@@ -142,3 +142,11 @@ extend_exclude = ["tests/", "demo/", "docs/"]
 # imports yet. The dependency is at the template level: the pack's templates
 # are loaded by crispy-forms' template tags and render nothing without it.
 DEP002 = ["django-crispy-forms"]
+
+[tool.forge.conformance]
+# Neither has a module under mvp_forms/ to mirror: one covers the app registry,
+# the other the undistributed demo project.
+non-mirror-paths = [
+  "tests/test_smoke.py",
+  "tests/test_demo.py",
+]
