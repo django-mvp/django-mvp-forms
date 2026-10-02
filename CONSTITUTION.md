@@ -9,8 +9,7 @@ the date in the footer. If a rule here is wrong, change the rule in its own
 pull request and then do the work.
 
 **Articles I to X are the general standard and are the same in every package
-built this way.** Articles XI onward are this package's own, and are the ones
-to write. Everything below the articles — the quality bar and the
+built this way.** Articles XI onward are this package's own. Everything below the articles — the quality bar and the
 non-negotiables — applies as written.
 
 ## Core articles
@@ -144,31 +143,52 @@ hierarchy built for a second implementation that does not exist.
 
 ## Project articles
 
-<!--
-  Articles XI onward are this package's own. They hold the rules that are
-  specific to what it does — the ones a reviewer would otherwise have to infer
-  from the code.
-
-  Write one when a decision would otherwise be re-argued on every pull request.
-  A rule belongs here if breaking it should block a merge. Anything softer is a
-  convention for the README, and anything that was a one-time choice is a
-  decision record under docs/adr/.
-
-  Two examples of the shape, to be replaced:
--->
-
 ### Article XI — Compatibility
 
 The public API is semver-stable. A deprecation lives one minor version with a
 warning before it is removed, and the CHANGELOG says what replaces it.
 
+The public API includes the markup contract: the template pack's name, the
+template paths a host project can override, and the names of the fields and
+widgets. Class names inside the rendered markup are not part of it.
+
 ### Article XII — Scope
 
-<!--
-  What this package refuses to do, and why. This is the article that stops
-  scope creep arriving one reasonable-sounding pull request at a time. Name the
-  neighbouring concern that is deliberately somebody else's.
--->
+This package draws forms and supplies what goes in them: the template pack,
+its layout objects, form fields and widgets. It ships no models, no views, no
+URLs and no migrations.
+
+Form views, inline formset handling and form page templates are django-mvp's.
+A change that needs one of them belongs there, however small.
+
+### Article XIII — Plain templates, no dependency on django-mvp
+
+Every template this package distributes is a plain Django template. None may
+use django-cotton or daisy-cotton, whether by tag, by include or by template
+inheritance, so the pack works in any daisyUI project.
+
+django-mvp depends on this package for its form rendering. This package
+therefore never depends on django-mvp at runtime and never imports from it.
+django-mvp appears in the development dependencies only, as the shell of the
+demo project.
+
+### Article XIV — Stock daisyUI
+
+Pack templates are built from daisyUI's component classes and Tailwind
+utilities as documented. The pack ships no stylesheet and defines no classes of
+its own. Where daisyUI has a component for the job, the pack uses it rather
+than assembling a look-alike from utilities.
+
+Where django-crispy-forms documents how a layout object behaves, the pack
+matches it. A host project moving from another pack should find the same
+layout code draws the same structure.
+
+### Article XV — Fields and widgets arrive when needed
+
+Fields and widgets are added when a real project needs one. They are not
+planned ahead and never appear on the roadmap. Each one arrives complete in a
+single pull request: the class, its template, its tests, and its entry in the
+README's public surface.
 
 ## Quality bar
 
@@ -191,17 +211,6 @@ Read at planning and at review; applies to every change.
   author can never approve it.
 - Machine verification gates every step. Tests, build, and lint are the gate,
   and no amount of reasoning about why a red result is acceptable overrides it.
-
-<!--
-  The footer below is mandatory and closes this file, so a review can name the
-  revision it was made against. The format is fixed: bold labels with the colon
-  outside the bold, ISO dates, and the last line of the file.
-
-  Versioning is semantic. MAJOR for a removed or redefined article, MINOR for a
-  new article or materially expanded guidance, PATCH for clarification and
-  wording. Every amendment updates the version and the Last Amended date.
-  Ratified never changes after first adoption.
--->
 
 ---
 

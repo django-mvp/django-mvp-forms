@@ -20,7 +20,7 @@ depend on django-mvp at runtime.
 - **Lint:** `uv run pre-commit run --all-files`
 - **Type-check:** `uv run mypy`
 - **Build:** `uv build`
-- **Demo project:** `uv run python manage.py runserver 0.0.0.0:8000`
+- **Demo project:** `uv run python manage.py runserver 0.0.0.0:8026`
 - **Bump the version:** `uv version` — never edit `pyproject.toml` alone, because `uv.lock`
   records this package's own version too
 
@@ -114,6 +114,8 @@ their status checks carry the calling job as a prefix. The required checks are:
 - `call-tests / Test Python 3.12, Django 6.0`
 - `call-tests / Test Python 3.13, Django 5.2`
 - `call-tests / Test Python 3.13, Django 6.0`
+- `call-tests / Test Python 3.12, Django 6.1`
+- `call-tests / Test Python 3.13, Django 6.1`
 
 `tests.yml` and `build.yml` deliberately carry no `paths:` filter on
 `pull_request`. A required check that is filtered out never reports, and a
