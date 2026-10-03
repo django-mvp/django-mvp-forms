@@ -608,6 +608,32 @@ class OverrideForm(ChosenForm):
         )
 
 
+class DrawingsForm(forms.Form):
+    """Three boolean fields, each drawn a different way, which can be posted.
+
+    ``remember`` states nothing and is a checkbox, ``notify`` is a toggle by name
+    in ``FormChoices`` and ``publish`` is a switch in the layout. Every id and the
+    button's name carry the form's prefix. The form must be given a prefix.
+    """
+
+    remember = forms.BooleanField(label=_("Remember me"), required=False)
+    notify = forms.BooleanField(label=_("Email me about replies"), required=False)
+    publish = forms.BooleanField(label=_("Publish this record"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Build the helper, with the drawings stated and a submit button."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.daisyui = FormChoices(fields={"notify": Choice(drawing="toggle")})
+        self.helper.layout = Layout(
+            "remember",
+            "notify",
+            Choice("publish", drawing="switch"),
+        )
+        self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
 ORDER_LINE_LIMIT = 10000
 ORDER_ITEMS = [
     ("", "---------"),

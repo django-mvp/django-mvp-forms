@@ -651,6 +651,11 @@ One more page draws the size, colour and variant of a form's inputs and buttons.
 - `/choices/` is the page inside the django-mvp shell, reached from its sidebar as "Size, colour and variant".
 - `/choices/standalone/` is the same page styled by daisyUI's CDN build alone.
 
+One more page draws a boolean field as a checkbox, a toggle and a switch. It holds one form with three boolean fields, drawn those three ways: the first states nothing, the second is a toggle by its name in `FormChoices`, and the third is a switch in the layout. Turning some on and submitting the form draws the page again with each field as it was posted and the values the form cleaned to. Nothing is saved.
+
+- `/drawings/` is the page inside the django-mvp shell, reached from its sidebar as "Checkbox, toggle and switch".
+- `/drawings/standalone/` is the same page styled by daisyUI's CDN build alone.
+
 Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset, groups two fields in a `MultiField`, and carries a `Hidden` input.
 
 Five more pages draw the containers and the notice django-crispy-forms keeps in `crispy_forms.bootstrap`. Each of the first three holds a form to submit whose required field sits in a tab, a group or a modal that is not open, so submitting it empty comes back with the tab, group or modal that holds the error open:

@@ -17,6 +17,7 @@ from demo.forms import (
     ButtonBarForm,
     ChoiceInputsForm,
     ChosenGroupsForm,
+    DrawingsForm,
     HelperButtonsForm,
     InputKindsForm,
     LayoutObjectsForm,
@@ -544,6 +545,63 @@ class StandaloneChoicesView(ChoicesMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/choices_standalone.html"
+
+
+class DrawingsMixin:
+    """The form both drawings pages draw, with what it cleaned to once posted.
+
+    A post binds the form and draws the page again. Nothing is saved.
+    """
+
+    drawings_prefix = "drawings"
+
+    def build_cleaned(self, form):
+        """List what a posted form cleaned to, for the page to show.
+
+        Args:
+            form: The form to read.
+
+        Returns:
+            A list of dicts holding each field's name, label and cleaned value,
+            or an empty list when the form is not bound or does not validate.
+        """
+        if not form.is_valid():
+            return []
+        return [
+            {"name": name, "label": form.fields[name].label, "value": value}
+            for name, value in form.cleaned_data.items()
+        ]
+
+    def get_context_data(self, **kwargs):
+        """Add the form, and what it cleaned to when it was posted."""
+        form = kwargs.setdefault("form", DrawingsForm(prefix=self.drawings_prefix))
+        kwargs["cleaned"] = self.build_cleaned(form)
+        kwargs["prefix"] = self.drawings_prefix
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form bound to what was posted."""
+        form = DrawingsForm(request.POST, prefix=self.drawings_prefix)
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class DrawingsView(DrawingsMixin, MVPTemplateView):
+    """A boolean field drawn as a checkbox, a toggle and a switch, in the shell."""
+
+    template_name = "demo/drawings.html"
+    page_title = "Checkbox, toggle and switch"
+    page_subtitle = "How a boolean field is drawn, chosen in Python"
+    breadcrumbs = [{"text": "Checkbox, toggle and switch"}]
+
+
+class StandaloneDrawingsView(DrawingsMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/drawings_standalone.html"
 
 
 class OrderFormsetMixin:
