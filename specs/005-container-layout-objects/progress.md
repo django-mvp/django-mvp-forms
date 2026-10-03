@@ -23,3 +23,10 @@ Did: Accordion and AccordionGroup drawn by daisyui/accordion.html and accordion-
 Verified: `uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope` 767 passed; `uv run pre-commit run --all-files` clean. Red observed first (TemplateDoesNotExist for accordion-group.html). Probes: dropping the open clause fails 8, `|safe` on the name fails the escaping test, a name on the details fails the name test.
 Next: T004, the accordion demo page.
 Watch: AccordionGroup has css_class "" so crispy writes no active class on it; nothing to drop.
+
+## 2026-10-03T17:48:06Z · Implementer US2 · T004
+
+Did: the accordion page on the shell (route accordion, demo/accordion.html on Cotton components, menu entry and the icon name accordion in EASY_ICONS) and its two forms added to the standalone page. AccordionForm (three groups, the third required, novalidate, the prefix in every id and the submit name) and ChosenGroupsForm (first group active=False, second active=True, no form element) in demo/forms.py; AccordionMixin in demo/views.py. ContainersStandaloneView combines both mixins and binds the accordion form only when the post names its submit button, otherwise the tabs form (decisions.md D16). README's Demo section now lists the tabs, accordion and standalone routes, and CHANGELOG has the entry.
+Verified: `uv run pytest tests/test_demo.py -n auto --dist loadscope` 609 passed (22 new, red first on NoReverseMatch); `uv run pre-commit run --all-files` clean. Probes: removing active= from the chosen form fails 4, removing the standalone post override fails the tabs-post test.
+Next: full verify, then the report.
+Watch: a post with an empty body to the standalone page still binds the tabs form, because US1's tests post {} there and expect it (D16).
