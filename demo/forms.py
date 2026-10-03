@@ -108,13 +108,17 @@ class LayoutObjectsForm(forms.Form):
         self.helper.attrs = {"novalidate": True}
         self.helper.layout = Layout(
             Fieldset(
-                "Details for {{ owner }}",
+                _("Details for {{ owner }}"),
                 Row(
                     Column("first_name", css_id=f"{prefix}-first"),
                     Column("last_name", css_id=f"{prefix}-last"),
                     css_id=f"{prefix}-row",
                 ),
-                HTML(f'<p id="{prefix}-aside">Prepared for {{{{ owner }}}}.</p>'),
+                HTML(
+                    '<p id="{}-aside">{}</p>'.format(
+                        prefix, _("Prepared for {{ owner }}.")
+                    )
+                ),
                 MultiField(
                     _("How to reach you"),
                     "email",

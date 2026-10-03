@@ -153,6 +153,18 @@ Plan, *The templates*, *The demo project*; research R3.
 - README: the buttons and the two holders join the "Layout objects" list, with a line saying
   buttons added with `add_input` are drawn after the fields. CHANGELOG: one line.
 
+### T010 — Review fixes to the helper's buttons
+
+**Files**: `mvp_forms/templatetags/daisyui.py`, `mvp_forms/templates/daisyui/inputs.html`,
+`tests/test_pack/test_buttons.py`, `tests/test_templatetags/test_daisyui.py`, `README.md`
+
+- A `StrictButton` added to the helper is drawn by its own `render`, through the tag
+  `daisyui_layout_object`, so it is the button a layout draws (CR-001).
+- A `Hidden` added to the helper is drawn outside the buttons' container, and a helper holding
+  only hidden inputs draws no container, through the filter `daisyui_shown` (CR-003).
+- README: a helper-added input's value is drawn as written, `template=` applies in a layout only
+  (CR-002), and the four class names that are never drawn are named (CR-004).
+
 ---
 
 ## US3 — Place raw HTML and hidden values in a layout (P3)
@@ -218,3 +230,13 @@ Plan, *Tests*.
   `MultiField` has no docstring example and is covered by T008.
 - Check the README's "Layout objects" list against the thirteen, and that every one of them is on
   the demo page (SC-005).
+
+### T011 — Review fixes to the documented examples and the demo
+
+**Files**: `tests/test_pack/test_documented_examples.py`, `demo/forms.py`, `README.md`
+
+- Every documented example now names an element that must be drawn once, so an example that
+  draws nothing fails (CR-005).
+- The demo's legend and note are wrapped for translation like the labels beside them (CR-006).
+- README: what a `Column` carries outside a `Row`, that a `MultiField` label is not a template,
+  and that `css_id` and `css_class` do nothing on a `Hidden`.

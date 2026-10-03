@@ -1,5 +1,9 @@
-{% if inputs %}
-  <div class="flex flex-wrap gap-2 mt-4">
-    {% for input in inputs %}{% include "daisyui/layout/baseinput.html" %}{% endfor %}
-  </div>
-{% endif %}
+{% load daisyui %}
+{% for input in inputs %}{% if input.input_type == "hidden" %}{% include "daisyui/layout/baseinput.html" %}{% endif %}{% endfor %}
+{% with shown=inputs|daisyui_shown %}
+  {% if shown %}
+    <div class="flex flex-wrap gap-2 mt-4">
+      {% for input in shown %}{% if input.input_type %}{% include "daisyui/layout/baseinput.html" %}{% else %}{% daisyui_layout_object input %}{% endif %}{% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}

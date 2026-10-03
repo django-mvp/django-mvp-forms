@@ -2,7 +2,7 @@
 
 import pytest
 from crispy_forms.bootstrap import FormActions, StrictButton
-from crispy_forms.layout import Button, ButtonHolder, Reset, Submit
+from crispy_forms.layout import Button, ButtonHolder, Hidden, Reset, Submit
 
 from tests.forms import ButtonedForm
 
@@ -263,6 +263,49 @@ class TestHelperButtons:
             len(form.find_all("div", recursive=False))
             == len(ButtonedForm.base_fields) + 1
         )
+
+    def test_a_strict_button_is_the_button_a_layout_draws(
+        self, draw_helper, draw_layout
+    ):
+        content = "<em>Go</em> {{ who }}"
+        in_helper = draw_helper(
+            StrictButton(content, css_id="go", css_class="mine"), who="Ada"
+        ).find("button", id="go")
+        in_layout = draw_layout(
+            StrictButton(content, css_id="go", css_class="mine"), who="Ada"
+        ).find("button", id="go")
+
+        assert in_helper.find_parent("form") is not None
+        assert in_helper.attrs == in_layout.attrs
+        assert str(in_helper) == str(in_layout)
+
+    def test_a_strict_button_shares_the_container_of_the_other_buttons(
+        self, draw_helper
+    ):
+        form = draw_helper(
+            Submit("save", "Save"), StrictButton("Go", css_id="go")
+        ).find("form")
+
+        assert (
+            form.find("button", id="go").parent
+            is form.find("input", attrs={"name": "save"}).parent
+        )
+
+    def test_a_helper_holding_only_a_hidden_input_draws_no_container(self, draw_helper):
+        form = draw_helper(Hidden("step", "two")).find("form")
+
+        assert form.find("input", attrs={"name": "step"}).parent is form
+        assert len(form.find_all("div", recursive=False)) == len(
+            ButtonedForm.base_fields
+        )
+
+    def test_a_hidden_input_is_drawn_outside_the_container_of_the_buttons(
+        self, draw_helper
+    ):
+        form = draw_helper(Submit("save", "Save"), Hidden("step", "two")).find("form")
+
+        assert form.find("input", attrs={"name": "step"}).parent is form
+        assert form.find("input", attrs={"name": "save"}).parent is not form
 
     def test_a_layouts_buttons_are_drawn_with_the_form_element_off(self, draw_layout):
         soup = draw_layout(Submit("save", "Save"))

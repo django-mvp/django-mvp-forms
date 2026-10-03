@@ -14,6 +14,11 @@ The names each template reads are the ones django-crispy-forms sets for that tem
 others. Attributes are read from the template's own object, such as `div.flat_attrs`, and never
 as a bare name.
 
+Buttons added to a form helper with `add_input` are drawn by `daisyui/inputs.html`, which the form
+wrapper includes after the fields. An input object is drawn with the same template as in a layout.
+An object that draws itself, such as a `StrictButton`, is drawn by its own `render` through the
+tag `daisyui_layout_object`. Hidden inputs are drawn outside the container that holds the buttons.
+
 ## Why
 
 Article XIV says that where django-crispy-forms documents how a layout object behaves, the pack

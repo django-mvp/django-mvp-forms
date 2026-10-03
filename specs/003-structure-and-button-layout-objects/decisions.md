@@ -208,3 +208,18 @@ One reviewer read the plan before any code, as a check on fit with the specifica
 **Revisit if:** The demo form's fields change.
 
 **ADR:** none — a demo arrangement
+
+## D21. What the code review found and what was done
+
+One reviewer read the whole diff against the specification. Verdict: approve. One medium and five low findings, all verified, and all fixed:
+
+- **A `StrictButton` added to the form helper was drawn as a broken input (medium).** The helper's inputs were all drawn by the input template, which a `StrictButton` does not fit. It is now drawn by its own `render`, so it is the button a layout draws. The fix was made directly, without a dispatch, because it is one tag, one template and four tests.
+- **A helper-added button's value is not rendered as a template, and `template=` is ignored there (low).** Kept, because it is how django-crispy-forms treats helper inputs and it keeps a value escaped. The README now says so.
+- **A helper holding only a `Hidden` drew an empty button container (low).** Hidden inputs are now drawn outside the container, and the container is drawn only when there is a button.
+- **A developer's own class named `error`, `ctrlHolder`, `blockLabel` or `btn-inverse` is dropped (low).** Kept, per ADR 0010. The README now names the four.
+- **The documented-examples test asserted nothing for the examples with no fields (low).** Each example now names an element that must be drawn once.
+- **Two demo strings were not wrapped for translation (low).** Wrapped. The page titles follow the demo's existing practice and are left.
+
+The edits to `tests/test_templatetags/test_daisyui.py` and `tests/test_demo.py` across this feature are additions of test classes and methods to files that existed before it, as D17 records for the class test.
+
+**ADR:** none — a record of review fixes. How helper inputs are drawn is in ADR 0008
