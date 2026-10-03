@@ -18,7 +18,7 @@ open for the maintainer.
 ### daisyUI classes for everything daisyUI has, Tailwind layout utilities for the rest
 
 **Adopted.** Every class the six templates write is in `tests/data/daisyui-classes.txt` except
-three Tailwind layout utilities, all of which `LAYOUT_UTILITIES` in
+four Tailwind layout utilities, all of which `LAYOUT_UTILITIES` in
 `tests/test_pack/test_independence.py` already names: `flex`, `flex-col` and `gap-2` on the
 accordion, which daisyUI has no component to stack, and `mt-4` between a tab row and its content.
 No utility is added to that set.
@@ -67,12 +67,17 @@ row, a fieldset, an accordion or a modal inside the tab is found (`layout.py:96`
 field's error is a key in `form.errors` like any other, so it counts. A form-wide error has the
 key `__all__`, which no container holds, so it moves nothing.
 
-`TabHolder.render` resets every tab first (`bootstrap.py:776-777`), so exactly one tab is active
-and a developer's `active=` on a `Tab` has no effect. `Accordion.render` does not reset
+`TabHolder.render` resets every tab first (`bootstrap.py:776-777`), so a developer's `active=` on
+a later `Tab` has no effect and at most one tab is active. When the first `Tab` was given
+`active=`, true or false, and no tab holds an error, django-crispy-forms marks none
+(`bootstrap.py:604`, `:663-668`): `TabHolder(Tab("A", "a", active=True), Tab("B", "b"))` drawn
+unbound has no active tab. FR-002 needs exactly one, so the holder's filter checks the first
+radio when none is checked (R4). `Accordion.render` does not reset
 (`bootstrap.py:888-901`), so a group the developer made `active=True` stays open, and a first
 group made `active=False` stays closed (`bootstrap.py:666`).
 
-The pack draws `div.active` and writes no rule of its own for tabs or groups.
+The pack draws `div.active`. Its one rule for tabs is the fallback above, for a case where
+django-crispy-forms picks nothing. It writes none for groups.
 
 ### R3. daisyUI's script-free tabs need each radio directly before its content
 
@@ -120,7 +125,7 @@ the submission.
 
 ### R6. An accordion group is a `details` element with no group name
 
-daisyUI's collapse supports a `details` element (`.collapse:is(details)`, opened by `[open]`). It
+daisyUI's collapse supports a `details` element (`&:is(details)` nested under `.collapse`, opened by `[open]`). It
 needs no input, is opened and closed from the keyboard by the browser, and is drawn open by the
 `open` attribute.
 
@@ -137,12 +142,12 @@ group django-crispy-forms marks active is open.
 (`bootstrap.py:1127-1131`). The one sign of an error the template can read is in the drawn fields.
 Django marks every visible input of a field with errors `aria-invalid="true"`
 (`django/forms/boundfield.py:296-297`), whether or not the form draws error messages. The modal
-template passes `fields` through a filter that looks for that attribute and draws the dialog open
-when it is there.
+template looks for that attribute in `fields` with the template language's own `in` and draws
+the dialog open when it is there.
 
 - A value a person typed cannot forge the attribute, for the reason given in R4.
 - A hidden field's error is not found, since Django does not mark a hidden input invalid. Nothing
-  draws that error today either: FS-002's FR-013 owns it. When it lands, the filter is the one
+  draws that error today either: FS-002's FR-013 owns it. When it lands, the modal template is the one
   place to extend.
 - A subclass of `Modal` that reads `form.errors` would be exact, but the specification rules out
   layout classes of the pack's own (D1, ADR 0008).
@@ -160,6 +165,10 @@ focus is held inside it and Escape closes it.
   inside the form the modal belongs to. The close control is a `<button type="button">` whose
   inline handler calls `close()` on its dialog. `close()` works on a dialog opened by the
   attribute as well as by `showModal()`, so FR-012's "still be able to close it" holds.
+- **Invoker commands were weighed.** A `type="button"` button with `commandfor` naming the
+  dialog and `command="close"` closes it with no script. Browsers gained it only recently, and a
+  modal drawn open for an error has no other way to close, so a browser without it would leave
+  the modal stuck. The inline handler is kept. This bears on issue #47, which stays open.
 - **The checkbox method was rejected.** It is script-free, but its close control is a `<label>`,
   which the keyboard cannot reach and which assistive technology does not announce as a control
   (FR-010), and the open modal is not a modal to assistive technology.
@@ -196,7 +205,14 @@ carries `alert-block`. None is a daisyUI class. All three join `UPSTREAM_ONLY_CL
 - README, *Layout objects*: the six objects, how a host project opens a modal, and the note that
   alert content is trusted (FR-016, FR-025).
 
-### R12. No new dependency, no new term
+### R12. The first translatable strings
+
+The close and dismiss controls carry the package's first translatable template strings. Article
+VIII asks a package with user-facing strings for a base English catalogue and a `locale/`
+directory, so `mvp_forms/locale/en/LC_MESSAGES/django.po` arrives with the modal and gains the
+alert's string after it. `pyproject.toml` already packages everything under `mvp_forms/`.
+
+### R13. No new dependency, no new term
 
 Nothing is added to `pyproject.toml`. "Container layout object" is not needed in code or
 documentation: the README names the six objects, so `CONTEXT.md` is unchanged.

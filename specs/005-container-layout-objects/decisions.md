@@ -88,7 +88,7 @@ A developer who writes a `Layout` can group parts of a form behind tabs or an ac
 
 These are observations, not requirements. They are here so the build does not rediscover them.
 
-- django-crispy-forms decides which tab or group is active in Python and hands the template an `active` flag. `TabHolder` resets every tab before picking one, so a developer's `active` on a `Tab` has no effect there. `Accordion` does not reset, so it does.
+- django-crispy-forms decides which tab or group is active in Python and hands the template an `active` flag. `TabHolder` resets every tab before picking one, so a developer's `active` on a later `Tab` has no effect there. (Corrected at the design review: `active=` on the first `Tab` leaves no tab active. See D14.) `Accordion` does not reset, so it does.
 - The modal sits inside the form. daisyUI's usual close button is a form of its own with the dialog method, and a form nested in a form is not valid HTML. The close control needs another route.
 - A modal drawn open for an error must still close. daisyUI's class that forces a modal open keeps it open until the class is removed.
 - Radio inputs that drive tabs or a collapse are submitted unless they are detached from the form, and their group name has to be unique per holder for FR-020.
@@ -130,7 +130,7 @@ asks that the groups django-crispy-forms picks are the ones open.
 **Ambiguous:** FR-012 needs the modal drawn open when it holds a field with an error.
 django-crispy-forms hands the modal's template the drawn fields and no form.
 
-**Chosen:** the template passes the drawn fields through `daisyui_invalid`, which looks for
+**Chosen:** the template looks in the drawn fields for
 `aria-invalid="true"`, the attribute Django writes on every visible input of a field with errors.
 The modal is a `dialog` element drawn with the `open` attribute, and its close control is a
 button with a one-line inline handler.
@@ -163,3 +163,37 @@ each page a twin outside the shell.
 **Why defensible:** the standalone page exists to show the four working on daisyUI's CDN install
 alone (SC-003). One page shows that as well as four would, and the shell pages are the ones
 FR-024 counts.
+
+## D14. When django-crispy-forms marks no tab active, the first is open
+
+**Ambiguous:** FR-002 says exactly one tab is marked open. The specification also assumes the
+pack adds no rule of its own for tabs. django-crispy-forms marks no tab active when the first
+`Tab` was given `active=` and no tab holds an error, which the design review found by running it.
+
+**Chosen:** the holder's filter checks the first radio when none of that holder's radios is
+checked.
+
+**Why defensible:** with no radio checked every pane is hidden until a person picks a tab, which
+FR-002 exists to prevent. The fallback only acts where django-crispy-forms picked nothing, so it
+never disagrees with a choice the library made, and it is the same tab the library opens by
+default.
+
+## D15. Design review, 2026-10-03: approve, findings applied
+
+One reviewer, three lenses, on the plan before any code. No critical or high finding.
+
+- DR-001 (medium): no tab open when the first `Tab` is given `active=`. Applied: D14.
+- DR-002 (medium): the first translatable strings need the base English catalogue Article VIII
+  asks for. Applied: `mvp_forms/locale/en/LC_MESSAGES/django.po` is in T005 and T007.
+- DR-003 (low): `daisyui_invalid` had one caller. Applied: the modal template tests with `in`
+  and the filter is dropped.
+- DR-004 (low): `daisyui_tab_group` must not mark its input safe. Applied: `is_safe=True`.
+- DR-005 (low): no test for a hidden field's error opening a tab or group. Applied: T001, T003.
+- DR-006 (low): SC-005 traced nowhere. Applied: one sentence in the plan.
+- DR-007 (low): the demo's posting forms need `novalidate` for the error case to be produced by
+  hand. Applied: the plan and T002.
+- DR-008 (low): invoker commands not weighed for closing a modal. Applied: research R8.
+
+Watch items for the build: `Tab.render` strips the substring `active` from an inactive tab's
+classes, so a test must not use a developer class containing it; a developer's own `active`
+class is dropped from buttons and a `MultiField` as well, and the README says so.

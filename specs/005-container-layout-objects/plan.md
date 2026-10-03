@@ -5,9 +5,8 @@
 ## Summary
 
 django-crispy-forms asks a template pack for one template per layout object. This feature adds
-the templates for `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and two
-small template filters: one gives each tab holder's radios a group name of their own, the other
-tells the modal template whether the fields it holds carry an error. A developer keeps importing
+the templates for `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and one
+small template filter, which gives each tab holder's radios a group name of their own. A developer keeps importing
 the six layout objects from django-crispy-forms. The package gains no layout classes, no
 dependency, no script file and no stylesheet.
 
@@ -20,22 +19,22 @@ dependency, no script file and no stylesheet.
 **Target Platform**: any Django project that loads daisyUI 5 as its CDN install documents
 **Project Type**: a published Django package with an undistributed demo project
 **Constraints**: plain Django templates only; daisyUI classes for every component; a Tailwind utility only for layout and named in the class test; no import from django-mvp; no script file
-**Scale/Scope**: seven new templates, one changed template, two filters, three more names in one constant, five demo pages
+**Scale/Scope**: seven new templates, one changed template, one filter, three more names in one constant, a base English catalogue, five demo pages
 
 ## Constitution Check
 
 | Article | How the plan meets it |
 |---|---|
 | I, testing | Every task is test-first. No test asserts wording, spacing or appearance. A class is asserted only where it is a daisyUI component (`tabs`, `tab`, `tab-content`, `collapse`, `collapse-title`, `collapse-content`, `modal`, `modal-box`, `alert`), which the testing standard counts as markup a host project depends on. |
-| II, simplicity | Templates and two filters. No new dependency. |
+| II, simplicity | Templates and one filter. No new dependency. |
 | III, anti-abstraction | No layout classes of the pack's own and no base template shared between the six. |
 | IV, integration-first | Tests draw a real form with a real `Layout` through `{% crispy %}`, the way a host project does. |
-| V, security | Names, titles and field values are escaped by the template layer. Alert content is drawn as written, which django-crispy-forms documents, and the README says it is trusted. The one string the pack swaps in Python is a literal it wrote itself, replaced by a random token (research R4). |
+| V, security | Names, titles and field values are escaped by the template layer. Alert content is drawn as written, which django-crispy-forms documents, and the README says it is trusted. The one string the pack swaps in Python is a literal it wrote itself, replaced by a random token (research R4), and the filter that does it marks nothing safe that was not safe already. |
 | VI, documentation | README public surface and CHANGELOG are updated in the task that adds each object. |
 | VII, dependencies | None added. |
-| VIII, i18n | The two names the pack supplies, for the close and dismiss controls, are translatable. |
-| X, cohesion | The two filters are decorator-registered template filters, which the article exempts. |
-| XI, compatibility | The template paths are the ones django-crispy-forms defines, so they are the override points a host project already expects. |
+| VIII, i18n | The two names the pack supplies, for the close and dismiss controls, are translatable. They are the package's first translatable strings, so the base English catalogue arrives with them, at `mvp_forms/locale/en/LC_MESSAGES/django.po`. |
+| X, cohesion | The filter is a decorator-registered template filter, which the article exempts. |
+| XI, compatibility | The template paths are the ones django-crispy-forms defines, so they are the override points a host project already expects. `layout/tab-pane.html` is the pack's own path and becomes one more. |
 | XIII, plain templates | No Cotton in `mvp_forms/`. The existing test over every distributed template covers the new files. |
 | XIV, stock daisyUI | Tabs, collapse, modal and alert are daisyUI's own components. The only Tailwind utilities are four layout utilities the pack already uses. Each object keeps the arguments and the open-or-closed rule django-crispy-forms gives it. |
 
@@ -45,7 +44,8 @@ No violation to justify.
 
 ```text
 mvp_forms/
-├── templatetags/daisyui.py          # gains two filters and three class names
+├── templatetags/daisyui.py          # gains one filter and three class names
+├── locale/en/LC_MESSAGES/django.po  # new: the base English catalogue
 └── templates/daisyui/
     ├── accordion.html               # new: Accordion
     ├── accordion-group.html         # new: AccordionGroup
@@ -66,7 +66,7 @@ demo/
     └── containers_standalone.html   # all four, on daisyUI's CDN install alone
 
 tests/
-├── test_templatetags/test_daisyui.py     # gains the two filters and the three names
+├── test_templatetags/test_daisyui.py     # gains the filter and the three names
 ├── test_pack/test_tabs.py                # new
 ├── test_pack/test_accordion.py           # new
 ├── test_pack/test_modal.py               # new
@@ -100,7 +100,7 @@ names in the context. Names, titles and ids go through the template engine's esc
 ```django
 {% load daisyui %}
 {% with pane_class=div.css_class|daisyui_classes %}
-<input type="radio" name="daisyui-tab-group" form="" class="tab" aria-label="{{ div.name }}"{% if div.active %} checked{% endif %}>
+<input type="radio" name="daisyui-tab-group"{% if div.active %} checked{% endif %} form="" class="tab" aria-label="{{ div.name }}">
 <div{% if div.css_id %} id="{{ div.css_id }}"{% endif %} class="tab-content mt-4{% if pane_class %} {{ pane_class }}{% endif %}"{{ div.flat_attrs }}>
   {{ fields }}
 </div>
@@ -118,8 +118,9 @@ for every tab and the pack does not draw the result (research R3).
   reaches it and the arrow keys move within it (FR-021). Its name for assistive technology is
   the tab's name, escaped (FR-022).
 - `form=""` keeps it out of the submitted data (research R5, FR-019).
-- `checked` follows `div.active`, which django-crispy-forms sets on exactly one tab (research R2,
-  FR-002 to FR-004).
+- `checked` follows `div.active`. django-crispy-forms sets it on one tab, except when the first
+  `Tab` was given `active=`, where it sets it on none (research R2). The holder's filter then
+  checks the first radio, so exactly one tab is open in every case (FR-002 to FR-004).
 - `daisyui_classes` drops `tab-pane` and `active` (research R10).
 
 **`daisyui_tab_group`**, in `mvp_forms/templatetags/daisyui.py`:
@@ -128,17 +129,26 @@ for every tab and the pack does not draw the result (research R3).
 TAB_GROUP_PLACEHOLDER = 'name="daisyui-tab-group"'
 
 
-@register.filter
-def daisyui_tab_group(panes: str) -> SafeString:
+@register.filter(is_safe=True)
+def daisyui_tab_group(panes: str) -> str:
     """Give the radios of one tab holder a group name no other holder has."""
 ```
 
-It replaces every occurrence of the placeholder in the drawn panes with
-`name="tabs-<token>"`, where the token is `secrets.token_hex(4)`, made once per call. An inner
-holder has already had its placeholder replaced by the time an outer one is drawn, so nested
-holders get different names (research R4, FR-020). The pane template writes the placeholder as a
-literal. The constant in Python and the literal in the template are the same string, and a test
-draws a holder and fails if any radio still carries the placeholder name.
+It does two things to the drawn panes of one holder.
+
+- When no radio carrying the placeholder is checked, it checks the first. The pane template
+  writes `checked` directly after the placeholder, so the test is whether the placeholder followed
+  by ` checked` occurs, and the remedy is to add ` checked` after the first placeholder.
+- It replaces every occurrence of the placeholder with `name="tabs-<token>"`, where the token is
+  `secrets.token_hex(4)`, made once per call.
+
+An inner holder has already had its placeholder replaced by the time an outer one is drawn, so
+nested holders get different names and an inner holder's checked radio is not mistaken for the
+outer one's (research R4, FR-020). The filter is registered with `is_safe=True` and returns a
+plain string, so safe input stays safe and anything else is escaped by the template engine. The
+pane template writes the placeholder as a literal. The constant in Python and the literal in the
+template are the same string, and a test draws a holder and fails if any radio still carries the
+placeholder name.
 
 ### Accordion
 
@@ -174,8 +184,8 @@ draws a holder and fails if any radio still carries the placeholder name.
 `layout/modal.html` (context: `modal`, `fields`):
 
 ```django
-{% load daisyui i18n %}
-<dialog id="{{ modal.css_id }}" class="modal{% if modal.css_class %} {{ modal.css_class }}{% endif %}"{{ modal.flat_attrs }}{% if fields|daisyui_invalid %} open{% endif %}>
+{% load i18n %}
+<dialog id="{{ modal.css_id }}" class="modal{% if modal.css_class %} {{ modal.css_class }}{% endif %}"{{ modal.flat_attrs }}{% if 'aria-invalid="true"' in fields %} open{% endif %}>
   <div class="modal-box">
     <h3 id="{{ modal.title_id }}-label"{% if modal.title_class %} class="{{ modal.title_class }}"{% endif %}>{{ modal.title }}</h3>
     {{ fields }}
@@ -196,15 +206,9 @@ draws a holder and fails if any radio still carries the placeholder name.
 - The title carries no class of the pack's. daisyUI has no class for a modal title and a
   typography utility is not a layout utility. A developer styles it with `title_class`.
 
-**`daisyui_invalid`**, in `mvp_forms/templatetags/daisyui.py`:
-
-```python
-@register.filter
-def daisyui_invalid(fields: str) -> bool:
-    """Whether drawn fields include an input Django marked invalid."""
-```
-
-It returns whether `aria-invalid="true"` occurs in the drawn fields (research R7, FR-012).
+- The dialog is drawn open when the drawn fields hold `aria-invalid="true"`, the mark Django
+  writes on every visible input of a field with errors (research R7, FR-012). The test is written
+  in the template with `in`. It has one caller, so it is not a filter.
 
 ### Alert
 
@@ -228,14 +232,19 @@ It returns whether `aria-invalid="true"` occurs in the drawn fields (research R7
 
 ### The three class names
 
-`UPSTREAM_ONLY_CLASSES` gains `tab-pane`, `active` and `alert-block`. The README's sentence
-listing the names that are never drawn is updated in the task that adds each.
+`UPSTREAM_ONLY_CLASSES` gains `tab-pane`, `active` and `alert-block`. The existing filter is used
+by the buttons and `MultiField` too, so a developer's own `active` class is no longer drawn on
+those either. The README's sentence listing the names that are never drawn is rewritten, in the
+task that adds each, to name all of them and every object they are dropped from.
 
 ## The demo project
 
 Four pages on the shell, each with a route, a view on `MVPTemplateView`, a menu entry with an
 icon, and a template that extends `page_view.html` and uses Cotton components for the page
-around the form. Each has a prefix on every form so no id repeats.
+around the form. Each has a prefix on every form so no id repeats. Every posting form sets `novalidate` on its
+helper, as `LayoutObjectsForm` does: a browser will not submit a form whose empty required input
+sits in a hidden tab, a closed group or a closed dialog, so without it the error case could not
+be produced by hand.
 
 | Page | Route name | What it holds |
 |---|---|---|
@@ -261,7 +270,7 @@ shell (SC-003), and each shell page links to it.
 - FR-020 is tested by drawing two holders, in one form and in two, and comparing the radios'
   group names.
 - Escaping is tested with a name, a title and a field value that hold markup.
-- `tests/test_templatetags/test_daisyui.py` tests the two filters and the three dropped names on
+- `tests/test_templatetags/test_daisyui.py` tests the filter and the three dropped names on
   their own.
 - `tests/test_pack/test_independence.py` gains one state per object, unbound and bound, so every
   class the six templates write is checked against daisyUI's list.
@@ -272,6 +281,9 @@ What a browser does with the markup (a radio with `form=""` is not submitted, `d
 shown by daisyUI, the inline handlers close and dismiss) is not reachable from the test client.
 It is checked on the running pages before the pull request is marked ready, and listed in the
 walkthrough.
+
+SC-005 is met jointly with the features for issues #7 and #8, and is checked when the last of
+them merges. This feature's share is the six templates.
 
 ## Story order
 

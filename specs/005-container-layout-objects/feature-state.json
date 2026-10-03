@@ -2,7 +2,7 @@
   "feature": "005-container-layout-objects",
   "branch": "005-container-layout-objects",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-10-03T17:22:29Z",
       "note": "plan.md, research.md, tasks.md: 4 stories, 8 tasks; continues on pull request #65"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T17:22:58Z",
+      "note": "one reviewer, three lenses, on plan.md, tasks.md and research.md at 73876ec"
     }
   ],
   "gates": {
@@ -24,12 +29,26 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-03T17:32:39Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
+      "at": "2026-10-03T17:32:39Z",
+      "self_resolved": [
+        "DR-001 medium: first tab opened when none is marked active (D14)",
+        "DR-002 medium: base English catalogue added to T005 and T007",
+        "DR-003 low: daisyui_invalid dropped, the modal template tests with `in`",
+        "DR-004 low: daisyui_tab_group registered is_safe, marks nothing safe",
+        "DR-005 low: hidden-field cases added to T001 and T003",
+        "DR-006 low: SC-005 traced in the plan",
+        "DR-007 low: demo forms set novalidate",
+        "DR-008 low: invoker commands weighed in research R8"
+      ]
     }
   },
   "stories": [
@@ -124,7 +143,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

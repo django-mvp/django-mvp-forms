@@ -40,15 +40,17 @@ Issue: #66. Delivers FR-001 – FR-004, and for tabs FR-017 – FR-023; SC-001, 
 
 Plan, *Tabs* and *The three class names*; research R1 – R5, R10.
 
-- The three templates and the branch in `div.html` as the plan has them. `daisyui_tab_group` and
-  `TAB_GROUP_PLACEHOLDER`. `tab-pane` and `active` join `UPSTREAM_ONLY_CLASSES`.
+- The three templates and the branch in `div.html` as the plan has them. `daisyui_tab_group`,
+  registered with `is_safe=True`, and `TAB_GROUP_PLACEHOLDER`. `tab-pane` and `active` join `UPSTREAM_ONLY_CLASSES`.
 - Tests, `tests/test_pack/test_tabs.py`:
   - one radio and one content element per `Tab`, each radio directly before its own content, and
     each content holding its own fields (US1.1);
-  - unbound, exactly one radio is checked and it is the first (US1.2); with an error in the
+  - unbound, exactly one radio is checked and it is the first (US1.2), also when the first `Tab`
+    was given `active=True` or `active=False` (FR-002); with an error in the
     second tab the second is checked and the error element is inside its content (US1.3); with
     errors in the second and third, the second (US1.4); with the field nested in a `Row` or a
-    `Fieldset` inside the tab (US1.5); with only a form-wide error, the first (US1.6);
+    `Fieldset` inside the tab (US1.5); with only a form-wide error, the first (US1.6); with only a
+    hidden field in a later tab failing, that tab (assert the checked radio only);
   - two holders in one form, and one holder in each of two forms drawn on one page, have
     different group names, and the radios of one holder share one (US1.7, FR-020); a holder
     nested in a tab of another has a name of its own; no radio keeps the placeholder name;
@@ -61,12 +63,14 @@ Plan, *Tabs* and *The three class names*; research R1 – R5, R10.
     neither `tab-pane` nor `active` is drawn (FR-017);
   - a plain `Div` is still drawn as FS-003 left it.
 - Tests, `tests/test_templatetags/test_daisyui.py`: `daisyui_tab_group` replaces every
-  placeholder with one name, gives two calls two names, and returns a safe string;
+  placeholder with one name, gives two calls two names, checks the first radio when none is
+  checked and leaves a checked one alone, keeps safe input safe and has unsafe input escaped;
   `daisyui_classes` drops the two names.
 - `test_independence.py`: a tabs state, unbound and bound. `test_documented_examples.py`: the
   `TabHolder` and `Tab` docstring examples.
 - README, *Layout objects*: `TabHolder` and `Tab`, with an example, that the first tab holding an
-  error opens, that a tab's radio is not submitted, and the two dropped names. CHANGELOG entry.
+  error opens, that a tab's radio is not submitted, and the sentence on dropped class names rewritten to name
+  `tab-pane` and `active` and to say `active` is dropped from buttons and a `MultiField` too. CHANGELOG entry.
 
 ### T002 — The tabs demo page and the standalone page
 
@@ -76,6 +80,8 @@ Plan, *Tabs* and *The three class names*; research R1 – R5, R10.
 
 Plan, *The demo project*.
 
+- Every posting demo form in this feature sets `novalidate` on its helper (plan, *The demo
+  project*).
 - The tabs page on the shell, with its menu entry and icon, and the standalone page holding the
   tabs forms. Each links to the other.
 - Tests: both pages respond; the shell wraps the first and the sidebar links it; the standalone
@@ -104,7 +110,8 @@ Plan, *Accordion*; research R1, R2, R6.
     and its own fields (US2.1);
   - unbound, the first group is open and the rest are closed; `active=True` on a later group
     opens it too; `active=False` on the first keeps it closed (US2.2, FR-007);
-  - an error in a closed group opens it with the error element inside (US2.3); errors in two
+  - an error in a closed group opens it with the error element inside (US2.3); only a hidden
+    field in a later group failing opens that group (assert the open group only); errors in two
     groups open the first of them (US2.4); an accordion inside a tab with an error in a group
     has both the tab checked and the group open (US2.5);
   - no `details` carries a `name`, and two accordions have different ids (US2.6, FR-020);
@@ -139,13 +146,14 @@ SC-001, SC-002, SC-004.
 ### T005 — `Modal`
 
 **Files**: `mvp_forms/templates/daisyui/layout/modal.html`,
-`mvp_forms/templatetags/daisyui.py`, `tests/test_pack/test_modal.py`,
-`tests/test_templatetags/test_daisyui.py`, `tests/test_pack/test_independence.py`,
+`mvp_forms/locale/en/LC_MESSAGES/django.po`, `tests/test_pack/test_modal.py`,
+`tests/test_pack/test_independence.py`,
 `tests/test_pack/test_documented_examples.py`, `README.md`, `CHANGELOG.md`
 
 Plan, *Modal*; research R1, R7, R8.
 
-- The template as the plan has it, and `daisyui_invalid`.
+- The template as the plan has it. The base English catalogue, made with `makemessages` for the
+  `en` locale from inside `mvp_forms/`, holding the close control's name.
 - Tests, `tests/test_pack/test_modal.py`:
   - a `dialog` with daisyUI's `modal` class and the developer's id, holding its fields inside a
     `modal-box`, with no `open` attribute (US3.1);
@@ -157,14 +165,13 @@ Plan, *Modal*; research R1, R7, R8.
   - bound with an error in a field of the modal, the dialog has `open` and the error element is
     inside it (US3.6); bound with an error only in a field outside the modal it does not; with
     `form_show_errors` off it still opens; a modal holding only an `HTML` object never opens;
+    a valid field whose value is the text `aria-invalid="true"` does not open it;
   - a field with an error in a group in a tab in a modal has all three open;
   - two modals with two ids are both drawn, and an error in one opens only that one (FR-020);
   - `css_class`, `title_class`, `title_id` and extra attributes reach their elements (FR-017).
-- Tests, `tests/test_templatetags/test_daisyui.py`: `daisyui_invalid` is true for drawn fields
-  holding an invalid input and false otherwise, including for a field whose value is the text
-  `aria-invalid="true"`.
 - `test_independence.py`: a modal state, unbound and bound.
-  `test_documented_examples.py`: the `Modal` docstring example.
+  `test_documented_examples.py`: the `Modal` docstring example, with its unclosed quote repaired
+  and nothing else changed.
 - README: `Modal`, with an example, how a host project opens it by its id, that it is drawn open
   when a field inside it has an error, and that `title_class` styles the title. CHANGELOG entry.
 
@@ -184,19 +191,20 @@ Plan, *Modal*; research R1, R7, R8.
 
 ## US4 — Place a notice in a layout (P2)
 
-Issue: #69. Delivers FR-014 – FR-016, and for the alert FR-017 – FR-020, FR-022; FR-024,
-FR-025; SC-001, SC-003, SC-006.
+Issue: #69. Delivers FR-014 – FR-016, and for the alert FR-017 – FR-020, FR-022; SC-001. With
+the demo tasks of the other three stories it completes FR-024, FR-025, SC-003 and SC-006.
 
 ### T007 — `Alert`
 
 **Files**: `mvp_forms/templates/daisyui/layout/alert.html`,
-`mvp_forms/templatetags/daisyui.py`, `tests/test_pack/test_alert.py`,
+`mvp_forms/templatetags/daisyui.py`, `mvp_forms/locale/en/LC_MESSAGES/django.po`, `tests/test_pack/test_alert.py`,
 `tests/test_templatetags/test_daisyui.py`, `tests/test_pack/test_independence.py`,
 `tests/test_pack/test_documented_examples.py`, `README.md`, `CHANGELOG.md`
 
 Plan, *Alert*; research R9, R10.
 
-- The template as the plan has it. `alert-block` joins `UPSTREAM_ONLY_CLASSES`.
+- The template as the plan has it. `alert-block` joins `UPSTREAM_ONLY_CLASSES`. The catalogue is
+  made again so it holds the dismiss control's name.
 - Tests, `tests/test_pack/test_alert.py`:
   - an element with `role="alert"` and daisyUI's `alert` class, between the two fields it was
     placed between (US4.1);
@@ -209,7 +217,7 @@ Plan, *Alert*; research R9, R10.
   - two alerts are both drawn, each with its own dismiss control (FR-020); a bound form draws
     the alert again.
 - `test_independence.py`: an alert state. `test_documented_examples.py`: the `Alert` docstring
-  example.
+  example, with its apostrophe repaired and nothing else changed.
 - README: `Alert`, with an example, how to colour it with a daisyUI modifier, that a dismissal is
   not remembered, and the note that alert content is trusted and anything a person typed must be
   escaped before it is put there (FR-016, FR-025). The sentence listing the six as supported.
