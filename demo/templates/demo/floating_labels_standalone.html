@@ -1,0 +1,74 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Floating labels</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">Floating labels</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and nothing else.
+        <a class="link" href="{% url 'floating-labels' %}">The same page inside the django-mvp shell</a>
+      </p>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Try it</h2>
+          <p>
+            The form states a floating label for every field. The name, the notes and the
+            country float, the nickname undoes it and keeps its ordinary label, and the
+            checkbox is passed over. Submit the form with no name to see its error, or with
+            one to see what the form cleaned to.
+          </p>
+          {% crispy form %}
+        </div>
+      </section>
+      {% if cleaned %}
+        <section class="card card-border bg-base-100">
+          <div class="card-body">
+            <h2 class="card-title">What the form cleaned to</h2>
+            <ul id="{{ prefix }}-cleaned">
+              {% for item in cleaned %}
+                <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </section>
+      {% endif %}
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">A form that already fails</h2>
+          <p>
+            The name is required and has help text. The floating label keeps its required
+            marker, its help text and its error.
+          </p>
+          {% crispy failing_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Disabled and read-only</h2>
+          <p>
+            A disabled field keeps its ordinary label, so a person can still see what it
+            is. A read-only field floats.
+          </p>
+          {% crispy states_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">One field, by name</h2>
+          <p>
+            This form has no layout. Only the title is named in the form's choices, so only
+            the title floats.
+          </p>
+          {% crispy by_name_form %}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

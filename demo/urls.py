@@ -12,6 +12,7 @@ from demo.views import (
     DecoratedFieldsStandaloneView,
     DrawingsView,
     FieldWithButtonsView,
+    FloatingLabelsView,
     InlineChoicesView,
     InlineFieldView,
     LayoutObjectsView,
@@ -22,6 +23,7 @@ from demo.views import (
     StandaloneChoiceInputsView,
     StandaloneChoicesView,
     StandaloneDrawingsView,
+    StandaloneFloatingLabelsView,
     StandaloneLayoutObjectsView,
     StandaloneStackedFormsetView,
     StandaloneTableFormsetView,
@@ -89,6 +91,12 @@ urlpatterns = [
         "drawings/standalone/",
         StandaloneDrawingsView.as_view(),
         name="drawings-standalone",
+    ),
+    path("floating-labels/", FloatingLabelsView.as_view(), name="floating-labels"),
+    path(
+        "floating-labels/standalone/",
+        StandaloneFloatingLabelsView.as_view(),
+        name="floating-labels-standalone",
     ),
     path("formset-stacked/", StackedFormsetView.as_view(), name="formset-stacked"),
     path(

@@ -23,6 +23,9 @@ from demo.forms import (
     DrawingStateForm,
     DrawingTrioForm,
     FieldWithButtonsForm,
+    FloatingByNameForm,
+    FloatingLabelsForm,
+    FloatingStatesForm,
     HelperButtonsForm,
     InlineChoicesForm,
     InlineFieldForm,
@@ -825,15 +828,8 @@ class StandaloneChoicesView(ChoicesMixin, TemplateView):
     template_name = "demo/choices_standalone.html"
 
 
-class DrawingsMixin:
-    """The form both drawings pages draw, with what it cleaned to once posted.
-
-    A post binds the form and draws the page again. Nothing is saved.
-    """
-
-    drawings_prefix = "drawings"
-    drawing_names = tuple(Modifiers.drawings)
-    drawing_states = ("off", "on", "help", "error", "disabled")
+class CleanedMixin:
+    """What a posted form cleaned to, for a page to show."""
 
     def build_cleaned(self, form):
         """List what a posted form cleaned to, for the page to show.
@@ -851,6 +847,17 @@ class DrawingsMixin:
             {"name": name, "label": form.fields[name].label, "value": value}
             for name, value in form.cleaned_data.items()
         ]
+
+
+class DrawingsMixin(CleanedMixin):
+    """The form both drawings pages draw, with what it cleaned to once posted.
+
+    A post binds the form and draws the page again. Nothing is saved.
+    """
+
+    drawings_prefix = "drawings"
+    drawing_names = tuple(Modifiers.drawings)
+    drawing_states = ("off", "on", "help", "error", "disabled")
 
     def build_drawing_states(self):
         """Build one small form for each drawing in each state.
@@ -938,6 +945,56 @@ class StandaloneDrawingsView(DrawingsMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/drawings_standalone.html"
+
+
+class FloatingLabelsMixin(CleanedMixin):
+    """The forms both floating-label pages draw, with what the first cleaned to.
+
+    A post binds the form to submit and draws the page again. Nothing is saved.
+    """
+
+    floating_prefix = "floating"
+    floating_failing_prefix = "failing-floating"
+    floating_states_prefix = "floating-states"
+    floating_by_name_prefix = "floating-by-name"
+
+    def get_context_data(self, **kwargs):
+        """Add the form to submit, what it cleaned to, and the forms beside it."""
+        form = kwargs.setdefault(
+            "form", FloatingLabelsForm(prefix=self.floating_prefix)
+        )
+        kwargs["failing_form"] = FloatingLabelsForm(
+            {}, prefix=self.floating_failing_prefix, posts=False
+        )
+        kwargs["states_form"] = FloatingStatesForm(prefix=self.floating_states_prefix)
+        kwargs["by_name_form"] = FloatingByNameForm(prefix=self.floating_by_name_prefix)
+        kwargs["cleaned"] = self.build_cleaned(form)
+        kwargs["prefix"] = self.floating_prefix
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to submit unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to submit bound to what was posted."""
+        form = FloatingLabelsForm(request.POST, prefix=self.floating_prefix)
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class FloatingLabelsView(FloatingLabelsMixin, MVPTemplateView):
+    """Fields drawn with a floating label, inside the application shell."""
+
+    template_name = "demo/floating_labels.html"
+    page_title = "Floating labels"
+    page_subtitle = "A label that floats over the field, chosen in Python"
+    breadcrumbs = [{"text": "Floating labels"}]
+
+
+class StandaloneFloatingLabelsView(FloatingLabelsMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/floating_labels_standalone.html"
 
 
 class OrderFormsetMixin:

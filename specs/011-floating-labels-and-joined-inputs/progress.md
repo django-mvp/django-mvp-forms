@@ -19,3 +19,10 @@ Did: frame.html draws no ordinary label for a floating field and field_body.html
 Verified: uv run pytest tests/test_pack -q -n auto --dist loadscope, 1721 passed. SC-003: all 75 entries of STATES as they stood at 0f158d6 render byte for byte the same after this task.
 Next: T003, the demo pages.
 Watch: the formset test uses the default stacked template; labels off is drawn through the tag only, since the filter does not read the helper's form_show_labels.
+
+## 2026-10-03T23:29:09Z · Implementer US1 · T003
+
+Did: demo pages /floating-labels/ in the shell and /floating-labels/standalone/ on daisyUI's CDN install, with the sidebar entry and its icon; FloatingLabelsForm, FloatingStatesForm and FloatingByNameForm; FloatingLabelsMixin and its two views; build_cleaned moved to CleanedMixin, which DrawingsMixin now uses; tests for both pages; the README's page list and the CHANGELOG name the two pages.
+Verified: uv run pytest tests/test_demo.py -q -k FloatingLabels, 48 passed; they failed first on the missing route.
+Next: the full verify, then the report.
+Watch: the shell page uses the shell's Cotton components and no include; nothing states a size or a colour.

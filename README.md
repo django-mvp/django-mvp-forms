@@ -976,6 +976,11 @@ One more page draws a boolean field as a checkbox, a toggle and a switch. It hol
 
 Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset, groups two fields in a `MultiField`, and carries a `Hidden` input.
 
+One more page draws fields with a floating label. It holds a form to submit with an input, a textarea and a select that float, a field that undoes the form's statement and a checkbox the statement passes over. Submitting it with no name comes back with the error, and submitting it with one shows the values the form cleaned to. Nothing is saved. The page also draws a form that already fails, with a required field and its help text, a disabled field and a read-only field, and a form drawn with no layout that floats one field by name.
+
+- `/floating-labels/` is the page inside the django-mvp shell, reached from its sidebar as "Floating labels".
+- `/floating-labels/standalone/` is the same page styled by daisyUI's CDN build alone.
+
 Five more pages draw the containers and the notice django-crispy-forms keeps in `crispy_forms.bootstrap`. Each of the first three holds a form to submit whose required field sits in a tab, a group or a modal that is not open, so submitting it empty comes back with the tab, group or modal that holds the error open:
 
 - `/tabs/` is inside the django-mvp shell, reached from its sidebar. Its second form is already bound and fails in its third tab.

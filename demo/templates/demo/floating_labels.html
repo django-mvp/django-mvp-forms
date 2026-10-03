@@ -1,0 +1,46 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="floating-labels">
+    <c-text>
+      The form states a floating label for every field. The name, the notes and the
+      country float, the nickname undoes it and keeps its ordinary label, and the
+      checkbox is passed over. Submit the form with no name to see its error, or with
+      one to see what the form cleaned to.
+    </c-text>
+    {% crispy form %}
+  </c-section>
+  {% if cleaned %}
+    <c-section title="What the form cleaned to" level="3">
+      <ul id="{{ prefix }}-cleaned">
+        {% for item in cleaned %}
+          <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+        {% endfor %}
+      </ul>
+    </c-section>
+  {% endif %}
+  <c-section title="A form that already fails" level="3">
+    <c-text>
+      The name is required and has help text. The floating label keeps its required
+      marker, its help text and its error.
+    </c-text>
+    {% crispy failing_form %}
+  </c-section>
+  <c-section title="Disabled and read-only" level="3">
+    <c-text>
+      A disabled field keeps its ordinary label, so a person can still see what it
+      is. A read-only field floats.
+    </c-text>
+    {% crispy states_form %}
+  </c-section>
+  <c-section title="One field, by name" level="3">
+    <c-text>
+      This form has no layout. Only the title is named in the form's choices, so only
+      the title floats.
+    </c-text>
+    {% crispy by_name_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'floating-labels-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}

@@ -2336,3 +2336,181 @@ class TestDrawingSizesInThePage(DrawingSizesPageContract):
 
 class TestDrawingSizesInTheStandalonePage(DrawingSizesPageContract):
     url_name = "drawings-standalone"
+
+
+FLOATING_PREFIX = "floating"
+FLOATING_FAILING_PREFIX = "failing-floating"
+FLOATING_STATES_PREFIX = "floating-states"
+FLOATING_BY_NAME_PREFIX = "floating-by-name"
+FLOATING_POST = {
+    f"{FLOATING_PREFIX}-name": "Ada Lovelace",
+    f"{FLOATING_PREFIX}-notes": "Notes on the engine",
+    f"{FLOATING_PREFIX}-country": "uk",
+    f"{FLOATING_PREFIX}-nickname": "Ada",
+    f"{FLOATING_PREFIX}-subscribe": "on",
+    f"{FLOATING_PREFIX}-submit": "Submit",
+}
+FLOATING_EMPTY_POST = {f"{FLOATING_PREFIX}-submit": "Submit"}
+
+
+def floating_field(page, prefix, name):
+    return page.find(id=layout_field_id(prefix, name))
+
+
+def floating_label_around(page, prefix, name):
+    field = floating_field(page, prefix, name)
+    return field.find_parent("label", class_="floating-label")
+
+
+class FloatingLabelsPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    @pytest.mark.parametrize("name", ["name", "notes", "country"])
+    @pytest.mark.parametrize("prefix", [FLOATING_PREFIX, FLOATING_FAILING_PREFIX])
+    def test_the_floating_fields_are_drawn_inside_a_label_that_names_them(
+        self, page, prefix, name
+    ):
+        label = floating_label_around(page, prefix, name)
+
+        assert label["for"] == layout_field_id(prefix, name)
+
+    @pytest.mark.parametrize("name", ["nickname", "subscribe"])
+    def test_the_field_that_opts_out_and_the_checkbox_are_not_floating(
+        self, page, name
+    ):
+        field = floating_field(page, FLOATING_PREFIX, name)
+        label = page.find("label", attrs={"for": field["id"]})
+
+        assert floating_label_around(page, FLOATING_PREFIX, name) is None
+        assert label is not None
+        assert "floating-label" not in label.get("class", [])
+
+    def test_every_floating_input_and_textarea_has_a_placeholder_and_a_select_none(
+        self, page
+    ):
+        for name in ("name", "notes"):
+            assert floating_field(page, FLOATING_PREFIX, name)["placeholder"]
+        assert not floating_field(page, FLOATING_PREFIX, "country").has_attr(
+            "placeholder"
+        )
+
+    def test_the_form_that_already_fails_keeps_its_marker_help_and_error(self, page):
+        field = floating_field(page, FLOATING_FAILING_PREFIX, "name")
+        label = floating_label_around(page, FLOATING_FAILING_PREFIX, "name")
+        field_id = field["id"]
+
+        assert label.find(attrs={"aria-hidden": "true"}) is not None
+        assert page.find(id=f"{field_id}_helptext") is not None
+        assert page.find(id=f"{field_id}_error") is not None
+        assert field["aria-invalid"] == "true"
+        assert {f"{field_id}_helptext", f"{field_id}_error"} <= set(
+            field["aria-describedby"].split()
+        )
+
+    def test_the_disabled_field_has_its_ordinary_label_and_the_read_only_one_floats(
+        self, page
+    ):
+        locked = floating_field(page, FLOATING_STATES_PREFIX, "locked")
+        readonly = floating_field(page, FLOATING_STATES_PREFIX, "readonly")
+
+        assert locked.has_attr("disabled")
+        assert floating_label_around(page, FLOATING_STATES_PREFIX, "locked") is None
+        assert page.find("label", attrs={"for": locked["id"]}) is not None
+        assert readonly.has_attr("readonly")
+        assert floating_label_around(page, FLOATING_STATES_PREFIX, "readonly")
+
+    def test_the_form_with_no_layout_floats_only_the_field_named(self, page):
+        assert floating_label_around(page, FLOATING_BY_NAME_PREFIX, "title")
+        assert floating_label_around(page, FLOATING_BY_NAME_PREFIX, "company") is None
+
+    def test_the_form_to_submit_posts_with_a_token_and_a_button(self, page):
+        form = floating_field(page, FLOATING_PREFIX, "name").find_parent("form")
+
+        assert form["method"] == "post"
+        assert form.find("input", attrs={"name": "csrfmiddlewaretoken"}) is not None
+        assert form.find("input", attrs={"type": "submit"}) is not None
+
+    def test_only_the_form_to_submit_is_a_form_element(self, page):
+        for prefix in (
+            FLOATING_FAILING_PREFIX,
+            FLOATING_STATES_PREFIX,
+            FLOATING_BY_NAME_PREFIX,
+        ):
+            field = page.find(id=re.compile(f"^id_{prefix}-"))
+            assert field.find_parent("form") is None
+
+    def test_nothing_is_shown_as_cleaned_before_a_post(self, page):
+        assert page.find(id=f"{FLOATING_PREFIX}-cleaned") is None
+
+    def test_a_post_shows_what_the_form_cleaned_to(self, open_page):
+        page = open_page(self.url_name, FLOATING_POST)
+
+        for name, expected in (
+            ("name", "Ada Lovelace"),
+            ("country", "uk"),
+            ("nickname", "Ada"),
+            ("subscribe", "True"),
+        ):
+            shown = page.find(id=f"{FLOATING_PREFIX}-cleaned-{name}")
+            assert shown.get_text(strip=True) == expected
+
+    def test_a_post_keeps_the_fields_floating(self, open_page):
+        page = open_page(self.url_name, FLOATING_POST)
+
+        assert floating_label_around(page, FLOATING_PREFIX, "name")
+        assert floating_label_around(page, FLOATING_PREFIX, "nickname") is None
+
+    def test_a_post_of_the_empty_form_comes_back_with_its_error(self, open_page):
+        page = open_page(self.url_name, FLOATING_EMPTY_POST)
+
+        field = floating_field(page, FLOATING_PREFIX, "name")
+
+        assert page.find(id=f"{field['id']}_error") is not None
+        assert field["aria-invalid"] == "true"
+        assert page.find(id=f"{FLOATING_PREFIX}-cleaned") is None
+
+    @pytest.mark.parametrize(
+        "data",
+        [None, FLOATING_POST, FLOATING_EMPTY_POST],
+        ids=["get", "valid", "empty"],
+    )
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+
+        assert len(ids) == len(set(ids))
+
+
+class TestFloatingLabelsPage(FloatingLabelsPageContract):
+    url_name = "floating-labels"
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("floating-labels")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, page):
+        assert page.find("a", href=reverse("floating-labels-standalone")) is not None
+
+
+class TestStandaloneFloatingLabelsPage(FloatingLabelsPageContract):
+    url_name = "floating-labels-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, page):
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, page):
+        assert page.find("a", href=reverse("floating-labels")) is not None

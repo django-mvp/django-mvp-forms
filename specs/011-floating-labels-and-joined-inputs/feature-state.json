@@ -116,8 +116,27 @@
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestFloatingLabelsPage",
+              "tests/test_demo.py::TestStandaloneFloatingLabelsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -q -k FloatingLabels"
+            ],
+            "code": [
+              "demo/forms.py:790",
+              "demo/views.py:950",
+              "demo/urls.py:95",
+              "demo/menus.py:97",
+              "demo/settings.py:137",
+              "demo/templates/demo/floating_labels.html:1",
+              "demo/templates/demo/floating_labels_standalone.html:1"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

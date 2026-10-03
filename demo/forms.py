@@ -787,6 +787,81 @@ class DrawingOverrideForm(ChosenForm):
         )
 
 
+class FloatingLabelsForm(forms.Form):
+    """A form whose fields are drawn with a floating label, which can be posted.
+
+    The form states the floating label for every field and undoes it for
+    ``nickname``. The checkbox is passed over. ``name`` is required and has help
+    text, so a bound form with nothing in it comes back with an error in the
+    frame. Every id and the button's name carry the form's prefix, so two of these
+    forms on one page repeat no id. The form must be given a prefix.
+    """
+
+    name = forms.CharField(label=_("Name"), help_text=_("As on your card"))
+    notes = forms.CharField(label=_("Notes"), widget=forms.Textarea, required=False)
+    country = forms.ChoiceField(
+        label=_("Country"), choices=[("de", _("Germany")), ("uk", _("United Kingdom"))]
+    )
+    nickname = forms.CharField(label=_("Nickname"), required=False)
+    subscribe = forms.BooleanField(label=_("Subscribe"), required=False)
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """State the floating label, and add a submit button when the form posts.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.daisyui = FormChoices(
+            label="floating", fields={"nickname": Choice(label=None)}
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class FloatingStatesForm(ChosenForm):
+    """A disabled field and a read-only field, with a floating label stated.
+
+    The disabled field is drawn with its ordinary label and the read-only field
+    floats. Give the form a prefix, so no id repeats on the page.
+    """
+
+    locked = forms.CharField(label=_("Account"), initial="AC-1001", disabled=True)
+    readonly = forms.CharField(
+        label=_("Reference"),
+        initial="REF-2026",
+        widget=forms.TextInput(attrs={"readonly": True}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        """State the floating label for the form."""
+        super().__init__(*args, choices=FormChoices(label="floating"), **kwargs)
+
+
+class FloatingByNameForm(ChosenForm):
+    """A form drawn with no layout that floats one field, named in its choices.
+
+    Give the form a prefix, so no id repeats on the page.
+    """
+
+    title = forms.CharField(label=_("Title"), required=False)
+    company = forms.CharField(label=_("Company"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        """State the floating label for ``title`` by name."""
+        super().__init__(
+            *args,
+            choices=FormChoices(fields={"title": Choice(label="floating")}),
+            **kwargs,
+        )
+
+
 class InlineChoicesForm(forms.Form):
     """A form whose radio group and checkbox group are drawn along a line.
 
