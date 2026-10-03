@@ -83,3 +83,66 @@ A host project that selects the pack gets every text-like field of a plain Djang
 **Why defensible:** the project's rule is that stock daisyUI markup wins over custom styling, so the look of each input is daisyUI's to decide. The demo page is a list of fields in their states and needs no design.
 
 **ADR:** none.
+
+## D9. Class policy, as ruled for the build
+
+**Ruled by the maintainer, 2026-10-03, and it replaces the reading in D4:** every input, button
+and component is built from daisyUI component classes and modifiers. A plain Tailwind layout
+utility is allowed only where daisyUI has no component for the job, such as laying columns side
+by side. daisyUI's documented CDN install loads Tailwind's browser build beside the stylesheet,
+so no build step is needed either way. The package ships no stylesheet and defines no class.
+
+**In this feature:** no Tailwind utility is needed. The field frame is daisyUI's `fieldset`, and
+a test compares every class the pack emits with the class names in daisyUI's CDN stylesheet.
+
+## D10. The pack draws inputs with its own tag, not django-crispy-forms' `crispy_field`
+
+**Decision:** `{% daisyui_input field %}`, backed by the class `FieldInput`, passes the pack's
+class to `BoundField.as_widget` for one render.
+
+**Why:** `crispy_field` appends the widget's class name in lower case (`textinput`), which no
+daisyUI build defines, and it writes into `widget.attrs`, so the change outlives the render.
+
+**Revisit if:** django-crispy-forms offers a way to add a class without either effect.
+
+## D11. The ids around a field are Django's own
+
+**Decision:** help text carries the id `<auto_id>_helptext`, and one element carrying
+`<auto_id>_error` holds every error message. The pack invents no id for these.
+
+**Why:** Django 5.2, 6.0 and 6.1 all put `aria-describedby` on the input naming exactly those two
+ids. Per-message ids, as crispy-tailwind writes, would leave the input describing itself by an
+element that is not on the page.
+
+**Revisit if:** a supported Django version changes the ids it names.
+
+## D12. Where the pack corrects what Django puts on the input
+
+**Decision:** three cases, and no others. With errors turned off by the helper, the description
+names the help text only, or is removed. With the browser's required attribute turned off on the
+form, the input carries `aria-required`. With labels turned off, the input carries `aria-label`.
+A developer's own `aria-describedby` or `aria-label` on the widget is never replaced.
+
+**Why:** in each case Django's attributes and what the pack draws would otherwise disagree.
+Removing a description is the one thing `as_widget` cannot be asked to do, so that case builds
+the attributes and renders the widget directly.
+
+**Revisit if:** Django lets a caller suppress the description it adds.
+
+## D13. The pack adds no text of its own
+
+**Decision:** the required marker is an asterisk hidden from assistive technology. The
+requirement is carried by `required` or `aria-required`.
+
+**Why:** with no string of its own the pack needs no translation catalogue, and Article VIII says
+not to ship an empty one.
+
+**Revisit if:** a later feature has to add wording, at which point the package gains a catalogue.
+
+## D14. Search, telephone and colour inputs are left to the fallback
+
+**Decision:** the covered widgets are the ones the specification lists. Django's `SearchInput`,
+`TelInput` and `ColorInput` are drawn inside the frame with no daisyUI class.
+
+**Why:** the specification names nine kinds. Whether to add these is an open question on the
+tracker.
