@@ -26,7 +26,7 @@ Importance is a tag on each goal, not a ranking:
 | G8 | A host project can replace one template without forking the pack | Expected | | |
 | G9 | daisyUI's other form components, such as rating, range, floating label and joined inputs, are reachable from a layout | Expected | | |
 | G10 | A project moving from another crispy pack keeps its layout code, within reason | Expected | | |
-| G11 | Shared fields and widgets look native beside the pack's own inputs | Aspirational | | |
+| G11 | The package offers its own fields and widgets, for needs no third-party package meets, where the maintainers judge one worth sharing across projects, and each looks native beside the pack's own inputs | Aspirational | | |
 | G12 | Fields and widgets from popular third-party Django packages draw well in the pack, where the maintainers judge the package worth supporting | Aspirational | | |
 
 _Written 2026-10-03. Revise as the goals change._
