@@ -206,3 +206,19 @@ Django as a bare `aria-required`, which is not a valid ARIA value.
 **Why:** the demo's `mvp.context_processors.mvp_config` would fail a bare engine for a reason unrelated to the pack. With clearing disabled and a pack template loading `mvp`, the field-drawing tests stayed green on the cached compiled templates; with it, they failed.
 
 **Revisit if:** the pack needs a library of another package that is not in the denylist, or crispy caches a fifth loader.
+
+## D20. The demo's submittable form is required, has help text and is novalidate
+
+**Decision:** the submittable form on both pages is built with `required=True` and `with_help=True`, and its `<form>` carries `novalidate`.
+
+**Why:** a form of optional fields only ever answers with the form-wide error, so a reviewer would never see a field error from a submission. With required fields the browser would then refuse to send an empty form and no server-side error would show; `novalidate` hands validation to the server, which is the thing the page demonstrates. The five state forms are not forms of their own, they are drawn without a `<form>` element, so nothing on them can be submitted.
+
+**Revisit if:** a later feature wants to show the browser's own validation beside the server's.
+
+## D21. The two pages share one view mixin and one test contract
+
+**Decision:** `TextInputsMixin` builds the submittable form and a list of `{title, form}` states, and both views take it. The tests that hold for both pages live on `TextInputsPageContract`, which is not collected, and `TestTextInputsPage` and `TestStandaloneTextInputsPage` subclass it with their own `url_name` and the checks only that page can answer to.
+
+**Why:** the two pages are asked to draw the same forms and keep the same promises, so one set of checks run twice is what makes them twins. The mixin and the contract each have two present users.
+
+**Revisit if:** a third page needs the states drawn a different way.
