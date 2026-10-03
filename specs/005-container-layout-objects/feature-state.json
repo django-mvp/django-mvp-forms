@@ -93,8 +93,27 @@
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestTabsPage",
+              "tests/test_demo.py::TestContainersStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -n auto --dist loadscope (587 passed, exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:299",
+              "demo/views.py:302",
+              "demo/urls.py:37",
+              "demo/menus.py:34",
+              "demo/templates/demo/tabs.html:1",
+              "demo/templates/demo/containers_standalone.html:1"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

@@ -30,5 +30,10 @@ AppMenu.extend(
             view_name="layout-objects",
             extra_context={"label": "Layout objects", "icon": "layout-objects"},
         ),
+        MenuItem(
+            name="tabs",
+            view_name="tabs",
+            extra_context={"label": "Tabs", "icon": "tabs"},
+        ),
     ]
 )

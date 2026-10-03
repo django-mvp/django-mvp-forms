@@ -609,3 +609,89 @@ class TestStandaloneLayoutObjectsPage(LayoutObjectsPageContract):
     def test_it_links_back_to_the_shell_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("layout-objects")) is not None
+
+
+TABS_SUBMIT_PREFIX = "tabs"
+TABS_FAILING_PREFIX = "failing-tabs"
+
+
+def tab_radios(page, prefix):
+    return page.find(id=f"{prefix}-tabs").find_all("input", class_="tab")
+
+
+def checked_tabs(page, prefix):
+    radios = tab_radios(page, prefix)
+    return [index for index, radio in enumerate(radios) if radio.has_attr("checked")]
+
+
+class ContainersPageContract:
+    url_name = ""
+
+    def test_a_get_checks_the_first_tab_of_the_posting_form(self, open_page):
+        page = open_page(self.url_name)
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [0]
+
+    def test_a_post_of_the_empty_form_checks_the_second_tab(self, open_page):
+        page = open_page(self.url_name, {})
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [1]
+
+    def test_the_error_comes_back_inside_the_second_tabs_content(self, open_page):
+        page = open_page(self.url_name, {})
+        content = tab_radios(page, TABS_SUBMIT_PREFIX)[1].find_next_sibling()
+        error_id = layout_field_id(TABS_SUBMIT_PREFIX, "street") + "_error"
+        assert content.find(id=error_id) is not None
+
+    def test_the_form_that_already_fails_has_its_third_tab_checked(self, open_page):
+        page = open_page(self.url_name)
+        assert checked_tabs(page, TABS_FAILING_PREFIX) == [2]
+
+    def test_the_posting_form_has_a_form_element_and_the_failing_one_has_none(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+        posting = page.find(id=f"{TABS_SUBMIT_PREFIX}-tabs")
+        failing = page.find(id=f"{TABS_FAILING_PREFIX}-tabs")
+        assert posting.find_parent("form")["method"] == "post"
+        assert failing.find_parent("form") is None
+
+    @pytest.mark.parametrize("data", [None, {}], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestTabsPage(ContainersPageContract):
+    url_name = "tabs"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("tabs")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("containers-standalone")) is not None
+
+
+class TestContainersStandalonePage(ContainersPageContract):
+    url_name = "containers-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, open_page):
+        page = open_page(self.url_name)
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_tabs_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("tabs")) is not None

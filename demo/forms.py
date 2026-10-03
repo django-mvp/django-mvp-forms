@@ -1,6 +1,6 @@
 """The forms the demo project draws."""
 
-from crispy_forms.bootstrap import FormActions, StrictButton
+from crispy_forms.bootstrap import FormActions, StrictButton, Tab, TabHolder
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
     HTML,
@@ -294,3 +294,44 @@ class RowButtonsForm(forms.Form):
                 Submit(f"{prefix}-submit", _("Submit")), css_id=f"{prefix}-actions"
             ),
         )
+
+
+class TabsForm(forms.Form):
+    """A form whose fields sit behind three tabs.
+
+    The first tab holds an optional field and the second and third hold required
+    ones, so a bound form with nothing in it opens the second tab. Its layout is
+    built for each instance, and every id and button name in it carries the form's
+    prefix, so two of these forms on one page repeat no id. The form must be given
+    a prefix.
+    """
+
+    name = forms.CharField(label=_("Name"), required=False)
+    street = forms.CharField(label=_("Street"))
+    city = forms.CharField(label=_("City"))
+    note = forms.CharField(label=_("Note"))
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in every id and button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            TabHolder(
+                Tab(_("Profile"), "name", css_id=f"{prefix}-profile"),
+                Tab(_("Address"), "street", "city", css_id=f"{prefix}-address"),
+                Tab(_("Notes"), "note", css_id=f"{prefix}-notes"),
+                css_id=f"{prefix}-tabs",
+            ),
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{prefix}-submit", _("Submit")))

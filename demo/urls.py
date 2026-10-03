@@ -4,11 +4,13 @@ from django.urls import include, path
 
 from demo.views import (
     ChoiceInputsView,
+    ContainersStandaloneView,
     LayoutObjectsView,
     OverviewView,
     StandaloneChoiceInputsView,
     StandaloneLayoutObjectsView,
     StandaloneTextInputsView,
+    TabsView,
     TextInputsView,
 )
 
@@ -31,6 +33,12 @@ urlpatterns = [
         "layout-objects/standalone/",
         StandaloneLayoutObjectsView.as_view(),
         name="layout-objects-standalone",
+    ),
+    path("tabs/", TabsView.as_view(), name="tabs"),
+    path(
+        "containers/standalone/",
+        ContainersStandaloneView.as_view(),
+        name="containers-standalone",
     ),
     # django-mvp's Account Center, with a development sign-in and sign-out
     # until an account app such as allauth is installed.

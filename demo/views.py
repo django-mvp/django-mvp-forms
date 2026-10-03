@@ -15,6 +15,7 @@ from demo.forms import (
     HelperButtonsForm,
     LayoutObjectsForm,
     RowButtonsForm,
+    TabsForm,
     TextInputsForm,
     TextStatesForm,
 )
@@ -296,3 +297,50 @@ class StandaloneLayoutObjectsView(LayoutObjectsMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/layout_objects_standalone.html"
+
+
+class TabsMixin:
+    """The forms the tabs page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    tabs_prefix = "tabs"
+    tabs_failing_prefix = "failing-tabs"
+    failing_data = {
+        "failing-tabs-name": "Ada",
+        "failing-tabs-street": "12 Example Street",
+        "failing-tabs-city": "London",
+    }
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault("tabs_form", TabsForm(prefix=self.tabs_prefix))
+        kwargs["failing_tabs_form"] = TabsForm(
+            self.failing_data, prefix=self.tabs_failing_prefix, posts=False
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = TabsForm(request.POST, prefix=self.tabs_prefix)
+        return self.render_to_response(self.get_context_data(tabs_form=form))
+
+
+class TabsView(TabsMixin, MVPTemplateView):
+    """Fields behind tabs, inside the application shell."""
+
+    template_name = "demo/tabs.html"
+    page_title = "Tabs"
+    page_subtitle = "Fields grouped behind tabs, opening on the first error"
+    breadcrumbs = [{"text": "Tabs"}]
+
+
+class ContainersStandaloneView(TabsMixin, TemplateView):
+    """The container pages for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/containers_standalone.html"
