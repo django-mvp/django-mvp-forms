@@ -94,3 +94,7 @@ Watch: the standalone page's no-django-mvp, no-Cotton check is the one the attac
 ## 2026-10-03T19:40:10Z · Forge · converge
 
 Converged: no gap between the specification and what was built. Six decision records written (0022 to 0027), three earlier ones marked as amended, README status line brought up to date. Main merged in after each story. Next: code review.
+
+## 2026-10-03T19:52:40Z · Forge · review
+
+Code review: one high and two low findings, all fixed (T013, T014). Review outcome recorded on the pull request. Next: mark ready, lay out the walkthrough.
