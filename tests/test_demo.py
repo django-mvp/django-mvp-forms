@@ -9,10 +9,15 @@ import pytest
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.shortcuts import resolve_url
+from django.template.loader import get_template
 from django.urls import reverse
 
+from demo.forms import DAISYUI_VERSION, THEME_NAMES
 from mvp_forms.choices import Modifiers
 from tests.forms import ruled_data
+from tests.legibility.catalogue import Catalogue
+from tests.legibility.reader import Reader
+from tests.legibility.themes import THEMES_CSS, Themes
 
 # The address a page guarded by LoginRequiredMixin sends an anonymous visitor to.
 SIGN_IN_URL = resolve_url(settings.LOGIN_URL)
@@ -2336,3 +2341,91 @@ class TestDrawingSizesInThePage(DrawingSizesPageContract):
 
 class TestDrawingSizesInTheStandalonePage(DrawingSizesPageContract):
     url_name = "drawings-standalone"
+
+
+THEMES_FORMS_ID = "theme-forms"
+THEMES_STYLESHEET = (
+    f"https://cdn.jsdelivr.net/npm/daisyui@{Themes.version(THEMES_CSS.read_text())}"
+    "/themes.css"
+)
+DAISYUI_CDN = "https://cdn.jsdelivr.net/npm/daisyui@5"
+
+
+class TestThemeList:
+    def test_the_demo_lists_the_themes_the_suite_pins(self):
+        assert list(THEME_NAMES) == [theme.name for theme in Themes.shipped()]
+
+    def test_the_demo_names_the_version_the_suite_pins(self):
+        assert Themes.version(THEMES_CSS.read_text()) == DAISYUI_VERSION
+
+
+class ThemesPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    def test_the_chooser_has_one_radio_for_each_shipped_theme_and_no_other(self, page):
+        radios = page.find_all("input", class_="theme-controller")
+        assert sorted(radio["value"] for radio in radios) == sorted(
+            theme.name for theme in Themes.shipped()
+        )
+
+    def test_the_chooser_is_one_radio_group(self, page):
+        radios = page.find_all("input", class_="theme-controller")
+        assert {radio["type"] for radio in radios} == {"radio"}
+        assert len({radio["name"] for radio in radios}) == 1
+
+    def test_it_links_daisyuis_themes_at_the_pinned_version(self, page):
+        links = [link["href"] for link in page.find_all("link", rel="stylesheet")]
+        assert THEMES_STYLESHEET in links
+
+    def test_the_forms_hold_every_pairing_the_catalogue_holds(self, page):
+        forms_element = page.find(id=THEMES_FORMS_ID)
+        assert forms_element is not None
+
+        read = {m.pairing.name for m in Reader("themes").read(forms_element)}
+        wanted = {m.pairing.name for m in Catalogue.measurements()}
+
+        assert wanted <= read, sorted(wanted - read)
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestThemesPage(ThemesPageContract):
+    url_name = "themes"
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("themes")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, page):
+        assert page.find("a", href=reverse("themes-standalone")) is not None
+
+
+class TestStandaloneThemesPage(ThemesPageContract):
+    url_name = "themes-standalone"
+
+    def test_it_loads_daisyuis_cdn_install_and_themes_and_no_other_stylesheet(
+        self, page
+    ):
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [DAISYUI_CDN, THEMES_STYLESHEET]
+
+    def test_it_carries_none_of_the_shells_navigation(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_draws_no_cotton_component(self):
+        source = get_template("demo/themes_standalone.html").template.source
+        assert "<c-" not in source
+        assert "cotton" not in source
+
+    def test_it_links_back_to_the_shell_page(self, page):
+        assert page.find("a", href=reverse("themes")) is not None

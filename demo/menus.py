@@ -103,5 +103,10 @@ AppMenu.extend(
             view_name="formset-table",
             extra_context={"label": "Formset, as a table", "icon": "formset-table"},
         ),
+        MenuItem(
+            name="themes",
+            view_name="themes",
+            extra_context={"label": "Themes", "icon": "themes"},
+        ),
     ]
 )

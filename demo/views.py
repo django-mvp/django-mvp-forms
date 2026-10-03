@@ -2,6 +2,7 @@
 
 import datetime
 
+from crispy_forms.helper import FormHelper
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
@@ -11,8 +12,11 @@ from django.views.generic import TemplateView
 from mvp.views import MVPTemplateView
 
 from demo.forms import (
+    DAISYUI_VERSION,
     ORDER_LINE_LIMIT,
+    THEME_NAMES,
     AccordionForm,
+    AlertColoursForm,
     AlertForm,
     AttachedTextForm,
     ButtonBarForm,
@@ -28,17 +32,20 @@ from demo.forms import (
     InlineFieldForm,
     InputKindsForm,
     LayoutObjectsForm,
+    LockedKindsForm,
     ModalForm,
     MultiWidgetFieldForm,
     OrderLineFormSet,
     OverrideForm,
     PairForm,
+    ReadOnlyKindsForm,
     RowButtonsForm,
     StackedOrderHelper,
     TableOrderHelper,
     TabsForm,
     TextInputsForm,
     TextStatesForm,
+    UneditableChoicesForm,
     UneditableFieldForm,
 )
 from mvp_forms.choices import FormChoices, Modifiers
@@ -1027,3 +1034,288 @@ class StandaloneTableFormsetView(OrderFormsetMixin, TemplateView):
 
     helper_class = TableOrderHelper
     template_name = "demo/formset_table_standalone.html"
+
+
+class ThemesMixin:
+    """The forms both themes pages draw: every form state the pack has.
+
+    Each form has a prefix of its own, so no id repeats on the page, and none of
+    them posts anywhere. The forms are gathered in groups, each a title and a list
+    of items, and an item is a title and a form, or a title, a formset and its
+    helper.
+    """
+
+    owner = "Ada Lovelace"
+    modal_prefix = "modal"
+    failing_prefix = "failing"
+    drawing_states = ("off", "on", "help", "error", "disabled")
+
+    def build_item(self, title, form):
+        """Make a form draw apart: no form element, no token, and a helper.
+
+        Args:
+            title: The heading the form is drawn under.
+            form: The form. It gets a helper when it has none.
+
+        Returns:
+            A dict holding the title and the form.
+        """
+        if not hasattr(form, "helper"):
+            form.helper = FormHelper(form)
+        form.helper.form_tag = False
+        form.helper.disable_csrf = True
+        return {"title": title, "form": form}
+
+    def build_pairs(self, title, form_class, **kwargs):
+        """Build a form unbound and the same form bound to nothing.
+
+        Args:
+            title: What the forms are, without their state.
+            form_class: The form to build. It must take a prefix.
+            **kwargs: Passed to the form.
+
+        Returns:
+            Two items, the unbound form and then the bound one.
+        """
+        name = form_class.__name__
+        return [
+            self.build_item(f"{title}, unbound", form_class(prefix=name, **kwargs)),
+            self.build_item(
+                f"{title}, with errors",
+                form_class({}, prefix=f"{name}-errors", **kwargs),
+            ),
+        ]
+
+    def build_inputs(self):
+        """Build the text, choice and file inputs, and the disabled and read-only.
+
+        Returns:
+            A list of items.
+        """
+        initial = {"text": "Some text", "textarea": "Some lines\nof text"}
+        return [
+            *self.build_pairs(
+                "Text inputs", TextInputsForm, required=True, with_help=True
+            ),
+            *self.build_pairs(
+                "Choice, boolean and file inputs",
+                ChoiceInputsForm,
+                required=True,
+                with_help=True,
+            ),
+            self.build_item(
+                "Choice, boolean and file inputs, disabled",
+                ChoiceInputsForm(prefix="inputs-disabled", disabled=True),
+            ),
+            self.build_item(
+                "Text inputs, disabled",
+                TextStatesForm(prefix="text-disabled", initial=initial, disabled=True),
+            ),
+            self.build_item(
+                "Text inputs, read-only",
+                TextStatesForm(prefix="text-readonly", initial=initial, read_only=True),
+            ),
+            self.build_item(
+                "Inputs of every kind, read-only", ReadOnlyKindsForm(prefix="readonly")
+            ),
+        ]
+
+    def build_containers(self):
+        """Build the layout objects, tabs, accordions, modal and alerts.
+
+        Returns:
+            A list of items.
+        """
+        return [
+            *self.build_pairs("Layout objects", LayoutObjectsForm),
+            *self.build_pairs("Tabs", TabsForm),
+            *self.build_pairs("Accordion", AccordionForm),
+            self.build_item(
+                "Accordion, chosen groups", ChosenGroupsForm(prefix="chosen")
+            ),
+            self.build_item("Modal", ModalForm(prefix=self.modal_prefix)),
+            self.build_item(
+                "Modal, with errors",
+                ModalForm({}, prefix=f"{self.modal_prefix}-errors"),
+            ),
+            *self.build_pairs("Alerts", AlertForm),
+            self.build_item(
+                "Alerts in every colour", AlertColoursForm(prefix="alerts")
+            ),
+        ]
+
+    def build_decorated(self):
+        """Build the forms whose fields are decorated.
+
+        Returns:
+            A list of items.
+        """
+        return [
+            *self.build_pairs("Attached text", AttachedTextForm),
+            *self.build_pairs("Inline choices", InlineChoicesForm),
+            *self.build_pairs("Field with buttons", FieldWithButtonsForm),
+            *self.build_pairs("Uneditable field", UneditableFieldForm),
+            *self.build_pairs("Uneditable choices", UneditableChoicesForm),
+            *self.build_pairs("Inline field", InlineFieldForm),
+            *self.build_pairs("Multi-widget field", MultiWidgetFieldForm),
+        ]
+
+    def build_drawings(self):
+        """Build the checkbox, toggle and switch in every state, size and colour.
+
+        Returns:
+            A list of items.
+        """
+        states = [
+            self.build_item(
+                f"{drawing}, {state}",
+                DrawingStateForm(
+                    prefix=f"{drawing}-{state}", drawing=drawing, state=state
+                ),
+            )
+            for drawing in Modifiers.drawings
+            for state in self.drawing_states
+        ]
+        sizes = [
+            self.build_item(
+                f"Drawings, size {name}",
+                DrawingTrioForm(prefix=f"drawing-size-{name}", size=name),
+            )
+            for name in Modifiers.names("size", "toggle")
+        ]
+        colors = [
+            self.build_item(
+                f"Drawings, colour {name}",
+                DrawingTrioForm(prefix=f"drawing-color-{name}", color=name),
+            )
+            for name in Modifiers.names("color", "toggle")
+        ]
+        override = self.build_item(
+            "Drawings, overridden", DrawingOverrideForm(prefix="drawing-override")
+        )
+        return [*states, *sizes, *colors, override]
+
+    def build_choices(self):
+        """Build every size, colour and variant on every kind of input and button.
+
+        Returns:
+            A list of items.
+        """
+        inputs = [
+            self.build_item(
+                f"Inputs, {kind} {name}",
+                InputKindsForm(
+                    prefix=f"inputs-{kind}-{name}", choices=FormChoices(**{kind: name})
+                ),
+            )
+            for kind in ("size", "color", "variant")
+            for name in Modifiers.names(kind, None)
+        ]
+        buttons = [
+            self.build_item(
+                f"Buttons, {name}",
+                ButtonBarForm(
+                    prefix=f"buttons-{name}", choices=FormChoices(button_color=name)
+                ),
+            )
+            for name in Modifiers.names("color", Modifiers.button)
+        ]
+        pairs = [
+            self.build_item(
+                f"{kind} {name}",
+                PairForm(
+                    prefix=f"pair-{kind}-{name}", choices=FormChoices(**{kind: name})
+                ),
+            )
+            for kind in ("size", "color")
+            for name in Modifiers.names(kind, None)
+        ]
+        locked = [
+            self.build_item(
+                f"Disabled inputs, variant {name}",
+                LockedKindsForm(
+                    prefix=f"locked-{name}", choices=FormChoices(variant=name)
+                ),
+            )
+            for name in Modifiers.names("variant", None)
+        ]
+        bar = self.build_item("Buttons", ButtonBarForm(prefix="buttons"))
+        override = self.build_item("Overridden", OverrideForm(prefix="override"))
+        return [*inputs, *locked, bar, *buttons, *pairs, override]
+
+    def build_formset(self, title, helper_class, prefix):
+        """Build an order formset, unbound and failing in all three ways.
+
+        Args:
+            title: What the formset is.
+            helper_class: The helper that draws it.
+            prefix: The formset's prefix, with ``-errors`` added for the failing one.
+
+        Returns:
+            Two items, each a dict holding the title, the formset and its helper.
+        """
+        failing = f"{prefix}-errors"
+        data = {
+            f"{failing}-TOTAL_FORMS": str(len(OrderFormsetMixin.failing_lines)),
+            f"{failing}-INITIAL_FORMS": "0",
+        }
+        for index, line in enumerate(OrderFormsetMixin.failing_lines):
+            for name, value in line.items():
+                data[f"{failing}-{index}-{name}"] = value
+        return [
+            {
+                "title": f"{title}, unbound",
+                "formset": OrderLineFormSet(prefix=prefix),
+                "helper": helper_class(prefix, form_tag=False),
+            },
+            {
+                "title": f"{title}, with errors",
+                "formset": OrderLineFormSet(data, prefix=failing),
+                "helper": helper_class(failing, form_tag=False),
+            },
+        ]
+
+    def build_groups(self):
+        """Gather every form state into the groups the page draws.
+
+        Returns:
+            A list of dicts holding each group's title and items.
+        """
+        return [
+            {"title": "Inputs", "items": self.build_inputs()},
+            {"title": "Containers", "items": self.build_containers()},
+            {"title": "Decorated fields", "items": self.build_decorated()},
+            {"title": "Drawings", "items": self.build_drawings()},
+            {"title": "Sizes, colours and variants", "items": self.build_choices()},
+            {
+                "title": "Formsets",
+                "items": [
+                    *self.build_formset("Stacked", StackedOrderHelper, "stacked"),
+                    *self.build_formset("Table", TableOrderHelper, "table"),
+                ],
+            },
+        ]
+
+    def get_context_data(self, **kwargs):
+        """Add the groups of forms, the theme names and the daisyUI version."""
+        kwargs["groups"] = self.build_groups()
+        kwargs["owner"] = self.owner
+        kwargs["themes"] = THEME_NAMES
+        kwargs["version"] = DAISYUI_VERSION
+        kwargs["modal_dialog_id"] = f"{self.modal_prefix}-dialog"
+        return super().get_context_data(**kwargs)
+
+
+class ThemesView(ThemesMixin, MVPTemplateView):
+    """Every form state under any daisyUI theme, inside the application shell."""
+
+    template_name = "demo/themes.html"
+    page_title = "Themes"
+    page_subtitle = "Every form the pack draws, under any theme daisyUI ships"
+    breadcrumbs = [{"text": "Themes"}]
+
+
+class StandaloneThemesView(ThemesMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/themes_standalone.html"

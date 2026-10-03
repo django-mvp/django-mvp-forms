@@ -136,6 +136,7 @@ EASY_ICONS = {
             "drawings": "bi bi-toggles",
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",
+            "themes": "bi bi-brush",
         },
     },
 }
