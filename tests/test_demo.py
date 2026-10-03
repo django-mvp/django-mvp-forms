@@ -1487,3 +1487,80 @@ class TestDrawingStatesInThePage(DrawingStatesPageContract):
 
 class TestDrawingStatesInTheStandalonePage(DrawingStatesPageContract):
     url_name = "drawings-standalone"
+
+
+DRAWING_OVERRIDE_PREFIX = "override"
+DRAWING_COMPONENTS = {"checkbox": "checkbox", "toggle": "toggle", "switch": "toggle"}
+
+
+def drawing_sample(page, kind, name, drawing):
+    return page.find(id=f"id_{kind}-{name}-{drawing}")
+
+
+class DrawingSizesPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_every_drawing_is_drawn_at_every_size_the_table_has(self, page, drawing):
+        component = DRAWING_COMPONENTS[drawing]
+        for name, expected in Modifiers.sizes[component].items():
+            tag = drawing_sample(page, "size", name, drawing)
+            assert (tag.name, tag["type"]) == ("input", "checkbox")
+            assert expected in tag["class"]
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_every_drawing_is_drawn_in_every_colour_the_table_has(self, page, drawing):
+        component = DRAWING_COMPONENTS[drawing]
+        for name, expected in Modifiers.colors[component].items():
+            tag = drawing_sample(page, "color", name, drawing)
+            assert (tag.name, tag["type"]) == ("input", "checkbox")
+            assert expected in tag["class"]
+
+    def test_the_sizes_and_colours_shown_are_those_of_the_toggle_table(self, page):
+        for kind, table in (("size", Modifiers.sizes), ("color", Modifiers.colors)):
+            shown = {
+                tag["id"].split("-")[1]
+                for tag in page.find_all(id=re.compile(f"^id_{kind}-.*-toggle$"))
+            }
+            assert shown == set(table["toggle"])
+
+    @pytest.mark.parametrize("drawing", ["toggle", "switch"])
+    def test_no_checkbox_modifier_is_written_on_a_toggle_or_a_switch(
+        self, page, drawing
+    ):
+        for kind in ("size", "color"):
+            for tag in page.find_all(id=re.compile(f"^id_{kind}-.*-{drawing}$")):
+                assert not [c for c in tag["class"] if c.startswith("checkbox")]
+
+    def test_a_switch_is_a_switch_at_every_size_and_in_every_colour(self, page):
+        for tag in page.find_all(id=re.compile("^id_(size|color)-.*-switch$")):
+            assert tag["role"] == "switch"
+
+    def test_the_field_that_states_nothing_takes_the_forms_size_and_colour(self, page):
+        tag = page.find(id=f"id_{DRAWING_OVERRIDE_PREFIX}-inherits")
+        assert tag["role"] == "switch"
+        assert Modifiers.sizes["toggle"]["sm"] in tag["class"]
+        assert Modifiers.colors["toggle"]["primary"] in tag["class"]
+
+    def test_the_field_that_overrides_takes_its_own_size_and_colour(self, page):
+        tag = page.find(id=f"id_{DRAWING_OVERRIDE_PREFIX}-overrides")
+        assert Modifiers.sizes["toggle"]["xl"] in tag["class"]
+        assert Modifiers.colors["toggle"]["accent"] in tag["class"]
+        assert Modifiers.sizes["toggle"]["sm"] not in tag["class"]
+        assert Modifiers.colors["toggle"]["primary"] not in tag["class"]
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestDrawingSizesInThePage(DrawingSizesPageContract):
+    url_name = "drawings"
+
+
+class TestDrawingSizesInTheStandalonePage(DrawingSizesPageContract):
+    url_name = "drawings-standalone"

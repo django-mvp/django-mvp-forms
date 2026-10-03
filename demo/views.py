@@ -17,8 +17,10 @@ from demo.forms import (
     ButtonBarForm,
     ChoiceInputsForm,
     ChosenGroupsForm,
+    DrawingOverrideForm,
     DrawingsForm,
     DrawingStateForm,
+    DrawingTrioForm,
     HelperButtonsForm,
     InputKindsForm,
     LayoutObjectsForm,
@@ -599,10 +601,41 @@ class DrawingsMixin:
             for drawing in self.drawing_names
         ]
 
+    def build_sizes(self):
+        """Build one form of the three drawings for each size a toggle has.
+
+        Returns:
+            A list of dicts holding each size's name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": DrawingTrioForm(prefix=f"size-{name}", size=name),
+            }
+            for name in Modifiers.names("size", "toggle")
+        ]
+
+    def build_colors(self):
+        """Build one form of the three drawings for each colour a toggle has.
+
+        Returns:
+            A list of dicts holding each colour's name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": DrawingTrioForm(prefix=f"color-{name}", color=name),
+            }
+            for name in Modifiers.names("color", "toggle")
+        ]
+
     def get_context_data(self, **kwargs):
         """Add the form, what it cleaned to when it was posted, and the states."""
         form = kwargs.setdefault("form", DrawingsForm(prefix=self.drawings_prefix))
         kwargs["drawing_states"] = self.build_drawing_states()
+        kwargs["sizes"] = self.build_sizes()
+        kwargs["colors"] = self.build_colors()
+        kwargs["override_form"] = DrawingOverrideForm(prefix="override")
         kwargs["cleaned"] = self.build_cleaned(form)
         kwargs["prefix"] = self.drawings_prefix
         return super().get_context_data(**kwargs)

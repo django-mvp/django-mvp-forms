@@ -102,6 +102,13 @@ class Modifiers:
             "lg": "checkbox-lg",
             "xl": "checkbox-xl",
         },
+        "toggle": {
+            "xs": "toggle-xs",
+            "sm": "toggle-sm",
+            "md": "toggle-md",
+            "lg": "toggle-lg",
+            "xl": "toggle-xl",
+        },
         "radio": {
             "xs": "radio-xs",
             "sm": "radio-sm",
@@ -167,6 +174,16 @@ class Modifiers:
             "success": "checkbox-success",
             "warning": "checkbox-warning",
             "error": "checkbox-error",
+        },
+        "toggle": {
+            "neutral": "toggle-neutral",
+            "primary": "toggle-primary",
+            "secondary": "toggle-secondary",
+            "accent": "toggle-accent",
+            "info": "toggle-info",
+            "success": "toggle-success",
+            "warning": "toggle-warning",
+            "error": "toggle-error",
         },
         "radio": {
             "neutral": "radio-neutral",

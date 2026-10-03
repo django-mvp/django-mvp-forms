@@ -32,6 +32,33 @@
       {% endfor %}
     </c-section>
   {% endfor %}
+  <c-section title="Sizes" level="3">
+    <c-text>
+      A toggle and a switch take the size stated for the form, as a checkbox does.
+    </c-text>
+    {% for size in sizes %}
+      <c-section :title="size.title" level="4">
+        {% crispy size.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Colours" level="3">
+    <c-text>
+      They take its colour too. A toggle and a switch have no variant.
+    </c-text>
+    {% for color in colors %}
+      <c-section :title="color.title" level="4">
+        {% crispy color.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Overriding what the form states" level="3">
+    <c-text>
+      The form states a small size and the primary colour. The switch takes both, and
+      the toggle states a size and a colour of its own in the layout.
+    </c-text>
+    {% crispy override_form %}
+  </c-section>
   <c-text>
     <c-link href="{% url 'drawings-standalone' %}" text="The same page without django-mvp" />
   </c-text>

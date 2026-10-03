@@ -18,6 +18,18 @@ TAG = "{% crispy form %}"
 NAMES = ("remember", "notify", "publish")
 DRAWINGS = ["checkbox", "toggle", "switch"]
 TABLE = "daisyui/table_inline_formset.html"
+TOGGLES = ["toggle", "switch"]
+SIZES = ("xs", "sm", "md", "lg", "xl")
+COLORS = (
+    "neutral",
+    "primary",
+    "secondary",
+    "accent",
+    "info",
+    "success",
+    "warning",
+    "error",
+)
 ERROR_MODIFIERS = {
     "checkbox": "checkbox-error",
     "toggle": "toggle-error",
@@ -282,6 +294,181 @@ class TestDrawingKeepsWhatACheckboxHas:
         frame = soup.find(id="div_id_agree")
         assert frame.find("label") is None
         assert frame.find("input")["aria-label"] == form["agree"].label
+
+
+class TestDrawingSizeAndColour:
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_the_forms_size_is_taken(self, draw, source, drawing):
+        choices = FormChoices(size="sm", fields={"notify": Choice(drawing=drawing)})
+
+        soup = draw(source, form=DrawnBooleansForm(choices=choices))
+
+        assert "toggle-sm" in classes_of(soup, "notify")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_the_forms_colour_is_taken(self, draw, source, drawing):
+        choices = FormChoices(
+            color="primary", fields={"notify": Choice(drawing=drawing)}
+        )
+
+        soup = draw(source, form=DrawnBooleansForm(choices=choices))
+
+        assert "toggle-primary" in classes_of(soup, "notify")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_the_fields_own_size_and_colour_win_when_stated_by_name(
+        self, draw, source, drawing
+    ):
+        choices = FormChoices(
+            size="sm",
+            color="primary",
+            fields={"notify": Choice(drawing=drawing, size="lg", color="accent")},
+        )
+
+        classes = classes_of(
+            draw(source, form=DrawnBooleansForm(choices=choices)), "notify"
+        )
+
+        assert {"toggle-lg", "toggle-accent"} <= classes
+        assert not {"toggle-sm", "toggle-primary"} & classes
+
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_the_fields_own_size_and_colour_win_when_stated_in_the_layout(
+        self, draw, drawing
+    ):
+        form = DrawnBooleansForm(
+            layout=[
+                "remember",
+                Choice("notify", drawing=drawing, size="xl", color="error"),
+            ],
+            choices=FormChoices(size="sm", color="primary"),
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert {"toggle-xl", "toggle-error"} <= classes_of(soup, "notify")
+        assert {"checkbox-sm", "checkbox-primary"} <= classes_of(soup, "remember")
+
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_a_drawing_a_size_and_a_colour_stated_together_all_take_effect(
+        self, draw, drawing
+    ):
+        form = DrawnBooleansForm(
+            layout=[Choice("notify", drawing=drawing, size="xs", color="success")]
+        )
+
+        tag = draw(TAG, form=form).find(id="id_notify")
+
+        assert {"toggle", "toggle-xs", "toggle-success"} <= set(tag["class"])
+        assert tag.get("role") == ("switch" if drawing == "switch" else None)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_with_nothing_stated_no_size_or_colour_is_written(
+        self, draw, source, drawing
+    ):
+        choices = stating(notify=drawing)
+
+        classes = classes_of(
+            draw(source, form=DrawnBooleansForm(choices=choices)), "notify"
+        )
+
+        assert "toggle" in classes
+        assert not {name for name in classes if name.startswith("toggle-")}
+
+    @pytest.mark.parametrize("size", SIZES)
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_every_size_is_written_as_its_toggle_class(self, draw, drawing, size):
+        choices = FormChoices(size=size, fields={"notify": Choice(drawing=drawing)})
+
+        soup = draw(TAG, form=DrawnBooleansForm(choices=choices))
+
+        assert f"toggle-{size}" in classes_of(soup, "notify")
+
+    @pytest.mark.parametrize("color", COLORS)
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_every_colour_is_written_as_its_toggle_class(self, draw, drawing, color):
+        choices = FormChoices(color=color, fields={"notify": Choice(drawing=drawing)})
+
+        soup = draw(TAG, form=DrawnBooleansForm(choices=choices))
+
+        assert f"toggle-{color}" in classes_of(soup, "notify")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_a_field_in_error_keeps_the_error_modifier_and_drops_the_colour(
+        self, draw, source, drawing
+    ):
+        choices = FormChoices(
+            size="sm",
+            color="primary",
+            fields={
+                "agree": Choice(drawing=drawing),
+                "notify": Choice(drawing=drawing),
+            },
+        )
+
+        soup = draw(source, form=RequiredDrawnBooleanForm({}, choices=choices))
+
+        assert {"toggle-error", "toggle-sm"} <= classes_of(soup, "agree")
+        assert "toggle-primary" not in classes_of(soup, "agree")
+        assert "toggle-primary" in classes_of(soup, "notify")
+
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_no_checkbox_modifier_is_written_on_a_toggle(self, draw, drawing):
+        choices = FormChoices(
+            size="lg",
+            color="info",
+            fields={
+                "agree": Choice(drawing=drawing),
+                "notify": Choice(drawing=drawing),
+            },
+        )
+
+        soup = draw(TAG, form=RequiredDrawnBooleanForm({}, choices=choices))
+
+        for name in ("agree", "notify"):
+            assert not {c for c in classes_of(soup, name) if c.startswith("checkbox")}
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_a_variant_the_form_states_is_passed_over(self, draw, source, drawing):
+        choices = FormChoices(
+            variant="ghost", fields={"notify": Choice(drawing=drawing)}
+        )
+
+        classes = classes_of(
+            draw(source, form=DrawnBooleansForm(choices=choices)), "notify"
+        )
+
+        assert not {name for name in classes if name.startswith("toggle-")}
+
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_a_variant_stated_on_the_field_raises(self, draw, drawing):
+        form = DrawnBooleansForm(
+            layout=[Choice("notify", drawing=drawing, variant="ghost")]
+        )
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.allowed) == ("variant", "ghost", ())
+        assert error.target == "notify"
+
+    @pytest.mark.parametrize("drawing", TOGGLES)
+    def test_a_size_the_field_states_that_is_not_one_raises_naming_the_field(
+        self, draw, drawing
+    ):
+        form = DrawnBooleansForm(
+            layout=[Choice("notify", drawing=drawing, size="huge")]
+        )
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.target) == ("size", "huge", "notify")
+        assert error.allowed == SIZES
 
 
 class TestDrawingsInAFormset:

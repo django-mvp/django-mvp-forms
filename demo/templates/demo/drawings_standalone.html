@@ -55,6 +55,36 @@
           {% endfor %}
         </div>
       </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Sizes</h2>
+          <p>A toggle and a switch take the size stated for the form, as a checkbox does.</p>
+          {% for size in sizes %}
+            <h3 class="font-semibold">{{ size.title }}</h3>
+            {% crispy size.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Colours</h2>
+          <p>They take its colour too. A toggle and a switch have no variant.</p>
+          {% for color in colors %}
+            <h3 class="font-semibold">{{ color.title }}</h3>
+            {% crispy color.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Overriding what the form states</h2>
+          <p>
+            The form states a small size and the primary colour. The switch takes both, and
+            the toggle states a size and a colour of its own in the layout.
+          </p>
+          {% crispy override_form %}
+        </div>
+      </section>
     </main>
   </body>
 </html>

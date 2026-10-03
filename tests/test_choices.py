@@ -303,6 +303,45 @@ class TestModifiersDrawings:
         }
 
 
+class TestModifiersToggle:
+    def test_a_toggle_has_the_same_sizes_and_colours_as_the_other_inputs(self):
+        assert tuple(Modifiers.sizes["toggle"]) == SIZES
+        assert tuple(Modifiers.colors["toggle"]) == COLORS
+
+    def test_a_toggle_has_no_variant(self):
+        assert "toggle" not in Modifiers.variants
+
+    @pytest.mark.parametrize("name", SIZES)
+    def test_each_size_resolves_to_its_toggle_class(self, name):
+        assert Modifiers.resolve("size", "toggle", form=name) == f"toggle-{name}"
+
+    @pytest.mark.parametrize("name", COLORS)
+    def test_each_colour_resolves_to_its_toggle_class(self, name):
+        assert Modifiers.resolve("color", "toggle", own=name) == f"toggle-{name}"
+
+    def test_a_variant_the_form_states_is_passed_over(self):
+        assert Modifiers.resolve("variant", "toggle", form="ghost") is None
+
+    def test_a_variant_a_field_states_raises_with_nothing_allowed(self):
+        with pytest.raises(InvalidChoice) as caught:
+            Modifiers.resolve("variant", "toggle", own="ghost", target="notify")
+
+        assert (caught.value.kind, caught.value.value) == ("variant", "ghost")
+        assert (caught.value.allowed, caught.value.target) == ((), "notify")
+
+    def test_a_field_in_error_drops_the_colour_and_keeps_the_size(self):
+        assert Modifiers.resolve("color", "toggle", form="info", in_error=True) is None
+        assert Modifiers.resolve("size", "toggle", form="sm", in_error=True) == (
+            "toggle-sm"
+        )
+
+    def test_an_unknown_size_raises_with_the_names_allowed(self):
+        with pytest.raises(InvalidChoice) as caught:
+            Modifiers.resolve("size", "toggle", own="huge", target="notify")
+
+        assert (caught.value.allowed, caught.value.target) == (SIZES, "notify")
+
+
 class Recorder:
     def __init__(self, leaves_a_layer=False):
         self.leaves_a_layer = leaves_a_layer
