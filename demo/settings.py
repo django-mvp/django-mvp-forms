@@ -137,6 +137,7 @@ EASY_ICONS = {
             "rating-and-range": "bi bi-star",
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",
+            "themes": "bi bi-brush",
         },
     },
 }

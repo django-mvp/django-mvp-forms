@@ -17,6 +17,9 @@ depend on django-mvp at runtime.
 - **Test (whole suite):** `uv run pytest -n auto --dist loadscope`
 - **Test (one class or file, while iterating):** `uv run pytest <path> -x` —
   serial, because starting the workers costs more than a focused run takes
+- **Legibility report:** `uv run python -m tests.legibility` — prints the table of
+  known exceptions as the README should hold it, then the dimmed pairings of every
+  disabled control with their ratio under each theme
 - **Lint:** `uv run pre-commit run --all-files`
 - **Type-check:** `uv run mypy`
 - **Build:** `uv build`

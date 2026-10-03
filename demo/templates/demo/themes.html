@@ -1,0 +1,44 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block styles %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/daisyui@{{ version }}/themes.css" />
+{% endblock styles %}
+{% block page.content %}
+  <c-section title="Pick a theme" icon="themes">
+    <c-text>
+      Every form below is drawn by the pack, and none posts anywhere. Check a theme
+      and the whole page is drawn under it. The shell's own chooser in the sidebar
+      footer offers four themes; the radios here override it while one is checked.
+    </c-text>
+    <div class="flex flex-wrap gap-2">
+      {% for name in themes %}
+        <input type="radio"
+               name="theme"
+               class="btn btn-sm theme-controller"
+               aria-label="{{ name }}"
+               value="{{ name }}" />
+      {% endfor %}
+    </div>
+    <c-button type="button" variant="primary" text="Open the modal" onclick="document.getElementById('{{ modal_dialog_id }}').showModal()" />
+  </c-section>
+  <c-section title="The forms" level="3">
+    <div id="theme-forms">
+      {% for group in groups %}
+        <h3>{{ group.title }}</h3>
+        {% for item in group.items %}
+          <h4>{{ item.title }}</h4>
+          {% if item.formset %}
+            {% crispy item.formset item.helper %}
+          {% else %}
+            {% crispy item.form %}
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'themes-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}
