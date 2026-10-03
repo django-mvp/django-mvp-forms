@@ -95,3 +95,71 @@ These are observations, not requirements. They are here so the build does not re
 - daisyUI has nothing for dismissing an alert.
 - #16 asks which Tailwind utilities the CDN build really includes. Its answer bounds what these templates may use.
 - "Container layout object" is the roadmap's term for these six. It is not in `CONTEXT.md` yet. If the build needs the term in code or documentation, add it to the glossary in the same pull request.
+
+## D9. A tab's radio is drawn with its pane, and the holder names the group
+
+**Ambiguous:** daisyUI's script-free tabs need each radio directly before its content, and radios
+form a group by a shared name. django-crispy-forms draws all panes, then all links, and hands a
+pane's template nothing but its own `Tab`.
+
+**Chosen:** the pane template draws the radio and then the content, with a fixed placeholder for
+the group name. The holder's template passes the drawn panes through `daisyui_tab_group`, which
+swaps the placeholder for a random name made for that drawing. The link template is empty.
+
+**Why defensible:** the alternatives were tabs switched by an inline script, which the planning
+notes rule out where a script-free mechanism exists; drawing each pane twice, which
+django-crispy-forms reports as an error; and keeping each drawn pane on its `Tab`, which would let
+one request read another's fields from a shared layout. A random name keeps two forms drawn from
+one class apart without asking anything of the developer (research R3, R4).
+
+## D10. An accordion group is a `details` element with no group name
+
+**Ambiguous:** daisyUI's accordion examples give the groups a shared name so only one is open at
+a time. django-crispy-forms can mark more than one group active.
+
+**Chosen:** each group is a `details` element drawn open when django-crispy-forms marks it
+active, with no shared name. Groups open and close on their own.
+
+**Why defensible:** with a shared name the browser keeps only the first open group. When a
+developer's own open group comes before the group holding an error, the browser would close the
+one with the error, which is the failure this feature exists to prevent (research R6). FR-007
+asks that the groups django-crispy-forms picks are the ones open.
+
+## D11. The modal is a `dialog`, found open by Django's own mark on an invalid input
+
+**Ambiguous:** FR-012 needs the modal drawn open when it holds a field with an error.
+django-crispy-forms hands the modal's template the drawn fields and no form.
+
+**Chosen:** the template passes the drawn fields through `daisyui_invalid`, which looks for
+`aria-invalid="true"`, the attribute Django writes on every visible input of a field with errors.
+The modal is a `dialog` element drawn with the `open` attribute, and its close control is a
+button with a one-line inline handler.
+
+**Why defensible:** the specification rules out a `Modal` class of the pack's own, so the drawn
+fields are the only evidence the template has. A person's input cannot forge the attribute
+because Django escapes it. daisyUI's checkbox modal needs no script, but its close control is a
+label the keyboard cannot reach, which fails FR-010. A hidden field's error does not open the
+modal; nothing draws that error yet, and FS-002's FR-013 owns it (research R7, R8).
+
+## D12. Dismissing an alert removes it, by an inline handler
+
+**Ambiguous:** daisyUI has nothing for dismissing an alert.
+
+**Chosen:** the dismiss control is a `type="button"` button whose inline handler removes the
+alert from the page.
+
+**Why defensible:** there is no script-free mechanism to use, and the planning notes allow an
+inline handler in exactly that case. Removing the element needs no class to win against the
+alert's own display rule. Issue #47 stays open on whether a strict Content Security Policy must
+be supported (research R9).
+
+## D13. One standalone demo page for all four
+
+**Ambiguous:** FR-024 asks for one demo page for each of the four. The earlier features also gave
+each page a twin outside the shell.
+
+**Chosen:** four pages on the shell and one standalone page that draws all four forms.
+
+**Why defensible:** the standalone page exists to show the four working on daisyUI's CDN install
+alone (SC-003). One page shows that as well as four would, and the shell pages are the ones
+FR-024 counts.
