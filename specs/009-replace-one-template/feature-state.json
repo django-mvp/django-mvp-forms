@@ -126,12 +126,12 @@
           "attempts": 3,
           "evidence": {
             "tests": [
-              "tests/test_template_surface.py::TestNamesRead",
-              "tests/test_template_surface.py::TestDisagreements",
+              "tests/test_pack/test_template_surface.py::TestNamesRead",
+              "tests/test_pack/test_template_surface.py::TestDisagreements",
               "tests/test_pack/test_template_list.py::TestTheListMatchesThePackage"
             ],
             "commands": [
-              "uv run pytest tests/test_template_surface.py tests/test_pack/test_template_list.py -q"
+              "uv run pytest tests/test_pack/test_template_surface.py tests/test_pack/test_template_list.py -q"
             ],
             "code": [
               "tests/template_surface.py:29",
