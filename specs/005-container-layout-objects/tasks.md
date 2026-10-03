@@ -232,3 +232,18 @@ Plan, *Alert*; research R9, R10.
 - The alert page on the shell, and its form added to the standalone page.
 - Tests: the page responds, is wrapped and linked; it holds a dismissible alert and one without
   a dismiss control; the standalone page holds all four layout objects; no id repeats on either.
+
+---
+
+## Fixes from the code review
+
+### T009 — A modal opened for an error takes the focus (US3)
+
+The dialog is drawn with `autofocus` when it is drawn open, with two tests in
+`tests/test_pack/test_modal.py`. The README says how such a modal is closed, and that two modals
+need two `title_id` values.
+
+### T010 — A `Tab` is drawn only inside a `TabHolder` (US1)
+
+One sentence in the README. The CHANGELOG's accordion line and the alert demo page's description
+are corrected with it.

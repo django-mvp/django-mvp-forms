@@ -2,7 +2,7 @@
   "feature": "005-container-layout-objects",
   "branch": "005-container-layout-objects",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-03T18:07:45Z",
       "note": "one reviewer, correctness and spec compliance, on the feature diff"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T18:17:53Z",
+      "note": "review approved, three findings fixed; walkthrough laid out"
     }
   ],
   "gates": {
@@ -64,6 +69,20 @@
         "DR-007 low: demo forms set novalidate",
         "DR-008 low: invoker commands weighed in research R8"
       ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer: approve, every finding fixed",
+      "at": "2026-10-03T18:17:32Z",
+      "self_resolved": [
+        "CR-001 medium: remedied, the dialog takes the focus when drawn open and the README says how it closes (T009)",
+        "CR-002 low: remedied in the README (T009)",
+        "CR-003 low: remedied in the README (T010)"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T18:17:53Z",
+      "self_resolved": []
     }
   },
   "stories": [
