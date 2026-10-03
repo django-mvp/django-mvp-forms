@@ -4,7 +4,7 @@ import pytest
 from crispy_forms.bootstrap import PrependedText
 from crispy_forms.layout import Div, Field
 
-from mvp_forms.choices import Choice
+from mvp_forms.choices import Choice, FormChoices, Modifiers
 from mvp_forms.layout import InvalidMember, Join
 from tests.forms import (
     JoinedEdgesForm,
@@ -19,6 +19,12 @@ TABLE = "daisyui/table_inline_formset.html"
 GROUP_LABEL = "Phone"
 VISIBLE = ["country_code", "number", "extension"]
 UNJOINED = ["notes", "country_code", "number", "extension", "token"]
+COMPONENTS = {"country_code": "select", "number": "input", "extension": "input"}
+STATED = [
+    pytest.param("size", "lg", id="size"),
+    pytest.param("color", "primary", id="colour"),
+    pytest.param("variant", "ghost", id="variant"),
+]
 
 
 def joined(*members, **options):
@@ -36,6 +42,15 @@ def children_of(group):
 
 def names_in(group):
     return [tag["name"] for tag in children_of(group)]
+
+
+def modifiers_of(soup, name, kind):
+    carried = set(soup.find(id=f"id_{name}")["class"])
+    return carried & set(Modifiers.tables[kind][COMPONENTS[name]].values())
+
+
+def expected_for(name, kind, value):
+    return {Modifiers.tables[kind][COMPONENTS[name]][value]}
 
 
 def refused(draw, form):
@@ -295,3 +310,151 @@ class TestJoinedGroupEdges:
         legend = join_of(soup).find_parent("fieldset").find("legend")
         assert legend.find("b") is None
         assert "<b>Phone</b>" in legend.get_text()
+
+
+class TestJoinedGroupChoices:
+    @pytest.mark.parametrize(("kind", "value"), STATED)
+    def test_the_forms_choice_reaches_every_member(self, draw, kind, value):
+        form = JoinedForm(choices=FormChoices(**{kind: value}))
+
+        soup = draw(TAG, form=form)
+
+        assert names_in(join_of(soup)) == VISIBLE
+        for name in VISIBLE:
+            assert modifiers_of(soup, name, kind) == expected_for(name, kind, value)
+
+    @pytest.mark.parametrize("kind", ["size", "color", "variant"])
+    def test_every_name_the_tables_have_reaches_every_member(self, draw, kind):
+        for value in Modifiers.names(kind, None):
+            soup = draw(TAG, form=JoinedForm(choices=FormChoices(**{kind: value})))
+
+            for name, component in COMPONENTS.items():
+                expected = Modifiers.tables[kind][component].get(value)
+                assert modifiers_of(soup, name, kind) == ({expected} - {None})
+
+    def test_a_member_carries_the_choices_it_carries_outside_the_group(self, draw):
+        choices = FormChoices(size="sm", color="primary", variant="ghost")
+
+        joined_soup = draw(TAG, form=JoinedForm(choices=choices))
+        alone = draw(TAG, form=JoinedForm(layout=UNJOINED, choices=choices))
+
+        for name in VISIBLE:
+            for kind in ("size", "color", "variant"):
+                assert modifiers_of(joined_soup, name, kind) == modifiers_of(
+                    alone, name, kind
+                )
+
+    def test_the_forms_floating_label_is_passed_over_and_its_size_still_applies(
+        self, draw
+    ):
+        form = JoinedForm(choices=FormChoices(label="floating", size="lg"))
+
+        soup = draw(TAG, form=form)
+
+        for name in VISIBLE:
+            assert (
+                soup.find(id=f"id_{name}").find_parent(class_="floating-label") is None
+            )
+            assert modifiers_of(soup, name, "size") == expected_for(name, "size", "lg")
+
+    def test_a_choice_around_the_group_wins_over_the_forms_for_every_member(self, draw):
+        form = JoinedForm(
+            layout=[
+                Choice(Join("country_code", "number", "extension"), size="xs"),
+            ],
+            choices=FormChoices(size="xl", color="primary"),
+        )
+
+        soup = draw(TAG, form=form)
+
+        for name in VISIBLE:
+            assert modifiers_of(soup, name, "size") == expected_for(name, "size", "xs")
+            assert modifiers_of(soup, name, "color") == expected_for(
+                name, "color", "primary"
+            )
+
+    def test_a_members_own_choice_wins_over_the_one_around_the_group(self, draw):
+        form = JoinedForm(
+            layout=[
+                Choice(
+                    Join("country_code", Choice("number", size="xl"), "extension"),
+                    size="xs",
+                    color="accent",
+                ),
+            ],
+            choices=FormChoices(size="md"),
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert modifiers_of(soup, "number", "size") == expected_for(
+            "number", "size", "xl"
+        )
+        assert modifiers_of(soup, "number", "color") == expected_for(
+            "number", "color", "accent"
+        )
+        for name in ("country_code", "extension"):
+            assert modifiers_of(soup, name, "size") == expected_for(name, "size", "xs")
+
+    def test_a_choice_in_the_layout_wins_over_the_fields_entry_and_the_forms(
+        self, draw
+    ):
+        choices = FormChoices(size="md", fields={"number": Choice(size="lg")})
+        form = JoinedForm(
+            layout=[Join("country_code", Choice("number", size="xs"), "extension")],
+            choices=choices,
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert modifiers_of(soup, "number", "size") == expected_for(
+            "number", "size", "xs"
+        )
+        assert modifiers_of(soup, "extension", "size") == expected_for(
+            "extension", "size", "md"
+        )
+
+    def test_a_fields_entry_wins_over_the_forms_for_that_member_alone(self, draw):
+        choices = FormChoices(size="md", fields={"number": Choice(size="lg")})
+
+        soup = draw(TAG, form=JoinedForm(choices=choices))
+
+        assert modifiers_of(soup, "number", "size") == expected_for(
+            "number", "size", "lg"
+        )
+        assert modifiers_of(soup, "extension", "size") == expected_for(
+            "extension", "size", "md"
+        )
+
+    def test_a_member_in_error_carries_the_error_modifier_and_the_others_the_colour(
+        self, draw
+    ):
+        form = JoinedForm(
+            {"country_code": "+49", "number": ""}, choices=FormChoices(color="primary")
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert modifiers_of(soup, "number", "color") == {
+            Modifiers.colors["input"]["error"]
+        }
+        for name in ("country_code", "extension"):
+            assert modifiers_of(soup, name, "color") == expected_for(
+                name, "color", "primary"
+            )
+
+    def test_a_select_in_error_carries_the_select_error_modifier_and_no_colour(
+        self, draw
+    ):
+        form = JoinedForm(
+            {"country_code": "+99", "number": "5"}, choices=FormChoices(color="primary")
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert modifiers_of(soup, "country_code", "color") == {
+            Modifiers.colors["select"]["error"]
+        }
+        assert modifiers_of(soup, "number", "color") == expected_for(
+            "number", "color", "primary"
+        )

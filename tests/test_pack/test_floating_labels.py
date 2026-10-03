@@ -8,7 +8,7 @@ from crispy_forms.bootstrap import (
     StrictButton,
 )
 
-from mvp_forms.choices import Choice, FormChoices, InvalidChoice
+from mvp_forms.choices import Choice, FormChoices, InvalidChoice, Modifiers
 from tests.forms import FloatingForm, LineFormSet, formset_helper
 
 SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
@@ -17,6 +17,12 @@ FORMSET = "{% crispy formset helper %}"
 TABLE = "daisyui/table_inline_formset.html"
 FLOATING = FormChoices(label="floating")
 FLOATERS = ("name", "notes", "country")
+COMPONENTS = {"name": "input", "notes": "textarea", "country": "select"}
+STATED = [
+    pytest.param("size", "lg", id="size"),
+    pytest.param("color", "primary", id="colour"),
+    pytest.param("variant", "ghost", id="variant"),
+]
 
 
 def named(*names, label="floating"):
@@ -29,6 +35,15 @@ def floating_label_of(soup, name):
 
 def labels_for(soup, name):
     return soup.find_all("label", attrs={"for": f"id_{name}"})
+
+
+def classes_of(soup, name):
+    return set(soup.find(id=f"id_{name}")["class"])
+
+
+def modifiers_of(soup, name, kind):
+    component = COMPONENTS.get(name, "input")
+    return classes_of(soup, name) & set(Modifiers.tables[kind][component].values())
 
 
 def refused(draw, source, form):
@@ -195,6 +210,122 @@ class TestFloatingLabels:
         soup = draw(FORMSET, formset=LineFormSet(), helper=helper)
 
         assert len(soup.find_all(class_="floating-label")) == 3
+
+
+class TestFloatingLabelChoices:
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize(("kind", "value"), STATED)
+    def test_the_forms_choice_reaches_an_input_a_textarea_and_a_select(
+        self, draw, source, kind, value
+    ):
+        soup = draw(
+            source,
+            form=FloatingForm(choices=FormChoices(label="floating", **{kind: value})),
+        )
+
+        for name, component in COMPONENTS.items():
+            assert floating_label_of(soup, name) is not None
+            assert modifiers_of(soup, name, kind) == {
+                Modifiers.tables[kind][component][value]
+            }
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("kind", ["size", "color", "variant"])
+    def test_every_name_the_tables_have_reaches_a_floating_field(
+        self, draw, source, kind
+    ):
+        for value in Modifiers.names(kind, None):
+            soup = draw(
+                source,
+                form=FloatingForm(
+                    choices=FormChoices(label="floating", **{kind: value})
+                ),
+            )
+
+            for name, component in COMPONENTS.items():
+                expected = Modifiers.tables[kind][component].get(value)
+                assert modifiers_of(soup, name, kind) == ({expected} - {None})
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_floating_field_carries_what_it_carries_with_its_ordinary_label(
+        self, draw, source
+    ):
+        stated = {"size": "sm", "color": "primary", "variant": "ghost"}
+
+        ordinary = draw(source, form=FloatingForm(choices=FormChoices(**stated)))
+        floating = draw(
+            source, form=FloatingForm(choices=FormChoices(label="floating", **stated))
+        )
+
+        for name in FLOATERS:
+            assert classes_of(floating, name) == classes_of(ordinary, name)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_fields_own_choice_wins_over_the_forms_for_that_field_alone(
+        self, draw, source
+    ):
+        choices = FormChoices(
+            label="floating",
+            size="sm",
+            color="primary",
+            fields={"name": Choice(size="xl", color="accent")},
+        )
+
+        soup = draw(source, form=FloatingForm(choices=choices))
+
+        assert modifiers_of(soup, "name", "size") == {Modifiers.sizes["input"]["xl"]}
+        assert modifiers_of(soup, "name", "color") == {
+            Modifiers.colors["input"]["accent"]
+        }
+        assert modifiers_of(soup, "notes", "size") == {
+            Modifiers.sizes["textarea"]["sm"]
+        }
+        assert modifiers_of(soup, "notes", "color") == {
+            Modifiers.colors["textarea"]["primary"]
+        }
+
+    def test_a_choice_in_the_layout_wins_over_the_fields_entry_and_the_forms(
+        self, draw
+    ):
+        choices = FormChoices(
+            label="floating", size="sm", fields={"name": Choice(size="xl")}
+        )
+        form = FloatingForm(
+            choices=choices, layout=[Choice("name", size="xs"), "notes"]
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert modifiers_of(soup, "name", "size") == {Modifiers.sizes["input"]["xs"]}
+        assert modifiers_of(soup, "notes", "size") == {
+            Modifiers.sizes["textarea"]["sm"]
+        }
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_field_that_undoes_a_choice_carries_none_of_that_kind(self, draw, source):
+        choices = FormChoices(
+            label="floating", size="sm", fields={"notes": Choice(size=None)}
+        )
+
+        soup = draw(source, form=FloatingForm(choices=choices))
+
+        assert modifiers_of(soup, "notes", "size") == set()
+        assert modifiers_of(soup, "name", "size") == {Modifiers.sizes["input"]["sm"]}
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_floating_field_in_error_carries_the_error_modifier_and_no_colour(
+        self, draw, source
+    ):
+        choices = FormChoices(label="floating", color="primary")
+
+        soup = draw(source, form=FloatingForm({}, choices=choices))
+
+        assert modifiers_of(soup, "name", "color") == {
+            Modifiers.colors["input"]["error"]
+        }
+        assert modifiers_of(soup, "nickname", "color") == {
+            Modifiers.colors["input"]["primary"]
+        }
 
 
 class TestFloatingLabelKeepsTheData:
