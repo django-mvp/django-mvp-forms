@@ -37,3 +37,10 @@ Did: added layout/button.html, layout/buttonholder.html and layout/formactions.h
 Verified: uv run pytest tests/test_pack -q (176 passed). Red first: 15 failed with TemplateDoesNotExist for the three templates. Probe: renaming flex-wrap in LAYOUT_UTILITIES fails both new states. pre-commit clean.
 Next: T006 helper buttons (inputs.html), demo, README, CHANGELOG.
 Watch: ButtonHolder takes no attributes, so its template reads none.
+
+## 2026-10-03T16:47:12Z · Implementer US2 · T006
+
+Did: inputs.html (loop over helper inputs through baseinput.html) included by whole_uni_form.html; TestHelperButtons; a helper-buttons state in test_independence.py. Demo: LayoutObjectsForm ends in a FormActions with the four buttons and draws its own form element (form_tag kwarg, off for the failing form); HelperButtonsForm and RowButtonsForm added; both page templates and the view updated; page tests added to the layout contract. README and CHANGELOG name the buttons (D18).
+Verified: uv run pytest tests/test_pack/test_buttons.py tests/test_demo.py tests/test_templatetags/test_daisyui.py -q (340 passed). Red first: 9 of 11 TestHelperButtons failed with no button drawn; 40 demo tests failed before the page changed. pre-commit clean. README example drawn against the branch.
+Next: full verify, ledger rows, report.
+Watch: the page's own submit button is gone and no existing test relied on it.
