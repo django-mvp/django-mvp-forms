@@ -2,12 +2,17 @@
   "feature": "012-legible-under-every-theme",
   "branch": "012-legible-under-every-theme",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "QUEUED",
+  "state": "PLAN",
   "state_history": [
     {
       "state": "QUEUED",
       "at": "2026-10-03T21:42:05Z",
       "note": "specification approved by delegated review at commit a7c88514e6abfadd2e314e9da455c327c3d8e904, on pull request #95; epic #88, stories #99 to #101"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T22:06:11Z",
+      "note": "plan.md, research.md, tasks.md: 3 stories, 6 tasks; continues on pull request #95"
     }
   ],
   "gates": {
@@ -17,6 +22,14 @@
       "self_resolved": [
         "approved at commit a7c88514e6abfadd2e314e9da455c327c3d8e904 (forge spec-gate, pull request #95); spec gate opened by Sam, 2026-10-03: all gates are open"
       ]
+    },
+    "plan": {
+      "approved_by": null,
+      "at": null
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
     }
   },
   "stories": [
