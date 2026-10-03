@@ -294,6 +294,50 @@ class TestChoiceDrawing:
         assert (inner.drawing, outer.drawing) == ("toggle", "switch")
 
 
+class TestChoiceLabel:
+    def test_it_is_inherited_by_default(self):
+        assert Choice().label is INHERIT
+
+    def test_it_is_kept(self):
+        assert Choice(label="floating").label == "floating"
+
+    def test_none_is_kept(self):
+        assert Choice(label=None).label is None
+
+    def test_over_takes_the_inner_label_when_stated(self):
+        merged = Choice(label="floating").over(Choice(label=None))
+
+        assert merged.label == "floating"
+
+    def test_over_takes_the_outer_label_when_the_inner_one_is_left_out(self):
+        merged = Choice(size="sm").over(Choice(label="floating"))
+
+        assert merged.label == "floating"
+
+    def test_over_states_none_when_the_inner_label_is_none(self):
+        merged = Choice(label=None).over(Choice(label="floating"))
+
+        assert merged.label is None
+
+    def test_over_inherits_a_label_neither_choice_states(self):
+        merged = Choice(size="sm").over(Choice(color="info"))
+
+        assert merged.label is INHERIT
+
+    def test_over_changes_neither_choice(self):
+        inner = Choice(label=None)
+        outer = Choice(label="floating")
+
+        inner.over(outer)
+
+        assert (inner.label, outer.label) == (None, "floating")
+
+
+class TestModifiersLabels:
+    def test_floating_is_daisyuis_floating_label(self):
+        assert Modifiers.labels == {"floating": "floating-label"}
+
+
 class TestModifiersDrawings:
     def test_each_drawing_names_the_component_it_is_drawn_with(self):
         assert Modifiers.drawings == {
@@ -568,3 +612,26 @@ class TestFormChoicesCheck:
             FormChoices.lookup(
                 Context(), HelpedForm(FormChoices(button_variant="glow"))
             )
+
+
+class TestFormChoicesLabel:
+    def test_no_label_is_stated_by_default(self):
+        assert FormChoices().label is None
+
+    def test_the_label_is_kept(self):
+        assert FormChoices(label="floating").label == "floating"
+
+    def test_a_known_name_is_accepted(self):
+        FormChoices(label="floating").check()
+
+    def test_an_unknown_name_raises_with_the_names_allowed(self):
+        with pytest.raises(InvalidChoice) as caught:
+            FormChoices(label="sliding").check()
+
+        error = caught.value
+        assert (error.kind, error.value, error.target) == ("label", "sliding", None)
+        assert error.allowed == ("floating",)
+
+    def test_lookup_checks_the_label_it_finds_on_the_helper(self):
+        with pytest.raises(InvalidChoice):
+            FormChoices.lookup(Context(), HelpedForm(FormChoices(label="sliding")))
