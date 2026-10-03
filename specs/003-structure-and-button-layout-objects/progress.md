@@ -30,3 +30,10 @@ Did: added the daisyui_classes filter and UPSTREAM_ONLY_CLASSES in mvp_forms/tem
 Verified: uv run pytest tests/test_templatetags/test_daisyui.py::TestDaisyuiClasses tests/test_pack/test_buttons.py -q (29 passed); red first: 19 failed with TemplateDoesNotExist daisyui/layout/baseinput.html. pre-commit clean.
 Next: T005 StrictButton, ButtonHolder, FormActions.
 Watch: baseinput.html has no hidden branch yet; US3 adds it.
+
+## 2026-10-03T16:44:33Z · Implementer US2 · T005
+
+Did: added layout/button.html, layout/buttonholder.html and layout/formactions.html. Tests TestStrictButton and TestHolders; test_independence.py gains buttons-in-a-layout states (valid and invalid) and the utilities flex-wrap, gap-2, mt-4.
+Verified: uv run pytest tests/test_pack -q (176 passed). Red first: 15 failed with TemplateDoesNotExist for the three templates. Probe: renaming flex-wrap in LAYOUT_UTILITIES fails both new states. pre-commit clean.
+Next: T006 helper buttons (inputs.html), demo, README, CHANGELOG.
+Watch: ButtonHolder takes no attributes, so its template reads none.
