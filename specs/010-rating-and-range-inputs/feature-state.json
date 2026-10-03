@@ -2,7 +2,7 @@
   "feature": "010-rating-and-range-inputs",
   "branch": "010-rating-and-range-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "QUEUED",
@@ -38,6 +38,11 @@
       "state": "PR_READY",
       "at": "2026-10-03T23:09:50Z",
       "note": "review approve; findings closed; main merged in"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-10-03T23:18:00Z",
+      "note": "PR #96 merged; approved by forge-aeo-reviewer"
     }
   ],
   "gates": {
@@ -53,8 +58,8 @@
       "at": "2026-10-03T22:06:56Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "forge-aeo-reviewer",
+      "at": "2026-10-03T23:17:56Z"
     },
     "design_review": {
       "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
@@ -79,8 +84,8 @@
       ]
     },
     "walkthrough": {
-      "approved_by": null,
-      "at": "2026-10-03T23:10:41Z",
+      "approved_by": "delegated review",
+      "at": "2026-10-03T23:17:58Z",
       "self_resolved": []
     }
   },
@@ -314,12 +319,12 @@
       "max": 1
     },
     "tokens": {
-      "used": 18.7,
+      "used": 32.41,
       "max": 120
     }
   },
   "pr": {
     "number": 96,
-    "draft": true
+    "draft": false
   }
 }
