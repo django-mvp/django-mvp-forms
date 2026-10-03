@@ -169,3 +169,111 @@ uses only what ADR 0003 already allows.
 demo project already shows and adds a theme chooser, and the README section is text.
 
 **ADR:** none.
+
+## D13. The contrast maths is written in the test suite
+
+**Chosen:** the conversion from daisyUI's `oklch()` values to a WCAG contrast ratio is about
+sixty lines under `tests/legibility/`, held by fixed vectors.
+
+**Rejected:** `coloraide` as a development dependency. It does the same work and was used to
+check the numbers. Article VII says development tooling comes from the shared bundle and is not
+pinned package by package, and the change would sit in `pyproject.toml` and `uv.lock`, which four
+sibling branches are also changing.
+
+**Revisit if:** the shared bundle gains a colour library.
+
+**ADR:** pending. Judged at convergence with D2 and D8.
+
+## D14. The check reads the drawn markup through a table of what each class paints
+
+**Chosen:** a reader walks each drawn form with the text colour and the surface inherited down
+the tree, and one table says what each daisyUI class the pack writes does to them. A class with
+no row is an error.
+
+**Rejected:**
+
+- A hand-written list of pairings. It would measure the list and not the pack, and a new template
+  would never reach it.
+- A headless browser reading computed styles. It needs a browser in continuous integration, which
+  means a workflow change (FR-013), and D8 already settles on a calculation.
+- Evaluating daisyUI's stylesheet itself. That is a CSS engine.
+
+**Risk:** the table is a reading of daisyUI's stylesheet for one version. It was checked against
+a browser for 5.7.47. When the pinned version moves, the rows are re-read with it.
+
+**ADR:** pending. Judged at convergence with D2 and D8.
+
+## D15. A repair changes the colour of text the pack writes, and never repaints a control
+
+**Chosen:** a pairing is repaired when a stock daisyUI class brings it to the standard under
+every shipped theme, which is the test acceptance scenario 8 of the first story sets. For text
+that class is `text-base-content`, or dropping `text-error`. A control's border, fill and mark
+are left as daisyUI's component and its modifiers draw them.
+
+**Rejected:**
+
+- `border-base-content` and the like on an input. It is in the stylesheet and it would pass, but
+  it paints over daisyUI's component with a utility. Article XIV says the pack uses the component
+  and does not assemble a look-alike, and ADR 0003 gives the reason: the pack should look like
+  the rest of a daisyUI site.
+- A colour modifier written by default, such as `input-neutral`. No colour passes under every
+  theme (each fails under 11 to 20), and a colour is a choice FS-007 gives to the developer.
+- Keeping error text in the theme's error colour. It falls short under 21 themes, and plain
+  `base-content` passes under all 35. The error is still marked by the input's error modifier,
+  by `aria-invalid`, by where the message sits and by the alert's tinted fill.
+- A muted grade for help text. 90% passes everywhere and 80% does not, so nothing worth calling
+  muted is left.
+
+**Spec:** FR-006 said a class is written when it helps one theme and harms none. Read against a
+colour modifier that would have the pack state a colour for the developer. FR-006 now carries
+scenario 8's test, "under every shipped theme", and says a colour or variant modifier is the
+developer's to state.
+
+**ADR:** pending. Judged at convergence.
+
+## D16. The README table is the list of known exceptions
+
+**Chosen:** a known exception is a pairing and a theme. A pairing is named by what is drawn, in
+which of the theme's colours and on which surface, so form states that draw the same thing share
+one row. The check parses the README's table and compares it with what it measured, both ways.
+
+**Rejected:** a list in the test suite and a copy in the README. Two lists need a test that they
+agree, and the README copy is the one that goes stale.
+
+**ADR:** pending. Judged at convergence with D4.
+
+## D17. Nothing the pack draws is large text
+
+**Chosen:** WCAG's lower figure for large text applies to text of 24px, or 18.66px when bold. The
+largest text the pack writes is a `btn-xl` at 22px and weight 600, which is neither. Every piece
+of text is held to 4.5.
+
+**Revisit if:** a later size or component draws text at 24px or more.
+
+**ADR:** none. It is a reading of the standard in D2 for the sizes daisyUI has today.
+
+## D18. Which parts of a control are held to the figure
+
+**Chosen:** the border of an input, a select, a textarea and a file input; the border of a
+checkbox and a radio that is off; a toggle that is off; the mark and the fill of each when on;
+the arrow of a select and of an accordion group; the bar under the chosen tab. Each is what tells
+a person the control is there or what state it is in. A button is identified by its text, so its
+text is held and its outline is not, which is WCAG's own reading of a button.
+
+**ADR:** pending. Judged at convergence with D2.
+
+## D19. An alert whose colour the developer chose is not measured
+
+**Chosen:** the pack writes `alert` alone and `alert alert-error alert-soft`. An `Alert` layout
+object given another colour class carries the developer's class, and the spec's edge cases leave
+that to the developer.
+
+**ADR:** none. It follows the spec's edge case.
+
+## D20. The pre-existing tests change only by the class repaired
+
+**Chosen:** a test from FS-001 to FS-008 that asserts `text-error` or a bare `label` on a
+repaired element has that class name updated. Nothing else in it changes. The markup of every
+drawn state with its `class` attributes stripped is compared before and after, and is identical.
+
+**ADR:** none. It is how this feature shows FR-010.

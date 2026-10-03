@@ -1,0 +1,106 @@
+{
+  "feature": "012-legible-under-every-theme",
+  "branch": "012-legible-under-every-theme",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "QUEUED",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T21:42:05Z",
+      "note": "specification approved by delegated review at commit a7c88514e6abfadd2e314e9da455c327c3d8e904, on pull request #95; epic #88, stories #99 to #101"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T21:42:05Z",
+      "self_resolved": [
+        "approved at commit a7c88514e6abfadd2e314e9da455c327c3d8e904 (forge spec-gate, pull request #95); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 99,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T002",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T003",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 100,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P3",
+      "issue": 101,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T006",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 0,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 95,
+    "draft": true
+  }
+}

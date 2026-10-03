@@ -249,7 +249,7 @@ check holds is listed there, and nothing is listed that the check does not hold.
   any other. If another stock daisyUI class passes under every shipped theme the pack changes to
   it, and otherwise it is a known exception for that theme.
 - A fix that helps one theme harms another. A change of class is made only when the pairing then
-  meets the standard under every shipped theme where it met it before.
+  meets the standard under every shipped theme.
 - The disabled control itself is dimmed until it is hard to read. It is measured and reported and
   does not fail the check. Its label and help text still have to meet the standard.
 - A colour a developer chose is overridden by the error state, as FS-007 specifies. The invalid
@@ -297,8 +297,9 @@ check holds is listed there, and nothing is listed that the check does not hold.
 #### What is fixed and what is published
 
 - **FR-006**: Where a pairing falls short of the standard under a shipped theme, and a stock
-  daisyUI class or modifier exists that brings it up to the standard without putting it below the
-  standard under any other shipped theme, the pack MUST write that class.
+  daisyUI class exists that brings it up to the standard under every shipped theme, the pack MUST
+  write that class. A colour or a variant is the developer's to state (FS-007), and the pack
+  never writes one as a repair.
 - **FR-007**: Where a pairing falls short and no stock daisyUI class or modifier brings it up to
   the standard, it MUST be recorded as a known exception naming the form state, the pairing and
   the theme. The pack MUST NOT add a stylesheet, a class of its own or an inline style to repair
