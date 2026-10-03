@@ -57,3 +57,10 @@ Did: TemplateSurface takes the withdrawn paths as a third argument and reports o
 Verified: uv run pytest tests/test_pack/test_template_surface.py tests/test_pack/test_template_list.py tests/test_pack/test_documented_examples.py -q, 119 passed; pre-commit run --all-files passed. Probes, not committed: dropping the withdrawn exemption failed the not-distributed case, and dropping the withdrawn-not-listed report failed the other.
 Next: the full forge verify, then the ledger and the report.
 Watch: the README does not name the tag or mvp_forms.deprecation; the docs step of forge verify decides whether that stands.
+
+## 2026-10-03T22:42:51Z · Implementer US3 · T006
+
+Did: the docs step of forge verify failed on the new public name host_template, so the README part gained one sentence naming mvp_forms.deprecation.WITHDRAWN and mvp_forms.deprecation.host_template as the pack's own machinery. The daisyui_host_template tag is not named.
+Verified: forge verify --base origin/main, exit 0: conformance, docs, lint, typecheck, test and build all passed.
+Next: the report.
+Watch: the sentence is the one the brief allowed if the docs step demanded it.
