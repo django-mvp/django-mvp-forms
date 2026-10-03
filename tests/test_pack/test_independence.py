@@ -167,6 +167,9 @@ def helper_buttons():
 
 NOTHING = frozenset()
 EVERY_CHOICE = FormChoices(size="sm", color="primary", variant="ghost")
+EVERY_BUTTON_CHOICE = FormChoices(
+    size="lg", color="accent", button_color="neutral", button_variant="outline"
+)
 ERRORS_ONLY = "{{ form|as_crispy_errors }}"
 
 STATES = [
@@ -316,6 +319,22 @@ STATES = [
         lambda: stating(EveryInputForm({}), EVERY_CHOICE),
         NOTHING,
         id="every choice stated, invalid, through the tag",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: stating(
+            ButtonedForm(
+                buttons=(
+                    Submit("save", "Save"),
+                    Reset("clear", "Clear"),
+                    Button("help", "Help"),
+                    StrictButton("More"),
+                )
+            ),
+            EVERY_BUTTON_CHOICE,
+        ),
+        NOTHING,
+        id="buttons with every choice stated",
     ),
 ]
 

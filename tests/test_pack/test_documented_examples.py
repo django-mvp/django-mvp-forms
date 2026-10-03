@@ -238,3 +238,19 @@ class TestReadmeFieldChoices:
             assert "input-primary" not in tag
         notes = set(soup.find(id="id_notes")["class"])
         assert {"textarea-sm", "textarea-primary"} <= notes
+
+
+class TestReadmeButtonChoices:
+    def test_the_example_stating_choices_for_buttons_draws(self, draw):
+        form = readme_example("Buttons")["ConfirmForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        for name in ("save", "clear"):
+            assert {"btn-sm", "btn-neutral", "btn-outline"} <= set(
+                soup.find("input", attrs={"name": name})["class"]
+            )
+        delete = set(soup.find("button")["class"])
+        assert {"btn-sm", "btn-error", "btn-outline"} <= delete
+        assert "btn-neutral" not in delete
+        assert "input-sm" in set(soup.find(id="id_name")["class"])

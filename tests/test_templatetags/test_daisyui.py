@@ -5,14 +5,16 @@ import copy
 import pytest
 from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Hidden, Submit
+from crispy_forms.layout import Button, Hidden, Reset, Submit
 from django import forms
 from django.template import Context
 from django.utils.safestring import mark_safe
 
 from mvp_forms.choices import Choice, FormChoices, InvalidChoice
 from mvp_forms.templatetags.daisyui import (
+    DrawnButton,
     FieldInput,
+    daisyui_button,
     daisyui_classes,
     daisyui_field,
     daisyui_removal_checkbox,
@@ -762,3 +764,148 @@ class TestDaisyuiRemovalCheckbox:
         value = "wide file-input file-input-ghost"
 
         assert daisyui_removal_checkbox(value) == "checkbox"
+
+
+class TestDrawnButton:
+    def test_a_base_input_takes_the_forms_size_colour_and_variant_for_buttons(self):
+        choices = FormChoices(
+            size="sm",
+            color="info",
+            variant="ghost",
+            button_color="accent",
+            button_variant="outline",
+        )
+
+        drawn = DrawnButton(Button("act", "Go"), choices=choices)
+
+        assert set(drawn.css_class.split()) == {
+            "btn",
+            "btn-sm",
+            "btn-accent",
+            "btn-outline",
+        }
+
+    @pytest.mark.parametrize("kind", [Submit, Reset, Button])
+    def test_stating_nothing_leaves_the_class_string_as_it_was(self, kind):
+        button = kind("act", "Go", css_class="mine")
+
+        assert DrawnButton(button, choices=FormChoices()).css_class == (
+            daisyui_classes(button.field_classes)
+        )
+
+    def test_a_reset_carries_no_class_written_for_another_pack(self):
+        drawn = DrawnButton(Reset("act", "Go"), choices=FormChoices(size="sm"))
+
+        assert "btn-inverse" not in drawn.css_class.split()
+
+    def test_a_submit_with_a_resolved_colour_loses_the_default_colour(self):
+        drawn = DrawnButton(
+            Submit("act", "Go"), choices=FormChoices(button_color="error")
+        )
+
+        assert set(drawn.css_class.split()) == {"btn", "btn-error"}
+
+    def test_a_colour_set_to_none_for_the_button_leaves_the_default_colour(self):
+        drawn = DrawnButton(
+            Submit("act", "Go"),
+            choices=FormChoices(button_color="error"),
+            placed=Choice(color=None),
+        )
+
+        assert set(drawn.css_class.split()) == {"btn", "btn-primary"}
+
+    def test_a_submit_keeps_a_colour_class_the_developer_gave_it(self):
+        drawn = DrawnButton(
+            Submit("act", "Go", css_class="btn-primary"),
+            choices=FormChoices(button_color="error"),
+        )
+
+        assert {"btn-primary", "btn-error"} <= set(drawn.css_class.split())
+
+    def test_a_choice_placed_around_the_button_wins_over_the_forms(self):
+        drawn = DrawnButton(
+            Button("act", "Go"),
+            choices=FormChoices(size="sm", button_color="accent"),
+            placed=Choice(size="xl"),
+        )
+
+        classes = drawn.css_class.split()
+        assert {"btn-xl", "btn-accent"} <= set(classes)
+        assert "btn-sm" not in classes
+
+    def test_a_strict_button_gets_the_modifiers_inside_its_class_attribute(self):
+        button = StrictButton("Go", css_class="mine", title="Act")
+
+        drawn = DrawnButton(button, choices=FormChoices(size="sm"))
+
+        assert drawn.flat_attrs != button.flat_attrs
+        assert drawn.flat_attrs.count(" class=") == 1
+        assert 'title="Act"' in drawn.flat_attrs
+        attribute = drawn.flat_attrs.split(' class="')[1].split('"')[0]
+        assert set(attribute.split()) == {"btn", "mine", "btn-sm"}
+
+    @pytest.mark.parametrize("name", ["data_class", "aria_class"])
+    def test_a_strict_button_with_an_attribute_ending_in_class_keeps_it_whole(
+        self, name
+    ):
+        button = StrictButton("Go", **{name: "y"})
+
+        drawn = DrawnButton(button, choices=FormChoices(size="sm"))
+
+        attribute = name.replace("_", "-")
+        assert f' {attribute}="y"' in drawn.flat_attrs
+        assert drawn.flat_attrs.count("btn-sm") == 1
+        assert f'{attribute}="y btn-sm"' not in drawn.flat_attrs
+
+    def test_a_strict_button_with_nothing_stated_has_its_attributes_unchanged(self):
+        button = StrictButton("Go", css_class="mine", data_class="y")
+
+        assert DrawnButton(button, choices=FormChoices()).flat_attrs == (
+            button.flat_attrs
+        )
+
+    def test_a_hidden_input_takes_no_modifier(self):
+        drawn = DrawnButton(
+            Hidden("secret", "x"), choices=FormChoices(size="sm", button_color="info")
+        )
+
+        assert drawn.modifiers == []
+
+    def test_a_modifier_the_developer_already_wrote_is_written_once(self):
+        drawn = DrawnButton(
+            Button("act", "Go", css_class="btn-sm"), choices=FormChoices(size="sm")
+        )
+
+        assert drawn.css_class.split().count("btn-sm") == 1
+
+
+class TestDaisyuiButton:
+    def test_the_statement_in_the_context_is_used(self):
+        context = Context({"daisyui": FormChoices(size="lg")})
+
+        drawn = daisyui_button(context, Button("act", "Go"))
+
+        assert "btn-lg" in drawn.css_class.split()
+
+    def test_the_choice_a_layout_placed_in_the_context_is_used(self):
+        context = Context(
+            {"daisyui": FormChoices(size="sm"), "daisyui_choice": Choice(size="xl")}
+        )
+
+        drawn = daisyui_button(context, Button("act", "Go"))
+
+        classes = drawn.css_class.split()
+        assert "btn-xl" in classes
+        assert "btn-sm" not in classes
+
+    def test_a_context_value_that_is_not_a_statement_is_the_pages_own(self):
+        context = Context({"daisyui": "the page's own", "daisyui_choice": 3})
+
+        drawn = daisyui_button(context, Button("act", "Go"))
+
+        assert drawn.css_class == "btn"
+
+    def test_a_context_with_no_statement_draws_the_button_as_it_was(self):
+        drawn = daisyui_button(Context(), Submit("act", "Go"))
+
+        assert set(drawn.css_class.split()) == {"btn", "btn-primary"}

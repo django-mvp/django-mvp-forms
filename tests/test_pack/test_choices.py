@@ -3,13 +3,25 @@
 import re
 
 import pytest
+from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Column, Div, Fieldset, Layout, Row
+from crispy_forms.layout import (
+    Button,
+    Column,
+    Div,
+    Fieldset,
+    Hidden,
+    Layout,
+    Reset,
+    Row,
+    Submit,
+)
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template import Context, Template
 
 from mvp_forms.choices import Choice, FormChoices
 from tests.forms import (
+    ButtonedForm,
     DeveloperAttrsForm,
     EveryInputForm,
     FilesForm,
@@ -495,3 +507,223 @@ class TestFieldChoices:
         Template("{% load crispy_forms_tags %}{% crispy form %}").render(context)
 
         assert Choice.context_name not in context
+
+
+BUTTONS = [
+    pytest.param(
+        lambda **options: Submit("act", "Go", css_id="act", **options), id="submit"
+    ),
+    pytest.param(
+        lambda **options: Reset("act", "Go", css_id="act", **options), id="reset"
+    ),
+    pytest.param(
+        lambda **options: Button("act", "Go", css_id="act", **options), id="button"
+    ),
+    pytest.param(
+        lambda **options: StrictButton("Go", css_id="act", **options),
+        id="strict button",
+    ),
+]
+
+
+def button_of(soup, name="act"):
+    return classes(soup.find(id=name))
+
+
+class TestButtonChoices:
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_every_button_carries_the_forms_size(self, draw, make):
+        form = structured("first", make(), size="lg")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert "btn-lg" in button_of(soup)
+
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_every_button_carries_the_button_colour_and_variant_and_no_input_does(
+        self, draw, make
+    ):
+        form = structured(
+            "first", make(), button_color="accent", button_variant="outline"
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert {"btn-accent", "btn-outline"} <= button_of(soup)
+        assert not {"input-accent", "input-outline", "input-ghost"} & named(
+            soup, "first"
+        )
+
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_the_colour_and_variant_for_inputs_reach_no_button(self, draw, make):
+        form = structured("first", make(), color="accent", variant="ghost")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert {"input-accent", "input-ghost"} <= named(soup, "first")
+        assert not {"btn-accent", "btn-ghost"} & button_of(soup)
+
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_a_button_in_a_choice_takes_its_own_and_the_others_the_forms(
+        self, draw, make
+    ):
+        other = StrictButton("Other", css_id="other")
+        form = structured(
+            Choice(make(), color="error"),
+            other,
+            button_color="accent",
+            button_variant="outline",
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert {"btn-error", "btn-outline"} <= button_of(soup)
+        assert "btn-accent" not in button_of(soup)
+        assert {"btn-accent", "btn-outline"} <= button_of(soup, "other")
+        assert "btn-error" not in button_of(soup, "other")
+
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_a_choice_stating_none_undoes_the_forms_button_colour(self, draw, make):
+        form = structured(Choice(make(), color=None), button_color="accent")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert "btn-accent" not in button_of(soup)
+
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_a_choice_around_a_row_reaches_the_buttons_in_it(self, draw, make):
+        form = structured(Choice(Row(Column(make())), size="xl"), size="sm")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert "btn-xl" in button_of(soup)
+
+    def test_a_submit_given_a_colour_is_drawn_without_the_default_colour(self, draw):
+        form = structured(Submit("act", "Go", css_id="act"), button_color="error")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert "btn-error" in button_of(soup)
+        assert "btn-primary" not in button_of(soup)
+
+    def test_a_submit_given_the_default_colour_is_drawn_with_it_once(self, draw):
+        form = structured(Submit("act", "Go", css_id="act"), button_color="primary")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert soup.find(id="act")["class"].count("btn-primary") == 1
+
+    def test_a_submit_given_btn_primary_as_its_own_class_keeps_it(self, draw):
+        form = structured(
+            Submit("act", "Go", css_id="act", css_class="btn-primary"),
+            button_color="error",
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert {"btn-error", "btn-primary"} <= button_of(soup)
+
+    @pytest.mark.parametrize(
+        "statement", [{}, {"size": "lg"}, {"button_variant": "soft"}]
+    )
+    def test_a_submit_given_no_colour_keeps_the_default_colour(self, draw, statement):
+        form = structured(Submit("act", "Go", css_id="act"), **statement)
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert "btn-primary" in button_of(soup)
+
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_the_developers_class_id_and_attributes_are_kept(self, draw, make):
+        form = structured(
+            make(css_class="mine other", data_class="x", title="Act"),
+            size="lg",
+            button_color="accent",
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        button = soup.find(id="act")
+        assert {"mine", "other", "btn", "btn-lg", "btn-accent"} <= classes(button)
+        assert button["data-class"] == "x"
+        assert button["title"] == "Act"
+
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_a_button_in_a_form_stating_nothing_is_drawn_as_it_was(self, draw, make):
+        plain = structured("first", make(css_class="mine", title="Act"))
+        stating_nothing = structured(
+            "first", make(css_class="mine", title="Act"), size=None
+        )
+
+        assert str(draw("{% crispy form %}", form=stating_nothing)) == str(
+            draw("{% crispy form %}", form=plain)
+        )
+
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_a_button_in_a_form_with_no_statement_at_all_is_drawn_as_it_was(
+        self, draw, make
+    ):
+        without = StructureForm(layout=("first", make()))
+        stating_nothing = structured("first", make())
+
+        assert str(draw("{% crispy form %}", form=stating_nothing)) == str(
+            draw("{% crispy form %}", form=without)
+        )
+
+    def test_a_hidden_input_is_unchanged(self, draw):
+        stated = structured(
+            Hidden("secret", "x"),
+            size="lg",
+            button_color="accent",
+            button_variant="outline",
+        )
+        plain = structured(Hidden("secret", "x"))
+
+        assert str(draw("{% crispy form %}", form=stated)) == str(
+            draw("{% crispy form %}", form=plain)
+        )
+
+    @pytest.mark.parametrize("make", BUTTONS[:3])
+    def test_a_button_added_to_the_helper_takes_the_forms_choices(self, draw, make):
+        form = ButtonedForm(buttons=(make(),))
+        form.helper.daisyui = FormChoices(size="lg", button_color="accent")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert {"btn-lg", "btn-accent"} <= button_of(soup)
+
+    def test_a_strict_button_added_to_the_helper_takes_the_forms_choices(self, draw):
+        form = ButtonedForm(buttons=(StrictButton("Go", css_id="act"),))
+        form.helper.daisyui = FormChoices(size="lg", button_variant="soft")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert {"btn-lg", "btn-soft"} <= button_of(soup)
+
+    def test_a_hidden_input_added_to_the_helper_is_unchanged(self, draw):
+        form = ButtonedForm(buttons=(Hidden("secret", "x"),))
+        form.helper.daisyui = FormChoices(size="lg", button_color="accent")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert soup.find("input", attrs={"name": "secret"}).get("class") is None
+
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_a_page_that_names_its_form_otherwise_still_gets_the_choices(
+        self, draw, make
+    ):
+        form = structured("first", make(), size="lg", button_color="accent")
+
+        soup = draw("{% crispy settings_form %}", settings_form=form)
+
+        assert {"btn-lg", "btn-accent"} <= button_of(soup)
+        assert "input-lg" in named(soup, "first")
+
+    def test_a_page_variable_named_daisyui_that_is_not_a_statement_is_ignored(
+        self, draw
+    ):
+        form = structured(Submit("act", "Go", css_id="act"), size="lg")
+
+        soup = draw("{% crispy form %}", form=form, **{"daisyui": "the page's own"})
+
+        assert "btn-lg" in button_of(soup)

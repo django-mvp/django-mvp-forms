@@ -1,6 +1,7 @@
 """The pack's tags and filters, which draw inputs and buttons as daisyUI."""
 
 import copy
+import re
 from html import unescape
 from typing import Any
 
@@ -311,6 +312,156 @@ class FieldInput:
                 )
             )
         return self.field.as_widget(widget=self.widget, attrs=self.attrs)
+
+
+class DrawnButton:
+    """Draw one button for one render, with the choices that apply to it.
+
+    A ``Submit``, ``Reset`` or ``Button`` is an ``<input>`` whose classes are
+    ``css_class``. A ``StrictButton`` is a ``<button>`` whose attributes are
+    ``flat_attrs``. A hidden input is not a button and takes nothing.
+
+    Args:
+        button: The layout object, or the object given to ``add_input``.
+        choices: The form's statement of size, colour and variant, if any.
+        placed: The ``Choice`` of a layout around the button, if any. It wins
+            over the form's statement for this button.
+
+    Raises:
+        InvalidChoice: A size, colour or variant stated for the form or the
+            button is not one daisyUI has.
+    """
+
+    # The colour django-crispy-forms gives a Submit when none is chosen.
+    default_color = "btn-primary"
+    class_attribute = re.compile(r'( class=")([^"]*)(")')
+
+    def __init__(
+        self,
+        button: Any,
+        choices: FormChoices | None = None,
+        placed: Choice | None = None,
+    ) -> None:
+        self.button = button
+        self.modifiers = self.resolve_modifiers(choices or FormChoices(), placed)
+
+    def resolve_modifiers(
+        self, choices: FormChoices, placed: Choice | None
+    ) -> list[str]:
+        """Return the daisyUI class of each choice that applies to the button.
+
+        Resolved when the button is built, so a mistake is raised from the tag
+        and not from inside a template's ``{% if %}``, which would swallow it.
+
+        Args:
+            choices: The form's statement.
+            placed: The ``Choice`` of a layout around the button, or None.
+
+        Returns:
+            The classes for size, colour and variant, in that order, for each
+            one that resolves to a class. None for a hidden input.
+
+        Raises:
+            InvalidChoice: See the class.
+        """
+        if getattr(self.button, "input_type", "") == "hidden":
+            return []
+        own = Choice() if placed is None else placed
+        stated = {
+            "size": choices.size,
+            "color": choices.button_color,
+            "variant": choices.button_variant,
+        }
+        resolved = (
+            Modifiers.resolve(
+                kind,
+                Modifiers.button,
+                own=getattr(own, kind),
+                form=form,
+                target=self.target,
+            )
+            for kind, form in stated.items()
+        )
+        return [modifier for modifier in resolved if modifier]
+
+    @property
+    def target(self) -> str:
+        """What an error names: the button's name, or a ``StrictButton``'s content."""
+        name = getattr(self.button, "name", None)
+        return str(name if name is not None else self.button.content)
+
+    @property
+    def has_color(self) -> bool:
+        """Whether a colour class resolved for the button."""
+        return any(
+            modifier in Modifiers.colors[Modifiers.button].values()
+            for modifier in self.modifiers
+        )
+
+    @property
+    def css_class(self) -> str:
+        """The classes of an ``<input>`` button: its own, then the choices.
+
+        The colour a ``Submit`` is given by default is left out when a colour
+        resolved, so that one colour is written. The same class given by the
+        developer as ``css_class`` is kept.
+        """
+        names = self.button.field_classes.split()
+        if (
+            self.has_color
+            and self.default_color in type(self.button).field_classes.split()
+        ):
+            names.remove(self.default_color)
+        kept = daisyui_classes(" ".join(names)).split()
+        return " ".join(dict.fromkeys([*kept, *self.modifiers]))
+
+    @property
+    def flat_attrs(self) -> str:
+        """The attributes of a ``StrictButton``, with the choices in its classes.
+
+        The string is returned as django-crispy-forms wrote it when there are
+        no choices. Otherwise they are added inside the ``class`` attribute,
+        found by its leading space so that an attribute whose name ends in
+        ``class`` is left alone.
+        """
+        attrs: str = self.button.flat_attrs
+        if not self.modifiers:
+            return attrs
+
+        def add(found: re.Match[str]) -> str:
+            names = [*found.group(2).split(), *self.modifiers]
+            return f"{found.group(1)}{' '.join(dict.fromkeys(names))}{found.group(3)}"
+
+        return SafeString(self.class_attribute.sub(add, attrs, count=1))
+
+
+@register.simple_tag(takes_context=True)
+def daisyui_button(context: Context, button: Any) -> DrawnButton:
+    """Return the pack's drawing of a button.
+
+    Used as ``{% daisyui_button input as drawn %}``. A button in a layout is
+    drawn with no form in the context, so the form's statement reaches it only
+    through the context name ``daisyui``, which django-crispy-forms copies from
+    the helper.
+
+    Args:
+        context: The template context, read for the form's statement of
+            choices and for the choice of a layout around the button.
+        button: The layout object, or the object given to ``add_input``.
+
+    Returns:
+        The button's drawing.
+
+    Raises:
+        InvalidChoice: A choice that applies to the button is not one daisyUI
+            has.
+    """
+    placed = context.get(Choice.context_name)
+    return DrawnButton(
+        button,
+        choices=FormChoices.lookup(context),
+        placed=placed if isinstance(placed, Choice) else None,
+    )
 
 
 @register.simple_tag(takes_context=True)

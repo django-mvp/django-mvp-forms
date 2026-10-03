@@ -261,6 +261,7 @@ The classes the names mean are written out in the tables of `Modifiers`, in `mvp
 - A name that is not in the lists above raises `InvalidChoice`, a `ValueError`, when the form is drawn. It carries the `kind`, the `value` and the names `allowed`.
 - A field in error keeps its error modifier and is drawn without the chosen colour, so the error is the only colour it shows. Its size and variant still apply.
 - Hidden inputs, labels, help text, error text and the `required`, `disabled` and `readonly` attributes are never changed, and classes you put on a widget are kept.
+- The size reaches every button too, as `btn-sm` and the like. A colour or a variant for the form's buttons is stated apart from the inputs', as `button_color` and `button_variant`, so `color` and `variant` reach no button and the two never touch. Buttons are described below.
 
 ### One field's own choice
 
@@ -297,6 +298,41 @@ Here `search` is large and keeps the form's colour, `name` and `city` keep the f
 For a form drawn without a layout, name the field in `FormChoices`, as `notes` was in the section above: `FormChoices(fields={"search": Choice(size="lg")})`. It works with `{{ form|crispy }}` and with `{% crispy form %}`, and changes no other field.
 
 When both are given for a field, the `Choice` in the layout wins over the one in `fields`, which wins over the form's, for each of the three on its own. What a `Choice` leaves out is inherited, and `None` is the pack's ordinary drawing: `Choice("notes", color=None)` undoes the form's colour for that field and keeps its size. A size, colour or variant that the field's input has no modifier for raises `InvalidChoice` when the form is drawn, because you asked for it by name. The form's own statement is passed over for such an input.
+
+### Buttons
+
+A `Submit`, `Reset`, `Button` or `StrictButton` takes the form's `size`, `button_color` and `button_variant`, in a layout and when added with `helper.add_input`. The names are the lists above, with these variants for a button: `outline`, `dash`, `soft`, `ghost` and `link`.
+
+```python
+from crispy_forms.bootstrap import StrictButton
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Reset, Submit
+from django import forms
+from mvp_forms.choices import Choice, FormChoices
+
+
+class ConfirmForm(forms.Form):
+    name = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(
+            size="sm", button_color="neutral", button_variant="outline"
+        )
+        self.helper.layout = Layout(
+            "name",
+            Submit("save", "Save"),
+            Reset("clear", "Clear"),
+            Choice(StrictButton("Delete", type="submit"), color="error"),
+        )
+```
+
+Here every button is small and outlined, `Delete` is in the error colour and the others are neutral, and the text input is small. Wrap one button in a `Choice` to give it a choice of its own: what the `Choice` states wins over the form's, what it leaves out is inherited, and `None` is the ordinary drawing. A `Choice` takes the same `color` and `variant` for a button as for a field, and the form's `button_color` and `button_variant` are the ones it is merged over.
+
+- A `Submit` is drawn `btn-primary` unless a colour is stated for it, by `button_color` or by a `Choice`. Then only the colour you stated is written. A `btn-primary` you pass as `css_class` is kept.
+- Your `css_class`, `css_id` and attributes are kept on every button, and a `Hidden` is never changed.
+- The statement reaches a button as the context name `daisyui`, which django-crispy-forms copies from the helper, so it works under whatever name the page gives its form, and with `{% crispy form %}`. Buttons are drawn only by the tag: `{{ form|crispy }}` draws no layout and no helper.
 
 ## Contributing
 
