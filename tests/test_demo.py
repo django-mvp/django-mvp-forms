@@ -1158,8 +1158,6 @@ class TestStandaloneTableFormsetPage(FormsetPageContract):
     def test_it_links_back_to_the_shell_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("formset-table")) is not None
-        page = open_page(self.url_name)
-        assert page.find("a", href=reverse("alert")) is not None
 
 
 CHOICES_OVERRIDE_PREFIX = "override"

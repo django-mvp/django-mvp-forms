@@ -26,7 +26,7 @@ same three kinds of choice, which this keeps.
 **Revisit if.** Real forms turn out to state the same colour and variant for both nearly every
 time.
 
-**ADR:** docs/adr/0019-size-is-shared-colour-and-variant-are-held-twice.md
+**ADR:** docs/adr/0021-size-is-shared-colour-and-variant-are-held-twice.md
 
 ## D2. The names are daisyUI's own, and the set is closed
 
@@ -45,7 +45,7 @@ developer learns nothing new and the documentation they already read applies.
 
 **Revisit if.** Host projects with custom daisyUI colours need to name them from Python.
 
-**ADR:** docs/adr/0018-choices-are-daisyuis-names-from-a-closed-table.md
+**ADR:** docs/adr/0020-choices-are-daisyuis-names-from-a-closed-table.md
 
 ## D3. A form-wide choice that does not apply to a kind of input is passed over. The same choice on one field is an error
 
@@ -59,7 +59,7 @@ which has no ghost variant.
 most real forms. A choice made for one named field that can never apply is a mistake by the
 developer, and the same reasoning as D2 says it should be loud.
 
-**ADR:** docs/adr/0018-choices-are-daisyuis-names-from-a-closed-table.md
+**ADR:** docs/adr/0020-choices-are-daisyuis-names-from-a-closed-table.md
 
 ## D4. An invalid field stays marked as in error whatever colour is chosen
 
@@ -72,7 +72,7 @@ planning.
 **Why.** G3 is Essential and is about a person being able to tell which field is wrong. A
 decorative colour must never remove that.
 
-**ADR:** docs/adr/0019-size-is-shared-colour-and-variant-are-held-twice.md
+**ADR:** docs/adr/0021-size-is-shared-colour-and-variant-are-held-twice.md
 
 ## D5. The choice works under the crispy filter as well as the crispy tag, and with or without a layout
 
@@ -92,7 +92,7 @@ every other field too, which is the repetition this feature is meant to remove.
 **Left to planning.** Where each statement is written and what it is called. It has to be
 reachable by the pack's plain Django templates and must not need django-mvp.
 
-**ADR:** docs/adr/0017-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md
+**ADR:** docs/adr/0019-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md
 
 ## D6. A field can undo the form's choice
 
@@ -164,7 +164,7 @@ Research R2 has the options weighed.
 
 **Revisit if.** django-crispy-forms stops passing a helper's own attributes into the context.
 
-**ADR:** docs/adr/0017-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md
+**ADR:** docs/adr/0019-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md
 
 ## D12. One layout object, `Choice`, states a choice for what it holds
 
@@ -183,7 +183,7 @@ what ADR 0008 ruled out. One wrapper adds one name and leaves every upstream obj
 **Revisit if.** django-crispy-forms gives layout objects a way to carry arguments a template
 pack can read.
 
-**ADR:** docs/adr/0017-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md
+**ADR:** docs/adr/0019-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md
 
 ## D13. `None` on a field means the pack's ordinary drawing
 
@@ -203,7 +203,7 @@ apply. With errors off the field takes its colour.
 **Why.** Both classes set the same property, and which wins depends on the order of the rules in
 daisyUI's stylesheet. FR-018 should not rest on that (research R5).
 
-**ADR:** docs/adr/0019-size-is-shared-colour-and-variant-are-held-twice.md
+**ADR:** docs/adr/0021-size-is-shared-colour-and-variant-are-held-twice.md
 
 ## D15. A mistake is reported when the form is drawn, as `InvalidChoice`
 
@@ -215,7 +215,7 @@ field or the button. The error is `InvalidChoice`, a `ValueError` carrying `kind
 cannot name it (FR-020). Django's `{% if %}` swallows an exception raised inside `and`, `or` and
 `not`, so the check must not wait for a property the frame reads (research R6).
 
-**ADR:** docs/adr/0018-choices-are-daisyuis-names-from-a-closed-table.md
+**ADR:** docs/adr/0020-choices-are-daisyuis-names-from-a-closed-table.md
 
 ## D16. The keyword is `color`
 
@@ -224,7 +224,7 @@ cannot name it (FR-020). Django's `{% if %}` swallows an exception raised inside
 **Why.** FR-005 has the developer write daisyUI's names, and daisyUI's documentation, like CSS
 and the rest of the Python the developer writes, spells it `color`.
 
-**ADR:** docs/adr/0018-choices-are-daisyuis-names-from-a-closed-table.md
+**ADR:** docs/adr/0020-choices-are-daisyuis-names-from-a-closed-table.md
 
 ## D17. The removal checkbox of a file field takes the size and the colour
 
@@ -237,7 +237,7 @@ a form that states nothing. See D24.)
 attributes reach the pack's widget template (research R7). The checkbox is never marked in error,
 as before: a file field drawn as in error gives it the size and no colour.
 
-**ADR:** none — local to one widget template, and follows from the rule in docs/adr/0019-size-is-shared-colour-and-variant-are-held-twice.md that a choice reaches every visible input
+**ADR:** none — local to one widget template, and follows from the rule in docs/adr/0021-size-is-shared-colour-and-variant-are-held-twice.md that a choice reaches every visible input
 
 ## D18. A `Choice` applies to everything inside it, and an inner one wins
 
@@ -247,7 +247,7 @@ colour for a field inside it and the button's for a button inside it.
 
 **Why.** It falls out of placing the choice in the context, and refusing it would take code.
 
-**ADR:** docs/adr/0017-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md
+**ADR:** docs/adr/0019-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md
 
 ## D19. A button given a colour drops the default `btn-primary`
 
@@ -258,7 +258,7 @@ nothing changes.
 **Why.** The same reasoning as D14: two colour modifiers on one element leave the result to the
 order of daisyUI's rules.
 
-**ADR:** docs/adr/0019-size-is-shared-colour-and-variant-are-held-twice.md
+**ADR:** docs/adr/0021-size-is-shared-colour-and-variant-are-held-twice.md
 
 ## D20. Design review, 2026-10-03
 
@@ -288,7 +288,7 @@ A field's or a button's own choice is still checked where it is resolved (D15).
 **Why.** The crispy filter draws no button, so a misspelt `button_color` was never resolved and
 never reported under it. FR-020 asks for the report whichever way the form is drawn.
 
-**ADR:** docs/adr/0018-choices-are-daisyuis-names-from-a-closed-table.md
+**ADR:** docs/adr/0020-choices-are-daisyuis-names-from-a-closed-table.md
 
 ## D22. A modal's close button and an alert's dismiss control take no choice
 

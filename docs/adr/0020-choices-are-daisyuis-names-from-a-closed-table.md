@@ -1,4 +1,4 @@
-# ADR 0018 — Choices are daisyUI's own names, from a closed table written out in full
+# ADR 0020 — Choices are daisyUI's own names, from a closed table written out in full
 
 **Status:** accepted
 

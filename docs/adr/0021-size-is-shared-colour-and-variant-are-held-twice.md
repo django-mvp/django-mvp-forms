@@ -1,4 +1,4 @@
-# ADR 0019 — Size is stated once for a form; colour and variant are held for inputs and for buttons
+# ADR 0021 — Size is stated once for a form; colour and variant are held for inputs and for buttons
 
 **Status:** accepted
 
