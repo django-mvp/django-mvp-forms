@@ -167,3 +167,15 @@ finding. Each was applied to the plan and tasks before any code.
 - **DR-006.** A label copied into `aria-label` has its tags stripped.
 - **DR-007.** The label's `for` is written only when there is an id to point at.
 - **DR-008.** No wrapper class around BeautifulSoup in the tests.
+
+## D16. Help text and errors are in the frame from US1
+
+**Decision:** `daisyui/field.html` writes the help text and error elements, with the ids of D11,
+in the story that introduces the frame, not in US2.
+
+**Why:** US1's acceptance for a field whose widget the pack does not cover is that it keeps its
+label, help text and errors (FR-009), and a test can only show that if the frame draws them. US2
+still owns the label's marker, the description and invalid attributes tied to the input, the error
+modifier, escaping and prefixes, and tests them.
+
+**Revisit if:** US2 splits the frame into smaller templates.

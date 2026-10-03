@@ -23,6 +23,6 @@ def parse():
 def draw(parse):
     def draw_template(source, **context):
         template = Template("{% load crispy_forms_tags %}" + source)
-        return parse(template.render(Context(context)))
+        return parse(template.render(Context({"csrf_token": "token", **context})))
 
     return draw_template

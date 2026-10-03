@@ -1,5 +1,6 @@
 """The forms the suite draws."""
 
+from crispy_forms.helper import FormHelper
 from django import forms
 
 
@@ -26,3 +27,21 @@ class DeveloperAttrsForm(forms.Form):
 class SecretForm(forms.Form):
     hidden = forms.CharField(widget=forms.PasswordInput)
     shown = forms.CharField(widget=forms.PasswordInput(render_value=True))
+
+
+class TextInputsWithLayoutForm(TextInputsForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+
+
+class UncoveredWidgetsForm(forms.Form):
+    first = forms.CharField(help_text="First help")
+    choice = forms.ChoiceField(choices=[("a", "A")], help_text="Choice help")
+    agree = forms.BooleanField(help_text="Agree help")
+    upload = forms.FileField(help_text="Upload help")
+    last = forms.CharField(help_text="Last help")
+
+
+class NoFieldsForm(forms.Form):
+    pass

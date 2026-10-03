@@ -1,0 +1,5 @@
+{% if form.form_html %}
+  {{ form.form_html }}
+{% else %}
+  {% include "daisyui/uni_form.html" %}
+{% endif %}
