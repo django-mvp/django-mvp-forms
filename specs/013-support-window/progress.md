@@ -22,3 +22,10 @@ Did: Added `relative_links` to support_window.py and TestReadmeLinks; wrote the 
 Verified: red first (ImportError for relative_links), then `uv run pytest tests/test_support_window.py -q` 25 passed; the three README-reading test files (test_documented_examples, test_template_surface, test_template_list) plus the new file passed; `uv run pre-commit run --all-files` all hooks passed. No page under docs/ describes versions, so none changed.
 Next: ledger, then the full verify and the report.
 Watch: relative_links returns [] for a README with no marked block; US2's readme_disagreements is what fails a README with no block.
+
+## 2026-10-03T23:46:24Z · Implementer US2 · T003
+
+Did: Added Window.readme_disagreements (statement block only, read between the support-window comments: package rows by first cell, pairs rows by release), Window.lockfile_disagreements, installed_versions, Window.installed_disagreements and three small static helpers (series, table_rows, set_disagreements); TestReadme, TestLockfile and TestInstalled.
+Verified: red first (ImportError for installed_versions), then `uv run pytest tests/test_support_window.py -x -q` 44 passed; two mutation probes (pairs loop emptied, asked branch disabled) each failed one test; `uv run pre-commit run --all-files` all hooks passed.
+Next: T004, the class lists, the fixture and the network fetch by hand.
+Watch: a README with no block names every declared version as missing, which is what fails it. installed_disagreements takes asked as a dict of package to series with unasked packages absent: the T005 hook must build it that way and keep only disagreements for asked packages.
