@@ -487,6 +487,83 @@ class TestReadmeDrawingSizeAndColour:
         assert {"toggle-sm", "toggle-primary"} <= publish
 
 
+class TestReadmeRating:
+    def test_the_example_stating_a_rating_draws_each_field_as_a_rating(self, draw):
+        form = readme_example("Rating and range")["ReviewForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        for name in ("score", "comfort"):
+            assert "rating" in soup.find(id=f"id_{name}")["class"]
+        assert soup.find("select") is None
+        assert len(soup.find(id="id_score").find_all("input")) == 5
+        assert len(soup.find(id="id_comfort").find_all("input")) == 6
+
+    def test_the_rating_stated_by_name_reaches_the_filter_too(self, draw):
+        form = readme_example("Rating and range")["ReviewForm"]()
+
+        soup = draw("{{ form|crispy }}", form=form)
+
+        assert "rating" in soup.find(id="id_score")["class"]
+        assert soup.find("select", id="id_comfort") is not None
+
+
+class TestReadmeRatingAndRangeSizeAndColour:
+    def test_the_example_gives_the_ratings_the_forms_size_and_colour(self, draw):
+        form = readme_example("Rating and range")["ReviewForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        for name in ("score", "comfort"):
+            wrapper = soup.find(id=f"id_{name}")
+            assert "rating-sm" in wrapper["class"]
+            stars = [
+                tag for tag in wrapper("input") if "rating-hidden" not in tag["class"]
+            ]
+            assert stars
+            assert all("bg-primary" in tag["class"] for tag in stars)
+
+    def test_the_example_gives_the_range_its_own_colour_and_the_forms_size(self, draw):
+        form = readme_example("Rating and range")["ReviewForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        classes = set(soup.find("input", id="id_volume")["class"])
+        assert {"range-sm", "range-accent"} <= classes
+        assert "range-primary" not in classes
+
+    def test_the_size_and_colour_reach_the_filter_too(self, draw):
+        form = readme_example("Rating and range")["ReviewForm"]()
+
+        soup = draw("{{ form|crispy }}", form=form)
+
+        assert "rating-sm" in soup.find(id="id_score")["class"]
+
+
+class TestReadmeRange:
+    def test_the_example_stating_a_range_draws_the_field_as_a_slider_with_its_limits(
+        self, draw
+    ):
+        form = readme_example("Rating and range")["ReviewForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        tag = soup.find("input", id="id_volume")
+        assert tag["type"] == "range"
+        assert "range" in tag["class"]
+        assert (tag["min"], tag["max"], tag["step"]) == ("0", "100", "5")
+
+    def test_the_example_form_cleans_the_slid_value_to_a_number(self, draw):
+        namespace = readme_example("Rating and range")
+        soup = draw("{% crispy form %}", form=namespace["ReviewForm"]())
+        name = soup.find("input", id="id_volume")["name"]
+
+        form = namespace["ReviewForm"]({"score": "3", name: "35"})
+
+        assert form.is_valid()
+        assert form.cleaned_data["volume"] == 35
+
+
 def readme_template(heading):
     section = README.read_text().split(f"#### {heading}\n", 1)[1]
     return re.search(r"```django\n(.*?)```", section, re.DOTALL).group(1)

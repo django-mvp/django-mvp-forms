@@ -37,6 +37,7 @@ from crispy_forms.layout import (
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import BaseFormSet, formset_factory
+from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
 from mvp_forms.choices import Choice, FormChoices, Modifiers
@@ -572,7 +573,8 @@ class InputKindsForm(ChosenForm):
     """One field of every kind of input that has a size, a colour or a variant.
 
     Args:
-        choices: What the form states for its inputs, or None. A toggle is added.
+        choices: What the form states for its inputs, or None. A toggle, a rating
+            and a range are drawn as such beside it.
     """
 
     text = forms.CharField(label=_("Text"), required=False)
@@ -597,11 +599,19 @@ class InputKindsForm(ChosenForm):
         choices=[("a", "A"), ("b", "B")],
         widget=forms.CheckboxSelectMultiple,
     )
+    rating = forms.ChoiceField(
+        label=_("Rating"), required=False, choices=[("1", "1"), ("2", "2"), ("3", "3")]
+    )
+    slider = forms.IntegerField(
+        label=_("Range"), required=False, min_value=0, max_value=10
+    )
 
     def __init__(self, *args, choices=None, **kwargs):
-        """Draw ``toggle`` as a toggle, beside whatever the form states."""
+        """Draw the toggle, the rating and the range, beside whatever is stated."""
         choices = choices or FormChoices()
         choices.fields.setdefault("toggle", Choice(drawing="toggle"))
+        choices.fields.setdefault("rating", Choice(drawing="rating"))
+        choices.fields.setdefault("slider", Choice(drawing="range"))
         super().__init__(*args, choices=choices, **kwargs)
 
 
@@ -1086,3 +1096,181 @@ class TableOrderHelper(StackedOrderHelper):
     """Draws the order lines as a table, with one submit button."""
 
     template = "daisyui/table_inline_formset.html"
+
+
+STARS = [(count, format_lazy(_("{count} stars"), count=count)) for count in range(1, 6)]
+STATE_STARS = [(str(count), label) for count, label in STARS]
+
+
+class RatingAndRangeForm(forms.Form):
+    """Two ratings and a range, which can be posted.
+
+    ``score`` is a rating by its name in ``FormChoices`` and ``comfort`` is a rating
+    in the layout, with an empty choice that clears it. ``volume`` is a range in the
+    layout, with limits and a step, and a slider always submits a number, so it is
+    never left empty. Every id and the button's name carry the form's prefix. The
+    form must be given a prefix.
+    """
+
+    score = forms.ChoiceField(label=_("How would you rate this?"), choices=STARS)
+    comfort = forms.TypedChoiceField(
+        label=_("How comfortable was it?"),
+        choices=[("", _("No answer")), *STARS],
+        coerce=int,
+        empty_value=None,
+        required=False,
+    )
+    volume = forms.IntegerField(
+        label=_("Volume"),
+        min_value=0,
+        max_value=100,
+        step_size=5,
+        initial=50,
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Build the helper, with the drawings stated and a submit button."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.daisyui = FormChoices(fields={"score": Choice(drawing="rating")})
+        self.helper.layout = Layout(
+            "score",
+            Choice("comfort", drawing="rating"),
+            Choice("volume", drawing="range"),
+        )
+        self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class RatingStateForm(ChosenForm):
+    """One rating, in one state.
+
+    Give the form a prefix of the state's name, so no id repeats on the page. The
+    field is ``score``.
+
+    Args:
+        state: ``"help"``, ``"error"`` or ``"disabled"``. The form for ``"error"``
+            is bound with nothing posted, so the required field fails.
+    """
+
+    score = forms.ChoiceField(label=_("How would you rate this?"), choices=STATE_STARS)
+
+    def __init__(self, *args, state, **kwargs):
+        """Put the field in its state, and state its drawing for the form."""
+        if state == "error":
+            args = args or ({},)
+        super().__init__(
+            *args,
+            choices=FormChoices(fields={"score": Choice(drawing="rating")}),
+            **kwargs,
+        )
+        score = self.fields["score"]
+        score.disabled = state == "disabled"
+        if state == "disabled":
+            self.initial["score"] = "3"
+        if state == "help":
+            score.help_text = _("Pick the star that fits best.")
+
+
+class RangeStateForm(ChosenForm):
+    """One range, in one state.
+
+    Give the form a prefix of the state's name, so no id repeats on the page. The
+    field is ``volume``.
+
+    Args:
+        state: ``"help"``, ``"error"`` or ``"disabled"``. The form for ``"error"``
+            is bound with a value above the field's highest.
+    """
+
+    volume = forms.IntegerField(
+        label=_("Volume"), min_value=0, max_value=100, step_size=5
+    )
+
+    def __init__(self, *args, state, **kwargs):
+        """Put the field in its state, and state its drawing for the form."""
+        if state == "error":
+            args = args or ({"volume": "500"},)
+        super().__init__(
+            *args,
+            choices=FormChoices(fields={"volume": Choice(drawing="range")}),
+            **kwargs,
+        )
+        volume = self.fields["volume"]
+        volume.disabled = state == "disabled"
+        if state == "disabled":
+            self.initial["volume"] = 40
+        if state == "help":
+            volume.help_text = _("Move the slider to set the volume.")
+
+
+class RatingAndRangeTrioForm(ChosenForm):
+    """A rating and a range, at one size or in one colour.
+
+    The fields are ``score`` and ``volume``. Give the form a prefix, so no id repeats
+    on the page.
+
+    Args:
+        size: The size stated for the form, or None.
+        color: The colour stated for the form, or None.
+    """
+
+    score = forms.ChoiceField(label=_("Rating"), choices=STATE_STARS)
+    volume = forms.IntegerField(
+        label=_("Range"), min_value=0, max_value=100, step_size=5, required=False
+    )
+
+    def __init__(self, *args, size=None, color=None, **kwargs):
+        """State the size and colour for the form, and the drawing of both fields."""
+        super().__init__(
+            *args,
+            choices=FormChoices(
+                size=size,
+                color=color,
+                fields={
+                    "score": Choice(drawing="rating"),
+                    "volume": Choice(drawing="range"),
+                },
+            ),
+            **kwargs,
+        )
+
+
+class RatingAndRangeOverrideForm(ChosenForm):
+    """A form that states a size and a colour, and fields that override both.
+
+    ``inherits_score`` and ``inherits_volume`` take the form's size and colour.
+    ``overrides_score`` and ``overrides_volume`` state their own in the layout. Give
+    the form a prefix.
+    """
+
+    inherits_score = forms.ChoiceField(label=_("Takes the form's"), choices=STATE_STARS)
+    inherits_volume = forms.IntegerField(
+        label=_("Takes the form's"), min_value=0, max_value=100, required=False
+    )
+    overrides_score = forms.ChoiceField(label=_("States its own"), choices=STATE_STARS)
+    overrides_volume = forms.IntegerField(
+        label=_("States its own"), min_value=0, max_value=100, required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        """State the form's choices, and the four fields' drawings."""
+        super().__init__(
+            *args,
+            choices=FormChoices(
+                size="sm",
+                color="primary",
+                fields={
+                    "inherits_score": Choice(drawing="rating"),
+                    "inherits_volume": Choice(drawing="range"),
+                },
+            ),
+            **kwargs,
+        )
+        self.helper.layout = Layout(
+            "inherits_score",
+            "inherits_volume",
+            Choice("overrides_score", drawing="rating", size="xl", color="accent"),
+            Choice("overrides_volume", drawing="range", size="xl", color="accent"),
+        )

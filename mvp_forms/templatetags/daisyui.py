@@ -10,6 +10,7 @@ from typing import Any, cast
 from django import forms, template
 from django.forms.boundfield import BoundField
 from django.forms.formsets import BaseFormSet
+from django.forms.widgets import ChoiceWidget
 from django.template import Context, Template
 from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
@@ -83,8 +84,10 @@ class FieldInput:
     Raises:
         InvalidChoice: A size, colour or variant stated for the form or the
             field is not one daisyUI has, or the field states one its input has
-            no modifier for. A drawing the field states is not one of the three,
-            or the field is not a boolean field.
+            no modifier for. A drawing the field states is not one of the
+            drawings its widget takes: a boolean field's three, ``"rating"``
+            for a select or a radio group that holds one choice, ``"range"``
+            for a number input, and none for any other widget.
     """
 
     components: dict[type[forms.Widget], str] = {
@@ -104,8 +107,8 @@ class FieldInput:
     # Makes an input fill its field, unless the developer's own class holds a
     # width. See docs/adr/0007-inputs-fill-their-container.md.
     width = "w-full"
-    # A checkbox, a radio and a toggle are fixed-size and never widened.
-    fixed_size: set[str] = {"checkbox", "radio", "toggle"}
+    # A checkbox, a radio, a toggle and a rating are fixed-size and never widened.
+    fixed_size: set[str] = {"checkbox", "radio", "toggle", "rating"}
     templates: dict[type[forms.Widget], str] = {
         forms.CheckboxSelectMultiple: "daisyui/widgets/group.html",
         forms.RadioSelect: "daisyui/widgets/group.html",
@@ -119,6 +122,20 @@ class FieldInput:
     # The removal checkbox of a held file takes the size and the colour. A
     # checkbox has no variant.
     removal_kinds = ("size", "color")
+    # What a boolean field's widget takes, by name, in the order the drawings are
+    # listed in an error.
+    boolean_drawings = ("checkbox", "toggle", "switch")
+    # The widgets that hold one choice, each with the Django class whose
+    # templates they must still name to be drawn as a rating.
+    single_choice_widgets: tuple[type[ChoiceWidget], ...] = (
+        forms.Select,
+        forms.RadioSelect,
+    )
+    rating_template = "daisyui/widgets/rating.html"
+    # daisyUI draws every child of a rating as a star, and hides the input that
+    # clears it.
+    star_classes = ("mask", "mask-star-2")
+    clearing_class = "rating-hidden"
     # Written out, not built from the component's name, so a host project's
     # Tailwind build finds them when it scans this module.
     error_modifiers: dict[str, str] = {
@@ -129,6 +146,8 @@ class FieldInput:
         "toggle": "toggle-error",
         "radio": "radio-error",
         "file-input": "file-input-error",
+        "rating": "bg-error",
+        "range": "range-error",
     }
 
     def __init__(
@@ -194,6 +213,36 @@ class FieldInput:
             return Choice() if named is None else named
         return placed if named is None else placed.over(named)
 
+    def drawings_of(self, widget: forms.Widget) -> tuple[str, ...]:
+        """Return the names of the drawings a widget takes.
+
+        Args:
+            widget: The field's widget.
+
+        Returns:
+            The three drawings of a boolean field for a checkbox. ``"rating"``
+            for a select or a radio group that holds one choice, is not a
+            null-boolean select, and still names its Django class's own
+            template and option template. ``"range"`` for a number input.
+            Nothing for any other widget.
+        """
+        if isinstance(widget, forms.CheckboxInput):
+            return self.boolean_drawings
+        if isinstance(widget, forms.NumberInput):
+            return ("range",)
+        for widget_class in self.single_choice_widgets:
+            if (
+                isinstance(widget, widget_class)
+                and not widget.allow_multiple_selected
+                and not isinstance(widget, forms.NullBooleanSelect)
+                and all(
+                    getattr(widget, attr) == getattr(widget_class, attr)
+                    for attr in ("template_name", "option_template_name")
+                )
+            ):
+                return ("rating",)
+        return ()
+
     def resolve_drawing(self, own: Choice) -> str | None:
         """Return the name of the drawing stated for the field, or None.
 
@@ -213,9 +262,7 @@ class FieldInput:
         drawing = own.drawing
         if drawing is None or drawing is INHERIT:
             return None
-        if not isinstance(self.field.field.widget, forms.CheckboxInput):
-            raise InvalidChoice("drawing", drawing, (), self.field.name)
-        allowed = tuple(Modifiers.drawings)
+        allowed = self.drawings_of(self.field.field.widget)
         if drawing not in allowed:
             raise InvalidChoice("drawing", drawing, allowed, self.field.name)
         return str(drawing)
@@ -273,7 +320,7 @@ class FieldInput:
     def component(self) -> str | None:
         """The daisyUI class for the field's widget, or None when it has none.
 
-        A drawing stated for the field decides it, for a boolean field.
+        A drawing stated for the field decides it.
         """
         if self.drawing:
             return Modifiers.drawings[self.drawing]
@@ -313,8 +360,18 @@ class FieldInput:
 
     @property
     def widget(self) -> forms.Widget:
-        """The widget to draw: the field's own, or a copy with the pack's template."""
+        """The widget to draw: the field's own, or one made for this render.
+
+        A widget the pack has a template for is a copy that names it. A rating is
+        a radio group and a range is a copy whose input type is ``range``.
+        """
         widget: forms.Widget = self.field.field.widget
+        if self.drawing == "rating" and isinstance(widget, ChoiceWidget):
+            return self.rating_widget(widget)
+        if self.drawing == "range" and isinstance(widget, forms.NumberInput):
+            drawn = copy.copy(widget)
+            drawn.input_type = "range"
+            return drawn
         if self.template_name:
             widget = copy.copy(widget)
             widget.template_name = self.template_name
@@ -327,6 +384,99 @@ class FieldInput:
             for index, part in enumerate(widget.widgets):
                 self.decorate_part(widget, index, part)
         return widget
+
+    def rating_widget(self, widget: ChoiceWidget) -> forms.RadioSelect:
+        """Return the widget a rating is drawn through, made for this render.
+
+        A radio group is drawn through a copy of itself. A select is drawn
+        through a radio group built from its attributes and choices, because a
+        select gives its options none of its attributes and a rating is radio
+        inputs. The field's own widget is not changed.
+
+        Args:
+            widget: The field's widget, a select or a radio group.
+
+        Returns:
+            A radio group that names the rating template and whose context
+            holds what the template needs.
+        """
+        if isinstance(widget, forms.RadioSelect):
+            drawn = copy.copy(widget)
+        else:
+            drawn = forms.RadioSelect(attrs=widget.attrs, choices=widget.choices)
+            drawn.is_required = widget.is_required
+            drawn.is_localized = widget.is_localized
+        drawn.template_name = self.rating_template
+        context = self.rating_context(drawn.get_context)
+        drawn.get_context = context  # type: ignore[method-assign]
+        return drawn
+
+    def rating_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
+        """Wrap a rating widget's context so that it carries what the pack resolved.
+
+        Only the widget's own context reaches its template, so the wrapper's class
+        and the inputs, each with its class and its name, are added there, on the
+        copy of the widget that is drawn.
+
+        Args:
+            get_context: The copy's own ``get_context``.
+
+        Returns:
+            A function that returns the same context with ``rating_class`` and
+            ``inputs`` set. ``inputs`` holds the clearing input first, whatever
+            its place among the choices, and then the stars in the field's order.
+        """
+
+        def with_rating(*args: Any, **kwargs: Any) -> dict:
+            context = get_context(*args, **kwargs)
+            widget = context["widget"]
+            options = [
+                option for optgroup in widget["optgroups"] for option in optgroup[1]
+            ]
+            clearing = [option for option in options if option["value"] == ""]
+            stars = [option for option in options if option["value"] != ""]
+            star_classes = [*self.star_classes, *self.star_modifiers]
+            for option in clearing:
+                self.name_input(option, [self.clearing_class])
+            for option in stars:
+                self.name_input(option, star_classes)
+            widget["rating_class"] = self.rating_class
+            widget["inputs"] = clearing + stars
+            return context
+
+        return with_rating
+
+    def name_input(self, option: dict, classes: list[str]) -> None:
+        """Class and name one input of a rating, for this render.
+
+        Args:
+            option: The option's context, which is changed.
+            classes: The pack's classes for the input, after the developer's own.
+        """
+        attrs = option["attrs"]
+        attrs["class"] = " ".join(dict.fromkeys([*self.own_classes, *classes]))
+        attrs.setdefault("aria-label", self.plain_text(option["label"]))
+
+    @property
+    def rating_class(self) -> str:
+        """The classes of the element that is the rating: the component and the size."""
+        sizes = self.resolve_modifiers(
+            self.choices, self.own, self.component, ("size",)
+        )
+        return " ".join([str(self.component), *sizes])
+
+    @property
+    def star_modifiers(self) -> list[str]:
+        """The classes a star takes besides its shape: the colour, or the error's.
+
+        A field in error takes the error colour and not the chosen one.
+        """
+        colors = self.resolve_modifiers(
+            self.choices, self.own, self.component, ("color",)
+        )
+        if self.is_in_error:
+            colors.append(self.error_modifiers["rating"])
+        return colors
 
     def decorate_part(
         self, widget: forms.MultiWidget, index: int, part: forms.Widget
@@ -379,8 +529,11 @@ class FieldInput:
 
     @property
     def is_group(self) -> bool:
-        """Whether the field is several inputs that share one label."""
-        return self.field.use_fieldset
+        """Whether the field is several inputs that share one label.
+
+        A rating is one, whatever widget it is drawn from.
+        """
+        return self.drawing == "rating" or self.field.use_fieldset
 
     @property
     def is_multi_widget(self) -> bool:
@@ -485,7 +638,7 @@ class FieldInput:
         attrs: dict[str, str | bool] = {}
         if self.component and self.has_attached_text:
             attrs["class"] = " ".join(self.own_classes) or False
-        elif self.component:
+        elif self.component and self.drawing != "rating":
             attrs["class"] = self.css_class
         if self.drawing == "switch":
             attrs["role"] = "switch"
@@ -508,10 +661,24 @@ class FieldInput:
         A label marked safe is markup, so its tags are dropped and its entities
         read as characters. Any other label is shown as written.
         """
-        label = self.field.label
-        if isinstance(label, SafeData):
-            return unescape(strip_tags(str(label))).strip()
-        return str(label)
+        return self.plain_text(self.field.label)
+
+    @staticmethod
+    def plain_text(text: Any) -> str:
+        """Return a label or a choice's label as plain text, for an attribute.
+
+        Args:
+            text: A label, which is markup when it is marked safe.
+
+        Returns:
+            The text with its tags dropped and its entities read as characters
+            when it is marked safe, and as written otherwise.
+        """
+        # A lazy label says whether it is safe only once it is read.
+        plain = str(text)
+        if isinstance(plain, SafeData):
+            return unescape(strip_tags(str(plain))).strip()
+        return plain
 
     @property
     def requires_placeholder(self) -> bool:
@@ -534,7 +701,7 @@ class FieldInput:
         return (
             self.field.field.required
             and not self.field.form.use_required_attribute
-            and not self.field.use_fieldset
+            and not self.is_group
         )
 
     @property
@@ -545,7 +712,7 @@ class FieldInput:
             not self.show_labels
             and bool(self.field.label)
             and "aria-label" not in widget.attrs
-            and not self.field.use_fieldset
+            and not self.is_group
         )
 
     @property
@@ -556,7 +723,7 @@ class FieldInput:
             not self.show_errors
             and bool(self.field.errors)
             and "aria-describedby" not in widget.attrs
-            and not self.field.use_fieldset
+            and not self.is_group
         )
 
     @property
@@ -577,17 +744,24 @@ class FieldInput:
             ids.append(f"{self.field.auto_id}_error")
         return " ".join(ids)
 
+    @property
+    def is_select_rating(self) -> bool:
+        """Whether a select is drawn as a rating, which is a group to the frame."""
+        return self.drawing == "rating" and not self.field.use_fieldset
+
     def render(self) -> SafeString:
         """Return the widget drawn with the pack's attributes.
 
         With errors off, a field with errors and no help text has nothing for
         its description to name, which ``as_widget`` cannot express, so the
-        widget is rendered from the attributes Django would have built.
+        widget is rendered from the attributes Django would have built. A select
+        drawn as a rating is rendered the same way, because Django would describe
+        each star, and the fieldset carries the description.
 
         Returns:
             The widget's markup.
         """
-        if self.hides_error_element and not self.description:
+        if (self.hides_error_element and not self.description) or self.is_select_rating:
             widget = self.widget
             attrs = self.field.build_widget_attrs(self.attrs, widget)
             attrs.pop("aria-describedby", None)
@@ -781,7 +955,7 @@ def daisyui_field(context: Context, field: BoundField, **decoration: Any) -> Fie
 
     Raises:
         InvalidChoice: A choice that applies to the field is not one daisyUI has,
-            or a drawing is stated for a field that is not a boolean field.
+            or a drawing is stated that the field's widget does not take.
         TypeError: The form's helper holds a ``daisyui`` attribute that is not a
             ``FormChoices``.
     """

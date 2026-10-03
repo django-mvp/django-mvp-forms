@@ -27,7 +27,9 @@ class InvalidChoice(ValueError):
         value: The value that was stated.
         allowed: The names allowed, in daisyUI's order. Empty when the input
             drawn has no modifier of this kind at all, or when a drawing was
-            stated for something that is not a boolean field.
+            stated for a field that takes none. For a drawing, the names the
+            field takes: the three of a boolean field, ``"rating"`` for a
+            field that holds one choice, or ``"range"`` for a number field.
         target: The field's name, or the button's name or content, when the
             statement was made for one of them. None when the form made it.
     """
@@ -116,6 +118,20 @@ class Modifiers:
             "lg": "radio-lg",
             "xl": "radio-xl",
         },
+        "rating": {
+            "xs": "rating-xs",
+            "sm": "rating-sm",
+            "md": "rating-md",
+            "lg": "rating-lg",
+            "xl": "rating-xl",
+        },
+        "range": {
+            "xs": "range-xs",
+            "sm": "range-sm",
+            "md": "range-md",
+            "lg": "range-lg",
+            "xl": "range-xl",
+        },
         "btn": {
             "xs": "btn-xs",
             "sm": "btn-sm",
@@ -195,6 +211,26 @@ class Modifiers:
             "warning": "radio-warning",
             "error": "radio-error",
         },
+        "rating": {
+            "neutral": "bg-neutral",
+            "primary": "bg-primary",
+            "secondary": "bg-secondary",
+            "accent": "bg-accent",
+            "info": "bg-info",
+            "success": "bg-success",
+            "warning": "bg-warning",
+            "error": "bg-error",
+        },
+        "range": {
+            "neutral": "range-neutral",
+            "primary": "range-primary",
+            "secondary": "range-secondary",
+            "accent": "range-accent",
+            "info": "range-info",
+            "success": "range-success",
+            "warning": "range-warning",
+            "error": "range-error",
+        },
         "btn": {
             "neutral": "btn-neutral",
             "primary": "btn-primary",
@@ -233,6 +269,8 @@ class Modifiers:
         "checkbox": "checkbox",
         "toggle": "toggle",
         "switch": "toggle",
+        "rating": "rating",
+        "range": "range",
     }
 
     tables: ClassVar[dict[str, dict[str, dict[str, str]]]] = {
@@ -336,8 +374,10 @@ class Choice(LayoutObject):
         size: The size, or ``INHERIT``.
         color: The colour, or ``INHERIT``.
         variant: The variant, or ``INHERIT``.
-        drawing: How a boolean field is drawn: ``"checkbox"``, ``"toggle"`` or
-            ``"switch"``, or ``INHERIT``. Only a boolean field takes one.
+        drawing: How a field is drawn, or ``INHERIT``. A boolean field takes
+            ``"checkbox"``, ``"toggle"`` or ``"switch"``. A field that holds one
+            choice, a select or a radio group, takes ``"rating"``. A number
+            field takes ``"range"``. Any other field takes none.
     """
 
     context_name = "daisyui_choice"

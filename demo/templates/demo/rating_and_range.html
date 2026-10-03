@@ -1,0 +1,74 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Drawn in Python" icon="rating-and-range">
+    <c-text>
+      Two fields that each hold one choice, drawn as a rating, one star for each choice,
+      and a number field drawn as a range. The first rating states its drawing by its name
+      in the form's statement and cannot be cleared. The second states it in the layout and
+      has an empty choice, which clears it. The range states it in the layout, and its
+      limits and step are the ones the field declares. Pick a star, move the slider, submit
+      the form, and the page shows what the form cleaned to.
+    </c-text>
+    {% crispy form %}
+  </c-section>
+  {% if cleaned %}
+    <c-section title="What the form cleaned to" level="3">
+      <ul id="{{ prefix }}-cleaned">
+        {% for item in cleaned %}
+          <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+        {% endfor %}
+      </ul>
+    </c-section>
+  {% endif %}
+  <c-text>
+    A rating and a range keep their label, their help text, their required marker, their
+    error and their disabled state. No form below posts anywhere.
+  </c-text>
+  <c-section title="A rating in every state" level="3">
+    {% for state in rating_states %}
+      <c-section :title="state.title" level="4">
+        {% crispy state.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="A range in every state" level="3">
+    {% for state in range_states %}
+      <c-section :title="state.title" level="4">
+        {% crispy state.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Sizes" level="3">
+    <c-text>
+      A rating and a range take the size stated for the form, as every input does. A
+      rating's size is on the group and its colour is on each star.
+    </c-text>
+    {% for size in sizes %}
+      <c-section :title="size.title" level="4">
+        {% crispy size.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Colours" level="3">
+    <c-text>
+      They take its colour too. A rating and a range have no variant.
+    </c-text>
+    {% for color in colors %}
+      <c-section :title="color.title" level="4">
+        {% crispy color.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Overriding what the form states" level="3">
+    <c-text>
+      The form states a small size and the primary colour. The first rating and range
+      take both, and the second of each states a size and a colour of its own in the
+      layout.
+    </c-text>
+    {% crispy override_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'rating-and-range-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}
