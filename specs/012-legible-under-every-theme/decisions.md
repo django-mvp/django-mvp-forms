@@ -421,4 +421,3 @@ low ones. Every one was closed by a change.
   `Element` that nothing read, are removed. A disabled button is drawn, so its row is reached.
 
 **ADR:** none. It is the record of a review.
-

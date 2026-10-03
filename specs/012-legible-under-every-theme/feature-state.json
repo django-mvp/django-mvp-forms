@@ -2,7 +2,7 @@
   "feature": "012-legible-under-every-theme",
   "branch": "012-legible-under-every-theme",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-03T23:08:45Z",
       "note": "one reviewer on the feature diff"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T23:45:19Z",
+      "note": "review recorded, nothing open; walkthrough laid out; pull request ready for review"
     }
   ],
   "gates": {
@@ -80,6 +85,11 @@
         "COR-007 (low) the Themes page's headings are translatable: remedied in T009",
         "COR-008 (low) unreached rows and members removed; a disabled button is drawn: remedied in T009"
       ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T23:44:05Z",
+      "self_resolved": []
     }
   },
   "stories": [
@@ -350,6 +360,6 @@
   },
   "pr": {
     "number": 95,
-    "draft": true
+    "draft": false
   }
 }
