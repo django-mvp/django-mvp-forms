@@ -262,6 +262,42 @@ The classes the names mean are written out in the tables of `Modifiers`, in `mvp
 - A field in error keeps its error modifier and is drawn without the chosen colour, so the error is the only colour it shows. Its size and variant still apply.
 - Hidden inputs, labels, help text, error text and the `required`, `disabled` and `readonly` attributes are never changed, and classes you put on a widget are kept.
 
+### One field's own choice
+
+One field can state a size, a colour or a variant of its own. There are two ways, and they combine.
+
+In a layout, wrap the field in a `Choice`. It draws what it holds, with its choice in force for everything inside it:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Column, Layout, Row
+from django import forms
+from mvp_forms.choices import Choice, FormChoices
+
+
+class SearchForm(forms.Form):
+    search = forms.CharField()
+    name = forms.CharField()
+    city = forms.CharField()
+    notes = forms.CharField(widget=forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(size="sm", color="primary")
+        self.helper.layout = Layout(
+            Choice("search", size="lg"),
+            Choice(Row(Column("name"), Column("city")), color=None),
+            "notes",
+        )
+```
+
+Here `search` is large and keeps the form's colour, `name` and `city` keep the form's size and lose its colour, and `notes` takes the form's choices. A `Choice` may hold a `Row`, a `Fieldset` or any other layout object, and a `Choice` inside a `Choice` is merged over the outer one, each of the three on its own, so the inner one wins for what it states. You can also wrap fields already in a layout, with `helper["search"].wrap(Choice, size="lg")`.
+
+For a form drawn without a layout, name the field in `FormChoices`, as `notes` was in the section above: `FormChoices(fields={"search": Choice(size="lg")})`. It works with `{{ form|crispy }}` and with `{% crispy form %}`, and changes no other field.
+
+When both are given for a field, the `Choice` in the layout wins over the one in `fields`, which wins over the form's, for each of the three on its own. What a `Choice` leaves out is inherited, and `None` is the pack's ordinary drawing: `Choice("notes", color=None)` undoes the form's colour for that field and keeps its size. A size, colour or variant that the field's input has no modifier for raises `InvalidChoice` when the form is drawn, because you asked for it by name. The form's own statement is passed over for such an input.
+
 ## Contributing
 
 Standards for this repository live in

@@ -3,7 +3,10 @@
 from enum import Enum
 from typing import Any, ClassVar
 
+from crispy_forms.layout import LayoutObject
+from crispy_forms.utils import TEMPLATE_PACK
 from django.template import Context
+from django.utils.safestring import SafeString
 
 
 class Inherit(Enum):
@@ -279,13 +282,15 @@ class Modifiers:
         return modifiers[value]
 
 
-class Choice:
+class Choice(LayoutObject):
     """A size, a colour and a variant stated for one field or one button.
 
     Each argument left out is inherited from the statement it is merged over,
     and None is the pack's ordinary drawing, which undoes it.
 
-    ``context_name`` is where a layout places it while it draws what it holds.
+    In a layout it draws what it holds, at any depth, with itself placed in the
+    context under ``context_name``, merged over any ``Choice`` around it. Holding
+    nothing, it is the value in ``FormChoices(fields=...)``.
 
     Args:
         *fields: What the choice holds. Nothing when it is a value in
@@ -324,6 +329,42 @@ class Choice:
             color=outer.color if self.color is INHERIT else self.color,
             variant=outer.variant if self.variant is INHERIT else self.variant,
         )
+
+    def render(
+        self,
+        form: Any,
+        context: Context,
+        template_pack: str = TEMPLATE_PACK,
+        **kwargs: Any,
+    ) -> SafeString:
+        """Draw what the choice holds, with the choice placed in the context.
+
+        django-crispy-forms leaves layers of its own on top of the context while
+        it draws, so the layer pushed here is removed by identity and never by
+        popping the top.
+
+        Args:
+            form: The form being drawn.
+            context: The template context.
+            template_pack: The template pack drawing the layout.
+            **kwargs: Passed on to what the choice holds.
+
+        Returns:
+            The markup of what the choice holds, in order.
+        """
+        outer = context.get(self.context_name)
+        placed = self.over(outer) if isinstance(outer, Choice) else self
+        layer = context.push({self.context_name: placed})
+        try:
+            drawn: SafeString = self.get_rendered_fields(
+                form, context, template_pack, **kwargs
+            )
+            return drawn
+        finally:
+            for index in range(len(context.dicts) - 1, -1, -1):
+                if context.dicts[index] is layer:
+                    del context.dicts[index]
+                    break
 
 
 class FormChoices:

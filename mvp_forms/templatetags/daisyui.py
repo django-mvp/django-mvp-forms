@@ -119,10 +119,12 @@ class FieldInput:
             InvalidChoice: See the class.
         """
         named = choices.fields.get(self.field.name)
-        if placed is not None and named is not None:
-            own = placed.over(named)
+        if placed is None:
+            own = Choice() if named is None else named
+        elif named is None:
+            own = placed
         else:
-            own = placed or named or Choice()
+            own = placed.over(named)
         stated = {
             "size": choices.size,
             "color": choices.color,

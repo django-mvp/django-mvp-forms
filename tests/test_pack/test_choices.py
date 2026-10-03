@@ -4,11 +4,17 @@ import re
 
 import pytest
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Column, Div, Fieldset, Row
+from crispy_forms.layout import Column, Div, Fieldset, Layout, Row
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.template import Context, Template
 
-from mvp_forms.choices import FormChoices
-from tests.forms import DeveloperAttrsForm, EveryInputForm, FilesForm
+from mvp_forms.choices import Choice, FormChoices
+from tests.forms import (
+    DeveloperAttrsForm,
+    EveryInputForm,
+    FilesForm,
+    StructureForm,
+)
 
 SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
 STATEMENT = {"size": "lg", "color": "primary", "variant": "ghost"}
@@ -314,3 +320,178 @@ class TestRemovalCheckboxOfAFileInError:
 
         assert "file-input-error" in classes(soup.find(id="id_optional"))
         assert classes(removal) == {"checkbox", "checkbox-lg"}
+
+
+def structured(*layout, **statement):
+    form = StructureForm(layout=layout)
+    form.helper.daisyui = FormChoices(**statement)
+    return form
+
+
+def named(form, name):
+    return classes(form.find(id=f"id_{name}"))
+
+
+class TestFieldChoices:
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_field_named_by_the_form_takes_its_own_size_and_no_other_changes(
+        self, draw, source
+    ):
+        form = StructureForm()
+        form.helper.daisyui = FormChoices(
+            size="sm", fields={"second": Choice(size="lg")}
+        )
+
+        soup = draw(source, form=form)
+
+        assert "input-lg" in named(soup, "second")
+        assert "input-sm" not in named(soup, "second")
+        for other in ("first", "third", "fourth"):
+            assert "input-sm" in named(soup, other)
+            assert "input-lg" not in named(soup, other)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_field_named_by_the_form_on_a_form_stating_nothing_else_takes_it(
+        self, draw, source
+    ):
+        form = StructureForm()
+        form.helper.daisyui = FormChoices(fields={"second": Choice(color="accent")})
+
+        soup = draw(source, form=form)
+
+        assert "input-accent" in named(soup, "second")
+        assert "input-accent" not in named(soup, "first")
+
+    def test_a_choice_in_a_layout_gives_its_field_its_own_size(self, draw):
+        form = structured(
+            Choice("second", size="lg"), "first", "third", "fourth", size="sm"
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert "input-lg" in named(soup, "second")
+        assert "input-sm" not in named(soup, "second")
+        for other in ("first", "third", "fourth"):
+            assert "input-sm" in named(soup, other)
+            assert "input-lg" not in named(soup, other)
+
+    def test_a_field_stating_only_a_colour_keeps_the_forms_size(self, draw):
+        form = structured(
+            Choice("first", color="accent"), "second", size="sm", color="primary"
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert {"input-accent", "input-sm"} <= named(soup, "first")
+        assert "input-primary" not in named(soup, "first")
+        assert {"input-primary", "input-sm"} <= named(soup, "second")
+
+    def test_none_undoes_the_forms_colour_and_keeps_its_size(self, draw):
+        form = structured(
+            Choice("first", color=None), "second", size="sm", color="primary"
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert "input-sm" in named(soup, "first")
+        assert not {"input-primary", "input-accent"} & named(soup, "first")
+        assert "input-primary" in named(soup, "second")
+
+    def test_a_choice_in_a_layout_on_a_form_stating_nothing_takes_effect(self, draw):
+        form = structured(Choice("first", size="lg"), "second")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert "input-lg" in named(soup, "first")
+        assert "input-lg" not in named(soup, "second")
+
+    def test_a_choice_in_a_layout_wins_over_the_one_named_by_the_form(self, draw):
+        form = structured(
+            Choice("first", size="xl"),
+            "second",
+            fields={"first": Choice(size="xs", color="accent")},
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert {"input-xl", "input-accent"} <= named(soup, "first")
+        assert "input-xs" not in named(soup, "first")
+
+    def test_wrapping_a_field_with_a_choice_gives_it_the_choice(self, draw):
+        form = structured("first", "second", "third", size="sm")
+        form.helper["second"].wrap(Choice, size="lg")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert "input-lg" in named(soup, "second")
+        assert "input-sm" in named(soup, "first")
+        assert "input-sm" in named(soup, "third")
+
+    def test_a_choice_inside_a_choice_wins_for_each_kind_it_states(self, draw):
+        form = structured(
+            Choice(
+                "first",
+                Choice("second", size="xl"),
+                "third",
+                size="lg",
+                color="accent",
+            ),
+            "fourth",
+            size="sm",
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert {"input-lg", "input-accent"} <= named(soup, "first")
+        assert {"input-xl", "input-accent"} <= named(soup, "second")
+        assert "input-lg" not in named(soup, "second")
+        assert {"input-lg", "input-accent"} <= named(soup, "third")
+        assert "input-sm" in named(soup, "fourth")
+        assert "input-accent" not in named(soup, "fourth")
+
+    def test_a_choice_holding_a_row_gives_every_field_in_it_the_choice(self, draw):
+        form = structured(
+            Choice(Row(Column("first"), Column("second")), size="lg"),
+            "third",
+            size="sm",
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert "input-lg" in named(soup, "first")
+        assert "input-lg" in named(soup, "second")
+        assert "input-sm" in named(soup, "third")
+
+    def test_a_field_after_a_choice_in_the_same_layout_is_not_affected(self, draw):
+        form = structured(Choice("first", size="lg", color="accent"), "second")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert named(soup, "second") == classes(
+            draw("{% crispy form %}", form=structured("first", "second")).find(
+                id="id_second"
+            )
+        )
+
+    def test_the_developers_own_classes_are_kept(self, draw):
+        form = DeveloperAttrsForm()
+        form.helper = FormHelper(form)
+        form.helper.layout = Layout(Choice("name", size="lg"))
+
+        name = draw("{% crispy form %}", form=form).find(id="id_name")
+
+        assert {"wide", "input", "input-lg"} <= classes(name)
+
+    def test_a_choice_stating_nothing_draws_what_no_choice_draws(self, draw):
+        plain = draw("{% crispy form %}", form=structured("first", "second"))
+        chosen = draw("{% crispy form %}", form=structured(Choice("first"), "second"))
+
+        assert str(chosen) == str(plain)
+
+    def test_the_context_holds_no_choice_after_the_layout_is_drawn(self, draw):
+        form = structured(Choice("first", size="lg"), "second")
+        context = Context({"csrf_token": "token", "form": form})
+
+        Template("{% load crispy_forms_tags %}{% crispy form %}").render(context)
+
+        assert Choice.context_name not in context

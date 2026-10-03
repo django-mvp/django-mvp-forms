@@ -2,6 +2,7 @@
 
 import pytest
 from crispy_forms.helper import FormHelper
+from crispy_forms.layout import LayoutObject
 from django import forms
 from django.template import Context
 
@@ -252,6 +253,101 @@ class TestChoice:
 
         assert (inner.size, inner.color) == ("sm", INHERIT)
         assert (outer.size, outer.color) == ("lg", "info")
+
+
+class Recorder:
+    def __init__(self, leaves_a_layer=False):
+        self.leaves_a_layer = leaves_a_layer
+        self.seen = []
+
+    def render(self, form, context, template_pack=None, **kwargs):
+        self.seen.append(context.get(Choice.context_name))
+        if self.leaves_a_layer:
+            context.update({"left": "behind"})
+        return "<recorded>"
+
+
+class TestChoiceRender:
+    def test_it_is_a_layout_object(self):
+        assert isinstance(Choice("name"), LayoutObject)
+
+    def test_what_it_holds_is_drawn_with_itself_placed_in_the_context(self):
+        held = Recorder()
+        choice = Choice(held, size="lg")
+
+        choice.render(None, Context(), template_pack="daisyui")
+
+        placed = held.seen[0]
+        assert isinstance(placed, Choice)
+        assert placed.size == "lg"
+
+    def test_everything_it_holds_is_drawn_in_order(self):
+        first, second = Recorder(), Recorder()
+
+        html = Choice(first, second, size="lg").render(
+            None, Context(), template_pack="daisyui"
+        )
+
+        assert html == "<recorded><recorded>"
+        assert len(first.seen) == len(second.seen) == 1
+
+    def test_an_inner_choice_is_placed_merged_over_the_outer_one(self):
+        held = Recorder()
+        inner = Choice(held, color="info")
+        outer = Choice(inner, size="lg", color="accent")
+
+        outer.render(None, Context(), template_pack="daisyui")
+
+        placed = held.seen[0]
+        assert (placed.size, placed.color) == ("lg", "info")
+
+    def test_the_outer_choice_is_placed_again_after_an_inner_one(self):
+        before, after = Recorder(), Recorder()
+        outer = Choice(Choice(before, size="sm"), after, size="lg")
+
+        outer.render(None, Context(), template_pack="daisyui")
+
+        assert before.seen[0].size == "sm"
+        assert after.seen[0].size == "lg"
+
+    def test_nothing_is_placed_in_the_context_afterwards(self):
+        context = Context()
+
+        Choice(Recorder(), size="lg").render(None, context, template_pack="daisyui")
+
+        assert Choice.context_name not in context
+
+    def test_a_choice_placed_before_is_visible_again_afterwards(self):
+        outer = Choice(size="xl")
+        context = Context({Choice.context_name: outer})
+
+        Choice(Recorder(), size="lg").render(None, context, template_pack="daisyui")
+
+        assert context[Choice.context_name] is outer
+
+    def test_it_removes_its_own_layer_when_what_it_holds_leaves_one_above(self):
+        context = Context()
+        depth = len(context.dicts)
+
+        Choice(Recorder(leaves_a_layer=True), size="lg").render(
+            None, context, template_pack="daisyui"
+        )
+
+        assert Choice.context_name not in context
+        assert context["left"] == "behind"
+        assert len(context.dicts) == depth + 1
+
+    def test_it_removes_its_own_layer_when_drawing_what_it_holds_raises(self):
+        class Failing:
+            def render(self, form, context, template_pack=None, **kwargs):
+                raise RuntimeError
+
+        context = Context()
+
+        with pytest.raises(RuntimeError):
+            Choice(Failing(), size="lg").render(None, context, template_pack="daisyui")
+
+        assert Choice.context_name not in context
 
 
 class TestFormChoices:

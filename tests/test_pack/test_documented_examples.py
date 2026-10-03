@@ -221,3 +221,20 @@ class TestReadmeFormWideChoices:
         newsletter = set(soup.find(id="id_newsletter")["class"])
         assert {"checkbox-sm", "checkbox-primary"} <= newsletter
         assert "checkbox-ghost" not in newsletter
+
+
+class TestReadmeFieldChoices:
+    def test_the_example_stating_a_choice_in_a_layout_draws(self, draw):
+        form = readme_example("One field's own choice")["SearchForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        search = set(soup.find(id="id_search")["class"])
+        assert {"input-lg", "input-primary"} <= search
+        assert "input-sm" not in search
+        for name in ("name", "city"):
+            tag = set(soup.find(id=f"id_{name}")["class"])
+            assert "input-sm" in tag
+            assert "input-primary" not in tag
+        notes = set(soup.find(id="id_notes")["class"])
+        assert {"textarea-sm", "textarea-primary"} <= notes
