@@ -264,6 +264,15 @@ own stays (FR-021, research R6). The frame is the fieldset FS-002 draws for a gr
 This also draws a `SplitDateTimeField` with no layout object as daisyUI inputs, which was left
 to this feature.
 
+### Size, colour and variant
+
+Size, colour and variant chosen from Python merged while this was being built (ADRs 0019 to
+0021). `pack_classes` holds the modifiers, so the attached-text wrapper takes them and the bare
+input does not. A button takes the form's size and the size of a `Choice` around it. So a
+joined group reads as one control when the size is stated for the form or with `Choice` around
+the layout object (D21). The parts of a multi-widget field each take the modifiers for their
+own component.
+
 ## The demo project
 
 Six shell pages on `MVPTemplateView`, each with a route, a template on Cotton components, a

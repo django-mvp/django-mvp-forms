@@ -172,6 +172,11 @@ Plan, *Field with buttons*; research R3.
     not evaluated (research R3);
   - on a select the group is drawn; on a checkbox and a radio group the field and the buttons
     are both drawn (FR-025); a hidden field is drawn alone.
+- Size (D21): with a size stated for the form, or with `Choice` around the layout object, the
+  attached-text wrapper and the joined input and every joined button carry that size, and the
+  bare input inside an attached-text wrapper carries none. Tests in `test_attached_text.py` and
+  `test_field_with_buttons.py`. A size stated for one field by name does not reach its buttons,
+  and the README says how to state one that does.
 - `FieldInput` gains `join`. `test_daisyui.py`: `is_joined`, and `join-item` in `pack_classes`
   only when joined and never on a group. A state in
   `STATES`. Upstream's docstring example.
@@ -293,6 +298,8 @@ Plan, *Multi-widget fields*; research R1, R6.
     and one given through `MultiWidgetField` is kept; the parts of another multi-widget are
     named by the field's label; a part made hidden through `MultiWidgetField` gets neither a
     class nor a name;
+  - a size, colour and variant stated for the form, or by `Choice` around the layout object,
+    reach every part (D21);
   - `cleaned_data` equals the undecorated field's (US6.5, SC-004);
   - the form's own widget and its parts carry no class or name of the pack's after drawing;
     drawing twice gives the same markup; a split date and time with no layout object is drawn

@@ -273,3 +273,22 @@ approve. Applied:
 - DR-006, low: `UneditableField` writing `disabled` amends ADR 0013 and a sentence in the README.
 
 **ADR:** none. It is a record of this feature's review.
+
+## D21. Attached text and attached buttons take the size of the field they are joined to
+
+Issue #15 asked whether they should. The working answer, given on the maintainer's behalf while
+this was being built: yes, so that a joined group reads as one control.
+
+**Chosen:** the attached-text wrapper carries the field's size, colour and variant, and the
+input inside it carries none. A button joined to a field takes the size stated for the form and
+the size of a `Choice` around the `FieldWithButtons`. The parts of a multi-widget field each
+take the choices for their own kind.
+
+A size stated for one field by name reaches the input and not its buttons. django-crispy-forms
+draws the buttons before the field, with nothing that says which field they belong to, and
+drawing them again is ruled out (D14). The README says to state the size with `Choice` around
+the `FieldWithButtons`, or for the form.
+
+`input_size` still does nothing. It holds another pack's class name (D8).
+
+**ADR:** pending, written when the feature converges.
