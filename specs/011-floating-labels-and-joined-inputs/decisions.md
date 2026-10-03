@@ -209,7 +209,7 @@ the same way. A boolean would be the one kind with three states spelt `True`, `F
 **Why defensible:** the spec says an unknown value for the label raises "as it does for an
 unknown size", which presumes a set of names.
 
-**ADR:** docs/adr/0030-a-floating-label-is-a-kind-of-choice.md
+**ADR:** docs/adr/0033-a-floating-label-is-a-kind-of-choice.md
 
 ## D12. A floating label stated around a button raises
 
@@ -271,7 +271,7 @@ neither. `w-auto` is added to the class test by name.
 
 **Revisit if:** #16 or #18 rules on which layout utilities the pack may write.
 
-**ADR:** docs/adr/0031-fields-are-joined-by-a-layout-object-of-the-packs.md
+**ADR:** docs/adr/0034-fields-are-joined-by-a-layout-object-of-the-packs.md
 
 ## D17. Help text and errors move to a template of their own
 
