@@ -347,3 +347,25 @@ stops drawing any kind of input at a stated size.
 test should ask the pack where.
 
 **ADR:** none — a change to one test of the demo project.
+
+## D21. Code review: what was fixed and what stands
+
+**Decision:** three of the four findings were fixed and one stands as it is. All four were low.
+
+- COR-001: a choice label that is lazy and marked safe was written into a star's `aria-label`
+  unescaped. `FieldInput.plain_text` now reads the label before asking whether it is safe, and
+  a test covers the lazy case.
+- TST-001: a bare underscore used as an unpacking name in a test was given a name.
+- TST-002: two tests asserted a width on a range. A width is appearance, so both were removed,
+  with the test field only they read.
+- COR-002: for a rating, `FieldInput.modifiers` and `css_class` hold the wrapper's size beside
+  the star's error colour, although no element carries them together. Nothing the pack draws
+  reads them for a rating, so it stands. Narrowing them would change what two of this
+  feature's unit tests read for no change in what is drawn.
+
+**Why:** the three fixed are a real defect and two breaches of the repository's own standards.
+The fourth has no consequence on any page.
+
+**Revisit if:** a project template reads `drawn.css_class` for a rating.
+
+**ADR:** none — a record of the review.

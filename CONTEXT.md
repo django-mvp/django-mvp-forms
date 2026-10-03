@@ -87,8 +87,8 @@ means).
 
 **Drawing**:
 How a field is drawn when its widget allows more than one way. A boolean field
-takes `checkbox`, `toggle` or `switch`, and a single-choice field takes
-`rating`, and a number field takes `range`. A toggle and a switch are both
+takes `checkbox`, `toggle` or `switch`, a single-choice field takes `rating`
+and a number field takes `range`. A toggle and a switch are both
 daisyUI's toggle, and a switch also tells assistive technology it is a switch.
 A field that states none is drawn as its widget is: a boolean field as a
 checkbox, a single-choice field as a select or a radio group, a number field as

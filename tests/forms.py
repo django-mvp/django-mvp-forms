@@ -919,10 +919,6 @@ class DevelopersRangeForm(RangesForm):
         max_value=100,
         widget=forms.NumberInput(attrs={"class": "mine", "data-own": "yes"}),
     )
-    wide = forms.IntegerField(
-        required=False,
-        widget=forms.NumberInput(attrs={"class": "mine w-24", "data-own": "yes"}),
-    )
 
 
 class OwnNumberWidget(forms.NumberInput):

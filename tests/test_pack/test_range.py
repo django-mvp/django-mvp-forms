@@ -273,16 +273,6 @@ class TestRangeKeepsWhatANumberInputHas:
         assert tag["data-own"] == "yes"
         assert tag["max"] == "100"
 
-    @pytest.mark.parametrize("source", SOURCES)
-    def test_a_width_the_developer_set_leaves_the_packs_width_out(self, draw, source):
-        form = DevelopersRangeForm(choices=stating("volume", "wide"))
-
-        soup = draw(source, form=form)
-
-        assert "w-full" in input_of(soup, "volume")["class"]
-        assert "w-full" not in input_of(soup, "wide")["class"]
-        assert "w-24" in input_of(soup, "wide")["class"]
-
 
 class TestRangeAmongOtherFields:
     @pytest.mark.parametrize("source", SOURCES)

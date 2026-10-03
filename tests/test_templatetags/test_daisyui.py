@@ -9,7 +9,7 @@ from crispy_forms.layout import Button, Hidden, Reset, Submit
 from django import forms
 from django.forms import formset_factory
 from django.template import Context, Template
-from django.utils.functional import Promise
+from django.utils.functional import Promise, lazy
 from django.utils.safestring import SafeString, mark_safe
 
 from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice
@@ -2069,6 +2069,17 @@ class TestFieldInputRating:
         assert 'aria-label="Bold &quot;quoted&quot;"' in html
         assert "<b" not in html
 
+    def test_a_lazy_choice_marked_safe_names_its_star_as_plain_text(self):
+        class LazyStarsForm(forms.Form):
+            pick = forms.ChoiceField(
+                choices=[("a", lazy(mark_safe, str)('<b>Bold</b> "quoted"'))]
+            )
+
+        html = rated("pick", LazyStarsForm()).render()
+
+        assert 'aria-label="Bold &quot;quoted&quot;"' in html
+        assert "<b" not in html
+
     def test_each_star_is_named_by_its_choices_label(self, parse):
         soup = parse(rated("pick").render())
 
@@ -2269,13 +2280,6 @@ class TestFieldInputRange:
 
         assert [tag["type"] for tag in tags] == ["range"]
         assert "range" in tags[0]["class"]
-
-    def test_a_range_takes_a_width_unless_the_developers_class_holds_one(self):
-        form = RangeFieldsForm()
-        form.fields["classed"].widget.attrs["class"] = "w-24"
-
-        assert "w-full" in ranged("volume").css_class.split()
-        assert "w-full" not in ranged("classed", form).css_class.split()
 
     def test_a_field_in_error_carries_range_error(self):
         form = RangeFieldsForm({"volume": "500"})

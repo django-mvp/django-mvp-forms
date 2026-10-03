@@ -106,7 +106,7 @@ class FieldInput:
     # Makes an input fill its field, unless the developer's own class holds a
     # width. See docs/adr/0007-inputs-fill-their-container.md.
     width = "w-full"
-    # A checkbox, a radio and a toggle are fixed-size and never widened.
+    # A checkbox, a radio, a toggle and a rating are fixed-size and never widened.
     fixed_size: set[str] = {"checkbox", "radio", "toggle", "rating"}
     templates: dict[type[forms.Widget], str] = {
         forms.CheckboxSelectMultiple: "daisyui/widgets/group.html",
@@ -359,7 +359,11 @@ class FieldInput:
 
     @property
     def widget(self) -> forms.Widget:
-        """The widget to draw: the field's own, or a copy with the pack's template."""
+        """The widget to draw: the field's own, or one made for this render.
+
+        A widget the pack has a template for is a copy that names it. A rating is
+        a radio group and a range is a copy whose input type is ``range``.
+        """
         widget: forms.Widget = self.field.field.widget
         if self.drawing == "rating" and isinstance(widget, ChoiceWidget):
             return self.rating_widget(widget)
@@ -669,9 +673,11 @@ class FieldInput:
             The text with its tags dropped and its entities read as characters
             when it is marked safe, and as written otherwise.
         """
+        # A lazy label says whether it is safe only once it is read.
+        text = str(text)
         if isinstance(text, SafeData):
-            return unescape(strip_tags(str(text))).strip()
-        return str(text)
+            return unescape(strip_tags(text)).strip()
+        return text
 
     @property
     def requires_placeholder(self) -> bool:

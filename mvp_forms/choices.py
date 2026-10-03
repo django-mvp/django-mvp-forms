@@ -375,9 +375,9 @@ class Choice(LayoutObject):
         color: The colour, or ``INHERIT``.
         variant: The variant, or ``INHERIT``.
         drawing: How a field is drawn, or ``INHERIT``. A boolean field takes
-            ``"checkbox"``, ``"toggle"`` or ``"switch"``, and a field that holds
-            one choice, a select or a radio group, takes ``"rating"``, and a
-            number field takes ``"range"``. Any other field takes none.
+            ``"checkbox"``, ``"toggle"`` or ``"switch"``. A field that holds one
+            choice, a select or a radio group, takes ``"rating"``. A number
+            field takes ``"range"``. Any other field takes none.
     """
 
     context_name = "daisyui_choice"

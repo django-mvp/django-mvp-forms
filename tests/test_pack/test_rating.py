@@ -43,7 +43,7 @@ COLORS = (
     "error",
 )
 VALUES = [choice[0] for choice in STAR_CHOICES]
-LABELS = [label for _, label in STAR_CHOICES]
+LABELS = [choice[1] for choice in STAR_CHOICES]
 
 
 def stating(*names):
