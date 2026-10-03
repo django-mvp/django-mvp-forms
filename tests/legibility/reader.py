@@ -126,7 +126,6 @@ class Reader:
     paints: ClassVar[dict[str, Paint]] = {
         "fieldset-legend": Paint(ink=InkRule("set", "base-content", own=False)),
         "label": Paint(ink=InkRule("fade", 0.6, own=True)),
-        "text-error": Paint(ink=InkRule("set", "error", own=True, wins=True)),
         "text-base-content": Paint(
             ink=InkRule("set", "base-content", own=True, wins=True)
         ),
@@ -227,7 +226,6 @@ class Reader:
         element = Element(
             tag.name,
             tag.get("id", ""),
-            tuple(names),
             control or next((n for n in names if n in self.paints), tag.name),
         )
         below = here
@@ -435,7 +433,7 @@ class Reader:
         )
         held = not disabled
         outer = here.surface
-        fill = None if variant == "ghost" else (BASE_200 if disabled else BASE_100)
+        fill = BASE_200 if disabled else (None if variant == "ghost" else BASE_100)
         inner = fill or outer
         if fill:
             edge = (
@@ -461,9 +459,20 @@ class Reader:
             if tag.get("placeholder"):
                 shown = CONTENT.faded(0.2) if disabled else ink.faded(0.5)
                 self.measure(found, element, "placeholder", shown, inner, held)
-        if control == "select":
+        if control == "select" and not self.takes_many(tag):
             self.measure(found, element, "mark", ink, inner, held)
         return replace(here, surface=inner)
+
+    def takes_many(self, tag: Tag) -> bool:
+        """Tell whether a select, or the wrapper around one, takes many choices.
+
+        Args:
+            tag: The element.
+
+        Returns:
+            Whether it is a select with `multiple`, or holds one.
+        """
+        return tag.has_attr("multiple") or tag.find("select", multiple=True) is not None
 
     def read_choice(
         self,

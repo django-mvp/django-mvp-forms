@@ -67,7 +67,7 @@ class TestPairing:
             assert Pairing.of(part, CONTENT, BASE).figure == 3.0
 
     def test_a_part_that_is_not_one_of_the_closed_set_is_refused(self):
-        with pytest.raises(ValueError, match="part"):
+        with pytest.raises(ValueError):
             Pairing.of("colour", CONTENT, BASE)
 
     def test_the_name_is_the_same_for_the_same_part_ink_and_surface(self):
@@ -98,17 +98,9 @@ class TestPairing:
 
 
 class TestMeasurement:
-    def test_an_element_names_its_tag_id_and_classes(self):
-        element = Element("input", "id_name", ("input", "input-error"), "input")
-
-        assert str(element) == "input#id_name.input.input-error"
-
-    def test_an_element_with_neither_id_nor_classes_is_its_tag(self):
-        assert str(Element("p", "", (), "p")) == "p"
-
     def test_a_measurement_holds_what_it_was_read_from(self):
         pairing = Pairing.of("text", CONTENT, BASE)
-        element = Element("p", "", (), "p")
+        element = Element("p", "", "p")
 
         measurement = Measurement("unbound", element, pairing, held=True, own=False)
 

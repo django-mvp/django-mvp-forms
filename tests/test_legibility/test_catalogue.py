@@ -82,6 +82,9 @@ class TestCatalogue:
     def test_a_disabled_toggle_is_drawn_as_a_switch_too(self):
         assert tags(Catalogue.states(), "[class~=toggle][role=switch][disabled]")
 
+    def test_a_disabled_button_is_drawn(self):
+        assert tags(Catalogue.states(), "[class~=btn][disabled]")
+
     def test_a_rating_is_drawn_plain_in_error_and_disabled(self):
         states = Catalogue.states()
 
@@ -112,6 +115,3 @@ class TestCatalogue:
         names = {state.name for state in Catalogue.states()}
 
         assert {m.form_state for m in Catalogue.measurements()} <= names
-
-    def test_the_measurements_are_read_once(self):
-        assert Catalogue.measurements() is Catalogue.measurements()

@@ -216,6 +216,21 @@ class TextStatesForm(forms.Form):
                 field.widget.attrs["readonly"] = True
 
 
+class PlaceholdersForm(forms.Form):
+    """A text input and a textarea, each showing a placeholder."""
+
+    text = forms.CharField(
+        label=_("Text"),
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": _("Some text")}),
+    )
+    textarea = forms.CharField(
+        label=_("Textarea"),
+        required=False,
+        widget=forms.Textarea(attrs={"placeholder": _("Some lines of text")}),
+    )
+
+
 class LayoutObjectsForm(forms.Form):
     """A form whose layout uses every layout object the pack draws so far.
 
@@ -630,6 +645,20 @@ class ButtonBarForm(ChosenForm):
                     )
                     for variant in Modifiers.variants[Modifiers.button]
                 ]
+            )
+        )
+
+
+class PlainButtonsForm(ChosenForm):
+    """A bar holding a button in no variant and a disabled one."""
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the buttons named by the prefix."""
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(
+            FormActions(
+                Button(f"{self.prefix}-solid", _("Solid")),
+                Button(f"{self.prefix}-disabled", _("Disabled"), disabled=True),
             )
         )
 

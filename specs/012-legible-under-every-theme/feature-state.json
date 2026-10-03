@@ -152,8 +152,28 @@
         },
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_legibility/test_reader.py",
+              "tests/test_legibility/test_catalogue.py",
+              "tests/test_pack/test_legibility.py",
+              "tests/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_legibility tests/test_pack/test_legibility.py tests/test_demo.py -n auto --dist loadscope",
+              "uv run python -m tests.legibility",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "tests/legibility/reader.py:529",
+              "tests/legibility/reader.py:557",
+              "tests/legibility/catalogue.py:57",
+              "tests/legibility/catalogue.py:186"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
@@ -265,8 +285,33 @@
         },
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py",
+              "tests/test_legibility/test_reader.py",
+              "tests/test_legibility/test_catalogue.py",
+              "tests/test_legibility/test_colours.py",
+              "tests/test_legibility/test_exceptions.py",
+              "tests/test_legibility/test_pairings.py",
+              "tests/test_legibility/test_themes.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_legibility tests/test_pack/test_legibility.py tests/test_demo.py -n auto --dist loadscope",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "tests/test_demo.py:2703",
+              "tests/legibility/reader.py:436",
+              "tests/legibility/reader.py:466",
+              "demo/views.py:1157",
+              "demo/views.py:1171",
+              "demo/forms.py:219",
+              "demo/forms.py:652"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }

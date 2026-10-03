@@ -120,12 +120,12 @@ class TestColour:
         ["rgb(0 0 0)", "#ffffff", "oklch(50%)", "oklch(a b c)", "", "oklab(1 0 0)"],
     )
     def test_text_that_is_not_oklch_is_refused(self, text):
-        with pytest.raises(ValueError, match="oklch"):
+        with pytest.raises(ValueError):
             Colour.parse(text)
 
     def test_the_percent_sign_is_optional(self):
         assert Colour.parse("oklch(50% 0.1 90)") == Colour.parse("oklch(0.5 0.1 90)")
 
     def test_a_see_through_surface_is_refused(self):
-        with pytest.raises(ValueError, match="opaque"):
+        with pytest.raises(ValueError):
             BLACK.contrast(WHITE.faded(0.5))

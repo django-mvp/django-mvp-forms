@@ -93,14 +93,14 @@ class TestThemes:
             Themes.read(text)
 
     def test_a_theme_with_no_scheme_is_refused(self):
-        with pytest.raises(ValueError, match="color-scheme"):
+        with pytest.raises(ValueError):
             Themes.read(twilight().replace("color-scheme:dark;", ""))
 
     def test_the_version_is_read_from_the_banner(self):
         assert Themes.version("/*! 🌼 daisyUI 1.2.3 - MIT License */ x") == "1.2.3"
 
     def test_text_with_no_version_is_refused(self):
-        with pytest.raises(ValueError, match="version"):
+        with pytest.raises(ValueError):
             Themes.version(":root{}")
 
     def test_the_themes_and_the_class_list_are_the_same_version(self):

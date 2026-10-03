@@ -38,6 +38,8 @@ from demo.forms import (
     OrderLineFormSet,
     OverrideForm,
     PairForm,
+    PlaceholdersForm,
+    PlainButtonsForm,
     RangeStateForm,
     RatingAndRangeForm,
     RatingAndRangeOverrideForm,
@@ -1167,7 +1169,7 @@ class ThemesMixin:
     drawing_states = ("off", "on", "help", "error", "disabled")
 
     def build_item(self, title, form):
-        """Make a form draw apart: no form element, no token, and a helper.
+        """Make a form draw apart: no form element, so nothing posts, and a helper.
 
         Args:
             title: The heading the form is drawn under.
@@ -1195,9 +1197,12 @@ class ThemesMixin:
         """
         name = form_class.__name__
         return [
-            self.build_item(f"{title}, unbound", form_class(prefix=name, **kwargs)),
             self.build_item(
-                f"{title}, with errors",
+                _("%(title)s, unbound") % {"title": title},
+                form_class(prefix=name, **kwargs),
+            ),
+            self.build_item(
+                _("%(title)s, with errors") % {"title": title},
                 form_class({}, prefix=f"{name}-errors", **kwargs),
             ),
         ]
@@ -1211,28 +1216,39 @@ class ThemesMixin:
         initial = {"text": "Some text", "textarea": "Some lines\nof text"}
         return [
             *self.build_pairs(
-                "Text inputs", TextInputsForm, required=True, with_help=True
+                _("Text inputs"), TextInputsForm, required=True, with_help=True
             ),
             *self.build_pairs(
-                "Choice, boolean and file inputs",
+                _("Choice, boolean and file inputs"),
                 ChoiceInputsForm,
                 required=True,
                 with_help=True,
             ),
             self.build_item(
-                "Choice, boolean and file inputs, disabled",
-                ChoiceInputsForm(prefix="inputs-disabled", disabled=True),
+                _("Choice, boolean and file inputs, holding values"),
+                ChoiceInputsForm(
+                    prefix="inputs-held",
+                    initial=ChoiceInputsMixin.held,
+                    required=True,
+                    with_help=True,
+                ),
             ),
             self.build_item(
-                "Text inputs, disabled",
+                _("Choice, boolean and file inputs, disabled"),
+                ChoiceInputsForm(prefix="inputs-disabled", disabled=True),
+            ),
+            self.build_item(_("Placeholders"), PlaceholdersForm(prefix="placeholders")),
+            self.build_item(
+                _("Text inputs, disabled"),
                 TextStatesForm(prefix="text-disabled", initial=initial, disabled=True),
             ),
             self.build_item(
-                "Text inputs, read-only",
+                _("Text inputs, read-only"),
                 TextStatesForm(prefix="text-readonly", initial=initial, read_only=True),
             ),
             self.build_item(
-                "Inputs of every kind, read-only", ReadOnlyKindsForm(prefix="readonly")
+                _("Inputs of every kind, read-only"),
+                ReadOnlyKindsForm(prefix="readonly"),
             ),
         ]
 
@@ -1243,16 +1259,16 @@ class ThemesMixin:
             A list of items.
         """
         return [
-            *self.build_pairs("Layout objects", LayoutObjectsForm),
-            *self.build_pairs("Tabs", TabsForm),
-            *self.build_pairs("Accordion", AccordionForm),
+            *self.build_pairs(_("Layout objects"), LayoutObjectsForm),
+            *self.build_pairs(_("Tabs"), TabsForm),
+            *self.build_pairs(_("Accordion"), AccordionForm),
             self.build_item(
-                "Accordion, chosen groups", ChosenGroupsForm(prefix="chosen")
+                _("Accordion, chosen groups"), ChosenGroupsForm(prefix="chosen")
             ),
-            self.build_item("Modal", ModalForm(prefix=self.modal_prefix)),
-            *self.build_pairs("Alerts", AlertForm),
+            self.build_item(_("Modal"), ModalForm(prefix=self.modal_prefix)),
+            *self.build_pairs(_("Alerts"), AlertForm),
             self.build_item(
-                "Alerts in every colour", AlertColoursForm(prefix="alerts")
+                _("Alerts in every colour"), AlertColoursForm(prefix="alerts")
             ),
         ]
 
@@ -1263,13 +1279,13 @@ class ThemesMixin:
             A list of items.
         """
         return [
-            *self.build_pairs("Attached text", AttachedTextForm),
-            *self.build_pairs("Inline choices", InlineChoicesForm),
-            *self.build_pairs("Field with buttons", FieldWithButtonsForm),
-            *self.build_pairs("Uneditable field", UneditableFieldForm),
-            *self.build_pairs("Uneditable choices", UneditableChoicesForm),
-            *self.build_pairs("Inline field", InlineFieldForm),
-            *self.build_pairs("Multi-widget field", MultiWidgetFieldForm),
+            *self.build_pairs(_("Attached text"), AttachedTextForm),
+            *self.build_pairs(_("Inline choices"), InlineChoicesForm),
+            *self.build_pairs(_("Field with buttons"), FieldWithButtonsForm),
+            *self.build_pairs(_("Uneditable field"), UneditableFieldForm),
+            *self.build_pairs(_("Uneditable choices"), UneditableChoicesForm),
+            *self.build_pairs(_("Inline field"), InlineFieldForm),
+            *self.build_pairs(_("Multi-widget field"), MultiWidgetFieldForm),
         ]
 
     def build_drawings(self):
@@ -1280,7 +1296,7 @@ class ThemesMixin:
         """
         states = [
             self.build_item(
-                f"{drawing}, {state}",
+                _("%(drawing)s, %(state)s") % {"drawing": drawing, "state": state},
                 DrawingStateForm(
                     prefix=f"{drawing}-{state}", drawing=drawing, state=state
                 ),
@@ -1290,20 +1306,20 @@ class ThemesMixin:
         ]
         sizes = [
             self.build_item(
-                f"Drawings, size {name}",
+                _("Drawings, size %(name)s") % {"name": name},
                 DrawingTrioForm(prefix=f"drawing-size-{name}", size=name),
             )
             for name in Modifiers.names("size", "toggle")
         ]
         colors = [
             self.build_item(
-                f"Drawings, colour {name}",
+                _("Drawings, colour %(name)s") % {"name": name},
                 DrawingTrioForm(prefix=f"drawing-color-{name}", color=name),
             )
             for name in Modifiers.names("color", "toggle")
         ]
         override = self.build_item(
-            "Drawings, overridden", DrawingOverrideForm(prefix="drawing-override")
+            _("Drawings, overridden"), DrawingOverrideForm(prefix="drawing-override")
         )
         return [*states, *sizes, *colors, override]
 
@@ -1315,7 +1331,7 @@ class ThemesMixin:
         """
         inputs = [
             self.build_item(
-                f"Inputs, {kind} {name}",
+                _("Inputs, %(kind)s %(name)s") % {"kind": kind, "name": name},
                 InputKindsForm(
                     prefix=f"inputs-{kind}-{name}", choices=FormChoices(**{kind: name})
                 ),
@@ -1325,7 +1341,7 @@ class ThemesMixin:
         ]
         buttons = [
             self.build_item(
-                f"Buttons, {name}",
+                _("Buttons, %(name)s") % {"name": name},
                 ButtonBarForm(
                     prefix=f"buttons-{name}", choices=FormChoices(button_color=name)
                 ),
@@ -1334,7 +1350,7 @@ class ThemesMixin:
         ]
         pairs = [
             self.build_item(
-                f"{kind} {name}",
+                _("%(kind)s %(name)s") % {"kind": kind, "name": name},
                 PairForm(
                     prefix=f"pair-{kind}-{name}", choices=FormChoices(**{kind: name})
                 ),
@@ -1344,16 +1360,25 @@ class ThemesMixin:
         ]
         locked = [
             self.build_item(
-                f"Disabled inputs, variant {name}",
+                _("Disabled inputs, variant %(name)s") % {"name": name},
                 LockedKindsForm(
                     prefix=f"locked-{name}", choices=FormChoices(variant=name)
                 ),
             )
             for name in Modifiers.names("variant", None)
         ]
-        bar = self.build_item("Buttons", ButtonBarForm(prefix="buttons"))
-        override = self.build_item("Overridden", OverrideForm(prefix="override"))
-        return [*inputs, *locked, bar, *buttons, *pairs, override]
+        plain = [
+            self.build_item(
+                _("Buttons, solid %(name)s") % {"name": name},
+                PlainButtonsForm(
+                    prefix=f"plain-{name}", choices=FormChoices(button_color=name)
+                ),
+            )
+            for name in Modifiers.names("color", Modifiers.button)
+        ]
+        bar = self.build_item(_("Buttons"), ButtonBarForm(prefix="buttons"))
+        override = self.build_item(_("Overridden"), OverrideForm(prefix="override"))
+        return [*inputs, *locked, bar, *buttons, *plain, *pairs, override]
 
     def build_formset(self, title, helper_class, prefix):
         """Build an order formset, unbound and failing in all three ways.
@@ -1376,12 +1401,12 @@ class ThemesMixin:
                 data[f"{failing}-{index}-{name}"] = value
         return [
             {
-                "title": f"{title}, unbound",
+                "title": _("%(title)s, unbound") % {"title": title},
                 "formset": OrderLineFormSet(prefix=prefix),
                 "helper": helper_class(prefix, form_tag=False),
             },
             {
-                "title": f"{title}, with errors",
+                "title": _("%(title)s, with errors") % {"title": title},
                 "formset": OrderLineFormSet(data, prefix=failing),
                 "helper": helper_class(failing, form_tag=False),
             },
@@ -1394,16 +1419,16 @@ class ThemesMixin:
             A list of dicts holding each group's title and items.
         """
         return [
-            {"title": "Inputs", "items": self.build_inputs()},
-            {"title": "Containers", "items": self.build_containers()},
-            {"title": "Decorated fields", "items": self.build_decorated()},
-            {"title": "Drawings", "items": self.build_drawings()},
-            {"title": "Sizes, colours and variants", "items": self.build_choices()},
+            {"title": _("Inputs"), "items": self.build_inputs()},
+            {"title": _("Containers"), "items": self.build_containers()},
+            {"title": _("Decorated fields"), "items": self.build_decorated()},
+            {"title": _("Drawings"), "items": self.build_drawings()},
+            {"title": _("Sizes, colours and variants"), "items": self.build_choices()},
             {
-                "title": "Formsets",
+                "title": _("Formsets"),
                 "items": [
-                    *self.build_formset("Stacked", StackedOrderHelper, "stacked"),
-                    *self.build_formset("Table", TableOrderHelper, "table"),
+                    *self.build_formset(_("Stacked"), StackedOrderHelper, "stacked"),
+                    *self.build_formset(_("Table"), TableOrderHelper, "table"),
                 ],
             },
         ]

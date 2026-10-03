@@ -150,6 +150,17 @@ class Catalogue:
         yield "disabled file input", FILTER, DisabledFileForm()
         yield "disabled toggle and switch", TAG, DisabledBooleansForm()
         yield "disabled rating and range", TAG, DisabledRatingAndRangeForm()
+        yield (
+            "disabled buttons",
+            TAG,
+            ButtonedForm(
+                buttons=(
+                    Submit("save", "Save", disabled=True),
+                    Button("help", "Help", disabled=True),
+                    StrictButton("More", disabled=True),
+                )
+            ),
+        )
 
     @classmethod
     def inputs(cls) -> Iterator[tuple[str, forms.BaseForm]]:

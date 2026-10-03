@@ -2704,8 +2704,11 @@ class ThemesPageContract:
         forms_element = page.find(id=THEMES_FORMS_ID)
         assert forms_element is not None
 
-        read = {m.pairing.name for m in Reader("themes").read(forms_element)}
-        wanted = {m.pairing.name for m in Catalogue.measurements()}
+        read = {
+            (m.element.kind, m.pairing.name)
+            for m in Reader("themes").read(forms_element)
+        }
+        wanted = {(m.element.kind, m.pairing.name) for m in Catalogue.measurements()}
 
         assert wanted <= read, sorted(wanted - read)
 

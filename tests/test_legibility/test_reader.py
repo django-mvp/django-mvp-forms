@@ -60,11 +60,6 @@ class TestReader:
 
         assert pairs(html) == {("text", CONTENT, BASE_100)}
 
-    def test_text_error_is_the_error_colour(self):
-        found = of('<div class="text-error"><p>No</p></div>', "text", ERROR, BASE_100)
-
-        assert found.own
-
     def test_a_fieldset_legend_is_base_content(self):
         found = of(
             '<legend class="fieldset-legend">Name</legend>', "text", CONTENT, BASE_100
@@ -72,10 +67,11 @@ class TestReader:
 
         assert not found.own
 
-    def test_text_inside_text_error_inherits_it(self):
-        html = '<div class="text-error"><p>One</p><p><b>Two</b></p></div>'
+    def test_text_error_has_no_row_because_the_pack_no_longer_writes_it(self):
+        with pytest.raises(Uncovered) as raised:
+            read('<div class="text-error"><p>No</p></div>')
 
-        assert pairs(html) == {("text", ERROR, BASE_100)}
+        assert raised.value.class_name == "text-error"
 
     def test_a_table_header_is_sixty_percent(self):
         html = '<table class="table"><thead><tr><th>Name</th></tr></thead></table>'
@@ -265,6 +261,11 @@ class TestReaderInputs:
         html = '<label class="input"><input type="text" placeholder="x"></label>'
 
         assert {part for part, _, _ in pairs(html)} == {"border", "text", "placeholder"}
+
+    def test_a_select_that_takes_many_choices_draws_no_arrow(self):
+        html = '<select class="select" multiple><option>One</option></select>'
+
+        assert {part for part, _, _ in pairs(html)} == {"border", "text"}
 
     def test_a_wrapped_select_yields_one_arrow_for_the_wrapper(self):
         html = '<label class="select"><select><option>a</option></select></label>'
@@ -603,6 +604,17 @@ class TestReaderDisabled:
 
         assert ("text", CONTENT.faded(0.4), BASE_200) in pairs(html)
 
+    def test_a_disabled_ghost_input_is_filled_and_bordered_in_base_200(self):
+        html = '<input type="text" class="input input-ghost" disabled>'
+
+        found = read(html)
+
+        assert {(m.pairing.part, m.pairing.ink, m.pairing.surface) for m in found} == {
+            ("border", BASE_200, BASE_100),
+            ("text", CONTENT.faded(0.4), BASE_200),
+        }
+        assert not any(m.held for m in found)
+
     def test_a_disabled_checkbox_is_dimmed_and_not_held(self):
         found = read('<input type="checkbox" class="checkbox" disabled>')
 
@@ -661,7 +673,6 @@ class TestReaderOwn:
         "html",
         [
             '<p class="label">x</p>',
-            '<div class="text-error">x</div>',
             '<table class="table"><thead><tr><th>x</th></tr></thead></table>',
             '<input type="radio" class="tab" aria-label="x">',
             '<div class="alert alert-error alert-soft"><p>x</p></div>',

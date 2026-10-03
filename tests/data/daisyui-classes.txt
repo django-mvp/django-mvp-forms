@@ -1,6 +1,6 @@
 # Every class selector in daisyUI 5.7.47's CDN stylesheet, one per line.
 # Source: https://cdn.jsdelivr.net/npm/daisyui@5.7.47/daisyui.css
-# Its companion, daisyui-themes.css, is the same version's theme stylesheet, kept verbatim.
+# Its companion, daisyui-themes.css, is the same version's theme stylesheet, as daisyUI publishes it, with a final newline.
 # Source: https://cdn.jsdelivr.net/npm/daisyui@5.7.47/themes.css
 # To refresh: download both for the new version, replace daisyui-themes.css, and list the
 # stylesheet's class selectors here. The two must name the same version.

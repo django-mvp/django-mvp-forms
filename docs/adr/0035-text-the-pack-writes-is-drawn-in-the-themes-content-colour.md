@@ -16,7 +16,8 @@ shipped theme. The pack never repaints a control with a utility, and never write
 variant as a repair: those are the developer's to state.
 
 An error is marked by the input's error modifier, by `aria-invalid`, by where the message sits
-and by the tinted alert at the top of the form, and not by the colour of its text.
+and, for errors of the form as a whole, by the tinted alert at the top of the form, and not by
+the colour of its text.
 
 ## Why
 

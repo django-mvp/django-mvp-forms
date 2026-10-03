@@ -11,7 +11,7 @@ NAMES = {theme.name for theme in THEMES}
 
 
 def measurement(kind, pairing, held=True, state="a state"):
-    return Measurement(state, Element(kind, "", (), kind), pairing, held, False)
+    return Measurement(state, Element(kind, "", kind), pairing, held, False)
 
 
 FAILS = Pairing.of("border", CONTENT.faded(0.2), BASE)
@@ -104,7 +104,7 @@ class TestKnownExceptions:
         assert KnownExceptions.published(wrapped(table)) == {}
 
     def test_published_refuses_text_with_no_markers(self):
-        with pytest.raises(ValueError, match="known-exceptions"):
+        with pytest.raises(ValueError):
             KnownExceptions.published("no table here")
 
     def test_unlisted_gives_what_was_found_and_not_published(self):

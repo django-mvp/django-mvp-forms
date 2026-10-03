@@ -187,27 +187,17 @@ class Pairing:
 
 @dataclass(frozen=True)
 class Element:
-    """The element a measurement came from, for a failure message.
+    """The element a measurement came from.
 
     Args:
         tag: The tag name.
         id: The element's id, or empty.
-        classes: The element's classes.
         kind: What the element is, such as `input`, `checkbox` or `btn`.
     """
 
     tag: str
     id: str
-    classes: tuple[str, ...]
     kind: str
-
-    def __str__(self) -> str:
-        """Write the element as a selector."""
-        return (
-            self.tag
-            + (f"#{self.id}" if self.id else "")
-            + "".join(f".{name}" for name in self.classes)
-        )
 
 
 @dataclass(frozen=True)

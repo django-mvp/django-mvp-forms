@@ -48,3 +48,10 @@ Did: Reader reads a rating by its stars (lit mark, unlit border at 20%, in base-
 Verified: uv run pytest tests/test_legibility tests/test_pack/test_legibility.py tests/test_demo.py -n auto --dist loadscope: 1577 passed. pre-commit run --all-files: all passed.
 Next: T009, the review's findings (a) to (j).
 Watch: a range's empty track and an unlit star fall short under every shipped theme and are published, as the brief asks.
+
+## 2026-10-03T23:37:59Z · Implementer FIX-1 · T009
+
+Did: (a) the Themes page test compares (element kind, pairing name); the page gained a solid button in each colour with a disabled one, a clearable file field holding a file, and a textarea with a placeholder (PlainButtonsForm, PlaceholdersForm, and ChoiceInputsForm holding values). (b) a disabled ghost field is read on base-200. (c) README and ADR wording. (d) CHANGELOG tabs sentence, speculation removed. (e) match= dropped at six tests. (f) headings wrapped in _(). (g) text-error row, Element.classes and Element.__str__ and their tests removed, the read-once test dropped, a disabled button added to the catalogue. (h) classes file header. (i) build_item docstring. (j) select[multiple] draws no arrow.
+Verified: uv run pytest tests/test_legibility tests/test_pack/test_legibility.py tests/test_demo.py -n auto --dist loadscope: 1575 passed. pre-commit run --all-files: all passed.
+Next: the full verify, then the report.
+Watch: removing the modal from the page does not empty the (kind, pairing) difference, since the catalogue holds no pairing only a modal draws; tabs, tables and textareas do.
