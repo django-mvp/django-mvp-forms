@@ -23,6 +23,7 @@ from tests.forms import (
     PermissionFormSet,
     StructureForm,
 )
+from tests.template_surface import TemplateSurface
 
 
 @pytest.fixture
@@ -172,3 +173,19 @@ def replace(tmp_path_factory, settings):
             clear_crispy_template_caches()
 
     return replacing
+
+
+@pytest.fixture
+def names_read():
+    return lambda source: TemplateSurface("", PACK_TEMPLATES).names_read(source)
+
+
+@pytest.fixture
+def template_surface(tmp_path):
+    def surface_of(readme, templates):
+        for path, source in templates.items():
+            (tmp_path / path).parent.mkdir(parents=True, exist_ok=True)
+            (tmp_path / path).write_text(source)
+        return TemplateSurface(readme, tmp_path)
+
+    return surface_of
