@@ -2,7 +2,7 @@
   "feature": "013-support-window",
   "branch": "013-support-window",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "QUEUED",
@@ -18,6 +18,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-10-03T23:28:54Z",
       "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T23:35:03Z",
+      "note": "plan gate open; US1 first"
     }
   ],
   "gates": {
