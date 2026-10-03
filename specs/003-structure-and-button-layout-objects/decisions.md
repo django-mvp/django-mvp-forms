@@ -16,7 +16,7 @@ A developer who writes a `Layout` can arrange fields with django-crispy-forms' s
 
 **Revisit if:** A later feature, most likely the size, colour and variant choices in issue #11, needs an argument the upstream classes cannot carry.
 
-**ADR:** yes
+**ADR:** docs/adr/0008-layouts-use-django-crispy-forms-own-layout-objects.md
 
 ## D2. `Hidden` and `StrictButton` are in this feature
 
@@ -26,7 +26,7 @@ A developer who writes a `Layout` can arrange fields with django-crispy-forms' s
 
 **Revisit if:** The feature for issue #8 claims `StrictButton` because a field with buttons is where it is most used. One of the two specifications then drops it.
 
-**ADR:** no
+**ADR:** none — a question of which feature owns three objects, settled once they are drawn
 
 ## D3. `MultiField` is in this feature
 
@@ -36,7 +36,7 @@ A developer who writes a `Layout` can arrange fields with django-crispy-forms' s
 
 **Revisit if:** The maintainers decide `MultiField` is legacy and the pack should not carry it. The story can be removed without touching the other three.
 
-**ADR:** no
+**ADR:** none — a question of scope, as D2
 
 ## D4. A `Row` arranges its columns with no classes from the developer
 
@@ -46,7 +46,7 @@ A developer who writes a `Layout` can arrange fields with django-crispy-forms' s
 
 **Revisit if:** Issue #18 concludes that no arrangement is possible within daisyUI's own classes. FR-005 and acceptance scenario 8 of the first story would then change to say the containers carry the developer's classes and nothing more.
 
-**ADR:** yes, once issue #18 is settled
+**ADR:** docs/adr/0009-flex-utilities-arrange-rows-and-button-bars.md
 
 ## D5. Buttons added to the form helper draw the same as buttons in a layout
 
@@ -56,7 +56,7 @@ A developer who writes a `Layout` can arrange fields with django-crispy-forms' s
 
 **Revisit if:** FS-001's specification does not cover helper-added buttons at all. That placement would then need an owner.
 
-**ADR:** no
+**ADR:** none — superseded in part by D10, which places the buttons
 
 ## D6. Developer-written content is not escaped, context values are
 
@@ -66,7 +66,7 @@ A developer who writes a `Layout` can arrange fields with django-crispy-forms' s
 
 **Revisit if:** Never, short of upstream changing it.
 
-**ADR:** no
+**ADR:** none — django-crispy-forms' documented behaviour, kept as it is
 
 ## D7. No size, colour or variant choices here
 
@@ -74,7 +74,7 @@ A developer who writes a `Layout` can arrange fields with django-crispy-forms' s
 
 **Why:** That is issue #11, which depends on this feature. Passing a class through is upstream behaviour and costs nothing.
 
-**ADR:** no
+**ADR:** none — a limit of scope, owned by the feature for issue #11
 
 ## D8. Demo pages use text fields only
 
@@ -82,7 +82,7 @@ A developer who writes a `Layout` can arrange fields with django-crispy-forms' s
 
 **Why:** This feature depends on issue #5 and not on issue #6. Using a select or a checkbox on its demo pages would add a dependency the feature request does not have.
 
-**ADR:** no
+**ADR:** none — a demo arrangement
 
 ## D9. No prototype before the build
 
@@ -90,15 +90,13 @@ A developer who writes a `Layout` can arrange fields with django-crispy-forms' s
 
 **Why:** The markup is stock daisyUI and the structure is the one upstream documents, so there is little design to judge. The demo pages are reviewed when the feature is.
 
-**ADR:** no
+**ADR:** none — a process choice for this feature only
 
 ## How the specification was produced
 
 The spec number, directory and branch were fixed in advance because several specifications were being written at the same time, so the files were written from the specification template by hand and no script chose a number.
 
 The clarification scan was run against the draft and answered from the repository's own documents. Its six questions and answers are in `spec.md` under Clarifications. Categories with nothing to resolve: data model (the feature has none), performance and scale, observability, and compliance.
-
-## Decisions taken while planning the build
 
 ## D10. Buttons added to the form helper are placed by this feature
 
@@ -108,6 +106,8 @@ The clarification scan was run against the draft and answered from the repositor
 
 **Revisit if:** A later feature needs the helper's buttons somewhere other than after the fields.
 
+**ADR:** none — one include in the form wrapper, recorded here and in the README
+
 ## D11. A field inside a `MultiField` keeps its own errors
 
 **Decision:** Each field in a `MultiField` is drawn by the field frame, with its own label, help text and errors. The group does not collect its fields' errors at the top.
@@ -115,6 +115,8 @@ The clarification scan was run against the draft and answered from the repositor
 **Why:** The Bootstrap packs gather the errors above the group and drop each field's own. FR-008 and the fourth story's second scenario require an error to stay tied to its field, and ADR 0006 puts every input inside the one frame.
 
 **Revisit if:** A host project needs the gathered form. It can pass `field_template` to the `MultiField`.
+
+**ADR:** none — it follows from ADR 0006, which puts every input inside the one field frame
 
 ## D12. A hidden input has no class and no id
 
@@ -124,6 +126,8 @@ The clarification scan was run against the draft and answered from the repositor
 
 **Revisit if:** Never, short of django-crispy-forms changing it.
 
+**ADR:** docs/adr/0010-class-names-written-for-other-packs-are-dropped.md
+
 ## D13. Class names written for other packs are dropped by name
 
 **Decision:** A filter in the pack's template library, `daisyui_classes`, removes `btn-inverse`, `ctrlHolder`, `blockLabel` and `error` from a class string, and removes repeats. Button and `MultiField` templates pass django-crispy-forms' class strings through it. The buttons keep `btn` and `btn-primary`, which django-crispy-forms writes itself and daisyUI defines.
@@ -132,6 +136,8 @@ The clarification scan was run against the draft and answered from the repositor
 
 **Revisit if:** django-crispy-forms changes the classes it writes. The button tests fail when it does.
 
+**ADR:** docs/adr/0010-class-names-written-for-other-packs-are-dropped.md
+
 ## D14. A row is a flex container and a column takes an equal share
 
 **Decision:** `Row` is drawn with `flex flex-col gap-4 md:flex-row` and `Column` with `flex-1 min-w-0`. `ButtonHolder`, `FormActions` and the helper's buttons are drawn with `flex flex-wrap gap-2 mt-4`. The developer's classes are added after these.
@@ -139,6 +145,8 @@ The clarification scan was run against the draft and answered from the repositor
 **Why:** daisyUI has no component for either job, and ADR 0003 allows a Tailwind utility for layout in that case. Flex gives equal columns for any number of them without counting, and every one of these utilities is in django-mvp's packaged stylesheet as well as in Tailwind's browser build. A grid with automatic columns would have stacked on a django-mvp page. This is the working answer to issue #18.
 
 **Revisit if:** The maintainer picks another option on issue #18, or daisyUI gains a layout component.
+
+**ADR:** docs/adr/0009-flex-utilities-arrange-rows-and-button-bars.md
 
 ## D15. What the design review changed
 
@@ -160,6 +168,8 @@ One reviewer read the plan before any code, as a check on fit with the specifica
 **Why:** The buttons that belong inside the helper's form element arrive in the next story. Until then the page needs a submit button, and the only place for one is the page. One class with a prefix keeps every id apart and repeats no layout.
 
 **Revisit if:** The buttons story moves the submit button into the layout, at which point the submittable form draws its own `<form>`.
+
+**ADR:** none — a demo arrangement, replaced by D18
 
 ## D17. The class test's list and states grow with each story
 

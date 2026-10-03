@@ -65,3 +65,7 @@ Did: tests/test_pack/test_documented_examples.py draws every example from the in
 Verified: uv run pytest tests/test_pack/test_documented_examples.py (42 passed); with daisyui/layout/buttonholder.html moved away the two ButtonHolder cases failed, then restored. tests/test_demo.py -k every_layout_object 52 passed. pre-commit and mypy clean.
 Next: the full verify, ledger rows, report.
 Watch: the examples are drawn with no user in the context, so a context-aware legend or content draws an empty value. docs/ROADMAP.md line 55 still lists fieldsets, divs, rows and columns as plans.
+
+## 2026-10-03T16:59:16Z · Forge · converge
+
+Converged: no gaps against the specification, nothing to simplify in the diff. Three decision records written (0008 to 0010) and every decision given its verdict.
