@@ -64,13 +64,42 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_formsets.py::TestStackedFormset",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_formsets.py -q",
+              "uv run pytest tests/test_pack/test_independence.py -q",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/whole_uni_formset.html:1",
+              "mvp_forms/templates/daisyui/uni_formset.html:1"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [],
+            "commands": [
+              "uv run pre-commit run --all-files",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "CONTEXT.md:30",
+              "README.md:222",
+              "CHANGELOG.md:27"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
