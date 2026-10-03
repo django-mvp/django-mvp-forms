@@ -2,7 +2,7 @@
   "feature": "006-formsets",
   "branch": "006-formsets",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-03T18:17:01Z",
       "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T18:28:21Z",
+      "note": "review approved, five low findings fixed in T008; merged origin/main at 23b5933; ADRs renumbered 0017 and 0018"
     }
   ],
   "gates": {
@@ -61,6 +66,22 @@
         "DR-004 (low) the comparison form is built with use_required_attribute off: applied to plan",
         "DR-005 (low) FormsetTable written once, in T003: applied to tasks"
       ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T18:28:21Z",
+      "self_resolved": [
+        "CR-001 (low) a layout naming DELETE on a formset whose extra forms have none raises under DEBUG: README says so, T008",
+        "CR-002 (low) a form marked for deletion still shows its own field errors: README says so, T008",
+        "CR-003 (low) damaged management data had no test: test added, T008",
+        "CR-004 (low) escaping of a row's own error and a column heading had no test: test added, T008",
+        "CR-005 (low) no test that no spare empty form is drawn: test added, T008"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T18:28:35Z",
+      "self_resolved": []
     }
   },
   "stories": [
@@ -195,8 +216,21 @@
         },
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_formsets.py::TestFormsetErrors"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_formsets.py -q (91 passed, exit 0)",
+              "forge verify (all steps passed)"
+            ],
+            "code": [
+              "tests/test_pack/test_formsets.py:557",
+              "README.md:375"
+            ]
+          }
         }
       ]
     },
