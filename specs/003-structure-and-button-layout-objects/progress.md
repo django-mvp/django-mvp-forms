@@ -51,3 +51,10 @@ Did: wrote TestHTML and TestHidden in tests/test_pack/test_raw_content.py, watch
 Verified: uv run pytest tests/test_pack/test_raw_content.py tests/test_pack/test_buttons.py (63 passed); uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope (439 passed); uv run pre-commit run --all-files clean.
 Next: full verify, then the report.
 Watch: a css_id or css_class on a Hidden is not drawn (D19). The demo page templates needed no edit, the objects live in the form; demo/views.py and tests/forms.py were not touched.
+
+## 2026-10-03T16:56:01Z · Implementer US4 · T008
+
+Did: wrote TestMultiField (16 tests, red on the missing daisyui/multifield.html), then layout/multifield.html (fieldset, legend from the label, css_class and label_class through daisyui_classes, label marked safe) and multifield.html (one include of field.html). Class test gains a layout of all thirteen objects, unbound and invalid. The demo form gains a phone field and a MultiField (email, phone) with the prefixed id; the Div keeps only the note. README and CHANGELOG gain MultiField.
+Verified: uv run pytest tests/test_pack/test_structure.py::TestMultiField (16 passed), tests/test_pack/test_independence.py and tests/test_demo.py (291 passed). The demo tests were red against the old demo form (10 failed) and green after. pre-commit and mypy clean.
+Next: T009, the documented examples.
+Watch: MultiField appends " error" to its own css_class on each draw with errors; the filter drops repeats and "error", and a test draws one layout twice. docs/ROADMAP.md line 55 still lists fieldsets, divs, rows and columns as a plan; not in this story's files.
