@@ -198,3 +198,11 @@ Django as a bare `aria-required`, which is not a valid ARIA value.
 **Why:** a name missing from the context must mean on, as it does in the tag, so a bare `{% include "daisyui/field.html" %}` draws a label and errors. `strip_tags` returns a safe label unchanged when it holds no tag, so a label marked safe with a quote in it would break out of the attribute unless the value is made a plain string, which `strip()` does.
 
 **Revisit if:** a later feature reads these names in a template where a missing name should mean off.
+
+## D19. How the independence tests are set up
+
+**Decision:** the bare-install fixture overrides `INSTALLED_APPS` to `crispy_forms` and `mvp_forms` and replaces the first template engine's context processors with none, so the engine is bare as well as the app list. It clears crispy's four cached loaders inside the override on the way in and after leaving it. Template libraries are checked against a denylist (`cotton`, `mvp`) rather than an allowlist, and an `extends` or `include` with a literal path must start with `daisyui/`; an include through a variable cannot be checked statically and is not.
+
+**Why:** the demo's `mvp.context_processors.mvp_config` would fail a bare engine for a reason unrelated to the pack. With clearing disabled and a pack template loading `mvp`, the field-drawing tests stayed green on the cached compiled templates; with it, they failed.
+
+**Revisit if:** the pack needs a library of another package that is not in the denylist, or crispy caches a fifth loader.
