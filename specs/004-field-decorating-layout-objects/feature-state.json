@@ -1,281 +1,281 @@
 {
- "feature": "004-field-decorating-layout-objects",
- "branch": "004-field-decorating-layout-objects",
- "repo": "django-mvp/django-mvp-forms",
- "state": "IMPLEMENT",
- "state_history": [
-  {
-   "state": "QUEUED",
-   "at": "2026-10-03T15:07:51Z",
-   "note": "specification approved by delegated review at commit 4b77d0de9fc4bead9863a9636a3bf510c0afce61, on pull request #27; epic #8, stories #59, #60, #61, #62, #63, #64"
+  "feature": "004-field-decorating-layout-objects",
+  "branch": "004-field-decorating-layout-objects",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "IMPLEMENT",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T15:07:51Z",
+      "note": "specification approved by delegated review at commit 4b77d0de9fc4bead9863a9636a3bf510c0afce61, on pull request #27; epic #8, stories #59, #60, #61, #62, #63, #64"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T18:31:10Z",
+      "note": "plan.md, research.md, tasks.md: 6 stories, 12 tasks; continues on pull request #27"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T18:31:32Z",
+      "note": "one reviewer, three lenses, on plan.md, tasks.md and research.md at 0f751a8"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T18:40:18Z",
+      "note": "plan gate open; design review applied at 25a39b2"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T15:07:51Z",
+      "self_resolved": [
+        "approved at commit 4b77d0de9fc4bead9863a9636a3bf510c0afce61 (forge spec-gate, pull request #27); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T18:39:52Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
+      "at": "2026-10-03T18:39:52Z",
+      "self_resolved": [
+        "DR-001 medium: the spec's edge case on the crispy filter reworded, the test dropped from T001 (D19)",
+        "DR-002 low: the inline arrangement asserted by the widget template only",
+        "DR-003 low: each FieldInput argument arrives in the task that gives it behaviour",
+        "DR-004 low: attached text and join-item never apply to a group",
+        "DR-005 low: uneditable-input joins UPSTREAM_ONLY_CLASSES and an input drops that one name",
+        "DR-006 low: UneditableField writing disabled amends ADR 0013 and the README"
+      ]
+    }
   },
-  {
-   "state": "PLAN",
-   "at": "2026-10-03T18:31:10Z",
-   "note": "plan.md, research.md, tasks.md: 6 stories, 12 tasks; continues on pull request #27"
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 59,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_attached_text.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputClassParts",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputAttachedText",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiFieldTag",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (exit 0, 1008 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:158",
+              "mvp_forms/templatetags/daisyui.py:182",
+              "mvp_forms/templates/daisyui/frame.html:1",
+              "mvp_forms/templates/daisyui/layout/prepended_appended_text.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestAttachedTextPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py tests/test_smoke.py (exit 0, 802 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:490",
+              "demo/views.py:472",
+              "demo/urls.py:55",
+              "demo/menus.py:54",
+              "demo/templates/demo/attached_text.html:1",
+              "demo/templates/demo/decorated_fields_standalone.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 60,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_inline_groups.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputInline",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples",
+              "tests/test_pack/test_documented_examples.py::TestReadmeInlineChoices"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (exit 0, 1449 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:100",
+              "mvp_forms/templatetags/daisyui.py:219",
+              "mvp_forms/templates/daisyui/widgets/inline_group.html:1",
+              "mvp_forms/templates/daisyui/layout/radioselect_inline.html:2"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestInlineChoicesPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandaloneInlineChoices",
+              "tests/test_demo.py::TestAttachedTextPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -n auto --dist loadscope (exit 0, 885 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:658",
+              "demo/views.py:517",
+              "demo/views.py:545",
+              "demo/urls.py:59",
+              "demo/templates/demo/inline_choices.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 61,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T006",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 62,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T008",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 63,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T009",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T010",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US6",
+      "priority": "P3",
+      "issue": 64,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T011",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T012",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 0,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 11.23,
+      "max": 120
+    }
   },
-  {
-   "state": "DESIGN_REVIEW",
-   "at": "2026-10-03T18:31:32Z",
-   "note": "one reviewer, three lenses, on plan.md, tasks.md and research.md at 0f751a8"
-  },
-  {
-   "state": "IMPLEMENT",
-   "at": "2026-10-03T18:40:18Z",
-   "note": "plan gate open; design review applied at 25a39b2"
+  "pr": {
+    "number": 27,
+    "draft": true
   }
- ],
- "gates": {
-  "spec": {
-   "approved_by": "delegated review",
-   "at": "2026-10-03T15:07:51Z",
-   "self_resolved": [
-    "approved at commit 4b77d0de9fc4bead9863a9636a3bf510c0afce61 (forge spec-gate, pull request #27); spec gate opened by Sam, 2026-10-03: all gates are open"
-   ]
-  },
-  "plan": {
-   "approved_by": "open",
-   "at": "2026-10-03T18:39:52Z"
-  },
-  "merge": {
-   "approved_by": null,
-   "at": null
-  },
-  "design_review": {
-   "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
-   "at": "2026-10-03T18:39:52Z",
-   "self_resolved": [
-    "DR-001 medium: the spec's edge case on the crispy filter reworded, the test dropped from T001 (D19)",
-    "DR-002 low: the inline arrangement asserted by the widget template only",
-    "DR-003 low: each FieldInput argument arrives in the task that gives it behaviour",
-    "DR-004 low: attached text and join-item never apply to a group",
-    "DR-005 low: uneditable-input joins UPSTREAM_ONLY_CLASSES and an input drops that one name",
-    "DR-006 low: UneditableField writing disabled amends ADR 0013 and the README"
-   ]
-  }
- },
- "stories": [
-  {
-   "id": "US1",
-   "priority": "P1",
-   "issue": 59,
-   "worktree": null,
-   "status": "done",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T001",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_pack/test_attached_text.py",
-       "tests/test_templatetags/test_daisyui.py::TestFieldInputClassParts",
-       "tests/test_templatetags/test_daisyui.py::TestFieldInputAttachedText",
-       "tests/test_templatetags/test_daisyui.py::TestDaisyuiFieldTag",
-       "tests/test_pack/test_independence.py::TestEmittedClasses",
-       "tests/test_pack/test_documented_examples.py::TestDocumentedExamples"
-      ],
-      "commands": [
-       "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (exit 0, 1008 passed)",
-       "uv run pre-commit run --all-files (exit 0)"
-      ],
-      "code": [
-       "mvp_forms/templatetags/daisyui.py:158",
-       "mvp_forms/templatetags/daisyui.py:182",
-       "mvp_forms/templates/daisyui/frame.html:1",
-       "mvp_forms/templates/daisyui/layout/prepended_appended_text.html:1"
-      ],
-      "verified_by_ci": false
-     }
-    },
-    {
-     "id": "T002",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_demo.py::TestAttachedTextPage",
-       "tests/test_demo.py::TestDecoratedFieldsStandalonePage"
-      ],
-      "commands": [
-       "uv run pytest tests/test_demo.py tests/test_smoke.py (exit 0, 802 passed)",
-       "uv run pre-commit run --all-files (exit 0)"
-      ],
-      "code": [
-       "demo/forms.py:490",
-       "demo/views.py:472",
-       "demo/urls.py:55",
-       "demo/menus.py:54",
-       "demo/templates/demo/attached_text.html:1",
-       "demo/templates/demo/decorated_fields_standalone.html:1"
-      ],
-      "verified_by_ci": false
-     }
-    }
-   ]
-  },
-  {
-   "id": "US2",
-   "priority": "P1",
-   "issue": 60,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T003",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_pack/test_inline_groups.py",
-       "tests/test_templatetags/test_daisyui.py::TestFieldInputInline",
-       "tests/test_pack/test_independence.py::TestEmittedClasses",
-       "tests/test_pack/test_documented_examples.py::TestDocumentedExamples",
-       "tests/test_pack/test_documented_examples.py::TestReadmeInlineChoices"
-      ],
-      "commands": [
-       "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (exit 0, 1449 passed)",
-       "uv run pre-commit run --all-files (exit 0)"
-      ],
-      "code": [
-       "mvp_forms/templatetags/daisyui.py:100",
-       "mvp_forms/templatetags/daisyui.py:219",
-       "mvp_forms/templates/daisyui/widgets/inline_group.html:1",
-       "mvp_forms/templates/daisyui/layout/radioselect_inline.html:2"
-      ],
-      "verified_by_ci": false
-     }
-    },
-    {
-     "id": "T004",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_demo.py::TestInlineChoicesPage",
-       "tests/test_demo.py::TestDecoratedFieldsStandaloneInlineChoices",
-       "tests/test_demo.py::TestAttachedTextPage",
-       "tests/test_demo.py::TestDecoratedFieldsStandalonePage"
-      ],
-      "commands": [
-       "uv run pytest tests/test_demo.py -n auto --dist loadscope (exit 0, 885 passed)",
-       "uv run pre-commit run --all-files (exit 0)"
-      ],
-      "code": [
-       "demo/forms.py:658",
-       "demo/views.py:517",
-       "demo/views.py:545",
-       "demo/urls.py:59",
-       "demo/templates/demo/inline_choices.html:1"
-      ],
-      "verified_by_ci": false
-     }
-    }
-   ]
-  },
-  {
-   "id": "US3",
-   "priority": "P2",
-   "issue": 61,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T005",
-     "status": "todo",
-     "attempts": 0
-    },
-    {
-     "id": "T006",
-     "status": "todo",
-     "attempts": 0
-    }
-   ]
-  },
-  {
-   "id": "US4",
-   "priority": "P2",
-   "issue": 62,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T007",
-     "status": "todo",
-     "attempts": 0
-    },
-    {
-     "id": "T008",
-     "status": "todo",
-     "attempts": 0
-    }
-   ]
-  },
-  {
-   "id": "US5",
-   "priority": "P3",
-   "issue": 63,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T009",
-     "status": "todo",
-     "attempts": 0
-    },
-    {
-     "id": "T010",
-     "status": "todo",
-     "attempts": 0
-    }
-   ]
-  },
-  {
-   "id": "US6",
-   "priority": "P3",
-   "issue": 64,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T011",
-     "status": "todo",
-     "attempts": 0
-    },
-    {
-     "id": "T012",
-     "status": "todo",
-     "attempts": 0
-    }
-   ]
-  }
- ],
- "budgets": {
-  "converge_cycles": {
-   "used": 0,
-   "max": 2
-  },
-  "review_cycles": {
-   "used": 0,
-   "max": 1
-  },
-  "design_review_cycles": {
-   "used": 1,
-   "max": 1
-  },
-  "tokens": {
-   "used": 6.01,
-   "max": 120
-  }
- },
- "pr": {
-  "number": 27,
-  "draft": true
- }
 }
