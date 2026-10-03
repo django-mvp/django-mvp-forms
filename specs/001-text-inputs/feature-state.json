@@ -2,7 +2,7 @@
   "feature": "001-text-inputs",
   "branch": "001-text-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-03T15:57:52Z",
       "note": "one reviewer, correctness and spec compliance, on the feature diff"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T16:05:08Z",
+      "note": "review closed: approve, four small findings fixed, two declined; walkthrough laid out"
     }
   ],
   "gates": {
@@ -64,6 +69,23 @@
         "DR-007 label for written only when there is an id: applied to plan and T004",
         "DR-008 no wrapper class around BeautifulSoup: applied"
       ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T16:04:34Z",
+      "self_resolved": [
+        "CR-001 (medium) error modifiers written out as literals; README says to scan the whole package: fixed, T010",
+        "CR-002 (medium) standalone page loads Tailwind's browser build: declined, it is daisyUI's documented CDN install and the maintainer's ruling (D9)",
+        "CR-003 (low) a label not marked safe is named as written: fixed, T010",
+        "CR-004 (low) a falsy switch reads as off in the tag as in the templates: fixed, T010",
+        "CR-005 (low) demo tests no longer pin a styling class or a script, test class docstring removed: fixed, T011",
+        "CR-006 (low) demo page strings not wrapped for translation: declined, the demo is not distributed and has no catalogue"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T16:04:52Z",
+      "self_resolved": []
     }
   },
   "stories": [
