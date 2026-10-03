@@ -310,3 +310,53 @@ class SplitHiddenForm(forms.Form):
         widget=forms.SplitHiddenDateTimeWidget,
         initial=datetime.datetime(2026, 10, 3, 12, 30),
     )
+
+
+class DisabledInputsForm(forms.Form):
+    text = forms.CharField(initial="Ada", disabled=True)
+    number = forms.IntegerField(initial=42, disabled=True)
+    date = forms.DateField(initial=datetime.date(2026, 10, 3), disabled=True)
+    message = forms.CharField(
+        widget=forms.Textarea, initial="Hello there", disabled=True
+    )
+    choice = forms.ChoiceField(choices=FRUIT, initial="b", disabled=True)
+    agree = forms.BooleanField(initial=True, disabled=True)
+    upload = forms.FileField(
+        required=False, initial=HeldFile("kept.pdf"), disabled=True
+    )
+    radios = forms.ChoiceField(
+        choices=FRUIT, widget=forms.RadioSelect, initial="b", disabled=True
+    )
+    boxes = forms.MultipleChoiceField(
+        choices=FRUIT,
+        widget=forms.CheckboxSelectMultiple,
+        initial=["a", "b"],
+        disabled=True,
+    )
+    secret = forms.CharField(
+        widget=forms.PasswordInput, initial="hunter2", disabled=True
+    )
+
+
+class ReadOnlyInputsForm(forms.Form):
+    text = forms.CharField(
+        initial="Ada", widget=forms.TextInput(attrs={"readonly": True})
+    )
+    message = forms.CharField(
+        initial="Hello there", widget=forms.Textarea(attrs={"readonly": True})
+    )
+    choice = forms.ChoiceField(
+        choices=FRUIT, initial="b", widget=forms.Select(attrs={"readonly": True})
+    )
+    agree = forms.BooleanField(
+        initial=True, widget=forms.CheckboxInput(attrs={"readonly": True})
+    )
+    upload = forms.FileField(
+        required=False, widget=forms.FileInput(attrs={"readonly": True})
+    )
+
+
+class DisabledAndReadOnlyForm(forms.Form):
+    text = forms.CharField(
+        initial="Ada", widget=forms.TextInput(attrs={"readonly": True}), disabled=True
+    )
