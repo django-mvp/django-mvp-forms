@@ -2543,11 +2543,82 @@ class RangeStatesPageContract(RatingAndRangePageContract):
         assert tag["value"] == "40"
 
 
+RATING_OVERRIDE_PREFIX = "override"
+
+
+def rating_sample(page, kind, name):
+    return page.find(id=f"id_{kind}-{name}-score")
+
+
+def range_sample(page, kind, name):
+    return page.find("input", id=f"id_{kind}-{name}-volume")
+
+
+def stars_of_sample(wrapper):
+    return [
+        tag for tag in wrapper.find_all("input") if "rating-hidden" not in tag["class"]
+    ]
+
+
+class RatingAndRangeSizesPageContract(RatingAndRangePageContract):
+    def test_a_rating_and_a_range_are_drawn_at_every_size_the_tables_have(self, page):
+        for name, expected in Modifiers.sizes["rating"].items():
+            assert expected in rating_sample(page, "size", name)["class"]
+        for name, expected in Modifiers.sizes["range"].items():
+            tag = range_sample(page, "size", name)
+            assert tag["type"] == "range"
+            assert expected in tag["class"]
+
+    def test_a_rating_and_a_range_are_drawn_in_every_colour_the_tables_have(self, page):
+        for name, expected in Modifiers.colors["rating"].items():
+            stars = stars_of_sample(rating_sample(page, "color", name))
+            assert stars
+            assert all(expected in tag["class"] for tag in stars)
+        for name, expected in Modifiers.colors["range"].items():
+            assert expected in range_sample(page, "color", name)["class"]
+
+    def test_the_sizes_and_colours_shown_are_those_of_the_tables(self, page):
+        for kind, table in (("size", Modifiers.sizes), ("color", Modifiers.colors)):
+            for component, field in (("rating", "score"), ("range", "volume")):
+                shown = {
+                    tag["id"].split("-")[1]
+                    for tag in page.find_all(id=re.compile(f"^id_{kind}-.*-{field}$"))
+                }
+                assert shown == set(table[component])
+
+    def test_the_fields_that_state_nothing_take_the_forms_size_and_colour(self, page):
+        wrapper = page.find(id=f"id_{RATING_OVERRIDE_PREFIX}-inherits_score")
+        tag = page.find("input", id=f"id_{RATING_OVERRIDE_PREFIX}-inherits_volume")
+
+        assert Modifiers.sizes["rating"]["sm"] in wrapper["class"]
+        assert all(
+            Modifiers.colors["rating"]["primary"] in star["class"]
+            for star in stars_of_sample(wrapper)
+        )
+        assert Modifiers.sizes["range"]["sm"] in tag["class"]
+        assert Modifiers.colors["range"]["primary"] in tag["class"]
+
+    def test_the_fields_that_override_take_their_own_size_and_colour(self, page):
+        wrapper = page.find(id=f"id_{RATING_OVERRIDE_PREFIX}-overrides_score")
+        tag = page.find("input", id=f"id_{RATING_OVERRIDE_PREFIX}-overrides_volume")
+
+        assert Modifiers.sizes["rating"]["xl"] in wrapper["class"]
+        assert Modifiers.sizes["rating"]["sm"] not in wrapper["class"]
+        for star in stars_of_sample(wrapper):
+            assert Modifiers.colors["rating"]["accent"] in star["class"]
+            assert Modifiers.colors["rating"]["primary"] not in star["class"]
+        assert Modifiers.sizes["range"]["xl"] in tag["class"]
+        assert Modifiers.colors["range"]["accent"] in tag["class"]
+        assert Modifiers.sizes["range"]["sm"] not in tag["class"]
+        assert Modifiers.colors["range"]["primary"] not in tag["class"]
+
+
 class TestRatingAndRangePage(
     RatingFormPageContract,
     RatingStatesPageContract,
     RangeFormPageContract,
     RangeStatesPageContract,
+    RatingAndRangeSizesPageContract,
 ):
     url_name = "rating-and-range"
 
@@ -2568,6 +2639,7 @@ class TestStandaloneRatingAndRangePage(
     RatingStatesPageContract,
     RangeFormPageContract,
     RangeStatesPageContract,
+    RatingAndRangeSizesPageContract,
 ):
     url_name = "rating-and-range-standalone"
 

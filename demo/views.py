@@ -35,6 +35,8 @@ from demo.forms import (
     PairForm,
     RangeStateForm,
     RatingAndRangeForm,
+    RatingAndRangeOverrideForm,
+    RatingAndRangeTrioForm,
     RatingStateForm,
     RowButtonsForm,
     StackedOrderHelper,
@@ -989,11 +991,42 @@ class RatingAndRangeMixin:
             for state in self.states
         ]
 
+    def build_sizes(self):
+        """Build one form of a rating and a range for each size they have.
+
+        Returns:
+            A list of dicts holding each size's name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": RatingAndRangeTrioForm(prefix=f"size-{name}", size=name),
+            }
+            for name in Modifiers.names("size", "rating")
+        ]
+
+    def build_colors(self):
+        """Build one form of a rating and a range for each colour they have.
+
+        Returns:
+            A list of dicts holding each colour's name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": RatingAndRangeTrioForm(prefix=f"color-{name}", color=name),
+            }
+            for name in Modifiers.names("color", "rating")
+        ]
+
     def get_context_data(self, **kwargs):
         """Add the form, what it cleaned to when it was posted, and the states."""
         form = kwargs.setdefault("form", RatingAndRangeForm(prefix=self.rating_prefix))
         kwargs["rating_states"] = self.build_states(self.rating_prefix, RatingStateForm)
         kwargs["range_states"] = self.build_states(self.range_prefix, RangeStateForm)
+        kwargs["sizes"] = self.build_sizes()
+        kwargs["colors"] = self.build_colors()
+        kwargs["override_form"] = RatingAndRangeOverrideForm(prefix="override")
         kwargs["cleaned"] = self.build_cleaned(form)
         kwargs["prefix"] = self.rating_prefix
         return super().get_context_data(**kwargs)

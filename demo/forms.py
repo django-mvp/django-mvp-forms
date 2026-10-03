@@ -1194,3 +1194,74 @@ class RangeStateForm(ChosenForm):
             self.initial["volume"] = 40
         if state == "help":
             volume.help_text = _("Move the slider to set the volume.")
+
+
+class RatingAndRangeTrioForm(ChosenForm):
+    """A rating and a range, at one size or in one colour.
+
+    The fields are ``score`` and ``volume``. Give the form a prefix, so no id repeats
+    on the page.
+
+    Args:
+        size: The size stated for the form, or None.
+        color: The colour stated for the form, or None.
+    """
+
+    score = forms.ChoiceField(label=_("Rating"), choices=STATE_STARS)
+    volume = forms.IntegerField(
+        label=_("Range"), min_value=0, max_value=100, step_size=5, required=False
+    )
+
+    def __init__(self, *args, size=None, color=None, **kwargs):
+        """State the size and colour for the form, and the drawing of both fields."""
+        super().__init__(
+            *args,
+            choices=FormChoices(
+                size=size,
+                color=color,
+                fields={
+                    "score": Choice(drawing="rating"),
+                    "volume": Choice(drawing="range"),
+                },
+            ),
+            **kwargs,
+        )
+
+
+class RatingAndRangeOverrideForm(ChosenForm):
+    """A form that states a size and a colour, and fields that override both.
+
+    ``inherits_score`` and ``inherits_volume`` take the form's size and colour.
+    ``overrides_score`` and ``overrides_volume`` state their own in the layout. Give
+    the form a prefix.
+    """
+
+    inherits_score = forms.ChoiceField(label=_("Takes the form's"), choices=STATE_STARS)
+    inherits_volume = forms.IntegerField(
+        label=_("Takes the form's"), min_value=0, max_value=100, required=False
+    )
+    overrides_score = forms.ChoiceField(label=_("States its own"), choices=STATE_STARS)
+    overrides_volume = forms.IntegerField(
+        label=_("States its own"), min_value=0, max_value=100, required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        """State the form's choices, and the four fields' drawings."""
+        super().__init__(
+            *args,
+            choices=FormChoices(
+                size="sm",
+                color="primary",
+                fields={
+                    "inherits_score": Choice(drawing="rating"),
+                    "inherits_volume": Choice(drawing="range"),
+                },
+            ),
+            **kwargs,
+        )
+        self.helper.layout = Layout(
+            "inherits_score",
+            "inherits_volume",
+            Choice("overrides_score", drawing="rating", size="xl", color="accent"),
+            Choice("overrides_volume", drawing="range", size="xl", color="accent"),
+        )

@@ -39,6 +39,35 @@
       </c-section>
     {% endfor %}
   </c-section>
+  <c-section title="Sizes" level="3">
+    <c-text>
+      A rating and a range take the size stated for the form, as every input does. A
+      rating's size is on the group and its colour is on each star.
+    </c-text>
+    {% for size in sizes %}
+      <c-section :title="size.title" level="4">
+        {% crispy size.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Colours" level="3">
+    <c-text>
+      They take its colour too. A rating and a range have no variant.
+    </c-text>
+    {% for color in colors %}
+      <c-section :title="color.title" level="4">
+        {% crispy color.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Overriding what the form states" level="3">
+    <c-text>
+      The form states a small size and the primary colour. The first rating and range
+      take both, and the second of each states a size and a colour of its own in the
+      layout.
+    </c-text>
+    {% crispy override_form %}
+  </c-section>
   <c-text>
     <c-link href="{% url 'rating-and-range-standalone' %}" text="The same page without django-mvp" />
   </c-text>
