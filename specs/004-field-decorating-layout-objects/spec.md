@@ -21,7 +21,7 @@ uneditable field, an inline field and a multi-widget field.
 django-crispy-forms ships nine layout objects that take one field and change how it is presented,
 without changing what the field is: `PrependedText`, `AppendedText`, `PrependedAppendedText`,
 `InlineCheckboxes`, `InlineRadios`, `FieldWithButtons`, `UneditableField`, `InlineField` and
-`MultiWidgetField`. A developer who has selected the template pack places any of them in a form's
+`MultiWidgetField`. A developer who has selected the template pack, named `daisyui`, places any of them in a form's
 `Layout`, imported from django-crispy-forms as its documentation describes, and the pack draws the
 field that way as daisyUI markup. The field keeps its label, required marker, help text and
 errors, still tied to its input, and the form submits the same data it would without the layout
@@ -421,11 +421,9 @@ All nine layout objects (every user story)
 - FS-002 (#6) delivers radios, checkboxes, checkbox and radio groups, selects, and the disabled
   and read-only states. Inline groups and the uneditable field are drawn from those.
 - FS-003 (#7) delivers the button layout objects. `FieldWithButtons` needs at least one of them,
-  so this feature depends on #7 as well as #6. Which feature draws `StrictButton` is raised in
-  #21.
+  so this feature depends on #7 as well as #6. `StrictButton` is one of the buttons FS-003 draws.
 - How a multi-widget field draws when no layout object is involved belongs to FS-001 and FS-002.
-  This feature adds only the per-part attributes of `MultiWidgetField`. #21 asks for that to be
-  confirmed.
+  This feature adds only the per-part attributes of `MultiWidgetField`.
 - Size, colour and variant for inputs, attached text and buttons are FS-007 (#11). Everything
   here is drawn at daisyUI's defaults. Whether attached text and buttons follow the field's size
   is raised in #15.

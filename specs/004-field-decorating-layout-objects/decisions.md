@@ -45,7 +45,7 @@ field with buttons cannot be shown or tested without a button.
 subject, and two features drawing buttons would disagree as soon as #11 gives buttons a size and a
 colour.
 
-Whether #7 covers `StrictButton` is not stated anywhere. That is raised in #21.
+#7 draws `StrictButton` along with the other buttons, which was settled in #21.
 
 **ADR:** none. It is a boundary between two features, and nothing later inherits it.
 
@@ -140,8 +140,8 @@ is already raised in #15.
 to be drawn as the pack's input for its kind (FR-021, FR-022). Drawing a multi-widget field in a
 plain form is assumed to belong to #5 and #6, which cover the widgets Django ships.
 
-Neither of those issues names multi-widget fields, and `MultiField`, a Bootstrap 3 container
-django-crispy-forms still ships, is named by no issue at all. Both are raised in #21.
+#21 settled both this and `MultiField`, the Bootstrap 3 container django-crispy-forms still
+ships: a multi-widget field is drawn part by part under #5 and #6, and `MultiField` is drawn by #7.
 
 **ADR:** none. It is a boundary between features.
 
