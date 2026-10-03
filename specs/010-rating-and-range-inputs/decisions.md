@@ -313,3 +313,18 @@ would show them all as picked, against FR-008. FR-006 orders only the choices th
 is the edit the finding named.
 
 **ADR:** none — a record of the review, not a constraint on the code.
+
+## D19. The demo's posting range is an optional field with an initial value
+
+**Decision:** the range of the demo page's form that posts is an optional `IntegerField` with an
+initial value, and the form is renamed `RatingAndRangeForm`. The range states of the page are a
+form of their own, `RangeStateForm`, built beside the rating states.
+
+**Why:** a slider always submits a number, so "required" says nothing a person can act on, and an
+initial value is where the slider rests when the page opens. An optional field also leaves the
+page's rating tests, which post stars alone, unchanged.
+
+**Revisit if:** the maintainer decides the pack should do something about a range in an optional
+field (#116).
+
+**ADR:** none — a choice about the demo page.

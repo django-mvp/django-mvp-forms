@@ -107,7 +107,7 @@
               "uv run python /tmp/fs010/render_states.py /tmp/fs010/after.json /tmp/fs010/ids.json && uv run python /tmp/fs010/compare.py"
             ],
             "code": [
-              "README.md:717",
+              "README.md:755",
               "CONTEXT.md:103",
               "CHANGELOG.md:25",
               "tests/forms.py:761",
@@ -156,8 +156,49 @@
       "tasks": [
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputRange",
+              "tests/test_choices.py::TestModifiersDrawings",
+              "tests/test_pack/test_range.py::TestRange",
+              "tests/test_pack/test_range.py::TestRangeKeepsWhatANumberInputHas",
+              "tests/test_pack/test_range.py::TestRangeAmongOtherFields",
+              "tests/test_pack/test_range.py::TestRangeMistakes",
+              "tests/test_pack/test_documented_examples.py::TestReadmeRange",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_demo.py::TestRatingAndRangePage",
+              "tests/test_demo.py::TestStandaloneRatingAndRangePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags/test_daisyui.py::TestFieldInputRange tests/test_choices.py::TestModifiersDrawings -q",
+              "uv run pytest tests/test_pack/test_range.py -q",
+              "uv run pytest tests/test_pack tests/test_templatetags tests/test_choices.py -q -n auto --dist loadscope",
+              "uv run pytest tests/test_demo.py -q -n auto --dist loadscope",
+              "uv run python /tmp/fs010/render_states.py /tmp/fs010/us2-after.json /tmp/fs010/us2-ids.json"
+            ],
+            "code": [
+              "mvp_forms/choices.py:239",
+              "mvp_forms/templatetags/daisyui.py:149",
+              "mvp_forms/templatetags/daisyui.py:230",
+              "mvp_forms/templatetags/daisyui.py:366",
+              "tests/test_pack/test_range.py:52",
+              "tests/forms.py:866",
+              "tests/test_pack/test_independence.py:388",
+              "tests/test_pack/test_documented_examples.py:509",
+              "README.md:755",
+              "CONTEXT.md:126",
+              "CHANGELOG.md:28",
+              "demo/forms.py:1096",
+              "demo/forms.py:1167",
+              "demo/views.py:947",
+              "demo/templates/demo/rating_and_range.html:1",
+              "demo/templates/demo/rating_and_range_standalone.html:1",
+              "tests/test_demo.py:2482"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
