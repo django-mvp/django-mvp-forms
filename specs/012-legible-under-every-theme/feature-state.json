@@ -69,18 +69,76 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_legibility/test_colours.py::TestColour",
+              "tests/test_legibility/test_themes.py::TestThemes"
+            ],
+            "commands": [
+              "uv run pytest tests/test_legibility -q",
+              "forge verify --repo . --base origin/main (once, to learn the conformance rule; passed after the non-mirror-paths entry)"
+            ],
+            "code": [
+              "tests/legibility/colours.py:14",
+              "tests/legibility/themes.py:56",
+              "tests/data/daisyui-themes.css:1"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_legibility/test_pairings.py::TestInk",
+              "tests/test_legibility/test_pairings.py::TestPairing",
+              "tests/test_legibility/test_reader.py::TestReader",
+              "tests/test_legibility/test_catalogue.py::TestCatalogue"
+            ],
+            "commands": [
+              "uv run pytest tests/test_legibility -q"
+            ],
+            "code": [
+              "tests/legibility/pairings.py:10",
+              "tests/legibility/pairings.py:114",
+              "tests/legibility/reader.py:113",
+              "tests/legibility/reader.py:76",
+              "tests/legibility/catalogue.py:69"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_legibility.py::TestEveryTheme",
+              "tests/test_pack/test_legibility.py::TestPublishedExceptions",
+              "tests/test_pack/test_legibility.py::TestRepairs",
+              "tests/test_legibility/test_exceptions.py::TestKnownExceptions",
+              "tests/test_pack/test_independence.py::TestDistributedFiles::test_no_template_or_module_writes_a_theme"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_legibility.py -q",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run python -m tests.legibility",
+              "uv run python /tmp/fs012/work/render_states.py (before at the base, after T003), class attributes and random ids stripped, compared as strings: identical"
+            ],
+            "code": [
+              "tests/legibility/exceptions.py:9",
+              "tests/legibility/__main__.py:11",
+              "mvp_forms/templates/daisyui/field_body.html:19",
+              "mvp_forms/templates/daisyui/layout/alert.html:4",
+              "README.md:810"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
