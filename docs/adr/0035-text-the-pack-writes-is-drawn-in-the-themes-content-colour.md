@@ -1,4 +1,4 @@
-# ADR 0032 — Text the pack writes is drawn in the theme's content colour
+# ADR 0035 — Text the pack writes is drawn in the theme's content colour
 
 **Status:** accepted
 

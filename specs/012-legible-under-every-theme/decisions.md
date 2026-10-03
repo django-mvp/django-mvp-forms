@@ -39,7 +39,7 @@ for text, for large text and for the parts of a control that identify it and sho
 **Why defensible:** it is the standard a host project is most likely to be held to itself, and it
 is a calculation, which the constitution's test rules need.
 
-**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
+**ADR:** docs/adr/0033-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D3. The themes are those built into the daisyUI version the suite pins
 
@@ -82,7 +82,7 @@ names the rest precisely enough to be reported to daisyUI.
 text are the likely places. If it is, the maintainer is told at the build with the numbers, and
 the choice between living with it and loosening Article XIV is his.
 
-**ADR:** docs/adr/0031-a-shortfall-in-daisyuis-own-drawing-is-published-never-patched.md
+**ADR:** docs/adr/0034-a-shortfall-in-daisyuis-own-drawing-is-published-never-patched.md
 
 ## D5. A disabled control's own content is measured and not held to the figure
 
@@ -98,7 +98,7 @@ check (FR-004).
 - Leaving it out. The issue names disabled fields, and a theme where a disabled value all but
   vanishes is worth seeing in a report.
 
-**ADR:** none. It is a detail of the standard and is noted in docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
+**ADR:** none. It is a detail of the standard and is noted in docs/adr/0033-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D6. Pairings are measured on the page background and on surfaces the pack draws
 
@@ -134,7 +134,7 @@ the documented test command, gives the same result every run, and needs nothing 
   planning finds the check cannot run inside the existing jobs, everything else is built and the
   workflow part is filed as a separate request for the maintainer.
 
-**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
+**ADR:** docs/adr/0033-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D9. New inputs join the check when they are built
 
@@ -142,7 +142,7 @@ the documented test command, gives the same result every run, and needs nothing 
 (FR-016). Rating, range, floating labels and joined inputs (#86, #87) are specified alongside this
 feature and do not depend on it, so whichever is built second adds those states.
 
-**ADR:** none. It restates FR-016, and how it is held is in docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
+**ADR:** none. It restates FR-016, and how it is held is in docs/adr/0033-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D10. Focus, hover and pressed are not form states
 
@@ -180,7 +180,7 @@ sibling branches are also changing.
 
 **Revisit if:** the shared bundle gains a colour library.
 
-**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
+**ADR:** docs/adr/0033-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D14. The check reads the drawn markup through a table of what each class paints
 
@@ -199,7 +199,7 @@ no row is an error.
 **Risk:** the table is a reading of daisyUI's stylesheet for one version. It was checked against
 a browser for 5.7.47. When the pinned version moves, the rows are re-read with it.
 
-**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
+**ADR:** docs/adr/0033-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D15. A repair changes the colour of text the pack writes, and never repaints a control
 
@@ -227,7 +227,7 @@ colour modifier that would have the pack state a colour for the developer. FR-00
 scenario 8's test, "under every shipped theme", and says a colour or variant modifier is the
 developer's to state.
 
-**ADR:** docs/adr/0032-text-the-pack-writes-is-drawn-in-the-themes-content-colour.md
+**ADR:** docs/adr/0035-text-the-pack-writes-is-drawn-in-the-themes-content-colour.md
 
 ## D16. The README table is the list of known exceptions
 
@@ -238,7 +238,7 @@ one row. The check parses the README's table and compares it with what it measur
 **Rejected:** a list in the test suite and a copy in the README. Two lists need a test that they
 agree, and the README copy is the one that goes stale.
 
-**ADR:** docs/adr/0031-a-shortfall-in-daisyuis-own-drawing-is-published-never-patched.md
+**ADR:** docs/adr/0034-a-shortfall-in-daisyuis-own-drawing-is-published-never-patched.md
 
 ## D17. Nothing the pack draws is large text
 
@@ -258,7 +258,7 @@ the arrow of a select and of an accordion group; the bar under the chosen tab. E
 a person the control is there or what state it is in. A button is identified by its text, so its
 text is held and its outline is not, which is WCAG's own reading of a button.
 
-**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
+**ADR:** docs/adr/0033-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D19. An alert whose colour the developer chose is not measured
 
@@ -310,7 +310,7 @@ gives 178, which is what research R4's vector and the browser give.
 
 **Revisit if:** the vectors in research R4 are regenerated from a different engine.
 
-**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
+**ADR:** docs/adr/0033-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D23. A radio's ring and dot are the text ink, and only they are `own`
 
@@ -324,7 +324,7 @@ of it.
 
 **Revisit if:** the pack draws a radio outside a label.
 
-**ADR:** docs/adr/0032-text-the-pack-writes-is-drawn-in-the-themes-content-colour.md
+**ADR:** docs/adr/0035-text-the-pack-writes-is-drawn-in-the-themes-content-colour.md
 
 ## D24. A measurement names its element by an `Element`, not a string
 

@@ -1,4 +1,4 @@
-# ADR 0031 — A shortfall in daisyUI's own drawing is published, never patched
+# ADR 0034 — A shortfall in daisyUI's own drawing is published, never patched
 
 **Status:** accepted
 

@@ -1,4 +1,4 @@
-# ADR 0030 — Legibility is calculated from the theme's published colours
+# ADR 0033 — Legibility is calculated from the theme's published colours
 
 **Status:** accepted
 
