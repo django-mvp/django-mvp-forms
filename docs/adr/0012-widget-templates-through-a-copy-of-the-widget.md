@@ -1,4 +1,4 @@
-# ADR 0009 — The pack's own widget templates are drawn through a copy of the widget
+# ADR 0012 — The pack's own widget templates are drawn through a copy of the widget
 
 **Status:** accepted
 

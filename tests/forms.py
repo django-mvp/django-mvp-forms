@@ -3,6 +3,7 @@
 import datetime
 
 from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import widgets
@@ -360,3 +361,39 @@ class DisabledAndReadOnlyForm(forms.Form):
     text = forms.CharField(
         initial="Ada", widget=forms.TextInput(attrs={"readonly": True}), disabled=True
     )
+
+
+class StructureForm(forms.Form):
+    first = forms.CharField()
+    second = forms.CharField()
+    third = forms.CharField()
+    fourth = forms.CharField()
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+class ButtonedForm(forms.Form):
+    first = forms.CharField()
+    second = forms.CharField()
+
+    def __init__(self, *args, buttons=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        for button in buttons:
+            self.helper.add_input(button)
+
+
+class DocumentedExamplesForm(forms.Form):
+    form_field = forms.CharField()
+    form_field_1 = forms.CharField()
+    form_field_2 = forms.CharField()
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)

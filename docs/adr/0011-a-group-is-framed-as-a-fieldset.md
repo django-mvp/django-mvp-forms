@@ -1,4 +1,4 @@
-# ADR 0008 — A field of several inputs is framed as a fieldset, and a checkbox sits in its label
+# ADR 0011 — A field of several inputs is framed as a fieldset, and a checkbox sits in its label
 
 **Status:** accepted
 

@@ -3,10 +3,16 @@
 import copy
 
 import pytest
+from crispy_forms.bootstrap import StrictButton
+from crispy_forms.layout import Hidden, Submit
 from django import forms
 from django.utils.safestring import mark_safe
 
-from mvp_forms.templatetags.daisyui import FieldInput
+from mvp_forms.templatetags.daisyui import (
+    FieldInput,
+    daisyui_classes,
+    daisyui_shown,
+)
 from tests.forms import (
     CheckboxForm,
     DateSelectsForm,
@@ -510,3 +516,32 @@ class TestFieldInputDevelopersWidth:
         classes = FieldInput(OwnWidthForm()["responsive"]).css_class.split()
 
         assert {"md:w-40", FieldInput.width} <= set(classes)
+
+
+class TestDaisyuiClasses:
+    @pytest.mark.parametrize(
+        "name", ["btn-inverse", "ctrlHolder", "blockLabel", "error"]
+    )
+    def test_a_name_written_for_another_pack_is_dropped(self, name):
+        assert daisyui_classes(f"btn {name} mine") == "btn mine"
+
+    def test_a_repeated_name_is_dropped(self):
+        assert daisyui_classes("btn mine btn mine") == "btn mine"
+
+    def test_the_order_is_kept(self):
+        assert daisyui_classes("zeta alpha mid") == "zeta alpha mid"
+
+    @pytest.mark.parametrize("value", [None, "", "   ", "btn-inverse error"])
+    def test_nothing_left_gives_an_empty_string(self, value):
+        assert daisyui_classes(value) == ""
+
+
+class TestDaisyuiShown:
+    def test_a_hidden_input_is_left_out_and_the_order_is_kept(self):
+        save, go = Submit("save", "Save"), StrictButton("Go")
+
+        assert daisyui_shown([save, Hidden("step", "two"), go]) == [save, go]
+
+    @pytest.mark.parametrize("value", [None, []])
+    def test_nothing_given_is_an_empty_list(self, value):
+        assert daisyui_shown(value) == []

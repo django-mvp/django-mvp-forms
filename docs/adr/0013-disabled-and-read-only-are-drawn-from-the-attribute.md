@@ -1,4 +1,4 @@
-# ADR 0010 — Disabled and read-only are drawn from the attribute, and read-only is never imitated
+# ADR 0013 — Disabled and read-only are drawn from the attribute, and read-only is never imitated
 
 **Status:** accepted
 

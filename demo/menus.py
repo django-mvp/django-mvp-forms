@@ -25,5 +25,10 @@ AppMenu.extend(
                 "icon": "choice-inputs",
             },
         ),
+        MenuItem(
+            name="layout-objects",
+            view_name="layout-objects",
+            extra_context={"label": "Layout objects", "icon": "layout-objects"},
+        ),
     ]
 )

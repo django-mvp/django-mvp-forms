@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs so far, and nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, and the structural and button layout objects, and nothing is published to PyPI.
 
 ## Why
 
@@ -146,6 +146,79 @@ The pack adds no class and no attribute for either state. A field with `disabled
 
 Read-only is the browser's and exists only on text inputs and textareas. Set `readonly` on the widget, `forms.TextInput(attrs={"readonly": True})`, and it reaches the input unchanged, with the input's name and value, so the browser still submits it. The attribute does nothing on a select, a checkbox, a radio or a file input, and the pack does not try to make it: use `disabled` for those.
 
+### Layout objects
+
+The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import them from django-crispy-forms as its documentation says. This package adds no layout classes of its own:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Column, Div, Fieldset, Layout, Row
+from django import forms
+
+
+class ProfileForm(forms.Form):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+    email = forms.EmailField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Fieldset(
+                "Data for {{ user.username }}",
+                Row(Column("first_name"), Column("last_name")),
+                Div("email", css_id="contact"),
+                css_class="profile",
+            )
+        )
+```
+
+Build the layout in the form's `__init__`, as above, so each form has its own. django-crispy-forms stores some rendered values back on its layout objects, so one shared between forms or kept on a class is drawn wrongly the second time.
+
+- `Fieldset` is a daisyUI `fieldset` and its legend is a `fieldset-legend`. An empty legend draws no `<legend>`. The legend is rendered as a template against the page's context, as in the example, and markup in a context value is escaped.
+- `Div` is a plain `<div>` around its fields.
+- `Row` is a `<div>` that sets its columns side by side on a wide page and stacks them on a narrow one. It uses Tailwind layout utilities, because daisyUI has no component for a row.
+- `Column` is a `<div>` that takes an equal share of its row. Outside a `Row` it carries the same two layout classes, which do nothing unless its parent is a flex container. A `Row` that holds fields directly draws them in order, without columns.
+- `MultiField` is a daisyUI `fieldset` whose `<legend>` is the label you give it, holding its fields in order. Each field is still drawn in its own frame, with its own label, help text and errors, so an error sits beside the field it belongs to and not at the top of the group. The label is drawn as you write it, markup included. Unlike a `Fieldset` legend it is not rendered as a template, so it cannot read the page's context. `css_id`, `css_class`, `label_class` and attributes are kept on the group, and the names `ctrlHolder`, `blockLabel` and `error`, which django-crispy-forms writes for other template packs, are not drawn.
+
+Each of the five holds its fields and further layout objects in the order the layout gives, and can be nested to any depth. The `css_id`, `css_class` and attributes you give one are kept on its element, and your classes come after the pack's. Every field inside is still drawn with its own label, help text and errors. An empty container is drawn, and `template=` draws a container with a template of your own.
+
+Buttons are drawn as daisyUI buttons. `FormActions` and `StrictButton` come from `crispy_forms.bootstrap`, where django-crispy-forms keeps them:
+
+```python
+from crispy_forms.bootstrap import FormActions, StrictButton
+from crispy_forms.layout import Button, ButtonHolder, Reset, Submit
+
+FormActions(
+    Submit("save", "Save"),
+    Reset("clear", "Clear"),
+    Button("help", "Help"),
+    StrictButton("Save for {{ user.username }}", type="submit", css_class="btn-accent"),
+)
+```
+
+- `Submit`, `Reset` and `Button` are `<input>` elements of type `submit`, `reset` and `button`, each carrying `btn` (a `Submit` also `btn-primary`). Their value can read the page's context, as in `Submit("save", "Save {{ user.username }}")`. Pass `disabled=True` to draw one disabled. Four class names that django-crispy-forms writes for other template packs are never drawn on these buttons or on a `MultiField`, even when you give them yourself: `btn-inverse`, `ctrlHolder`, `blockLabel` and `error`.
+- `StrictButton` is a `<button>` of type `button` unless you give another `type=`. Its content may hold markup and context values; the values are escaped.
+- `ButtonHolder` and `FormActions` hold buttons side by side in one container, wrapping on a narrow page. `ButtonHolder` accepts an id and classes; `FormActions` also keeps any other attributes.
+- A button added to the form helper with `self.helper.add_input(Submit("save", "Save"))` is drawn after the fields, inside the form element, in a container of its own. It is the same element as the same button in a layout, with two limits that are django-crispy-forms' own: the value of a `Submit`, `Reset` or `Button` added this way is drawn as written and is not rendered as a template, and `template=` applies to a button in a layout only. A `StrictButton` added to the helper is drawn as it is in a layout. A `Hidden` added to the helper is drawn inside the form, outside the container of the buttons. With `form_tag` off, the buttons of a layout are still drawn.
+
+Raw markup and hidden values go in a layout as they do in django-crispy-forms:
+
+```python
+from crispy_forms.layout import HTML, Hidden
+
+Layout(
+    "first_name",
+    HTML("<p>Prepared for {{ user.username }}.</p>"),
+    "last_name",
+    Hidden("step", "details"),
+)
+```
+
+- `HTML` is drawn where you put it, between fields or inside a `Fieldset`, `Column`, `ButtonHolder` or `FormActions`. Your markup is kept as written, and a context value in it, as in the example, is filled in with any markup in the value escaped.
+- `Hidden` is an `<input type="hidden">` with the name and value you give, inside the form element. It carries no class and no id, so `css_id` and `css_class` do nothing on it. Pass `id=` or any other attribute as a keyword argument to add it.
+
 ## Contributing
 
 Standards for this repository live in
@@ -182,6 +255,14 @@ dropped, and nothing is stored.
 - `/text-inputs/standalone/` and `/choice-inputs/standalone/` are the same pages
   as a host project with neither django-mvp nor Cotton would have them, styled by
   daisyUI's CDN build alone.
+
+Two more pages draw the layout objects, a form to submit and a form that already
+fails, so an error inside a fieldset, a row and a column can be seen:
+
+- `/layout-objects/` is the page inside the django-mvp shell, reached from its sidebar.
+- `/layout-objects/standalone/` is the same page styled by daisyUI's CDN build alone.
+
+Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset, groups two fields in a `MultiField`, and carries a `Hidden` input.
 
 ## License
 

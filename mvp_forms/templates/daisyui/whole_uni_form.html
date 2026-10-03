@@ -1,4 +1,5 @@
 {% if form_tag %}<form {{ flat_attrs }} method="{{ form_method }}"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>{% endif %}
   {% if form_method|lower == "post" and not disable_csrf %}{% csrf_token %}{% endif %}
   {% include "daisyui/display_form.html" %}
+  {% include "daisyui/inputs.html" %}
 {% if form_tag %}</form>{% endif %}

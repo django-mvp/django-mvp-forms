@@ -48,7 +48,7 @@ the pack does not ship. Styling it to look fixed while it still accepts input mi
 Django itself has no read-only field argument, only `disabled`, and the README says stock
 behaviour wins over invention. Showing a field as uneditable from a layout is #8's.
 
-**ADR:** docs/adr/0010-disabled-and-read-only-are-drawn-from-the-attribute.md
+**ADR:** docs/adr/0013-disabled-and-read-only-are-drawn-from-the-attribute.md
 ## D3. A widget made of several inputs is split by the kind of each part
 
 **Ambiguous:** Django ships widgets built from several inputs: a date as three selects, a date
@@ -149,7 +149,7 @@ variable, so the reason stands and only the sentence changes.
 
 **Revisit if:** a layout object needs a group drawn without a fieldset.
 
-**ADR:** docs/adr/0008-a-group-is-framed-as-a-fieldset.md
+**ADR:** docs/adr/0011-a-group-is-framed-as-a-fieldset.md
 
 ## D10. The pack's own widget templates are drawn through a copy of the widget
 
@@ -166,7 +166,7 @@ template of its own (FR-004).
 
 **Revisit if:** Django lets a caller name the template for one render.
 
-**ADR:** docs/adr/0009-widget-templates-through-a-copy-of-the-widget.md
+**ADR:** docs/adr/0012-widget-templates-through-a-copy-of-the-widget.md
 
 ## D11. Read-only is the browser's state, and disabled is daisyUI's, both drawn from the attribute
 
@@ -182,7 +182,7 @@ class would add nothing.
 
 **Revisit if:** daisyUI gains a read-only modifier.
 
-**ADR:** docs/adr/0010-disabled-and-read-only-are-drawn-from-the-attribute.md
+**ADR:** docs/adr/0013-disabled-and-read-only-are-drawn-from-the-attribute.md
 
 ## D12. A hidden field's error uses Django's own message
 
@@ -243,7 +243,7 @@ repository's standards rule out. The old tag was never listed in the README's pu
 
 **Revisit if:** a layout object needs the input drawn without the frame.
 
-**ADR:** docs/adr/0009-widget-templates-through-a-copy-of-the-widget.md
+**ADR:** docs/adr/0012-widget-templates-through-a-copy-of-the-widget.md
 
 ## D17. The pack ships a base English catalogue
 

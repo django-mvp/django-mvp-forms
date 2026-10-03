@@ -1,6 +1,6 @@
 # ADR 0006 — One field frame, and what it reads from the context
 
-**Status:** accepted, amended by [ADR 0008](0008-a-group-is-framed-as-a-fieldset.md): a group is framed as a `fieldset`, and a single checkbox sits inside its label
+**Status:** accepted, amended by [ADR 0011](0011-a-group-is-framed-as-a-fieldset.md): a group is framed as a `fieldset`, and a single checkbox sits inside its label
 
 ## Decision
 

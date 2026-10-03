@@ -412,3 +412,191 @@ class TestStandaloneChoiceInputsPage(ChoiceInputsPageContract):
     def test_it_links_back_to_the_shell_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("choice-inputs")) is not None
+
+
+LAYOUT_SUBMIT_PREFIX = "layout"
+LAYOUT_FAILING_PREFIX = "failing"
+LAYOUT_ROW_FIELDS = ["first_name", "last_name"]
+LAYOUT_INPUT_BUTTONS = ["submit", "reset", "button"]
+HELPER_PREFIX = "helper"
+SMALL_PREFIX = "small"
+
+
+ELEMENTS_OF_THE_THIRTEEN_OBJECTS = {
+    "Fieldset": {"id": f"{LAYOUT_SUBMIT_PREFIX}-details"},
+    "Div": {"id": f"{LAYOUT_SUBMIT_PREFIX}-more"},
+    "Row": {"id": f"{LAYOUT_SUBMIT_PREFIX}-row"},
+    "Column": {"id": f"{LAYOUT_SUBMIT_PREFIX}-first"},
+    "MultiField": {"id": f"{LAYOUT_SUBMIT_PREFIX}-contact"},
+    "HTML": {"id": f"{LAYOUT_SUBMIT_PREFIX}-aside"},
+    "Submit": {"name": f"{LAYOUT_SUBMIT_PREFIX}-submit"},
+    "Reset": {"name": f"{LAYOUT_SUBMIT_PREFIX}-reset"},
+    "Button": {"name": f"{LAYOUT_SUBMIT_PREFIX}-button"},
+    "StrictButton": {"id": f"{LAYOUT_SUBMIT_PREFIX}-strict"},
+    "Hidden": {"name": f"{LAYOUT_SUBMIT_PREFIX}-step"},
+    "ButtonHolder": {"id": f"{SMALL_PREFIX}-actions"},
+    "FormActions": {"id": f"{LAYOUT_SUBMIT_PREFIX}-actions"},
+}
+
+
+def layout_field_id(prefix, name):
+    return f"id_{prefix}-{name}"
+
+
+class LayoutObjectsPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = {} if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    @pytest.mark.parametrize(
+        "attrs",
+        ELEMENTS_OF_THE_THIRTEEN_OBJECTS.values(),
+        ids=ELEMENTS_OF_THE_THIRTEEN_OBJECTS,
+    )
+    def test_every_layout_object_is_drawn_once(self, page, attrs):
+        assert len(page.find_all(attrs=attrs)) == 1
+
+    def test_it_holds_a_fieldset_with_a_legend(self, page):
+        fieldset = page.find("fieldset", id=f"{LAYOUT_SUBMIT_PREFIX}-details")
+        assert fieldset.find("legend") is not None
+
+    @pytest.mark.parametrize("name", LAYOUT_ROW_FIELDS)
+    def test_the_row_holds_its_fields_by_id(self, page, name):
+        row = page.find(id=f"{LAYOUT_SUBMIT_PREFIX}-row")
+        assert row.find("input", id=layout_field_id(LAYOUT_SUBMIT_PREFIX, name))
+
+    def test_the_bound_form_shows_its_errors_without_a_post(self, open_page):
+        page = open_page(self.url_name)
+        fieldset = page.find("fieldset", id=f"{LAYOUT_FAILING_PREFIX}-details")
+        error_id = layout_field_id(LAYOUT_FAILING_PREFIX, "first_name") + "_error"
+        assert fieldset.find(id=error_id) is not None
+
+    def test_the_submittable_form_starts_without_errors(self, open_page):
+        page = open_page(self.url_name)
+        error_id = layout_field_id(LAYOUT_SUBMIT_PREFIX, "first_name") + "_error"
+        assert page.find(id=error_id) is None
+
+    def test_a_post_of_the_empty_form_comes_back_with_a_field_error(self, open_page):
+        page = open_page(self.url_name, {})
+        error_id = layout_field_id(LAYOUT_SUBMIT_PREFIX, "first_name") + "_error"
+        assert page.find(id=error_id) is not None
+
+    @pytest.mark.parametrize("name", LAYOUT_INPUT_BUTTONS)
+    def test_the_actions_hold_each_input_button_by_name(self, page, name):
+        actions = page.find(id=f"{LAYOUT_SUBMIT_PREFIX}-actions")
+        assert actions.find("input", attrs={"name": f"{LAYOUT_SUBMIT_PREFIX}-{name}"})
+
+    def test_the_actions_hold_the_strict_button_by_id(self, page):
+        actions = page.find(id=f"{LAYOUT_SUBMIT_PREFIX}-actions")
+        assert actions.find("button", id=f"{LAYOUT_SUBMIT_PREFIX}-strict")
+
+    def test_the_submittable_form_is_drawn_with_its_own_form_element(self, page):
+        button = page.find("input", attrs={"name": f"{LAYOUT_SUBMIT_PREFIX}-submit"})
+        form = button.find_parent("form")
+        assert form["method"] == "post"
+        assert form.find("input", attrs={"name": "csrfmiddlewaretoken"}) is not None
+        assert form.find(id=layout_field_id(LAYOUT_SUBMIT_PREFIX, "first_name"))
+
+    def test_the_raw_html_sits_inside_the_fieldset_with_its_context_filled_in(
+        self, page
+    ):
+        fieldset = page.find("fieldset", id=f"{LAYOUT_SUBMIT_PREFIX}-details")
+        aside = fieldset.find(id=f"{LAYOUT_SUBMIT_PREFIX}-aside")
+        assert aside is not None
+        assert "{{" not in aside.get_text()
+
+    def test_the_hidden_input_is_inside_the_form_with_no_class_or_id(self, page):
+        hidden = page.find("input", attrs={"name": f"{LAYOUT_SUBMIT_PREFIX}-step"})
+        assert hidden["type"] == "hidden"
+        assert hidden.find_parent("form") is not None
+        assert not hidden.has_attr("class")
+        assert not hidden.has_attr("id")
+
+    @pytest.mark.parametrize("name", ["email", "phone"])
+    def test_the_multi_field_holds_each_of_its_fields_by_id(self, page, name):
+        group = page.find("fieldset", id=f"{LAYOUT_SUBMIT_PREFIX}-contact")
+        assert group.find("legend") is not None
+        assert group.find("input", id=layout_field_id(LAYOUT_SUBMIT_PREFIX, name))
+
+    def test_an_error_inside_the_multi_field_is_in_its_field_frame(self, open_page):
+        page = open_page(self.url_name)
+        group = page.find("fieldset", id=f"{LAYOUT_FAILING_PREFIX}-contact")
+        error_id = layout_field_id(LAYOUT_FAILING_PREFIX, "email") + "_error"
+        frame = group.find(id="div_" + layout_field_id(LAYOUT_FAILING_PREFIX, "email"))
+        assert frame.find(id=error_id) is not None
+
+    def test_the_form_that_fails_is_drawn_without_a_form_element(self, page):
+        field = page.find(id=layout_field_id(LAYOUT_FAILING_PREFIX, "first_name"))
+        assert field.find_parent("form") is None
+
+    def test_the_form_that_fails_still_draws_its_buttons(self, page):
+        actions = page.find(id=f"{LAYOUT_FAILING_PREFIX}-actions")
+        assert actions.find("input", attrs={"type": "submit"}) is not None
+
+    @pytest.mark.parametrize("name", ["submit", "reset"])
+    def test_the_helper_buttons_are_inside_the_form_after_its_fields(self, page, name):
+        field = page.find(id=layout_field_id(HELPER_PREFIX, "first_name"))
+        button = page.find("input", attrs={"name": f"{HELPER_PREFIX}-{name}"})
+        form = field.find_parent("form")
+        assert button.find_parent("form") is form
+        assert field in button.find_all_previous("input")
+
+    def test_the_small_layout_row_holds_its_fields_with_no_column(self, page):
+        row = page.find(id=f"{SMALL_PREFIX}-row")
+        for name in LAYOUT_ROW_FIELDS:
+            assert row.find("input", id=layout_field_id(SMALL_PREFIX, name))
+        assert row.find("div", id=f"{SMALL_PREFIX}-column") is None
+
+    def test_the_small_layout_ends_in_a_button_holder_with_a_button(self, page):
+        holder = page.find(id=f"{SMALL_PREFIX}-actions")
+        assert holder.find("input", attrs={"name": f"{SMALL_PREFIX}-submit"})
+
+    def test_every_described_id_exists(self, page):
+        described = page.find_all(attrs={"aria-describedby": True})
+        assert described
+        for element in described:
+            for described_id in element["aria-describedby"].split():
+                assert page.find(id=described_id) is not None
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestLayoutObjectsPage(LayoutObjectsPageContract):
+    url_name = "layout-objects"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("layout-objects")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("layout-objects-standalone")) is not None
+
+
+class TestStandaloneLayoutObjectsPage(LayoutObjectsPageContract):
+    url_name = "layout-objects-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, open_page):
+        page = open_page(self.url_name)
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("layout-objects")) is not None
