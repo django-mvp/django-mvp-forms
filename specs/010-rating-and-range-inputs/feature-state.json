@@ -2,7 +2,7 @@
   "feature": "010-rating-and-range-inputs",
   "branch": "010-rating-and-range-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-03T22:51:47Z",
       "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T23:09:50Z",
+      "note": "review approve; findings closed; main merged in"
     }
   ],
   "gates": {
@@ -61,6 +66,16 @@
         "DR-004 (low) a star's aria-label is the choice's label as plain text: applied to plan and T001",
         "DR-005 (low) empty means the empty string, and a choice whose value is 0 is a star: applied to plan and T002",
         "DR-006 (low) an extra form of a formset that holds a range is always submitted as changed: README says so (T004), question filed as #116"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T23:09:50Z",
+      "self_resolved": [
+        "COR-001 (low) a lazy choice label marked safe reached aria-label unescaped: fixed, T006",
+        "TST-001 (low) a bare underscore as an unpacking name in a test: fixed, T006",
+        "TST-002 (low) two tests asserted a width on a range: removed, T006",
+        "COR-002 (low) modifiers and css_class of a rating mix the group's size with a star's error colour, read by nothing the pack draws: kept as built, recorded in D21"
       ]
     }
   },
