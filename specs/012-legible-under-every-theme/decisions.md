@@ -333,3 +333,16 @@ selector for a failure message, and whose `kind` is what the README's *Seen on* 
 or `btn`, and never by a drawn state, and the reader is the one that knows the kind.
 
 **Revisit if:** the table stops naming what a pairing is seen on.
+
+## D25. The failure text is built by `KnownExceptions.failures`
+
+**Decision:** the lines that `TestEveryTheme` shows when a held pairing falls short (form
+state, theme, pairing, ratio and figure) are built by `KnownExceptions.failures(measurements,
+theme, published)`. `TestEveryTheme` asserts that it is empty and `TestTheCheckCatches` asserts
+that it names the state, the theme and the pairing of a help text that lost
+`text-base-content`.
+
+**Why:** a test that built its own copy of the message would pass while the real one lost a
+field. The one method is the message a contributor reads.
+
+**Revisit if:** the failure is reported another way than text.
