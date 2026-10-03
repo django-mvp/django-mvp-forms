@@ -320,4 +320,4 @@ submission.
 
 **Revisit if:** a third page pair needs a different set of states.
 
-**ADR:** none — demo code
+**ADR:** none — local to the demo project, which is not distributed and which nothing inherits from
