@@ -52,7 +52,7 @@ The host project supplies daisyUI itself. This package ships markup, not a style
 <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
 ```
 
-A host project with its own Tailwind build has to make that build produce the classes the pack writes: Tailwind only generates a class it finds in the files it scans, so point it at the installed package's templates.
+A host project with its own Tailwind build has to make that build produce the classes the pack writes. Tailwind only generates a class it finds in the files it scans, so point it at the whole installed `mvp_forms` package: the classes are written in its templates and in its template tags.
 
 ## Quickstart
 

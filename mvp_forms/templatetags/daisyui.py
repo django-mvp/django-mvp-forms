@@ -6,7 +6,7 @@ from django import forms, template
 from django.forms.boundfield import BoundField
 from django.template import Context
 from django.utils.html import strip_tags
-from django.utils.safestring import SafeString
+from django.utils.safestring import SafeData, SafeString
 
 register = template.Library()
 
@@ -34,6 +34,12 @@ class FieldInput:
         forms.PasswordInput: "input",
         forms.Textarea: "textarea",
     }
+    # Written out, not built from the component's name, so a host project's
+    # Tailwind build finds them when it scans this module.
+    error_modifiers: dict[str, str] = {
+        "input": "input-error",
+        "textarea": "textarea-error",
+    }
 
     def __init__(
         self, field: BoundField, show_labels: bool = True, show_errors: bool = True
@@ -57,7 +63,7 @@ class FieldInput:
         if self.component:
             classes.append(self.component)
             if self.show_errors and self.field.errors:
-                classes.append(f"{self.component}-error")
+                classes.append(self.error_modifiers[self.component])
         return " ".join(dict.fromkeys(classes))
 
     @property
@@ -69,12 +75,22 @@ class FieldInput:
         if self.requires_aria_required:
             attrs["aria-required"] = "true"
         if self.requires_aria_label:
-            # A plain str, so the attribute is escaped once however the label
-            # was marked.
-            attrs["aria-label"] = unescape(strip_tags(str(self.field.label))).strip()
+            attrs["aria-label"] = self.label_text
         if self.hides_error_element and self.description:
             attrs["aria-describedby"] = self.description
         return attrs
+
+    @property
+    def label_text(self) -> str:
+        """The label as plain text, for an attribute that is escaped once.
+
+        A label marked safe is markup, so its tags are dropped and its entities
+        read as characters. Any other label is shown as written.
+        """
+        label = self.field.label
+        if isinstance(label, SafeData):
+            return unescape(strip_tags(str(label))).strip()
+        return str(label)
 
     @property
     def requires_aria_required(self) -> bool:
@@ -151,7 +167,8 @@ def daisyui_input(context: Context, field: BoundField) -> SafeString:
 
     Args:
         context: The template context, read for the helper's label and error
-            switches, which are both on when absent.
+            switches. Each is off only when it equals False, as the
+            templates read it, and on when absent.
         field: The bound field whose widget is drawn.
 
     Returns:
@@ -159,6 +176,6 @@ def daisyui_input(context: Context, field: BoundField) -> SafeString:
     """
     return FieldInput(
         field,
-        show_labels=context.get("form_show_labels") is not False,
-        show_errors=context.get("form_show_errors") is not False,
+        show_labels=context.get("form_show_labels") != False,  # noqa: E712
+        show_errors=context.get("form_show_errors") != False,  # noqa: E712
     ).render()

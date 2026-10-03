@@ -303,3 +303,28 @@ class TestDaisyuiInputSwitches:
 
         assert page.find(id="id_bare_error") is not None
         assert "input-error" in page.find(id="id_bare")["class"]
+
+
+class LiteralLabelForm(forms.Form):
+    name = forms.CharField(label="Use <b> & AT&amp;T")
+
+
+class TestFieldInputLiteralLabel:
+    def test_a_label_not_marked_safe_is_named_exactly_as_written(self):
+        field_input = FieldInput(LiteralLabelForm()["name"], show_labels=False)
+
+        assert field_input.attrs["aria-label"] == "Use <b> & AT&amp;T"
+
+
+class TestDaisyuiInputFalsySwitches:
+    def test_a_switch_of_zero_hides_the_label_and_names_the_input(self, draw):
+        form = HelpedForm()
+
+        page = draw(
+            '{% include "daisyui/field.html" %}',
+            field=form["bare"],
+            form_show_labels=0,
+        )
+
+        assert page.find("label") is None
+        assert page.find(id="id_bare").has_attr("aria-label")
