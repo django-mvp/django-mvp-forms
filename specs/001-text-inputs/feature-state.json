@@ -2,7 +2,7 @@
   "feature": "001-text-inputs",
   "branch": "001-text-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "QUEUED",
@@ -23,6 +23,11 @@
       "state": "IMPLEMENT",
       "at": "2026-10-03T15:24:50Z",
       "note": "plan gate open; design review applied at 793c8e6"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T15:54:45Z",
+      "note": "all five stories accepted"
     }
   ],
   "gates": {
@@ -229,6 +234,11 @@
             ],
             "verified_by_ci": false
           }
+        },
+        {
+          "id": "T009",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
@@ -312,7 +322,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {

@@ -14,7 +14,7 @@ A host project that selects the pack gets every text-like field of a plain Djang
 
 **Why defensible:** crispy packs are named after the CSS framework they emit (`bootstrap5`, `tailwind`, `bulma`), and the README describes the package as a daisyUI template pack. A name tied to the package (`mvp_forms`) would suggest the pack needs django-mvp, which G6 rules out. A versioned name (`daisyui5`) would force a rename at each daisyUI major, while roadmap item R9 plans for one pack tested across the daisyUI versions it supports. The cost is that crispy-daisyui uses the same name, so a project cannot have both installed. That pack is the one this package replaces, so a project has no reason to install both.
 
-**ADR:** to be written with the build, as `docs/adr/NNNN-template-pack-name.md`. The branch carries only the specification until then.
+**ADR:** docs/adr/0001-template-pack-name.md
 
 ## D2. Form-wide errors and the form element belong to this feature
 
@@ -34,7 +34,7 @@ A host project that selects the pack gets every text-like field of a plain Djang
 
 **Why defensible:** the input type decides the format the browser submits, and the field's parsing has to match it. Changing it in a template would break forms with their own input formats, and it would be per-form behaviour that G1 says the pack must not need. "Matching crispy-forms' documented behaviour wins over inventing a new one."
 
-**ADR:** to be written with the build. It is a standing limit on what any template in the pack may do to a widget, and a later contributor will ask why date fields are not pickers.
+**ADR:** docs/adr/0002-the-pack-never-changes-an-input-type.md
 
 ## D4. Only classes found in daisyUI's CDN build
 
@@ -46,7 +46,7 @@ A host project that selects the pack gets every text-like field of a plain Djang
 
 **Why defensible:** it is the only reading under which the request's last sentence is true. The gap in the article's wording is filed as #16.
 
-**ADR:** to be written with the build, unless #16 amends Article XIV first, in which case the rule lives in the constitution and needs no record.
+**ADR:** none — superseded by D9, which carries the record.
 
 ## D5. One field frame, shared by every later feature
 
@@ -84,7 +84,7 @@ A host project that selects the pack gets every text-like field of a plain Djang
 
 **Why defensible:** the project's rule is that stock daisyUI markup wins over custom styling, so the look of each input is daisyUI's to decide. The demo page is a list of fields in their states and needs no design.
 
-**ADR:** none.
+**ADR:** none — it settles whether this feature has a prototype round and nothing later inherits it.
 
 ## D9. Class policy, as ruled for the build
 
@@ -97,6 +97,8 @@ so no build step is needed either way. The package ships no stylesheet and defin
 **In this feature:** no Tailwind utility is needed. The field frame is daisyUI's `fieldset`, and
 a test compares every class the pack emits with the class names in daisyUI's CDN stylesheet.
 
+**ADR:** docs/adr/0003-daisyui-classes-and-tailwind-for-layout-only.md
+
 ## D10. The pack draws inputs with its own tag, not django-crispy-forms' `crispy_field`
 
 **Decision:** `{% daisyui_input field %}`, backed by the class `FieldInput`, passes the pack's
@@ -106,6 +108,8 @@ class to `BoundField.as_widget` for one render.
 daisyUI build defines, and it writes into `widget.attrs`, so the change outlives the render.
 
 **Revisit if:** django-crispy-forms offers a way to add a class without either effect.
+
+**ADR:** docs/adr/0004-inputs-are-drawn-without-writing-to-the-widget.md
 
 ## D11. The ids around a field are Django's own
 
@@ -117,6 +121,8 @@ ids. Per-message ids, as crispy-tailwind writes, would leave the input describin
 element that is not on the page.
 
 **Revisit if:** a supported Django version changes the ids it names.
+
+**ADR:** docs/adr/0005-the-ids-around-a-field-are-djangos.md
 
 ## D12. Where the pack corrects what Django puts on the input
 
@@ -131,6 +137,8 @@ the attributes and renders the widget directly.
 
 **Revisit if:** Django lets a caller suppress the description it adds.
 
+**ADR:** docs/adr/0005-the-ids-around-a-field-are-djangos.md
+
 ## D13. The pack adds no text of its own
 
 **Decision:** the required marker is an asterisk hidden from assistive technology. The
@@ -141,6 +149,8 @@ not to ship an empty one.
 
 **Revisit if:** a later feature has to add wording, at which point the package gains a catalogue.
 
+**ADR:** none — it follows from Article VIII and binds nothing until a feature adds wording.
+
 ## D14. Search, telephone and colour inputs are left to the fallback
 
 **Decision:** the covered widgets are the ones the specification lists. Django's `SearchInput`,
@@ -148,6 +158,8 @@ not to ship an empty one.
 
 **Why:** the specification names nine kinds. Whether to add these is an open question on the
 tracker.
+
+**ADR:** none — a scope line; the question is open on the tracker.
 
 ## D15. Design review, 2026-10-03
 
@@ -168,6 +180,8 @@ finding. Each was applied to the plan and tasks before any code.
 - **DR-007.** The label's `for` is written only when there is an id to point at.
 - **DR-008.** No wrapper class around BeautifulSoup in the tests.
 
+**ADR:** none — a record of the review. Its lasting rulings are in ADR 0004, 0005 and 0006.
+
 ## D16. Help text and errors are in the frame from US1
 
 **Decision:** `daisyui/field.html` writes the help text and error elements, with the ids of D11,
@@ -180,6 +194,8 @@ modifier, escaping and prefixes, and tests them.
 
 **Revisit if:** US2 splits the frame into smaller templates.
 
+**ADR:** none — an ordering choice between two stories of this feature.
+
 ## D17. Error modifier and aria-required in US2
 
 **Decision:** `FieldInput.css_class` adds `<component>-error` whenever the field has errors, and
@@ -191,6 +207,8 @@ Django as a bare `aria-required`, which is not a valid ARIA value.
 
 **Revisit if:** US3 finds the modifier wants a different condition from the error element.
 
+**ADR:** none — an ordering choice between two stories; the lasting rule is in ADR 0005.
+
 ## D18. The helper's switches are off only when they are False
 
 **Decision:** `daisyui/field.html`, `uni_form.html` and `display_form.html` test `form_show_labels != False` and `form_show_errors != False`, and the tag reads both from the context with a default of on. `errors.html` reads neither, so `|as_crispy_errors`, which passes only the form, draws the form's errors. `FieldInput` narrows the error modifier to `show_errors and errors` as D17 left for this story, and builds `aria-label` from `strip_tags(label).strip()`.
@@ -198,6 +216,8 @@ Django as a bare `aria-required`, which is not a valid ARIA value.
 **Why:** a name missing from the context must mean on, as it does in the tag, so a bare `{% include "daisyui/field.html" %}` draws a label and errors. `strip_tags` returns a safe label unchanged when it holds no tag, so a label marked safe with a quote in it would break out of the attribute unless the value is made a plain string, which `strip()` does.
 
 **Revisit if:** a later feature reads these names in a template where a missing name should mean off.
+
+**ADR:** docs/adr/0006-the-field-frame.md
 
 ## D19. How the independence tests are set up
 
@@ -207,6 +227,8 @@ Django as a bare `aria-required`, which is not a valid ARIA value.
 
 **Revisit if:** the pack needs a library of another package that is not in the denylist, or crispy caches a fifth loader.
 
+**ADR:** none — how one test module is set up; nothing outside the tests inherits it.
+
 ## D20. The demo's submittable form is required, has help text and is novalidate
 
 **Decision:** the submittable form on both pages is built with `required=True` and `with_help=True`, and its `<form>` carries `novalidate`.
@@ -215,6 +237,8 @@ Django as a bare `aria-required`, which is not a valid ARIA value.
 
 **Revisit if:** a later feature wants to show the browser's own validation beside the server's.
 
+**ADR:** none — it concerns the demo project only.
+
 ## D21. The two pages share one view mixin and one test contract
 
 **Decision:** `TextInputsMixin` builds the submittable form and a list of `{title, form}` states, and both views take it. The tests that hold for both pages live on `TextInputsPageContract`, which is not collected, and `TestTextInputsPage` and `TestStandaloneTextInputsPage` subclass it with their own `url_name` and the checks only that page can answer to.
@@ -222,3 +246,19 @@ Django as a bare `aria-required`, which is not a valid ARIA value.
 **Why:** the two pages are asked to draw the same forms and keep the same promises, so one set of checks run twice is what makes them twins. The mixin and the contract each have two present users.
 
 **Revisit if:** a third page needs the states drawn a different way.
+
+**ADR:** none — it concerns the demo project and its tests only.
+
+## D22. Convergence, 2026-10-03
+
+**Decision:** two corrections after the last story. A label marked safe that holds an HTML entity
+is named in `aria-label` by the character, not the entity's code. The tag reads the helper's
+switches the way the templates do, so a switch is off only when it is `False`.
+
+**Left as it is:** the one render that bypasses `as_widget` does not mark a localised field's
+widget as localised. That path is reached only for a bound, invalid field, whose value is the
+text that was submitted, and submitted text is printed back unformatted either way.
+
+**Revisit if:** the direct render is ever reached for a field holding an unsubmitted value.
+
+**ADR:** none — two corrections inside one class; the rules they serve are in ADR 0005 and 0006.
