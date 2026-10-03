@@ -56,6 +56,11 @@ AppMenu.extend(
             extra_context={"label": "Attached text", "icon": "attached-text"},
         ),
         MenuItem(
+            name="inline-choices",
+            view_name="inline-choices",
+            extra_context={"label": "Inline choices", "icon": "inline-choices"},
+        ),
+        MenuItem(
             name="choices",
             view_name="choices",
             extra_context={"label": "Size, colour and variant", "icon": "choices"},

@@ -1,0 +1,18 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="inline-choices">
+    <c-text>
+      Both groups are required. Submit the form empty to see an error in each frame.
+      The options sit along a line and wrap onto the next one when they do not fit.
+    </c-text>
+    {% crispy inline_form %}
+  </c-section>
+  <c-section title="A form that already fails" level="3">
+    <c-text>The size is not one of the choices and no extra is picked, so both groups show their error.</c-text>
+    {% crispy failing_inline_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'decorated-fields-standalone' %}" text="The same forms without django-mvp" />
+  </c-text>
+{% endblock page.content %}

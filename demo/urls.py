@@ -10,6 +10,7 @@ from demo.views import (
     ChoicesView,
     ContainersStandaloneView,
     DecoratedFieldsStandaloneView,
+    InlineChoicesView,
     LayoutObjectsView,
     ModalView,
     OverviewView,
@@ -55,6 +56,7 @@ urlpatterns = [
         name="containers-standalone",
     ),
     path("attached-text/", AttachedTextView.as_view(), name="attached-text"),
+    path("inline-choices/", InlineChoicesView.as_view(), name="inline-choices"),
     path(
         "decorated-fields/standalone/",
         DecoratedFieldsStandaloneView.as_view(),

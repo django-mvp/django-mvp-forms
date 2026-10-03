@@ -19,6 +19,7 @@ from demo.forms import (
     ChoiceInputsForm,
     ChosenGroupsForm,
     HelperButtonsForm,
+    InlineChoicesForm,
     InputKindsForm,
     LayoutObjectsForm,
     ModalForm,
@@ -513,10 +514,59 @@ class AttachedTextView(AttachedTextMixin, MVPTemplateView):
     breadcrumbs = [{"text": "Attached text"}]
 
 
-class DecoratedFieldsStandaloneView(AttachedTextMixin, TemplateView):
-    """The decorated-field forms for a host project without django-mvp or Cotton."""
+class InlineChoicesMixin:
+    """The forms the inline-choices page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    inline_prefix = "inline"
+    inline_failing_prefix = "failing-inline"
+    inline_failing_data = {"failing-inline-size": "huge"}
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault("inline_form", InlineChoicesForm(prefix=self.inline_prefix))
+        kwargs["failing_inline_form"] = InlineChoicesForm(
+            self.inline_failing_data, prefix=self.inline_failing_prefix, posts=False
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = InlineChoicesForm(request.POST, prefix=self.inline_prefix)
+        return self.render_to_response(self.get_context_data(inline_form=form))
+
+
+class InlineChoicesView(InlineChoicesMixin, MVPTemplateView):
+    """Radios and checkboxes in a line, inside the application shell."""
+
+    template_name = "demo/inline_choices.html"
+    page_title = "Inline choices"
+    page_subtitle = "Radio and checkbox groups with their options along a line"
+    breadcrumbs = [{"text": "Inline choices"}]
+
+
+class DecoratedFieldsStandaloneView(
+    InlineChoicesMixin, AttachedTextMixin, TemplateView
+):
+    """The decorated-field forms for a host project without django-mvp or Cotton.
+
+    A post belongs to the form whose submit button it names. One that names none
+    binds the attached-text form.
+    """
 
     template_name = "demo/decorated_fields_standalone.html"
+
+    def post(self, request, *args, **kwargs):
+        """Bind the form whose submit button was pressed and no other."""
+        if f"{self.inline_prefix}-submit" in request.POST:
+            return InlineChoicesMixin.post(self, request, *args, **kwargs)
+        return AttachedTextMixin.post(self, request, *args, **kwargs)
 
 
 class ChoicesMixin:

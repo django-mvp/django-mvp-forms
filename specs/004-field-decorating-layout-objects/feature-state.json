@@ -150,8 +150,28 @@
         },
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestInlineChoicesPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandaloneInlineChoices",
+              "tests/test_demo.py::TestAttachedTextPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -n auto --dist loadscope (exit 0, 885 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:658",
+              "demo/views.py:517",
+              "demo/views.py:545",
+              "demo/urls.py:59",
+              "demo/templates/demo/inline_choices.html:1"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

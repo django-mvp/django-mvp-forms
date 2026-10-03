@@ -27,3 +27,10 @@ Did: FieldInput takes the keyword-only `inline`, with `inline_templates` naming 
 Verified: uv run pytest tests/test_pack/test_inline_groups.py (all failed with TemplateDoesNotExist before the templates existed); uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope: 1449 passed; pre-commit run --all-files clean. Probed by mutation: dropping inline=True from the radio layout template fails the template_name test.
 Next: T004, the inline-choices demo page and the standalone page's forms.
 Watch: the layout test reads the template through FieldInput.template_name by recording the FieldInputs built in a draw; no test compares the two containers. docs/ has no page for these objects; ADR 0012 names group.html and is left as written.
+
+## 2026-10-03T19:00:53Z · Implementer US2 · T004
+
+Did: InlineChoicesForm (a required radio group and a required checkbox group, layout built per instance, prefixed submit name), InlineChoicesMixin and InlineChoicesView on the shell, route inline-choices, sidebar entry and icon, demo/inline_choices.html on Cotton components. The standalone page gains both inline forms and a link to the shell page; DecoratedFieldsStandaloneView now binds the form whose submit button a post names, the attached-text form when it names none. Tests first in tests/test_demo.py (InlineChoicesPageContract, run against both pages; 42 failed or errored before the page existed). README demo section and CHANGELOG entry.
+Verified: uv run pytest tests/test_demo.py -n auto --dist loadscope: 885 passed; pre-commit run --all-files clean.
+Next: full verify, then the completion report.
+Watch: the failing form is bound to an invalid size and no extras, so both groups show an error; the forms of US3 to US6 add their own mixin to the standalone view and their submit names to its post.

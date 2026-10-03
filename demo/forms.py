@@ -6,6 +6,8 @@ from crispy_forms.bootstrap import (
     Alert,
     AppendedText,
     FormActions,
+    InlineCheckboxes,
+    InlineRadios,
     Modal,
     PrependedAppendedText,
     PrependedText,
@@ -651,6 +653,51 @@ class OverrideForm(ChosenForm):
                 ),
             ),
         )
+
+
+class InlineChoicesForm(forms.Form):
+    """A form whose radio group and checkbox group are drawn along a line.
+
+    Both fields are required, so a bound form with nothing in it comes back with
+    an error in each group's frame. Its layout is built for each instance, and
+    every id and button name in it carries the form's prefix, so two of these
+    forms on one page repeat no id. The form must be given a prefix.
+    """
+
+    size = forms.ChoiceField(
+        label=_("Size"),
+        help_text=_("Pick one"),
+        choices=[("s", _("Small")), ("m", _("Medium")), ("l", _("Large"))],
+        widget=forms.RadioSelect,
+    )
+    extras = forms.MultipleChoiceField(
+        label=_("Extras"),
+        help_text=_("Pick any"),
+        choices=[
+            ("ketchup", _("Ketchup")),
+            ("mustard", _("Mustard")),
+            ("onions", _("Fried onions")),
+            ("pickles", _("Pickles")),
+        ],
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in every id and button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(InlineRadios("size"), InlineCheckboxes("extras"))
+        if posts:
+            self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
 
 
 ORDER_LINE_LIMIT = 10000
