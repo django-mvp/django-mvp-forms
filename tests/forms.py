@@ -1,6 +1,7 @@
 """The forms the suite draws."""
 
 from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
 from django import forms
 from django.core.exceptions import ValidationError
 
@@ -93,3 +94,16 @@ class DeveloperLabelledForm(forms.Form):
 class FieldAndFormWideErrorsForm(HelpedForm):
     def clean(self):
         raise ValidationError("It failed as a whole", code="whole")
+
+
+class StructureForm(forms.Form):
+    first = forms.CharField()
+    second = forms.CharField()
+    third = forms.CharField()
+    fourth = forms.CharField()
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
