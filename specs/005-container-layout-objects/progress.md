@@ -30,3 +30,10 @@ Did: the accordion page on the shell (route accordion, demo/accordion.html on Co
 Verified: `uv run pytest tests/test_demo.py -n auto --dist loadscope` 609 passed (22 new, red first on NoReverseMatch); `uv run pre-commit run --all-files` clean. Probes: removing active= from the chosen form fails 4, removing the standalone post override fails the tabs-post test.
 Next: full verify, then the report.
 Watch: a post with an empty body to the standalone page still binds the tabs form, because US1's tests post {} there and expect it (D16).
+
+## 2026-10-03T17:54:34Z · Implementer US3 · T005
+
+Did: Modal drawn by daisyui/layout/modal.html: a dialog.modal with the developer's id, a modal-box holding an h3 title (id <title_id>-label, which aria-labelledby names), the fields and one type=button close control with translatable text; `open` when the drawn fields hold aria-invalid="true", tested in the template. "Close" added to the English catalogue with makemessages (en, from inside mvp_forms/). Tests: tests/test_pack/test_modal.py (19), a modal state (unbound, invalid) in test_independence.py, the Modal docstring example (unclosed quote repaired) in test_documented_examples.py. README gains a Modal section with how a host project opens it by id; CHANGELOG entry. UPSTREAM_ONLY_CLASSES unchanged: the modal template uses no daisyui_classes, so the README sentence on dropped names stays as US1 left it.
+Verified: `uv run pytest tests/test_pack -n auto --dist loadscope` 675 passed; `uv run pre-commit run --all-files` clean. Red observed first (TemplateDoesNotExist for daisyui/layout/modal.html). Probe: removing the open clause fails 4 tests.
+Next: T006, the modal demo page.
+Watch: a test attribute named title collides with Modal's own title argument, so the developer-attrs test uses lang.

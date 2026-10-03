@@ -181,8 +181,23 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_modal.py",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack -n auto --dist loadscope (675 passed, exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/modal.html:1"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T006",
