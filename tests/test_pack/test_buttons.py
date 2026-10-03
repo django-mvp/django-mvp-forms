@@ -4,6 +4,8 @@ import pytest
 from crispy_forms.bootstrap import FormActions, StrictButton
 from crispy_forms.layout import Button, ButtonHolder, Reset, Submit
 
+from tests.forms import ButtonedForm
+
 DEVELOPER_CLASSES = ["mine", "other"]
 DEVELOPER_ATTRS = {"data-role": "action", "title": "Act"}
 BASE_INPUTS = [
@@ -197,3 +199,73 @@ class TestHolders:
         container = soup.find(id="actions")
         assert container["data-role"] == DEVELOPER_ATTRS["data-role"]
         assert container["title"] == DEVELOPER_ATTRS["title"]
+
+
+class TestHelperButtons:
+    @pytest.fixture
+    def draw_helper(self, draw):
+        def draw_buttons(*buttons, **context):
+            form = ButtonedForm(buttons=buttons)
+            return draw("{% crispy form %}", form=form, **context)
+
+        return draw_buttons
+
+    @pytest.mark.parametrize(("kind", "input_type"), BASE_INPUTS)
+    def test_it_is_inside_the_form_element_after_the_fields(
+        self, draw_helper, kind, input_type
+    ):
+        form = draw_helper(kind("act", "Go")).find("form")
+
+        controls = form.find_all("input")
+        assert controls[-1]["name"] == "act"
+        assert [control["name"] for control in controls[-3:-1]] == ["first", "second"]
+
+    @pytest.mark.parametrize(("kind", "input_type"), BASE_INPUTS)
+    def test_it_is_the_element_a_layout_draws_for_the_same_button(
+        self, draw_helper, draw_layout, kind, input_type
+    ):
+        button = kind("act", "Go", css_class="mine", **DEVELOPER_ATTRS)
+
+        in_helper = draw_helper(button).find("input", attrs={"name": "act"})
+        in_layout = draw_layout(button).find("input", attrs={"name": "act"})
+
+        assert in_helper.attrs == in_layout.attrs
+        assert in_helper["type"] == input_type
+
+    def test_the_buttons_are_drawn_in_the_order_they_were_added(self, draw_helper):
+        form = draw_helper(Submit("save", "Save"), Reset("clear", "Clear")).find("form")
+
+        assert [control["name"] for control in form.find_all("input")[-2:]] == [
+            "save",
+            "clear",
+        ]
+
+    def test_markup_in_a_value_is_escaped(self, draw_helper):
+        soup = draw_helper(Submit("save", '"><script>x</script>'))
+
+        assert soup.find("script") is None
+        value = soup.find("input", attrs={"name": "save"})["value"]
+        assert value == '"><script>x</script>'
+
+    def test_a_helper_with_no_buttons_draws_no_container(self, draw_helper):
+        form = draw_helper().find("form")
+
+        assert len(form.find_all("div", recursive=False)) == len(
+            ButtonedForm.base_fields
+        )
+
+    def test_a_helper_with_buttons_draws_them_in_one_container(self, draw_helper):
+        form = draw_helper(Submit("save", "Save"), Reset("clear", "Clear")).find("form")
+
+        container = form.find("input", attrs={"name": "save"}).parent
+        assert container.find("input", attrs={"name": "clear"}) is not None
+        assert (
+            len(form.find_all("div", recursive=False))
+            == len(ButtonedForm.base_fields) + 1
+        )
+
+    def test_a_layouts_buttons_are_drawn_with_the_form_element_off(self, draw_layout):
+        soup = draw_layout(Submit("save", "Save"))
+
+        assert soup.find("form") is None
+        assert soup.find("input", attrs={"name": "save"}) is not None

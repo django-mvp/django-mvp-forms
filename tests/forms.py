@@ -107,3 +107,14 @@ class StructureForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(*layout)
+
+
+class ButtonedForm(forms.Form):
+    first = forms.CharField()
+    second = forms.CharField()
+
+    def __init__(self, *args, buttons=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        for button in buttons:
+            self.helper.add_input(button)

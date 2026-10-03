@@ -21,6 +21,7 @@ from django.apps import apps
 
 import mvp_forms
 from tests.forms import (
+    ButtonedForm,
     DeveloperAttrsForm,
     FieldAndFormWideErrorsForm,
     FormWideErrorsForm,
@@ -113,6 +114,16 @@ def buttoned(data=None):
     )
 
 
+def helper_buttons():
+    return ButtonedForm(
+        buttons=(
+            Submit("save", "Save"),
+            Reset("clear", "Clear"),
+            Button("help", "Help"),
+        )
+    )
+
+
 NOTHING = frozenset()
 ERRORS_ONLY = "{{ form|as_crispy_errors }}"
 
@@ -188,6 +199,9 @@ STATES = [
         lambda: buttoned({}),
         NOTHING,
         id="buttons in a layout, invalid",
+    ),
+    pytest.param(
+        "{% crispy form %}", helper_buttons, NOTHING, id="buttons added to the helper"
     ),
     pytest.param(
         "{% crispy form %}",
