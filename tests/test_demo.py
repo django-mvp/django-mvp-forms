@@ -1157,3 +1157,134 @@ class TestStandaloneTableFormsetPage(FormsetPageContract):
     def test_it_links_back_to_the_shell_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("formset-table")) is not None
+
+
+ATTACHED_PREFIX = "attached"
+ATTACHED_FAILING_PREFIX = "failing-attached"
+ATTACHED_POST = {f"{ATTACHED_PREFIX}-submit": "Submit"}
+ATTACHED_TEXT_FIELDS = ["amount", "weight", "budget"]
+
+
+def attached_frame(page, prefix, name):
+    return page.find(id=f"div_{layout_field_id(prefix, name)}")
+
+
+class AttachedTextPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = ATTACHED_POST if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    @pytest.mark.parametrize("prefix", [ATTACHED_PREFIX, ATTACHED_FAILING_PREFIX])
+    @pytest.mark.parametrize("name", ATTACHED_TEXT_FIELDS)
+    def test_each_layout_object_draws_its_input_in_a_wrapper(self, page, prefix, name):
+        frame = attached_frame(page, prefix, name)
+
+        wrapper = frame.find("label", class_="input")
+
+        assert wrapper.find(id=layout_field_id(prefix, name)) is not None
+        assert wrapper.find("span", class_="label") is not None
+
+    @pytest.mark.parametrize("prefix", [ATTACHED_PREFIX, ATTACHED_FAILING_PREFIX])
+    def test_a_select_is_drawn_in_a_wrapper(self, page, prefix):
+        frame = attached_frame(page, prefix, "fruit")
+
+        wrapper = frame.find("label", class_="select")
+
+        assert wrapper.find("select", id=layout_field_id(prefix, "fruit"))
+
+    def test_the_form_that_already_fails_shows_the_error_in_a_decorated_frame(
+        self, page
+    ):
+        frame = attached_frame(page, ATTACHED_FAILING_PREFIX, "amount")
+
+        assert frame.find(
+            id=layout_field_id(ATTACHED_FAILING_PREFIX, "amount") + "_error"
+        )
+        assert "input-error" in frame.find("label", class_="input")["class"]
+
+    def test_a_field_that_holds_a_valid_value_shows_no_error(self, page):
+        frame = attached_frame(page, ATTACHED_FAILING_PREFIX, "weight")
+
+        assert (
+            frame.find(id=layout_field_id(ATTACHED_FAILING_PREFIX, "weight") + "_error")
+            is None
+        )
+
+    def test_a_post_of_the_empty_form_comes_back_with_an_error_in_a_decorated_frame(
+        self, open_page
+    ):
+        page = open_page(self.url_name, ATTACHED_POST)
+
+        for name in [*ATTACHED_TEXT_FIELDS, "fruit"]:
+            frame = attached_frame(page, ATTACHED_PREFIX, name)
+            error_id = layout_field_id(ATTACHED_PREFIX, name) + "_error"
+            assert frame.find(id=error_id) is not None
+
+    def test_the_form_to_post_is_unbound_on_a_get(self, open_page):
+        page = open_page(self.url_name)
+
+        for name in ATTACHED_TEXT_FIELDS:
+            frame = attached_frame(page, ATTACHED_PREFIX, name)
+            assert frame.find(class_="input-error") is None
+
+    def test_the_form_to_post_has_a_form_element_and_the_failing_one_has_none(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+        posting = attached_frame(page, ATTACHED_PREFIX, "amount")
+        failing = attached_frame(page, ATTACHED_FAILING_PREFIX, "amount")
+
+        assert posting.find_parent("form")["method"] == "post"
+        assert failing.find_parent("form") is None
+
+    @pytest.mark.parametrize("data", [None, ATTACHED_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestAttachedTextPage(AttachedTextPageContract):
+    url_name = "attached-text"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("attached-text")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("decorated-fields-standalone")) is not None
+
+
+class TestDecoratedFieldsStandalonePage(AttachedTextPageContract):
+    url_name = "decorated-fields-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, open_page):
+        page = open_page(self.url_name)
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_no_script_but_tailwinds_browser_build(self, open_page):
+        page = open_page(self.url_name)
+        scripts = page.find_all("script", src=True)
+        assert [script["src"] for script in scripts] == [
+            "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_attached_text_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("attached-text")) is not None

@@ -4,8 +4,11 @@ from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
     Alert,
+    AppendedText,
     FormActions,
     Modal,
+    PrependedAppendedText,
+    PrependedText,
     StrictButton,
     Tab,
     TabHolder,
@@ -482,6 +485,48 @@ class AlertForm(forms.Form):
             "name",
         )
         self.helper.add_input(Submit(f"{prefix}-submit", _("Submit")))
+
+
+class AttachedTextForm(forms.Form):
+    """A form whose fields have text attached to their inputs.
+
+    Three text inputs take the three layout objects, a prepended text, an
+    appended text and both, and a select takes a prepended text. Every field is
+    required, so a bound form with nothing in it comes back with an error in each
+    decorated frame. Its layout is built for each instance, and every id and
+    button name in it carries the form's prefix, so two of these forms on one
+    page repeat no id. The form must be given a prefix.
+    """
+
+    amount = forms.CharField(label=_("Amount"), help_text=_("In whole units"))
+    weight = forms.CharField(label=_("Weight"))
+    budget = forms.CharField(label=_("Budget"))
+    fruit = forms.ChoiceField(
+        label=_("Fruit"),
+        choices=[("", "---------"), ("apple", _("Apple")), ("pear", _("Pear"))],
+    )
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in every id and button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            PrependedText("amount", "$"),
+            AppendedText("weight", "kg"),
+            PrependedAppendedText("budget", "$", ".00"),
+            PrependedText("fruit", "#"),
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
 
 
 ORDER_LINE_LIMIT = 10000

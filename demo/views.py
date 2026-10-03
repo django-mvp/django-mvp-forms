@@ -14,6 +14,7 @@ from demo.forms import (
     ORDER_LINE_LIMIT,
     AccordionForm,
     AlertForm,
+    AttachedTextForm,
     ChoiceInputsForm,
     ChosenGroupsForm,
     HelperButtonsForm,
@@ -466,6 +467,51 @@ class ContainersStandaloneView(
         if f"{self.accordion_prefix}-submit" in request.POST:
             return AccordionMixin.post(self, request, *args, **kwargs)
         return TabsMixin.post(self, request, *args, **kwargs)
+
+
+class AttachedTextMixin:
+    """The forms the attached-text page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    attached_prefix = "attached"
+    attached_failing_prefix = "failing-attached"
+    attached_failing_data = {"failing-attached-weight": "70"}
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault(
+            "attached_form", AttachedTextForm(prefix=self.attached_prefix)
+        )
+        kwargs["failing_attached_form"] = AttachedTextForm(
+            self.attached_failing_data, prefix=self.attached_failing_prefix, posts=False
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = AttachedTextForm(request.POST, prefix=self.attached_prefix)
+        return self.render_to_response(self.get_context_data(attached_form=form))
+
+
+class AttachedTextView(AttachedTextMixin, MVPTemplateView):
+    """Text attached to inputs, inside the application shell."""
+
+    template_name = "demo/attached_text.html"
+    page_title = "Attached text"
+    page_subtitle = "Text drawn before and after an input or a select"
+    breadcrumbs = [{"text": "Attached text"}]
+
+
+class DecoratedFieldsStandaloneView(AttachedTextMixin, TemplateView):
+    """The decorated-field forms for a host project without django-mvp or Cotton."""
+
+    template_name = "demo/decorated_fields_standalone.html"
 
 
 class OrderFormsetMixin:

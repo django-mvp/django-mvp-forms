@@ -515,6 +515,11 @@ Five more pages draw the containers and the notice django-crispy-forms keeps in 
 - `/alert/` is inside the shell too. Its form has three alerts ahead of its field: one with a dismiss control, one without, and one with a daisyUI colour. Submitting the form empty draws all three again.
 - `/containers/standalone/` draws the forms of all four pages as a host project with neither django-mvp nor Cotton would have them, styled by daisyUI's CDN build alone. A post is bound to the form whose submit button it names.
 
+One more page draws the layout objects that decorate a field, starting with the three that attach text to an input. Its form has a text input with a prepended text, one with an appended text, one with both and a select with a prepended text, every field required, so submitting it empty comes back with an error in each frame. A second form on the page already fails:
+
+- `/attached-text/` is the page inside the django-mvp shell, reached from its sidebar.
+- `/decorated-fields/standalone/` draws the same forms as a host project with neither django-mvp nor Cotton would have them, styled by daisyUI's CDN build alone.
+
 Four more pages draw a formset of order lines, each with a delete input and an order input, and each drawn twice: a formset to submit and a formset that already fails, so all three kinds of error can be seen. A line with a quantity below one is a field error, a line whose total passes a limit is a form-wide error, and the same item on two lines is a formset-wide error. Posting the formset to submit with lines like those comes back with all three. Nothing is saved.
 
 - `/formset-stacked/` and `/formset-table/` draw the formset stacked and as a table, inside the django-mvp shell, and are reached from its sidebar.

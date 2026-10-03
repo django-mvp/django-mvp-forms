@@ -13,3 +13,10 @@ Did: moved the frame to daisyui/frame.html (field.html is now the tag and the in
 Verified: uv run pytest tests/test_pack/test_attached_text.py (46 failed, 3 passed before the code, all green after); uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope: 1008 passed; pre-commit run --all-files and mypy clean. Probed by mutation: removing |safe fails the markup test, removing the group check fails the date-as-selects test.
 Next: T002, the attached-text demo page and the standalone page.
 Watch: ADRs 0006, 0011 and 0012 still name daisyui/field.html as the frame; the feature's ADR at the end amends them. multifield.html includes field.html, so a MultiField draws through the tag as before.
+
+## 2026-10-03T18:48:51Z · Implementer US1 · T002
+
+Did: AttachedTextForm (three attached-text layout objects on inputs, one on a select, every field required, prefixed ids), AttachedTextMixin, AttachedTextView on the shell and DecoratedFieldsStandaloneView, routes attached-text and decorated-fields-standalone, sidebar entry and icon, templates demo/attached_text.html (Cotton) and demo/decorated_fields_standalone.html (plain, CDN only). Tests first in tests/test_demo.py (57 selected, all failed with NoReverseMatch before the pages existed). README demo section and CHANGELOG entry.
+Verified: uv run pytest tests/test_demo.py tests/test_smoke.py: 802 passed; pre-commit run --all-files clean.
+Next: full verify, then the completion report.
+Watch: the standalone view only binds the attached-text form; later stories choose by the submit button's name, as the containers view does.

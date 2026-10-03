@@ -5,8 +5,10 @@ from django.urls import include, path
 from demo.views import (
     AccordionView,
     AlertView,
+    AttachedTextView,
     ChoiceInputsView,
     ContainersStandaloneView,
+    DecoratedFieldsStandaloneView,
     LayoutObjectsView,
     ModalView,
     OverviewView,
@@ -49,6 +51,12 @@ urlpatterns = [
         "containers/standalone/",
         ContainersStandaloneView.as_view(),
         name="containers-standalone",
+    ),
+    path("attached-text/", AttachedTextView.as_view(), name="attached-text"),
+    path(
+        "decorated-fields/standalone/",
+        DecoratedFieldsStandaloneView.as_view(),
+        name="decorated-fields-standalone",
     ),
     path("formset-stacked/", StackedFormsetView.as_view(), name="formset-stacked"),
     path(

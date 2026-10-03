@@ -51,6 +51,11 @@ AppMenu.extend(
             extra_context={"label": "Alert", "icon": "alert"},
         ),
         MenuItem(
+            name="attached-text",
+            view_name="attached-text",
+            extra_context={"label": "Attached text", "icon": "attached-text"},
+        ),
+        MenuItem(
             name="formset-stacked",
             view_name="formset-stacked",
             extra_context={"label": "Formset, stacked", "icon": "formset-stacked"},
