@@ -54,3 +54,10 @@ Did: added OrderLineForm (quantity below one is a field error; a line total past
 Verified: red first, NoReverseMatch for the new route names. uv run pytest tests/test_demo.py -k Formset: 92 passed. Probes: dropping can_order failed 12, removing the duplicate-item check failed 8, giving both formsets one prefix failed 24. Full verify (pre-commit, mypy, pytest -n auto --dist loadscope, uv build): exit 0, 1452 passed.
 Next: the story's report.
 Watch: the failing formset is drawn with form_tag off yet still carries a csrfmiddlewaretoken input, because the pack draws the token outside its form_tag guard as crispy's own whole_uni_form does; a template in mvp_forms/ is outside this task.
+
+## 2026-10-03T18:16:50Z · Forge · converge
+
+Did: all five stories accepted; ADRs 0014 and 0015 written; every decision carries its verdict; rebased onto origin/main at 80da4fd.
+Verified: forge verify green on the rebased branch; tamper flags are the additive ones recorded in D16; story comments on #31 to #35.
+Next: code review.
+Watch: FS-005 and FS-007 may take ADR numbers 0014 and 0015 first; re-check at every rebase.
