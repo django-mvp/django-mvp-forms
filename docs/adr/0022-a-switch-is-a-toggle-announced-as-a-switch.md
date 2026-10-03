@@ -1,6 +1,6 @@
 # ADR 0022 — A switch is daisyUI's toggle, announced as a switch
 
-**Status:** accepted
+**Status:** accepted, amended by [ADR 0029](0029-each-kind-of-field-has-its-own-drawings.md)
 
 ## Decision
 

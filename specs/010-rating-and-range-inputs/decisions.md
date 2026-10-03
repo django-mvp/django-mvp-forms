@@ -49,7 +49,9 @@ one, is widened when the feature is built (FR-026).
 it works with and without a layout, and it combines with size and colour on one statement, which
 the issue asks for.
 
-**ADR:** yes. A record that a drawing is no longer a boolean field's alone, and that each kind of
+**ADR:** docs/adr/0029-each-kind-of-field-has-its-own-drawings.md
+
+It records that a drawing is no longer a boolean field's alone, and that each kind of
 field has its own set of drawings. It amends ADR 0022.
 
 ## D3. A stated drawing may change the element drawn, and never what is submitted
@@ -76,7 +78,9 @@ the same value for the same choice, and a number input and a slider submit the s
 developer also asked for the drawing by name, which is the opening ADR 0002 itself leaves when it
 says "unless the developer writes" otherwise.
 
-**ADR:** yes. It amends ADR 0002: the pack sets a type only for a drawing the developer stated,
+**ADR:** docs/adr/0030-a-stated-drawing-may-set-the-element-drawn.md
+
+It amends ADR 0002: the pack sets a type only for a drawing the developer stated,
 and only where the submitted value is the same.
 
 ## D4. A rating's colour is daisyUI's colour class on each star
@@ -104,7 +108,7 @@ wrote them for its own colours.
 that the chosen colour is left out and that the group is marked invalid. Whether the stars also
 take the error colour is for the plan.
 
-**ADR:** yes. The first component whose colour is not a modifier of its own.
+**ADR:** docs/adr/0031-a-ratings-colour-is-a-class-on-each-star.md
 
 ## D5. An empty choice clears the rating and is never a star
 

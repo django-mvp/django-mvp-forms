@@ -2,7 +2,7 @@
   "feature": "010-rating-and-range-inputs",
   "branch": "010-rating-and-range-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "QUEUED",
@@ -23,6 +23,11 @@
       "state": "IMPLEMENT",
       "at": "2026-10-03T22:07:05Z",
       "note": "plan gate open; US1 first"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T22:49:44Z",
+      "note": "all three stories done"
     }
   ],
   "gates": {
@@ -255,7 +260,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {
