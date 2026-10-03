@@ -2,6 +2,7 @@
 
 from crispy_forms.helper import FormHelper
 from django import forms
+from django.core.exceptions import ValidationError
 
 
 class TextInputsForm(forms.Form):
@@ -45,3 +46,41 @@ class UncoveredWidgetsForm(forms.Form):
 
 class NoFieldsForm(forms.Form):
     pass
+
+
+class FormWideErrorsForm(forms.Form):
+    name = forms.CharField(required=False)
+
+    def clean(self):
+        raise ValidationError(
+            [
+                ValidationError("The first failure", code="first"),
+                ValidationError("The second failure", code="second"),
+            ]
+        )
+
+
+class FormWideMarkupForm(forms.Form):
+    name = forms.CharField(required=False)
+
+    def clean(self):
+        raise ValidationError("<script>alert(1)</script>", code="markup")
+
+
+class HelpedForm(forms.Form):
+    helped = forms.CharField(help_text="Some help")
+    bare = forms.CharField()
+    optional = forms.CharField(required=False)
+
+
+class UploadForm(forms.Form):
+    upload = forms.FileField(required=False)
+
+
+class MediaWidget(forms.TextInput):
+    class Media:
+        js = ["tests/media.js"]
+
+
+class MediaForm(forms.Form):
+    name = forms.CharField(widget=MediaWidget)
