@@ -369,3 +369,21 @@ The fourth has no consequence on any page.
 **Revisit if:** a project template reads `drawn.css_class` for a rating.
 
 **ADR:** none — a record of the review.
+
+## D22. The rating's template is one of the pack's public templates
+
+**Decision:** `daisyui/widgets/rating.html` is listed in the README's table of the pack's
+templates, with what it draws and the names it is handed: `widget`, which also holds
+`rating_class` and `inputs`. It is found through the form renderer, as the other widget templates
+are. The helper that works out which templates the form renderer loads reads
+`FieldInput.rating_template` beside the two tables it already reads, and the test that pins
+that set gained the template.
+
+**Why:** the feature that makes every pack template public merged while this one was being
+built. Its own test fails for a template the README does not list, or lists with the wrong
+route, so the new template had to join the list.
+
+**Revisit if:** a later drawing adds a template, at which point the drawing templates may be
+worth a table of their own on `FieldInput`.
+
+**ADR:** none — it applies ADR 0029 to one more template.
