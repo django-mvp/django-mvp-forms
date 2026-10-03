@@ -329,3 +329,18 @@ the counts in research R3 (4,036 and 3,662) are larger. Neither is a class, and 
 a class could hide a pack that writes it.
 
 **Revisit if:** daisyUI ships a class named `w3` or `org`, which a selector read would find.
+
+## D20. The theme stylesheet follows the newest named daisyUI version
+
+**Decision:** the legibility check, which arrived on main beside this feature, keeps its own copy
+of daisyUI's themes in `tests/data/daisyui-themes.css`. Its test that the themes and the class
+list name the same version now reads the class list of the newest version the window names. The
+window is where the version is chosen, and the theme stylesheet is held to it.
+
+**Why:** two files each pinning a daisyUI version could move apart. With this, raising the newest
+version in the window fails the suite until both the class list and the theme stylesheet are
+replaced.
+
+**Revisit if:** the themes are ever wanted for the minimum version as well.
+
+**ADR:** none. One test's choice of which file to read.

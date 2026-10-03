@@ -193,6 +193,24 @@
             ],
             "verified_by_ci": false
           }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_legibility/test_themes.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_legibility/test_themes.py -q",
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "tests/test_legibility/test_themes.py:12",
+              "README.md:1099"
+            ]
+          }
         }
       ]
     },

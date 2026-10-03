@@ -232,3 +232,14 @@ Plan, *`releases`*, *`main`*; research R5.
 - The file lists of the wheel and the source distribution built from this branch and from
   `origin/main` are the same (FR-023).
 - `uv run python support_window.py test` for each of the three named pairs.
+
+### T008 — The theme stylesheet and the newest class list name one version
+
+**Files**: `tests/test_legibility/test_themes.py`, `README.md`, `docs/adr/0020-…`, `docs/adr/0032-…`
+
+Added when the legibility check arrived on main beside this feature. It reads daisyUI's themes
+from `tests/data/daisyui-themes.css` and has a test that this file and the class list name the
+same daisyUI version. That test now reads the class list of the newest version the window names,
+found through the declaration, so the window is the one place the version is chosen. The
+contributing text says to replace the theme stylesheet when the newest version changes. Two
+decision records that named the old class list name the lists under `tests/data/`.
