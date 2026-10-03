@@ -34,7 +34,7 @@ A developer who writes a `Layout` can group parts of a form behind tabs or an ac
 
 **Why defensible:** the request gives its reason, "so nobody submits a form and sees nothing wrong". A modal is closed when a page arrives, so a field error inside one is the clearest case of that failure. This is the one place the feature adds behaviour django-crispy-forms does not have, and the README's tie-break (match documented behaviour) is not in play because there is no documented behaviour to match.
 
-**ADR:** to be written with the build. It is the pack's own rule, a later contributor will ask why the modal template inspects errors, and any future layout object that hides fields inherits it.
+**ADR:** docs/adr/0016-a-modal-holding-an-invalid-field-is-drawn-open.md
 
 ## D4. The pack draws no control that opens a modal
 
@@ -54,7 +54,7 @@ A developer who writes a `Layout` can group parts of a form behind tabs or an ac
 
 **Why defensible:** a script file the host project must load would break the "daisyUI alone" promise as surely as a stylesheet would. An extra key in the submitted data is harmless to Django on a POST but pollutes the query string of a search or filter form, and can collide with a field name. Both are behaviours a developer would report as defects.
 
-**ADR:** to be written with the build, as one record: the pack's interactive layout objects need nothing from the host project beyond daisyUI, and how that is achieved. It depends on the answer to #47.
+**ADR:** docs/adr/0014-interactive-layout-objects-need-only-daisyui.md
 
 ## D6. A dismissed alert is not remembered, and alert content is trusted
 
@@ -112,6 +112,8 @@ django-crispy-forms reports as an error; and keeping each drawn pane on its `Tab
 one request read another's fields from a shared layout. A random name keeps two forms drawn from
 one class apart without asking anything of the developer (research R3, R4).
 
+**ADR:** docs/adr/0015-a-tabs-radio-is-drawn-with-its-pane.md
+
 ## D10. An accordion group is a `details` element with no group name
 
 **Ambiguous:** daisyUI's accordion examples give the groups a shared name so only one is open at
@@ -124,6 +126,8 @@ active, with no shared name. Groups open and close on their own.
 developer's own open group comes before the group holding an error, the browser would close the
 one with the error, which is the failure this feature exists to prevent (research R6). FR-007
 asks that the groups django-crispy-forms picks are the ones open.
+
+**ADR:** docs/adr/0014-interactive-layout-objects-need-only-daisyui.md
 
 ## D11. The modal is a `dialog`, found open by Django's own mark on an invalid input
 
@@ -141,6 +145,8 @@ because Django escapes it. daisyUI's checkbox modal needs no script, but its clo
 label the keyboard cannot reach, which fails FR-010. A hidden field's error does not open the
 modal; nothing draws that error yet, and FS-002's FR-013 owns it (research R7, R8).
 
+**ADR:** docs/adr/0016-a-modal-holding-an-invalid-field-is-drawn-open.md
+
 ## D12. Dismissing an alert removes it, by an inline handler
 
 **Ambiguous:** daisyUI has nothing for dismissing an alert.
@@ -153,6 +159,8 @@ inline handler in exactly that case. Removing the element needs no class to win 
 alert's own display rule. Issue #47 stays open on whether a strict Content Security Policy must
 be supported (research R9).
 
+**ADR:** docs/adr/0014-interactive-layout-objects-need-only-daisyui.md
+
 ## D13. One standalone demo page for all four
 
 **Ambiguous:** FR-024 asks for one demo page for each of the four. The earlier features also gave
@@ -163,6 +171,8 @@ each page a twin outside the shell.
 **Why defensible:** the standalone page exists to show the four working on daisyUI's CDN install
 alone (SC-003). One page shows that as well as four would, and the shell pages are the ones
 FR-024 counts.
+
+**ADR:** none — a choice about the demo project, which is not distributed.
 
 ## D14. When django-crispy-forms marks no tab active, the first is open
 
@@ -177,6 +187,8 @@ checked.
 FR-002 exists to prevent. The fallback only acts where django-crispy-forms picked nothing, so it
 never disagrees with a choice the library made, and it is the same tab the library opens by
 default.
+
+**ADR:** docs/adr/0015-a-tabs-radio-is-drawn-with-its-pane.md
 
 ## D15. Design review, 2026-10-03: approve, findings applied
 
@@ -199,6 +211,8 @@ Watch items for the build: `Tab.render` strips the substring `active` from an in
 classes, so a test must not use a developer class containing it; a developer's own `active`
 class is dropped from buttons and a `MultiField` as well, and the README says so.
 
+**ADR:** none — a record of the review, not a decision. Its findings are in D14 and the records above.
+
 ## D16. Which form a standalone post belongs to (US2)
 
 **Decision**: `ContainersStandaloneView.post` binds the accordion form when the post names the
@@ -213,3 +227,17 @@ button keeps binding the tabs form rather than binding nothing. No registry or d
 
 **Revisit if**: US3 and US4 each add a posting form to the page, which makes three `if`s and is
 the point to look again.
+
+**ADR:** none — local to one view of the demo project.
+
+## D17. The record of dropped class names is left as it landed
+
+**Decision**: three more names join `UPSTREAM_ONLY_CLASSES` (`tab-pane`, `active`, `alert-block`)
+and ADR 0010 is not edited to list them. Two stories had edited it in place; that was undone
+before the pull request was marked ready.
+
+**Why**: the repository's rule is that a landed record is never rewritten. ADR 0010 already says
+a later feature adds its names to the constant, so adding them follows the record and does not
+overturn it. The current list is the constant in the code and the sentence in the README.
+
+**ADR:** none — it follows ADR 0010 as written.
