@@ -273,6 +273,16 @@ What is drawn:
 
 A helper's layout is not applied in a table: every visible field of the form gets a column. The columns are the first form's visible fields and every form is taken to have the same ones. A form that lacks one of them has an empty cell there.
 
+#### Errors
+
+Every error is drawn once, next to what it belongs to, in both layouts:
+
+- a field's error under its input, which the input's `aria-describedby` names
+- a form's own errors, its form-wide errors and those of its hidden fields, in the form's own container when stacked, and in the first cell of the form's row in a table. The row's `aria-describedby` names them, and a row with none carries no `aria-describedby`
+- errors that belong to the formset as a whole, such as a minimum or maximum number of forms, once in an element with `role="alert"` ahead of the forms, outside every form's container and above the table
+
+`formset_error_title` is drawn at the top of the formset-wide element when the helper sets it. A formset with no such error draws no such element, and with `form_show_errors` off none of the three kinds is drawn. `{{ formset|as_crispy_errors }}` draws the formset-wide errors on their own, through `daisyui/errors_formset.html`.
+
 The pack draws a formset and nothing around it. It draws no empty form to copy, adds no script, and has no view: adding and removing rows in the browser, handling the post and saving belong to django-mvp or to your own code.
 
 ## Contributing

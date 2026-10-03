@@ -9,6 +9,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.forms import (
+    BaseFormSet,
     formset_factory,
     inlineformset_factory,
     modelformset_factory,
@@ -427,7 +428,37 @@ class ChoiceLineForm(forms.Form):
     )
 
 
+class RuledLineForm(LineForm):
+    def clean_ref(self):
+        if self.cleaned_data["ref"] == "bad":
+            raise ValidationError("The reference is refused", code="refused")
+        return self.cleaned_data["ref"]
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("name") == "whole":
+            raise ValidationError("The line failed as a whole", code="whole")
+        return cleaned
+
+
+class RuledBaseFormSet(BaseFormSet):
+    refusal = "The lines add up to too much"
+    limit = 10
+
+    def clean(self):
+        super().clean()
+        total = sum(form.cleaned_data.get("quantity") or 0 for form in self.forms)
+        if total > self.limit:
+            raise ValidationError(self.refusal, code="too_much")
+
+
+class MarkupRuledBaseFormSet(RuledBaseFormSet):
+    refusal = "<script>alert(1)</script>"
+
+
 LineFormSet = formset_factory(LineForm, extra=3)
+RuledLineFormSet = formset_factory(RuledLineForm, RuledBaseFormSet, extra=3)
+MarkupRuledLineFormSet = formset_factory(RuledLineForm, MarkupRuledBaseFormSet, extra=3)
 ChoiceLineFormSet = formset_factory(ChoiceLineForm, extra=2)
 NoLinesFormSet = formset_factory(LineForm, extra=0)
 MediaFormSet = formset_factory(MediaForm, extra=2)
@@ -446,3 +477,16 @@ def formset_helper(*layout, buttons=(), **settings):
     for button in buttons:
         helper.add_input(button)
     return helper
+
+
+def ruled_data(*lines, prefix="form"):
+    data = {
+        f"{prefix}-TOTAL_FORMS": str(len(lines)),
+        f"{prefix}-INITIAL_FORMS": "0",
+        f"{prefix}-MIN_NUM_FORMS": "0",
+        f"{prefix}-MAX_NUM_FORMS": "1000",
+    }
+    for index, line in enumerate(lines):
+        for name, value in line.items():
+            data[f"{prefix}-{index}-{name}"] = value
+    return data

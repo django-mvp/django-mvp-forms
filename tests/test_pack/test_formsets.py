@@ -6,8 +6,11 @@ from crispy_forms.layout import Submit
 from tests.forms import (
     ChoiceLineFormSet,
     LineForm,
+    MarkupRuledLineFormSet,
     MediaFormSet,
+    RuledLineFormSet,
     formset_helper,
+    ruled_data,
 )
 
 SOURCES = ["{% crispy formset %}", "{{ formset|crispy }}"]
@@ -405,3 +408,190 @@ class TestTableFormset:
         )
 
         assert len(soup.find_all(attrs={"name": "save"})) == 1
+
+
+REQUIRED = "This field is required."
+WHOLE = "The line failed as a whole"
+TOO_MUCH = "The lines add up to too much"
+REFUSED = "The reference is refused"
+LAYOUTS = ["stacked", "table"]
+SOUND = [{"name": "a"}, {"name": "b"}, {"name": "c"}]
+ALL_THREE = [
+    {"name": "a", "quantity": "6"},
+    {"name": "", "quantity": "6"},
+    {"name": "whole"},
+]
+
+
+def layout_helper(layout, **settings):
+    if layout == "table":
+        return table_helper(form_tag=False, **settings)
+    return formset_helper(form_tag=False, **settings)
+
+
+def units_of(soup, formset, layout):
+    if layout == "table":
+        return soup.find("tbody").find_all("tr")
+    return [container_of(soup, formset, i) for i in range(len(formset.forms))]
+
+
+def draw_ruled(draw, layout, lines, formset_class=RuledLineFormSet, **settings):
+    formset = formset_class(ruled_data(*lines))
+    soup = draw(TAG, formset=formset, helper=layout_helper(layout, **settings))
+    return soup, formset, units_of(soup, formset, layout)
+
+
+def occurrences(soup, message):
+    return soup.get_text().count(message)
+
+
+def described_by(tag):
+    return tag["aria-describedby"].split()
+
+
+class TestFormsetErrors:
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_a_field_error_is_in_its_form_s_unit_and_describes_the_input(
+        self, draw, layout
+    ):
+        lines = [{"name": "a"}, {"name": "", "quantity": "1"}, {"name": "c"}]
+
+        soup, formset, units = draw_ruled(draw, layout, lines)
+
+        field = formset.forms[1]["name"]
+        error = units[1].find(id=field.auto_id + "_error")
+        assert error is not None
+        assert REQUIRED in error.get_text()
+        assert error["id"] in described_by(
+            units[1].find(attrs={"name": field.html_name})
+        )
+        assert occurrences(soup, REQUIRED) == 1
+        assert not any(REQUIRED in unit.get_text() for unit in (units[0], units[2]))
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_a_form_wide_error_is_in_its_form_s_unit(self, draw, layout):
+        lines = [{"name": "a"}, {"name": "b"}, {"name": "whole"}]
+
+        soup, formset, units = draw_ruled(draw, layout, lines)
+
+        assert WHOLE in units[2].get_text()
+        assert occurrences(soup, WHOLE) == 1
+        assert not any(WHOLE in unit.get_text() for unit in units[:2])
+
+    def test_a_row_s_form_wide_error_is_named_by_the_row(self, draw):
+        lines = [{"name": "a"}, {"name": "b"}, {"name": "whole"}]
+
+        soup, formset, units = draw_ruled(draw, "table", lines)
+
+        prefix = formset.forms[2].prefix
+        error = units[2].find(id=prefix + "_errors")
+        assert error["role"] == "alert"
+        assert WHOLE in error.get_text()
+        assert error.find_parent("td") is units[2].find("td")
+        assert described_by(units[2]) == [prefix + "_errors"]
+        assert not units[0].has_attr("aria-describedby")
+        assert not units[1].has_attr("aria-describedby")
+        assert len(soup.find("tbody").find_all("tr")) == 3
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_a_hidden_field_s_error_is_with_its_form(self, draw, layout):
+        lines = [{"name": "a"}, {"name": "b"}, {"name": "c", "ref": "bad"}]
+
+        soup, formset, units = draw_ruled(draw, layout, lines)
+
+        assert REFUSED in units[2].get_text()
+        assert occurrences(soup, REFUSED) == 1
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_a_formset_wide_error_is_drawn_once_outside_every_unit(self, draw, layout):
+        lines = [{"name": "a", "quantity": "6"}, {"name": "b", "quantity": "6"}, {}]
+
+        soup, formset, units = draw_ruled(draw, layout, lines)
+
+        alerts = soup.find_all(attrs={"role": "alert"})
+        assert len(alerts) == 1
+        assert TOO_MUCH in alerts[0].get_text()
+        assert not any(unit in alerts[0].parents for unit in units)
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_every_message_is_drawn_exactly_once_with_all_three_kinds(
+        self, draw, layout
+    ):
+        lines = [*ALL_THREE[:2], {"name": "whole", "ref": "bad"}]
+
+        soup, formset, units = draw_ruled(draw, layout, lines)
+
+        assert formset.non_form_errors()
+        for message in (REQUIRED, WHOLE, TOO_MUCH, REFUSED):
+            assert occurrences(soup, message) == 1, message
+        assert TOO_MUCH not in "".join(unit.get_text() for unit in units)
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_no_alert_and_no_row_description_without_errors(
+        self, draw, plain_formset, layout
+    ):
+        unbound = plain_formset()
+        valid = RuledLineFormSet(ruled_data(*SOUND))
+
+        for formset in (unbound, valid):
+            soup = draw(TAG, formset=formset, helper=layout_helper(layout))
+
+            assert formset.is_bound is (formset is valid)
+            assert soup.find(attrs={"role": "alert"}) is None
+            assert soup.find("tr", attrs={"aria-describedby": True}) is None
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_a_message_holding_markup_is_escaped(self, draw, layout):
+        lines = [{"name": "a", "quantity": "6"}, {"name": "b", "quantity": "6"}, {}]
+
+        soup, _, _ = draw_ruled(
+            draw, layout, lines, formset_class=MarkupRuledLineFormSet
+        )
+
+        assert soup.find("script") is None
+        assert "<script>alert(1)</script>" in soup.find(attrs={"role": "alert"}).text
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_no_error_is_drawn_when_the_helper_turns_errors_off(self, draw, layout):
+        soup, _, _ = draw_ruled(draw, layout, ALL_THREE, form_show_errors=False)
+
+        assert soup.find(attrs={"role": "alert"}) is None
+        for message in (REQUIRED, WHOLE, TOO_MUCH):
+            assert occurrences(soup, message) == 0, message
+        assert soup.find("tr", attrs={"aria-describedby": True}) is None
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_the_formset_error_title_is_drawn_when_set(self, draw, layout):
+        lines = [{"name": "a", "quantity": "6"}, {"name": "b", "quantity": "6"}, {}]
+
+        soup, _, _ = draw_ruled(draw, layout, lines, formset_error_title="Mind this")
+
+        assert "Mind this" in soup.find(attrs={"role": "alert"}).get_text()
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_no_title_is_drawn_when_none_is_set(self, draw, layout):
+        lines = [{"name": "a", "quantity": "6"}, {"name": "b", "quantity": "6"}, {}]
+
+        soup, _, _ = draw_ruled(draw, layout, lines)
+
+        assert len(soup.find(attrs={"role": "alert"}).find_all("p")) == 1
+
+    def test_the_filter_draws_the_formset_wide_errors_once_in_the_stacked_layout(
+        self, draw
+    ):
+        formset = RuledLineFormSet(ruled_data(*ALL_THREE))
+
+        soup = draw("{{ formset|crispy }}", formset=formset)
+
+        assert occurrences(soup, TOO_MUCH) == 1
+
+    def test_the_errors_filter_draws_the_formset_wide_errors_alone(self, draw):
+        formset = RuledLineFormSet(ruled_data(*ALL_THREE))
+
+        soup = draw("{{ formset|as_crispy_errors }}", formset=formset)
+
+        assert len(soup.find_all(attrs={"role": "alert"})) == 1
+        assert occurrences(soup, TOO_MUCH) == 1
+        for message in (REQUIRED, WHOLE):
+            assert occurrences(soup, message) == 0
+        assert soup.find(attrs={"name": True}) is None

@@ -3,6 +3,7 @@
   {% if formset_method|lower == "post" and not disable_csrf %}{% csrf_token %}{% endif %}
   {% if include_media %}{{ formset.media }}{% endif %}
   {% for field in formset.management_form %}{{ field }}{% endfor %}
+  {% if form_show_errors != False %}{% include "daisyui/errors_formset.html" %}{% endif %}
   {% daisyui_formset_table formset as table %}
   {% if table.rows %}
     <div class="overflow-x-auto">
@@ -16,14 +17,23 @@
         </thead>
         <tbody>
           {% for row in table.rows %}
-            <tr>
+            {% with errors=row.form.get_context.errors %}
+            <tr{% if errors and form_show_errors != False %} aria-describedby="{{ row.form.prefix }}_errors"{% endif %}>
               {% for field in row.cells %}
                 <td>
-                  {% if forloop.first %}{% for hidden in row.form.hidden_fields %}{{ hidden }}{% endfor %}{% endif %}
+                  {% if forloop.first %}
+                    {% for hidden in row.form.hidden_fields %}{{ hidden }}{% endfor %}
+                    {% if errors and form_show_errors != False %}
+                      <div id="{{ row.form.prefix }}_errors" role="alert" class="text-error">
+                        {% for error in errors %}<p>{{ error }}</p>{% endfor %}
+                      </div>
+                    {% endif %}
+                  {% endif %}
                   {% if field %}{% include field_template with form_show_labels=False %}{% endif %}
                 </td>
               {% endfor %}
             </tr>
+            {% endwith %}
           {% endfor %}
         </tbody>
       </table>

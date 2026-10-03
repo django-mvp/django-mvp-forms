@@ -35,10 +35,12 @@ from tests.forms import (
     HelpedForm,
     LineFormSet,
     RadioGroupsForm,
+    RuledLineFormSet,
     SelectsForm,
     StructureForm,
     TextInputsForm,
     UncoveredWidgetsForm,
+    ruled_data,
 )
 
 PACKAGE = Path(mvp_forms.__file__).parent
@@ -156,6 +158,16 @@ def helper_buttons():
             Submit("save", "Save"),
             Reset("clear", "Clear"),
             Button("help", "Help"),
+        )
+    )
+
+
+def failing_lines():
+    return RuledLineFormSet(
+        ruled_data(
+            {"name": "a", "quantity": "6"},
+            {"name": "", "quantity": "6"},
+            {"name": "whole", "ref": "bad"},
         )
     )
 
@@ -305,6 +317,24 @@ STATES = [
         lambda: helped(LineFormSet(), template="daisyui/table_inline_formset.html"),
         NOTHING,
         id="table formset",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        failing_lines,
+        NOTHING,
+        id="stacked formset with all three kinds of error",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: helped(failing_lines(), template="daisyui/table_inline_formset.html"),
+        NOTHING,
+        id="table formset with all three kinds of error",
+    ),
+    pytest.param(
+        "{{ form|as_crispy_errors }}",
+        failing_lines,
+        NOTHING,
+        id="formset-wide errors on their own",
     ),
 ]
 
