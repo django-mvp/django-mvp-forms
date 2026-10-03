@@ -69,3 +69,10 @@ Did: InlineField drawn by layout/inline_field.html (daisyui_field unlabelled=Tru
 Verified: uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope: 1589 passed; pre-commit clean; mypy clean.
 Next: T010 demo page inline-field and its forms on the standalone page.
 Watch: table_inline_formset passes form_show_labels=False, still read by the tag.
+
+## 2026-10-03T19:27:07Z · Implementer US5 · T010
+
+Did: demo route inline-field (InlineFieldForm, InlineFieldMixin, InlineFieldView, template, menu, icon), forms added to the standalone page and its post dispatch; README demo section and CHANGELOG.
+Verified: uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope: 2336 passed; pre-commit clean; mypy clean.
+Next: full verify, ledger evidence, report.
+Watch: standalone post dispatch picks the form by submit name; inline-field prefix does not collide with inline.
