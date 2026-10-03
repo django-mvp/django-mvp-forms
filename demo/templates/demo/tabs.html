@@ -1,0 +1,18 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="tabs">
+    <c-text>
+      The second and third tabs hold required fields. Submit the form empty to see
+      the tab that holds the first error open.
+    </c-text>
+    {% crispy tabs_form %}
+  </c-section>
+  <c-section title="A form that already fails" level="3">
+    <c-text>The error is in the third tab, so that tab is open.</c-text>
+    {% crispy failing_tabs_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'containers-standalone' %}" text="The same forms without django-mvp" />
+  </c-text>
+{% endblock page.content %}

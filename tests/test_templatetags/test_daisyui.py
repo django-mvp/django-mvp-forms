@@ -7,11 +7,12 @@ from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Button, Hidden, Reset, Submit
 from django import forms
-from django.template import Context
-from django.utils.safestring import mark_safe
+from django.template import Context, Template
+from django.utils.safestring import SafeString, mark_safe
 
 from mvp_forms.choices import Choice, FormChoices, InvalidChoice
 from mvp_forms.templatetags.daisyui import (
+    TAB_GROUP_PLACEHOLDER,
     DrawnButton,
     FieldInput,
     daisyui_button,
@@ -19,6 +20,7 @@ from mvp_forms.templatetags.daisyui import (
     daisyui_field,
     daisyui_removal_checkbox,
     daisyui_shown,
+    daisyui_tab_group,
 )
 from tests.forms import (
     CheckboxForm,
@@ -532,6 +534,13 @@ class TestDaisyuiClasses:
     def test_a_name_written_for_another_pack_is_dropped(self, name):
         assert daisyui_classes(f"btn {name} mine") == "btn mine"
 
+    @pytest.mark.parametrize("name", ["tab-pane", "active"])
+    def test_a_name_written_for_tabs_is_dropped(self, name):
+        assert daisyui_classes(f"tab-content {name} mine") == "tab-content mine"
+
+    def test_a_name_written_for_alerts_is_dropped(self):
+        assert daisyui_classes("alert alert-block mine") == "alert mine"
+
     def test_a_repeated_name_is_dropped(self):
         assert daisyui_classes("btn mine btn mine") == "btn mine"
 
@@ -909,3 +918,62 @@ class TestDaisyuiButton:
         drawn = daisyui_button(Context(), Submit("act", "Go"))
 
         assert set(drawn.css_class.split()) == {"btn", "btn-primary"}
+
+
+def tab_radio(checked=False):
+    return (
+        f'<input type="radio" {TAB_GROUP_PLACEHOLDER}{" checked" if checked else ""}>'
+    )
+
+
+def radios_in(html, parse):
+    return parse(html).find_all("input")
+
+
+class TestDaisyuiTabGroup:
+    def test_every_placeholder_is_replaced_by_one_name(self, parse):
+        panes = tab_radio() + "<div></div>" + tab_radio() + "<div></div>"
+
+        names = {radio["name"] for radio in radios_in(daisyui_tab_group(panes), parse)}
+
+        assert len(names) == 1
+        assert TAB_GROUP_PLACEHOLDER.split('"')[1] not in names
+
+    def test_two_calls_give_two_names(self, parse):
+        panes = tab_radio()
+
+        first = radios_in(daisyui_tab_group(panes), parse)[0]["name"]
+        second = radios_in(daisyui_tab_group(panes), parse)[0]["name"]
+
+        assert first != second
+
+    def test_the_first_radio_is_checked_when_none_is(self, parse):
+        panes = tab_radio() + tab_radio()
+
+        radios = radios_in(daisyui_tab_group(panes), parse)
+
+        assert [radio.has_attr("checked") for radio in radios] == [True, False]
+
+    def test_a_checked_radio_is_left_alone(self, parse):
+        panes = tab_radio() + tab_radio(checked=True)
+
+        radios = radios_in(daisyui_tab_group(panes), parse)
+
+        assert [radio.has_attr("checked") for radio in radios] == [False, True]
+
+    def test_panes_without_a_radio_are_returned_as_they_are(self):
+        assert daisyui_tab_group("<div></div>") == "<div></div>"
+
+    def test_safe_input_stays_safe(self):
+        template = Template("{% load daisyui %}{{ panes|daisyui_tab_group }}")
+
+        html = template.render(Context({"panes": SafeString(tab_radio())}))
+
+        assert html.startswith("<input")
+
+    def test_unsafe_input_is_escaped(self):
+        template = Template("{% load daisyui %}{{ panes|daisyui_tab_group }}")
+
+        html = template.render(Context({"panes": tab_radio()}))
+
+        assert html.startswith("&lt;input")

@@ -2,7 +2,7 @@
   "feature": "002-choice-boolean-file-inputs",
   "branch": "002-choice-boolean-file-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "QUEUED",
@@ -48,6 +48,11 @@
       "state": "PR_READY",
       "at": "2026-10-03T17:29:08Z",
       "note": "review approved, four low findings fixed; walkthrough laid out"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-10-03T17:31:57Z",
+      "note": "PR #22 merged; approved by forge-aeo-reviewer"
     }
   ],
   "gates": {
@@ -63,8 +68,8 @@
       "at": "2026-10-03T16:34:58Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "forge-aeo-reviewer",
+      "at": "2026-10-03T17:31:53Z"
     },
     "design_review": {
       "approved_by": "design review, one reviewer, three lenses: changes requested, all applied",
@@ -91,8 +96,8 @@
       ]
     },
     "walkthrough": {
-      "approved_by": null,
-      "at": "2026-10-03T17:29:10Z",
+      "approved_by": "delegated review",
+      "at": "2026-10-03T17:31:53Z",
       "self_resolved": []
     }
   },
@@ -409,12 +414,12 @@
       "max": 1
     },
     "tokens": {
-      "used": 16.07,
+      "used": 23.92,
       "max": 120
     }
   },
   "pr": {
     "number": 22,
-    "draft": true
+    "draft": false
   }
 }

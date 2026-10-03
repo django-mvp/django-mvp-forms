@@ -1,0 +1,370 @@
+{
+  "feature": "005-container-layout-objects",
+  "branch": "005-container-layout-objects",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T15:10:16Z",
+      "note": "specification approved by delegated review at commit 6dc02c4e078166a7aae601db56e5bede581233cd, on pull request #65; epic #9, stories #66, #67, #68, #69"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T17:22:29Z",
+      "note": "plan.md, research.md, tasks.md: 4 stories, 8 tasks; continues on pull request #65"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T17:22:58Z",
+      "note": "one reviewer, three lenses, on plan.md, tasks.md and research.md at 73876ec"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T17:32:46Z",
+      "note": "plan gate open; design review applied at ee0ba89"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T18:05:45Z",
+      "note": "all four stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T18:07:45Z",
+      "note": "one reviewer, correctness and spec compliance, on the feature diff"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T18:17:53Z",
+      "note": "review approved, three findings fixed; walkthrough laid out"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T15:10:16Z",
+      "self_resolved": [
+        "approved at commit 6dc02c4e078166a7aae601db56e5bede581233cd (forge spec-gate, pull request #65); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T17:32:39Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
+      "at": "2026-10-03T17:32:39Z",
+      "self_resolved": [
+        "DR-001 medium: first tab opened when none is marked active (D14)",
+        "DR-002 medium: base English catalogue added to T005 and T007",
+        "DR-003 low: daisyui_invalid dropped, the modal template tests with `in`",
+        "DR-004 low: daisyui_tab_group registered is_safe, marks nothing safe",
+        "DR-005 low: hidden-field cases added to T001 and T003",
+        "DR-006 low: SC-005 traced in the plan",
+        "DR-007 low: demo forms set novalidate",
+        "DR-008 low: invoker commands weighed in research R8"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer: approve, every finding fixed",
+      "at": "2026-10-03T18:17:32Z",
+      "self_resolved": [
+        "CR-001 medium: remedied, the dialog takes the focus when drawn open and the README says how it closes (T009)",
+        "CR-002 low: remedied in the README (T009)",
+        "CR-003 low: remedied in the README (T010)"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T18:17:53Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 66,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_tabs.py",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiTabGroup",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiClasses",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (737 passed, exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/tab.html:1",
+              "mvp_forms/templates/daisyui/layout/tab-pane.html:1",
+              "mvp_forms/templates/daisyui/layout/tab-link.html:1",
+              "mvp_forms/templates/daisyui/layout/div.html:1",
+              "mvp_forms/templatetags/daisyui.py:314"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestTabsPage",
+              "tests/test_demo.py::TestContainersStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -n auto --dist loadscope (587 passed, exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:299",
+              "demo/views.py:302",
+              "demo/urls.py:39",
+              "demo/menus.py:34",
+              "demo/templates/demo/tabs.html:1",
+              "demo/templates/demo/containers_standalone.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_tabs.py"
+            ],
+            "commands": [
+              "forge verify --base origin/main (all six steps passed)"
+            ],
+            "code": [
+              "README.md:215"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 67,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_accordion.py",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/accordion.html:1",
+              "mvp_forms/templates/daisyui/accordion-group.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestAccordionPage",
+              "tests/test_demo.py::TestContainersStandaloneAccordion"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -n auto --dist loadscope (609 passed, exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:347",
+              "demo/views.py:345",
+              "demo/urls.py:39",
+              "demo/templates/demo/accordion.html:1",
+              "demo/templates/demo/containers_standalone.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 68,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_modal.py",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack -n auto --dist loadscope (675 passed, exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/modal.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestModalPage",
+              "tests/test_demo.py::TestContainersStandaloneModal"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -n auto --dist loadscope (629 passed, exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:409",
+              "demo/views.py:380",
+              "demo/urls.py:41",
+              "demo/menus.py:43",
+              "demo/templates/demo/modal.html:1",
+              "demo/templates/demo/containers_standalone.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_modal.py::TestModalOpensForAnError"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_modal.py -q (21 passed, exit 0)",
+              "forge verify --base origin/main (all six steps passed)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/modal.html:2",
+              "tests/test_pack/test_modal.py:166"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 69,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_alert.py",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiClasses",
+              "tests/test_pack/test_independence.py",
+              "tests/test_pack/test_documented_examples.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (809 passed, exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/alert.html:1",
+              "mvp_forms/templatetags/daisyui.py:24"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestAlertPage",
+              "tests/test_demo.py::TestContainersStandaloneAlert"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -n auto --dist loadscope (652 passed, exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:448",
+              "demo/views.py:413",
+              "demo/urls.py:43",
+              "demo/menus.py:49",
+              "demo/templates/demo/alert.html:1",
+              "demo/templates/demo/containers_standalone.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 14.98,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 65,
+    "draft": true
+  }
+}

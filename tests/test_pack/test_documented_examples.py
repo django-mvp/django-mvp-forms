@@ -4,7 +4,16 @@ import re
 from pathlib import Path
 
 import pytest
-from crispy_forms.bootstrap import FormActions, StrictButton
+from crispy_forms.bootstrap import (
+    Accordion,
+    AccordionGroup,
+    Alert,
+    FormActions,
+    Modal,
+    StrictButton,
+    Tab,
+    TabHolder,
+)
 from crispy_forms.layout import (
     HTML,
     Button,
@@ -153,6 +162,50 @@ EXAMPLES = {
         lambda: StrictButton("button content", css_class="extra"),
         [],
         ("button", {"type": "button"}),
+    ),
+    "Tab": (
+        lambda: Tab("tab_name", "form_field_1", "form_field_2", "form_field_3"),
+        [*BOTH, "form_field_3"],
+        ("input", {"type": "radio", "aria-label": "tab_name"}),
+    ),
+    "TabHolder": (
+        lambda: TabHolder(Tab("form_field_1", "form_field_2"), Tab("form_field_3")),
+        ["form_field_2"],
+        ("div", {"class": "tabs"}),
+    ),
+    "AccordionGroup": (
+        lambda: AccordionGroup("group name", "form_field_1", "form_field_2"),
+        BOTH,
+        ("details", {"class": "collapse"}),
+    ),
+    "Accordion": (
+        lambda: Accordion(
+            AccordionGroup("group name", "form_field_1", "form_field_2"),
+            AccordionGroup("another group name", "form_field"),
+        ),
+        [*BOTH, "form_field"],
+        ("details", {"open": True}),
+    ),
+    "Modal": (
+        lambda: Modal(
+            "form_field_1",
+            Div("form_field_2"),
+            css_id="modal-id-ex",
+            css_class="modal-class-ex",
+            title="This is my modal",
+        ),
+        BOTH,
+        ("dialog", {"id": "modal-id-ex"}),
+    ),
+    "Alert": (
+        lambda: Alert(
+            content=(
+                "<strong>Warning!</strong> Best check yo self, "
+                "you're not looking too good."
+            )
+        ),
+        [],
+        ("div", {"role": "alert"}),
     ),
     "StrictButton with a context-aware content": (
         lambda: StrictButton("Button for {{ user.username }}"),
