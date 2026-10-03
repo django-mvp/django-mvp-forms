@@ -83,3 +83,10 @@ Did: FieldInput deep-copies a MultiWidget and classes and names each part (decor
 Verified: `uv run pytest tests/test_pack/test_multi_widget.py` 14 failed of 31 first (parts had no class or name), then 31 passed; `uv run pytest tests/test_pack/test_multi_widget.py tests/test_templatetags/test_daisyui.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py -n auto --dist loadscope` 506 passed; pre-commit and mypy clean.
 Next: T012, the multi-widget-field demo page and its forms on the standalone page.
 Watch: a part of a SplitDateTimeField made hidden through MultiWidgetField crashes validation in Django and crispy (its hidden widget is a multi-widget), so that case is tested on another multi-widget and the README says not to.
+
+## 2026-10-03T19:36:31Z · Implementer US6 · T012
+
+Did: route `multi-widget-field` (MultiWidgetFieldForm, MultiWidgetFieldMixin, MultiWidgetFieldView, template demo/multi_widget_field.html on Cotton components, menu item and icon); a required split date and time through MultiWidgetField with a placeholder on each part and an optional one with no layout object, to post and already failing; both forms added to the standalone page and a branch for `multi-widget-submit` in its post dispatch. README demo section and CHANGELOG entry.
+Verified: `uv run pytest tests/test_demo.py -k MultiWidget` failed first (28 failed, 10 errors, no route), then `uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope` 2414 passed; pre-commit and mypy clean.
+Next: full verify, ledger evidence, report.
+Watch: the standalone page's no-django-mvp, no-Cotton check is the one the attached-text class already runs on it.
