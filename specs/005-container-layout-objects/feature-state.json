@@ -2,12 +2,17 @@
   "feature": "005-container-layout-objects",
   "branch": "005-container-layout-objects",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "QUEUED",
+  "state": "PLAN",
   "state_history": [
     {
       "state": "QUEUED",
       "at": "2026-10-03T15:10:16Z",
       "note": "specification approved by delegated review at commit 6dc02c4e078166a7aae601db56e5bede581233cd, on pull request #65; epic #9, stories #66, #67, #68, #69"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T17:22:29Z",
+      "note": "plan.md, research.md, tasks.md: 4 stories, 8 tasks; continues on pull request #65"
     }
   ],
   "gates": {
