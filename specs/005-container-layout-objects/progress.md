@@ -44,3 +44,10 @@ Did: the modal page on the shell (route modal, demo/modal.html on Cotton compone
 Verified: `uv run pytest tests/test_demo.py -n auto --dist loadscope` 629 passed (20 new, red first on NoReverseMatch); `uv run pre-commit run --all-files` clean. Probe: removing the standalone modal branch fails 3 tests.
 Next: full verify, then the report.
 Watch: the standalone page's open control is a plain button with daisyUI's btn classes because that page has no Cotton.
+
+## 2026-10-03T18:01:58Z · Implementer US4 · T007
+
+Did: Alert drawn by daisyui/layout/alert.html: a div with role="alert", the alert class from the layout object's css_class passed through daisyui_classes, the content drawn with |safe in a span, and a type=button dismiss control named by a translatable aria-label that removes the alert; no button with dismiss=False. `alert-block` joins UPSTREAM_ONLY_CLASSES so block=True draws without the name. "Dismiss" added to the English catalogue with makemessages. Tests: tests/test_pack/test_alert.py (12), an alert state (unbound, invalid) in test_independence.py, the Alert docstring example (apostrophe repaired) in test_documented_examples.py, the alert-block case in test_daisyui.py. README: status line and Layout objects intro name the six as supported, an Alert section with the trusted-content note, the dropped-names sentence rewritten to seven names and the four objects they leave (buttons, MultiField, Tab, Alert). ADR 0010 lists alert-block and Alert. CHANGELOG entry.
+Verified: `uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope` 809 passed; `uv run pre-commit run --all-files` clean. Red observed first (TemplateDoesNotExist for daisyui/layout/alert.html). Probe: renaming alert-block in UPSTREAM_ONLY_CLASSES fails the block test and the filter test. The README Alert example run against this branch draws the alert between the two fields.
+Next: T008, the alert demo page.
+Watch: Alert.css_class is a plain str, so block=True sets it on the instance, never on the class.
