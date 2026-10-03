@@ -340,3 +340,20 @@ textarea and a select, so this is the specification applied to two drawings it c
 named.
 
 **ADR:** none. It follows from the two records this feature writes.
+
+## D22. A group's members are a small named type
+
+**Chosen:** `Join.members()` returns a list of `Member`, a frozen dataclass holding the field's
+`name`, the `attrs` of the `Field` that held it and the `Choice` around it.
+
+**Why:** the plan said one entry per name with the attributes and the choice. A named type reads
+better than a tuple of three, and the glossary already has the term.
+
+**ADR:** none. It is a detail of the layout object, covered by its record.
+
+## D23. One import line changed in the suite's shared forms
+
+**Chosen:** `tests/forms.py` imports `Field` beside `Layout`, for the joined forms the suite now
+draws. No existing form and no existing assertion changed.
+
+**ADR:** none. Local to the tests.
