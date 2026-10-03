@@ -163,3 +163,11 @@ findings. None forced a re-plan. Each was applied as an edit to the plan or the 
 - The table's rows-and-columns class is written once, in one task.
 
 **ADR:** none — a record of review edits, each already in the plan.
+
+## D16: Additions to shared test files are accepted
+
+The check for changed tests flags `tests/conftest.py` and `tests/test_pack/test_independence.py`
+after each story. Every change there is an addition the tasks name: new fixtures, and new
+states in the list of forms whose classes are checked. No existing test or assertion was altered.
+
+**ADR:** none — a record of a check's outcome for this feature.
