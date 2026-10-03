@@ -27,6 +27,25 @@ is drawn by a template in the pack. A pack is complete when every layout object
 crispy-forms documents has one.
 _Avoid_: component, block, element.
 
+**Formset**:
+A Django formset: several forms of one kind, handed to the pack as a whole with
+`{% crispy formset %}` or `{{ formset|crispy }}`, together with its management
+form. A model formset and an inline formset are formsets. Drawing one is this
+package's; handling one (the view, saving it, adding and removing rows in the
+browser) is django-mvp's.
+_Avoid_: form set, form list.
+
+**Stacked layout**:
+The way the pack draws a formset when nothing else is chosen: every form one
+after another, each in a container of its own and drawn exactly as a single
+form is.
+_Avoid_: list layout, vertical layout.
+
+**Table layout**:
+The way the pack draws a formset when the helper chooses it: one table, a row
+per form and a column per visible field.
+_Avoid_: grid, inline layout.
+
 **Field**:
 A Django form field class. It owns validation and cleaning, and names the
 widget that draws it. Never a model field, which this package does not ship.
@@ -72,6 +91,8 @@ In django-mvp this means a django-cotton component placed with a `<c-...>` tag.
 This package ships none, and its templates must not use any, so calling a
 widget or a layout object a component implies a dependency that is ruled out.
 
-**Form view**, **formset**:
-Real things, but django-mvp's. An issue here that needs one of these words is
-probably filed against the wrong repository.
+**Form view**:
+A real thing, but django-mvp's. An issue here that needs this word is probably
+filed against the wrong repository. The same line runs through formsets: this
+package draws one, and the view that handles it, the saving, and adding and
+removing rows in the browser stay with django-mvp.

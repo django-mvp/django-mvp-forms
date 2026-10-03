@@ -11,6 +11,7 @@ from django.views.generic import TemplateView
 from mvp.views import MVPTemplateView
 
 from demo.forms import (
+    ORDER_LINE_LIMIT,
     AccordionForm,
     AlertForm,
     ButtonBarForm,
@@ -20,9 +21,12 @@ from demo.forms import (
     InputKindsForm,
     LayoutObjectsForm,
     ModalForm,
+    OrderLineFormSet,
     OverrideForm,
     PairForm,
     RowButtonsForm,
+    StackedOrderHelper,
+    TableOrderHelper,
     TabsForm,
     TextInputsForm,
     TextStatesForm,
@@ -540,3 +544,92 @@ class StandaloneChoicesView(ChoicesMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/choices_standalone.html"
+
+
+class OrderFormsetMixin:
+    """The formsets both pages of one layout draw.
+
+    One formset is drawn to submit and one is drawn already bound to lines that
+    fail in all three ways. Each has a prefix of its own, so no id repeats on the
+    page. A post binds the submitted formset and draws the page again, and nothing
+    is saved.
+    """
+
+    helper_class = StackedOrderHelper
+    submit_prefix = "order"
+    failing_prefix = "failing"
+    failing_lines = [
+        {"item": "pen", "quantity": "0", "unit_price": "2"},
+        {"item": "ink", "quantity": "1000", "unit_price": "1000"},
+        {"item": "ink", "quantity": "1", "unit_price": "1"},
+    ]
+
+    def build_failing_data(self):
+        """Build the data the failing formset is bound to.
+
+        Returns:
+            A dict of the management form and every line's fields.
+        """
+        prefix = self.failing_prefix
+        data = {
+            f"{prefix}-TOTAL_FORMS": str(len(self.failing_lines)),
+            f"{prefix}-INITIAL_FORMS": "0",
+        }
+        for index, line in enumerate(self.failing_lines):
+            for name, value in line.items():
+                data[f"{prefix}-{index}-{name}"] = value
+        return data
+
+    def get_context_data(self, **kwargs):
+        """Add the formset to submit, the formset that fails and their helpers."""
+        kwargs.setdefault("formset", OrderLineFormSet(prefix=self.submit_prefix))
+        kwargs["failing_formset"] = OrderLineFormSet(
+            self.build_failing_data(), prefix=self.failing_prefix
+        )
+        kwargs["helper"] = self.helper_class(self.submit_prefix)
+        kwargs["failing_helper"] = self.helper_class(
+            self.failing_prefix, form_tag=False
+        )
+        kwargs["limit"] = ORDER_LINE_LIMIT
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the formset to submit unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the formset to submit bound to what was posted."""
+        formset = OrderLineFormSet(request.POST, prefix=self.submit_prefix)
+        return self.render_to_response(self.get_context_data(formset=formset))
+
+
+class StackedFormsetView(OrderFormsetMixin, MVPTemplateView):
+    """A formset drawn stacked, inside the application shell."""
+
+    template_name = "demo/formset_stacked.html"
+    page_title = "Formset, stacked"
+    page_subtitle = "Order lines drawn one after another"
+    breadcrumbs = [{"text": "Formset, stacked"}]
+
+
+class StandaloneStackedFormsetView(OrderFormsetMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/formset_stacked_standalone.html"
+
+
+class TableFormsetView(OrderFormsetMixin, MVPTemplateView):
+    """A formset drawn as a table, inside the application shell."""
+
+    helper_class = TableOrderHelper
+    template_name = "demo/formset_table.html"
+    page_title = "Formset, as a table"
+    page_subtitle = "Order lines drawn as the rows of a table"
+    breadcrumbs = [{"text": "Formset, as a table"}]
+
+
+class StandaloneTableFormsetView(OrderFormsetMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    helper_class = TableOrderHelper
+    template_name = "demo/formset_table_standalone.html"

@@ -5,8 +5,16 @@ import datetime
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.forms import widgets
+from django.forms import (
+    BaseFormSet,
+    formset_factory,
+    inlineformset_factory,
+    modelformset_factory,
+    widgets,
+)
 
 
 class TextInputsForm(forms.Form):
@@ -439,3 +447,101 @@ class EveryInputForm(forms.Form):
         self.helper.form_tag = False
         if layout is not None:
             self.helper.layout = Layout(*layout)
+
+
+class LineForm(forms.Form):
+    name = forms.CharField(help_text="What it is")
+    quantity = forms.IntegerField(required=False)
+    ref = forms.CharField(required=False, widget=forms.HiddenInput)
+
+
+class ChoiceLineForm(forms.Form):
+    fruit = forms.ChoiceField(
+        choices=FRUIT, widget=forms.RadioSelect, help_text="Pick one"
+    )
+    extras = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.CheckboxSelectMultiple, required=False
+    )
+
+
+class RuledLineForm(LineForm):
+    def clean_ref(self):
+        if self.cleaned_data["ref"] == "bad":
+            raise ValidationError("The reference is refused", code="refused")
+        return self.cleaned_data["ref"]
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("name") == "whole":
+            raise ValidationError("The line failed as a whole", code="whole")
+        return cleaned
+
+
+class RuledBaseFormSet(BaseFormSet):
+    refusal = "The lines add up to too much"
+    limit = 10
+
+    def clean(self):
+        super().clean()
+        total = sum(form.cleaned_data.get("quantity") or 0 for form in self.forms)
+        if total > self.limit:
+            raise ValidationError(self.refusal, code="too_much")
+
+
+class MarkupRuledBaseFormSet(RuledBaseFormSet):
+    refusal = "<script>alert(1)</script>"
+
+
+class MarkupLineForm(LineForm):
+    refusal = "<script>alert(2)</script>"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["name"].label = "<script>alert(3)</script>"
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("name") == "whole":
+            raise ValidationError(self.refusal, code="whole")
+        return cleaned
+
+
+LineFormSet = formset_factory(LineForm, extra=3)
+OrderedLineFormSet = formset_factory(LineForm, extra=3, can_delete=True, can_order=True)
+KeptLineFormSet = formset_factory(
+    LineForm, extra=1, can_delete=True, can_delete_extra=False, can_order=True
+)
+RuledLineFormSet = formset_factory(RuledLineForm, RuledBaseFormSet, extra=3)
+MarkupRuledLineFormSet = formset_factory(RuledLineForm, MarkupRuledBaseFormSet, extra=3)
+MarkupLineFormSet = formset_factory(MarkupLineForm, extra=3)
+ChoiceLineFormSet = formset_factory(ChoiceLineForm, extra=2)
+NoLinesFormSet = formset_factory(LineForm, extra=0)
+MediaFormSet = formset_factory(MediaForm, extra=2)
+GroupFormSet = modelformset_factory(Group, fields=["name"], extra=1)
+PermissionFormSet = inlineformset_factory(
+    ContentType, Permission, fields=["name", "codename"], extra=1
+)
+
+
+def formset_helper(*layout, buttons=(), **settings):
+    helper = FormHelper()
+    for name, value in settings.items():
+        setattr(helper, name, value)
+    if layout:
+        helper.layout = Layout(*layout)
+    for button in buttons:
+        helper.add_input(button)
+    return helper
+
+
+def ruled_data(*lines, prefix="form"):
+    data = {
+        f"{prefix}-TOTAL_FORMS": str(len(lines)),
+        f"{prefix}-INITIAL_FORMS": "0",
+        f"{prefix}-MIN_NUM_FORMS": "0",
+        f"{prefix}-MAX_NUM_FORMS": "1000",
+    }
+    for index, line in enumerate(lines):
+        for name, value in line.items():
+            data[f"{prefix}-{index}-{name}"] = value
+    return data

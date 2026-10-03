@@ -7,6 +7,7 @@ from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Button, Hidden, Reset, Submit
 from django import forms
+from django.forms import formset_factory
 from django.template import Context, Template
 from django.utils.safestring import SafeString, mark_safe
 
@@ -15,9 +16,11 @@ from mvp_forms.templatetags.daisyui import (
     TAB_GROUP_PLACEHOLDER,
     DrawnButton,
     FieldInput,
+    FormsetTable,
     daisyui_button,
     daisyui_classes,
     daisyui_field,
+    daisyui_formset_table,
     daisyui_shown,
     daisyui_tab_group,
 )
@@ -27,6 +30,8 @@ from tests.forms import (
     DeveloperAttrsForm,
     FilesForm,
     HelpedForm,
+    LineFormSet,
+    NoLinesFormSet,
     OwnTemplateDateWidget,
     SelectsForm,
     TextInputsForm,
@@ -101,6 +106,14 @@ class MarkedUpLabelForm(forms.Form):
     tagged = forms.CharField(label=mark_safe('<a href="/x" title="y">Name</a>'))
     quoted = forms.CharField(label=mark_safe('He said "hi"'))
     unlabelled = forms.CharField(label="")
+
+
+class OnlyHiddenForm(forms.Form):
+    first = forms.CharField(widget=forms.HiddenInput)
+    second = forms.CharField(widget=forms.HiddenInput)
+
+
+OnlyHiddenFormSet = formset_factory(OnlyHiddenForm, extra=2)
 
 
 class TestFieldInput:
@@ -995,3 +1008,77 @@ class TestDaisyuiTabGroup:
         html = template.render(Context({"panes": tab_radio()}))
 
         assert html.startswith("&lt;input")
+
+
+class TestFormsetTable:
+    def test_the_columns_are_the_first_forms_visible_fields_in_order(self):
+        formset = LineFormSet()
+
+        table = FormsetTable(formset)
+
+        assert [column.name for column in table.columns] == ["name", "quantity"]
+        assert all(column.form is formset.forms[0] for column in table.columns)
+
+    def test_a_hidden_field_is_not_a_column(self):
+        table = FormsetTable(LineFormSet())
+
+        assert "ref" not in [column.name for column in table.columns]
+
+    def test_there_is_one_row_per_form_in_the_formsets_order(self):
+        formset = LineFormSet()
+
+        table = FormsetTable(formset)
+
+        assert [row["form"] for row in table.rows] == formset.forms
+
+    def test_each_cell_is_that_forms_own_bound_field(self):
+        formset = LineFormSet()
+
+        table = FormsetTable(formset)
+
+        for row in table.rows:
+            assert [cell.html_name for cell in row["cells"]] == [
+                row["form"].add_prefix("name"),
+                row["form"].add_prefix("quantity"),
+            ]
+            assert all(cell.form is row["form"] for cell in row["cells"])
+
+    def test_a_form_without_a_columns_field_has_none_there(self):
+        formset = LineFormSet()
+        del formset.forms[1].fields["quantity"]
+
+        table = FormsetTable(formset)
+
+        assert [cell is None for cell in table.rows[1]["cells"]] == [False, True]
+        assert all(len(row["cells"]) == len(table.columns) for row in table.rows)
+
+    def test_a_field_only_a_later_form_has_is_not_a_column(self):
+        formset = LineFormSet()
+        formset.forms[1].fields["extra"] = forms.CharField()
+
+        table = FormsetTable(formset)
+
+        assert [column.name for column in table.columns] == ["name", "quantity"]
+
+    def test_no_forms_gives_no_columns_and_no_rows(self):
+        table = FormsetTable(NoLinesFormSet())
+
+        assert table.columns == []
+        assert table.rows == []
+
+    def test_forms_with_only_hidden_fields_give_each_row_one_empty_cell(self):
+        formset = OnlyHiddenFormSet()
+
+        table = FormsetTable(formset)
+
+        assert table.columns == []
+        assert [row["cells"] for row in table.rows] == [[None], [None]]
+        assert [row["form"] for row in table.rows] == formset.forms
+
+    def test_the_tag_returns_the_table_of_the_formset(self):
+        formset = LineFormSet()
+
+        table = daisyui_formset_table(formset)
+
+        assert isinstance(table, FormsetTable)
+        assert [row["form"] for row in table.rows] == formset.forms

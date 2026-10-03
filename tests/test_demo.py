@@ -3,6 +3,8 @@
 # Everything in the demo fails quietly: an unresolvable component renders empty
 # and a menu entry whose URL will not resolve is dropped from the tree.
 
+import re
+
 import pytest
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -10,6 +12,7 @@ from django.shortcuts import resolve_url
 from django.urls import reverse
 
 from mvp_forms.choices import Modifiers
+from tests.forms import ruled_data
 
 # The address a page guarded by LoginRequiredMixin sends an anonymous visitor to.
 SIGN_IN_URL = resolve_url(settings.LOGIN_URL)
@@ -937,6 +940,224 @@ class TestContainersStandaloneAlert(AlertPageContract):
         assert page.find(id=ALERT_DISMISSIBLE) is not None
 
     def test_it_links_back_to_the_alert_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("alert")) is not None
+
+
+FORMSET_SUBMIT_PREFIX = "order"
+FORMSET_FAILING_PREFIX = "failing"
+FORMSET_PAGES = ["formset-stacked", "formset-table"]
+FORMSET_FAILING_LINES = [
+    {"item": "pen", "quantity": "0", "unit_price": "2"},
+    {"item": "ink", "quantity": "1000", "unit_price": "1000"},
+    {"item": "ink", "quantity": "1", "unit_price": "1"},
+]
+
+
+def formset_region(page, prefix):
+    return page.find(id=f"{prefix}-formset")
+
+
+def formset_unit(region, prefix, index):
+    """The smallest element holding one form's inputs and no other form's."""
+    own = region.find(attrs={"name": f"{prefix}-{index}-item"})
+    others = [
+        region.find(attrs={"name": f"{prefix}-{other}-item"})
+        for other in range(len(FORMSET_FAILING_LINES))
+        if other != index
+    ]
+    unit = None
+    for parent in own.parents:
+        if any(parent in other.parents for other in others):
+            break
+        unit = parent
+    return unit
+
+
+def formset_units(region, prefix):
+    return [formset_unit(region, prefix, i) for i in range(len(FORMSET_FAILING_LINES))]
+
+
+class FormsetPageContract:
+    url_name = ""
+    drawn_as_table = False
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = None
+        if request.param == "post":
+            data = ruled_data(*FORMSET_FAILING_LINES, prefix=FORMSET_SUBMIT_PREFIX)
+        return open_page(self.url_name, data)
+
+    def assert_all_three_errors(self, page, prefix):
+        region = formset_region(page, prefix)
+        units = formset_units(region, prefix)
+        assert region.find(id=f"id_{prefix}-0-quantity_error") is not None
+        assert units[1].find(attrs={"role": "alert"}) is not None
+        outside = [
+            alert
+            for alert in region.find_all(attrs={"role": "alert"})
+            if not any(unit in alert.parents for unit in units)
+        ]
+        assert len(outside) == 1
+
+    @pytest.mark.parametrize("index", range(3))
+    def test_the_formset_to_submit_has_a_delete_input_in_every_form(
+        self, open_page, index
+    ):
+        page = open_page(self.url_name)
+        name = f"{FORMSET_SUBMIT_PREFIX}-{index}-DELETE"
+        assert page.find("input", attrs={"name": name, "type": "checkbox"})
+
+    @pytest.mark.parametrize("index", range(3))
+    def test_the_formset_to_submit_has_an_order_input_in_every_form(
+        self, open_page, index
+    ):
+        page = open_page(self.url_name)
+        name = f"{FORMSET_SUBMIT_PREFIX}-{index}-ORDER"
+        assert page.find("input", attrs={"name": name, "type": "number"})
+
+    def test_the_formset_that_already_fails_shows_all_three_kinds_of_error(
+        self, open_page
+    ):
+        self.assert_all_three_errors(open_page(self.url_name), FORMSET_FAILING_PREFIX)
+
+    def test_the_formset_to_submit_starts_without_errors(self, open_page):
+        region = formset_region(open_page(self.url_name), FORMSET_SUBMIT_PREFIX)
+        assert region.find(attrs={"role": "alert"}) is None
+        assert region.find(id=re.compile(r"_error$")) is None
+
+    def test_a_post_of_invalid_data_comes_back_with_all_three_kinds_of_error(
+        self, open_page
+    ):
+        data = ruled_data(*FORMSET_FAILING_LINES, prefix=FORMSET_SUBMIT_PREFIX)
+        page = open_page(self.url_name, data)
+        self.assert_all_three_errors(page, FORMSET_SUBMIT_PREFIX)
+
+    def test_a_post_keeps_what_was_submitted(self, open_page):
+        data = ruled_data(*FORMSET_FAILING_LINES, prefix=FORMSET_SUBMIT_PREFIX)
+        page = open_page(self.url_name, data)
+        quantity = page.find(attrs={"name": f"{FORMSET_SUBMIT_PREFIX}-1-quantity"})
+        assert quantity["value"] == "1000"
+
+    def test_the_formset_to_submit_posts_with_a_token_and_a_submit_button(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+        total = page.find(id=f"id_{FORMSET_SUBMIT_PREFIX}-TOTAL_FORMS")
+        form = total.find_parent("form")
+        assert form["method"] == "post"
+        assert form.find("input", attrs={"name": "csrfmiddlewaretoken"}) is not None
+        assert form.find(attrs={"type": "submit"}) is not None
+        assert form.find(attrs={"name": f"{FORMSET_SUBMIT_PREFIX}-2-item"})
+
+    def test_the_formset_that_fails_is_not_a_form_element(self, open_page):
+        page = open_page(self.url_name)
+        total = page.find(id=f"id_{FORMSET_FAILING_PREFIX}-TOTAL_FORMS")
+        assert total.find_parent("form") is None
+
+    def test_both_formsets_are_drawn_in_the_layout_of_the_page(self, page):
+        tables = [
+            formset_region(page, prefix).find("table")
+            for prefix in (FORMSET_SUBMIT_PREFIX, FORMSET_FAILING_PREFIX)
+        ]
+        assert all(table is not None for table in tables) is self.drawn_as_table
+        assert any(table is not None for table in tables) is self.drawn_as_table
+
+    def test_every_visible_input_has_a_label_or_an_aria_label(self, page):
+        fields = page.find_all(["input", "select", "textarea"])
+        visible = [f for f in fields if f.get("type") not in {"hidden", "submit"}]
+        assert visible
+        for field in visible:
+            labelled = page.find("label", attrs={"for": field.get("id")}) is not None
+            group = field.find_parent("fieldset")
+            named = group is not None and (
+                group.find("legend") is not None or group.get("aria-label")
+            )
+            assert labelled or field.get("aria-label") or named
+
+    def test_every_described_id_exists(self, page):
+        described = page.find_all(attrs={"aria-describedby": True})
+        assert described
+        for element in described:
+            for described_id in element["aria-describedby"].split():
+                assert page.find(id=described_id) is not None
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestFormsetPagesInTheSidebar:
+    @pytest.mark.parametrize("name", FORMSET_PAGES)
+    def test_the_sidebar_links_it(self, overview_page: str, name) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse(name)}"' in sidebar
+
+
+class TestStackedFormsetPage(FormsetPageContract):
+    url_name = "formset-stacked"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("formset-stacked-standalone")) is not None
+
+
+class TestStandaloneStackedFormsetPage(FormsetPageContract):
+    url_name = "formset-stacked-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, open_page):
+        page = open_page(self.url_name)
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("formset-stacked")) is not None
+
+
+class TestTableFormsetPage(FormsetPageContract):
+    url_name = "formset-table"
+    drawn_as_table = True
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("formset-table-standalone")) is not None
+
+
+class TestStandaloneTableFormsetPage(FormsetPageContract):
+    url_name = "formset-table-standalone"
+    drawn_as_table = True
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, open_page):
+        page = open_page(self.url_name)
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("formset-table")) is not None
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("alert")) is not None
 

@@ -55,5 +55,15 @@ AppMenu.extend(
             view_name="choices",
             extra_context={"label": "Size, colour and variant", "icon": "choices"},
         ),
+        MenuItem(
+            name="formset-stacked",
+            view_name="formset-stacked",
+            extra_context={"label": "Formset, stacked", "icon": "formset-stacked"},
+        ),
+        MenuItem(
+            name="formset-table",
+            view_name="formset-table",
+            extra_context={"label": "Formset, as a table", "icon": "formset-table"},
+        ),
     ]
 )
