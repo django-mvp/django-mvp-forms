@@ -336,6 +336,11 @@ fails, so an error inside a fieldset, a row and a column can be seen:
 
 Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset, groups two fields in a `MultiField`, and carries a `Hidden` input.
 
+Four more pages draw a formset of order lines, each with a delete input and an order input, and each drawn twice: a formset to submit and a formset that already fails, so all three kinds of error can be seen. A line with a quantity below one is a field error, a line whose total passes a limit is a form-wide error, and the same item on two lines is a formset-wide error. Posting the formset to submit with lines like those comes back with all three. Nothing is saved.
+
+- `/formset-stacked/` and `/formset-table/` draw the formset stacked and as a table, inside the django-mvp shell, and are reached from its sidebar.
+- `/formset-stacked/standalone/` and `/formset-table/standalone/` are the same pages styled by daisyUI's CDN build alone.
+
 ## License
 
 MIT. See [LICENSE](https://github.com/django-mvp/django-mvp-forms/blob/main/LICENSE).

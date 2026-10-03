@@ -1,0 +1,23 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="formset-stacked">
+    <c-text>
+      Every line is required here. Enter a quantity of zero to see an error on a
+      field, a quantity and unit price that together pass {{ limit }} to see an
+      error on a line as a whole, and the same item on two lines to see an error on
+      the formset as a whole.
+    </c-text>
+    <div id="{{ formset.prefix }}-formset">
+      {% crispy formset helper %}
+    </div>
+  </c-section>
+  <c-section title="Errors of all three kinds" level="3">
+    <div id="{{ failing_formset.prefix }}-formset">
+      {% crispy failing_formset failing_helper %}
+    </div>
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'formset-stacked-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}

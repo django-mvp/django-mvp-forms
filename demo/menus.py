@@ -30,5 +30,15 @@ AppMenu.extend(
             view_name="layout-objects",
             extra_context={"label": "Layout objects", "icon": "layout-objects"},
         ),
+        MenuItem(
+            name="formset-stacked",
+            view_name="formset-stacked",
+            extra_context={"label": "Formset, stacked", "icon": "formset-stacked"},
+        ),
+        MenuItem(
+            name="formset-table",
+            view_name="formset-table",
+            extra_context={"label": "Formset, as a table", "icon": "formset-table"},
+        ),
     ]
 )

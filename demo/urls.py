@@ -6,9 +6,13 @@ from demo.views import (
     ChoiceInputsView,
     LayoutObjectsView,
     OverviewView,
+    StackedFormsetView,
     StandaloneChoiceInputsView,
     StandaloneLayoutObjectsView,
+    StandaloneStackedFormsetView,
+    StandaloneTableFormsetView,
     StandaloneTextInputsView,
+    TableFormsetView,
     TextInputsView,
 )
 
@@ -31,6 +35,18 @@ urlpatterns = [
         "layout-objects/standalone/",
         StandaloneLayoutObjectsView.as_view(),
         name="layout-objects-standalone",
+    ),
+    path("formset-stacked/", StackedFormsetView.as_view(), name="formset-stacked"),
+    path(
+        "formset-stacked/standalone/",
+        StandaloneStackedFormsetView.as_view(),
+        name="formset-stacked-standalone",
+    ),
+    path("formset-table/", TableFormsetView.as_view(), name="formset-table"),
+    path(
+        "formset-table/standalone/",
+        StandaloneTableFormsetView.as_view(),
+        name="formset-table-standalone",
     ),
     # django-mvp's Account Center, with a development sign-in and sign-out
     # until an account app such as allauth is installed.

@@ -18,6 +18,7 @@ from crispy_forms.layout import (
 )
 from django import forms
 from django.core.exceptions import ValidationError
+from django.forms import BaseFormSet, formset_factory
 from django.utils.translation import gettext_lazy as _
 
 
@@ -294,3 +295,107 @@ class RowButtonsForm(forms.Form):
                 Submit(f"{prefix}-submit", _("Submit")), css_id=f"{prefix}-actions"
             ),
         )
+
+
+ORDER_LINE_LIMIT = 10000
+ORDER_ITEMS = [
+    ("", "---------"),
+    ("pen", _("Pen")),
+    ("ink", _("Ink")),
+    ("paper", _("Paper")),
+]
+
+
+class OrderLineForm(forms.Form):
+    """One line of an order: an item, a quantity, a unit price and a reference.
+
+    The quantity must be at least one, which is an error on the field. A line
+    whose total passes ``ORDER_LINE_LIMIT`` is an error on the form as a whole.
+    """
+
+    item = forms.ChoiceField(label=_("Item"), choices=ORDER_ITEMS)
+    quantity = forms.IntegerField(
+        label=_("Quantity"), min_value=1, help_text=_("How many to order.")
+    )
+    unit_price = forms.DecimalField(
+        label=_("Unit price"), min_value=0, decimal_places=2
+    )
+    reference = forms.CharField(required=False, widget=forms.HiddenInput)
+
+    def clean(self):
+        """Refuse a line whose total passes the limit.
+
+        Returns:
+            The cleaned data.
+
+        Raises:
+            ValidationError: When quantity times unit price passes the limit.
+        """
+        cleaned = super().clean()
+        quantity = cleaned.get("quantity")
+        unit_price = cleaned.get("unit_price")
+        if quantity and unit_price and quantity * unit_price > ORDER_LINE_LIMIT:
+            raise ValidationError(
+                _("A line may not total more than %(limit)s."),
+                code="over_limit",
+                params={"limit": ORDER_LINE_LIMIT},
+            )
+        return cleaned
+
+
+class BaseOrderLineFormSet(BaseFormSet):
+    """The lines of an order, none of which may repeat an item."""
+
+    def clean(self):
+        """Refuse the same item on two lines.
+
+        Raises:
+            ValidationError: When two lines that are kept name the same item.
+        """
+        super().clean()
+        items = [
+            form.cleaned_data["item"]
+            for form in self.forms
+            if getattr(form, "cleaned_data", None)
+            and form.cleaned_data.get("item")
+            and not form.cleaned_data.get("DELETE")
+        ]
+        if len(items) != len(set(items)):
+            raise ValidationError(
+                _("Each item may be ordered on one line only."),
+                code="duplicate_item",
+            )
+
+
+OrderLineFormSet = formset_factory(
+    OrderLineForm, BaseOrderLineFormSet, extra=3, can_delete=True, can_order=True
+)
+
+
+class StackedOrderHelper(FormHelper):
+    """Draws the order lines stacked, with one submit button.
+
+    The submit button's name carries the formset's prefix, so two of these on
+    one page repeat no id.
+    """
+
+    def __init__(self, prefix, *args, form_tag=True, **kwargs):
+        """Name the submit button by the prefix.
+
+        Args:
+            prefix: The prefix of the formset this helper draws.
+            *args: Passed to ``FormHelper``.
+            form_tag: Whether the helper draws the form element. The formset that
+                already fails has none.
+            **kwargs: Passed to ``FormHelper``.
+        """
+        super().__init__(*args, **kwargs)
+        self.form_tag = form_tag
+        self.attrs = {"novalidate": True}
+        self.add_input(Submit(f"{prefix}-submit", _("Submit")))
+
+
+class TableOrderHelper(StackedOrderHelper):
+    """Draws the order lines as a table, with one submit button."""
+
+    template = "daisyui/table_inline_formset.html"
