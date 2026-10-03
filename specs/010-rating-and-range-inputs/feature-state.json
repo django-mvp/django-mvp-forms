@@ -2,7 +2,7 @@
   "feature": "010-rating-and-range-inputs",
   "branch": "010-rating-and-range-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-10-03T21:59:58Z",
       "note": "plan.md, research.md, tasks.md: 3 stories, 5 tasks; continues on pull request #96"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T22:00:11Z",
+      "note": "one reviewer, three lenses"
     }
   ],
   "gates": {
@@ -24,12 +29,24 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-03T22:06:56Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T22:06:56Z",
+      "self_resolved": [
+        "DR-001 (medium) the existing drawings demo page names its three drawings itself: applied to plan and T001",
+        "DR-002 (medium) the clearing input is drawn before the stars whatever its place among the choices: applied to plan and T002 (D17)",
+        "DR-003 (low) the one existing test that pins the drawings table is named as extended: applied to T001 and T004",
+        "DR-004 (low) a star's aria-label is the choice's label as plain text: applied to plan and T001",
+        "DR-005 (low) empty means the empty string, and a choice whose value is 0 is a star: applied to plan and T002",
+        "DR-006 (low) an extra form of a formset that holds a range is always submitted as changed: README says so (T004), question filed as #116"
+      ]
     }
   },
   "stories": [
@@ -99,7 +116,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

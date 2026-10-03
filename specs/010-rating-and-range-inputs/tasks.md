@@ -40,8 +40,8 @@ SC-001 to SC-004, SC-006.
 ### T001 — A field's own drawings, and a rating drawn for one field
 
 **Files**: `mvp_forms/choices.py`, `mvp_forms/templatetags/daisyui.py`,
-`mvp_forms/templates/daisyui/widgets/rating.html` (new), `tests/test_choices.py`,
-`tests/test_templatetags/test_daisyui.py`
+`mvp_forms/templates/daisyui/widgets/rating.html` (new), `demo/views.py`,
+`tests/test_choices.py`, `tests/test_templatetags/test_daisyui.py`
 
 Plan, *`mvp_forms/choices.py`*, *`FieldInput`: which drawings a field takes*, *`FieldInput`: a
 rating*, *`daisyui/widgets/rating.html`*; research R2, R4, R7.
@@ -49,7 +49,15 @@ rating*, *`daisyui/widgets/rating.html`*; research R2, R4, R7.
 - `Modifiers.drawings` gains `rating`. `FieldInput.drawings_of` and the one rule in
   `resolve_drawing`. `is_group` and the three properties that ask it. The widget a rating is
   drawn through, its wrapped context, the template, and `error_modifiers["rating"]`.
-- Tests, `tests/test_choices.py`: `rating` is in the drawings table with its component.
+- `DrawingsMixin.drawing_names` in `demo/views.py` stops reading the whole of
+  `Modifiers.drawings` and names the three drawings a boolean field takes (plan, *The existing
+  drawings demo page*). No new test: the drawings contract in `tests/test_demo.py` is the guard.
+- Tests, `tests/test_choices.py`: `rating` is in the drawings table with its component. This
+  extends one existing test, `TestModifiersDrawings.test_each_drawing_names_the_component_it_is_drawn_with`,
+  which pins the table to its exact rows: the table gains a row, so the expected table gains
+  the same row. Nothing else in an existing test changes. Say so in the report.
+- Tests, in `TestFieldInputRating`: a choice label marked safe that holds a tag and a double
+  quote is written into `aria-label` as plain text, with the quote escaped.
 - Tests, `tests/test_templatetags/test_daisyui.py`, a `TestFieldInputRating` class: a select and
   a radio group each take `rating` and nothing else; the component is `rating` and the field is
   a group; stated in a layout and by name, the layout's winning; a multiple select, a checkbox
@@ -72,12 +80,14 @@ rating*, *`daisyui/widgets/rating.html`*; research R2, R4, R7.
 - Tests, `TestRating`, one per acceptance scenario of US1, through `{{ form|crispy }}` and
   `{% crispy form %}` where both apply: no drawing stated is the select or radio group it was
   (1); a rating is one radio input for each choice with a value, in order, sharing the field's
-  name, inside an element with the class `rating` (2); a form posted with a star picked cleans
+  name, inside an element with the class `rating` (2), and a field whose first choice has the
+  value `0` draws that choice as a star; a form posted with a star picked cleans
   to that choice's value, the same as the same form with no drawing stated, with the posted
   data built from the drawn inputs and not from a dict written by hand (3, SC-002); a bound and
   an initial value are drawn checked (4); with no value no star is checked (5); the empty choice
   is one input with `rating-hidden`, is not a star, and submitting it cleans to the field's
-  empty value (6); choices in named groups are stars in order and no group name is drawn
+  empty value (6), and a field whose empty choice is its last choice draws the clearing input
+  before every star; choices in named groups are stars in order and no group name is drawn
   (FR-010); a field with no choices is drawn with its frame and no input; a model choice field
   is drawn with its empty label as the clearing input.
 - Tests, `TestRatingKeepsWhatARadioGroupHas`: the stars are in a fieldset whose legend is the
@@ -87,7 +97,8 @@ rating*, *`daisyui/widgets/rating.html`*; research R2, R4, R7.
   holds (8); every star of a disabled field is `disabled` (9); no script is drawn (10); with
   labels off the fieldset is named by `aria-label` and each star keeps its own; a select and a
   radio group with the same choices are drawn as the same inputs; a class and an attribute the
-  developer set on the widget are on every star (FR-017); the form drawn twice gives the same
+  developer set on the widget are on every input of the rating, the clearing input included
+  (FR-017); the form drawn twice gives the same
   markup.
 - Tests, `TestRatingAmongOtherFields`: only the field stated changes (11); every form of a
   formset draws the field as a rating, in the stacked layout and in the table, and no id and no
@@ -95,7 +106,8 @@ rating*, *`daisyui/widgets/rating.html`*; research R2, R4, R7.
   is drawn as it is outside; `PrependedText` and `InlineRadios` around it draw the rating.
 - Tests, `TestRatingMistakes`: each case of FR-021 that concerns a rating raises when the form
   is drawn, by either path, with the field as `target`; a hidden field raises nothing and is a
-  hidden input.
+  hidden input. `README.md` and `CONTEXT.md` are searched for every sentence that says only a
+  boolean field takes a drawing, or that any other field allows nothing, and each is made true.
 - `STATES` in `test_independence.py` gains a form with a rating, plain and in error.
 - Verification, reported and not committed: render every entry of `STATES` as it stands at the
   base commit before T001 and after this task, and compare (SC-003).
@@ -141,18 +153,20 @@ SC-004, SC-006.
 
 Plan, *`FieldInput`: a range*; research R3, R5.
 
-- `Modifiers.drawings` gains `range`. `drawings_of` gives a number input `range`. The widget a
+- `Modifiers.drawings` gains `range`, and the one existing test that pins the table,
+  `TestModifiersDrawings.test_each_drawing_names_the_component_it_is_drawn_with`, gains the same
+  row. `drawings_of` gives a number input `range`. The widget a
   range is drawn through. `error_modifiers["range"]`.
 - Tests, `TestFieldInputRange`: an integer, a float and a decimal field's number input take
   `range` and nothing else; a subclass of `NumberInput` takes it; a text input, a select, a
-  boolean field and a localised decimal field refuse it with their own drawings as `allowed`; a
+  boolean field and a localised integer and a localised decimal field refuse it with their own drawings as `allowed`; a
   boolean field's drawing and `rating` on a number input are refused with `range` allowed; a
   hidden number field raises nothing; the form's own widget keeps its `input_type` after a
   draw.
 - Tests, `TestRange` in `tests/test_pack/test_range.py`, one per acceptance scenario of US2: no
   drawing stated is the number input it was (1); a range is one `input` of type `range` with
   the field's name and the class `range` (2); `min`, `max` and `step` are the field's (3), and
-  a field that declares none has none written; a form posted with the slider's value cleans to
+  an integer field that declares none has none written; a form posted with the slider's value cleans to
   the number, the same as the same form with no drawing stated, for a value inside the limits
   and one outside them (4, SC-002); a bound and an initial value are the input's `value` (5);
   the label's `for` is the input's id (6); help text and errors are drawn and the input is
@@ -170,7 +184,8 @@ Plan, *`FieldInput`: a range*; research R3, R5.
   help text, in error and disabled. `tests/test_demo.py` finds each and posts a value.
 - README: the section gains the range: which fields take it, where its limits come from, what
   it keeps, and that a slider always submits a number, so an optional number field drawn as a
-  range is never submitted empty. The example gains a range. CHANGELOG entry extended. CONTEXT:
+  range is never submitted empty, and an extra form of a formset that holds a range is always
+  submitted as changed. The example gains a range. CHANGELOG entry extended. CONTEXT:
   **Drawing** covers the range; add **Number field** and **Range**.
 
 ---

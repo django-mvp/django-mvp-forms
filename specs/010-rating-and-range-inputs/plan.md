@@ -49,7 +49,8 @@ until then the README's example and the demo page state a drawing only.
 literals; no leading-underscore names; line length 88; no compatibility aliases; nothing written
 to a widget that outlives the draw.
 
-**Scale/Scope**: two modules change, one pack template is added, one demo page in two forms.
+**Scale/Scope**: two modules of the pack change, one pack template is added, one demo page in
+two forms, and the existing drawings demo page names its three drawings itself.
 
 ## Constitution Check
 
@@ -141,8 +142,17 @@ resolves no drawing, as today.
   - `widget.rating_class`: `rating`, then the size modifier when one resolves.
   - on every option with a value, the class: the developer's own classes, `mask`, `mask-star-2`,
     then the colour class when one resolves, or `bg-error` when the field is in error.
-  - on an option whose value is empty, the class `rating-hidden` and nothing else.
-  - on every option, `aria-label` set to the choice's label unless the option already has one.
+  - on an option whose value is empty, the developer's own classes and `rating-hidden`, with no
+    mask and no colour. Empty means the empty string and nothing else: a choice whose value is
+    `0` is a star.
+  - on every option, `aria-label` set to the choice's label as plain text, unless the option
+    already has one. The text is made by the rule `label_text` applies to the field's label,
+    moved into one helper both use, so a label marked safe has its tags dropped and is escaped
+    once by the template.
+  - the options are handed to the template with the clearing input first, whatever its place
+    among the choices, and the stars after it in the field's order. daisyUI raises every star
+    before the checked input, so a clearing input drawn after the stars would show them all as
+    picked on a field with no value (FR-008).
 - `attrs` passes no class to the widget for a rating, so the class is written once, by the
   wrapper above. Everything else `attrs` adds is unchanged.
 - A select drawn as a rating does not carry Django's own `aria-describedby` on each star: the
@@ -164,7 +174,7 @@ resolves no drawing, as today.
 ```
 
 One input for each choice, in the field's order, with no label element and no group name
-(research R2). The empty choice is the clearing input and is drawn where the field has it.
+(research R2). The wrapped context puts the clearing input first.
 `checked`, `required`, `disabled` and `aria-invalid` reach each input through the option's
 attributes, as they do for a radio group.
 
@@ -187,6 +197,13 @@ attributes, as they do for a radio group.
 field states. For a rating the size and the colour are written in different places, so the
 wrapper asks for the size alone and the stars for the colour alone, through `resolve_modifiers`
 and its `kinds` argument. A range's modifiers are all on the input, through `classes_for`.
+
+### The existing drawings demo page
+
+`DrawingsMixin.drawing_names` in `demo/views.py` reads the whole of `Modifiers.drawings` and
+states each name on a boolean field. With two more names in the table it would state a rating on
+a checkbox and raise. It names the three drawings a boolean field takes instead, in the task that
+adds `rating` to the table.
 
 ### What does not change
 

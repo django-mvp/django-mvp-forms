@@ -280,3 +280,36 @@ the same rating would be drawn differently.
 
 **ADR:** none — it follows ADR 0011, which frames a group as a fieldset that carries the
 description.
+
+## D17. The clearing input is drawn first, whatever its place among the choices
+
+**Decision:** the input for an empty choice is drawn before the stars even when the field lists
+the empty choice last. The stars keep the field's order.
+
+**Why:** the design review found that daisyUI raises every star before the checked input. A
+field with no value has its empty choice checked, so a clearing input drawn after the stars
+would show them all as picked, against FR-008. FR-006 orders only the choices that have a value.
+
+**Revisit if:** daisyUI changes which stars it raises.
+
+**ADR:** none — local to the rating's template.
+
+## D18. Design review: what was applied and what is carried
+
+**Decision:** all six findings were applied to the plan and the tasks. None was declined.
+
+- DR-001 (medium): the existing drawings demo page names its three drawings itself (plan, T001).
+- DR-002 (medium): the clearing input is drawn first (D17, plan, T002).
+- DR-003 (low): the one existing test that pins the drawings table is named as extended (T001,
+  T004).
+- DR-004 (low): a star's `aria-label` is the choice's label as plain text (plan, T001).
+- DR-005 (low): empty means the empty string, and a choice with the value `0` is a star (plan,
+  T002).
+- DR-006 (low): a slider always submits a number, so an extra form of a formset that holds a
+  range is always submitted as changed. The README says so (T004), and the question of whether
+  the pack should do anything about it is filed for the maintainer.
+
+**Why:** each was verified against the code or the stylesheet by the reviewer, and each remedy
+is the edit the finding named.
+
+**ADR:** none — a record of the review, not a constraint on the code.
