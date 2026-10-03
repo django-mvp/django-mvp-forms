@@ -2,7 +2,7 @@
   "feature": "011-floating-labels-and-joined-inputs",
   "branch": "011-floating-labels-and-joined-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "QUEUED",
@@ -18,6 +18,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-10-03T23:11:02Z",
       "note": "plan to design review"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T23:17:43Z",
+      "note": "plan gate open; build starts"
     }
   ],
   "gates": {
@@ -29,12 +34,24 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-03T23:17:37Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T23:17:37Z",
+      "self_resolved": [
+        "DR-001 (medium) the joined group's test state moves to the task that adds its templates: applied to T004 and T005",
+        "DR-002 (medium) a name the form lacks is left to django-crispy-forms inside a group: applied to plan and T004",
+        "DR-003 (low) daisyUI sizes a floating label on selects and textareas too: research corrected, README claim dropped from T002",
+        "DR-004 (low) the demo shows a read-only member: applied to plan and T006",
+        "DR-005 (low) the demo shows a group at every colour and in the variant: applied to plan and T007",
+        "DR-006 (low) a field disabled only by a fieldset around it is not detected: README says to undo the label, T002"
+      ]
     }
   },
   "stories": [
