@@ -231,8 +231,27 @@
       "tasks": [
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestChoicesPage",
+              "tests/test_demo.py::TestStandaloneChoicesPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -k Choices -q",
+              "uv run pytest tests/test_demo.py -q -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "demo/forms.py:488",
+              "demo/views.py:472",
+              "demo/urls.py:51",
+              "demo/menus.py:54"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }
