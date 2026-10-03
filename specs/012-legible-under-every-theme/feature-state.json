@@ -1,0 +1,365 @@
+{
+  "feature": "012-legible-under-every-theme",
+  "branch": "012-legible-under-every-theme",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T21:42:05Z",
+      "note": "specification approved by delegated review at commit a7c88514e6abfadd2e314e9da455c327c3d8e904, on pull request #95; epic #88, stories #99 to #101"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T22:06:11Z",
+      "note": "plan.md, research.md, tasks.md: 3 stories, 6 tasks; continues on pull request #95"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T22:06:42Z",
+      "note": "one reviewer, three lenses, on plan.md, research.md and tasks.md"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T22:16:55Z",
+      "note": "plan gate open; design review applied"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T23:02:32Z",
+      "note": "all three stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T23:08:45Z",
+      "note": "one reviewer on the feature diff"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T23:45:19Z",
+      "note": "review recorded, nothing open; walkthrough laid out; pull request ready for review"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T21:42:05Z",
+      "self_resolved": [
+        "approved at commit a7c88514e6abfadd2e314e9da455c327c3d8e904 (forge spec-gate, pull request #95); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T22:16:48Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T22:16:48Z",
+      "self_resolved": [
+        "DR-001 (medium) a template's classes must be drawn by a catalogue state, not only known to the reader: applied to plan, T004",
+        "DR-002 (medium) the catalogue draws disabled and read-only forms, a disabled file input, toggle and switch: applied to plan, T002",
+        "DR-003 (medium) every button colour is drawn with every variant: applied to plan, T002",
+        "DR-004 (medium) the dismiss button in a developer-coloured alert is measured: applied to plan, D19, T002",
+        "DR-005 (low) the sweep states a toggle: applied to plan",
+        "DR-006 (low) the catalogue draws without pytest fixtures and the report sets up Django: applied to plan",
+        "DR-007 (low) attached text on its wrapper's fill, a disabled button row, an input with no class: applied to plan, research, T002",
+        "DR-008 (low) per-theme report listing and two assertions that could not fail dropped: applied to plan, T004",
+        "DR-009 (low) the published table is compared by pairing and themes only: applied to plan",
+        "DR-010 (low) the demo test reads the element holding the forms; radios override the shell's chooser: applied to plan, T005"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer: approve, every finding remedied",
+      "at": "2026-10-03T23:41:07Z",
+      "self_resolved": [
+        "COR-001 (medium) the Themes page test compares element kind with pairing; the page draws what it named: remedied in T009",
+        "COR-002 (low) README says a ghost field has no border to measure: remedied in T009",
+        "COR-003 (low) a disabled ghost field is read on base-200 with its border: remedied in T009",
+        "COR-004 (low) README and ADR 0035 say only form-wide errors are gathered in an alert: remedied in T009",
+        "COR-005 (low) FR-007 and Key Entities name the pairing, what it is seen on and the theme: remedied in spec.md, D28",
+        "COR-006 (low) no test matches an error's wording: remedied in T009",
+        "COR-007 (low) the Themes page's headings are translatable: remedied in T009",
+        "COR-008 (low) unreached rows and members removed; a disabled button is drawn: remedied in T009"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T23:44:05Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 99,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_legibility/test_colours.py::TestColour",
+              "tests/test_legibility/test_themes.py::TestThemes"
+            ],
+            "commands": [
+              "uv run pytest tests/test_legibility -q",
+              "forge verify --repo . --base origin/main (once, to learn the conformance rule; passed after the non-mirror-paths entry)"
+            ],
+            "code": [
+              "tests/legibility/colours.py:14",
+              "tests/legibility/themes.py:56",
+              "tests/data/daisyui-themes.css:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_legibility/test_pairings.py::TestInk",
+              "tests/test_legibility/test_pairings.py::TestPairing",
+              "tests/test_legibility/test_reader.py::TestReader",
+              "tests/test_legibility/test_catalogue.py::TestCatalogue"
+            ],
+            "commands": [
+              "uv run pytest tests/test_legibility -q"
+            ],
+            "code": [
+              "tests/legibility/pairings.py:10",
+              "tests/legibility/pairings.py:114",
+              "tests/legibility/reader.py:113",
+              "tests/legibility/reader.py:76",
+              "tests/legibility/catalogue.py:69"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_legibility.py::TestEveryTheme",
+              "tests/test_pack/test_legibility.py::TestPublishedExceptions",
+              "tests/test_pack/test_legibility.py::TestRepairs",
+              "tests/test_legibility/test_exceptions.py::TestKnownExceptions",
+              "tests/test_pack/test_independence.py::TestDistributedFiles::test_no_template_or_module_writes_a_theme"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_legibility.py -q",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run python -m tests.legibility",
+              "uv run python /tmp/fs012/work/render_states.py (before at the base, after T003), class attributes and random ids stripped, compared as strings: identical"
+            ],
+            "code": [
+              "tests/legibility/exceptions.py:9",
+              "tests/legibility/__main__.py:11",
+              "mvp_forms/templates/daisyui/field_body.html:19",
+              "mvp_forms/templates/daisyui/layout/alert.html:4",
+              "README.md:810"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_legibility/test_reader.py",
+              "tests/test_legibility/test_catalogue.py",
+              "tests/test_pack/test_legibility.py",
+              "tests/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_legibility tests/test_pack/test_legibility.py tests/test_demo.py -n auto --dist loadscope",
+              "uv run python -m tests.legibility",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "tests/legibility/reader.py:529",
+              "tests/legibility/reader.py:557",
+              "tests/legibility/catalogue.py:57",
+              "tests/legibility/catalogue.py:186"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 100,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_legibility.py::TestTheCheckCatches",
+              "tests/test_pack/test_legibility.py::TestCoverage",
+              "tests/test_pack/test_legibility.py::TestEveryTheme"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_legibility.py -q",
+              "uv run python -m tests.legibility",
+              "uv run pre-commit run --all-files",
+              "uv run mypy"
+            ],
+            "code": [
+              "tests/legibility/exceptions.py:42",
+              "tests/test_pack/test_legibility.py:69",
+              "tests/test_pack/test_legibility.py:168",
+              "README.md:860"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P3",
+      "issue": 101,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestThemeList",
+              "tests/test_demo.py::TestThemesPage",
+              "tests/test_demo.py::TestStandaloneThemesPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy"
+            ],
+            "code": [
+              "demo/views.py:1039",
+              "demo/views.py:1309",
+              "demo/views.py:1318",
+              "demo/forms.py:1091",
+              "demo/urls.py:107",
+              "demo/templates/demo/themes.html:1",
+              "demo/templates/demo/themes_standalone.html:1",
+              "tests/test_demo.py:2362"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_legibility.py::TestPublishedExceptions"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_legibility.py::TestPublishedExceptions",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "README.md:804",
+              "CHANGELOG.md:25"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -q"
+            ],
+            "code": [
+              "demo/views.py:1136"
+            ]
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py",
+              "tests/test_legibility/test_reader.py",
+              "tests/test_legibility/test_catalogue.py",
+              "tests/test_legibility/test_colours.py",
+              "tests/test_legibility/test_exceptions.py",
+              "tests/test_legibility/test_pairings.py",
+              "tests/test_legibility/test_themes.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_legibility tests/test_pack/test_legibility.py tests/test_demo.py -n auto --dist loadscope",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "tests/test_demo.py:2703",
+              "tests/legibility/reader.py:436",
+              "tests/legibility/reader.py:466",
+              "demo/views.py:1157",
+              "demo/views.py:1171",
+              "demo/forms.py:219",
+              "demo/forms.py:652"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 20.02,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 95,
+    "draft": false
+  }
+}

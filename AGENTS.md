@@ -20,6 +20,9 @@ depend on django-mvp at runtime.
   serial, because starting the workers costs more than a focused run takes
 - **Test (one named Django and django-crispy-forms pair):**
   `uv run python support_window.py test 5.2 2.7` — the pair must be one the window offers
+- **Legibility report:** `uv run python -m tests.legibility` — prints the table of
+  known exceptions as the README should hold it, then the dimmed pairings of every
+  disabled control with their ratio under each theme
 - **Lint:** `uv run pre-commit run --all-files`
 - **Type-check:** `uv run mypy`
 - **Build:** `uv build`

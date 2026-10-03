@@ -144,6 +144,39 @@ widget. A range always submits a number, so an optional number field drawn as a
 range is never submitted empty.
 _Avoid_: slider field.
 
+**Form state**:
+One thing the pack draws, in one condition a person can meet it in: a text input
+that is empty, filled, invalid, disabled or read-only, a help text, a field error,
+a form-wide error, a required marker, a button, a tab that is selected or not, an
+accordion group open or closed, and so on.
+_Avoid_: case, scenario.
+
+**Shipped theme**:
+A theme built into the daisyUI version the test suite is pinned to, used as
+daisyUI publishes it. Each one is either light or dark.
+_Avoid_: using it for a theme a host project writes, which the suite never
+measures.
+
+**Pairing**:
+One thing a person has to make out, together with the surface directly behind
+it: a piece of text and its background, or the part of a control that shows what
+it is and what state it is in and the surface around it.
+_Avoid_: contrast pair, combination.
+
+**Standard**:
+The minimum contrast WCAG 2.2 sets at level AA: one figure for text, a lower one
+for large text, and one for the parts of a control that identify it and show its
+state. The pack draws no large text, so text is held to 4.5 to 1 and those parts
+to 3 to 1.
+_Avoid_: threshold, guideline.
+
+**Known exception**:
+A pairing that falls short of the standard under a named shipped theme, that no
+stock daisyUI class would bring up to it, and that is published in the README.
+The README's table is the only list, and the test suite compares it with what it
+measures in both directions.
+_Avoid_: bug, waiver, ignore list.
+
 **Support window**:
 The versions of Django, django-crispy-forms and daisyUI this package states it
 works with and checks itself against, with the rule by which a version enters

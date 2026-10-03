@@ -20,7 +20,7 @@ A choice stated for a whole form that one kind of input has no modifier for, suc
 checkbox, is passed over for that kind. The same choice stated on that one field raises.
 
 A later feature that draws a new kind of input adds a row to each table. When daisyUI adds or
-removes a name, the tables follow it and `tests/data/daisyui-classes.txt` is refreshed.
+removes a name, the tables follow it and the class lists under `tests/data/` are refreshed.
 
 ## Why
 

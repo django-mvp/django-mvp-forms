@@ -21,7 +21,7 @@ The request was that a rating takes the same size and colour choices as every ot
 Colouring each star with a background class is how daisyUI's own documentation colours a
 rating, because a star is a masked element and its background is its colour.
 
-The eight classes are in daisyUI's CDN stylesheet and in `tests/data/daisyui-classes.txt`, they
+The eight classes are in daisyUI's CDN stylesheet and in the class lists under `tests/data/`, they
 follow the host project's theme, and they need no build step. So they pass the test
 [ADR 0003](0003-daisyui-classes-and-tailwind-for-layout-only.md) sets for what the pack may
 write, although they are not modifiers of the rating itself. An arbitrary colour utility would

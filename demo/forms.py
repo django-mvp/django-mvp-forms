@@ -216,6 +216,21 @@ class TextStatesForm(forms.Form):
                 field.widget.attrs["readonly"] = True
 
 
+class PlaceholdersForm(forms.Form):
+    """A text input and a textarea, each showing a placeholder."""
+
+    text = forms.CharField(
+        label=_("Text"),
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": _("Some text")}),
+    )
+    textarea = forms.CharField(
+        label=_("Textarea"),
+        required=False,
+        widget=forms.Textarea(attrs={"placeholder": _("Some lines of text")}),
+    )
+
+
 class LayoutObjectsForm(forms.Form):
     """A form whose layout uses every layout object the pack draws so far.
 
@@ -630,6 +645,20 @@ class ButtonBarForm(ChosenForm):
                     )
                     for variant in Modifiers.variants[Modifiers.button]
                 ]
+            )
+        )
+
+
+class PlainButtonsForm(ChosenForm):
+    """A bar holding a button in no variant and a disabled one."""
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the buttons named by the prefix."""
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(
+            FormActions(
+                Button(f"{self.prefix}-solid", _("Solid")),
+                Button(f"{self.prefix}-disabled", _("Disabled"), disabled=True),
             )
         )
 
@@ -1274,3 +1303,135 @@ class RatingAndRangeOverrideForm(ChosenForm):
             Choice("overrides_score", drawing="rating", size="xl", color="accent"),
             Choice("overrides_volume", drawing="range", size="xl", color="accent"),
         )
+
+
+DAISYUI_VERSION = "5.7.47"
+THEME_NAMES = (
+    "light",
+    "dark",
+    "cupcake",
+    "bumblebee",
+    "emerald",
+    "corporate",
+    "synthwave",
+    "retro",
+    "cyberpunk",
+    "valentine",
+    "halloween",
+    "garden",
+    "forest",
+    "aqua",
+    "lofi",
+    "pastel",
+    "fantasy",
+    "wireframe",
+    "black",
+    "luxury",
+    "dracula",
+    "cmyk",
+    "autumn",
+    "business",
+    "acid",
+    "lemonade",
+    "night",
+    "coffee",
+    "winter",
+    "dim",
+    "nord",
+    "sunset",
+    "caramellatte",
+    "abyss",
+    "silk",
+)
+
+
+class ReadOnlyKindsForm(ChosenForm):
+    """One input of each kind that can be read-only, each carrying ``readonly``.
+
+    The pack draws a read-only input as an ordinary one. Give the form a prefix.
+    """
+
+    text = forms.CharField(label=_("Text"))
+    textarea = forms.CharField(
+        label=_("Textarea"), widget=forms.Textarea(attrs={"rows": 2})
+    )
+    select = forms.ChoiceField(label=_("Select"), choices=[("a", "A"), ("b", "B")])
+    checkbox = forms.BooleanField(label=_("Checkbox"))
+    file = forms.FileField(label=_("File"), widget=forms.FileInput)
+
+    def __init__(self, *args, **kwargs):
+        """Mark every widget read-only and give the text fields a value."""
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.required = False
+            field.widget.attrs["readonly"] = True
+        self.initial.update({"text": "Some text", "textarea": "Some lines"})
+
+
+class AlertColoursForm(ChosenForm):
+    """An alert in each colour daisyUI has for a button, each with its dismiss button.
+
+    Give the form a prefix, so no id repeats on the page.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with an alert for every colour in the table."""
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(
+            *[
+                Alert(
+                    _("A notice in %(colour)s.") % {"colour": colour},
+                    css_class=f"alert-{colour}",
+                    css_id=f"{self.prefix}-{colour}",
+                )
+                for colour in Modifiers.names("color", Modifiers.button)
+            ]
+        )
+
+
+class LockedKindsForm(InputKindsForm):
+    """One disabled field of every kind of input that has a size, colour or variant.
+
+    Args:
+        choices: What the form states for its inputs, or None. A toggle is added.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Disable every field."""
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.disabled = True
+
+
+class UneditableChoicesForm(forms.Form):
+    """A form whose every field is drawn uneditable, one of each choice kind.
+
+    The fields are required and hold a value, so a bound form with nothing in it
+    shows an error on each uneditable field. Give the form a prefix.
+    """
+
+    select = forms.ChoiceField(
+        label=_("Select"), choices=[("a", "A"), ("b", "B")], initial="b"
+    )
+    checkbox = forms.BooleanField(label=_("Checkbox"), initial=True)
+    radio = forms.ChoiceField(
+        label=_("Radio group"),
+        choices=[("a", "A"), ("b", "B")],
+        widget=forms.RadioSelect,
+        initial="b",
+    )
+    checkbox_group = forms.MultipleChoiceField(
+        label=_("Checkbox group"),
+        choices=[("a", "A"), ("b", "B")],
+        widget=forms.CheckboxSelectMultiple,
+        initial=["a"],
+    )
+    textarea = forms.CharField(
+        label=_("Textarea"), widget=forms.Textarea(attrs={"rows": 2}), initial="Hello"
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with every field uneditable."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(*[UneditableField(name) for name in self.fields])
