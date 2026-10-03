@@ -65,13 +65,49 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestWindow",
+              "tests/test_support_window.py::TestMetadata"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -x -q (exit 0, 19 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "support_window.py:24",
+              "support_window.py:44",
+              "support_window.py:61",
+              "support_window.py:162",
+              "support-window.toml:1"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestReadmeLinks"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -q (exit 0, 25 passed)",
+              "uv run pytest tests/test_pack/test_documented_examples.py tests/test_pack/test_template_surface.py tests/test_pack/test_template_list.py tests/test_support_window.py -q (exit 0, 157 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "support_window.py:267",
+              "README.md:58",
+              "CONTEXT.md:147",
+              "CHANGELOG.md:31",
+              "AGENTS.md:15"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
