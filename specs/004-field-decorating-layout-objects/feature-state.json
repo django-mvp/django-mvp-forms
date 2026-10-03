@@ -176,8 +176,16 @@
         },
         {
           "id": "T015",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "specs/004-field-decorating-layout-objects/spec.md:292"
+            ]
+          }
         }
       ]
     },
