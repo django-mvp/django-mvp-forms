@@ -372,7 +372,7 @@ What is drawn:
 - every hidden field of every form, such as a model formset's primary key or an inline formset's foreign key, inside its form's `<div>`
 - each form's fields as the pack draws them in a single form, with the same label, required marker, help text, errors and input
 - one `<form>` element around the whole formset, never one per form, unless the helper's `form_tag` is off, and the CSRF token once for a post form
-- the formset's media once, unless `include_media` is off, and the helper's buttons once, after the last form
+- through `{% crispy formset %}`, the formset's media once, unless `include_media` is off, and the helper's buttons once, after the last form. `{{ formset|crispy }}` draws neither, as for a single form
 
 A helper's layout is applied to each form. A form drawn through a layout shows the fields the layout names and its hidden fields, so the `DELETE` and `ORDER` fields that Django adds to a formset are drawn only when the layout names them.
 
@@ -384,6 +384,8 @@ helper = FormHelper()
 helper.layout = Layout("name", "quantity", "DELETE")
 helper.add_input(Submit("save", "Save"))
 ```
+
+A layout that names `DELETE` or `ORDER` needs every form to have that field. With `can_delete_extra=False` the extra forms have no `DELETE` field, and django-crispy-forms raises for a field a form does not have while `DEBUG` is on. Leave `DELETE` out of the layout for such a formset, or draw it as a table.
 
 The two templates are `daisyui/whole_uni_formset.html`, which `{% crispy formset %}` asks for, and `daisyui/uni_formset.html`, which `{{ formset|crispy }}` asks for and the first includes.
 
@@ -422,6 +424,8 @@ Every error is drawn once, next to what it belongs to, in both layouts:
 When a formset has `can_delete` or `can_order` on, each form's delete input is drawn as the pack's checkbox and its order input as the pack's number input, the same as a boolean or an integer field in a single form. In the table each has a column of its own, with a heading and an `aria-label`. What a posted form reports in `deleted_forms` and `ordered_forms` is Django's, read from the inputs as drawn.
 
 A form that has no delete field, such as an extra form of a formset with `can_delete_extra=False`, leaves that cell empty, so every row has as many cells as there are headings. A form that was marked for deletion and is drawn again after a failed post keeps its delete input ticked.
+
+A form marked for deletion is left out of the formset's validation by Django, but it still holds its own field errors, and they are drawn with it when the page comes back.
 
 The pack draws a formset and nothing around it. It draws no empty form to copy, adds no script, and has no view: adding and removing rows in the browser, handling the post and saving belong to django-mvp or to your own code.
 

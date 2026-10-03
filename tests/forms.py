@@ -466,6 +466,20 @@ class MarkupRuledBaseFormSet(RuledBaseFormSet):
     refusal = "<script>alert(1)</script>"
 
 
+class MarkupLineForm(LineForm):
+    refusal = "<script>alert(2)</script>"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["name"].label = "<script>alert(3)</script>"
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("name") == "whole":
+            raise ValidationError(self.refusal, code="whole")
+        return cleaned
+
+
 LineFormSet = formset_factory(LineForm, extra=3)
 OrderedLineFormSet = formset_factory(LineForm, extra=3, can_delete=True, can_order=True)
 KeptLineFormSet = formset_factory(
@@ -473,6 +487,7 @@ KeptLineFormSet = formset_factory(
 )
 RuledLineFormSet = formset_factory(RuledLineForm, RuledBaseFormSet, extra=3)
 MarkupRuledLineFormSet = formset_factory(RuledLineForm, MarkupRuledBaseFormSet, extra=3)
+MarkupLineFormSet = formset_factory(MarkupLineForm, extra=3)
 ChoiceLineFormSet = formset_factory(ChoiceLineForm, extra=2)
 NoLinesFormSet = formset_factory(LineForm, extra=0)
 MediaFormSet = formset_factory(MediaForm, extra=2)

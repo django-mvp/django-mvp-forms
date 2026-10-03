@@ -1,4 +1,4 @@
-"""A formset drawn by the pack: stacked, one form after another."""
+"""A formset drawn by the pack, stacked and as a table."""
 
 import pytest
 from crispy_forms.layout import Submit
@@ -7,6 +7,8 @@ from tests.forms import (
     ChoiceLineFormSet,
     KeptLineFormSet,
     LineForm,
+    MarkupLineForm,
+    MarkupLineFormSet,
     MarkupRuledLineFormSet,
     MediaFormSet,
     OrderedLineFormSet,
@@ -552,6 +554,41 @@ class TestFormsetErrors:
 
         assert soup.find("script") is None
         assert "<script>alert(1)</script>" in soup.find(attrs={"role": "alert"}).text
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_a_forms_own_message_and_a_label_holding_markup_are_escaped(
+        self, draw, layout
+    ):
+        lines = [{"name": "a"}, {"name": "whole"}]
+
+        soup, _, units = draw_ruled(
+            draw, layout, lines, formset_class=MarkupLineFormSet
+        )
+
+        assert soup.find("script") is None
+        assert MarkupLineForm.refusal in units[1].get_text()
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_damaged_management_data_draws_the_formset_wide_error_alone(
+        self, draw, layout
+    ):
+        formset = RuledLineFormSet({"form-0-name": "a"})
+
+        soup = draw(TAG, formset=formset, helper=layout_helper(layout))
+
+        assert len(soup.find_all(attrs={"role": "alert"})) == 1
+        assert soup.find("ul") is None
+        for name in MANAGEMENT:
+            assert len(soup.find_all(attrs={"name": formset.add_prefix(name)})) == 1
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_no_spare_empty_form_is_drawn(self, draw, layout):
+        formset = OrderedLineFormSet()
+
+        soup = draw(TAG, formset=formset, helper=layout_helper(layout))
+
+        names = [tag["name"] for tag in soup.find_all(attrs={"name": True})]
+        assert not [name for name in names if "__prefix__" in name]
 
     @pytest.mark.parametrize("layout", LAYOUTS)
     def test_no_error_is_drawn_when_the_helper_turns_errors_off(self, draw, layout):

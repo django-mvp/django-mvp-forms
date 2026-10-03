@@ -43,7 +43,7 @@ _Avoid_: list layout, vertical layout.
 
 **Table layout**:
 The way the pack draws a formset when the helper chooses it: one table, a row
-per form and a column per field.
+per form and a column per visible field.
 _Avoid_: grid, inline layout.
 
 **Field**:

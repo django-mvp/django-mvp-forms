@@ -135,6 +135,17 @@ Plan, *The templates*, *Tests*; research R7.
   `{{ formset|as_crispy_errors }}` with the path `daisyui/errors_formset.html`. CHANGELOG: one
   line.
 
+### T008 — Review fixes to the error tests and the README
+
+**Files**: `tests/forms.py`, `tests/test_pack/test_formsets.py`, `README.md`, `CONTEXT.md`
+
+- Tests: damaged management data draws the formset-wide error alone, with no list of Django's
+  beside it (CR-003); a form's own message and a column heading holding markup are escaped in
+  both layouts (CR-004); no drawn name belongs to a spare empty form (CR-005).
+- README: a layout that names `DELETE` needs every form to have it (CR-001); a form marked for
+  deletion still shows its own field errors (CR-002); media and buttons are drawn through the tag
+  only. The glossary says a column per visible field.
+
 ---
 
 ## US4 — Delete and ordering inputs match the rest of the pack (P3)

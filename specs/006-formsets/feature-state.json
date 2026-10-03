@@ -192,6 +192,11 @@
             ],
             "verified_by_ci": false
           }
+        },
+        {
+          "id": "T008",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },

@@ -209,3 +209,14 @@ django-crispy-forms: a developer who turns the form element off writes their own
 output, and the token has to be inside it.
 
 **ADR:** none — the single form's existing behaviour, kept the same for a formset.
+
+## D19: Code review, applied
+
+One reviewer read the finished branch and approved it with five low findings and no finding at
+medium or above. All five were fixed, in one small task made directly because each was a sentence
+or a test of a few lines: two README sentences (a layout naming `DELETE` on a formset whose extra
+forms have none, and a deleted form's own field errors), and three tests (damaged management
+data, escaping of a row's own error and a column heading, and no spare empty form). Each new test
+was seen to fail with the template broken on purpose.
+
+**ADR:** none — a record of review edits.
