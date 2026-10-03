@@ -230,3 +230,18 @@ four low findings. All five were applied to the plan and the tasks before any co
 **Why:** each costs a sentence now and a rework later.
 
 **ADR:** none — a record of the review, not a constraint on the code.
+
+## D17. The choices page draws a toggle, so that its test of every size still holds
+
+**Decision:** the demo's `InputKindsForm`, the form of one field of every kind of input on the
+choices page, gains a `toggle` field and states its drawing by name in the choices it is given.
+
+**Why:** FS-007's `test_every_kind_of_input_is_drawn_at_a_stated_size` walks every row of
+`Modifiers.sizes` and finds an input carrying each. The `toggle` rows of T005 add a row the choices
+page did not draw, so the test failed. A toggle is now a kind of input that has a size, and the page
+that shows one of each is the right place for it. The test is not edited.
+
+**Revisit if:** the choices page is split by kind of input, or the test is changed to read the
+drawings page too.
+
+**ADR:** none.
