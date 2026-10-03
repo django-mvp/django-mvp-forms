@@ -328,3 +328,18 @@ page's rating tests, which post stars alone, unchanged.
 field (#116).
 
 **ADR:** none — a choice about the demo page.
+
+## D20. The choices demo page's test looks for a size on the element that holds a rating
+
+**Decision:** the test of the size, colour and variant demo page that checks every kind of input
+is drawn at a stated size also looks at `div` elements. Nothing else in it changed.
+
+**Why:** the test builds its cases from the size table and looks for each size's class on an
+input, a select or a textarea. A rating's size is daisyUI's modifier of the element that holds
+the stars (D4), so no drawing of a rating could satisfy it. The test still fails if the page
+stops drawing any kind of input at a stated size.
+
+**Revisit if:** a later kind of input carries its size somewhere else again, at which point the
+test should ask the pack where.
+
+**ADR:** none — a change to one test of the demo project.

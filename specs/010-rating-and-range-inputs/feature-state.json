@@ -212,8 +212,8 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "blocked",
-          "attempts": 2,
+          "status": "done",
+          "attempts": 3,
           "evidence": {
             "tests": [
               "tests/test_choices.py::TestModifiersRatingAndRange",

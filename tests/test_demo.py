@@ -1933,7 +1933,8 @@ class TestDecoratedFieldsStandaloneMultiWidgetField(MultiWidgetFieldPageContract
 
 
 CHOICES_OVERRIDE_PREFIX = "override"
-INPUT_ELEMENTS = ["input", "select", "textarea"]
+# A rating's size is on the element that holds its stars.
+INPUT_ELEMENTS = ["input", "select", "textarea", "div"]
 BUTTON_ELEMENTS = ["input", "button"]
 INPUT_COMPONENTS = [name for name in Modifiers.sizes if name != Modifiers.button]
 COMPONENTS_OF = {
