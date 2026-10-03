@@ -301,6 +301,7 @@ class TestModifiersDrawings:
             "toggle": "toggle",
             "switch": "toggle",
             "rating": "rating",
+            "range": "range",
         }
 
 

@@ -2126,3 +2126,156 @@ class TestFieldInputRating:
         field_input = rated("pick", choices=FormChoices(size="lg"))
 
         assert field_input.modifiers == []
+
+
+class OwnNumberInput(forms.NumberInput):
+    pass
+
+
+class RangeFieldsForm(forms.Form):
+    volume = forms.IntegerField(min_value=0, max_value=100, step_size=5)
+    bare = forms.IntegerField(required=False)
+    ratio = forms.FloatField(required=False)
+    price = forms.DecimalField(required=False, max_digits=5, decimal_places=2)
+    own = forms.IntegerField(required=False, widget=OwnNumberInput)
+    classed = forms.IntegerField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "mine", "data-own": "yes"}),
+    )
+    text = forms.CharField(required=False)
+    pick = forms.ChoiceField(choices=STARS)
+    flag = forms.BooleanField(required=False)
+    local_count = forms.IntegerField(required=False, localize=True)
+    local_price = forms.DecimalField(required=False, localize=True)
+    secret = forms.IntegerField(widget=forms.HiddenInput)
+
+
+def ranged(name, form=None, **kwargs):
+    kwargs.setdefault("placed", Choice(drawing="range"))
+    return FieldInput((form or RangeFieldsForm())[name], **kwargs)
+
+
+class TestFieldInputRange:
+    @pytest.mark.parametrize("name", ["volume", "bare", "ratio", "price", "own"])
+    def test_a_number_field_takes_range_and_nothing_else(self, name):
+        field_input = FieldInput(RangeFieldsForm()[name])
+
+        assert field_input.drawings_of(field_input.field.field.widget) == ("range",)
+
+    @pytest.mark.parametrize("name", ["volume", "ratio", "price", "own"])
+    def test_a_range_stated_in_a_layout_gives_the_range_component(self, name):
+        field_input = ranged(name)
+
+        assert field_input.drawing == "range"
+        assert field_input.component == "range"
+
+    @pytest.mark.parametrize("name", ["volume", "ratio", "price", "own"])
+    def test_a_range_stated_by_name_gives_the_range_component(self, name):
+        choices = FormChoices(fields={name: Choice(drawing="range")})
+
+        field_input = ranged(name, choices=choices, placed=None)
+
+        assert field_input.component == "range"
+
+    def test_the_drawing_in_a_layout_wins_over_the_one_stated_by_name(self):
+        choices = FormChoices(fields={"volume": Choice(drawing="range")})
+
+        field_input = ranged("volume", choices=choices, placed=Choice(drawing=None))
+
+        assert field_input.component == "input"
+
+    def test_a_range_is_one_input_to_the_frame(self):
+        assert not ranged("volume").is_group
+
+    @pytest.mark.parametrize(
+        ("name", "allowed"),
+        [
+            ("text", ()),
+            ("pick", ("rating",)),
+            ("flag", ("checkbox", "toggle", "switch")),
+            ("local_count", ()),
+            ("local_price", ()),
+        ],
+    )
+    def test_a_field_that_is_not_a_number_field_refuses_range(self, name, allowed):
+        with pytest.raises(InvalidChoice) as caught:
+            ranged(name)
+
+        assert caught.value.kind == "drawing"
+        assert caught.value.value == "range"
+        assert caught.value.allowed == allowed
+        assert caught.value.target == name
+
+    @pytest.mark.parametrize("drawing", ["checkbox", "toggle", "switch", "rating"])
+    def test_another_drawing_stated_for_a_number_field_is_refused_with_range_allowed(
+        self, drawing
+    ):
+        with pytest.raises(InvalidChoice) as caught:
+            ranged("volume", placed=Choice(drawing=drawing))
+
+        assert caught.value.value == drawing
+        assert caught.value.allowed == ("range",)
+        assert caught.value.target == "volume"
+
+    @pytest.mark.parametrize("drawing", [None, INHERIT])
+    def test_none_and_inherit_state_nothing(self, drawing):
+        field_input = ranged("volume", placed=Choice(drawing=drawing))
+
+        assert field_input.drawing is None
+
+    def test_a_hidden_field_with_range_stated_raises_nothing(self):
+        assert ranged("secret").drawing is None
+
+    def test_the_widget_is_drawn_from_a_copy_of_type_range(self):
+        form = RangeFieldsForm()
+        own = form.fields["volume"].widget
+
+        widget = ranged("volume", form).widget
+
+        assert widget is not own
+        assert widget.input_type == "range"
+        assert isinstance(widget, forms.NumberInput)
+
+    def test_a_subclass_of_number_input_is_drawn_as_a_copy_of_itself(self):
+        widget = ranged("own").widget
+
+        assert isinstance(widget, OwnNumberInput)
+        assert widget.input_type == "range"
+
+    def test_a_draw_leaves_the_forms_own_widget_as_it_was(self):
+        form = RangeFieldsForm()
+        own = form.fields["volume"].widget
+        before = (type(own), own.input_type, copy.deepcopy(own.attrs))
+
+        ranged("volume", form).render()
+
+        assert form.fields["volume"].widget is own
+        assert (type(own), own.input_type, own.attrs) == before
+
+    def test_the_range_is_drawn_as_one_input_of_type_range(self, parse):
+        soup = parse(ranged("volume").render())
+
+        tags = soup.find_all("input")
+
+        assert [tag["type"] for tag in tags] == ["range"]
+        assert "range" in tags[0]["class"]
+
+    def test_a_range_takes_a_width_unless_the_developers_class_holds_one(self):
+        form = RangeFieldsForm()
+        form.fields["classed"].widget.attrs["class"] = "w-24"
+
+        assert "w-full" in ranged("volume").css_class.split()
+        assert "w-full" not in ranged("classed", form).css_class.split()
+
+    def test_a_field_in_error_carries_range_error(self):
+        form = RangeFieldsForm({"volume": "500"})
+
+        assert "range-error" in ranged("volume", form).css_class.split()
+
+    def test_a_field_not_in_error_carries_no_error_class(self):
+        assert "range-error" not in ranged("volume").css_class.split()
+
+    def test_text_attached_to_a_range_is_not_held(self):
+        field_input = ranged("volume", prepended="$")
+
+        assert not field_input.has_attached_text

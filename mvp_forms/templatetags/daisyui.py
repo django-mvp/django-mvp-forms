@@ -85,8 +85,8 @@ class FieldInput:
             field is not one daisyUI has, or the field states one its input has
             no modifier for. A drawing the field states is not one of the
             drawings its widget takes: a boolean field's three, ``"rating"``
-            for a select or a radio group that holds one choice, and none for
-            any other widget.
+            for a select or a radio group that holds one choice, ``"range"``
+            for a number input, and none for any other widget.
     """
 
     components: dict[type[forms.Widget], str] = {
@@ -146,6 +146,7 @@ class FieldInput:
         "radio": "radio-error",
         "file-input": "file-input-error",
         "rating": "bg-error",
+        "range": "range-error",
     }
 
     def __init__(
@@ -221,10 +222,13 @@ class FieldInput:
             The three drawings of a boolean field for a checkbox. ``"rating"``
             for a select or a radio group that holds one choice, is not a
             null-boolean select, and still names its Django class's own
-            template and option template. Nothing for any other widget.
+            template and option template. ``"range"`` for a number input.
+            Nothing for any other widget.
         """
         if isinstance(widget, forms.CheckboxInput):
             return self.boolean_drawings
+        if isinstance(widget, forms.NumberInput):
+            return ("range",)
         for widget_class in self.single_choice_widgets:
             if (
                 isinstance(widget, widget_class)
@@ -359,6 +363,10 @@ class FieldInput:
         widget: forms.Widget = self.field.field.widget
         if self.drawing == "rating" and isinstance(widget, ChoiceWidget):
             return self.rating_widget(widget)
+        if self.drawing == "range" and isinstance(widget, forms.NumberInput):
+            drawn = copy.copy(widget)
+            drawn.input_type = "range"
+            return drawn
         if self.template_name:
             widget = copy.copy(widget)
             widget.template_name = self.template_name
@@ -923,7 +931,7 @@ def daisyui_field(context: Context, field: BoundField, **decoration: Any) -> Fie
 
     Raises:
         InvalidChoice: A choice that applies to the field is not one daisyUI has,
-            or a drawing is stated for a field that is not a boolean field.
+            or a drawing is stated that the field's widget does not take.
         TypeError: The form's helper holds a ``daisyui`` attribute that is not a
             ``FormChoices``.
     """

@@ -28,8 +28,8 @@ class InvalidChoice(ValueError):
         allowed: The names allowed, in daisyUI's order. Empty when the input
             drawn has no modifier of this kind at all, or when a drawing was
             stated for a field that takes none. For a drawing, the names the
-            field takes: the three of a boolean field, or ``"rating"`` for a
-            field that holds one choice.
+            field takes: the three of a boolean field, ``"rating"`` for a
+            field that holds one choice, or ``"range"`` for a number field.
         target: The field's name, or the button's name or content, when the
             statement was made for one of them. None when the form made it.
     """
@@ -236,6 +236,7 @@ class Modifiers:
         "toggle": "toggle",
         "switch": "toggle",
         "rating": "rating",
+        "range": "range",
     }
 
     tables: ClassVar[dict[str, dict[str, dict[str, str]]]] = {
@@ -341,8 +342,8 @@ class Choice(LayoutObject):
         variant: The variant, or ``INHERIT``.
         drawing: How a field is drawn, or ``INHERIT``. A boolean field takes
             ``"checkbox"``, ``"toggle"`` or ``"switch"``, and a field that holds
-            one choice, a select or a radio group, takes ``"rating"``. Any other
-            field takes none.
+            one choice, a select or a radio group, takes ``"rating"``, and a
+            number field takes ``"range"``. Any other field takes none.
     """
 
     context_name = "daisyui_choice"
