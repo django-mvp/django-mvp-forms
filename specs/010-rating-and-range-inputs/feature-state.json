@@ -212,8 +212,43 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "blocked",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_choices.py::TestModifiersRatingAndRange",
+              "tests/test_pack/test_rating.py::TestRatingSizeAndColour",
+              "tests/test_pack/test_range.py::TestRangeSizeAndColour",
+              "tests/test_pack/test_rating.py::TestRatingMistakes",
+              "tests/test_pack/test_range.py::TestRangeMistakes",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_independence.py::TestModifierTables",
+              "tests/test_pack/test_documented_examples.py::TestReadmeRatingAndRangeSizeAndColour",
+              "tests/test_demo.py::TestRatingAndRangePage",
+              "tests/test_demo.py::TestStandaloneRatingAndRangePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py -x -q",
+              "uv run pytest tests/test_pack/test_rating.py tests/test_pack/test_range.py -q -n auto",
+              "uv run pytest tests/test_demo.py -q -n auto",
+              "uv run pytest -n auto --dist loadscope -q --maxfail=1000",
+              "forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-010-rating-and-range-inputs --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/choices.py:121",
+              "mvp_forms/choices.py:128",
+              "mvp_forms/choices.py:214",
+              "mvp_forms/choices.py:224",
+              "mvp_forms/templatetags/daisyui.py:456",
+              "mvp_forms/templatetags/daisyui.py:464",
+              "demo/forms.py:1208",
+              "demo/forms.py:1240",
+              "demo/views.py:994",
+              "tests/test_pack/test_rating.py:538",
+              "tests/test_pack/test_range.py:392"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }
