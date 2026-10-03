@@ -20,3 +20,10 @@ Did: KnownExceptions and the report command (python -m tests.legibility); TestEv
 Verified: uv run pytest -n auto --dist loadscope: 3447 passed. FR-010: rendered all 73 STATES entries before and after with a throwaway script under /tmp/fs012/work, stripped class attributes and the random tab and accordion ids: identical (a second render at the base is the control). No earlier test needed a change: they find the label by class_="label", which still matches, and none asserts text-error.
 Next: Forge reviews the story.
 Watch: the end-of-file hook adds one trailing newline to tests/data/daisyui-themes.css, so it is the CDN file plus that newline.
+
+## 2026-10-03T22:47:47Z · Implementer US2 · T004
+
+Did: TestTheCheckCatches (help text without its ink, the failure text, stale, unlisted, an added theme read and checked, Uncovered) and TestCoverage (every daisyUI class literal in a pack template is drawn by a catalogue state; every disabled control's pairings are unheld with a ratio under every theme; dimmed has every theme). The failure text moved into KnownExceptions.failures, which TestEveryTheme now calls. README Themes: how to run the report and what to do on a failure. Nothing under .github/ changed.
+Verified: uv run pytest tests/test_pack/test_legibility.py -q, 49 passed. Eleven probes, each reverted: the help text template without text-base-content (cupcake fails TestEveryTheme), the fragment keeping its ink, the failure text without state, theme or pairing, stale and unlisted reversed, Themes.read dropping or skipping the added theme, the reader no longer raising Uncovered, a literal in a branch no state draws, a state dropped from the catalogue, disabled content held, not read, or missing a theme, the README row gaining or losing a theme. Every one failed its test for the right reason. No gap in tests/legibility/ turned up.
+Next: full verify, then the report.
+Watch: the coverage test reads the template sources, so a class written only in a Python module is not covered by it.

@@ -152,8 +152,28 @@
       "tasks": [
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_legibility.py::TestTheCheckCatches",
+              "tests/test_pack/test_legibility.py::TestCoverage",
+              "tests/test_pack/test_legibility.py::TestEveryTheme"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_legibility.py -q",
+              "uv run python -m tests.legibility",
+              "uv run pre-commit run --all-files",
+              "uv run mypy"
+            ],
+            "code": [
+              "tests/legibility/exceptions.py:42",
+              "tests/test_pack/test_legibility.py:69",
+              "tests/test_pack/test_legibility.py:168",
+              "README.md:860"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
