@@ -62,6 +62,18 @@
         "DR-005 (low) ButtonHolder accepts no attributes: applied to plan and T005",
         "DR-006 (low) the demo gains a row holding fields with no column: applied to plan and T006"
       ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T17:08:13Z",
+      "self_resolved": [
+        "CR-001 (medium) a StrictButton added to the helper is drawn by its own render: fixed, T010",
+        "CR-002 (low) a helper-added value is drawn as written and template= is layout only: kept as django-crispy-forms has it, README states both, T010",
+        "CR-003 (low) hidden inputs drawn outside the buttons' container, no container without a button: fixed, T010",
+        "CR-004 (low) the four dropped class names are named in the README: fixed, T010",
+        "CR-005 (low) every documented example names an element drawn once: fixed, T011",
+        "CR-006 (low) the demo's legend and note are wrapped for translation: fixed, T011"
+      ]
     }
   },
   "stories": [
