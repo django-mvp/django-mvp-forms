@@ -25,6 +25,14 @@ class ShortTextInput(forms.TextInput):
     pass
 
 
+class OptionalRequiredAttributeForm(forms.Form):
+    use_required_attribute = False
+
+    name = forms.CharField()
+    nickname = forms.CharField(required=False)
+    choice = forms.ChoiceField(choices=[("a", "A")], widget=forms.RadioSelect)
+
+
 class UncoveredForm(forms.Form):
     choice = forms.ChoiceField(choices=[("a", "A")])
     short = forms.CharField(widget=ShortTextInput)
@@ -76,3 +84,21 @@ class TestFieldInput:
             FieldInput(form[name]).render()
 
         assert {n: f.widget.attrs for n, f in form.fields.items()} == before
+
+    def test_a_required_field_gets_aria_required_when_the_form_drops_required(self):
+        field_input = FieldInput(OptionalRequiredAttributeForm()["name"])
+
+        assert field_input.attrs["aria-required"] == "true"
+
+    def test_a_form_that_keeps_required_needs_no_aria_required(self):
+        assert "aria-required" not in FieldInput(TextInputsForm()["text"]).attrs
+
+    def test_an_optional_field_gets_no_aria_required(self):
+        field_input = FieldInput(OptionalRequiredAttributeForm()["nickname"])
+
+        assert "aria-required" not in field_input.attrs
+
+    def test_a_grouped_widget_gets_no_aria_attribute(self):
+        field_input = FieldInput(OptionalRequiredAttributeForm()["choice"])
+
+        assert "aria-required" not in field_input.attrs

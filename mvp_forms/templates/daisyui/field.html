@@ -3,7 +3,11 @@
   {{ field }}
 {% else %}
   <div{% if field.auto_id %} id="div_{{ field.auto_id }}"{% endif %} class="fieldset">
-    <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %}>{{ field.label }}</label>
+    {% if field.label %}
+      <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="fieldset-legend">
+        {{ field.label }}{% if field.field.required %} <span aria-hidden="true" class="text-error">*</span>{% endif %}
+      </label>
+    {% endif %}
     {% daisyui_input field %}
     {% if field.help_text %}
       <p{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %} class="label">{{ field.help_text }}</p>

@@ -49,9 +49,25 @@ class FieldInput:
     @property
     def attrs(self) -> dict[str, str | bool]:
         """The attributes the pack adds to the widget for this render."""
+        attrs: dict[str, str | bool] = {}
         if self.component:
-            return {"class": self.css_class}
-        return {}
+            attrs["class"] = self.css_class
+        if self.requires_aria_required:
+            attrs["aria-required"] = "true"
+        return attrs
+
+    @property
+    def requires_aria_required(self) -> bool:
+        """Whether the requirement must reach assistive technology by ARIA.
+
+        Django writes ``required`` itself unless the form turns it off, and a
+        grouped widget copies its attributes onto every option.
+        """
+        return (
+            self.field.field.required
+            and not self.field.form.use_required_attribute
+            and not self.field.use_fieldset
+        )
 
     def render(self) -> SafeString:
         """Return the widget drawn with the pack's attributes.

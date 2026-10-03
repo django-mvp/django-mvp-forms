@@ -16,3 +16,10 @@ Did: whole_uni_form.html and display_form.html so `{% crispy form %}` draws the 
 Verified: red first (TemplateDoesNotExist daisyui/whole_uni_form.html; missing help text and error ids), then `uv run pytest tests/test_templatetags tests/test_pack tests/test_demo.py` 43 passed; pre-commit clean. The bound-value, single-field and empty-filter tests passed on first run: T001's as_widget path already satisfied them, so they pin existing behaviour.
 Next: US2, the label marker, aria hooks and error modifier.
 Watch: the layout path of the tag (FormHelper(form)) was confirmed to go through form.form_html; the form element and token have no tests yet (US3).
+
+## 2026-10-03T15:32:48Z · Implementer US2 · T003
+
+Did: the label drawn as the frame's caption (fieldset-legend) with a marker span, aria-hidden, on required fields; no label element when the label is empty; FieldInput.attrs gains aria-required="true" through requires_aria_required, when the field is required, the form turns use_required_attribute off and the widget is not a group. Tests in test_field_frame.py (TestLabel, TestRequiredMarker) and four in TestFieldInput.
+Verified: red first, 5 failed for the right reason (no marker, an empty label element left behind, no aria-required); then `uv run pytest tests/test_pack tests/test_templatetags tests/test_demo.py` 54 passed; pre-commit clean. Passed on first run, pinning markup US1 already had: label for equals the input id, required on the input, an optional field has no marker, no aria-required when the form keeps required, none on an optional field, none on a grouped widget. Mutation probes: dropping the use_fieldset guard failed the grouped test, dropping the use_required_attribute condition failed the keeps-required test.
+Next: T004, errors and help text tied to the input.
+Watch: label_class and form_show_labels are US3 (T006), so the label ignores both for now.
