@@ -19,3 +19,17 @@ Did: CONTEXT.md defines formset, stacked layout and table layout and keeps form 
 Verified: pre-commit run --all-files passed. No docs/ page describes formsets (docs/ROADMAP.md only lists the item, unchanged).
 Next: full verify, then the report.
 Watch: the README says nothing of the table layout, which a later story adds.
+
+## 2026-10-03T17:56:39Z · Implementer US2 · T003
+
+Did: added FormsetTable (columns, rows) and the daisyui_formset_table tag to mvp_forms/templatetags/daisyui.py, with TestFormsetTable (9 tests) in tests/test_templatetags/test_daisyui.py. Red first: ImportError for FormsetTable.
+Verified: uv run pytest tests/test_templatetags/test_daisyui.py::TestFormsetTable -x, 9 passed; uv run pre-commit run --all-files passed.
+Next: T004, the table template and TestTableFormset.
+Watch: the cell list for a row with no columns is [None]; a form is assumed to have the first form fields.
+
+## 2026-10-03T17:58:54Z · Implementer US2 · T004
+
+Did: added daisyui/table_inline_formset.html (form wrapper, media once, management form field by field, one overflow-x-auto div holding table.table, a th scope=col per visible field with the required marker, a row per form with hidden fields in the first cell, each field drawn by field_template with form_show_labels=False, inputs.html once; no table when there are no rows). Added TestTableFormset (24 tests), ChoiceLineForm and ChoiceLineFormSet in tests/forms.py, a table formset state and overflow-x-auto in test_independence.py, README section and CHANGELOG line.
+Verified: uv run pytest tests/test_pack/test_formsets.py::TestTableFormset tests/test_pack/test_independence.py, 98 passed; red first was TemplateDoesNotExist. Probes: dropping the hidden-field loop fails 8 tests, dropping the required marker fails 1.
+Next: US3 adds formset-wide and row errors.
+Watch: the template reads no form.form_html; a form missing a column gets an empty cell.
