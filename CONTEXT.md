@@ -81,21 +81,40 @@ _Avoid_: style, look.
 **Choice**:
 A size, a colour, a variant or a drawing stated in Python, for a form, for one
 field or for one button. The four are independent of each other. A drawing is
-stated for one boolean field at a time and never for a form.
+stated for one field at a time and never for a form.
 _Avoid_: option, setting, modifier (a modifier is the daisyUI class a choice
 means).
 
 **Drawing**:
-How a boolean field is drawn: `checkbox`, `toggle` or `switch`. A toggle and a
-switch are both daisyUI's toggle, and a switch also tells assistive technology
-it is a switch. A field that states none is drawn as a checkbox.
+How a field is drawn when its widget allows more than one way. A boolean field
+takes `checkbox`, `toggle` or `switch`, and a single-choice field takes
+`rating`. A toggle and a switch are both daisyUI's toggle, and a switch also
+tells assistive technology it is a switch. A field that states none is drawn as
+its widget is: a boolean field as a checkbox, a single-choice field as a select
+or a radio group. Any other field takes none.
 _Avoid_: style, look, type (an input's type is the HTML attribute).
 
 **Boolean field**:
 A field whose widget is a Django `CheckboxInput`, or a subclass of one, such as
-a `BooleanField`. It is the only kind of field that takes a drawing. A
+a `BooleanField`. It takes the drawings `checkbox`, `toggle` and `switch`. A
 null-boolean select and a checkbox group are not boolean fields.
 _Avoid_: checkbox field, switch field.
+
+**Single-choice field**:
+A field whose widget is a Django `Select` or `RadioSelect`, or a subclass of
+either that still uses Django's own templates, and that holds one value, such as
+a `ChoiceField` or a `ModelChoiceField`. It takes the drawing `rating`. A
+multiple select, a checkbox group and a null-boolean select are not
+single-choice fields.
+_Avoid_: dropdown field, radio field.
+
+**Rating**:
+The drawing of a single-choice field as daisyUI's rating: one star for each
+choice that has a value, drawn as bare radio inputs in the field's order. The
+choice whose value is the empty string is not a star but the way to clear the
+rating. A rating is a group, framed by a fieldset and a legend as a radio group
+is.
+_Avoid_: stars, star field.
 
 ## Terms deliberately not used
 

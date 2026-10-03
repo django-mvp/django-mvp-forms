@@ -90,8 +90,33 @@
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_rating.py::TestRating",
+              "tests/test_pack/test_rating.py::TestRatingKeepsWhatARadioGroupHas",
+              "tests/test_pack/test_rating.py::TestRatingAmongOtherFields",
+              "tests/test_pack/test_rating.py::TestRatingMistakes",
+              "tests/test_pack/test_documented_examples.py::TestReadmeRating",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_rating.py -q",
+              "uv run pytest tests/test_pack tests/test_templatetags tests/test_choices.py -q -n auto --dist loadscope",
+              "uv run python /tmp/fs010/render_states.py /tmp/fs010/after.json /tmp/fs010/ids.json && uv run python /tmp/fs010/compare.py"
+            ],
+            "code": [
+              "README.md:717",
+              "CONTEXT.md:103",
+              "CHANGELOG.md:25",
+              "tests/forms.py:761",
+              "tests/test_pack/test_rating.py:77",
+              "tests/test_pack/test_independence.py:384",
+              "tests/test_pack/test_documented_examples.py:488"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T003",

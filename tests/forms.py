@@ -752,3 +752,112 @@ class KeptBooleansForm(forms.Form):
         self.helper.form_show_labels = show_labels
         if choices is not None:
             self.helper.daisyui = choices
+
+
+STAR_CHOICES = [(str(count), f"{count} stars") for count in range(1, 6)]
+CLEARABLE_STARS = [("", "No answer"), (1, "Poor"), (2, "Fair"), (3, "Good")]
+
+
+class RatingsForm(forms.Form):
+    score = forms.ChoiceField(choices=STAR_CHOICES, label="How would you rate this?")
+    again = forms.TypedChoiceField(
+        choices=CLEARABLE_STARS, coerce=int, empty_value=None, required=False
+    )
+    other = forms.ChoiceField(choices=STAR_CHOICES, required=False)
+    kind = forms.ChoiceField(
+        choices=STAR_CHOICES, widget=forms.RadioSelect, required=False
+    )
+    title = forms.CharField(required=False)
+
+    def __init__(self, *args, layout=None, choices=None, show_labels=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.form_show_labels = show_labels
+        if layout is not None:
+            self.helper.layout = Layout(*layout)
+        if choices is not None:
+            self.helper.daisyui = choices
+
+
+class RadioRatingsForm(RatingsForm):
+    score = forms.ChoiceField(
+        choices=STAR_CHOICES,
+        label="How would you rate this?",
+        widget=forms.RadioSelect,
+    )
+    again = forms.TypedChoiceField(
+        choices=CLEARABLE_STARS,
+        coerce=int,
+        empty_value=None,
+        required=False,
+        widget=forms.RadioSelect,
+    )
+
+
+class KeptRatingsForm(RatingsForm):
+    score = forms.ChoiceField(
+        choices=STAR_CHOICES, label="Score", help_text="Pick a star"
+    )
+    kind = forms.ChoiceField(
+        choices=STAR_CHOICES,
+        label="Kind",
+        help_text="Pick a star",
+        widget=forms.RadioSelect,
+    )
+    locked = forms.ChoiceField(
+        choices=STAR_CHOICES, label="Locked", required=False, disabled=True
+    )
+
+
+class EdgeChoicesForm(RatingsForm):
+    zero_first = forms.TypedChoiceField(
+        choices=[(0, "Zero"), (1, "One"), (2, "Two")], coerce=int
+    )
+    empty_last = forms.ChoiceField(
+        choices=[*STAR_CHOICES, ("", "No answer")], required=False
+    )
+    named = forms.ChoiceField(
+        choices=[
+            ("First group", [("1", "One"), ("2", "Two")]),
+            ("Second group", [("3", "Three")]),
+        ]
+    )
+    none = forms.ChoiceField(choices=[], required=False)
+
+
+class DevelopersRatingForm(RatingsForm):
+    score = forms.ChoiceField(
+        choices=CLEARABLE_STARS,
+        required=False,
+        widget=forms.Select(attrs={"class": "mine", "data-own": "yes"}),
+    )
+    kind = forms.ChoiceField(
+        choices=CLEARABLE_STARS,
+        required=False,
+        widget=forms.RadioSelect(attrs={"class": "mine", "data-own": "yes"}),
+    )
+
+
+class ModelRatingForm(RatingsForm):
+    group = forms.ModelChoiceField(
+        queryset=Group.objects.all(), empty_label="Nobody", required=False
+    )
+
+
+class RefusedRatingsForm(RatingsForm):
+    many = forms.MultipleChoiceField(choices=STAR_CHOICES, required=False)
+    boxes = forms.MultipleChoiceField(
+        choices=STAR_CHOICES, widget=forms.CheckboxSelectMultiple, required=False
+    )
+    maybe = forms.NullBooleanField()
+    flag = forms.BooleanField(required=False)
+    secret = forms.ChoiceField(choices=STAR_CHOICES, widget=forms.HiddenInput)
+
+
+class RatedLineForm(forms.Form):
+    name = forms.CharField(required=False)
+    score = forms.ChoiceField(choices=STAR_CHOICES, required=False)
+
+
+RatedLineFormSet = formset_factory(RatedLineForm, extra=3)

@@ -483,3 +483,24 @@ class TestReadmeDrawingSizeAndColour:
         assert "toggle-sm" in set(soup.find(id="id_notify")["class"])
         publish = set(soup.find(id="id_publish")["class"])
         assert {"toggle-sm", "toggle-primary"} <= publish
+
+
+class TestReadmeRating:
+    def test_the_example_stating_a_rating_draws_each_field_as_a_rating(self, draw):
+        form = readme_example("Rating and range")["ReviewForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        for name in ("score", "comfort"):
+            assert "rating" in soup.find(id=f"id_{name}")["class"]
+        assert soup.find("select") is None
+        assert len(soup.find(id="id_score").find_all("input")) == 5
+        assert len(soup.find(id="id_comfort").find_all("input")) == 6
+
+    def test_the_rating_stated_by_name_reaches_the_filter_too(self, draw):
+        form = readme_example("Rating and range")["ReviewForm"]()
+
+        soup = draw("{{ form|crispy }}", form=form)
+
+        assert "rating" in soup.find(id="id_score")["class"]
+        assert soup.find("select", id="id_comfort") is not None

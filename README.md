@@ -589,7 +589,7 @@ For buttons, the same sizes and colours and these variants:
 
 The classes the names mean are written out in the tables of `Modifiers`, in `mvp_forms.choices`, one for sizes, one for colours and one for variants. The keyword is spelt `color`, as daisyUI spells it. The three are independent: changing one leaves the other two as they were. Every one is optional, and a form that states nothing is drawn exactly as it was before.
 
-- `fields` gives one field a `Choice` of its own, by the field's name. Each of size, colour and variant that the `Choice` states wins over the form's for that field, and each it leaves out, which is `INHERIT` and the default, falls back to the form's. A `Choice` also states a drawing for a boolean field, which the form has no statement of: see "Checkbox, toggle and switch" below. `None` is the pack's ordinary drawing, so `Choice(color=None)` undoes the form's colour for that field, as `notes` does above. `INHERIT` is the one value of the type `Inherit`.
+- `fields` gives one field a `Choice` of its own, by the field's name. Each of size, colour and variant that the `Choice` states wins over the form's for that field, and each it leaves out, which is `INHERIT` and the default, falls back to the form's. A `Choice` also states a drawing, which the form has no statement of: see "Checkbox, toggle and switch" and "Rating and range" below. `None` is the pack's ordinary drawing, so `Choice(color=None)` undoes the form's colour for that field, as `notes` does above. `INHERIT` is the one value of the type `Inherit`.
 - Every input of a field takes the choices: each option of a radio or checkbox group, each select of a date, and the removal checkbox of a file field that holds a file, which takes the size and the colour.
 - A choice that one kind of input has no modifier for is passed over for that kind. `variant="ghost"` leaves a checkbox, a toggle and a radio as they are and draws the text input beside them in ghost.
 - A name that is not in the lists above raises `InvalidChoice`, a `ValueError`, when the form is drawn. It carries the `kind`, the `value` and the names `allowed`.
@@ -599,7 +599,7 @@ The classes the names mean are written out in the tables of `Modifiers`, in `mvp
 
 ### One field's own choice
 
-One field can state a size, a colour or a variant of its own, and a boolean field a drawing as well. There are two ways, and they combine.
+One field can state a size, a colour or a variant of its own, and a drawing as well. There are two ways, and they combine.
 
 In a layout, wrap the field in a `Choice`. It draws what it holds, with its choice in force for everything inside it:
 
@@ -708,11 +708,46 @@ Each is still one `<input type="checkbox">` with the field's name, inside the la
 - The drawing is stated one field at a time. `FormChoices` has no `drawing` of its own, so a form cannot say that all its boolean fields are toggles. Name each one in `fields`, or wrap it in a `Choice`.
 - A `Choice` in a layout wins over the one in `fields`, and a `Choice` that leaves the drawing out takes the one around it. `None` is the ordinary drawing, so `Choice("remember", drawing=None)` undoes a drawing stated around it.
 - A field that states no drawing is drawn exactly as it was before, whatever the other fields of the form state.
-- Only a boolean field takes a drawing. A field that is a null-boolean select, a checkbox group, a text input or anything else that is not a `CheckboxInput` does not, and neither does a button.
+- A boolean field takes these three drawings. A field that holds one choice takes the rating of "Rating and range" below, and nothing else takes a drawing: a null-boolean select, a checkbox group, a text input or anything else that is not a `CheckboxInput`, and neither does a button.
 - A hidden boolean field is a hidden input whatever is stated for it.
 - A toggle and a switch take the form's size and colour, and the field's own, like any input: `toggle-sm` and `toggle-primary` for a toggle or a switch, where a checkbox takes `checkbox-sm` and `checkbox-primary`. They have no variant. A variant stated for the form is passed over for them and one stated on the field itself raises `InvalidChoice`, as for a checkbox. A field in error keeps `toggle-error` and is drawn without the colour.
 
-A name that is not one of the three raises `InvalidChoice` with `kind="drawing"`, naming the field as `target`, with `checkbox`, `toggle` and `switch` as the names `allowed`. A drawing of any name, `checkbox` included, stated for a field that is not a boolean field, or around a button, raises the same error with nothing allowed. A `Choice` that holds fields states its drawing for each of them, so `Choice(Row("name", "agree"), drawing="toggle")` raises for a text input `name`. `None` and `INHERIT` state nothing and never raise. A drawing stated by name in `FormChoices(fields=...)` is checked when its field is drawn, so one for a field the layout leaves out is never looked at.
+A name that is not one of the three raises `InvalidChoice` with `kind="drawing"`, naming the field as `target`, with `checkbox`, `toggle` and `switch` as the names `allowed`. A drawing of any name, `checkbox` included, stated for a field that is not a boolean field raises the same error, with `rating` allowed for a field that holds one choice and nothing allowed for any other, and so does one stated around a button, with nothing allowed. A `Choice` that holds fields states its drawing for each of them, so `Choice(Row("name", "agree"), drawing="toggle")` raises for a text input `name`. `None` and `INHERIT` state nothing and never raise. A drawing stated by name in `FormChoices(fields=...)` is checked when its field is drawn, so one for a field the layout leaves out is never looked at.
+
+### Rating and range
+
+A field that holds one choice can be drawn as daisyUI's rating, with one star for each choice. That is a field whose widget is a `Select` or a `RadioSelect`, or a subclass of either that still uses Django's own templates, such as a `ChoiceField`, a `TypedChoiceField` or a `ModelChoiceField`. State it as any drawing is stated, with `drawing="rating"` in a `Choice`, in a layout or by the field's name:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+from mvp_forms.choices import Choice, FormChoices
+
+STARS = [(count, f"{count} stars") for count in range(1, 6)]
+
+
+class ReviewForm(forms.Form):
+    score = forms.ChoiceField(choices=STARS)
+    comfort = forms.ChoiceField(choices=[("", "No answer"), *STARS], required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(fields={"score": Choice(drawing="rating")})
+        self.helper.layout = Layout("score", Choice("comfort", drawing="rating"))
+```
+
+Here `score` is a rating by its name in `FormChoices` and `comfort` is a rating in the layout. The form posts and cleans exactly as it does with a select, because only the way the choices are drawn changes: a person picks a star and the form receives the value of that choice, and the field and its widget are not changed.
+
+- Each choice that has a value is one `<input type="radio">` with the field's name, in the field's order, inside an element with the class `rating`. daisyUI draws every child of a rating as a star, so a star has no `<label>` around it. It is named by an `aria-label` that holds its choice's label as plain text, unless the widget already gives the input one. The pack adds no text of its own.
+- A choice whose value is the empty string is not a star. It is the way to clear the rating, drawn first, whatever its place among the choices, as the input daisyUI hides with `rating-hidden`, so that an optional field can be submitted empty and cleans to its empty value. A choice whose value is `0` is a star. A field with no empty choice offers no way to clear it.
+- A bound or initial value is drawn as the star picked, and a field that holds no value is drawn with no star picked. Choices in named groups are stars in the field's order and the group names are not drawn. A field with no choices is drawn with its frame and no star. A model choice field has its empty label as the way to clear.
+- A select and a radio group with the same choices are drawn as the same inputs. A select is drawn through a radio group that is made for the draw from its attributes and choices, and a radio group is drawn through a copy of itself.
+- A rating keeps what a radio group has. The stars are one group in a `<fieldset>` named by a `<legend>` that holds the field's label and the required marker, and by an `aria-label` on the fieldset when the form draws no labels. The help text and the errors are drawn and describe the fieldset, each star of a field in error is `aria-invalid`, and every star of a disabled field is disabled. A field in error draws its stars in the error colour, `bg-error`. A class or an attribute you set on the widget is on every input of the rating, the one that clears included.
+- A rating is drawn the same through `{{ form|crispy }}` and `{% crispy form %}`, in a formset stacked or as a table, and inside a `Row`, a `Fieldset`, a `Tab` or an `AccordionGroup`. `InlineRadios` around a rating draws the rating, and a layout object that attaches text to an input leaves it as it is. A hidden field is a hidden input whatever is stated for it. The pack adds no script.
+
+A field that cannot be drawn as a rating raises `InvalidChoice` with `kind="drawing"` when the form is drawn, naming the field as `target`. That is a multiple select, a checkbox group, a null-boolean select, a text input, a boolean field, and a select or a radio group whose widget names a template of its own, because the pack cannot draw a rating through a template it does not own. The names `allowed` are the field's own: `rating` for a field that holds one choice, the three drawings of a boolean field for a checkbox, and none for the others.
 
 ### What is refused and what is passed over
 

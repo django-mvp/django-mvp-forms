@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A field that holds one choice, a `Select` or a `RadioSelect` such as a `ChoiceField`, a `TypedChoiceField` or a `ModelChoiceField`, can be drawn as daisyUI's rating, with one star for each choice. State it as the checkbox, toggle and switch are stated, with `Choice(drawing="rating")` in a layout or by the field's name in `FormChoices(fields=...)`. The stars are bare radio inputs with the field's name, in the field's order, and a person picking one submits the value of its choice, so the form validates and cleans exactly as it does with a select or a radio group, and the form's own widget is not changed. A choice whose value is the empty string is the way to clear the rating and is drawn first as the input daisyUI hides, and a choice whose value is `0` is a star. The stars are one group, in a fieldset with a legend, a required marker, help text and errors, as a radio group is, and each star is named by its choice's label. A field in error draws its stars in the error colour, `bg-error`, and a class or an attribute you set on the widget is on every input. A form that states no rating is drawn as before.
+
+### Changed
+
+- `InvalidChoice` for a drawing now names the drawings the field takes in `allowed`: the three of a boolean field, `rating` for a field that holds one choice, and none for any other field. A rating stated for a multiple select, a checkbox group, a null-boolean select, a text input, a boolean field, or a select or radio group that names a template of its own raises it, naming the field.
+
 ## [v0.1.0] - 2026-10-03
 
 ### Added

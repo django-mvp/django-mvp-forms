@@ -394,7 +394,8 @@ class FieldInput:
             drawn.is_required = widget.is_required
             drawn.is_localized = widget.is_localized
         drawn.template_name = self.rating_template
-        drawn.get_context = self.rating_context(drawn.get_context)  # type: ignore[method-assign]
+        context = self.rating_context(drawn.get_context)
+        drawn.get_context = context  # type: ignore[method-assign]
         return drawn
 
     def rating_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
