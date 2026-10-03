@@ -286,3 +286,17 @@ findings were fixed anyway, because each was small.
   same way. The package adds no text of its own.
 
 **ADR:** none — a record of the review; the rules it touched are in ADR 0003, 0005 and 0006.
+
+## D24. Inputs fill the width of their field
+
+**Asked for at the walkthrough, 2026-10-03, on the maintainer's behalf:** every text-like input
+and textarea carries Tailwind's `w-full`.
+
+**Why:** daisyUI's default width of 20rem leaves forms narrow, and an input would not fill a
+column once rows and columns exist. daisyUI has no modifier for a full-width input, so this is
+the case D9 allows a layout utility for. It is named in the class test's short list of allowed
+utilities. No test asserts the width itself, since that is appearance.
+
+**Revisit if:** daisyUI gains a full-width modifier.
+
+**ADR:** docs/adr/0003-daisyui-classes-and-tailwind-for-layout-only.md

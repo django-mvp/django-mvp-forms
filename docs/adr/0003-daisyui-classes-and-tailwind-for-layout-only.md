@@ -13,6 +13,10 @@ A test compares every class the pack writes with the class names in daisyUI's pu
 stylesheet, kept in `tests/data/daisyui-classes.txt`. A feature that needs a layout utility adds
 it to that test by name, so each one is a visible, reviewed exception.
 
+The first such utility is `w-full`, on every text-like input and textarea. daisyUI gives an input
+a fixed width of 20rem and has no modifier for a full-width one, so without it a form stays narrow
+and an input would not fill a column.
+
 ## Why
 
 The pack has to work on a page that has no build step. daisyUI's documented CDN install is its

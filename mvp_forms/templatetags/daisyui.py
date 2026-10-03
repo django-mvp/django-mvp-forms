@@ -36,6 +36,9 @@ class FieldInput:
     }
     # Written out, not built from the component's name, so a host project's
     # Tailwind build finds them when it scans this module.
+    # daisyUI gives an input a fixed width and has no modifier to change it, so
+    # the one Tailwind utility the pack writes makes the input fill its field.
+    width = "w-full"
     error_modifiers: dict[str, str] = {
         "input": "input-error",
         "textarea": "textarea-error",
@@ -58,10 +61,10 @@ class FieldInput:
 
     @property
     def css_class(self) -> str:
-        """The widget's own classes, the component, then its error modifier."""
+        """The widget's own classes, the component, its width, then its error modifier."""
         classes = self.field.field.widget.attrs.get("class", "").split()
         if self.component:
-            classes.append(self.component)
+            classes.extend([self.component, self.width])
             if self.show_errors and self.field.errors:
                 classes.append(self.error_modifiers[self.component])
         return " ".join(dict.fromkeys(classes))

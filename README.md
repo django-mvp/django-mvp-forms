@@ -46,10 +46,11 @@ INSTALLED_APPS = [
 ]
 ```
 
-The host project supplies daisyUI itself. This package ships markup, not a stylesheet. Pages that draw these forms must load daisyUI 5. Its CDN build needs no build step, so a single stylesheet link in the page's `<head>` is enough:
+The host project supplies daisyUI itself. This package ships markup, not a stylesheet. Pages that draw these forms must load daisyUI 5. Its CDN build needs no build step, so daisyUI's own CDN install in the page's `<head>` is enough:
 
 ```html
 <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 ```
 
 A host project with its own Tailwind build has to make that build produce the classes the pack writes. Tailwind only generates a class it finds in the files it scans, so point it at the whole installed `mvp_forms` package: the classes are written in its templates and in its template tags.
@@ -89,6 +90,7 @@ Draw it in a template of a page that loads daisyUI:
 <html lang="en">
   <head>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   </head>
   <body>
     <form method="post">
@@ -112,6 +114,8 @@ These inputs are drawn as daisyUI components, whichever way crispy-forms is aske
 
 - text, email, URL, number, password, date, time and date-time inputs, as `input`
 - textareas, as `textarea`
+
+Each of them fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`, the one utility it writes. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
 
 Errors that belong to the form as a whole are drawn once, in an element with `role="alert"` ahead of the fields. A form with none draws no such element, and `{{ form|as_crispy_errors }}` draws the same element on its own.
 

@@ -28,6 +28,9 @@ LABEL_CLASS = "supplied-by-label-class"
 FIELD_CLASS = "supplied-by-field-class"
 FORM_CLASS = "supplied-by-form-class"
 HELPER_CLASSES = {LABEL_CLASS, FIELD_CLASS, FORM_CLASS}
+# Tailwind utilities the pack writes where daisyUI has no class for the job.
+# Each is named here so that adding one is a reviewed change.
+LAYOUT_UTILITIES = {"w-full"}
 
 
 def helped(form, **settings):
@@ -142,7 +145,7 @@ class TestEmittedClasses:
         written = classes_in(soup) - supplied
 
         assert written
-        assert written <= daisyui_classes, written - daisyui_classes
+        assert written <= daisyui_classes | LAYOUT_UTILITIES, written - daisyui_classes
 
     def test_the_classes_the_forms_supplied_are_drawn(self, draw):
         soup = draw("{% crispy form %}", form=supplying_classes(DeveloperAttrsForm({})))

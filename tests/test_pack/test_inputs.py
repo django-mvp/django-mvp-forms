@@ -47,7 +47,7 @@ class TestCoveredInputs:
         name, born, notes = (soup.find(id=f"id_{n}") for n in ("name", "born", "notes"))
 
         assert name["placeholder"] == "Your name"
-        assert name["class"] == ["wide", "input"]
+        assert {"wide", "input"} <= set(name["class"])
         assert born["type"] == "date"
         assert "input" in born["class"]
         assert notes["rows"] == "3"

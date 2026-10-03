@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The `daisyui` template pack for django-crispy-forms. Select it with `CRISPY_ALLOWED_TEMPLATE_PACKS = ["daisyui"]` and `CRISPY_TEMPLATE_PACK = "daisyui"`, and a form's text, email, URL, number, password, date, time and date-time inputs and textareas are drawn as daisyUI components with no layout written. A field with any other widget is still drawn in place.
+- The `daisyui` template pack for django-crispy-forms. Select it with `CRISPY_ALLOWED_TEMPLATE_PACKS = ["daisyui"]` and `CRISPY_TEMPLATE_PACK = "daisyui"`, and a form's text, email, URL, number, password, date, time and date-time inputs and textareas are drawn as daisyUI components with no layout written, each filling the width of its field. A field with any other widget is still drawn in place.
 - Each field is drawn with its label, a required marker, its help text and every error message. The label is tied to the input, and the input is marked required, marked invalid and described by its help text and errors, so assistive technology announces them with the field. Labels, help text and errors are escaped.
 - Errors that belong to a form as a whole are drawn once, in an element with `role="alert"`, through `|crispy`, `{% crispy %}` and `|as_crispy_errors`.
 - Through `{% crispy %}` the pack draws the form element and its CSRF token, and honours the `FormHelper` settings for the form element, labels, errors, `label_class` and `field_class`. `help_text_inline` and `error_text_inline` are ignored.

@@ -78,6 +78,15 @@ Plan, *The form templates*; research R1.
   no fields draws no field and raises nothing, and through the tag still has its form element
   (edge case).
 
+### T012 — Inputs fill the width of their field
+
+**Files**: `mvp_forms/templatetags/daisyui.py`, `tests/test_pack/test_independence.py`,
+`tests/test_pack/test_inputs.py`, `tests/test_templatetags/test_daisyui.py`, `README.md`,
+`docs/adr/0003-daisyui-classes-and-tailwind-for-layout-only.md`
+
+Asked for at the walkthrough. Every text-like input and textarea carries `w-full`, which the
+class test allows by name. The width itself gets no test.
+
 ---
 
 ## US2 — Label, required marker, help text and errors belong to their input (P1)
