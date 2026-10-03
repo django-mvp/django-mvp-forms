@@ -188,3 +188,13 @@ One reviewer read the plan before any code, as a check on fit with the specifica
 **Revisit if:** A host project needs `css_id` honoured on a hidden input.
 
 **ADR:** none — decided at D12
+
+## D20. The demo's MultiField takes email and a new phone field, and the Div keeps the note
+
+**Decision:** `LayoutObjectsForm` gains a required `phone` text field. Its `MultiField` ("How to reach you", id `<prefix>-contact`) holds `email` and `phone`, and the `Div` now holds `note` alone.
+
+**Why:** django-crispy-forms draws a field named twice twice, so the `email` the `Div` held could not also sit in the group, and a group of one field shows nothing about a shared label. A second text field keeps the demo to text fields (D8).
+
+**Revisit if:** The demo form's fields change.
+
+**ADR:** none — a demo arrangement

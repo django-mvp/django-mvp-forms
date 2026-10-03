@@ -58,3 +58,10 @@ Did: wrote TestMultiField (16 tests, red on the missing daisyui/multifield.html)
 Verified: uv run pytest tests/test_pack/test_structure.py::TestMultiField (16 passed), tests/test_pack/test_independence.py and tests/test_demo.py (291 passed). The demo tests were red against the old demo form (10 failed) and green after. pre-commit and mypy clean.
 Next: T009, the documented examples.
 Watch: MultiField appends " error" to its own css_class on each draw with errors; the filter drops repeats and "error", and a test draws one layout twice. docs/ROADMAP.md line 55 still lists fieldsets, divs, rows and columns as a plan; not in this story's files.
+
+## 2026-10-03T16:56:55Z · Implementer US4 · T009
+
+Did: tests/test_pack/test_documented_examples.py draws every example from the installed django-crispy-forms docstrings (Fieldset, Div, Row, Column, HTML, Submit, Reset, Button, Hidden, ButtonHolder, FormActions, StrictButton), unbound and invalid, against DocumentedExamplesForm (new in tests/forms.py), 42 cases. The three examples that did not parse (ButtonHolder, FormActions, Column) are repaired by quoting the string and nothing else. The four input objects are built with the arguments their docstrings show and placed in a layout. test_demo.py gains one parametrised test that each of the thirteen objects is on both pages exactly once, by id or name. README's Layout objects part names all thirteen and its status line now says the structural and button layout objects are drawn.
+Verified: uv run pytest tests/test_pack/test_documented_examples.py (42 passed); with daisyui/layout/buttonholder.html moved away the two ButtonHolder cases failed, then restored. tests/test_demo.py -k every_layout_object 52 passed. pre-commit and mypy clean.
+Next: the full verify, ledger rows, report.
+Watch: the examples are drawn with no user in the context, so a context-aware legend or content draws an empty value. docs/ROADMAP.md line 55 still lists fieldsets, divs, rows and columns as plans.
