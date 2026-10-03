@@ -18,6 +18,7 @@ from demo.forms import (
     ChoiceInputsForm,
     ChosenGroupsForm,
     DrawingsForm,
+    DrawingStateForm,
     HelperButtonsForm,
     InputKindsForm,
     LayoutObjectsForm,
@@ -554,6 +555,8 @@ class DrawingsMixin:
     """
 
     drawings_prefix = "drawings"
+    drawing_names = tuple(Modifiers.drawings)
+    drawing_states = ("off", "on", "help", "error", "disabled")
 
     def build_cleaned(self, form):
         """List what a posted form cleaned to, for the page to show.
@@ -572,9 +575,34 @@ class DrawingsMixin:
             for name, value in form.cleaned_data.items()
         ]
 
+    def build_drawing_states(self):
+        """Build one small form for each drawing in each state.
+
+        Returns:
+            A list with a dict for each drawing, holding its name, a heading and a
+            list of dicts for its states, each with the state's name and form.
+        """
+        return [
+            {
+                "title": drawing,
+                "heading": _("%(drawing)s in every state") % {"drawing": drawing},
+                "states": [
+                    {
+                        "title": state,
+                        "form": DrawingStateForm(
+                            prefix=f"{drawing}-{state}", drawing=drawing, state=state
+                        ),
+                    }
+                    for state in self.drawing_states
+                ],
+            }
+            for drawing in self.drawing_names
+        ]
+
     def get_context_data(self, **kwargs):
-        """Add the form, and what it cleaned to when it was posted."""
+        """Add the form, what it cleaned to when it was posted, and the states."""
         form = kwargs.setdefault("form", DrawingsForm(prefix=self.drawings_prefix))
+        kwargs["drawing_states"] = self.build_drawing_states()
         kwargs["cleaned"] = self.build_cleaned(form)
         kwargs["prefix"] = self.drawings_prefix
         return super().get_context_data(**kwargs)

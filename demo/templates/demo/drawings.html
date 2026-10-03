@@ -20,6 +20,19 @@
     </c-section>
   {% endif %}
   <c-text>
+    Each drawing keeps its label, its help text, its required marker, its error and its
+    disabled state. No form below posts anywhere.
+  </c-text>
+  {% for drawing in drawing_states %}
+    <c-section :title="drawing.heading" level="3">
+      {% for state in drawing.states %}
+        <c-section :title="state.title" level="4">
+          {% crispy state.form %}
+        </c-section>
+      {% endfor %}
+    </c-section>
+  {% endfor %}
+  <c-text>
     <c-link href="{% url 'drawings-standalone' %}" text="The same page without django-mvp" />
   </c-text>
 {% endblock page.content %}

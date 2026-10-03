@@ -582,3 +582,17 @@ class RequiredDrawnBooleanForm(forms.Form):
         self.helper.form_tag = False
         if choices is not None:
             self.helper.daisyui = choices
+
+
+class KeptBooleansForm(forms.Form):
+    agree = forms.BooleanField(label="Agree", help_text="Read the terms first")
+    news = forms.BooleanField(label="News", required=False)
+    locked = forms.BooleanField(label="Locked", required=False, disabled=True)
+
+    def __init__(self, *args, choices=None, show_labels=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.form_show_labels = show_labels
+        if choices is not None:
+            self.helper.daisyui = choices

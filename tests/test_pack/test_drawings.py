@@ -8,6 +8,7 @@ from mvp_forms.choices import Choice, FormChoices, InvalidChoice
 from tests.forms import (
     DrawnBooleanLineFormSet,
     DrawnBooleansForm,
+    KeptBooleansForm,
     RequiredDrawnBooleanForm,
     formset_helper,
 )
@@ -17,6 +18,11 @@ TAG = "{% crispy form %}"
 NAMES = ("remember", "notify", "publish")
 DRAWINGS = ["checkbox", "toggle", "switch"]
 TABLE = "daisyui/table_inline_formset.html"
+ERROR_MODIFIERS = {
+    "checkbox": "checkbox-error",
+    "toggle": "toggle-error",
+    "switch": "toggle-error",
+}
 
 
 def stating(**drawings):
@@ -185,6 +191,97 @@ class TestDrawings:
         assert "toggle" in tag["class"]
         assert "toggle-error" in tag["class"]
         assert tag["aria-invalid"] == "true"
+
+
+def stating_all(drawing):
+    return stating(agree=drawing, news=drawing, locked=drawing)
+
+
+class TestDrawingKeepsWhatACheckboxHas:
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", DRAWINGS)
+    def test_the_label_is_tied_to_the_input_and_holds_it(self, draw, source, drawing):
+        form = KeptBooleansForm(choices=stating_all(drawing))
+
+        soup = draw(source, form=form)
+
+        tag = soup.find(id="id_agree")
+        label = soup.find("label", attrs={"for": tag["id"]})
+        assert label.find("input") is tag
+        assert len(soup.find(id="div_id_agree").find_all("label")) == 1
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", DRAWINGS)
+    def test_the_input_is_described_by_the_help_text(self, draw, source, drawing):
+        form = KeptBooleansForm(choices=stating_all(drawing))
+
+        soup = draw(source, form=form)
+
+        tag = soup.find(id="id_agree")
+        assert tag["aria-describedby"].split() == ["id_agree_helptext"]
+        assert len(soup.find_all(id="id_agree_helptext")) == 1
+        assert not soup.find(id="id_news").has_attr("aria-describedby")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", DRAWINGS)
+    def test_a_required_field_left_off_is_invalid_and_described_by_its_error(
+        self, draw, source, drawing
+    ):
+        form = KeptBooleansForm({}, choices=stating_all(drawing))
+
+        soup = draw(source, form=form)
+
+        tag = soup.find(id="id_agree")
+        assert tag["aria-invalid"] == "true"
+        assert ERROR_MODIFIERS[drawing] in tag["class"]
+        assert "id_agree_error" in tag["aria-describedby"].split()
+        assert soup.find(id="id_agree_error") is not None
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", DRAWINGS)
+    def test_a_field_that_is_not_in_error_carries_no_error_modifier(
+        self, draw, source, drawing
+    ):
+        form = KeptBooleansForm({"agree": "on"}, choices=stating_all(drawing))
+
+        tag = draw(source, form=form).find(id="id_agree")
+
+        assert ERROR_MODIFIERS[drawing] not in tag["class"]
+        assert not tag.has_attr("aria-invalid")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", DRAWINGS)
+    def test_the_required_marker_is_in_the_label_of_a_required_field_only(
+        self, draw, source, drawing
+    ):
+        form = KeptBooleansForm(choices=stating_all(drawing))
+
+        soup = draw(source, form=form)
+
+        required = soup.find("label", attrs={"for": "id_agree"})
+        optional = soup.find("label", attrs={"for": "id_news"})
+        assert required.find(attrs={"aria-hidden": "true"}) is not None
+        assert optional.find(attrs={"aria-hidden": "true"}) is None
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("drawing", DRAWINGS)
+    def test_a_disabled_field_is_disabled(self, draw, source, drawing):
+        form = KeptBooleansForm(choices=stating_all(drawing))
+
+        soup = draw(source, form=form)
+
+        assert soup.find(id="id_locked").has_attr("disabled")
+        assert not soup.find(id="id_news").has_attr("disabled")
+
+    @pytest.mark.parametrize("drawing", DRAWINGS)
+    def test_with_labels_off_the_input_is_named_by_aria_label(self, draw, drawing):
+        form = KeptBooleansForm(choices=stating_all(drawing), show_labels=False)
+
+        soup = draw(TAG, form=form)
+
+        frame = soup.find(id="div_id_agree")
+        assert frame.find("label") is None
+        assert frame.find("input")["aria-label"] == form["agree"].label
 
 
 class TestDrawingsInAFormset:

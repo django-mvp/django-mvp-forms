@@ -634,6 +634,39 @@ class DrawingsForm(forms.Form):
         self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
 
 
+class DrawingStateForm(ChosenForm):
+    """One boolean field, drawn in one drawing and in one state.
+
+    Give the form a prefix of the drawing's name and the state's, so no id
+    repeats on the page. The field is ``flag``.
+
+    Args:
+        drawing: ``"checkbox"``, ``"toggle"`` or ``"switch"``.
+        state: ``"off"``, ``"on"``, ``"help"``, ``"error"`` or ``"disabled"``.
+            The form for ``"error"`` is bound with nothing posted, so the
+            required field fails.
+    """
+
+    flag = forms.BooleanField(label=_("Email me about replies"), required=False)
+
+    def __init__(self, *args, drawing, state, **kwargs):
+        """Put the field in its state, and state its drawing for the form."""
+        if state == "error":
+            args = args or ({},)
+        super().__init__(
+            *args,
+            choices=FormChoices(fields={"flag": Choice(drawing=drawing)}),
+            **kwargs,
+        )
+        flag = self.fields["flag"]
+        flag.required = state == "error"
+        flag.disabled = state == "disabled"
+        if state == "on":
+            self.initial["flag"] = True
+        if state == "help":
+            flag.help_text = _("Sent once a day at most.")
+
+
 ORDER_LINE_LIMIT = 10000
 ORDER_ITEMS = [
     ("", "---------"),

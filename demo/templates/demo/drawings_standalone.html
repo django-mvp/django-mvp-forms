@@ -39,6 +39,22 @@
           </div>
         </section>
       {% endif %}
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Every drawing in every state</h2>
+          <p>
+            Each drawing keeps its label, its help text, its required marker, its error and
+            its disabled state. No form below posts anywhere.
+          </p>
+          {% for drawing in drawing_states %}
+            <h3 class="font-semibold">{{ drawing.heading }}</h3>
+            {% for state in drawing.states %}
+              <h4>{{ state.title }}</h4>
+              {% crispy state.form %}
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </section>
     </main>
   </body>
 </html>

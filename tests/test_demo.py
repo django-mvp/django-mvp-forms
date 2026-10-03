@@ -1395,3 +1395,95 @@ class TestStandaloneDrawingsPage(DrawingsPageContract):
 
     def test_it_links_back_to_the_shell_page(self, page):
         assert page.find("a", href=reverse("drawings")) is not None
+
+
+DRAWING_NAMES = ["checkbox", "toggle", "switch"]
+DRAWING_STATES = ["off", "on", "help", "error", "disabled"]
+DRAWING_ERROR_MODIFIERS = {
+    "checkbox": "checkbox-error",
+    "toggle": "toggle-error",
+    "switch": "toggle-error",
+}
+
+
+def drawing_state(page, drawing, state):
+    return page.find(id=f"id_{drawing}-{state}-flag")
+
+
+class DrawingStatesPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    @pytest.mark.parametrize("state", DRAWING_STATES)
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_every_drawing_is_drawn_in_every_state(self, page, drawing, state):
+        tag = drawing_state(page, drawing, state)
+        assert (tag.name, tag["type"]) == ("input", "checkbox")
+
+    @pytest.mark.parametrize("state", DRAWING_STATES)
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_each_input_is_drawn_as_its_drawing(self, page, drawing, state):
+        tag = drawing_state(page, drawing, state)
+        component = "checkbox" if drawing == "checkbox" else "toggle"
+        assert component in tag["class"]
+        assert tag.get("role") == ("switch" if drawing == "switch" else None)
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_only_the_on_state_is_checked(self, page, drawing):
+        for state in DRAWING_STATES:
+            tag = drawing_state(page, drawing, state)
+            assert tag.has_attr("checked") == (state == "on")
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_the_help_state_is_described_by_its_help_text(self, page, drawing):
+        tag = drawing_state(page, drawing, "help")
+        for name in tag["aria-describedby"].split():
+            assert page.find(id=name) is not None
+        assert drawing_state(page, drawing, "off").get("aria-describedby") is None
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_the_error_state_is_required_invalid_and_described_by_its_error(
+        self, page, drawing
+    ):
+        tag = drawing_state(page, drawing, "error")
+        label = page.find("label", attrs={"for": tag["id"]})
+        assert label.find(attrs={"aria-hidden": "true"}) is not None
+        assert tag["aria-invalid"] == "true"
+        assert DRAWING_ERROR_MODIFIERS[drawing] in tag["class"]
+        assert f"{tag['id']}_error" in tag["aria-describedby"].split()
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_only_the_error_state_is_invalid(self, page, drawing):
+        for state in DRAWING_STATES:
+            tag = drawing_state(page, drawing, state)
+            assert tag.has_attr("aria-invalid") == (state == "error")
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_only_the_disabled_state_is_disabled(self, page, drawing):
+        for state in DRAWING_STATES:
+            tag = drawing_state(page, drawing, state)
+            assert tag.has_attr("disabled") == (state == "disabled")
+
+    @pytest.mark.parametrize("state", DRAWING_STATES)
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_every_input_has_a_label_that_names_it(self, page, drawing, state):
+        tag = drawing_state(page, drawing, state)
+        assert page.find("label", attrs={"for": tag["id"]}) is not None
+
+    def test_no_form_element_surrounds_a_state(self, page):
+        assert drawing_state(page, "toggle", "off").find_parent("form") is None
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestDrawingStatesInThePage(DrawingStatesPageContract):
+    url_name = "drawings"
+
+
+class TestDrawingStatesInTheStandalonePage(DrawingStatesPageContract):
+    url_name = "drawings-standalone"
