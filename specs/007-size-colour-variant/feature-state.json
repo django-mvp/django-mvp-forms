@@ -2,7 +2,7 @@
   "feature": "007-size-colour-variant",
   "branch": "007-size-colour-variant",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "QUEUED",
@@ -23,6 +23,11 @@
       "state": "IMPLEMENT",
       "at": "2026-10-03T17:51:28Z",
       "note": "plan gate open; design review applied"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T18:28:59Z",
+      "note": "all five stories accepted"
     }
   ],
   "gates": {
@@ -226,7 +231,7 @@
       "priority": "P3",
       "issue": 40,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -258,7 +263,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {
