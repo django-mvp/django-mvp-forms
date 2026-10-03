@@ -735,21 +735,24 @@ class ReviewForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        self.helper.daisyui = FormChoices(fields={"score": Choice(drawing="rating")})
+        self.helper.daisyui = FormChoices(
+            size="sm", color="primary", fields={"score": Choice(drawing="rating")}
+        )
         self.helper.layout = Layout(
             "score",
             Choice("comfort", drawing="rating"),
-            Choice("volume", drawing="range"),
+            Choice("volume", drawing="range", color="accent"),
         )
 ```
 
-Here `score` is a rating by its name in `FormChoices`, `comfort` is a rating in the layout and `volume` is a range in the layout, from 0 to 100 in steps of 5. The form posts and cleans exactly as it does with a select, because only the way the choices are drawn changes: a person picks a star and the form receives the value of that choice, and the field and its widget are not changed.
+Here `score` is a rating by its name in `FormChoices`, `comfort` is a rating in the layout and `volume` is a range in the layout, from 0 to 100 in steps of 5. The form states a small size and the primary colour, so both ratings and the range are small, the ratings are primary, and `volume` states the accent colour of its own. The form posts and cleans exactly as it does with a select, because only the way the choices are drawn changes: a person picks a star and the form receives the value of that choice, and the field and its widget are not changed.
 
 - Each choice that has a value is one `<input type="radio">` with the field's name, in the field's order, inside an element with the class `rating`. daisyUI draws every child of a rating as a star, so a star has no `<label>` around it. It is named by an `aria-label` that holds its choice's label as plain text, unless the widget already gives the input one. The pack adds no text of its own.
 - A choice whose value is the empty string is not a star. It is the way to clear the rating, drawn first, whatever its place among the choices, as the input daisyUI hides with `rating-hidden`, so that an optional field can be submitted empty and cleans to its empty value. A choice whose value is `0` is a star. A field with no empty choice offers no way to clear it.
 - A bound or initial value is drawn as the star picked, and a field that holds no value is drawn with no star picked. Choices in named groups are stars in the field's order and the group names are not drawn. A field with no choices is drawn with its frame and no star. A model choice field has its empty label as the way to clear.
 - A select and a radio group with the same choices are drawn as the same inputs. A select is drawn through a radio group that is made for the draw from its attributes and choices, and a radio group is drawn through a copy of itself.
 - A rating keeps what a radio group has. The stars are one group in a `<fieldset>` named by a `<legend>` that holds the field's label and the required marker, and by an `aria-label` on the fieldset when the form draws no labels. The help text and the errors are drawn and describe the fieldset, each star of a field in error is `aria-invalid`, and every star of a disabled field is disabled. A field in error draws its stars in the error colour, `bg-error`. A class or an attribute you set on the widget is on every input of the rating, the one that clears included.
+- A rating and a range take the form's size and colour, and the field's own, like any input, and have no variant. A variant stated for the form is passed over for them and one stated on the field itself raises `InvalidChoice`. A range takes `range-sm` and `range-primary` and the like on its input. A rating's size is on the element with the class `rating`, the group of stars, as `rating-sm`, and its colour is on each star, as daisyUI's background colour class `bg-primary`, and never on the input that clears it. A field in error keeps its error modifier and is drawn without the chosen colour: a rating's stars carry `bg-error`, a range carries `range-error`, and the size still applies.
 - A rating is drawn the same through `{{ form|crispy }}` and `{% crispy form %}`, in a formset stacked or as a table, and inside a `Row`, a `Fieldset`, a `Tab` or an `AccordionGroup`. `InlineRadios` around a rating draws the rating, and a layout object that attaches text to an input leaves it as it is. A hidden field is a hidden input whatever is stated for it. The pack adds no script.
 
 A range is one `<input type="range">` with the field's name and id and the class `range`. It is drawn through a copy of the field's widget with its type changed, by Django's own input template, so what is submitted, validated and cleaned is what a number input gives, and the field and its widget are not changed.
