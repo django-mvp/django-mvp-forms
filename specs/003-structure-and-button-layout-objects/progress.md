@@ -23,3 +23,10 @@ Planned the build: research.md, plan.md and tasks.md written. Four stories, nine
 **Verified:** `uv run pytest tests/test_demo.py -q` -> 180 passed, exit 0. Rendered `/layout-objects/` with the test client and read the markup: fieldset, legend, row, two columns, div, ids all prefixed. The README example drawn against the branch gave the fieldset, the legend with the context value, and the div with its id. `uv run pre-commit run --all-files` clean.
 **Next:** Report. Forge re-verifies.
 **Watch:** README status line (`draws text-like fields so far`) still omits layout objects; left alone because the parallel feature edits README too.
+
+## 2026-10-03T16:43:53Z · Implementer US2 · T004
+
+Did: added the daisyui_classes filter and UPSTREAM_ONLY_CLASSES in mvp_forms/templatetags/daisyui.py, and layout/baseinput.html for Submit, Reset and Button (type, name, value, class through the filter, id, flat_attrs). Tests: TestDaisyuiClasses and TestBaseInputs.
+Verified: uv run pytest tests/test_templatetags/test_daisyui.py::TestDaisyuiClasses tests/test_pack/test_buttons.py -q (29 passed); red first: 19 failed with TemplateDoesNotExist daisyui/layout/baseinput.html. pre-commit clean.
+Next: T005 StrictButton, ButtonHolder, FormActions.
+Watch: baseinput.html has no hidden branch yet; US3 adds it.
