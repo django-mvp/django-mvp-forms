@@ -26,4 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The `daisyui` template pack, which draws text, email, URL, number, password, date, time and date-time inputs and textareas as daisyUI components. Select it with `CRISPY_ALLOWED_TEMPLATE_PACKS` and `CRISPY_TEMPLATE_PACK`.
 - Each field of the `daisyui` pack has its label tied to the input, a required marker, help text and every error message, and the input is marked required, invalid and described by them. Text in the label, help text and errors is escaped.
+- Errors that belong to a form as a whole are drawn by the `daisyui` pack, once, in an element with `role="alert"`, through `|crispy`, `{% crispy %}` and `|as_crispy_errors`.
+- The `daisyui` pack honours the `FormHelper` settings for the form element, its CSRF token, labels, errors, `label_class` and `field_class`. With labels off each input is named by an `aria-label`; with errors off no error is drawn and no input points at one. `help_text_inline` and `error_text_inline` are ignored.
 - The package skeleton: an installable app, a demo project and the test suite. No template pack, fields or widgets yet.

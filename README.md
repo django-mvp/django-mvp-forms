@@ -91,6 +91,18 @@ These inputs are drawn as daisyUI components, whichever way crispy-forms is aske
 - text, email, URL, number, password, date, time and date-time inputs, as `input`
 - textareas, as `textarea`
 
+Errors that belong to the form as a whole are drawn once, in an element with `role="alert"` ahead of the fields. A form with none draws no such element, and `{{ form|as_crispy_errors }}` draws the same element on its own.
+
+With `{% crispy form %}` the pack follows these `FormHelper` settings:
+
+- `form_tag`, `form_method`, `form_action`, `form_id`, `form_class` and `attrs` for the `<form>` element, which is `multipart` when the form needs it, and `disable_csrf` for its CSRF token, drawn for a post form
+- `form_show_labels`: with labels off, each input is named by an `aria-label` holding the label's text, unless the widget sets its own
+- `form_show_errors`: with errors off, no field error, no form-wide error and no error styling is drawn, and an input's description names only what is on the page
+- `label_class` on each label, and `field_class` on an element wrapped around each input
+- `form_error_title` inside the form-wide error element, and `include_media` for the form's media
+
+`help_text_inline` and `error_text_inline` are ignored.
+
 A class, placeholder, input type or row count you give a widget is kept. The pack never changes an input's type, so a date field is a text input unless its widget says otherwise. Fields with any other widget are still drawn in place, without a daisyUI class.
 
 ## Contributing

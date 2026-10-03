@@ -190,3 +190,11 @@ modifier, escaping and prefixes, and tests them.
 Django as a bare `aria-required`, which is not a valid ARIA value.
 
 **Revisit if:** US3 finds the modifier wants a different condition from the error element.
+
+## D18. The helper's switches are off only when they are False
+
+**Decision:** `daisyui/field.html`, `uni_form.html` and `display_form.html` test `form_show_labels != False` and `form_show_errors != False`, and the tag reads both from the context with a default of on. `errors.html` reads neither, so `|as_crispy_errors`, which passes only the form, draws the form's errors. `FieldInput` narrows the error modifier to `show_errors and errors` as D17 left for this story, and builds `aria-label` from `strip_tags(label).strip()`.
+
+**Why:** a name missing from the context must mean on, as it does in the tag, so a bare `{% include "daisyui/field.html" %}` draws a label and errors. `strip_tags` returns a safe label unchanged when it holds no tag, so a label marked safe with a quote in it would break out of the attribute unless the value is made a plain string, which `strip()` does.
+
+**Revisit if:** a later feature reads these names in a template where a missing name should mean off.

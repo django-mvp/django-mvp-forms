@@ -2,6 +2,8 @@
 
 from django import forms, template
 from django.forms.boundfield import BoundField
+from django.template import Context
+from django.utils.html import strip_tags
 from django.utils.safestring import SafeString
 
 register = template.Library()
@@ -16,6 +18,10 @@ class FieldInput:
 
     Args:
         field: The bound field whose widget is drawn.
+        show_labels: Whether the form draws labels. Without them the input is
+            named by an ``aria-label``.
+        show_errors: Whether the form draws errors. Without them the input has
+            no error modifier and no description naming the error element.
     """
 
     components: dict[type[forms.Widget], str] = {
@@ -27,8 +33,12 @@ class FieldInput:
         forms.Textarea: "textarea",
     }
 
-    def __init__(self, field: BoundField) -> None:
+    def __init__(
+        self, field: BoundField, show_labels: bool = True, show_errors: bool = True
+    ) -> None:
         self.field = field
+        self.show_labels = show_labels
+        self.show_errors = show_errors
 
     @property
     def component(self) -> str | None:
@@ -44,7 +54,7 @@ class FieldInput:
         classes = self.field.field.widget.attrs.get("class", "").split()
         if self.component:
             classes.append(self.component)
-            if self.field.errors:
+            if self.show_errors and self.field.errors:
                 classes.append(f"{self.component}-error")
         return " ".join(dict.fromkeys(classes))
 
@@ -56,6 +66,11 @@ class FieldInput:
             attrs["class"] = self.css_class
         if self.requires_aria_required:
             attrs["aria-required"] = "true"
+        if self.requires_aria_label:
+            # strip() returns a plain str; strip_tags keeps a safe label safe.
+            attrs["aria-label"] = strip_tags(str(self.field.label)).strip()
+        if self.hides_error_element and self.description:
+            attrs["aria-describedby"] = self.description
         return attrs
 
     @property
@@ -71,23 +86,76 @@ class FieldInput:
             and not self.field.use_fieldset
         )
 
+    @property
+    def requires_aria_label(self) -> bool:
+        """Whether the input needs a name of its own because no label is drawn."""
+        widget = self.field.field.widget
+        return (
+            not self.show_labels
+            and bool(self.field.label)
+            and "aria-label" not in widget.attrs
+            and not self.field.use_fieldset
+        )
+
+    @property
+    def hides_error_element(self) -> bool:
+        """Whether Django would describe the input by an error element not drawn."""
+        widget = self.field.field.widget
+        return (
+            not self.show_errors
+            and bool(self.field.errors)
+            and "aria-describedby" not in widget.attrs
+            and not self.field.use_fieldset
+        )
+
+    @property
+    def description(self) -> str:
+        """The id of the help text, or an empty string when none is drawn."""
+        if self.field.help_text and self.field.auto_id:
+            return f"{self.field.auto_id}_helptext"
+        return ""
+
     def render(self) -> SafeString:
         """Return the widget drawn with the pack's attributes.
+
+        With errors off, a field with errors and no help text has nothing for
+        its description to name, which ``as_widget`` cannot express, so the
+        widget is rendered from the attributes Django would have built.
 
         Returns:
             The widget's markup.
         """
+        if self.hides_error_element and not self.description:
+            widget = self.field.field.widget
+            attrs = self.field.build_widget_attrs(self.attrs, widget)
+            attrs.pop("aria-describedby", None)
+            if self.field.auto_id and "id" not in widget.attrs:
+                attrs.setdefault("id", self.field.auto_id)
+            return SafeString(
+                widget.render(
+                    name=self.field.html_name,
+                    value=self.field.value(),
+                    attrs=attrs,
+                    renderer=self.field.form.renderer,
+                )
+            )
         return self.field.as_widget(attrs=self.attrs)
 
 
-@register.simple_tag
-def daisyui_input(field: BoundField) -> SafeString:
+@register.simple_tag(takes_context=True)
+def daisyui_input(context: Context, field: BoundField) -> SafeString:
     """Draw a bound field's widget as a daisyUI component.
 
     Args:
+        context: The template context, read for the helper's label and error
+            switches, which are both on when absent.
         field: The bound field whose widget is drawn.
 
     Returns:
         The widget's markup.
     """
-    return FieldInput(field).render()
+    return FieldInput(
+        field,
+        show_labels=bool(context.get("form_show_labels", True)),
+        show_errors=bool(context.get("form_show_errors", True)),
+    ).render()

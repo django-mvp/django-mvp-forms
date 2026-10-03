@@ -84,3 +84,12 @@ class MediaWidget(forms.TextInput):
 
 class MediaForm(forms.Form):
     name = forms.CharField(widget=MediaWidget)
+
+
+class DeveloperLabelledForm(forms.Form):
+    name = forms.CharField(widget=forms.TextInput(attrs={"aria-label": "Mine"}))
+
+
+class FieldAndFormWideErrorsForm(HelpedForm):
+    def clean(self):
+        raise ValidationError("It failed as a whole", code="whole")
