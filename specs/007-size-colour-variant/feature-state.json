@@ -2,7 +2,7 @@
   "feature": "007-size-colour-variant",
   "branch": "007-size-colour-variant",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "QUEUED",
@@ -18,6 +18,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-10-03T17:42:28Z",
       "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T17:51:28Z",
+      "note": "plan gate open; design review applied"
     }
   ],
   "gates": {
