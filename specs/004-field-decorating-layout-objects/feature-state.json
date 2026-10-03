@@ -125,13 +125,35 @@
         },
         {
           "id": "T013",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestHiddenFieldChoices"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_choices.py -k TestHiddenFieldChoices (2 failed before the fix, 2 passed after)",
+              "forge verify --base origin/main (all steps passed)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:165"
+            ]
+          }
         },
         {
           "id": "T014",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "forge verify --base origin/main (all steps passed)"
+            ],
+            "code": [
+              "README.md:383",
+              "CHANGELOG.md:32",
+              "docs/adr/0025-attached-text-and-joined-buttons.md:10"
+            ]
+          }
         }
       ]
     },
