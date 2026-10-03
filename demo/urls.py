@@ -5,12 +5,18 @@ from django.urls import include, path
 from demo.views import (
     AccordionView,
     AlertView,
+    AttachedTextView,
     ChoiceInputsView,
     ChoicesView,
     ContainersStandaloneView,
+    DecoratedFieldsStandaloneView,
     DrawingsView,
+    FieldWithButtonsView,
+    InlineChoicesView,
+    InlineFieldView,
     LayoutObjectsView,
     ModalView,
+    MultiWidgetFieldView,
     OverviewView,
     StackedFormsetView,
     StandaloneChoiceInputsView,
@@ -23,6 +29,7 @@ from demo.views import (
     TableFormsetView,
     TabsView,
     TextInputsView,
+    UneditableFieldView,
 )
 
 urlpatterns = [
@@ -53,6 +60,23 @@ urlpatterns = [
         "containers/standalone/",
         ContainersStandaloneView.as_view(),
         name="containers-standalone",
+    ),
+    path("attached-text/", AttachedTextView.as_view(), name="attached-text"),
+    path("inline-choices/", InlineChoicesView.as_view(), name="inline-choices"),
+    path(
+        "field-with-buttons/", FieldWithButtonsView.as_view(), name="field-with-buttons"
+    ),
+    path("uneditable-field/", UneditableFieldView.as_view(), name="uneditable-field"),
+    path("inline-field/", InlineFieldView.as_view(), name="inline-field"),
+    path(
+        "multi-widget-field/",
+        MultiWidgetFieldView.as_view(),
+        name="multi-widget-field",
+    ),
+    path(
+        "decorated-fields/standalone/",
+        DecoratedFieldsStandaloneView.as_view(),
+        name="decorated-fields-standalone",
     ),
     path("choices/", ChoicesView.as_view(), name="choices"),
     path(

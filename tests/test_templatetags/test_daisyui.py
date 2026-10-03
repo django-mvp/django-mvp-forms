@@ -3,16 +3,18 @@
 import copy
 
 import pytest
-from crispy_forms.bootstrap import StrictButton
+from crispy_forms.bootstrap import FieldWithButtons, StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Button, Hidden, Reset, Submit
 from django import forms
 from django.forms import formset_factory
 from django.template import Context, Template
+from django.utils.functional import Promise
 from django.utils.safestring import SafeString, mark_safe
 
 from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice
 from mvp_forms.templatetags.daisyui import (
+    SPLIT_DATE_TIME_PARTS,
     TAB_GROUP_PLACEHOLDER,
     DrawnButton,
     FieldInput,
@@ -26,16 +28,21 @@ from mvp_forms.templatetags.daisyui import (
 )
 from tests.forms import (
     CheckboxForm,
+    CheckboxGroupsForm,
     DateSelectsForm,
     DeveloperAttrsForm,
     FilesForm,
     HelpedForm,
+    InlineFieldsForm,
     LineFormSet,
+    MultiWidgetsForm,
     NoLinesFormSet,
     OwnTemplateDateWidget,
+    RadioGroupsForm,
     SelectsForm,
     TextInputsForm,
     UncoveredInput,
+    UncoveredWidgetsForm,
 )
 
 KINDS = [
@@ -1297,3 +1304,492 @@ class TestFormsetTable:
 
         assert isinstance(table, FormsetTable)
         assert [row["form"] for row in table.rows] == formset.forms
+
+
+class TestFieldInputClassParts:
+    def test_the_own_classes_are_the_widgets_own_names(self):
+        field_input = FieldInput(DeveloperAttrsForm()["name"])
+
+        assert field_input.own_classes == ["wide"]
+
+    def test_a_widget_with_no_class_has_no_own_classes(self):
+        assert FieldInput(TextInputsForm()["text"]).own_classes == []
+
+    def test_the_pack_classes_are_the_component_the_width_and_the_error_modifier(self):
+        field_input = FieldInput(DeveloperAttrsForm({})["name"])
+
+        assert field_input.pack_classes == ["input", "w-full", "input-error"]
+
+    def test_the_pack_classes_of_an_uncovered_widget_are_none(self):
+        assert FieldInput(UncoveredForm()["choice"]).pack_classes == []
+
+    def test_the_css_class_is_the_own_classes_then_the_pack_classes(self):
+        field_input = FieldInput(DeveloperAttrsForm({})["name"])
+
+        assert field_input.css_class.split() == (
+            field_input.own_classes + field_input.pack_classes
+        )
+
+    def test_a_name_in_both_is_written_once(self):
+        class Form(forms.Form):
+            name = forms.CharField(widget=forms.TextInput(attrs={"class": "input a"}))
+
+        field_input = FieldInput(Form()["name"])
+
+        assert field_input.css_class.split() == ["input", "a", "w-full"]
+
+
+class TestFieldInputAttachedText:
+    @pytest.mark.parametrize(
+        ("prepended", "appended"),
+        [("$", None), (None, ".00"), ("$", ".00"), ("$", ""), ("", ".00")],
+    )
+    def test_a_text_on_an_input_is_attached_text(self, prepended, appended):
+        field_input = FieldInput(
+            TextInputsForm()["text"], prepended=prepended, appended=appended
+        )
+
+        assert field_input.has_attached_text
+
+    @pytest.mark.parametrize(("prepended", "appended"), [(None, None), ("", "")])
+    def test_no_text_is_not_attached_text(self, prepended, appended):
+        field_input = FieldInput(
+            TextInputsForm()["text"], prepended=prepended, appended=appended
+        )
+
+        assert not field_input.has_attached_text
+
+    def test_a_text_on_a_select_is_attached_text(self):
+        field_input = FieldInput(SelectsForm()["choice"], prepended="#")
+
+        assert field_input.has_attached_text
+
+    @pytest.mark.parametrize(
+        ("form", "name"),
+        [
+            (TextInputsForm, "message"),
+            (CheckboxForm, "agree"),
+            (HostSelectForm, "born"),
+            (UncoveredForm, "choice"),
+            (FilesForm, "plain"),
+        ],
+    )
+    def test_a_text_on_a_widget_that_does_not_suit_it_is_not_attached_text(
+        self, form, name
+    ):
+        field_input = FieldInput(form()[name], prepended="$", appended=".00")
+
+        assert not field_input.has_attached_text
+
+    def test_a_group_is_not_attached_text(self):
+        field_input = FieldInput(
+            OptionalRequiredAttributeForm()["choice"], appended="x"
+        )
+
+        assert not field_input.has_attached_text
+
+    def test_the_wrapper_gets_the_pack_classes_as_one_string(self):
+        field_input = FieldInput(TextInputsForm({})["text"], prepended="$")
+
+        assert field_input.attached_class == "input w-full input-error"
+
+    def test_the_wrapper_of_a_select_gets_the_select_classes(self):
+        field_input = FieldInput(SelectsForm({})["choice"], prepended="#")
+
+        assert field_input.attached_class == "select w-full select-error"
+
+    def test_the_input_inside_is_drawn_with_only_its_own_classes(self, parse):
+        field_input = FieldInput(DeveloperAttrsForm()["name"], prepended="$")
+
+        assert parse(field_input.render()).find("input")["class"] == ["wide"]
+
+    def test_an_input_with_no_own_class_is_drawn_without_a_class_attribute(self, parse):
+        field_input = FieldInput(TextInputsForm()["text"], prepended="$")
+
+        assert not parse(field_input.render()).find("input").has_attr("class")
+
+    def test_a_field_without_attached_text_keeps_the_pack_classes_on_the_input(
+        self, parse
+    ):
+        field_input = FieldInput(TextInputsForm()["text"], prepended="")
+
+        assert "input" in parse(field_input.render()).find("input")["class"]
+
+    def test_the_render_leaves_the_widgets_attrs_unchanged(self):
+        form = DeveloperAttrsForm()
+        before = copy.deepcopy(form.fields["name"].widget.attrs)
+
+        FieldInput(form["name"], prepended="$").render()
+
+        assert form.fields["name"].widget.attrs == before
+
+
+class TestDaisyuiFieldTag:
+    def render(self, **context):
+        template = Template(
+            "{% load daisyui %}"
+            "{% daisyui_field field prepended='$' appended=after as drawn %}"
+            "{{ drawn.prepended }}|{{ drawn.appended }}|{{ drawn.wrapper_class }}"
+        )
+        return template.render(Context(context))
+
+    def test_the_keyword_options_reach_the_input(self):
+        form = TextInputsForm()
+
+        assert self.render(field=form["text"], after=".00") == "$|.00|"
+
+    def test_the_wrapper_class_is_read_from_the_context(self):
+        form = TextInputsForm()
+
+        rendered = self.render(field=form["text"], after="", wrapper_class="mine")
+
+        assert rendered == "$||mine"
+
+    def test_a_wrapper_class_of_none_is_an_empty_string(self):
+        form = TextInputsForm()
+
+        rendered = self.render(field=form["text"], after="", wrapper_class=None)
+
+        assert rendered == "$||"
+
+
+class TestFieldInputInline:
+    @pytest.mark.parametrize("name", ["choice", "grouped", "empty"])
+    @pytest.mark.parametrize("form", [RadioGroupsForm, CheckboxGroupsForm])
+    def test_a_group_is_drawn_by_the_inline_template_when_inline(self, form, name):
+        field_input = FieldInput(form()[name], inline=True)
+
+        assert field_input.template_name == "daisyui/widgets/inline_group.html"
+
+    @pytest.mark.parametrize("form", [RadioGroupsForm, CheckboxGroupsForm])
+    def test_a_group_is_drawn_by_the_stacked_template_when_not_inline(self, form):
+        field_input = FieldInput(form()["choice"])
+
+        assert field_input.template_name == "daisyui/widgets/group.html"
+
+    @pytest.mark.parametrize("form", [RadioGroupsForm, CheckboxGroupsForm])
+    def test_inline_off_is_the_default_and_is_the_stacked_template(self, form):
+        field_input = FieldInput(form()["choice"], inline=False)
+
+        assert field_input.template_name == FieldInput(form()["choice"]).template_name
+
+    @pytest.mark.parametrize("form", [RadioGroupsForm, CheckboxGroupsForm])
+    @pytest.mark.parametrize("name", ["own", "own_option"])
+    def test_a_widget_naming_its_own_template_is_never_drawn_by_the_inline_one(
+        self, form, name
+    ):
+        assert FieldInput(form()[name], inline=True).template_name is None
+
+    @pytest.mark.parametrize(
+        ("form", "name"),
+        [
+            (TextInputsForm, "text"),
+            (SelectsForm, "choice"),
+            (DateSelectsForm, "born"),
+            (FilesForm, "plain"),
+        ],
+    )
+    def test_inline_changes_nothing_for_a_widget_that_is_not_a_choice_group(
+        self, form, name
+    ):
+        inline = FieldInput(form()[name], inline=True)
+
+        assert inline.template_name == FieldInput(form()[name]).template_name
+
+    def test_the_widget_is_drawn_from_a_copy_with_the_inline_template(self):
+        form = RadioGroupsForm()
+        widget = form.fields["choice"].widget
+        before = widget.template_name
+
+        FieldInput(form["choice"], inline=True).render()
+
+        assert form.fields["choice"].widget is widget
+        assert widget.template_name == before
+
+    def test_an_inline_group_is_still_a_group(self):
+        assert FieldInput(RadioGroupsForm()["choice"], inline=True).is_group
+
+
+class TestFieldInputJoin:
+    def test_a_field_with_a_join_is_joined(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"], join=FieldWithButtons("text")
+        )
+
+        assert field_input.is_joined
+
+    def test_a_field_without_a_join_is_not_joined(self):
+        assert not FieldInput(TextInputsForm()["text"]).is_joined
+
+    @pytest.mark.parametrize("join", [None, False, ""])
+    def test_a_join_that_is_not_true_is_not_joined(self, join):
+        assert not FieldInput(TextInputsForm()["text"], join=join).is_joined
+
+    @pytest.mark.parametrize(
+        ("form", "name"),
+        [(TextInputsForm, "text"), (SelectsForm, "choice"), (CheckboxForm, "agree")],
+    )
+    def test_a_joined_input_carries_join_item(self, form, name):
+        field_input = FieldInput(form()[name], join=FieldWithButtons(name))
+
+        assert "join-item" in field_input.pack_classes
+        assert "join-item" in field_input.css_class.split()
+
+    @pytest.mark.parametrize(
+        ("form", "name"),
+        [(TextInputsForm, "text"), (SelectsForm, "choice"), (CheckboxForm, "agree")],
+    )
+    def test_an_input_that_is_not_joined_carries_no_join_item(self, form, name):
+        assert "join-item" not in FieldInput(form()[name]).pack_classes
+
+    @pytest.mark.parametrize("form", [RadioGroupsForm, CheckboxGroupsForm])
+    def test_a_joined_group_carries_no_join_item(self, form):
+        field_input = FieldInput(form()["choice"], join=FieldWithButtons("choice"))
+
+        assert field_input.is_group
+        assert "join-item" not in field_input.pack_classes
+
+    def test_a_joined_field_with_no_component_carries_no_join_item(self):
+        field_input = FieldInput(
+            UncoveredWidgetsForm()["choice"], join=FieldWithButtons("choice")
+        )
+
+        assert field_input.pack_classes == []
+
+
+class ClassedForm(forms.Form):
+    name = forms.CharField(
+        widget=forms.TextInput(attrs={"class": "uneditable-input active wide"})
+    )
+
+
+class TestFieldInputDisabled:
+    def test_a_disabled_input_has_the_disabled_attribute(self):
+        field_input = FieldInput(TextInputsForm()["text"], disabled=True)
+
+        assert field_input.attrs["disabled"] is True
+
+    def test_an_input_is_not_disabled_by_default(self):
+        assert "disabled" not in FieldInput(TextInputsForm()["text"]).attrs
+
+    def test_a_disabled_input_adds_no_class(self):
+        plain = FieldInput(TextInputsForm()["text"])
+        disabled = FieldInput(TextInputsForm()["text"], disabled=True)
+
+        assert disabled.css_class == plain.css_class
+
+    def test_the_render_draws_the_widget_disabled_without_changing_it(self, parse):
+        form = TextInputsForm()
+
+        drawn = parse(FieldInput(form["text"], disabled=True).render())
+
+        assert drawn.find("input").has_attr("disabled")
+        assert "disabled" not in form.fields["text"].widget.attrs
+        assert form.fields["text"].disabled is False
+
+    def test_the_class_written_for_another_pack_is_not_an_own_class(self):
+        field_input = FieldInput(ClassedForm()["name"])
+
+        assert "uneditable-input" not in field_input.own_classes
+        assert "uneditable-input" not in field_input.css_class.split()
+
+    def test_a_class_of_the_developers_called_active_is_kept(self):
+        field_input = FieldInput(ClassedForm()["name"])
+
+        assert field_input.own_classes == ["active", "wide"]
+        assert "active" in field_input.css_class.split()
+
+
+class TestFieldInputUnlabelled:
+    def test_the_labels_are_hidden(self):
+        field_input = FieldInput(InlineFieldsForm()["name"], unlabelled=True)
+
+        assert field_input.show_labels is False
+
+    def test_the_labels_are_shown_by_default(self):
+        assert FieldInput(InlineFieldsForm()["name"]).show_labels is True
+
+    def test_a_form_that_hides_its_labels_still_does(self):
+        field_input = FieldInput(InlineFieldsForm()["name"], show_labels=False)
+
+        assert field_input.show_labels is False
+
+    def test_a_single_checkbox_keeps_its_label(self):
+        field_input = FieldInput(InlineFieldsForm()["agree"], unlabelled=True)
+
+        assert field_input.show_labels is True
+        assert "aria-label" not in field_input.attrs
+
+    @pytest.mark.parametrize("name", ["name", "note"])
+    def test_a_text_input_and_a_textarea_get_the_label_as_a_placeholder(self, name):
+        field_input = FieldInput(InlineFieldsForm()[name], unlabelled=True)
+
+        assert field_input.attrs["placeholder"] == field_input.label_text
+
+    def test_a_field_not_unlabelled_gets_no_placeholder(self):
+        assert "placeholder" not in FieldInput(InlineFieldsForm()["name"]).attrs
+
+    def test_the_input_is_named_by_an_aria_label(self):
+        field_input = FieldInput(InlineFieldsForm()["name"], unlabelled=True)
+
+        assert field_input.attrs["aria-label"] == "Your name"
+
+    def test_a_widget_that_sets_a_placeholder_keeps_it(self):
+        field_input = FieldInput(InlineFieldsForm()["own"], unlabelled=True)
+
+        assert "placeholder" not in field_input.attrs
+        assert 'placeholder="Mine"' in field_input.render()
+
+    def test_a_label_marked_safe_is_the_placeholder_as_text(self):
+        field_input = FieldInput(InlineFieldsForm()["marked"], unlabelled=True)
+
+        assert field_input.attrs["placeholder"] == "Marked & bold"
+
+    @pytest.mark.parametrize("name", ["country", "pick"])
+    def test_a_select_and_a_group_get_no_placeholder(self, name):
+        field_input = FieldInput(InlineFieldsForm()[name], unlabelled=True)
+
+        assert "placeholder" not in field_input.attrs
+
+    def test_a_field_with_no_label_gets_no_placeholder(self):
+        field_input = FieldInput(InlineFieldsForm()["unlabelled"], unlabelled=True)
+
+        assert "placeholder" not in field_input.attrs
+
+    def test_the_render_draws_the_placeholder_without_changing_the_widget(self):
+        form = InlineFieldsForm()
+
+        drawn = FieldInput(form["name"], unlabelled=True).render()
+
+        assert 'placeholder="Your name"' in drawn
+        assert "placeholder" not in form.fields["name"].widget.attrs
+
+
+class TestDaisyuiFieldUnlabelledTag:
+    def render(self, **context):
+        template = Template(
+            "{% load daisyui %}"
+            "{% daisyui_field field unlabelled=True as drawn %}"
+            "{{ drawn.show_labels }}"
+        )
+        return template.render(Context(context))
+
+    def test_the_labels_are_hidden_for_the_field(self):
+        assert self.render(field=InlineFieldsForm()["name"]) == "False"
+
+    def test_the_forms_switch_still_hides_the_labels_of_a_field_not_unlabelled(self):
+        template = Template(
+            "{% load daisyui %}{% daisyui_field field as drawn %}{{ drawn.show_labels }}"
+        )
+
+        shown = template.render(Context({"field": InlineFieldsForm()["name"]}))
+        hidden = template.render(
+            Context({"field": InlineFieldsForm()["name"], "form_show_labels": False})
+        )
+
+        assert (shown, hidden) == ("True", "False")
+
+
+class TestFieldInputMultiWidget:
+    def parts_of(self, field_input):
+        return field_input.widget.widgets
+
+    def test_the_copys_parts_each_carry_the_component_and_a_width(self):
+        field_input = FieldInput(MultiWidgetsForm()["moment"])
+
+        classes = [part.attrs["class"].split() for part in self.parts_of(field_input)]
+
+        assert classes == [["input", "w-full"], ["input", "w-full"]]
+
+    def test_the_copys_parts_keep_their_own_classes_before_the_packs(self):
+        form = MultiWidgetsForm()
+        form.fields["moment"].widget.widgets[0].attrs["class"] = "mine"
+
+        field_input = FieldInput(form["moment"])
+
+        assert self.parts_of(field_input)[0].attrs["class"].split()[0] == "mine"
+
+    def test_the_form_widget_and_its_parts_are_left_untouched(self):
+        form = MultiWidgetsForm({})
+        widget = form.fields["moment"].widget
+
+        field_input = FieldInput(form["moment"])
+        field_input.render()
+
+        assert field_input.widget is not widget
+        assert [part.attrs for part in widget.widgets] == [{}, {}]
+
+    def test_the_component_of_the_field_stays_none(self):
+        assert FieldInput(MultiWidgetsForm()["moment"]).component is None
+        assert "class" not in FieldInput(MultiWidgetsForm()["moment"]).attrs
+
+    def test_the_parts_of_a_split_date_and_time_are_named_date_then_time(self):
+        field_input = FieldInput(MultiWidgetsForm()["moment"])
+
+        names = [part.attrs["aria-label"] for part in self.parts_of(field_input)]
+
+        assert names == ["Date", "Time"]
+
+    def test_the_names_of_a_split_date_and_time_are_lazy_so_they_translate(self):
+        assert len(SPLIT_DATE_TIME_PARTS) == 2
+        assert all(isinstance(name, Promise) for name in SPLIT_DATE_TIME_PARTS)
+
+    def test_the_parts_of_another_multi_widget_are_named_by_the_fields_label(self):
+        field_input = FieldInput(MultiWidgetsForm()["phone"])
+
+        names = {part.attrs["aria-label"] for part in self.parts_of(field_input)}
+
+        assert names == {"Phone"}
+
+    def test_a_part_with_a_name_of_its_own_keeps_it(self):
+        form = MultiWidgetsForm()
+        form.fields["moment"].widget.widgets[1].attrs["aria-label"] = "Hour"
+
+        field_input = FieldInput(form["moment"])
+
+        assert self.parts_of(field_input)[1].attrs["aria-label"] == "Hour"
+
+    def test_a_hidden_part_gets_neither_a_class_nor_a_name(self):
+        form = MultiWidgetsForm()
+        form.fields["phone"].widget.widgets[1] = forms.HiddenInput()
+
+        field_input = FieldInput(form["phone"])
+
+        assert self.parts_of(field_input)[1].attrs == {}
+        assert "class" in self.parts_of(field_input)[0].attrs
+
+    def test_the_parts_take_the_choices_of_their_own_component(self):
+        field_input = FieldInput(
+            MultiWidgetsForm()["moment"],
+            choices=FormChoices(size="lg", color="primary"),
+            placed=Choice(size="sm"),
+        )
+
+        classes = self.parts_of(field_input)[0].attrs["class"].split()
+
+        assert "input-sm" in classes
+        assert "input-primary" in classes
+        assert "input-lg" not in classes
+
+    def test_a_failing_field_has_the_error_modifier_and_not_the_colour(self):
+        field_input = FieldInput(
+            MultiWidgetsForm({})["moment"], choices=FormChoices(color="primary")
+        )
+
+        classes = self.parts_of(field_input)[0].attrs["class"].split()
+
+        assert "input-error" in classes
+        assert "input-primary" not in classes
+
+    def test_a_form_with_no_choices_draws_the_parts_with_no_modifier(self):
+        field_input = FieldInput(MultiWidgetsForm()["moment"])
+
+        assert field_input.modifiers == []
+        assert self.parts_of(field_input)[0].attrs["class"].split() == [
+            "input",
+            "w-full",
+        ]
+
+    def test_a_field_with_one_widget_is_not_a_multi_widget(self):
+        assert not FieldInput(MultiWidgetsForm()["name"]).is_multi_widget
+        assert FieldInput(MultiWidgetsForm()["moment"]).is_multi_widget

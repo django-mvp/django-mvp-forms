@@ -8,11 +8,19 @@ from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
     Alert,
+    AppendedText,
+    FieldWithButtons,
     FormActions,
+    InlineCheckboxes,
+    InlineField,
+    InlineRadios,
     Modal,
+    PrependedAppendedText,
+    PrependedText,
     StrictButton,
     Tab,
     TabHolder,
+    UneditableField,
 )
 from crispy_forms.layout import (
     HTML,
@@ -23,6 +31,7 @@ from crispy_forms.layout import (
     Field,
     Fieldset,
     Hidden,
+    MultiWidgetField,
     Reset,
     Row,
     Submit,
@@ -212,6 +221,58 @@ EXAMPLES = {
         [],
         ("button", {"type": "button"}),
     ),
+    "PrependedAppendedText": (
+        lambda: PrependedAppendedText("form_field", "$", ".00"),
+        ["form_field"],
+        ("label", {"class": "input"}),
+    ),
+    "AppendedText": (
+        lambda: AppendedText("form_field", ".00"),
+        ["form_field"],
+        ("label", {"class": "input"}),
+    ),
+    "PrependedText": (
+        lambda: PrependedText("form_field", "$"),
+        ["form_field"],
+        ("label", {"class": "input"}),
+    ),
+    "FieldWithButtons": (
+        lambda: FieldWithButtons(
+            Field("form_field", css_class="span4"),
+            StrictButton("Go!", css_id="go-button"),
+            input_size="input-group-sm",
+        ),
+        ["form_field"],
+        ("div", {"class": "join"}),
+    ),
+    "UneditableField": (
+        lambda: UneditableField("form_field", css_class="input-xlarge"),
+        ["form_field"],
+        ("input", {"disabled": True}),
+    ),
+    "InlineField": (
+        lambda: InlineField("form_field"),
+        ["form_field"],
+        ("input", {"aria-label": "Form field"}),
+    ),
+    "MultiWidgetField": (
+        lambda: MultiWidgetField(
+            "form_field_split",
+            attrs=({"style": "width: 30px;"}, {"class": "second_widget_class"}),
+        ),
+        ["form_field_split_0", "form_field_split_1"],
+        ("input", {"style": "width: 30px;"}),
+    ),
+    "InlineCheckboxes": (
+        lambda: InlineCheckboxes("form_field"),
+        ["form_field"],
+        ("div", {"id": "div_id_form_field"}),
+    ),
+    "InlineRadios": (
+        lambda: InlineRadios("form_field"),
+        ["form_field"],
+        ("div", {"id": "div_id_form_field"}),
+    ),
 }
 
 
@@ -307,6 +368,83 @@ class TestReadmeButtonChoices:
         assert {"btn-sm", "btn-error", "btn-outline"} <= delete
         assert "btn-neutral" not in delete
         assert "input-sm" in set(soup.find(id="id_name")["class"])
+
+
+class TestReadmeInlineChoices:
+    def test_the_example_drawing_choices_in_a_line_draws_both_groups(self, draw):
+        form = readme_example("Choices in a line")["SurveyForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        sizes = soup.find(id="div_id_size").find_all("input", type="radio")
+        extras = soup.find(id="div_id_extras").find_all("input", type="checkbox")
+        assert [option["value"] for option in sizes] == ["s", "m", "l"]
+        assert [option["value"] for option in extras] == ["a", "b"]
+
+
+class TestReadmeFieldWithButtons:
+    def test_the_example_drawing_a_field_with_buttons_joins_them_to_the_input(
+        self, draw
+    ):
+        form = readme_example("A field with buttons")["SearchForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        parts = (
+            soup.find(id="div_id_query")
+            .find(class_="join")
+            .find_all(True, recursive=False)
+        )
+        assert [part["name"] for part in parts] == [
+            "query",
+            "go",
+            "clear",
+        ]
+
+
+class TestReadmeUneditableField:
+    def test_the_example_draws_the_uneditable_fields_disabled_and_the_other_editable(
+        self, draw
+    ):
+        form = readme_example("An uneditable field")["ProfileForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert soup.find(id="id_account")["value"] == "AC-1001"
+        assert soup.find(id="id_account").has_attr("disabled")
+        assert soup.find(id="id_reference").has_attr("disabled")
+        assert not soup.find(id="id_nickname").has_attr("disabled")
+
+
+class TestReadmeInlineField:
+    def test_the_example_draws_the_inline_fields_without_labels_and_the_other_with(
+        self, draw
+    ):
+        form = readme_example("An inline field")["SearchForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert soup.find(id="div_id_query").find("label") is None
+        assert soup.find(id="id_query")["aria-label"] == "Search"
+        assert soup.find(id="id_query")["placeholder"] == "Search"
+        assert soup.find("label", attrs={"for": "id_remember"}) is not None
+        assert soup.find(id="id_note").has_attr("placeholder") is False
+        assert soup.find("label", attrs={"for": "id_note"}) is not None
+
+
+class TestReadmeMultiWidgetField:
+    def test_the_example_puts_each_attribute_on_its_own_part(self, draw):
+        form = readme_example("A multi-widget field")["EventForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        date = soup.find(attrs={"name": "starts_0"})
+        time = soup.find(attrs={"name": "starts_1"})
+        assert date["placeholder"] == "2026-10-03"
+        assert not time.has_attr("placeholder")
+        assert "mine" in time["class"]
+        assert "input" in date["class"]
+        assert date["aria-label"] != time["aria-label"]
 
 
 class TestReadmeDrawings:

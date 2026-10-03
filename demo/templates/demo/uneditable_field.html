@@ -1,0 +1,15 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="uneditable-field">
+    <c-text>
+      The account is shown with its value and cannot be changed. The nickname beside it can.
+      A browser does not submit a disabled input, so the form declares the account disabled
+      to keep its value.
+    </c-text>
+    {% crispy uneditable_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'decorated-fields-standalone' %}" text="The same form without django-mvp" />
+  </c-text>
+{% endblock page.content %}

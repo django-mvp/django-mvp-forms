@@ -1,6 +1,6 @@
 # ADR 0012 — The pack's own widget templates are drawn through a copy of the widget
 
-**Status:** accepted
+**Status:** accepted, extended by [ADR 0027](0027-the-parts-of-a-multi-widget-field.md): the parts of a multi-widget field are classed and named on a copy
 
 ## Decision
 

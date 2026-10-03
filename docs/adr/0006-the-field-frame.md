@@ -1,6 +1,6 @@
 # ADR 0006 — One field frame, and what it reads from the context
 
-**Status:** accepted, amended by [ADR 0011](0011-a-group-is-framed-as-a-fieldset.md): a group is framed as a `fieldset`, and a single checkbox sits inside its label; and by [ADR 0019](0019-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md): the pack's tags also read `daisyui` and `daisyui_choice`
+**Status:** accepted, amended by [ADR 0011](0011-a-group-is-framed-as-a-fieldset.md): a group is framed as a `fieldset`, and a single checkbox sits inside its label; and by [ADR 0019](0019-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md): the pack's tags also read `daisyui` and `daisyui_choice`, and by [ADR 0023](0023-a-layout-object-decorates-a-field-through-the-tag.md): the frame lives in `daisyui/frame.html`, is told how a field is decorated and asks the drawn field whether to show a label, and by [ADR 0024](0024-the-frame-takes-a-wrapper-class.md): it takes a wrapper class
 
 ## Decision
 

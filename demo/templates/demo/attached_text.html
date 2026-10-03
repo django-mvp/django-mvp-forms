@@ -1,0 +1,18 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="attached-text">
+    <c-text>
+      Every field is required. Submit the form empty to see an error in each frame,
+      with the error colour on the wrapper that holds the text.
+    </c-text>
+    {% crispy attached_form %}
+  </c-section>
+  <c-section title="A form that already fails" level="3">
+    <c-text>Only the weight holds a value, so the other three fields show their error.</c-text>
+    {% crispy failing_attached_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'decorated-fields-standalone' %}" text="The same forms without django-mvp" />
+  </c-text>
+{% endblock page.content %}

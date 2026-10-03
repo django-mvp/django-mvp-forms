@@ -1160,6 +1160,778 @@ class TestStandaloneTableFormsetPage(FormsetPageContract):
         assert page.find("a", href=reverse("formset-table")) is not None
 
 
+ATTACHED_PREFIX = "attached"
+ATTACHED_FAILING_PREFIX = "failing-attached"
+ATTACHED_POST = {f"{ATTACHED_PREFIX}-submit": "Submit"}
+ATTACHED_TEXT_FIELDS = ["amount", "weight", "budget"]
+
+
+def attached_frame(page, prefix, name):
+    return page.find(id=f"div_{layout_field_id(prefix, name)}")
+
+
+class AttachedTextPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = ATTACHED_POST if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    @pytest.mark.parametrize("prefix", [ATTACHED_PREFIX, ATTACHED_FAILING_PREFIX])
+    @pytest.mark.parametrize("name", ATTACHED_TEXT_FIELDS)
+    def test_each_layout_object_draws_its_input_in_a_wrapper(self, page, prefix, name):
+        frame = attached_frame(page, prefix, name)
+
+        wrapper = frame.find("label", class_="input")
+
+        assert wrapper.find(id=layout_field_id(prefix, name)) is not None
+        assert wrapper.find("span", class_="label") is not None
+
+    @pytest.mark.parametrize("prefix", [ATTACHED_PREFIX, ATTACHED_FAILING_PREFIX])
+    def test_a_select_is_drawn_in_a_wrapper(self, page, prefix):
+        frame = attached_frame(page, prefix, "fruit")
+
+        wrapper = frame.find("label", class_="select")
+
+        assert wrapper.find("select", id=layout_field_id(prefix, "fruit"))
+
+    def test_the_form_that_already_fails_shows_the_error_in_a_decorated_frame(
+        self, page
+    ):
+        frame = attached_frame(page, ATTACHED_FAILING_PREFIX, "amount")
+
+        assert frame.find(
+            id=layout_field_id(ATTACHED_FAILING_PREFIX, "amount") + "_error"
+        )
+        assert "input-error" in frame.find("label", class_="input")["class"]
+
+    def test_a_field_that_holds_a_valid_value_shows_no_error(self, page):
+        frame = attached_frame(page, ATTACHED_FAILING_PREFIX, "weight")
+
+        assert (
+            frame.find(id=layout_field_id(ATTACHED_FAILING_PREFIX, "weight") + "_error")
+            is None
+        )
+
+    def test_a_post_of_the_empty_form_comes_back_with_an_error_in_a_decorated_frame(
+        self, open_page
+    ):
+        page = open_page(self.url_name, ATTACHED_POST)
+
+        for name in [*ATTACHED_TEXT_FIELDS, "fruit"]:
+            frame = attached_frame(page, ATTACHED_PREFIX, name)
+            error_id = layout_field_id(ATTACHED_PREFIX, name) + "_error"
+            assert frame.find(id=error_id) is not None
+
+    def test_the_form_to_post_is_unbound_on_a_get(self, open_page):
+        page = open_page(self.url_name)
+
+        for name in ATTACHED_TEXT_FIELDS:
+            frame = attached_frame(page, ATTACHED_PREFIX, name)
+            assert frame.find(class_="input-error") is None
+
+    def test_the_form_to_post_has_a_form_element_and_the_failing_one_has_none(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+        posting = attached_frame(page, ATTACHED_PREFIX, "amount")
+        failing = attached_frame(page, ATTACHED_FAILING_PREFIX, "amount")
+
+        assert posting.find_parent("form")["method"] == "post"
+        assert failing.find_parent("form") is None
+
+    @pytest.mark.parametrize("data", [None, ATTACHED_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestAttachedTextPage(AttachedTextPageContract):
+    url_name = "attached-text"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("attached-text")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("decorated-fields-standalone")) is not None
+
+
+class TestDecoratedFieldsStandalonePage(AttachedTextPageContract):
+    url_name = "decorated-fields-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, open_page):
+        page = open_page(self.url_name)
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_no_script_but_tailwinds_browser_build(self, open_page):
+        page = open_page(self.url_name)
+        scripts = page.find_all("script", src=True)
+        assert [script["src"] for script in scripts] == [
+            "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_attached_text_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("attached-text")) is not None
+
+
+INLINE_PREFIX = "inline"
+INLINE_FAILING_PREFIX = "failing-inline"
+INLINE_POST = {f"{INLINE_PREFIX}-submit": "Submit"}
+INLINE_FIELDS = {"size": "radio", "extras": "checkbox"}
+
+
+def inline_frame(page, prefix, name):
+    return page.find(id=f"div_{layout_field_id(prefix, name)}")
+
+
+class InlineChoicesPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = INLINE_POST if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    @pytest.mark.parametrize("prefix", [INLINE_PREFIX, INLINE_FAILING_PREFIX])
+    @pytest.mark.parametrize("name", INLINE_FIELDS)
+    def test_each_group_is_a_fieldset_of_inputs_each_in_a_label_of_its_own(
+        self, page, prefix, name
+    ):
+        frame = inline_frame(page, prefix, name)
+
+        options = frame.find_all("input")
+
+        assert frame.name == "fieldset"
+        assert len(options) > 1
+        assert {option["type"] for option in options} == {INLINE_FIELDS[name]}
+        for option in options:
+            assert frame.find("label", attrs={"for": option["id"]}) is not None
+
+    @pytest.mark.parametrize("name", INLINE_FIELDS)
+    def test_the_form_that_already_fails_shows_an_error_in_each_group(self, page, name):
+        frame = inline_frame(page, INLINE_FAILING_PREFIX, name)
+
+        error_id = layout_field_id(INLINE_FAILING_PREFIX, name) + "_error"
+
+        assert frame.find(id=error_id) is not None
+
+    @pytest.mark.parametrize("name", INLINE_FIELDS)
+    def test_a_post_of_the_empty_form_comes_back_with_an_error_in_each_frame(
+        self, open_page, name
+    ):
+        page = open_page(self.url_name, INLINE_POST)
+
+        frame = inline_frame(page, INLINE_PREFIX, name)
+
+        assert frame.find(id=layout_field_id(INLINE_PREFIX, name) + "_error")
+
+    @pytest.mark.parametrize("name", INLINE_FIELDS)
+    def test_the_form_to_post_shows_no_error_on_a_get(self, open_page, name):
+        page = open_page(self.url_name)
+
+        frame = inline_frame(page, INLINE_PREFIX, name)
+
+        assert frame.find(id=layout_field_id(INLINE_PREFIX, name) + "_error") is None
+
+    def test_the_form_to_post_has_a_form_element_and_the_failing_one_has_none(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+        posting = inline_frame(page, INLINE_PREFIX, "size")
+        failing = inline_frame(page, INLINE_FAILING_PREFIX, "size")
+
+        assert posting.find_parent("form")["method"] == "post"
+        assert failing.find_parent("form") is None
+
+    @pytest.mark.parametrize("data", [None, INLINE_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestInlineChoicesPage(InlineChoicesPageContract):
+    url_name = "inline-choices"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("inline-choices")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("decorated-fields-standalone")) is not None
+
+
+class TestDecoratedFieldsStandaloneInlineChoices(InlineChoicesPageContract):
+    url_name = "decorated-fields-standalone"
+
+    def test_it_links_back_to_the_inline_choices_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("inline-choices")) is not None
+
+    def test_a_post_of_the_inline_form_leaves_the_attached_text_form_unbound(
+        self, open_page
+    ):
+        page = open_page(self.url_name, INLINE_POST)
+
+        frame = attached_frame(page, ATTACHED_PREFIX, "amount")
+
+        assert (
+            frame.find(id=layout_field_id(ATTACHED_PREFIX, "amount") + "_error") is None
+        )
+
+    def test_a_post_of_the_attached_text_form_leaves_the_inline_form_unbound(
+        self, open_page
+    ):
+        page = open_page(self.url_name, ATTACHED_POST)
+
+        frame = inline_frame(page, INLINE_PREFIX, "size")
+
+        assert frame.find(id=layout_field_id(INLINE_PREFIX, "size") + "_error") is None
+
+
+BUTTONS_PREFIX = "buttons"
+BUTTONS_FAILING_PREFIX = "failing-buttons"
+BUTTONS_POST = {f"{BUTTONS_PREFIX}-submit": "Submit"}
+BUTTON_COUNTS = {"search": 1, "code": 3}
+
+
+def buttons_frame(page, prefix, name):
+    return page.find(id=f"div_{layout_field_id(prefix, name)}")
+
+
+class FieldWithButtonsPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = BUTTONS_POST if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    @pytest.mark.parametrize("prefix", [BUTTONS_PREFIX, BUTTONS_FAILING_PREFIX])
+    @pytest.mark.parametrize(("name", "count"), BUTTON_COUNTS.items())
+    def test_each_field_is_one_join_of_its_input_first_and_then_its_buttons(
+        self, page, prefix, name, count
+    ):
+        frame = buttons_frame(page, prefix, name)
+
+        joins = frame.find_all(class_="join")
+        parts = joins[0].find_all(True, recursive=False)
+
+        assert len(joins) == 1
+        assert parts[0]["id"] == layout_field_id(prefix, name)
+        assert "join-item" in parts[0]["class"]
+        assert [part.name for part in parts[1:]] == ["button"] * count
+
+    @pytest.mark.parametrize("name", BUTTON_COUNTS)
+    def test_the_form_that_already_fails_shows_an_error_in_each_frame(self, page, name):
+        frame = buttons_frame(page, BUTTONS_FAILING_PREFIX, name)
+
+        error_id = layout_field_id(BUTTONS_FAILING_PREFIX, name) + "_error"
+
+        assert frame.find(id=error_id) is not None
+
+    @pytest.mark.parametrize("name", BUTTON_COUNTS)
+    def test_a_post_of_the_empty_form_comes_back_with_an_error_in_each_frame(
+        self, open_page, name
+    ):
+        page = open_page(self.url_name, BUTTONS_POST)
+
+        frame = buttons_frame(page, BUTTONS_PREFIX, name)
+
+        assert frame.find(id=layout_field_id(BUTTONS_PREFIX, name) + "_error")
+
+    @pytest.mark.parametrize("name", BUTTON_COUNTS)
+    def test_the_form_to_post_shows_no_error_on_a_get(self, open_page, name):
+        page = open_page(self.url_name)
+
+        frame = buttons_frame(page, BUTTONS_PREFIX, name)
+
+        assert frame.find(id=layout_field_id(BUTTONS_PREFIX, name) + "_error") is None
+
+    def test_the_form_to_post_has_a_form_element_and_the_failing_one_has_none(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+        posting = buttons_frame(page, BUTTONS_PREFIX, "search")
+        failing = buttons_frame(page, BUTTONS_FAILING_PREFIX, "search")
+
+        assert posting.find_parent("form")["method"] == "post"
+        assert failing.find_parent("form") is None
+
+    @pytest.mark.parametrize("data", [None, BUTTONS_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestFieldWithButtonsPage(FieldWithButtonsPageContract):
+    url_name = "field-with-buttons"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("field-with-buttons")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("decorated-fields-standalone")) is not None
+
+
+class TestDecoratedFieldsStandaloneFieldWithButtons(FieldWithButtonsPageContract):
+    url_name = "decorated-fields-standalone"
+
+    def test_it_links_back_to_the_field_with_buttons_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("field-with-buttons")) is not None
+
+    @pytest.mark.parametrize(
+        "data", [ATTACHED_POST, INLINE_POST], ids=["attached", "inline"]
+    )
+    def test_a_post_of_another_form_leaves_the_buttons_form_unbound(
+        self, open_page, data
+    ):
+        page = open_page(self.url_name, data)
+
+        frame = buttons_frame(page, BUTTONS_PREFIX, "search")
+
+        assert (
+            frame.find(id=layout_field_id(BUTTONS_PREFIX, "search") + "_error") is None
+        )
+
+    def test_a_post_of_the_buttons_form_leaves_the_others_unbound(self, open_page):
+        page = open_page(self.url_name, BUTTONS_POST)
+
+        attached = attached_frame(page, ATTACHED_PREFIX, "amount")
+        inline = inline_frame(page, INLINE_PREFIX, "size")
+
+        assert (
+            attached.find(id=layout_field_id(ATTACHED_PREFIX, "amount") + "_error")
+            is None
+        )
+        assert inline.find(id=layout_field_id(INLINE_PREFIX, "size") + "_error") is None
+
+
+UNEDITABLE_PREFIX = "uneditable"
+UNEDITABLE_POST = {f"{UNEDITABLE_PREFIX}-submit": "Submit"}
+
+
+def uneditable_input(page, name):
+    return page.find(id=layout_field_id(UNEDITABLE_PREFIX, name))
+
+
+class UneditableFieldPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = UNEDITABLE_POST if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    def test_the_uneditable_field_shows_its_value_and_is_disabled(self, page):
+        field = uneditable_input(page, "account")
+
+        assert field["value"]
+        assert field.has_attr("disabled")
+        assert "input" in field["class"]
+
+    def test_the_editable_field_beside_it_is_not_disabled(self, page):
+        field = uneditable_input(page, "nickname")
+
+        assert field is not None
+        assert not field.has_attr("disabled")
+        assert field.find_parent("form") is uneditable_input(
+            page, "account"
+        ).find_parent("form")
+
+    def test_the_form_has_a_form_element_that_posts(self, page):
+        field = uneditable_input(page, "account")
+
+        assert field.find_parent("form")["method"] == "post"
+
+    def test_a_post_comes_back_with_no_error_and_the_value_kept(self, open_page):
+        page = open_page(self.url_name, UNEDITABLE_POST)
+        frame = page.find(id=f"div_{layout_field_id(UNEDITABLE_PREFIX, 'account')}")
+
+        assert (
+            frame.find(id=layout_field_id(UNEDITABLE_PREFIX, "account") + "_error")
+            is None
+        )
+        assert uneditable_input(page, "account")["value"]
+
+    @pytest.mark.parametrize("data", [None, UNEDITABLE_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestUneditableFieldPage(UneditableFieldPageContract):
+    url_name = "uneditable-field"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("uneditable-field")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("decorated-fields-standalone")) is not None
+
+
+class TestDecoratedFieldsStandaloneUneditableField(UneditableFieldPageContract):
+    url_name = "decorated-fields-standalone"
+
+    def test_it_links_back_to_the_uneditable_field_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("uneditable-field")) is not None
+
+    def test_a_post_of_the_uneditable_form_leaves_the_others_unbound(self, open_page):
+        page = open_page(self.url_name, UNEDITABLE_POST)
+
+        attached = attached_frame(page, ATTACHED_PREFIX, "amount")
+        inline = inline_frame(page, INLINE_PREFIX, "size")
+        buttons = buttons_frame(page, BUTTONS_PREFIX, "search")
+
+        assert (
+            attached.find(id=layout_field_id(ATTACHED_PREFIX, "amount") + "_error")
+            is None
+        )
+        assert inline.find(id=layout_field_id(INLINE_PREFIX, "size") + "_error") is None
+        assert (
+            buttons.find(id=layout_field_id(BUTTONS_PREFIX, "search") + "_error")
+            is None
+        )
+
+    @pytest.mark.parametrize(
+        "data",
+        [ATTACHED_POST, INLINE_POST, BUTTONS_POST],
+        ids=["attached", "inline", "buttons"],
+    )
+    def test_a_post_of_another_form_leaves_the_uneditable_form_unbound(
+        self, open_page, data
+    ):
+        page = open_page(self.url_name, data)
+
+        assert uneditable_input(page, "account").has_attr("disabled")
+        assert uneditable_input(page, "account")["value"]
+
+
+INLINE_FIELD_PREFIX = "inline-field"
+INLINE_FIELD_FAILING_PREFIX = "failing-inline-field"
+INLINE_FIELD_POST = {f"{INLINE_FIELD_PREFIX}-submit": "Submit"}
+INLINE_FIELD_NAMES = ["email", "city"]
+
+
+def inline_field_frame(page, prefix, name):
+    return page.find(id=f"div_{layout_field_id(prefix, name)}")
+
+
+class InlineFieldPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = INLINE_FIELD_POST if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    @pytest.mark.parametrize(
+        "prefix", [INLINE_FIELD_PREFIX, INLINE_FIELD_FAILING_PREFIX]
+    )
+    @pytest.mark.parametrize("name", INLINE_FIELD_NAMES)
+    def test_each_inline_field_has_no_label_and_is_named_by_aria_label(
+        self, page, prefix, name
+    ):
+        frame = inline_field_frame(page, prefix, name)
+        field = frame.find(id=layout_field_id(prefix, name))
+
+        assert frame.find("label") is None
+        assert field["aria-label"]
+        assert field["placeholder"] == field["aria-label"]
+
+    @pytest.mark.parametrize("name", INLINE_FIELD_NAMES)
+    def test_the_form_that_already_fails_shows_an_error_in_each_frame(self, page, name):
+        frame = inline_field_frame(page, INLINE_FIELD_FAILING_PREFIX, name)
+
+        error_id = layout_field_id(INLINE_FIELD_FAILING_PREFIX, name) + "_error"
+
+        assert frame.find(id=error_id) is not None
+
+    @pytest.mark.parametrize("name", INLINE_FIELD_NAMES)
+    def test_a_post_of_the_empty_form_comes_back_with_an_error_in_each_frame(
+        self, open_page, name
+    ):
+        page = open_page(self.url_name, INLINE_FIELD_POST)
+
+        frame = inline_field_frame(page, INLINE_FIELD_PREFIX, name)
+
+        assert frame.find(id=layout_field_id(INLINE_FIELD_PREFIX, name) + "_error")
+
+    @pytest.mark.parametrize("name", INLINE_FIELD_NAMES)
+    def test_the_form_to_post_shows_no_error_on_a_get(self, open_page, name):
+        page = open_page(self.url_name)
+
+        frame = inline_field_frame(page, INLINE_FIELD_PREFIX, name)
+
+        assert (
+            frame.find(id=layout_field_id(INLINE_FIELD_PREFIX, name) + "_error") is None
+        )
+
+    def test_the_form_to_post_has_a_form_element_and_the_failing_one_has_none(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+        posting = inline_field_frame(page, INLINE_FIELD_PREFIX, "email")
+        failing = inline_field_frame(page, INLINE_FIELD_FAILING_PREFIX, "email")
+
+        assert posting.find_parent("form")["method"] == "post"
+        assert failing.find_parent("form") is None
+
+    @pytest.mark.parametrize("data", [None, INLINE_FIELD_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestInlineFieldPage(InlineFieldPageContract):
+    url_name = "inline-field"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("inline-field")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("decorated-fields-standalone")) is not None
+
+
+class TestDecoratedFieldsStandaloneInlineField(InlineFieldPageContract):
+    url_name = "decorated-fields-standalone"
+
+    def test_it_links_back_to_the_inline_field_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("inline-field")) is not None
+
+    @pytest.mark.parametrize(
+        "data",
+        [ATTACHED_POST, INLINE_POST, BUTTONS_POST, UNEDITABLE_POST],
+        ids=["attached", "inline", "buttons", "uneditable"],
+    )
+    def test_a_post_of_another_form_leaves_the_inline_field_form_unbound(
+        self, open_page, data
+    ):
+        page = open_page(self.url_name, data)
+
+        frame = inline_field_frame(page, INLINE_FIELD_PREFIX, "email")
+
+        assert (
+            frame.find(id=layout_field_id(INLINE_FIELD_PREFIX, "email") + "_error")
+            is None
+        )
+
+    def test_a_post_of_the_inline_field_form_leaves_the_others_unbound(self, open_page):
+        page = open_page(self.url_name, INLINE_FIELD_POST)
+
+        attached = attached_frame(page, ATTACHED_PREFIX, "amount")
+        inline = inline_frame(page, INLINE_PREFIX, "size")
+        buttons = buttons_frame(page, BUTTONS_PREFIX, "search")
+
+        assert (
+            attached.find(id=layout_field_id(ATTACHED_PREFIX, "amount") + "_error")
+            is None
+        )
+        assert inline.find(id=layout_field_id(INLINE_PREFIX, "size") + "_error") is None
+        assert (
+            buttons.find(id=layout_field_id(BUTTONS_PREFIX, "search") + "_error")
+            is None
+        )
+
+
+MULTI_WIDGET_PREFIX = "multi-widget"
+MULTI_WIDGET_FAILING_PREFIX = "failing-multi-widget"
+MULTI_WIDGET_POST = {f"{MULTI_WIDGET_PREFIX}-submit": "Submit"}
+
+
+def multi_widget_frame(page, prefix):
+    return page.find(id=f"div_{layout_field_id(prefix, 'starts')}")
+
+
+def multi_widget_part(page, prefix, index):
+    return page.find(attrs={"name": f"{prefix}-starts_{index}"})
+
+
+class MultiWidgetFieldPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = MULTI_WIDGET_POST if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    @pytest.mark.parametrize(
+        "prefix", [MULTI_WIDGET_PREFIX, MULTI_WIDGET_FAILING_PREFIX]
+    )
+    def test_each_part_has_an_attribute_of_its_own(self, page, prefix):
+        date = multi_widget_part(page, prefix, 0)
+        time = multi_widget_part(page, prefix, 1)
+
+        assert date["placeholder"]
+        assert time["placeholder"]
+        assert date["placeholder"] != time["placeholder"]
+
+    @pytest.mark.parametrize(
+        "prefix", [MULTI_WIDGET_PREFIX, MULTI_WIDGET_FAILING_PREFIX]
+    )
+    def test_each_part_is_an_input_and_the_frame_is_one_fieldset(self, page, prefix):
+        frame = multi_widget_frame(page, prefix)
+
+        assert frame.name == "fieldset"
+        assert len(frame.find_all("legend")) == 1
+        assert "input" in multi_widget_part(page, prefix, 0)["class"]
+        assert "input" in multi_widget_part(page, prefix, 1)["class"]
+
+    def test_the_form_that_already_fails_shows_an_error_in_its_frame(self, page):
+        frame = multi_widget_frame(page, MULTI_WIDGET_FAILING_PREFIX)
+
+        error_id = layout_field_id(MULTI_WIDGET_FAILING_PREFIX, "starts") + "_error"
+
+        assert frame.find(id=error_id) is not None
+        assert (
+            "input-error"
+            in multi_widget_part(page, MULTI_WIDGET_FAILING_PREFIX, 0)["class"]
+        )
+
+    def test_a_post_of_the_empty_form_comes_back_with_an_error_in_the_frame(
+        self, open_page
+    ):
+        page = open_page(self.url_name, MULTI_WIDGET_POST)
+
+        frame = multi_widget_frame(page, MULTI_WIDGET_PREFIX)
+
+        error_id = layout_field_id(MULTI_WIDGET_PREFIX, "starts") + "_error"
+        assert frame.find(id=error_id) is not None
+
+    def test_the_form_to_post_shows_no_error_on_a_get(self, open_page):
+        page = open_page(self.url_name)
+
+        frame = multi_widget_frame(page, MULTI_WIDGET_PREFIX)
+
+        error_id = layout_field_id(MULTI_WIDGET_PREFIX, "starts") + "_error"
+        assert frame.find(id=error_id) is None
+
+    def test_the_form_to_post_has_a_form_element_and_the_failing_one_has_none(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+        posting = multi_widget_frame(page, MULTI_WIDGET_PREFIX)
+        failing = multi_widget_frame(page, MULTI_WIDGET_FAILING_PREFIX)
+
+        assert posting.find_parent("form")["method"] == "post"
+        assert failing.find_parent("form") is None
+
+    @pytest.mark.parametrize("data", [None, MULTI_WIDGET_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestMultiWidgetFieldPage(MultiWidgetFieldPageContract):
+    url_name = "multi-widget-field"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("multi-widget-field")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("decorated-fields-standalone")) is not None
+
+
+class TestDecoratedFieldsStandaloneMultiWidgetField(MultiWidgetFieldPageContract):
+    url_name = "decorated-fields-standalone"
+
+    def test_it_links_back_to_the_multi_widget_field_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("multi-widget-field")) is not None
+
+    @pytest.mark.parametrize(
+        "data",
+        [ATTACHED_POST, INLINE_POST, BUTTONS_POST, UNEDITABLE_POST, INLINE_FIELD_POST],
+        ids=["attached", "inline", "buttons", "uneditable", "inline field"],
+    )
+    def test_a_post_of_another_form_leaves_the_multi_widget_form_unbound(
+        self, open_page, data
+    ):
+        page = open_page(self.url_name, data)
+
+        frame = multi_widget_frame(page, MULTI_WIDGET_PREFIX)
+
+        error_id = layout_field_id(MULTI_WIDGET_PREFIX, "starts") + "_error"
+        assert frame.find(id=error_id) is None
+
+    def test_a_post_of_the_multi_widget_form_leaves_the_others_unbound(self, open_page):
+        page = open_page(self.url_name, MULTI_WIDGET_POST)
+
+        attached = attached_frame(page, ATTACHED_PREFIX, "amount")
+        inline = inline_frame(page, INLINE_PREFIX, "size")
+        inline_field = inline_field_frame(page, INLINE_FIELD_PREFIX, "email")
+
+        assert (
+            attached.find(id=layout_field_id(ATTACHED_PREFIX, "amount") + "_error")
+            is None
+        )
+        assert inline.find(id=layout_field_id(INLINE_PREFIX, "size") + "_error") is None
+        assert (
+            inline_field.find(
+                id=layout_field_id(INLINE_FIELD_PREFIX, "email") + "_error"
+            )
+            is None
+        )
+
+
 CHOICES_OVERRIDE_PREFIX = "override"
 INPUT_ELEMENTS = ["input", "select", "textarea"]
 BUTTON_ELEMENTS = ["input", "button"]

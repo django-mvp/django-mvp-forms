@@ -4,11 +4,19 @@ from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
     Alert,
+    AppendedText,
+    FieldWithButtons,
     FormActions,
+    InlineCheckboxes,
+    InlineField,
+    InlineRadios,
     Modal,
+    PrependedAppendedText,
+    PrependedText,
     StrictButton,
     Tab,
     TabHolder,
+    UneditableField,
 )
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
@@ -21,6 +29,7 @@ from crispy_forms.layout import (
     Hidden,
     Layout,
     MultiField,
+    MultiWidgetField,
     Reset,
     Row,
     Submit,
@@ -486,6 +495,48 @@ class AlertForm(forms.Form):
         self.helper.add_input(Submit(f"{prefix}-submit", _("Submit")))
 
 
+class AttachedTextForm(forms.Form):
+    """A form whose fields have text attached to their inputs.
+
+    Three text inputs take the three layout objects, a prepended text, an
+    appended text and both, and a select takes a prepended text. Every field is
+    required, so a bound form with nothing in it comes back with an error in each
+    decorated frame. Its layout is built for each instance, and every id and
+    button name in it carries the form's prefix, so two of these forms on one
+    page repeat no id. The form must be given a prefix.
+    """
+
+    amount = forms.CharField(label=_("Amount"), help_text=_("In whole units"))
+    weight = forms.CharField(label=_("Weight"))
+    budget = forms.CharField(label=_("Budget"))
+    fruit = forms.ChoiceField(
+        label=_("Fruit"),
+        choices=[("", "---------"), ("apple", _("Apple")), ("pear", _("Pear"))],
+    )
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in every id and button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            PrependedText("amount", "$"),
+            AppendedText("weight", "kg"),
+            PrependedAppendedText("budget", "$", ".00"),
+            PrependedText("fruit", "#"),
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
 class ChosenForm(forms.Form):
     """A form that states choices for the form and draws no form element.
 
@@ -734,6 +785,203 @@ class DrawingOverrideForm(ChosenForm):
             "inherits",
             Choice("overrides", drawing="toggle", size="xl", color="accent"),
         )
+
+
+class InlineChoicesForm(forms.Form):
+    """A form whose radio group and checkbox group are drawn along a line.
+
+    Both fields are required, so a bound form with nothing in it comes back with
+    an error in each group's frame. Its layout is built for each instance, and
+    every id and button name in it carries the form's prefix, so two of these
+    forms on one page repeat no id. The form must be given a prefix.
+    """
+
+    size = forms.ChoiceField(
+        label=_("Size"),
+        help_text=_("Pick one"),
+        choices=[("s", _("Small")), ("m", _("Medium")), ("l", _("Large"))],
+        widget=forms.RadioSelect,
+    )
+    extras = forms.MultipleChoiceField(
+        label=_("Extras"),
+        help_text=_("Pick any"),
+        choices=[
+            ("ketchup", _("Ketchup")),
+            ("mustard", _("Mustard")),
+            ("onions", _("Fried onions")),
+            ("pickles", _("Pickles")),
+        ],
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in every id and button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(InlineRadios("size"), InlineCheckboxes("extras"))
+        if posts:
+            self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class FieldWithButtonsForm(forms.Form):
+    """A form whose fields have buttons joined to their inputs.
+
+    One field has a button and the other has three. Both are required, so a bound
+    form with nothing in it comes back with an error in each frame. Its layout is
+    built for each instance, and every id and button name in it carries the form's
+    prefix, so two of these forms on one page repeat no id. The form must be given
+    a prefix.
+    """
+
+    search = forms.CharField(label=_("Search"), help_text=_("Words to look for"))
+    code = forms.CharField(label=_("Code"))
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in every id and button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            FieldWithButtons(
+                "search",
+                StrictButton(_("Go"), css_id=f"{prefix}-go"),
+                css_id=f"{prefix}-search-group",
+            ),
+            FieldWithButtons(
+                "code",
+                StrictButton(_("Apply"), css_id=f"{prefix}-apply"),
+                StrictButton(_("Clear"), css_id=f"{prefix}-clear"),
+                StrictButton(_("Help"), css_id=f"{prefix}-help"),
+                css_id=f"{prefix}-code-group",
+            ),
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{prefix}-submit", _("Submit")))
+
+
+class UneditableFieldForm(forms.Form):
+    """A form with an uneditable field beside an editable one.
+
+    The account is declared disabled, so a submitted form keeps its initial value
+    and the browser leaving it out is no error. The nickname is optional, so a
+    bound form with nothing in it has no error to show. Its layout is built for
+    each instance, and the form's prefix is in the button name, so two forms on
+    one page repeat no id. The form must be given a prefix.
+    """
+
+    account = forms.CharField(
+        label=_("Account"),
+        initial="AC-1001",
+        disabled=True,
+        help_text=_("Issued once and never changed"),
+    )
+    nickname = forms.CharField(
+        label=_("Nickname"), required=False, help_text=_("Shown to others")
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in the button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(UneditableField("account"), "nickname")
+        self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class InlineFieldForm(forms.Form):
+    """A short form of fields drawn with no visible label.
+
+    The email and the city are required, so a bound form with nothing in it
+    comes back with an error in each frame. The checkbox keeps its label. Its
+    layout is built for each instance, and every id and button name in it
+    carries the form's prefix, so two of these forms on one page repeat no id.
+    The form must be given a prefix.
+    """
+
+    email = forms.EmailField(label=_("Email"))
+    city = forms.CharField(label=_("City"))
+    remember = forms.BooleanField(label=_("Remember me"), required=False)
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in the button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            InlineField("email"), InlineField("city"), InlineField("remember")
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class MultiWidgetFieldForm(forms.Form):
+    """A form with a split date and time whose parts each have an attribute.
+
+    The start is required, so a bound form with nothing in it comes back with an
+    error in the frame. The end is optional and drawn with no layout object, as
+    any split date and time is. Its layout is built for each instance, and the
+    form's prefix is in the button name, so two of these forms on one page repeat
+    no id. The form must be given a prefix.
+    """
+
+    starts = forms.SplitDateTimeField(
+        label=_("Starts"), help_text=_("Local date and time")
+    )
+    ends = forms.SplitDateTimeField(label=_("Ends"), required=False)
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in the button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            MultiWidgetField(
+                "starts",
+                attrs=({"placeholder": "2026-10-03"}, {"placeholder": "12:30"}),
+            ),
+            "ends",
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
 
 
 ORDER_LINE_LIMIT = 10000

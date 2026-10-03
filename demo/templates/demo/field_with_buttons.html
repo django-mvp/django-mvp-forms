@@ -1,0 +1,18 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="field-with-buttons">
+    <c-text>
+      Both fields are required. Submit the form empty to see an error in each frame.
+      The input and its buttons are joined into one control.
+    </c-text>
+    {% crispy buttons_form %}
+  </c-section>
+  <c-section title="A form that already fails" level="3">
+    <c-text>Neither field holds a value, so both show their error.</c-text>
+    {% crispy failing_buttons_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'decorated-fields-standalone' %}" text="The same forms without django-mvp" />
+  </c-text>
+{% endblock page.content %}

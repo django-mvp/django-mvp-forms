@@ -51,6 +51,39 @@ AppMenu.extend(
             extra_context={"label": "Alert", "icon": "alert"},
         ),
         MenuItem(
+            name="attached-text",
+            view_name="attached-text",
+            extra_context={"label": "Attached text", "icon": "attached-text"},
+        ),
+        MenuItem(
+            name="inline-choices",
+            view_name="inline-choices",
+            extra_context={"label": "Inline choices", "icon": "inline-choices"},
+        ),
+        MenuItem(
+            name="field-with-buttons",
+            view_name="field-with-buttons",
+            extra_context={"label": "Field with buttons", "icon": "field-with-buttons"},
+        ),
+        MenuItem(
+            name="uneditable-field",
+            view_name="uneditable-field",
+            extra_context={"label": "Uneditable field", "icon": "uneditable-field"},
+        ),
+        MenuItem(
+            name="inline-field",
+            view_name="inline-field",
+            extra_context={"label": "Inline field", "icon": "inline-field"},
+        ),
+        MenuItem(
+            name="multi-widget-field",
+            view_name="multi-widget-field",
+            extra_context={
+                "label": "Multi-widget field",
+                "icon": "multi-widget-field",
+            },
+        ),
+        MenuItem(
             name="choices",
             view_name="choices",
             extra_context={"label": "Size, colour and variant", "icon": "choices"},

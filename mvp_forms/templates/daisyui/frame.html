@@ -1,0 +1,23 @@
+{% if field.is_hidden %}
+  {{ field }}
+{% else %}
+  {% if drawn.is_group %}
+    <fieldset{% if field.auto_id %} id="div_{{ field.auto_id }}"{% endif %} class="fieldset{% if drawn.wrapper_class %} {{ drawn.wrapper_class }}{% endif %}"{% if drawn.group_description %} aria-describedby="{{ drawn.group_description }}"{% endif %}{% if field.label and not drawn.show_labels %} aria-label="{{ drawn.label_text }}"{% endif %}>
+      {% if field.label and drawn.show_labels %}
+        <legend class="fieldset-legend{% if label_class %} {{ label_class }}{% endif %}">
+          {{ field.label }}{% include "daisyui/required_marker.html" %}
+        </legend>
+      {% endif %}
+      {% include "daisyui/field_body.html" %}
+    </fieldset>
+  {% else %}
+    <div{% if field.auto_id %} id="div_{{ field.auto_id }}"{% endif %} class="fieldset{% if drawn.wrapper_class %} {{ drawn.wrapper_class }}{% endif %}">
+      {% if field.label and drawn.show_labels and not drawn.is_single_checkbox %}
+        <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="fieldset-legend{% if label_class %} {{ label_class }}{% endif %}">
+          {{ field.label }}{% include "daisyui/required_marker.html" %}
+        </label>
+      {% endif %}
+      {% include "daisyui/field_body.html" %}
+    </div>
+  {% endif %}
+{% endif %}

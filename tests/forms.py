@@ -15,6 +15,7 @@ from django.forms import (
     modelformset_factory,
     widgets,
 )
+from django.utils.safestring import mark_safe
 
 
 class TextInputsForm(forms.Form):
@@ -415,6 +416,161 @@ class DocumentedExamplesForm(forms.Form):
     form_field_1 = forms.CharField()
     form_field_2 = forms.CharField()
     form_field_3 = forms.CharField()
+    form_field_split = forms.SplitDateTimeField()
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+class DecoratedFieldsForm(forms.Form):
+    amount = forms.CharField(label="Amount", help_text="In whole units")
+    other = forms.CharField(label="Other", required=False)
+    country = forms.ChoiceField(choices=FRUIT, label="Fruit")
+    agree = forms.BooleanField()
+    pick = forms.ChoiceField(choices=FRUIT, widget=forms.RadioSelect)
+    born = forms.DateField(widget=forms.SelectDateWidget)
+    notes = forms.CharField(widget=forms.Textarea)
+    upload = forms.FileField()
+    token = forms.CharField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+class UneditableFieldsForm(forms.Form):
+    account = forms.CharField(
+        label="Account", initial="AC-1001", help_text="Issued once"
+    )
+    empty = forms.CharField(required=False)
+    markup = forms.CharField(initial='<b onclick="x()">&amp;</b>')
+    country = forms.ChoiceField(choices=FRUIT, initial="b")
+    agree = forms.BooleanField(initial=True)
+    pick = forms.ChoiceField(choices=FRUIT, widget=forms.RadioSelect, initial="b")
+    boxes = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.CheckboxSelectMultiple, initial=["a"]
+    )
+    notes = forms.CharField(widget=forms.Textarea, initial="Hello")
+    locked = forms.CharField(initial="Ada", disabled=True)
+    kept = forms.CharField(initial="Kept")
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+class InlineFieldsForm(forms.Form):
+    name = forms.CharField(label="Your name", help_text="As on your card")
+    own = forms.CharField(
+        label="Own", widget=forms.TextInput(attrs={"placeholder": "Mine"})
+    )
+    named = forms.CharField(
+        label="Named", widget=forms.TextInput(attrs={"aria-label": "Mine"})
+    )
+    marked = forms.CharField(label=mark_safe("<b>Marked</b> &amp; bold"))
+    note = forms.CharField(label="Note", widget=forms.Textarea)
+    country = forms.ChoiceField(choices=FRUIT, label="Fruit")
+    agree = forms.BooleanField(label="I agree")
+    pick = forms.ChoiceField(choices=FRUIT, widget=forms.RadioSelect, label="Pick")
+    plain = forms.CharField(label="Plain")
+    unlabelled = forms.CharField(label="", required=False)
+    token = forms.CharField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+class PhoneWidget(forms.MultiWidget):
+    def __init__(self, attrs=None):
+        parts = (forms.TextInput, forms.TextInput, forms.TextInput)
+        super().__init__(parts, attrs)
+
+    def decompress(self, value):
+        return value.split("-") if value else [None, None, None]
+
+
+class PhoneField(forms.MultiValueField):
+    widget = PhoneWidget
+
+    def __init__(self, **kwargs):
+        parts = (forms.CharField(), forms.CharField(), forms.CharField())
+        super().__init__(parts, **kwargs)
+
+    def compress(self, data_list):
+        return "-".join(data_list)
+
+
+def refuse_moment(value):
+    raise ValidationError("Not that moment", code="moment")
+
+
+class MultiWidgetsForm(forms.Form):
+    moment = forms.SplitDateTimeField(label="Starts", help_text="Local time")
+    ends = forms.SplitDateTimeField(label="Ends", required=False)
+    phone = PhoneField(label="Phone")
+    name = forms.CharField(label="Name")
+    token = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+class RefusedMomentForm(MultiWidgetsForm):
+    moment = forms.SplitDateTimeField(
+        label="Starts", help_text="Local time", validators=[refuse_moment]
+    )
+
+
+class InlineRadiosForm(RadioGroupsForm):
+    text = forms.CharField(required=False)
+    fixed = forms.ChoiceField(
+        choices=FRUIT, widget=forms.RadioSelect, disabled=True, initial="a"
+    )
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+class InlineCheckboxesForm(CheckboxGroupsForm):
+    text = forms.CharField(required=False)
+    fixed = forms.MultipleChoiceField(
+        choices=FRUIT,
+        widget=forms.CheckboxSelectMultiple,
+        disabled=True,
+        initial=["a"],
+    )
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+def refuse_markup(value):
+    raise ValidationError("<script>alert(1)</script>", code="markup")
+
+
+class MarkedUpDecoratedForm(forms.Form):
+    amount = forms.CharField(
+        label="<b>Amount</b>", help_text="<i>Help</i>", validators=[refuse_markup]
+    )
 
     def __init__(self, *args, layout=(), **kwargs):
         super().__init__(*args, **kwargs)

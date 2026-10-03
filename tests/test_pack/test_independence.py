@@ -9,11 +9,19 @@ from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
     Alert,
+    AppendedText,
+    FieldWithButtons,
     FormActions,
+    InlineCheckboxes,
+    InlineField,
+    InlineRadios,
     Modal,
+    PrependedAppendedText,
+    PrependedText,
     StrictButton,
     Tab,
     TabHolder,
+    UneditableField,
 )
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
@@ -25,6 +33,7 @@ from crispy_forms.layout import (
     Fieldset,
     Hidden,
     MultiField,
+    MultiWidgetField,
     Reset,
     Row,
     Submit,
@@ -38,6 +47,7 @@ from tests.forms import (
     CheckboxForm,
     CheckboxGroupsForm,
     DateSelectsForm,
+    DecoratedFieldsForm,
     DeveloperAttrsForm,
     DrawnBooleansForm,
     EveryInputForm,
@@ -45,7 +55,11 @@ from tests.forms import (
     FilesForm,
     FormWideErrorsForm,
     HelpedForm,
+    InlineCheckboxesForm,
+    InlineFieldsForm,
+    InlineRadiosForm,
     LineFormSet,
+    MultiWidgetsForm,
     RadioGroupsForm,
     RequiredDrawnBooleanForm,
     RuledLineFormSet,
@@ -53,6 +67,7 @@ from tests.forms import (
     StructureForm,
     TextInputsForm,
     UncoveredWidgetsForm,
+    UneditableFieldsForm,
     ruled_data,
 )
 
@@ -223,6 +238,101 @@ def alerted(data=None):
             Alert("Mind <b>this</b>", css_id="note", css_class="alert-warning mine"),
             Alert("Stay", dismiss=False, block=True),
             "second",
+        ),
+    )
+
+
+def attached(data=None):
+    return DecoratedFieldsForm(
+        data,
+        layout=(
+            PrependedText("amount", "$"),
+            AppendedText("country", "#"),
+            PrependedAppendedText("other", "$", ".00"),
+        ),
+    )
+
+
+def with_buttons(data=None):
+    return DecoratedFieldsForm(
+        data,
+        layout=(
+            FieldWithButtons("amount", StrictButton("Go")),
+            FieldWithButtons(
+                "country",
+                Submit("search", "Search"),
+                Button("clear", "Clear"),
+                css_id="joined-country",
+            ),
+            FieldWithButtons("other"),
+        ),
+    )
+
+
+def uneditable(data=None):
+    return UneditableFieldsForm(
+        data,
+        layout=(
+            UneditableField("account"),
+            UneditableField("country"),
+            UneditableField("agree"),
+            UneditableField("pick"),
+            UneditableField("boxes"),
+            UneditableField("notes"),
+            UneditableField("empty", css_class="mine"),
+        ),
+    )
+
+
+def inlined_fields(data=None):
+    return InlineFieldsForm(
+        data,
+        layout=(
+            InlineField("name"),
+            InlineField("own"),
+            InlineField("named"),
+            InlineField("marked"),
+            InlineField("note"),
+            InlineField("country"),
+            InlineField("agree"),
+            InlineField("pick"),
+            InlineField("plain", css_class="mine"),
+        ),
+    )
+
+
+def inlined_radios(data=None):
+    return InlineRadiosForm(
+        data,
+        layout=(
+            InlineRadios("choice"),
+            InlineRadios("grouped"),
+            InlineRadios("locked"),
+        ),
+    )
+
+
+def inlined_checkboxes(data=None):
+    return InlineCheckboxesForm(
+        data,
+        layout=(
+            InlineCheckboxes("choice"),
+            InlineCheckboxes("grouped"),
+            InlineCheckboxes("locked"),
+        ),
+    )
+
+
+def multi_widget(data=None):
+    return MultiWidgetsForm(
+        data,
+        layout=(
+            MultiWidgetField(
+                "moment", attrs=({"class": "mine"}, {"placeholder": "12:30"})
+            ),
+            MultiWidgetField("phone", attrs={"data-part": "phone"}),
+            "ends",
+            "name",
         ),
     )
 
@@ -400,12 +510,72 @@ STATES = [
     pytest.param("{% crispy form %}", lambda: modalled({}), MINE, id="modal, invalid"),
     pytest.param("{% crispy form %}", alerted, MINE, id="alert"),
     pytest.param("{% crispy form %}", lambda: alerted({}), MINE, id="alert, invalid"),
+    pytest.param("{% crispy form %}", attached, NOTHING, id="attached text"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: attached({}),
+        NOTHING,
+        id="attached text, invalid",
+    ),
+    pytest.param("{% crispy form %}", with_buttons, NOTHING, id="field with buttons"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: with_buttons({}),
+        NOTHING,
+        id="field with buttons, invalid",
+    ),
+    pytest.param("{% crispy form %}", uneditable, MINE, id="uneditable fields"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: uneditable({}),
+        MINE,
+        id="uneditable fields, invalid",
+    ),
+    pytest.param("{% crispy form %}", inlined_fields, MINE, id="inline fields"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: inlined_fields({}),
+        MINE,
+        id="inline fields, invalid",
+    ),
+    pytest.param("{% crispy form %}", multi_widget, MINE, id="multi-widget fields"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: multi_widget({}),
+        MINE,
+        id="multi-widget fields, invalid",
+    ),
+    pytest.param(
+        "{{ form|crispy }}", MultiWidgetsForm, NOTHING, id="split date and time"
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: MultiWidgetsForm({}),
+        NOTHING,
+        id="split date and time, invalid",
+    ),
     pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
     pytest.param(
         "{% crispy form %}",
         lambda: buttoned({}),
         NOTHING,
         id="buttons in a layout, invalid",
+    ),
+    pytest.param("{% crispy form %}", inlined_radios, NOTHING, id="inline radios"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: inlined_radios({}),
+        NOTHING,
+        id="inline radios, invalid",
+    ),
+    pytest.param(
+        "{% crispy form %}", inlined_checkboxes, NOTHING, id="inline checkboxes"
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: inlined_checkboxes({}),
+        NOTHING,
+        id="inline checkboxes, invalid",
     ),
     pytest.param(
         "{% crispy form %}", helper_buttons, NOTHING, id="buttons added to the helper"

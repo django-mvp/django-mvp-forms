@@ -24,6 +24,10 @@ DATE_PARTS = {
     "_month": gettext_lazy("Month"),
     "_day": gettext_lazy("Day"),
 }
+# What names the two inputs of a split date and time, in the order they are drawn.
+SPLIT_DATE_TIME_PARTS = (gettext_lazy("Date"), gettext_lazy("Time"))
+# The class UneditableField writes onto the widget it wraps.
+UNEDITABLE_CLASS = "uneditable-input"
 # Class names django-crispy-forms writes for other template packs. daisyUI does
 # not define them, so a button or a group is drawn without them.
 UPSTREAM_ONLY_CLASSES = frozenset(
@@ -35,6 +39,7 @@ UPSTREAM_ONLY_CLASSES = frozenset(
         "tab-pane",
         "active",
         "alert-block",
+        UNEDITABLE_CLASS,
     }
 )
 # Written by layout/tab-pane.html in place of a group name; daisyui_tab_group
@@ -48,7 +53,8 @@ class FieldInput:
     The pack's class is passed to ``BoundField.as_widget``, which merges it over
     the widget's own attributes for that render only, so the widget is never
     changed. A widget the pack has a template for is drawn from a copy of it with
-    that template, for the same reason.
+    that template, for the same reason. The parts of a multi-widget are classed
+    and named on a deep copy of it, each by its own kind.
 
     Args:
         field: The bound field whose widget is drawn.
@@ -60,6 +66,18 @@ class FieldInput:
         placed: The ``Choice`` of a layout around the field, if any. It wins
             over the form's statement for this field, and the field's entry in
             ``choices.fields`` stands between the two.
+        wrapper_class: A class for the frame's outer element.
+        prepended: Text drawn before the input, as markup.
+        appended: Text drawn after the input, as markup.
+        inline: Whether a group of choices is drawn along a line, wrapping when it
+            does not fit, and not one under another.
+        join: The ``FieldWithButtons`` whose buttons are joined to the input, if
+            any. Its buttons were drawn by django-crispy-forms before the field.
+        disabled: Whether the input is drawn disabled, whatever the form field
+            says. The form field and its widget are not changed.
+        unlabelled: Whether the field is drawn with no visible label, named by an
+            ``aria-label`` and, on a text input or a textarea, offering the label
+            as its placeholder. A single checkbox keeps its label.
 
     Raises:
         InvalidChoice: A size, colour or variant stated for the form or the
@@ -93,6 +111,10 @@ class FieldInput:
         forms.SelectDateWidget: "daisyui/widgets/select_date.html",
         forms.ClearableFileInput: "daisyui/widgets/clearable_file_input.html",
     }
+    inline_templates: dict[type[forms.Widget], str] = {
+        forms.CheckboxSelectMultiple: "daisyui/widgets/inline_group.html",
+        forms.RadioSelect: "daisyui/widgets/inline_group.html",
+    }
     # The removal checkbox of a held file takes the size and the colour. A
     # checkbox has no variant.
     removal_kinds = ("size", "color")
@@ -115,16 +137,42 @@ class FieldInput:
         show_errors: bool = True,
         choices: FormChoices | None = None,
         placed: Choice | None = None,
+        *,
+        wrapper_class: str = "",
+        prepended: str | None = None,
+        appended: str | None = None,
+        inline: bool = False,
+        join: Any = None,
+        disabled: bool = False,
+        unlabelled: bool = False,
     ) -> None:
         self.field = field
-        self.show_labels = show_labels
+        self.choices = choices or FormChoices()
+        self.own = self.own_choice(self.choices, placed)
+        # A hidden field is drawn as it is, so nothing stated reaches it.
+        self.drawing = None if field.is_hidden else self.resolve_drawing(self.own)
+        self.unlabelled = unlabelled
+        self.show_labels = show_labels and not (
+            unlabelled and not self.is_single_checkbox
+        )
         self.show_errors = show_errors
-        choices = choices or FormChoices()
-        own = self.own_choice(choices, placed)
-        self.drawing = self.resolve_drawing(own)
-        self.modifiers = self.resolve_modifiers(choices, own, self.component)
+        self.wrapper_class = wrapper_class
+        self.prepended = prepended
+        self.appended = appended
+        self.inline = inline
+        self.join = join
+        self.disabled = disabled
+        # A multi-widget's parts state their own choices, so the field
+        # resolves none.
+        self.modifiers = (
+            []
+            if field.is_hidden or self.is_multi_widget
+            else self.resolve_modifiers(self.choices, self.own, self.component)
+        )
         self.removal_modifiers = (
-            self.resolve_modifiers(choices, own, "checkbox", self.removal_kinds)
+            self.resolve_modifiers(
+                self.choices, self.own, "checkbox", self.removal_kinds
+            )
             if self.component == "file-input"
             else []
         )
@@ -228,8 +276,19 @@ class FieldInput:
         """
         if self.drawing:
             return Modifiers.drawings[self.drawing]
+        return self.component_of(self.field.field.widget)
+
+    def component_of(self, widget: forms.Widget) -> str | None:
+        """Return the daisyUI class for a widget, or None when it has none.
+
+        Args:
+            widget: The field's widget, or one part of a multi-widget.
+
+        Returns:
+            The component the widget is drawn as.
+        """
         for widget_class, component in self.components.items():
-            if isinstance(self.field.field.widget, widget_class):
+            if isinstance(widget, widget_class):
                 return component
         return None
 
@@ -242,7 +301,8 @@ class FieldInput:
         widget has its class's templates.
         """
         widget = self.field.field.widget
-        for widget_class, name in self.templates.items():
+        templates = {**self.templates, **(self.inline_templates if self.inline else {})}
+        for widget_class, name in templates.items():
             if isinstance(widget, widget_class) and all(
                 getattr(widget, attr, None) == getattr(widget_class, attr, None)
                 for attr in ("template_name", "option_template_name")
@@ -261,7 +321,39 @@ class FieldInput:
                 widget.get_context = self.removal_context(  # type: ignore[method-assign]
                     widget.get_context
                 )
+        elif isinstance(widget, forms.MultiWidget):
+            widget = copy.deepcopy(widget)
+            for index, part in enumerate(widget.widgets):
+                self.decorate_part(widget, index, part)
         return widget
+
+    def decorate_part(
+        self, widget: forms.MultiWidget, index: int, part: forms.Widget
+    ) -> None:
+        """Class and name one part of a copy of a multi-widget, for this render.
+
+        A hidden part is left as it is. Any class or name the part already has
+        is kept.
+
+        Args:
+            widget: The copy of the multi-widget that holds the part.
+            index: The part's place in the widget.
+            part: The part, which is changed.
+        """
+        if part.is_hidden:
+            return
+        component = self.component_of(part)
+        if component:
+            own = self.own_names(part)
+            modifiers = self.resolve_modifiers(self.choices, self.own, component)
+            classes = self.classes_for(component, own, modifiers)
+            part.attrs["class"] = " ".join(dict.fromkeys(own + classes))
+        if isinstance(widget, forms.SplitDateTimeWidget):
+            name = str(SPLIT_DATE_TIME_PARTS[index])
+        else:
+            name = self.label_text if self.field.label else ""
+        if name and "aria-label" not in part.attrs:
+            part.attrs["aria-label"] = name
 
     def removal_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
         """Wrap a widget's context so that it names the removal checkbox's classes.
@@ -290,6 +382,11 @@ class FieldInput:
         return self.field.use_fieldset
 
     @property
+    def is_multi_widget(self) -> bool:
+        """Whether the field's widget is several widgets, each drawn on its own."""
+        return isinstance(self.field.field.widget, forms.MultiWidget)
+
+    @property
     def is_single_checkbox(self) -> bool:
         """Whether the field is one checkbox, which sits inside its own label.
 
@@ -298,28 +395,103 @@ class FieldInput:
         return self.component in {"checkbox", "toggle"} and not self.is_group
 
     @property
-    def css_class(self) -> str:
-        """The widget's own classes, the component, the choices, a width, the error."""
-        classes = self.field.field.widget.attrs.get("class", "").split()
-        if self.component:
-            classes.append(self.component)
-            classes.extend(self.modifiers)
-            if self.component not in self.fixed_size and not any(
-                name.startswith("w-") for name in classes
+    def own_classes(self) -> list[str]:
+        """The class names the widget already carries, but one daisyUI lacks.
+
+        Only the class ``UneditableField`` writes onto the widget is dropped. Any
+        other name is the developer's and is kept.
+        """
+        return self.own_names(self.field.field.widget)
+
+    def own_names(self, widget: forms.Widget) -> list[str]:
+        """Return the class names a widget already carries, but one daisyUI lacks.
+
+        Args:
+            widget: The field's widget, or one part of a multi-widget.
+
+        Returns:
+            The names in its ``class`` attribute, in order, without the class
+            ``UneditableField`` writes.
+        """
+        names = str(widget.attrs.get("class", "")).split()
+        return [name for name in names if name != UNEDITABLE_CLASS]
+
+    @property
+    def is_joined(self) -> bool:
+        """Whether the field is drawn with buttons joined to it."""
+        return bool(self.join)
+
+    @property
+    def pack_classes(self) -> list[str]:
+        """The component, the choices, a width, the error. Empty with no component."""
+        return self.classes_for(self.component, self.own_classes, self.modifiers)
+
+    def classes_for(
+        self, component: str | None, own: list[str], modifiers: list[str]
+    ) -> list[str]:
+        """Return the pack's classes for one input: the field's or one part's.
+
+        Args:
+            component: The component the input is drawn as.
+            own: The class names the input already carries.
+            modifiers: The classes of the choices that apply to the component.
+
+        Returns:
+            The component, the choices, ``join-item`` when the field is joined
+            and is not a group, a width unless the component is fixed-size or an
+            own class is a width, and the error modifier. Empty with no
+            component.
+        """
+        classes: list[str] = []
+        if component:
+            classes.append(component)
+            classes.extend(modifiers)
+            if self.is_joined and not self.is_group:
+                classes.append("join-item")
+            if component not in self.fixed_size and not any(
+                name.startswith("w-") for name in own
             ):
                 classes.append(self.width)
             if self.is_in_error:
-                classes.append(self.error_modifiers[self.component])
-        return " ".join(dict.fromkeys(classes))
+                classes.append(self.error_modifiers[component])
+        return classes
+
+    @property
+    def css_class(self) -> str:
+        """The widget's own classes, the component, the choices, a width, the error."""
+        return " ".join(dict.fromkeys(self.own_classes + self.pack_classes))
+
+    @property
+    def has_attached_text(self) -> bool:
+        """Whether text is drawn beside an input or a select that can hold it.
+
+        A group is several inputs, so it never holds attached text.
+        """
+        return (
+            bool(self.prepended or self.appended)
+            and self.component in {"input", "select"}
+            and not self.is_group
+        )
+
+    @property
+    def attached_class(self) -> str:
+        """The pack's classes as one string, for the element holding attached text."""
+        return " ".join(self.pack_classes)
 
     @property
     def attrs(self) -> dict[str, str | bool]:
         """The attributes the pack adds to the widget for this render."""
         attrs: dict[str, str | bool] = {}
-        if self.component:
+        if self.component and self.has_attached_text:
+            attrs["class"] = " ".join(self.own_classes) or False
+        elif self.component:
             attrs["class"] = self.css_class
         if self.drawing == "switch":
             attrs["role"] = "switch"
+        if self.disabled:
+            attrs["disabled"] = True
+        if self.requires_placeholder:
+            attrs["placeholder"] = self.label_text
         if self.requires_aria_required:
             attrs["aria-required"] = "true"
         if self.requires_aria_label:
@@ -339,6 +511,17 @@ class FieldInput:
         if isinstance(label, SafeData):
             return unescape(strip_tags(str(label))).strip()
         return str(label)
+
+    @property
+    def requires_placeholder(self) -> bool:
+        """Whether the label is offered as the placeholder of an unlabelled field."""
+        return (
+            self.unlabelled
+            and self.component in {"input", "textarea"}
+            and not self.is_group
+            and "placeholder" not in self.field.field.widget.attrs
+            and bool(self.field.label)
+        )
 
     @property
     def requires_aria_required(self) -> bool:
@@ -575,11 +758,13 @@ def daisyui_button(context: Context, button: Any) -> DrawnButton:
 
 
 @register.simple_tag(takes_context=True)
-def daisyui_field(context: Context, field: BoundField) -> FieldInput:
+def daisyui_field(context: Context, field: BoundField, **decoration: Any) -> FieldInput:
     """Return the pack's drawing of a bound field's widget.
 
     Used as ``{% daisyui_field field as drawn %}``: the frame asks the result
-    which shape to draw, then draws it with ``drawn.render``.
+    which shape to draw, then draws it with ``drawn.render``. A layout object's
+    template adds the options that say how the field is decorated, such as
+    ``prepended="$"``.
 
     Args:
         context: The template context, read for the helper's label and error
@@ -588,6 +773,7 @@ def daisyui_field(context: Context, field: BoundField) -> FieldInput:
             form's statement of choices and for the choice of a layout around
             the field.
         field: The bound field whose widget is drawn.
+        **decoration: The keyword-only arguments of ``FieldInput``, passed on.
 
     Returns:
         The field's input.
@@ -605,6 +791,8 @@ def daisyui_field(context: Context, field: BoundField) -> FieldInput:
         show_errors=context.get("form_show_errors") != False,  # noqa: E712
         choices=FormChoices.lookup(context, field.form),
         placed=placed if isinstance(placed, Choice) else None,
+        wrapper_class=context.get("wrapper_class") or "",
+        **decoration,
     )
 
 

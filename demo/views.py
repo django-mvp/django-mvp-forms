@@ -14,6 +14,7 @@ from demo.forms import (
     ORDER_LINE_LIMIT,
     AccordionForm,
     AlertForm,
+    AttachedTextForm,
     ButtonBarForm,
     ChoiceInputsForm,
     ChosenGroupsForm,
@@ -21,10 +22,14 @@ from demo.forms import (
     DrawingsForm,
     DrawingStateForm,
     DrawingTrioForm,
+    FieldWithButtonsForm,
     HelperButtonsForm,
+    InlineChoicesForm,
+    InlineFieldForm,
     InputKindsForm,
     LayoutObjectsForm,
     ModalForm,
+    MultiWidgetFieldForm,
     OrderLineFormSet,
     OverrideForm,
     PairForm,
@@ -34,6 +39,7 @@ from demo.forms import (
     TabsForm,
     TextInputsForm,
     TextStatesForm,
+    UneditableFieldForm,
 )
 from mvp_forms.choices import FormChoices, Modifiers
 
@@ -475,6 +481,275 @@ class ContainersStandaloneView(
         if f"{self.accordion_prefix}-submit" in request.POST:
             return AccordionMixin.post(self, request, *args, **kwargs)
         return TabsMixin.post(self, request, *args, **kwargs)
+
+
+class AttachedTextMixin:
+    """The forms the attached-text page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    attached_prefix = "attached"
+    attached_failing_prefix = "failing-attached"
+    attached_failing_data = {"failing-attached-weight": "70"}
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault(
+            "attached_form", AttachedTextForm(prefix=self.attached_prefix)
+        )
+        kwargs["failing_attached_form"] = AttachedTextForm(
+            self.attached_failing_data, prefix=self.attached_failing_prefix, posts=False
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = AttachedTextForm(request.POST, prefix=self.attached_prefix)
+        return self.render_to_response(self.get_context_data(attached_form=form))
+
+
+class AttachedTextView(AttachedTextMixin, MVPTemplateView):
+    """Text attached to inputs, inside the application shell."""
+
+    template_name = "demo/attached_text.html"
+    page_title = "Attached text"
+    page_subtitle = "Text drawn before and after an input or a select"
+    breadcrumbs = [{"text": "Attached text"}]
+
+
+class InlineChoicesMixin:
+    """The forms the inline-choices page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    inline_prefix = "inline"
+    inline_failing_prefix = "failing-inline"
+    inline_failing_data = {"failing-inline-size": "huge"}
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault("inline_form", InlineChoicesForm(prefix=self.inline_prefix))
+        kwargs["failing_inline_form"] = InlineChoicesForm(
+            self.inline_failing_data, prefix=self.inline_failing_prefix, posts=False
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = InlineChoicesForm(request.POST, prefix=self.inline_prefix)
+        return self.render_to_response(self.get_context_data(inline_form=form))
+
+
+class InlineChoicesView(InlineChoicesMixin, MVPTemplateView):
+    """Radios and checkboxes in a line, inside the application shell."""
+
+    template_name = "demo/inline_choices.html"
+    page_title = "Inline choices"
+    page_subtitle = "Radio and checkbox groups with their options along a line"
+    breadcrumbs = [{"text": "Inline choices"}]
+
+
+class FieldWithButtonsMixin:
+    """The forms the field-with-buttons page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    buttons_prefix = "buttons"
+    buttons_failing_prefix = "failing-buttons"
+    buttons_failing_data = {"failing-buttons-search": "", "failing-buttons-code": ""}
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault(
+            "buttons_form", FieldWithButtonsForm(prefix=self.buttons_prefix)
+        )
+        kwargs["failing_buttons_form"] = FieldWithButtonsForm(
+            self.buttons_failing_data, prefix=self.buttons_failing_prefix, posts=False
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = FieldWithButtonsForm(request.POST, prefix=self.buttons_prefix)
+        return self.render_to_response(self.get_context_data(buttons_form=form))
+
+
+class FieldWithButtonsView(FieldWithButtonsMixin, MVPTemplateView):
+    """A field with buttons joined to its input, inside the application shell."""
+
+    template_name = "demo/field_with_buttons.html"
+    page_title = "Field with buttons"
+    page_subtitle = "An input with one button or several joined to it"
+    breadcrumbs = [{"text": "Field with buttons"}]
+
+
+class UneditableFieldMixin:
+    """The form the uneditable-field page and the standalone page draw.
+
+    The form has a prefix of its own, so no id repeats on a page.
+    """
+
+    uneditable_prefix = "uneditable"
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post."""
+        kwargs.setdefault(
+            "uneditable_form", UneditableFieldForm(prefix=self.uneditable_prefix)
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form bound to what was posted."""
+        form = UneditableFieldForm(request.POST, prefix=self.uneditable_prefix)
+        return self.render_to_response(self.get_context_data(uneditable_form=form))
+
+
+class UneditableFieldView(UneditableFieldMixin, MVPTemplateView):
+    """An uneditable field beside an editable one, inside the application shell."""
+
+    template_name = "demo/uneditable_field.html"
+    page_title = "Uneditable field"
+    page_subtitle = "A value shown and not changed, beside one that can be"
+    breadcrumbs = [{"text": "Uneditable field"}]
+
+
+class InlineFieldMixin:
+    """The forms the inline-field page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    inline_field_prefix = "inline-field"
+    inline_field_failing_prefix = "failing-inline-field"
+    inline_field_failing_data = {
+        "failing-inline-field-email": "",
+        "failing-inline-field-city": "",
+    }
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault(
+            "inline_field_form", InlineFieldForm(prefix=self.inline_field_prefix)
+        )
+        kwargs["failing_inline_field_form"] = InlineFieldForm(
+            self.inline_field_failing_data,
+            prefix=self.inline_field_failing_prefix,
+            posts=False,
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = InlineFieldForm(request.POST, prefix=self.inline_field_prefix)
+        return self.render_to_response(self.get_context_data(inline_field_form=form))
+
+
+class InlineFieldView(InlineFieldMixin, MVPTemplateView):
+    """Fields with no visible label, inside the application shell."""
+
+    template_name = "demo/inline_field.html"
+    page_title = "Inline field"
+    page_subtitle = "Fields named by their placeholder and no label"
+    breadcrumbs = [{"text": "Inline field"}]
+
+
+class MultiWidgetFieldMixin:
+    """The forms the multi-widget-field page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    multi_widget_prefix = "multi-widget"
+    multi_widget_failing_prefix = "failing-multi-widget"
+    multi_widget_failing_data = {
+        "failing-multi-widget-starts_0": "",
+        "failing-multi-widget-starts_1": "",
+    }
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault(
+            "multi_widget_form", MultiWidgetFieldForm(prefix=self.multi_widget_prefix)
+        )
+        kwargs["failing_multi_widget_form"] = MultiWidgetFieldForm(
+            self.multi_widget_failing_data,
+            prefix=self.multi_widget_failing_prefix,
+            posts=False,
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = MultiWidgetFieldForm(request.POST, prefix=self.multi_widget_prefix)
+        return self.render_to_response(self.get_context_data(multi_widget_form=form))
+
+
+class MultiWidgetFieldView(MultiWidgetFieldMixin, MVPTemplateView):
+    """A split date and time with an attribute on each part, inside the shell."""
+
+    template_name = "demo/multi_widget_field.html"
+    page_title = "Multi-widget field"
+    page_subtitle = "A split date and time with an attribute on each part"
+    breadcrumbs = [{"text": "Multi-widget field"}]
+
+
+class DecoratedFieldsStandaloneView(
+    MultiWidgetFieldMixin,
+    InlineFieldMixin,
+    UneditableFieldMixin,
+    FieldWithButtonsMixin,
+    InlineChoicesMixin,
+    AttachedTextMixin,
+    TemplateView,
+):
+    """The decorated-field forms for a host project without django-mvp or Cotton.
+
+    A post belongs to the form whose submit button it names. One that names none
+    binds the attached-text form.
+    """
+
+    template_name = "demo/decorated_fields_standalone.html"
+
+    def post(self, request, *args, **kwargs):
+        """Bind the form whose submit button was pressed and no other."""
+        if f"{self.multi_widget_prefix}-submit" in request.POST:
+            return MultiWidgetFieldMixin.post(self, request, *args, **kwargs)
+        if f"{self.inline_field_prefix}-submit" in request.POST:
+            return InlineFieldMixin.post(self, request, *args, **kwargs)
+        if f"{self.uneditable_prefix}-submit" in request.POST:
+            return UneditableFieldMixin.post(self, request, *args, **kwargs)
+        if f"{self.buttons_prefix}-submit" in request.POST:
+            return FieldWithButtonsMixin.post(self, request, *args, **kwargs)
+        if f"{self.inline_prefix}-submit" in request.POST:
+            return InlineChoicesMixin.post(self, request, *args, **kwargs)
+        return AttachedTextMixin.post(self, request, *args, **kwargs)
 
 
 class ChoicesMixin:

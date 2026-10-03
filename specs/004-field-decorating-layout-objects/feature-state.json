@@ -1,0 +1,517 @@
+{
+  "feature": "004-field-decorating-layout-objects",
+  "branch": "004-field-decorating-layout-objects",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T15:07:51Z",
+      "note": "specification approved by delegated review at commit 4b77d0de9fc4bead9863a9636a3bf510c0afce61, on pull request #27; epic #8, stories #59, #60, #61, #62, #63, #64"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T18:31:10Z",
+      "note": "plan.md, research.md, tasks.md: 6 stories, 12 tasks; continues on pull request #27"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T18:31:32Z",
+      "note": "one reviewer, three lenses, on plan.md, tasks.md and research.md at 0f751a8"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T18:40:18Z",
+      "note": "plan gate open; design review applied at 25a39b2"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T19:39:33Z",
+      "note": "six stories accepted; converging"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T19:41:12Z",
+      "note": "one reviewer, correctness and spec lens, on the feature diff at 8f7da47"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T19:54:01Z",
+      "note": "review closed, walkthrough laid out, pull request open for review"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T15:07:51Z",
+      "self_resolved": [
+        "approved at commit 4b77d0de9fc4bead9863a9636a3bf510c0afce61 (forge spec-gate, pull request #27); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T18:39:52Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
+      "at": "2026-10-03T18:39:52Z",
+      "self_resolved": [
+        "DR-001 medium: the spec's edge case on the crispy filter reworded, the test dropped from T001 (D19)",
+        "DR-002 low: the inline arrangement asserted by the widget template only",
+        "DR-003 low: each FieldInput argument arrives in the task that gives it behaviour",
+        "DR-004 low: attached text and join-item never apply to a group",
+        "DR-005 low: uneditable-input joins UPSTREAM_ONLY_CLASSES and an input drops that one name",
+        "DR-006 low: UneditableField writing disabled amends ADR 0013 and the README"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer: changes requested, every finding fixed",
+      "at": "2026-10-03T19:52:39Z",
+      "self_resolved": [
+        "COR-001 high: remedied, a hidden field resolves no choices (T013)",
+        "COR-002 low: remedied in the README and ADR 0026 (T014)",
+        "DOC-001 low: remedied in the README and CHANGELOG (T014)"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T20:06:29Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 59,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_attached_text.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputClassParts",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputAttachedText",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiFieldTag",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (exit 0, 1008 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:158",
+              "mvp_forms/templatetags/daisyui.py:182",
+              "mvp_forms/templates/daisyui/frame.html:1",
+              "mvp_forms/templates/daisyui/layout/prepended_appended_text.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestAttachedTextPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py tests/test_smoke.py (exit 0, 802 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:490",
+              "demo/views.py:472",
+              "demo/urls.py:55",
+              "demo/menus.py:54",
+              "demo/templates/demo/attached_text.html:1",
+              "demo/templates/demo/decorated_fields_standalone.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestHiddenFieldChoices"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_choices.py -k TestHiddenFieldChoices (2 failed before the fix, 2 passed after)",
+              "forge verify --base origin/main (all steps passed)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:165"
+            ]
+          }
+        },
+        {
+          "id": "T014",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "forge verify --base origin/main (all steps passed)"
+            ],
+            "code": [
+              "README.md:383",
+              "CHANGELOG.md:32",
+              "docs/adr/0026-attached-text-and-joined-buttons.md:10"
+            ]
+          }
+        },
+        {
+          "id": "T015",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "specs/004-field-decorating-layout-objects/spec.md:292"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 60,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_inline_groups.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputInline",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples",
+              "tests/test_pack/test_documented_examples.py::TestReadmeInlineChoices"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (exit 0, 1449 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:100",
+              "mvp_forms/templatetags/daisyui.py:219",
+              "mvp_forms/templates/daisyui/widgets/inline_group.html:1",
+              "mvp_forms/templates/daisyui/layout/radioselect_inline.html:2"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestInlineChoicesPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandaloneInlineChoices",
+              "tests/test_demo.py::TestAttachedTextPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -n auto --dist loadscope (exit 0, 885 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:658",
+              "demo/views.py:517",
+              "demo/views.py:545",
+              "demo/urls.py:59",
+              "demo/templates/demo/inline_choices.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 61,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_field_with_buttons.py",
+              "tests/test_pack/test_attached_text.py::TestAttachedTextSize",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputJoin",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples",
+              "tests/test_pack/test_documented_examples.py::TestReadmeFieldWithButtons"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_field_with_buttons.py tests/test_pack/test_attached_text.py tests/test_pack/test_independence.py tests/test_pack/test_documented_examples.py tests/test_templatetags/test_daisyui.py -q (exit 0, 503 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:132",
+              "mvp_forms/templatetags/daisyui.py:282",
+              "mvp_forms/templatetags/daisyui.py:294",
+              "mvp_forms/templates/daisyui/field_body.html:2",
+              "mvp_forms/templates/daisyui/layout/field_with_buttons.html:2"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestFieldWithButtonsPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandaloneFieldWithButtons",
+              "tests/test_demo.py::TestDecoratedFieldsStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py tests/test_smoke.py -q -n auto --dist loadscope (exit 0, 931 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:704",
+              "demo/views.py:555",
+              "demo/views.py:585",
+              "demo/urls.py:62",
+              "demo/templates/demo/field_with_buttons.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 62,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_uneditable_field.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputDisabled",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples",
+              "tests/test_pack/test_documented_examples.py::TestReadmeUneditableField",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_uneditable_field.py tests/test_templatetags/test_daisyui.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py -q (exit 0, 451 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:138",
+              "mvp_forms/templatetags/daisyui.py:290",
+              "mvp_forms/templatetags/daisyui.py:344",
+              "mvp_forms/templates/daisyui/layout/uneditable_input.html:2"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestUneditableFieldPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandaloneUneditableField"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py tests/test_pack/test_documented_examples.py -q (exit 0, 1031 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:750",
+              "demo/views.py:595",
+              "demo/views.py:620",
+              "demo/urls.py:65",
+              "demo/templates/demo/uneditable_field.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 63,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_inline_field.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputUnlabelled",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiFieldUnlabelledTag",
+              "tests/test_pack/test_independence.py",
+              "tests/test_pack/test_documented_examples.py::TestReadmeInlineField"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (exit 0, 1589 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:142",
+              "mvp_forms/templatetags/daisyui.py:376",
+              "mvp_forms/templates/daisyui/frame.html:6",
+              "mvp_forms/templates/daisyui/layout/inline_field.html:2"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestInlineFieldPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandaloneInlineField"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope (exit 0, 2336 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:785",
+              "demo/views.py:630",
+              "demo/views.py:665",
+              "demo/urls.py:67",
+              "demo/templates/demo/inline_field.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US6",
+      "priority": "P3",
+      "issue": 64,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_multi_widget.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputMultiWidget",
+              "tests/test_pack/test_documented_examples.py::TestReadmeMultiWidgetField",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_multi_widget.py -q (exit 1 first, 14 failed of 31; then exit 0, 31 passed)",
+              "uv run pytest tests/test_pack/test_multi_widget.py tests/test_templatetags/test_daisyui.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py -n auto --dist loadscope -q (exit 0, 506 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:28",
+              "mvp_forms/templatetags/daisyui.py:284",
+              "mvp_forms/templatetags/daisyui.py:380",
+              "mvp_forms/locale/en/LC_MESSAGES/django.po:42"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestMultiWidgetFieldPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandaloneMultiWidgetField"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -k MultiWidget -q (exit 1 first, 28 failed and 10 errors; then exit 0, 40 passed)",
+              "uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope -q (exit 0, 2414 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:820",
+              "demo/views.py:675",
+              "demo/views.py:710",
+              "demo/urls.py:70",
+              "demo/templates/demo/multi_widget_field.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 25.89,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 27,
+    "draft": false
+  }
+}

@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, the layout objects, with `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert` all supported, and formsets drawn stacked or as a table. Nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table. Nothing is published to PyPI.
 
 ## Why
 
@@ -121,6 +121,7 @@ These inputs are drawn as daisyUI components, whichever way crispy-forms is aske
 - `RadioSelect`, as a group of `radio` inputs, and `CheckboxSelectMultiple`, as a group of `checkbox` inputs: each option is an input inside a label of its own, tied to it by `for`, with `radio-error` or `checkbox-error` when invalid. Choices with named groups sit under their name in a nested `<fieldset>`, and an attribute a widget sets on one option stays on that option. A required checkbox group does not mark its options `required`, since that would demand all of them
 - `FileInput` and `ClearableFileInput`, as `file-input`, with `file-input-error` when invalid. A `ClearableFileInput` whose field holds a file shows a link to it, and, when the field is optional, a removal checkbox in a label of its own; a required field offers no removal and its input is not `required`, so it can be submitted without choosing another file. A widget that allows several files keeps `multiple`
 - `HiddenInput` and `MultipleHiddenInput`, as `<input type="hidden">` and nothing around it, which is described below
+- the parts of a `MultiWidget`, each as the component of its own kind, so a `SplitDateTimeField` is two `input` elements. A part that is hidden has no class
 
 Each of them but the checkbox, the radio and the hidden input fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`. A width class of your own on the widget, such as `w-40`, replaces it. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
 
@@ -138,11 +139,11 @@ With `{% crispy form %}` the pack follows these `FormHelper` settings:
 
 `help_text_inline` and `error_text_inline` are ignored.
 
-A class, placeholder, input type or row count you give a widget is kept. The pack never changes an input's type, so a date field is a text input unless its widget says otherwise. Fields with any other widget are still drawn in place, without a daisyUI class.
+A class, placeholder, input type or row count you give a widget is kept. The pack never changes an input's type, so a date field is a text input unless its widget says otherwise. Fields with any other widget are still drawn in place, without a daisyUI class, except that the parts of a multi-widget are drawn as the inputs they are (see [A multi-widget field](#a-multi-widget-field)).
 
 ### Disabled and read-only fields
 
-The pack adds no class and no attribute for either state. A field with `disabled=True` is drawn by Django with `disabled` on its input, on every option of a radio or checkbox group, and on the removal checkbox of a file field that holds a file, and daisyUI draws its disabled look from that attribute for every component the pack uses. A disabled field still shows its value, except a password input, which never draws one. The browser does not submit a disabled input, and Django takes the field's initial value instead.
+The pack adds no class for either state, and no attribute either, except in one case: `UneditableField` writes `disabled` (see [An uneditable field](#an-uneditable-field)). A field with `disabled=True` is drawn by Django with `disabled` on its input, on every option of a radio or checkbox group, and on the removal checkbox of a file field that holds a file, and daisyUI draws its disabled look from that attribute for every component the pack uses. A disabled field still shows its value, except a password input, which never draws one. The browser does not submit a disabled input, and Django takes the field's initial value instead.
 
 Read-only is the browser's and exists only on text inputs and textareas. Set `readonly` on the widget, `forms.TextInput(attrs={"readonly": True})`, and it reaches the input unchanged, with the input's name and value, so the browser still submits it. The attribute does nothing on a select, a checkbox, a radio or a file input, and the pack does not try to make it: use `disabled` for those.
 
@@ -352,6 +353,201 @@ Layout(
 
 - `HTML` is drawn where you put it, between fields or inside a `Fieldset`, `Column`, `ButtonHolder` or `FormActions`. Your markup is kept as written, and a context value in it, as in the example, is filled in with any markup in the value escaped.
 - `Hidden` is an `<input type="hidden">` with the name and value you give, inside the form element. It carries no class and no id, so `css_id` and `css_class` do nothing on it. Pass `id=` or any other attribute as a keyword argument to add it.
+
+### Layout objects that decorate a field
+
+Some layout objects of django-crispy-forms draw one field with something added to it. The first three attach text to an input. `PrependedText`, `AppendedText` and `PrependedAppendedText` come from `crispy_forms.bootstrap`:
+
+```python
+from crispy_forms.bootstrap import AppendedText, PrependedAppendedText, PrependedText
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+
+
+class PriceForm(forms.Form):
+    amount = forms.CharField()
+    weight = forms.CharField()
+    budget = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            PrependedText("amount", "$"),
+            AppendedText("weight", "kg"),
+            PrependedAppendedText("budget", "$", ".00"),
+        )
+```
+
+- The field is drawn in its usual frame, with its label, help text and errors, and its input sits in one daisyUI `input` wrapper, which is a `<label>`, beside a `<span class="label">` for each text that is set: before the input for the prepended text and after it for the appended one. The input inside has no `input` class of its own, because the wrapper has it. On a select the wrapper is `select` instead. Because the wrapper is a label, assistive technology announces the text as part of the field's name. That holds while the form draws labels: with `form_show_labels` off the input is named by an `aria-label` holding the field's label alone, which takes the place of every label, so put the unit in the field's label if it has to be announced.
+- A text that is an empty string or `None` draws nothing, and a field with neither text is drawn as it is without the layout object. The error modifier, `input-error` or `select-error`, is on the wrapper, and the input is marked invalid as before.
+- The text is markup. It is written into the page as it is, so `"<b>US</b>"` is drawn as a bold element and a currency symbol such as `&euro;` works. When you build it from anything a person typed, escape it first, for example with `django.utils.html.escape` or `format_html`. The label, the help text, the errors and the value stay escaped.
+- On a checkbox, a radio group, a date drawn as three selects, a textarea or a file input there is nowhere to attach the text, so the field is drawn exactly as it is without the layout object. A hidden field is drawn as its hidden input alone.
+- `css_class` and extra attributes go to the input, as they do for `Field`. `template=` draws your own template. `input_size` and `active` are accepted and do nothing.
+- The wrapper takes the size of the field. With a size stated for the form, or with a `Choice` around the layout object, the size class (`input-lg`, or `select-lg` on a select) is on the wrapper and the input inside carries none, so the text and the input read as one control.
+- `wrapper_class` works on any field, not only on these three: it is added to the class of the frame's outer element, whether that is a `<div>` or a `<fieldset>`. `Field("name", wrapper_class="wide")` draws `class="fieldset wide"`. The one place it does not reach is a `Field` given as the first item of `FieldWithButtons`, because django-crispy-forms passes on only that `Field`'s attributes.
+
+#### Choices in a line
+
+`InlineRadios` and `InlineCheckboxes` come from `crispy_forms.bootstrap`. They draw a radio group or a checkbox group with its options along a line instead of one under another:
+
+```python
+from crispy_forms.bootstrap import InlineCheckboxes, InlineRadios
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+
+
+class SurveyForm(forms.Form):
+    size = forms.ChoiceField(
+        choices=[("s", "Small"), ("m", "Medium"), ("l", "Large")],
+        widget=forms.RadioSelect,
+    )
+    extras = forms.MultipleChoiceField(
+        choices=[("a", "Ketchup"), ("b", "Mustard")],
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(InlineRadios("size"), InlineCheckboxes("extras"))
+```
+
+- Each option is a `radio` or a `checkbox` input inside a `<label>` of its own, tied to it by `for`, exactly as in a group drawn without the layout object. The options sit in a `<div>` that lets them run along a line and wrap onto the next one when the group has many options or long labels.
+- The frame is the group's usual one: a `<fieldset>` with a `<legend>`, the required marker, the help text and the errors, described by the help text and the error. Initial and submitted values check the same options, disabled options stay disabled, choices with named groups sit under their names, and `cleaned_data` is what the group without the layout object gives.
+- A widget that names a template or an option template of its own is drawn by it. A field with no choices is drawn with its frame and no option, and a field that is not a group, such as a text field, is drawn as it is without the layout object.
+- `css_class` and extra attributes go to every option, as they do for `Field`. `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
+
+#### A field with buttons
+
+`FieldWithButtons` comes from `crispy_forms.bootstrap`. It draws one field with any number of buttons joined to it, such as a search box with a button beside it. The first item is the field, as a name or as a `Field`, and the rest are the buttons:
+
+```python
+from crispy_forms.bootstrap import FieldWithButtons, StrictButton
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Button, Field, Layout
+from django import forms
+
+
+class SearchForm(forms.Form):
+    query = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            FieldWithButtons(
+                Field("query", css_class="mine"),
+                StrictButton("Go", type="submit", name="go"),
+                Button("clear", "Clear"),
+            ),
+        )
+```
+
+- The field is drawn in its usual frame, with its label, help text and errors. Inside it one daisyUI `join` element holds the input, which carries `join-item`, and then every button in the order you gave them. The buttons are the ones `StrictButton`, `Submit` and `Button` draw anywhere else, and each is drawn once, so a `Submit` keeps its name and value and a button whose content holds markup or `{{ ... }}` from a value is escaped, never evaluated.
+- With no buttons the group holds the input alone. A failing field has its error modifier on the input, which is marked invalid and described by the error element in the frame.
+- A `Field` as the first item gives its class and attributes to the input. `css_id`, `css_class` and any other attribute go to the `join` element, and a class written for another template pack is dropped from it. `template=` draws your own template. `input_size` is accepted and does nothing.
+- On a select the group is drawn as it is on an input. On a checkbox or a radio group both the field and the buttons are drawn, and no option of a group carries `join-item`. A hidden field is drawn as its hidden input alone.
+- The input and the buttons take the same size. State it for the whole form, or put a `Choice` around the layout object: `Choice(FieldWithButtons("query", StrictButton("Go")), size="lg")` gives the input `input-lg` and the button `btn-lg`. A size stated for one field by name, `FormChoices(fields={"query": Choice(size="lg")})`, reaches the input and cannot reach its buttons, which django-crispy-forms draws before the field, so for a field with buttons state the size with `Choice` around the `FieldWithButtons` or for the whole form.
+- Give a button `css_class="join-item"` to close the doubled border where the joined parts meet.
+- A `Choice` around the layout object is stated for the input and for the buttons alike, so state only what both have. A size is safe. A variant that only buttons have, such as `outline`, raises `InvalidChoice` for the input.
+
+#### An uneditable field
+
+`UneditableField` comes from `crispy_forms.bootstrap`. It draws one field with its current value shown and the input disabled, such as an account number on a profile form:
+
+```python
+from crispy_forms.bootstrap import UneditableField
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+
+
+class ProfileForm(forms.Form):
+    account = forms.CharField(initial="AC-1001", help_text="Issued once")
+    reference = forms.CharField(initial="R-7", disabled=True)
+    nickname = forms.CharField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            UneditableField("account"),
+            UneditableField("reference"),
+            "nickname",
+        )
+```
+
+- The field is drawn in its usual frame, with its label, help text and errors, and its input keeps its component class (`input`, `select`, `textarea`, `checkbox`) and shows the field's value. A field with no value is drawn empty. The value is escaped, as it is for any field.
+- The input carries the `disabled` attribute and no class for it: daisyUI draws the disabled look from the attribute. A select, a checkbox and a textarea are disabled the same way, and every option of a radio group or a checkbox group is. The form's own field and widget are not changed, so the same field drawn without the layout object is editable.
+- **The browser does not submit a disabled input.** Wrapping a field in `UneditableField` does not make Django ignore what comes back, so a required field left out of the submitted data fails with the `required` code. A form that needs the value kept declares the field disabled in the form class, `forms.CharField(initial="R-7", disabled=True)` as `reference` does above, and Django then uses the initial value whatever is submitted.
+- `uneditable-input`, the class django-crispy-forms writes for other template packs, is not drawn on an input a person can see. It is the only name dropped from an input's own classes, so a class of yours called `active` or `error` on an input is still drawn.
+- `css_class` and extra attributes go to the input, as they do for `Field`. `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
+
+#### An inline field
+
+`InlineField` comes from `crispy_forms.bootstrap`. It draws one field with no visible label, for a form that sits in a line such as a search bar. The input is named by an `aria-label` and the label is offered as its placeholder:
+
+```python
+from crispy_forms.bootstrap import InlineField
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+
+
+class SearchForm(forms.Form):
+    query = forms.CharField(label="Search", help_text="Names and numbers")
+    remember = forms.BooleanField(label="Remember me", required=False)
+    note = forms.CharField(label="Note", required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            InlineField("query"),
+            InlineField("remember"),
+            "note",
+        )
+```
+
+- The frame holds no `<label>` for the field. The input has an `aria-label` equal to the field's label, and on a text input or a textarea a `placeholder` equal to it as well. A placeholder or an `aria-label` that the widget sets is kept. A label marked safe reaches both as plain text.
+- The help text and the error element are still drawn, still described by the input, and a failing input has `aria-invalid` and its error modifier.
+- A single checkbox keeps its `<label>`, with the checkbox inside it. A select and a radio group get no placeholder; a select is named by an `aria-label` and a group by an `aria-label` on its fieldset, without a legend.
+- A field beside it that is not inline keeps its label. `css_class` and extra attributes go to the input, `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
+
+#### A multi-widget field
+
+`MultiWidgetField` comes from `crispy_forms.layout`, not `crispy_forms.bootstrap`. It draws a field whose widget is several widgets, such as a `SplitDateTimeField`, and lets you give each part attributes of its own:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, MultiWidgetField
+from django import forms
+
+
+class EventForm(forms.Form):
+    starts = forms.SplitDateTimeField(label="Starts", help_text="Local time")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            MultiWidgetField(
+                "starts",
+                attrs=({"placeholder": "2026-10-03"}, {"class": "mine"}),
+            ),
+        )
+```
+
+- `attrs` is a sequence with one set of attributes for each part, in order, or one set that goes on every part. A sequence shorter than the parts leaves the last parts with none, and raises nothing. A part given `{"type": "hidden"}` is drawn as a hidden input.
+- Each part is drawn as the daisyUI component of its kind: the two parts of a split date and time are `input`, with `input-error` when the field fails, and a class of your own on a part is kept beside it. A size, a colour and a variant stated for the form, or with a `Choice` around the layout object, reach every part as they reach any input, and a failing field's parts have the error modifier and not the colour.
+- The frame is one `<fieldset>` with one `<legend>`, one help text and one error element, and the fieldset is described by the help text and the error. Each part has an `aria-label`: Date and Time for a split date and time, and the field's label for the parts of any other multi-widget. An `aria-label` you give a part is kept.
+- A `SplitDateTimeField` with no layout object is drawn the same way. A split field whose widget is hidden is drawn as hidden inputs and nothing around them. On a field with one widget, `MultiWidgetField` draws the field with the attributes.
+- The form's own widget and its parts are not changed: the classes and names are written on a copy for each render, so drawing a form twice gives the same markup. `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
+- Do not make a part of a `SplitDateTimeField` hidden: the hidden widget of that field is itself a multi-widget, and validating the form then fails. To hide the whole field, give it `widget=forms.SplitHiddenDateTimeWidget`.
 
 ### Size, colour and variant
 
@@ -667,6 +863,16 @@ Five more pages draw the containers and the notice django-crispy-forms keeps in 
 - `/modal/` is inside the shell too. Its form holds the street and the city, both required, in a modal that a button on the page opens by the modal's id. Submitting the form empty comes back with the modal open and the errors inside it.
 - `/alert/` is inside the shell too. Its form has three alerts ahead of its field: one with a dismiss control, one without, and one with a daisyUI colour. Submitting the form empty draws all three again.
 - `/containers/standalone/` draws the forms of all four pages as a host project with neither django-mvp nor Cotton would have them, styled by daisyUI's CDN build alone. A post is bound to the form whose submit button it names.
+
+Six more pages draw the layout objects that decorate a field. The first draws the three that attach text to an input. Its form has a text input with a prepended text, one with an appended text, one with both and a select with a prepended text, every field required, so submitting it empty comes back with an error in each frame. A second form on the page already fails. The second draws the two that put choices in a line, the third draws `FieldWithButtons`, the fourth draws `UneditableField`, the fifth draws `InlineField` and the sixth draws `MultiWidgetField`. The first three, the fifth and the sixth each have a form to submit and one that already fails; the fourth has one form to submit:
+
+- `/attached-text/` is the page inside the django-mvp shell, reached from its sidebar.
+- `/inline-choices/` is the page inside the shell, reached from its sidebar. The form to submit holds a required radio group and a required checkbox group, so submitting it empty comes back with an error in each frame.
+- `/field-with-buttons/` is the page inside the shell, reached from its sidebar. The form to submit has a required field with one button and a required field with three, so submitting it empty comes back with an error in each frame.
+- `/uneditable-field/` is the page inside the shell, reached from its sidebar. Its form holds an uneditable account, shown with its value and the `disabled` attribute, beside an editable nickname. The account is declared disabled in the form class, so submitting the form keeps its value and shows no error.
+- `/inline-field/` is the page inside the shell, reached from its sidebar. The form to submit has a required email and a required city, each drawn with no label and named by its placeholder, and a checkbox that keeps its label, so submitting it empty comes back with an error in the frame of each of the two fields.
+- `/multi-widget-field/` is the page inside the shell, reached from its sidebar. The form to submit has a required split date and time whose parts each have a placeholder of their own, and an optional one drawn with no layout object, so submitting it empty comes back with an error in the frame of the first.
+- `/decorated-fields/standalone/` draws the forms of all six pages as a host project with neither django-mvp nor Cotton would have them, styled by daisyUI's CDN build alone.
 
 Four more pages draw a formset of order lines, each with a delete input and an order input, and each drawn twice: a formset to submit and a formset that already fails, so all three kinds of error can be seen. A line with a quantity below one is a field error, a line whose total passes a limit is a form-wide error, and the same item on two lines is a formset-wide error. Posting the formset to submit with lines like those comes back with all three. Nothing is saved.
 

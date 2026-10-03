@@ -37,3 +37,11 @@ msgstr ""
 #: templatetags/daisyui.py:20
 msgid "Day"
 msgstr ""
+
+#: templatetags/daisyui.py:28
+msgid "Date"
+msgstr ""
+
+#: templatetags/daisyui.py:28
+msgid "Time"
+msgstr ""
