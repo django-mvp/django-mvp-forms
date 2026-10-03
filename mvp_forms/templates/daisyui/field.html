@@ -14,7 +14,7 @@
     </fieldset>
   {% else %}
     <div{% if field.auto_id %} id="div_{{ field.auto_id }}"{% endif %} class="fieldset">
-      {% if field.label and form_show_labels != False %}
+      {% if field.label and form_show_labels != False and not drawn.is_single_checkbox %}
         <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="fieldset-legend{% if label_class %} {{ label_class }}{% endif %}">
           {{ field.label }}{% include "daisyui/required_marker.html" %}
         </label>

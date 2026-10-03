@@ -106,7 +106,7 @@ Draw it in a template of a page that loads daisyUI:
 
 ### Template pack `daisyui`
 
-Selected with the two settings above. Every field is drawn inside a daisyUI `fieldset`. A field of one input has a label and its input. A field of several inputs that share one label, such as a date drawn as three selects, is drawn as a `<fieldset>` with a `<legend>`, which is described by the field's help text and errors, and which is named by an `aria-label` when the form draws no labels.
+Selected with the two settings above. Every field is drawn inside a daisyUI `fieldset`. A field of one input has a label and its input, except a single checkbox, whose label holds the checkbox and is tied to it by `for`. A field of several inputs that share one label, such as a date drawn as three selects, is drawn as a `<fieldset>` with a `<legend>`, which is described by the field's help text and errors, and which is named by an `aria-label` when the form draws no labels.
 
 The pack draws a date's selects, and the widgets added after it, from templates of its own, which the form renderer has to load. Django's default renderer and `TemplatesSetting` both do. A widget subclass that names a template of its own is drawn by that template, with the daisyUI class only.
 
@@ -117,8 +117,9 @@ These inputs are drawn as daisyUI components, whichever way crispy-forms is aske
 - text, email, URL, number, password, date, time and date-time inputs, as `input`
 - textareas, as `textarea`
 - selects, multiple selects, null-boolean selects and selects with named groups, as `select`, and the three selects of a date drawn by `SelectDateWidget`, each named by an `aria-label` of Year, Month or Day
+- boolean fields, as `checkbox`, inside their own label, with `checkbox-error` when invalid
 
-Each of them fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`, the one utility it writes. A width class of your own on the widget, such as `w-40`, replaces it. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
+Each of them but the checkbox fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`, the one utility it writes. A width class of your own on the widget, such as `w-40`, replaces it. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
 
 Errors that belong to the form as a whole are drawn once, in an element with `role="alert"` ahead of the fields. A form with none draws no such element, and `{{ form|as_crispy_errors }}` draws the same element on its own.
 

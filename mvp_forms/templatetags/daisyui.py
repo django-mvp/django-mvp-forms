@@ -42,6 +42,7 @@ class FieldInput:
         forms.NumberInput: "input",
         forms.PasswordInput: "input",
         forms.Textarea: "textarea",
+        forms.CheckboxInput: "checkbox",
         forms.Select: "select",
         forms.SelectDateWidget: "select",
     }
@@ -49,8 +50,10 @@ class FieldInput:
     # Tailwind build finds them when it scans this module.
     # daisyUI gives an input a fixed width and has no modifier to change it, so
     # the one Tailwind utility the pack writes makes the input fill its field.
-    # A width utility the developer put on the widget replaces it.
+    # A width utility the developer put on the widget replaces it. A checkbox is a
+    # fixed-size box and is never widened.
     width = "w-full"
+    fixed_size: set[str] = {"checkbox"}
     templates: dict[type[forms.Widget], str] = {
         forms.SelectDateWidget: "daisyui/widgets/select_date.html",
     }
@@ -58,6 +61,7 @@ class FieldInput:
         "input": "input-error",
         "textarea": "textarea-error",
         "select": "select-error",
+        "checkbox": "checkbox-error",
     }
 
     def __init__(
@@ -106,12 +110,19 @@ class FieldInput:
         return self.field.use_fieldset
 
     @property
+    def is_single_checkbox(self) -> bool:
+        """Whether the field is one checkbox, which sits inside its own label."""
+        return self.component == "checkbox" and not self.is_group
+
+    @property
     def css_class(self) -> str:
         """The widget's own classes, the component, a width, then its error modifier."""
         classes = self.field.field.widget.attrs.get("class", "").split()
         if self.component:
             classes.append(self.component)
-            if not any(name.startswith("w-") for name in classes):
+            if self.component not in self.fixed_size and not any(
+                name.startswith("w-") for name in classes
+            ):
                 classes.append(self.width)
             if self.show_errors and self.field.errors:
                 classes.append(self.error_modifiers[self.component])

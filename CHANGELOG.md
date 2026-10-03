@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A boolean field is drawn as daisyUI's `checkbox`, inside its own `<label>` that is tied to it by `for` and carries the required marker. The box is ticked when the field's value is true, an invalid one carries `checkbox-error` and is described by its error, help text describes it, and with labels off it is named by an `aria-label` and no label is drawn. A checkbox keeps its natural size and is not widened.
 - A date drawn as three selects by `SelectDateWidget` is one field in a `<fieldset>` with a `<legend>`, one help text and one error element, and each select is named Year, Month or Day by an `aria-label`. A field with several inputs that share one label is framed this way, and a field with one input keeps its `div` and `label`. The pack's own templates need a form renderer that loads Django templates, which the default renderer and `TemplatesSetting` both do. A widget subclass that names its own template is drawn by that template.
 - The pack carries a base English catalogue for the text it adds.
 - A field with choices is drawn as daisyUI's `select`, filling the width of its field: a `ChoiceField`, a `MultipleChoiceField`, a `NullBooleanField` and choices with named groups, which become `<optgroup>`s. The held choice is selected, an invalid select carries `select-error` and is described by its error, and a class or `data-` attribute you gave the widget is kept.

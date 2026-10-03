@@ -8,6 +8,7 @@ from django.utils.safestring import mark_safe
 
 from mvp_forms.templatetags.daisyui import FieldInput
 from tests.forms import (
+    CheckboxForm,
     DateSelectsForm,
     DeveloperAttrsForm,
     HelpedForm,
@@ -104,6 +105,23 @@ class TestFieldInput:
 
     def test_a_host_subclass_of_select_is_covered(self):
         assert FieldInput(HostSelectForm()["choice"]).component == "select"
+
+    def test_a_boolean_field_has_the_checkbox_component(self):
+        assert FieldInput(CheckboxForm()["agree"]).component == "checkbox"
+
+    def test_a_checkbox_is_not_a_group_and_is_drawn_in_its_label(self):
+        field_input = FieldInput(CheckboxForm()["agree"])
+
+        assert not field_input.is_group
+        assert field_input.is_single_checkbox
+
+    def test_a_select_is_not_a_single_checkbox(self):
+        assert not FieldInput(SelectsForm()["choice"]).is_single_checkbox
+
+    def test_a_checkbox_is_given_no_width_and_gets_its_error_modifier(self):
+        field_input = FieldInput(CheckboxForm({})["agree"])
+
+        assert set(field_input.css_class.split()) == {"checkbox", "checkbox-error"}
 
     def test_an_invalid_select_gets_its_error_modifier(self):
         field_input = FieldInput(SelectsForm({"choice": "nowhere"})["choice"])

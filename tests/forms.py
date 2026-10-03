@@ -141,3 +141,11 @@ class DateSelectsForm(forms.Form):
     own = forms.DateField(
         widget=OwnTemplateDateWidget(years=[2020, 2021]), required=False
     )
+
+
+class CheckboxForm(forms.Form):
+    agree = forms.BooleanField(help_text="Read the terms first")
+    news = forms.BooleanField(required=False)
+    styled = forms.BooleanField(
+        required=False, widget=forms.CheckboxInput(attrs={"class": "mine"})
+    )
