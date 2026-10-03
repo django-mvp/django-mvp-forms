@@ -98,3 +98,52 @@ define. Nothing here needs a new design, so the feature goes to planning without
 round. The appearance points in D7 are looked at on the demo pages when the build is reviewed.
 
 **ADR:** none. A process choice for this feature only.
+
+## D10: In the table, a form's own errors sit in its row's first cell
+
+D5 left a cell or a row of its own to planning. A row of its own would mean a form with an error
+takes two rows, which breaks the one structural promise the specification makes about the table,
+one body row per form, at the moment a script reading the rows needs it. So a form's form-wide
+errors, and its hidden fields' errors with them, are drawn in the row's first cell ahead of the
+field, in an element whose id is the form's prefix followed by `_errors`, and the row names that
+element with `aria-describedby`. The form's hidden fields sit in the same cell.
+
+**Why**: FR-005 and FR-011 together. **Revisit if**: the walkthrough finds the first cell too
+narrow to read an error in.
+
+## D11: A formset with no forms draws no table
+
+The specification leaves whether an empty table shows its headings to the build. Headings with no
+rows would have to come from `formset.empty_form`, which the pack otherwise never touches, and an
+empty table says nothing. The management form, any formset-wide error and the helper's buttons
+are still drawn, so the page submits as a valid empty formset.
+
+**Why**: the simplest thing that meets US1.6 in the table. **Revisit if**: django-mvp's row
+adding needs the headings on the page before the first row exists (#13).
+
+## D12: A formset's media is drawn once
+
+The single-form template draws `form.media` when the helper asks for it. Included per form that
+would repeat every script and stylesheet for every form, so the formset templates draw
+`formset.media` once and include each form with media off.
+
+**Why**: the same assets, once. **Revisit if**: never expected.
+
+## D13: A stacked form's container is a bare element
+
+Each stacked form is drawn in a `<div>` of its own with no class, id or attribute, and a daisyUI
+`divider` at the head of every one but the first. What a script needs to find a form's container
+is the open question in #13, and nothing is promised ahead of its answer.
+
+**Why**: D6. **Revisit if**: #13 settles on a hook.
+
+## D14: A helper layout decides whether a delete or order input is drawn
+
+In the stacked layout a helper layout is applied to each form, and django-crispy-forms draws only
+the fields a layout names, plus hidden ones. A laid-out formset therefore shows a delete or order
+input only when the layout names `DELETE` or `ORDER`. The pack does not add them back, because
+the README makes django-crispy-forms' documented behaviour the rule, and the README says what to
+write.
+
+**Why**: matching django-crispy-forms. **Revisit if**: a developer reports the omission as a
+surprise.
