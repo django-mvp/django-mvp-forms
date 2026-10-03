@@ -126,6 +126,20 @@
             ],
             "verified_by_ci": false
           }
+        },
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestRemovalCheckboxOfAHandStyledFile",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputRemovalModifiers"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
+          }
         }
       ]
     },
@@ -196,6 +210,19 @@
             ],
             "verified_by_ci": false
           }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestDrawnButton::test_a_submit_recoloured_on_the_instance_keeps_its_colour_and_takes_the_forms"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
+          }
         }
       ]
     },
@@ -227,6 +254,19 @@
               "mvp_forms/choices.py:432"
             ],
             "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestUnknownFieldNames"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
           }
         }
       ]

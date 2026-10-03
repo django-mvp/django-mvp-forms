@@ -193,3 +193,22 @@ Plan, *The demo project*.
   stylesheet and none of the shell's.
 - README: the contributing section names the new pages; the public surface lists every allowed
   name for inputs and for buttons (FR-024). CHANGELOG entry for the demo page.
+
+---
+
+## Fixes from the code review
+
+### T007 — The removal checkbox takes only what the pack resolved (US1)
+
+`FieldInput` resolves the checkbox's size and colour and names them in the drawn widget's
+context; the filter over the class string is removed. A file widget with hand-written modifiers
+on a form that states nothing draws its removal checkbox as before.
+
+### T008 — A `Submit` recoloured on the instance does not raise (US3)
+
+The default colour is removed only when the instance still carries it.
+
+### T009 — A name in `fields` that is no field of the form is refused (US4)
+
+`UnknownField`, raised when a field of the form is drawn. The README says what a `Choice` holding
+several kinds is checked against, and which helper's attribute raises `TypeError`.
