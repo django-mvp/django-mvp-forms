@@ -1,6 +1,7 @@
 """Fixtures shared across the test suite."""
 
 import copy
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ from django.template import Context, Template
 from django.test import override_settings
 from django.urls import reverse
 
+import mvp_forms
 from tests.forms import (
     GroupFormSet,
     LineFormSet,
@@ -123,6 +125,7 @@ def clear_crispy_template_caches():
     crispy_forms_filters.uni_form_template.cache_clear()
     crispy_forms_filters.uni_formset_template.cache_clear()
     crispy_forms_tags.whole_uni_form_template.cache_clear()
+    crispy_forms_tags.whole_uni_formset_template.cache_clear()
     default_field_template.cache_clear()
 
 
@@ -136,3 +139,36 @@ def without_django_mvp(settings):
         clear_crispy_template_caches()
         yield
     clear_crispy_template_caches()
+
+
+PACK_TEMPLATES = Path(mvp_forms.__file__).parent / "templates"
+FORM_RENDERER_THAT_READS_TEMPLATES = "django.forms.renderers.TemplatesSetting"
+
+
+@pytest.fixture
+def pack_source():
+    return lambda path: (PACK_TEMPLATES / path).read_text()
+
+
+@pytest.fixture
+def replace(tmp_path_factory, settings):
+    @contextmanager
+    def replacing(sources):
+        root = tmp_path_factory.mktemp("replacements")
+        for path, source in sources.items():
+            (root / path).parent.mkdir(parents=True, exist_ok=True)
+            (root / path).write_text(source)
+        templates = copy.deepcopy(settings.TEMPLATES)
+        templates[0]["DIRS"] = [root, *templates[0]["DIRS"]]
+        try:
+            with override_settings(
+                TEMPLATES=templates,
+                FORM_RENDERER=FORM_RENDERER_THAT_READS_TEMPLATES,
+                INSTALLED_APPS=[*settings.INSTALLED_APPS, "django.forms"],
+            ):
+                clear_crispy_template_caches()
+                yield
+        finally:
+            clear_crispy_template_caches()
+
+    return replacing
