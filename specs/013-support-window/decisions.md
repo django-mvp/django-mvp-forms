@@ -316,3 +316,16 @@ One review of the plan, before any code. Each finding and what was done:
   unknown subcommand, the commands named in the CHANGELOG, and leaving out yanked releases.
 
 **ADR:** none. The record of one review.
+
+## D19. Class names are read from selectors, so the lists hold 4,034 and 3,660 names
+
+**Decision:** `class_names` reads only the text in front of each `{`, with comments, quoted
+strings and unquoted `url()` values taken out first. The list for 5.7.47 holds 4,034 names and the
+list for 5.0.55 holds 3,660.
+
+**Why:** reading every `.name` in the file also returns `w3` and `org`, cut from the address
+`http://www.w3.org` inside the stylesheet's inline SVG images. Those are the two names by which
+the counts in research R3 (4,036 and 3,662) are larger. Neither is a class, and a name that is not
+a class could hide a pack that writes it.
+
+**Revisit if:** daisyUI ships a class named `w3` or `org`, which a selector read would find.

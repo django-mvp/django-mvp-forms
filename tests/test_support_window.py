@@ -9,9 +9,13 @@ from support_window import (
     DECLARATION,
     ROOT,
     InvalidWindow,
+    MissingClassList,
     Window,
+    class_list,
+    class_names,
     installed_versions,
     relative_links,
+    write_class_list,
 )
 
 MAPPING = {
@@ -433,3 +437,94 @@ class TestInstalled:
             window.installed_disagreements(installed, {"django-crispy-forms": "2.7"})
             == []
         )
+
+
+class TestClassNames:
+    def test_an_escaped_colon_is_undone(self):
+        assert class_names(r".md\:flex-row { display: flex }") == {"md:flex-row"}
+
+    def test_an_escaped_leading_digit_is_undone(self):
+        assert class_names(r".\32 xl\:btn { display: flex }") == {"2xl:btn"}
+
+    def test_a_number_with_a_decimal_point_in_a_selector_is_not_a_class(self):
+        sheet = "@media (min-width: 0.5em) { .wide { top: .5px } }"
+
+        assert class_names(sheet) == {"wide"}
+
+    def test_a_dot_in_a_declaration_is_not_a_class(self):
+        sheet = ".logo { background: url(http://www.w3.org/logo.svg) }"
+
+        assert class_names(sheet) == {"logo"}
+
+    def test_every_class_of_a_compound_selector_is_found(self):
+        sheet = ".btn.btn-primary:hover > .icon, :where(.menu) li { color: red }"
+
+        assert class_names(sheet) == {"btn", "btn-primary", "icon", "menu"}
+
+
+class TestClassLists:
+    def test_every_named_daisyui_version_has_a_list_that_is_not_empty(
+        self, daisyui_classes
+    ):
+        assert daisyui_classes
+
+    def test_a_version_with_no_list_is_refused_with_the_version(self, tmp_path):
+        with pytest.raises(MissingClassList) as raised:
+            class_list("5.3", tmp_path)
+
+        assert raised.value.version == "5.3"
+
+    def test_a_list_written_for_a_version_is_the_newest_patch_releases(self, tmp_path):
+        sheets = {
+            "https://cdn.jsdelivr.net/npm/daisyui@5.3.10/daisyui.css": ".newest {}",
+            "https://cdn.jsdelivr.net/npm/daisyui@5.3.9/daisyui.css": ".older {}",
+        }
+        registry = {
+            "versions": {
+                "5.2.99": {},
+                "5.3.0": {},
+                "5.3.9": {},
+                "5.3.10": {},
+                "5.3.11-beta.1": {},
+                "5.4.0": {},
+            }
+        }
+
+        write_class_list(
+            "5.3",
+            fetch=sheets.__getitem__,
+            registry=lambda url: registry,
+            directory=tmp_path,
+        )
+
+        assert class_list("5.3", tmp_path) == {"newest"}
+
+    def test_a_minor_version_the_registry_does_not_know_is_refused(self, tmp_path):
+        registry = {"versions": {"5.2.0": {}}}
+
+        with pytest.raises(MissingClassList) as raised:
+            write_class_list(
+                "5.3",
+                fetch=lambda url: "",
+                registry=lambda url: registry,
+                directory=tmp_path,
+            )
+
+        assert raised.value.version == "5.3"
+
+    @pytest.mark.parametrize("version", ["5.3.1", "5", "../5.3", "5.x"])
+    def test_a_version_that_is_not_two_numbers_is_refused_before_anything_is_fetched(
+        self, tmp_path, version
+    ):
+        fetched = []
+
+        def fetch(url):
+            fetched.append(url)
+            return ""
+
+        with pytest.raises(InvalidWindow) as raised:
+            write_class_list(version, fetch=fetch, registry=fetch, directory=tmp_path)
+
+        assert raised.value.version == version
+        assert fetched == []
+        assert list(tmp_path.iterdir()) == []

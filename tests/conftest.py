@@ -16,6 +16,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 import mvp_forms
+from support_window import DECLARATION, Window, class_list
 from tests.forms import (
     GroupFormSet,
     LineFormSet,
@@ -115,11 +116,9 @@ def inline_formset(db):
     return lambda data=None: PermissionFormSet(data, instance=owner)
 
 
-@pytest.fixture(scope="session")
-def daisyui_classes():
-    path = Path(__file__).parent / "data" / "daisyui-classes.txt"
-    lines = path.read_text().splitlines()
-    return {line for line in lines if line and not line.startswith("#")}
+@pytest.fixture(scope="session", params=Window.read(DECLARATION).daisyui, ids=str)
+def daisyui_classes(request):
+    return class_list(request.param)
 
 
 def clear_crispy_template_caches():

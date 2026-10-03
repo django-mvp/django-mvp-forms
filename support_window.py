@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
+import json
 import re
 import tomllib
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from importlib import metadata
 from pathlib import Path
 from typing import Any
+from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parent
 DECLARATION = ROOT / "support-window.toml"
+CLASS_DIRECTORY = ROOT / "tests" / "data"
+TIMEOUT = 30
 
 VERSION = re.compile(r"\d+\.\d+")
 CLAUSE = re.compile(r"\s*(==|!=|~=|>=|<=|>|<)\s*([\w.*]+)\s*")
@@ -23,6 +27,13 @@ SUPPORT_BLOCK = re.compile(
     r"<!-- support-window -->(.*?)<!-- /support-window -->", re.S
 )
 SEPARATOR = re.compile(r":?-+:?")
+PATCH = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
+COMMENT = re.compile(r"/\*.*?\*/", re.S)
+LITERAL = re.compile(r"\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|url\([^)\"']*\)")
+PRELUDE = re.compile(r"([^{};]*)\{")
+CLASS_SELECTOR = re.compile(r"\.(?![0-9])((?:\\[0-9a-fA-F]{1,6}\s?|\\.|[\w-])+)")
+HEX_ESCAPE = re.compile(r"\\([0-9a-fA-F]{1,6})\s?")
+ESCAPE = re.compile(r"\\(.)")
 STATEMENT = re.compile(r"<!-- support-window -->.*<!-- /dropped-versions -->", re.S)
 LINK_TARGET = re.compile(r"\]\(\s*<?([^)\s>]+)|href=[\"']([^\"']+)")
 ABSOLUTE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:")
@@ -484,3 +495,128 @@ def relative_links(readme: str) -> list[str]:
         return []
     targets = (a or b for a, b in LINK_TARGET.findall(statement.group()))
     return [target for target in targets if not ABSOLUTE.match(target)]
+
+
+class MissingClassList(LookupError):
+    """There is no class list for a daisyUI version.
+
+    Args:
+        version: The daisyUI version that has no list.
+
+    Attributes:
+        version: The daisyUI version that has no list.
+    """
+
+    def __init__(self, version: str) -> None:
+        super().__init__(f"daisyUI {version} has no class list")
+        self.version = version
+
+
+def fetch_json(url: str) -> Any:
+    """Fetch an address and read the answer as JSON.
+
+    Args:
+        url: A fixed https address.
+
+    Returns:
+        The parsed JSON.
+    """
+    with urlopen(url, timeout=TIMEOUT) as response:  # noqa: S310 fixed https address
+        return json.load(response)
+
+
+def fetch_text(url: str) -> str:
+    """Fetch an address and read the answer as text.
+
+    Args:
+        url: An https address built from a version already matched as numbers.
+
+    Returns:
+        The text of the answer.
+    """
+    with urlopen(url, timeout=TIMEOUT) as response:  # noqa: S310 built from numbers
+        return response.read().decode("utf-8")
+
+
+def class_names(stylesheet: str) -> set[str]:
+    """List the class selectors of a stylesheet with CSS escapes undone.
+
+    Only the selector in front of each ``{`` is read, so a dot in a number, a
+    string or an address in a declaration is never taken for a class.
+
+    Args:
+        stylesheet: The text of the stylesheet.
+
+    Returns:
+        The class names, such as ``md:flex-row`` for ``.md\\:flex-row`` and
+        ``2xl:btn`` for ``.\\32 xl\\:btn``.
+    """
+    text = LITERAL.sub("", COMMENT.sub("", stylesheet))
+    names = set()
+    for prelude in PRELUDE.findall(text):
+        for escaped in CLASS_SELECTOR.findall(prelude):
+            unescaped = HEX_ESCAPE.sub(lambda m: chr(int(m.group(1), 16)), escaped)
+            names.add(ESCAPE.sub(r"\1", unescaped))
+    return names
+
+
+def class_list(version: str, directory: Path = CLASS_DIRECTORY) -> set[str]:
+    """Read the class list kept for a daisyUI version.
+
+    Args:
+        version: The daisyUI version, such as ``5.0``.
+        directory: The directory that holds the lists.
+
+    Returns:
+        The class names in ``daisyui-classes-<version>.txt``.
+
+    Raises:
+        MissingClassList: The directory has no list for the version.
+    """
+    path = directory / f"daisyui-classes-{version}.txt"
+    if not path.is_file():
+        raise MissingClassList(version)
+    lines = path.read_text().splitlines()
+    return {line for line in lines if line and not line.startswith("#")}
+
+
+def write_class_list(
+    version: str,
+    fetch: Callable[[str], str] = fetch_text,
+    registry: Callable[[str], Any] = fetch_json,
+    directory: Path = CLASS_DIRECTORY,
+) -> Path:
+    """Write the class list of the newest patch release of a daisyUI version.
+
+    Args:
+        version: The daisyUI version, such as ``5.0``.
+        fetch: Reads a stylesheet from its address.
+        registry: Reads the npm registry's JSON from its address.
+        directory: The directory to write the list to.
+
+    Returns:
+        The path of the list written.
+
+    Raises:
+        MissingClassList: The registry holds no release of the version.
+    """
+    Window.parse_versions("daisyui", [version])
+    versions = registry("https://registry.npmjs.org/daisyui")["versions"]
+    patches = [
+        patch
+        for patch in versions
+        if PATCH.fullmatch(patch) and Window.series(patch) == version
+    ]
+    if not patches:
+        raise MissingClassList(version)
+    newest = max(patches, key=lambda patch: tuple(map(int, patch.split("."))))
+    address = f"https://cdn.jsdelivr.net/npm/daisyui@{newest}/daisyui.css"
+    names = sorted(class_names(fetch(address)))
+    header = (
+        f"# Every class selector in daisyUI {newest}'s CDN stylesheet, one per line.\n"
+        f"# Source: {address}\n"
+        f"# Written by: uv run python support_window.py classes {version}\n"
+    )
+    path = directory / f"daisyui-classes-{version}.txt"
+    path.write_text(header + "\n".join(names) + "\n")
+    return path

@@ -10,7 +10,8 @@ no component for the job, such as putting columns side by side. The package ship
 and defines no class of its own.
 
 A test compares every class the pack writes with the class names in daisyUI's published CDN
-stylesheet, kept in `tests/data/daisyui-classes.txt`. A feature that needs a layout utility adds
+stylesheet, kept in `tests/data/daisyui-classes-5.0.txt` and
+`tests/data/daisyui-classes-5.7.txt`. A feature that needs a layout utility adds
 it to that test by name, so each one is a visible, reviewed exception.
 
 The first such utility is `w-full`. See ADR 0007.
