@@ -1,0 +1,15 @@
+{% for group_name, options, group_index in widget.optgroups %}
+  {% if group_name %}
+    <fieldset class="fieldset">
+      <legend class="fieldset-legend">{{ group_name }}</legend>
+  {% endif %}
+  {% for option in options %}
+    <label class="label"{% if option.attrs.id %} for="{{ option.attrs.id }}"{% endif %}>
+      <input type="{{ option.type }}" name="{{ option.name }}"{% if option.value != None %} value="{{ option.value|stringformat:'s' }}"{% endif %}{% include "daisyui/widgets/attrs.html" with widget=option %}>
+      {{ option.label }}
+    </label>
+  {% endfor %}
+  {% if group_name %}
+    </fieldset>
+  {% endif %}
+{% endfor %}

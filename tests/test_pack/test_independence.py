@@ -11,6 +11,8 @@ from crispy_forms.bootstrap import (
     Alert,
     AppendedText,
     FormActions,
+    InlineCheckboxes,
+    InlineRadios,
     Modal,
     PrependedAppendedText,
     PrependedText,
@@ -48,6 +50,8 @@ from tests.forms import (
     FilesForm,
     FormWideErrorsForm,
     HelpedForm,
+    InlineCheckboxesForm,
+    InlineRadiosForm,
     LineFormSet,
     RadioGroupsForm,
     RuledLineFormSet,
@@ -240,6 +244,28 @@ def attached(data=None):
     )
 
 
+def inlined_radios(data=None):
+    return InlineRadiosForm(
+        data,
+        layout=(
+            InlineRadios("choice"),
+            InlineRadios("grouped"),
+            InlineRadios("locked"),
+        ),
+    )
+
+
+def inlined_checkboxes(data=None):
+    return InlineCheckboxesForm(
+        data,
+        layout=(
+            InlineCheckboxes("choice"),
+            InlineCheckboxes("grouped"),
+            InlineCheckboxes("locked"),
+        ),
+    )
+
+
 def helper_buttons():
     return ButtonedForm(
         buttons=(
@@ -404,6 +430,22 @@ STATES = [
         lambda: buttoned({}),
         NOTHING,
         id="buttons in a layout, invalid",
+    ),
+    pytest.param("{% crispy form %}", inlined_radios, NOTHING, id="inline radios"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: inlined_radios({}),
+        NOTHING,
+        id="inline radios, invalid",
+    ),
+    pytest.param(
+        "{% crispy form %}", inlined_checkboxes, NOTHING, id="inline checkboxes"
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: inlined_checkboxes({}),
+        NOTHING,
+        id="inline checkboxes, invalid",
     ),
     pytest.param(
         "{% crispy form %}", helper_buttons, NOTHING, id="buttons added to the helper"

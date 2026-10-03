@@ -26,6 +26,7 @@ from mvp_forms.templatetags.daisyui import (
 )
 from tests.forms import (
     CheckboxForm,
+    CheckboxGroupsForm,
     DateSelectsForm,
     DeveloperAttrsForm,
     FilesForm,
@@ -33,6 +34,7 @@ from tests.forms import (
     LineFormSet,
     NoLinesFormSet,
     OwnTemplateDateWidget,
+    RadioGroupsForm,
     SelectsForm,
     TextInputsForm,
     UncoveredInput,
@@ -1229,3 +1231,60 @@ class TestDaisyuiFieldTag:
         rendered = self.render(field=form["text"], after="", wrapper_class=None)
 
         assert rendered == "$||"
+
+
+class TestFieldInputInline:
+    @pytest.mark.parametrize("name", ["choice", "grouped", "empty"])
+    @pytest.mark.parametrize("form", [RadioGroupsForm, CheckboxGroupsForm])
+    def test_a_group_is_drawn_by_the_inline_template_when_inline(self, form, name):
+        field_input = FieldInput(form()[name], inline=True)
+
+        assert field_input.template_name == "daisyui/widgets/inline_group.html"
+
+    @pytest.mark.parametrize("form", [RadioGroupsForm, CheckboxGroupsForm])
+    def test_a_group_is_drawn_by_the_stacked_template_when_not_inline(self, form):
+        field_input = FieldInput(form()["choice"])
+
+        assert field_input.template_name == "daisyui/widgets/group.html"
+
+    @pytest.mark.parametrize("form", [RadioGroupsForm, CheckboxGroupsForm])
+    def test_inline_off_is_the_default_and_is_the_stacked_template(self, form):
+        field_input = FieldInput(form()["choice"], inline=False)
+
+        assert field_input.template_name == FieldInput(form()["choice"]).template_name
+
+    @pytest.mark.parametrize("form", [RadioGroupsForm, CheckboxGroupsForm])
+    @pytest.mark.parametrize("name", ["own", "own_option"])
+    def test_a_widget_naming_its_own_template_is_never_drawn_by_the_inline_one(
+        self, form, name
+    ):
+        assert FieldInput(form()[name], inline=True).template_name is None
+
+    @pytest.mark.parametrize(
+        ("form", "name"),
+        [
+            (TextInputsForm, "text"),
+            (SelectsForm, "choice"),
+            (DateSelectsForm, "born"),
+            (FilesForm, "plain"),
+        ],
+    )
+    def test_inline_changes_nothing_for_a_widget_that_is_not_a_choice_group(
+        self, form, name
+    ):
+        inline = FieldInput(form()[name], inline=True)
+
+        assert inline.template_name == FieldInput(form()[name]).template_name
+
+    def test_the_widget_is_drawn_from_a_copy_with_the_inline_template(self):
+        form = RadioGroupsForm()
+        widget = form.fields["choice"].widget
+        before = widget.template_name
+
+        FieldInput(form["choice"], inline=True).render()
+
+        assert form.fields["choice"].widget is widget
+        assert widget.template_name == before
+
+    def test_an_inline_group_is_still_a_group(self):
+        assert FieldInput(RadioGroupsForm()["choice"], inline=True).is_group

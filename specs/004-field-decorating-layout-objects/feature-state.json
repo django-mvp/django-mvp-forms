@@ -125,8 +125,28 @@
       "tasks": [
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_inline_groups.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputInline",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples",
+              "tests/test_pack/test_documented_examples.py::TestReadmeInlineChoices"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (exit 0, 1449 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:100",
+              "mvp_forms/templatetags/daisyui.py:219",
+              "mvp_forms/templates/daisyui/widgets/inline_group.html:1",
+              "mvp_forms/templates/daisyui/layout/radioselect_inline.html:2"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T004",

@@ -441,6 +441,35 @@ class DecoratedFieldsForm(forms.Form):
         self.helper.layout = Layout(*layout)
 
 
+class InlineRadiosForm(RadioGroupsForm):
+    text = forms.CharField(required=False)
+    fixed = forms.ChoiceField(
+        choices=FRUIT, widget=forms.RadioSelect, disabled=True, initial="a"
+    )
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+class InlineCheckboxesForm(CheckboxGroupsForm):
+    text = forms.CharField(required=False)
+    fixed = forms.MultipleChoiceField(
+        choices=FRUIT,
+        widget=forms.CheckboxSelectMultiple,
+        disabled=True,
+        initial=["a"],
+    )
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
 def refuse_markup(value):
     raise ValidationError("<script>alert(1)</script>", code="markup")
 

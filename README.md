@@ -386,6 +386,39 @@ class PriceForm(forms.Form):
 - `css_class` and extra attributes go to the input, as they do for `Field`. `template=` draws your own template. `input_size` and `active` are accepted and do nothing.
 - `wrapper_class` now works on any field, not only on these three: it is added to the class of the frame's outer element, whether that is a `<div>` or a `<fieldset>`. `Field("name", wrapper_class="wide")` draws `class="fieldset wide"`.
 
+#### Choices in a line
+
+`InlineRadios` and `InlineCheckboxes` come from `crispy_forms.bootstrap`. They draw a radio group or a checkbox group with its options along a line instead of one under another:
+
+```python
+from crispy_forms.bootstrap import InlineCheckboxes, InlineRadios
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+
+
+class SurveyForm(forms.Form):
+    size = forms.ChoiceField(
+        choices=[("s", "Small"), ("m", "Medium"), ("l", "Large")],
+        widget=forms.RadioSelect,
+    )
+    extras = forms.MultipleChoiceField(
+        choices=[("a", "Ketchup"), ("b", "Mustard")],
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(InlineRadios("size"), InlineCheckboxes("extras"))
+```
+
+- Each option is a `radio` or a `checkbox` input inside a `<label>` of its own, tied to it by `for`, exactly as in a group drawn without the layout object. The options sit in a `<div>` that lets them run along a line and wrap onto the next one when the group has many options or long labels.
+- The frame is the group's usual one: a `<fieldset>` with a `<legend>`, the required marker, the help text and the errors, described by the help text and the error. Initial and submitted values check the same options, disabled options stay disabled, choices with named groups sit under their names, and `cleaned_data` is what the group without the layout object gives.
+- A widget that names a template or an option template of its own is drawn by it. A field with no choices is drawn with its frame and no option, and a field that is not a group, such as a text field, is drawn as it is without the layout object.
+- `css_class` and extra attributes go to every option, as they do for `Field`. `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
+
 ### Size, colour and variant
 
 State a size, a colour and a variant once, in Python, and the pack adds daisyUI's modifier for each to every input it draws for the form. You write no class on any widget. The statement is a `FormChoices`, set as the `daisyui` attribute of the form's helper:

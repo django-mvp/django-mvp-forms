@@ -63,6 +63,8 @@ class FieldInput:
         wrapper_class: A class for the frame's outer element.
         prepended: Text drawn before the input, as markup.
         appended: Text drawn after the input, as markup.
+        inline: Whether a group of choices is drawn along a line, wrapping when it
+            does not fit, and not one under another.
 
     Raises:
         InvalidChoice: A size, colour or variant stated for the form or the
@@ -95,6 +97,10 @@ class FieldInput:
         forms.SelectDateWidget: "daisyui/widgets/select_date.html",
         forms.ClearableFileInput: "daisyui/widgets/clearable_file_input.html",
     }
+    inline_templates: dict[type[forms.Widget], str] = {
+        forms.CheckboxSelectMultiple: "daisyui/widgets/inline_group.html",
+        forms.RadioSelect: "daisyui/widgets/inline_group.html",
+    }
     # The removal checkbox of a held file takes the size and the colour. A
     # checkbox has no variant.
     removal_kinds = ("size", "color")
@@ -120,6 +126,7 @@ class FieldInput:
         wrapper_class: str = "",
         prepended: str | None = None,
         appended: str | None = None,
+        inline: bool = False,
     ) -> None:
         self.field = field
         self.show_labels = show_labels
@@ -127,6 +134,7 @@ class FieldInput:
         self.wrapper_class = wrapper_class
         self.prepended = prepended
         self.appended = appended
+        self.inline = inline
         choices = choices or FormChoices()
         self.modifiers = self.resolve_modifiers(choices, placed, self.component)
         self.removal_modifiers = (
@@ -208,7 +216,8 @@ class FieldInput:
         widget has its class's templates.
         """
         widget = self.field.field.widget
-        for widget_class, name in self.templates.items():
+        templates = {**self.templates, **(self.inline_templates if self.inline else {})}
+        for widget_class, name in templates.items():
             if isinstance(widget, widget_class) and all(
                 getattr(widget, attr, None) == getattr(widget_class, attr, None)
                 for attr in ("template_name", "option_template_name")

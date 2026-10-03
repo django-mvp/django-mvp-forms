@@ -20,3 +20,10 @@ Did: AttachedTextForm (three attached-text layout objects on inputs, one on a se
 Verified: uv run pytest tests/test_demo.py tests/test_smoke.py: 802 passed; pre-commit run --all-files clean.
 Next: full verify, then the completion report.
 Watch: the standalone view only binds the attached-text form; later stories choose by the submit button's name, as the containers view does.
+
+## 2026-10-03T18:58:17Z · Implementer US2 · T003
+
+Did: FieldInput takes the keyword-only `inline`, with `inline_templates` naming widgets/inline_group.html for RadioSelect and CheckboxSelectMultiple; template_name draws them from it while a widget naming its own template or option template keeps its own. widgets/group.html and the new inline_group.html both include widgets/group_options.html. layout/radioselect_inline.html and layout/checkboxselectmultiple_inline.html are the two-line templates. Tests first: tests/test_pack/test_inline_groups.py (56), TestFieldInputInline in test_daisyui.py, four inline states in test_independence.py, two docstring examples and a README example test in test_documented_examples.py; InlineRadiosForm and InlineCheckboxesForm in tests/forms.py. README section "Choices in a line" and a CHANGELOG entry.
+Verified: uv run pytest tests/test_pack/test_inline_groups.py (all failed with TemplateDoesNotExist before the templates existed); uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope: 1449 passed; pre-commit run --all-files clean. Probed by mutation: dropping inline=True from the radio layout template fails the template_name test.
+Next: T004, the inline-choices demo page and the standalone page's forms.
+Watch: the layout test reads the template through FieldInput.template_name by recording the FieldInputs built in a draw; no test compares the two containers. docs/ has no page for these objects; ADR 0012 names group.html and is left as written.

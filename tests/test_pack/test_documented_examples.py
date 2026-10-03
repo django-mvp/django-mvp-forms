@@ -10,6 +10,8 @@ from crispy_forms.bootstrap import (
     Alert,
     AppendedText,
     FormActions,
+    InlineCheckboxes,
+    InlineRadios,
     Modal,
     PrependedAppendedText,
     PrependedText,
@@ -230,6 +232,16 @@ EXAMPLES = {
         ["form_field"],
         ("label", {"class": "input"}),
     ),
+    "InlineCheckboxes": (
+        lambda: InlineCheckboxes("form_field"),
+        ["form_field"],
+        ("div", {"id": "div_id_form_field"}),
+    ),
+    "InlineRadios": (
+        lambda: InlineRadios("form_field"),
+        ["form_field"],
+        ("div", {"id": "div_id_form_field"}),
+    ),
 }
 
 
@@ -325,3 +337,15 @@ class TestReadmeButtonChoices:
         assert {"btn-sm", "btn-error", "btn-outline"} <= delete
         assert "btn-neutral" not in delete
         assert "input-sm" in set(soup.find(id="id_name")["class"])
+
+
+class TestReadmeInlineChoices:
+    def test_the_example_drawing_choices_in_a_line_draws_both_groups(self, draw):
+        form = readme_example("Choices in a line")["SurveyForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        sizes = soup.find(id="div_id_size").find_all("input", type="radio")
+        extras = soup.find(id="div_id_extras").find_all("input", type="checkbox")
+        assert [option["value"] for option in sizes] == ["s", "m", "l"]
+        assert [option["value"] for option in extras] == ["a", "b"]
