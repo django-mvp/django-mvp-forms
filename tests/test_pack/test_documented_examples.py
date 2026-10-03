@@ -215,9 +215,9 @@ class TestReadmeFormWideChoices:
         assert {"input-sm", "input-primary", "input-ghost"} <= set(
             soup.find(id="id_name")["class"]
         )
-        assert {"textarea-sm", "textarea-primary", "textarea-ghost"} <= set(
-            soup.find(id="id_notes")["class"]
-        )
+        notes = set(soup.find(id="id_notes")["class"])
+        assert {"textarea-sm", "textarea-ghost"} <= notes
+        assert "textarea-primary" not in notes
         newsletter = set(soup.find(id="id_newsletter")["class"])
         assert {"checkbox-sm", "checkbox-primary"} <= newsletter
         assert "checkbox-ghost" not in newsletter

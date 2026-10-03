@@ -226,7 +226,7 @@ State a size, a colour and a variant once, in Python, and the pack adds daisyUI'
 ```python
 from crispy_forms.helper import FormHelper
 from django import forms
-from mvp_forms.choices import FormChoices
+from mvp_forms.choices import Choice, FormChoices
 
 
 class SettingsForm(forms.Form):
@@ -237,7 +237,12 @@ class SettingsForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        self.helper.daisyui = FormChoices(size="sm", color="primary", variant="ghost")
+        self.helper.daisyui = FormChoices(
+            size="sm",
+            color="primary",
+            variant="ghost",
+            fields={"notes": Choice(color=None)},
+        )
 ```
 
 It takes effect with `{{ form|crispy }}` and with `{% crispy form %}`, whether or not the form has a layout, and wherever a field sits in one. Set it on the helper's instance, as above, and not as a class attribute of a `FormHelper` subclass: django-crispy-forms passes a helper's instance attributes on to the templates and leaves its class attributes behind, so a class attribute would not reach everything the pack draws.
@@ -248,8 +253,9 @@ The names are daisyUI's own, and nothing else is accepted:
 - colour: `neutral`, `primary`, `secondary`, `accent`, `info`, `success`, `warning`, `error`
 - variant: `ghost`, for text-like inputs, textareas, selects and file inputs
 
-The keyword is spelt `color`, as daisyUI spells it. The three are independent: changing one leaves the other two as they were. Every one is optional, and a form that states nothing is drawn exactly as it was before.
+The classes the names mean are written out in the tables of `Modifiers`, in `mvp_forms.choices`, one for sizes, one for colours and one for variants. The keyword is spelt `color`, as daisyUI spells it. The three are independent: changing one leaves the other two as they were. Every one is optional, and a form that states nothing is drawn exactly as it was before.
 
+- `fields` gives one field a `Choice` of its own, by the field's name. Each of the three that the `Choice` states wins over the form's for that field, and each it leaves out, which is `INHERIT` and the default, falls back to the form's. `None` is the pack's ordinary drawing, so `Choice(color=None)` undoes the form's colour for that field, as `notes` does above. `INHERIT` is the one value of the type `Inherit`.
 - Every input of a field takes the choices: each option of a radio or checkbox group, each select of a date, and the removal checkbox of a file field that holds a file, which takes the size and the colour.
 - A choice that one kind of input has no modifier for is passed over for that kind. `variant="ghost"` leaves a checkbox and a radio as they are and draws the text input beside them in ghost.
 - A name that is not in the lists above raises `InvalidChoice`, a `ValueError`, when the form is drawn. It carries the `kind`, the `value` and the names `allowed`.

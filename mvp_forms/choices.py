@@ -13,7 +13,6 @@ class Inherit(Enum):
 
 
 INHERIT = Inherit.INHERIT
-Stated = str | Inherit | None
 
 
 class InvalidChoice(ValueError):
@@ -231,7 +230,7 @@ class Modifiers:
         kind: str,
         component: str | None,
         *,
-        own: Stated = INHERIT,
+        own: str | Inherit | None = INHERIT,
         form: str | None = None,
         target: str | None = None,
         in_error: bool = False,
@@ -301,9 +300,9 @@ class Choice:
     def __init__(
         self,
         *fields: Any,
-        size: Stated = INHERIT,
-        color: Stated = INHERIT,
-        variant: Stated = INHERIT,
+        size: str | Inherit | None = INHERIT,
+        color: str | Inherit | None = INHERIT,
+        variant: str | Inherit | None = INHERIT,
     ) -> None:
         self.fields = list(fields)
         self.size = size
