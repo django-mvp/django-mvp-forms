@@ -2,7 +2,7 @@
   "feature": "012-legible-under-every-theme",
   "branch": "012-legible-under-every-theme",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-10-03T22:06:11Z",
       "note": "plan.md, research.md, tasks.md: 3 stories, 6 tasks; continues on pull request #95"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T22:06:42Z",
+      "note": "one reviewer, three lenses, on plan.md, research.md and tasks.md"
     }
   ],
   "gates": {
@@ -104,7 +109,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {
