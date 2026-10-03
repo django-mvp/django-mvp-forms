@@ -263,8 +263,26 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_states.py::TestDisabled",
+              "tests/test_pack/test_states.py::TestReadOnly"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_states.py -x",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build"
+            ],
+            "code": [
+              "tests/test_pack/test_states.py:40",
+              "tests/forms.py:315"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
