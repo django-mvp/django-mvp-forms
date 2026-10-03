@@ -80,7 +80,7 @@ and every layout written from its documentation. The text is written in Python b
 in the same place they would write an `HTML` layout object, so it is on the trusted side of the
 boundary in Article V.
 
-**ADR:** pending, to be written when the feature is built. It is a standing exception to escaping
+**ADR:** pending, written when the feature converges. It is a standing exception to escaping
 that every later template taking developer-supplied text will be measured against, and a reader
 would reasonably ask why it exists.
 
@@ -161,5 +161,77 @@ last one is.
 **Chosen:** the feature is built without a prototype stage. Every decoration is drawn from stock
 daisyUI markup, the README says stock markup wins over custom styling, and the only new pages are
 demo pages that nobody outside the project sees.
+
+**ADR:** none. It is about how this one feature is delivered.
+
+## D12. A layout object decorates a field through options on the tag that draws it
+
+**Chosen:** each of the six templates django-crispy-forms asks for is two lines: it calls
+`daisyui_field` with an option naming the decoration, then includes the one frame. `FieldInput`
+and the frame's body draw the decoration (plan, *One frame, told how the field is decorated*).
+
+**Rejected:** a frame per layout object. Six copies of the label, required marker, help text and
+error handling would drift, and ADR 0006 exists to prevent that.
+
+**Rejected:** template inheritance with a block for the input. A value set by a tag inside a
+block is gone when the block ends, so a child template could not say how the input is drawn.
+
+**ADR:** pending, written when the feature converges.
+
+## D13. Attached text is daisyUI's label inside an input, and the wrapper is a label element
+
+**Chosen:** the wrapper carries the component class, the width and the error modifier, and the
+input inside is drawn bare. The wrapper is a `<label>`, so the text is part of the input's name
+(research R2).
+
+**Rejected:** `aria-describedby` with an id per text, and `join` with a separate element.
+Reasons in research R2.
+
+**ADR:** pending, with D12.
+
+## D14. Buttons joined to a field are left as they were drawn
+
+**Chosen:** the pack puts `join` on the group and `join-item` on the input. The buttons are the
+string django-crispy-forms already drew (research R3). daisyUI squares a button's joined corners
+from the container alone.
+
+**Rejected:** drawing each button again from a copy with `join-item`. A second render evaluates
+already-rendered text as a template.
+
+**ADR:** none. It is local to one layout object, and the reason is in research R3.
+
+## D15. The frame takes `wrapper_class` from the context
+
+**Chosen:** the tag reads `wrapper_class` and the frame writes it as a class on its outer
+element (research R5). FR-024 requires it and django-crispy-forms offers no other route.
+
+**Rejected:** honouring it only for `PrependedAppendedText`, the one layout object that always
+supplies it. The other five that document it would ignore it without a word.
+
+**ADR:** pending. It amends ADR 0006.
+
+## D16. The parts of a multi-widget field are classed and named on a copy
+
+**Chosen:** a deep copy of the widget, each part given its component class after its own
+classes and an `aria-label` when it has none: `Date` and `Time` for a split date and time, the
+field's label otherwise (research R6).
+
+**Rejected:** passing one class to `as_widget`. It replaces every part's own class, which is
+exactly what `MultiWidgetField` exists to set.
+
+**ADR:** pending. It extends ADR 0012.
+
+## D17. One standalone page for all six kinds
+
+**Chosen:** six shell pages, as D10 has it, and one standalone page that draws the forms of all
+six on daisyUI's CDN install alone, which is what SC-005 is checked against. FS-005 did the same
+for its four.
+
+**ADR:** none. It concerns the demo project only.
+
+## D18. Dispatch
+
+One implementer per story, six in sequence in the feature worktree, because every story edits
+the same shared files (plan, *Story order*).
 
 **ADR:** none. It is about how this one feature is delivered.
