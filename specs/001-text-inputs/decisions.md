@@ -262,3 +262,27 @@ text that was submitted, and submitted text is printed back unformatted either w
 **Revisit if:** the direct render is ever reached for a field holding an unsubmitted value.
 
 **ADR:** none — two corrections inside one class; the rules they serve are in ADR 0005 and 0006.
+
+## D23. Code review, 2026-10-03
+
+One reviewer on the whole feature. Verdict: approve, nothing critical or high. Four of the six
+findings were fixed anyway, because each was small.
+
+- **CR-001, fixed.** The error modifiers `input-error` and `textarea-error` were built from the
+  component's name at run time, so a host project's own Tailwind build would never find them.
+  They are now written out in `FieldInput.error_modifiers`, and the README tells such a project
+  to scan the whole package and not only its templates.
+- **CR-002, declined.** The standalone demo page loads Tailwind's browser build beside daisyUI's
+  stylesheet. That is daisyUI's documented CDN install and the maintainer's ruling in D9. The
+  pack itself writes only classes the stylesheet defines, which a test holds.
+- **CR-003, fixed.** With labels off, only a label marked safe has its tags stripped and its
+  entities read as characters. Any other label is named exactly as written.
+- **CR-004, fixed.** The tag reads the helper's switches with the same comparison the templates
+  use, so a switch set to `0` hides the label and names the input.
+- **CR-005, fixed.** The demo tests find the submit button by its type, no longer pin which
+  script the standalone page loads, and the shared test class has no docstring.
+- **CR-006, declined.** The demo pages' own headings and prose are not wrapped for translation.
+  The demo project is not distributed and has no catalogue, and its overview page is written the
+  same way. The package adds no text of its own.
+
+**ADR:** none — a record of the review; the rules it touched are in ADR 0003, 0005 and 0006.

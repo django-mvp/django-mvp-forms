@@ -169,6 +169,13 @@ Added at convergence. A label marked safe that holds an HTML entity is named in 
 the character. The tag reads `form_show_labels` and `form_show_errors` as the templates do: off
 only when `False`.
 
+### T010 — Review fixes to the input tag
+
+**Files**: `mvp_forms/templatetags/daisyui.py`, `tests/test_templatetags/test_daisyui.py`, `README.md`
+
+The error modifiers are written out as literals. A label not marked safe is named in
+`aria-label` exactly as written. The tag reads a falsy switch as off, as the templates do.
+
 ---
 
 ## US4 — The pack works in any daisyUI project (P2)
@@ -231,3 +238,9 @@ Plan, *The demo project*; research R7.
 - README: read the installation and quickstart sections as a developer would and correct
   anything that would not work as written (US5.5); add the demo's two pages to the contributing
   section. CHANGELOG: the demo pages.
+
+### T011 — Review fixes to the demo tests
+
+**Files**: `tests/test_demo.py`
+
+The submit button is found by its type. No test pins which script the standalone page loads.

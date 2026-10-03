@@ -253,6 +253,20 @@
               "uv run pytest tests/test_templatetags/test_daisyui.py"
             ]
           }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputLiteralLabel",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiInputFalsySwitches"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
+          }
         }
       ]
     },
@@ -329,6 +343,19 @@
               "README.md:36"
             ],
             "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestTextInputsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py"
+            ]
           }
         }
       ]
