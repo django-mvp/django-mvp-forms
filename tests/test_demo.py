@@ -2471,7 +2471,84 @@ class RatingStatesPageContract(RatingAndRangePageContract):
         assert sum(tag.has_attr("checked") for tag in stars) == 1
 
 
-class TestRatingAndRangePage(RatingFormPageContract, RatingStatesPageContract):
+RANGE_PREFIX = "range"
+
+
+def range_input(page, state=None):
+    prefix = RATING_PREFIX if state is None else f"{RANGE_PREFIX}-{state}"
+    return page.find("input", id=f"id_{prefix}-volume")
+
+
+class RangeFormPageContract(RatingAndRangePageContract):
+    def test_the_field_is_a_range_with_its_name_and_the_limits_of_the_field(self, page):
+        tag = range_input(page)
+
+        assert tag["type"] == "range"
+        assert tag["name"] == f"{RATING_PREFIX}-volume"
+        assert (tag["min"], tag["max"], tag["step"]) == ("0", "100", "5")
+
+    def test_a_post_with_the_slider_set_shows_the_number_the_form_cleaned_to(
+        self, open_page
+    ):
+        first = open_page(self.url_name)
+        data = {**rating_picked(first, score=2), range_input(first)["name"]: "35"}
+
+        page = open_page(self.url_name, data)
+
+        shown = page.find(id=f"{RATING_PREFIX}-cleaned-volume")
+        assert shown.get_text(strip=True) == "35"
+        assert range_input(page)["value"] == "35"
+
+    def test_a_post_beyond_the_limits_shows_an_error_and_nothing_cleaned(
+        self, open_page
+    ):
+        first = open_page(self.url_name)
+        data = {**rating_picked(first, score=2), range_input(first)["name"]: "500"}
+
+        page = open_page(self.url_name, data)
+
+        tag = range_input(page)
+        assert tag["aria-invalid"] == "true"
+        assert "range-error" in tag["class"]
+        assert page.find(id=f"{RATING_PREFIX}-cleaned") is None
+
+
+class RangeStatesPageContract(RatingAndRangePageContract):
+    @pytest.mark.parametrize("state", RATING_STATES)
+    def test_every_state_is_drawn_as_a_range_with_limits_and_a_step(self, page, state):
+        tag = range_input(page, state)
+
+        assert tag["type"] == "range"
+        assert {"min", "max", "step"} <= set(tag.attrs)
+
+    def test_the_range_with_help_text_is_described_by_it(self, page):
+        tag = range_input(page, "help")
+
+        described = tag["aria-describedby"].split()
+
+        assert f"id_{RANGE_PREFIX}-help-volume_helptext" in described
+        assert page.find(id=described[0]) is not None
+
+    def test_the_range_in_error_is_invalid_and_draws_its_error(self, page):
+        tag = range_input(page, "error")
+
+        assert tag["aria-invalid"] == "true"
+        assert "range-error" in tag["class"]
+        assert page.find(id=f"id_{RANGE_PREFIX}-error-volume_error") is not None
+
+    def test_the_disabled_range_is_disabled_and_shows_its_value(self, page):
+        tag = range_input(page, "disabled")
+
+        assert tag.has_attr("disabled")
+        assert tag["value"] == "40"
+
+
+class TestRatingAndRangePage(
+    RatingFormPageContract,
+    RatingStatesPageContract,
+    RangeFormPageContract,
+    RangeStatesPageContract,
+):
     url_name = "rating-and-range"
 
     def test_the_shell_wraps_it(self, page):
@@ -2487,7 +2564,10 @@ class TestRatingAndRangePage(RatingFormPageContract, RatingStatesPageContract):
 
 
 class TestStandaloneRatingAndRangePage(
-    RatingFormPageContract, RatingStatesPageContract
+    RatingFormPageContract,
+    RatingStatesPageContract,
+    RangeFormPageContract,
+    RangeStatesPageContract,
 ):
     url_name = "rating-and-range-standalone"
 

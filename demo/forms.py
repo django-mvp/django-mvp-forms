@@ -1093,12 +1093,14 @@ STARS = [(count, format_lazy(_("{count} stars"), count=count)) for count in rang
 STATE_STARS = [(str(count), label) for count, label in STARS]
 
 
-class RatingForm(forms.Form):
-    """A required rating and an optional one that can be cleared, which can be posted.
+class RatingAndRangeForm(forms.Form):
+    """Two ratings and a range, which can be posted.
 
     ``score`` is a rating by its name in ``FormChoices`` and ``comfort`` is a rating
-    in the layout, with an empty choice that clears it. Every id and the button's
-    name carry the form's prefix. The form must be given a prefix.
+    in the layout, with an empty choice that clears it. ``volume`` is a range in the
+    layout, with limits and a step, and a slider always submits a number, so it is
+    never left empty. Every id and the button's name carry the form's prefix. The
+    form must be given a prefix.
     """
 
     score = forms.ChoiceField(label=_("How would you rate this?"), choices=STARS)
@@ -1109,14 +1111,26 @@ class RatingForm(forms.Form):
         empty_value=None,
         required=False,
     )
+    volume = forms.IntegerField(
+        label=_("Volume"),
+        min_value=0,
+        max_value=100,
+        step_size=5,
+        initial=50,
+        required=False,
+    )
 
     def __init__(self, *args, **kwargs):
-        """Build the helper, with the ratings stated and a submit button."""
+        """Build the helper, with the drawings stated and a submit button."""
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.attrs = {"novalidate": True}
         self.helper.daisyui = FormChoices(fields={"score": Choice(drawing="rating")})
-        self.helper.layout = Layout("score", Choice("comfort", drawing="rating"))
+        self.helper.layout = Layout(
+            "score",
+            Choice("comfort", drawing="rating"),
+            Choice("volume", drawing="range"),
+        )
         self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
 
 
@@ -1148,3 +1162,35 @@ class RatingStateForm(ChosenForm):
             self.initial["score"] = "3"
         if state == "help":
             score.help_text = _("Pick the star that fits best.")
+
+
+class RangeStateForm(ChosenForm):
+    """One range, in one state.
+
+    Give the form a prefix of the state's name, so no id repeats on the page. The
+    field is ``volume``.
+
+    Args:
+        state: ``"help"``, ``"error"`` or ``"disabled"``. The form for ``"error"``
+            is bound with a value above the field's highest.
+    """
+
+    volume = forms.IntegerField(
+        label=_("Volume"), min_value=0, max_value=100, step_size=5
+    )
+
+    def __init__(self, *args, state, **kwargs):
+        """Put the field in its state, and state its drawing for the form."""
+        if state == "error":
+            args = args or ({"volume": "500"},)
+        super().__init__(
+            *args,
+            choices=FormChoices(fields={"volume": Choice(drawing="range")}),
+            **kwargs,
+        )
+        volume = self.fields["volume"]
+        volume.disabled = state == "disabled"
+        if state == "disabled":
+            self.initial["volume"] = 40
+        if state == "help":
+            volume.help_text = _("Move the slider to set the volume.")

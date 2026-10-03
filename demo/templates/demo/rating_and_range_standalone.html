@@ -19,10 +19,12 @@
         <div class="card-body">
           <h2 class="card-title">Drawn in Python</h2>
           <p>
-            Two fields that each hold one choice, drawn as a rating, one star for each choice.
-            The first states its rating by its name in the form's statement and cannot be
-            cleared. The second states it in the layout and has an empty choice, which clears
-            it. Pick a star, submit the form, and the page shows what the form cleaned to.
+            Two fields that each hold one choice, drawn as a rating, one star for each choice,
+            and a number field drawn as a range. The first rating states its drawing by its name
+            in the form's statement and cannot be cleared. The second states it in the layout and
+            has an empty choice, which clears it. The range states it in the layout, and its
+            limits and step are the ones the field declares. Pick a star, move the slider, submit
+            the form, and the page shows what the form cleaned to.
           </p>
           {% crispy form %}
         </div>
@@ -47,6 +49,19 @@
             disabled state. No form below posts anywhere.
           </p>
           {% for state in rating_states %}
+            <h3 class="font-semibold">{{ state.title }}</h3>
+            {% crispy state.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">A range in every state</h2>
+          <p>
+            A range keeps its label, its help text, its required marker, its error and its
+            disabled state. No form below posts anywhere.
+          </p>
+          {% for state in range_states %}
             <h3 class="font-semibold">{{ state.title }}</h3>
             {% crispy state.form %}
           {% endfor %}

@@ -33,7 +33,8 @@ from demo.forms import (
     OrderLineFormSet,
     OverrideForm,
     PairForm,
-    RatingForm,
+    RangeStateForm,
+    RatingAndRangeForm,
     RatingStateForm,
     RowButtonsForm,
     StackedOrderHelper,
@@ -950,7 +951,8 @@ class RatingAndRangeMixin:
     """
 
     rating_prefix = "rating"
-    rating_states = ("help", "error", "disabled")
+    range_prefix = "range"
+    states = ("help", "error", "disabled")
 
     def build_cleaned(self, form):
         """List what a posted form cleaned to, for the page to show.
@@ -969,8 +971,12 @@ class RatingAndRangeMixin:
             for name, value in form.cleaned_data.items()
         ]
 
-    def build_rating_states(self):
-        """Build one small form for each state a rating is shown in.
+    def build_states(self, prefix, form_class):
+        """Build one small form for each state a field is shown in.
+
+        Args:
+            prefix: What each form's prefix starts with.
+            form_class: The form to build, given a prefix and a state.
 
         Returns:
             A list of dicts holding each state's name and form.
@@ -978,17 +984,16 @@ class RatingAndRangeMixin:
         return [
             {
                 "title": state,
-                "form": RatingStateForm(
-                    prefix=f"{self.rating_prefix}-{state}", state=state
-                ),
+                "form": form_class(prefix=f"{prefix}-{state}", state=state),
             }
-            for state in self.rating_states
+            for state in self.states
         ]
 
     def get_context_data(self, **kwargs):
         """Add the form, what it cleaned to when it was posted, and the states."""
-        form = kwargs.setdefault("form", RatingForm(prefix=self.rating_prefix))
-        kwargs["rating_states"] = self.build_rating_states()
+        form = kwargs.setdefault("form", RatingAndRangeForm(prefix=self.rating_prefix))
+        kwargs["rating_states"] = self.build_states(self.rating_prefix, RatingStateForm)
+        kwargs["range_states"] = self.build_states(self.range_prefix, RangeStateForm)
         kwargs["cleaned"] = self.build_cleaned(form)
         kwargs["prefix"] = self.rating_prefix
         return super().get_context_data(**kwargs)
@@ -999,16 +1004,16 @@ class RatingAndRangeMixin:
 
     def post(self, request, *args, **kwargs):
         """Render the page with the form bound to what was posted."""
-        form = RatingForm(request.POST, prefix=self.rating_prefix)
+        form = RatingAndRangeForm(request.POST, prefix=self.rating_prefix)
         return self.render_to_response(self.get_context_data(form=form))
 
 
 class RatingAndRangeView(RatingAndRangeMixin, MVPTemplateView):
-    """A single-choice field drawn as a rating, in the shell."""
+    """A single-choice field drawn as a rating and a number field as a range."""
 
     template_name = "demo/rating_and_range.html"
     page_title = "Rating and range"
-    page_subtitle = "How a single-choice field is drawn as a rating, chosen in Python"
+    page_subtitle = "How a rating and a range are drawn, chosen in Python"
     breadcrumbs = [{"text": "Rating and range"}]
 
 

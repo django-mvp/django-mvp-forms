@@ -3,10 +3,12 @@
 {% block page.content %}
   <c-section title="Drawn in Python" icon="rating-and-range">
     <c-text>
-      Two fields that each hold one choice, drawn as a rating, one star for each choice.
-      The first states its rating by its name in the form's statement and cannot be
-      cleared. The second states it in the layout and has an empty choice, which clears
-      it. Pick a star, submit the form, and the page shows what the form cleaned to.
+      Two fields that each hold one choice, drawn as a rating, one star for each choice,
+      and a number field drawn as a range. The first rating states its drawing by its name
+      in the form's statement and cannot be cleared. The second states it in the layout and
+      has an empty choice, which clears it. The range states it in the layout, and its
+      limits and step are the ones the field declares. Pick a star, move the slider, submit
+      the form, and the page shows what the form cleaned to.
     </c-text>
     {% crispy form %}
   </c-section>
@@ -20,11 +22,18 @@
     </c-section>
   {% endif %}
   <c-text>
-    A rating keeps its label, its help text, its required marker, its error and its
-    disabled state. No form below posts anywhere.
+    A rating and a range keep their label, their help text, their required marker, their
+    error and their disabled state. No form below posts anywhere.
   </c-text>
   <c-section title="A rating in every state" level="3">
     {% for state in rating_states %}
+      <c-section :title="state.title" level="4">
+        {% crispy state.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="A range in every state" level="3">
+    {% for state in range_states %}
       <c-section :title="state.title" level="4">
         {% crispy state.form %}
       </c-section>
