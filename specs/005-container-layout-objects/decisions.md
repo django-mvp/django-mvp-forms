@@ -241,3 +241,24 @@ a later feature adds its names to the constant, so adding them follows the recor
 overturn it. The current list is the constant in the code and the sentence in the README.
 
 **ADR:** none — it follows ADR 0010 as written.
+
+## D18. Code review, 2026-10-03: approve, findings closed
+
+One reviewer read the whole diff against the specification. No critical or high finding.
+
+- CR-001 (medium): a modal drawn open for an error is not modal to the browser, so the Escape
+  key does not close it and the keyboard starts outside it, and the README did not say so.
+  Closed by a code change and a README sentence: the dialog is drawn with `autofocus` when it is
+  drawn open, so the keyboard starts inside it, and the README says the modal is closed with its
+  close button and that Escape applies only to one opened with `showModal()`. Both were checked
+  in a browser. US3 scenario 7 holds: the close button closes it either way.
+- CR-002 (low): two modals left on the default `title_id` share a title id. Closed: the README
+  says to give each its own.
+- CR-003 (low): a `Tab` outside a `TabHolder` has no group. Closed: the README says a `Tab` is
+  drawn only inside a holder.
+- Notes applied: the CHANGELOG's accordion line, the alert page's description, and a clause in
+  ADR 0015 on the group name differing between drawings.
+
+The fixes were made directly and not dispatched: one attribute, two tests and a few sentences.
+
+**ADR:** none — a record of the review. The `autofocus` rule is written into ADR 0016.

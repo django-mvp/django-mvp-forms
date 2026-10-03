@@ -10,7 +10,7 @@ then its content. It tells a `Tab` from a `Div` by the `link_template` attribute
 
 The pane writes a fixed placeholder for the radio's group name. `layout/tab.html` passes the
 drawn panes through the filter `daisyui_tab_group`, which replaces the placeholder with a random
-name made for that one drawing. When none of the holder's radios is checked, the filter checks
+name made for that one drawing, so the markup of the same form differs from one drawing to the next. When none of the holder's radios is checked, the filter checks
 the first.
 
 ## Why

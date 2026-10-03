@@ -163,6 +163,16 @@ class TestModalOpensForAnError:
         assert dialogs(soup)
         assert opened(soup) == []
 
+    def test_a_modal_opened_for_an_error_takes_the_focus(self, draw_layout):
+        soup = draw_layout("first", Modal("second", css_id="box"), bound=True)
+
+        assert soup.find("dialog", id="box").has_attr("autofocus")
+
+    def test_a_closed_modal_does_not_take_the_focus(self, draw_layout):
+        soup = draw_layout("first", Modal("second", css_id="box"))
+
+        assert not soup.find("dialog", id="box").has_attr("autofocus")
+
     def test_it_opens_when_the_helper_does_not_show_errors(self, draw):
         form = StructureForm(data_without("second"), layout=[one_modal()])
         form.helper.form_show_errors = False

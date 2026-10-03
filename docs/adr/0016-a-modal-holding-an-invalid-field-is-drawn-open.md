@@ -5,7 +5,8 @@
 ## Decision
 
 `layout/modal.html` draws its `dialog` with the `open` attribute when the fields drawn inside it
-contain `aria-invalid="true"`. The modal can still be closed with its own close button.
+contain `aria-invalid="true"`, and with `autofocus`, so the keyboard starts inside it. The modal
+can still be closed with its own close button.
 
 A layout object added later that hides fields until asked for follows the same rule: when a field
 inside it has an error, it is drawn showing that field.
@@ -24,6 +25,11 @@ subclass that would read the errors directly.
 
 Django does not mark a hidden input invalid, so an error on a hidden field alone does not open
 the modal.
+
+A dialog shown by the `open` attribute is not modal to the browser: the Escape key does not close
+it and the page behind it stays reachable. Making it modal needs `showModal()`, which is a script
+(ADR 0014). `autofocus` puts the keyboard inside the dialog without one, and the README says how
+the two cases differ.
 
 The `open` attribute is used and not daisyUI's `modal-open` class, which holds a modal open until
 the class is removed.

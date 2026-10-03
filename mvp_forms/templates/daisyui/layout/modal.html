@@ -1,5 +1,5 @@
 {% load i18n %}
-<dialog id="{{ modal.css_id }}" class="modal{% if modal.css_class %} {{ modal.css_class }}{% endif %}"{{ modal.flat_attrs }}{% if 'aria-invalid="true"' in fields %} open{% endif %}>
+<dialog id="{{ modal.css_id }}" class="modal{% if modal.css_class %} {{ modal.css_class }}{% endif %}"{{ modal.flat_attrs }}{% if 'aria-invalid="true"' in fields %} open autofocus{% endif %}>
   <div class="modal-box">
     <h3 id="{{ modal.title_id }}-label"{% if modal.title_class %} class="{{ modal.title_class }}"{% endif %}>{{ modal.title }}</h3>
     {{ fields }}
