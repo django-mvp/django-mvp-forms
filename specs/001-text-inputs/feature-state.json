@@ -281,8 +281,31 @@
       "tasks": [
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestTextInputsPage",
+              "tests/test_demo.py::TestStandaloneTextInputsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "/home/sam/.openclaw/workspaces/forge/engineering-org/kit/forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-001-text-inputs --base origin/main"
+            ],
+            "code": [
+              "demo/forms.py:8",
+              "demo/views.py:24",
+              "demo/views.py:99",
+              "demo/views.py:108",
+              "tests/test_demo.py:64",
+              "tests/test_demo.py:150",
+              "tests/test_demo.py:167",
+              "README.md:36"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }
