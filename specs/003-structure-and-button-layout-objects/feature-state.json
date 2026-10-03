@@ -2,7 +2,7 @@
   "feature": "003-structure-and-button-layout-objects",
   "branch": "003-structure-and-button-layout-objects",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-10-03T16:27:17Z",
       "note": "plan.md, research.md, tasks.md: 4 stories, 9 tasks; continues on pull request #24"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T16:27:40Z",
+      "note": "one reviewer, three lenses, on plan.md, tasks.md and research.md at 74acfa1"
     }
   ],
   "gates": {
@@ -24,12 +29,24 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-03T16:33:27Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
+      "at": "2026-10-03T16:33:27Z",
+      "self_resolved": [
+        "DR-001 (medium) the documented-examples test names the source of each example and the one repair allowed: applied to plan and T009",
+        "DR-002 (low) each demo form builds its own layout and prefixes every id and button name: applied to plan, T003, T006",
+        "DR-003 (low) a layout object is built per form instance and never shared: applied to research R7, carried into every brief",
+        "DR-004 (low) tests/settings.py already lists the test template directory: edit dropped from T001",
+        "DR-005 (low) ButtonHolder accepts no attributes: applied to plan and T005",
+        "DR-006 (low) the demo gains a row holding fields with no column: applied to plan and T006"
+      ]
     }
   },
   "stories": [
@@ -129,7 +146,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

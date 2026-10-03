@@ -32,7 +32,7 @@ path django-crispy-forms builds from the pack's name (R1).
 
 django-crispy-forms 2.7 ships no template pack of its own. Each layout object names its template
 as `"%s/layout/<name>.html"` and fills in the pack's name when it draws
-(`TemplateNameMixin.get_template_name`, `layout.py:132`). A `template=` argument replaces that
+(`TemplateNameMixin.get_template_name`, `layout.py:19`). A `template=` argument replaces that
 path, which is all FR-019 needs: the pack does nothing to honour it.
 
 | Layout object | Template asked for | Names given to the template | Context |
@@ -87,7 +87,7 @@ Some class names come from django-crispy-forms' Python, written for Bootstrap an
 | `MultiField` | `ctrlHolder`, plus `error` appended on every render that finds a field error, and `blockLabel` for its label | none |
 
 Three of the four buttons come out as daisyUI buttons with no work. That is luck the pack can
-use, and the class test (R6) will say so if a later release of django-crispy-forms changes them.
+use, and the button tests will say so if a later release of django-crispy-forms changes them.
 
 The names daisyUI does not define cannot be told apart from the developer's own in a template,
 because django-crispy-forms joins both into one string. A small filter in the pack's template
@@ -179,6 +179,12 @@ to the forms it draws and adds these utilities by name: `flex`, `flex-col`, `fle
 - `flat_attrs` is built by Django's `flatatt`, which escapes each value.
 
 Nothing a person using the host project typed reaches these templates unescaped.
+
+One edge is django-crispy-forms' own and no pack template can change it. A button stores its
+rendered value back on itself (`layout.py:255`, `bootstrap.py:559`), so a layout object drawn a
+second time renders its earlier output as a template again. A layout object is therefore built
+per form instance, in the form's `__init__`, and never held on a class or shared between forms.
+The demo and the tests follow that.
 
 ## R8. The demo project
 

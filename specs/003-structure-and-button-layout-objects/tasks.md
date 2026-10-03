@@ -32,14 +32,13 @@ Issue: #48. Delivers FR-001 (less `MultiField`), FR-002, FR-003, FR-005 – FR-0
 
 **Files**: `mvp_forms/templates/daisyui/layout/div.html`,
 `mvp_forms/templates/daisyui/layout/fieldset.html`, `tests/forms.py`,
-`tests/test_pack/test_structure.py`, `tests/templates/tests/own_container.html`,
-`tests/settings.py`
+`tests/test_pack/test_structure.py`, `tests/templates/tests/own_container.html`
 
 Plan, *The templates*; research R1, R5, R7.
 
 - `div.html` and `fieldset.html` as the plan's table has them.
-- `tests/settings.py` adds `tests/templates` to the template directories, for the one template
-  that stands for a developer's own.
+- `tests/settings.py` already lists `tests/templates` in the template directories. The one
+  template that stands for a developer's own goes there.
 - Tests, `TestDiv`: fields inside the container in layout order; id, classes and attributes on
   it (US1.5); an empty `Div` draws and raises nothing; a `Div` given its own template is drawn
   with it (FR-019).
@@ -80,6 +79,8 @@ Plan, *The demo project*; research R8.
 
 - The page pair, the routes `layout-objects` and `layout-objects-standalone`, the menu entry, and
   the first two forms of the plan with the structural objects only. Later stories add to them.
+  Each form builds its own layout in `__init__`, and every `css_id` in it carries the form's
+  prefix, so no id repeats on the page.
 - Tests: both pages respond; each holds a `fieldset` with a `legend`, and the fields of the row
   by id; a post of the empty form comes back with a field error; no id repeats; each page links
   the other; the shell wraps one and the other carries only daisyUI's stylesheet (FR-022, SC-003).
@@ -125,8 +126,9 @@ Plan, *The templates*; research R1, R4.
 - Tests, `TestStrictButton`: a `button` element holding the developer's markup with a context
   value filled in and escaped; `type` is `button` unless the developer chose another; id,
   classes and attributes arrive with `btn` kept (US2.4, US2.5).
-- Tests, `TestHolders` (parametrised over the two): the buttons are inside one container in the
-  order given; the container carries what it was given (US2.6).
+- Tests, `TestHolders`: parametrised over the two, the buttons are inside one container in the
+  order given and the container carries its id and classes. Other attributes are tested on
+  `FormActions` only, since `ButtonHolder` accepts none (US2.6).
 - `test_independence.py`: the layout state gains a `FormActions` with all four buttons and a
   `ButtonHolder`. `LAYOUT_UTILITIES` gains `flex-wrap`, `gap-2` and `mt-4`.
 
@@ -146,8 +148,8 @@ Plan, *The templates*, *The demo project*; research R3.
   (US2.7, FR-014); a helper with no buttons draws no container; with `form_tag` off, a layout's
   buttons are still drawn (US2.8).
 - `test_independence.py`: a state for a helper with added buttons.
-- Demo: the submittable form ends in a `FormActions` with the four buttons, and the third form
-  of the plan is added. Tests: the page holds each button by name, and the helper-added ones.
+- Demo: the submittable form ends in a `FormActions` with the four buttons, and the third and
+  fourth forms of the plan are added. Every button name and `css_id` carries its form's prefix. Tests: the page holds each button by name, and the helper-added ones.
 - README: the buttons and the two holders join the "Layout objects" list, with a line saying
   buttons added with `add_input` are drawn after the fields. CHANGELOG: one line.
 
@@ -203,13 +205,16 @@ Plan, *The templates*; research R1, R2, R5.
 
 ### T009 — The documented examples draw as written
 
-**Files**: `tests/test_pack/test_structure.py`, `tests/forms.py`
+**Files**: `tests/test_pack/test_documented_examples.py`, `tests/forms.py`
 
 Plan, *Tests*.
 
-- One parametrised test: the example layout from each of the thirteen objects' docstrings in the
-  installed django-crispy-forms, drawn against a form that has the fields the example names. Each
-  draws without raising and holds each named field once (SC-002). The examples are copied as
-  written, with no argument added for the pack's sake.
+- One parametrised test, `TestDocumentedExamples`: the example from each object's docstring in the
+  installed django-crispy-forms where it has one, drawn against a form that has the fields the
+  example names. Each draws without raising and holds each named field once (SC-002). No argument
+  is added for the pack's sake. The three examples that do not parse (`ButtonHolder`,
+  `FormActions`, `Column`) are repaired by quoting the string and nothing else. `Submit`, `Reset`,
+  `Button` and `Hidden` are built with the arguments their docstrings show and placed in a layout.
+  `MultiField` has no docstring example and is covered by T008.
 - Check the README's "Layout objects" list against the thirteen, and that every one of them is on
   the demo page (SC-005).

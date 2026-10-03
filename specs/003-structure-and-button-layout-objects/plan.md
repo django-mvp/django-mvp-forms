@@ -71,11 +71,11 @@ demo/
 tests/
 ├── forms.py                         # gains the forms the layout tests draw
 ├── templates/tests/own_container.html   # a developer's own template, for FR-019
-├── settings.py                      # adds tests/templates to the template directories
 ├── test_templatetags/test_daisyui.py    # gains TestDaisyuiClasses
 ├── test_pack/test_structure.py      # new: Div, Row, Column, Fieldset, MultiField
 ├── test_pack/test_buttons.py        # new: the four buttons, the two holders, helper buttons
 ├── test_pack/test_raw_content.py    # new: HTML and Hidden
+├── test_pack/test_documented_examples.py  # new: upstream's own examples
 ├── test_pack/test_independence.py   # gains layout states and the layout utilities
 └── test_demo.py                     # gains the layout objects pages
 ```
@@ -87,8 +87,11 @@ tests/
 ### The templates
 
 Each template writes the developer's id only when there is one, the pack's classes first and the
-developer's after them, then `flat_attrs`, then the already-rendered contents marked safe. The
-names each one reads are those in research R1 and no others.
+developer's after them, then `flat_attrs`, then the already-rendered contents. Those contents
+are safe strings already, so no template adds `|safe` except for a `MultiField`'s label. The
+names each one reads are those in research R1 and no others. `flat_attrs` is read only as an
+attribute of the template's own object, never as a bare name: django-crispy-forms leaves earlier
+objects' names in the context.
 
 | Template | Element | The pack's classes |
 |---|---|---|
@@ -100,7 +103,7 @@ names each one reads are those in research R1 and no others.
 | `multifield.html` | includes `daisyui/field.html` | the field frame's own |
 | `layout/baseinput.html` | `input` | what django-crispy-forms wrote, through `daisyui_classes` |
 | `layout/button.html` | `button` | what django-crispy-forms wrote, inside `flat_attrs` |
-| `layout/buttonholder.html` | `div` | `flex flex-wrap gap-2 mt-4` |
+| `layout/buttonholder.html` | `div`, with no `flat_attrs`: a `ButtonHolder` accepts none | `flex flex-wrap gap-2 mt-4` |
 | `layout/formactions.html` | `div` | `flex flex-wrap gap-2 mt-4` |
 | `inputs.html` | `div`, only when the helper has buttons | `flex flex-wrap gap-2 mt-4` |
 
@@ -109,7 +112,7 @@ Points that are easy to get wrong:
 - **`baseinput.html`** writes `type`, `name`, `value`, then `class` and `id` unless the input is
   hidden, then `flat_attrs`. The name is slugified when it is more than one word, as the
   Bootstrap packs do. A hidden input has no `class` and no `id` (research R2).
-- **`button.html`** is `<button{{ button.flat_attrs }}>{{ button.content|safe }}</button>`. The id,
+- **`button.html`** is `<button{{ button.flat_attrs }}>{{ button.content }}</button>`. The id,
   class and type are already in `flat_attrs`.
 - **`layout/multifield.html`** passes `multifield.css_class` and `multifield.label_class` through
   `daisyui_classes`, so `ctrlHolder`, `blockLabel` and `error` are not drawn. The label is printed
@@ -138,8 +141,8 @@ It splits the string, drops the names in the set, drops repeats while keeping or
 what is left. `None` and an empty string give an empty string. The names are literals in one
 constant, so the list is easy to find and to extend.
 
-It does not add `btn`. django-crispy-forms writes `btn` on all four buttons itself, and the class
-test fails if a later release stops.
+It does not add `btn`. django-crispy-forms writes `btn` on all four buttons itself, and the
+button tests fail if a later release stops.
 
 ### What the pack leaves to django-crispy-forms
 
@@ -150,8 +153,9 @@ test fails if a later release stops.
 
 ## The demo project
 
-`LayoutObjectsMixin` in `demo/views.py` builds three forms, each with its own prefix so that no id
-repeats on the page:
+`LayoutObjectsMixin` in `demo/views.py` builds four forms. Each form builds its own layout in
+`__init__`, and every `css_id` and button name in it carries the form's prefix, so no id repeats
+on the page. A layout object is never shared between two forms (research R7):
 
 1. **A form to submit.** Its layout holds a `Fieldset` whose legend reads a context value, a `Row`
    of two `Column`s, a `Div` with an id, a `MultiField`, an `HTML` object, a `Hidden`, and a
@@ -159,8 +163,9 @@ repeats on the page:
    submitting it empty brings it back with errors.
 2. **The same layout bound to data that fails**, with `form_tag` off, so errors inside nested
    containers can be seen without submitting.
-3. **A form with no layout** whose buttons were added with `add_input`, and a small layout ending
-   in a `ButtonHolder`.
+3. **A form with no layout** whose buttons were added with `add_input`.
+4. **A small layout** that puts two fields straight in a `Row` with no `Column`, the way
+   django-crispy-forms' own documentation writes it, and ends in a `ButtonHolder`.
 
 Stories add to the page as they land: US1 creates the page pair with the structural objects, US2
 adds the buttons, US3 the `HTML` and `Hidden` objects, US4 the `MultiField`.
@@ -191,9 +196,13 @@ CDN install and nothing else. Each page links the other. The sidebar gains one e
 - **`test_independence.py`**: the parametrised states gain a layout that uses all thirteen objects,
   unbound and invalid, and a helper with added buttons. `LAYOUT_UTILITIES` gains the nine
   utilities by name. This one drawn layout is also the demonstration of SC-001.
-- **Documented examples (SC-002)**: one parametrised test draws the example layout from each
-  object's own docstring in django-crispy-forms 2.7 against a form that has the fields it names,
-  and checks it draws without raising and holds each named field once.
+- **Documented examples (SC-002)**, `test_documented_examples.py`: one parametrised test draws the
+  example from each object's own docstring in django-crispy-forms 2.7, where it has one, against a
+  form that has the fields it names, and checks it draws without raising and holds each named
+  field once. Three examples do not parse as printed (`ButtonHolder`, `FormActions`, `Column`) and
+  are repaired by quoting the string and nothing else. The four input objects' examples are
+  direct calls, so they are built with the same arguments and placed in a layout. `MultiField`
+  has no example.
 - **`test_demo.py`**: both pages respond, hold every one of the thirteen objects' elements by id or
   name, come back from a post with a field error, repeat no id, and link each other. The
   standalone page carries only daisyUI's stylesheet.

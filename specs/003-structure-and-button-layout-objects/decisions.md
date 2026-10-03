@@ -130,7 +130,7 @@ The clarification scan was run against the draft and answered from the repositor
 
 **Why:** django-crispy-forms joins its own default classes and the developer's into one string, so a template cannot tell them apart. Its defaults were written for Bootstrap and uni-form. Three of the four buttons already come out as daisyUI buttons. Subclassing the layout objects to change the defaults is ruled out by D1.
 
-**Revisit if:** django-crispy-forms changes the classes it writes. The class test fails when it does.
+**Revisit if:** django-crispy-forms changes the classes it writes. The button tests fail when it does.
 
 ## D14. A row is a flex container and a column takes an equal share
 
@@ -139,3 +139,16 @@ The clarification scan was run against the draft and answered from the repositor
 **Why:** daisyUI has no component for either job, and ADR 0003 allows a Tailwind utility for layout in that case. Flex gives equal columns for any number of them without counting, and every one of these utilities is in django-mvp's packaged stylesheet as well as in Tailwind's browser build. A grid with automatic columns would have stacked on a django-mvp page. This is the working answer to issue #18.
 
 **Revisit if:** The maintainer picks another option on issue #18, or daisyUI gains a layout component.
+
+## D15. What the design review changed
+
+One reviewer read the plan before any code, as a check on fit with the specification, on security and on structure. It approved the plan. Nothing it found forced a change of approach. Its findings were applied as edits:
+
+- The test of django-crispy-forms' documented examples names where each example comes from. Three do not parse as printed and are repaired by quoting a string. `MultiField` has none.
+- Each demo form builds its own layout, and every id and button name carries the form's prefix. A form prefix does not reach a layout object's id.
+- A layout object is built per form instance and never shared. django-crispy-forms stores a button's rendered value back on the object, so a second draw renders the first draw's output as a template again. Implementers are told to keep to this.
+- `tests/settings.py` already lists the test template directory, so that edit was dropped.
+- `ButtonHolder` accepts no attributes beyond an id and classes, so that case is tested on `FormActions` only.
+- The demo gains a row that holds fields directly with no column, which is the form django-crispy-forms documents, so the maintainer sees it when confirming issue #18.
+
+**ADR:** none — a record of plan edits, nothing a later feature inherits
