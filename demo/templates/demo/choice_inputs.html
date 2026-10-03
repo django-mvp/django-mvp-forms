@@ -1,0 +1,28 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="choice-inputs">
+    <c-text>
+      Every field is required here. Submit the form to see an error on a field. A
+      file you choose is checked and then dropped, and nothing is stored.
+    </c-text>
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      {{ form|crispy }}
+      <c-button type="submit" variant="primary" text="Submit" />
+    </form>
+  </c-section>
+  {% for state in states %}
+    <c-section :title="state.title" level="3">
+      {{ state.form|crispy }}
+    </c-section>
+  {% endfor %}
+  {% for state in text_states %}
+    <c-section :title="state.title" level="3">
+      {{ state.form|crispy }}
+    </c-section>
+  {% endfor %}
+  <c-text>
+    <c-link href="{% url 'choice-inputs-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}

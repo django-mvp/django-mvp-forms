@@ -120,6 +120,7 @@ EASY_ICONS = {
         "icons": {
             "overview": "bi bi-house",
             "text-inputs": "bi bi-input-cursor-text",
+            "choice-inputs": "bi bi-ui-checks",
         },
     },
 }

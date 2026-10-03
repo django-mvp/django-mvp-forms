@@ -37,4 +37,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Errors that belong to a form as a whole are drawn once, in an element with `role="alert"`, through `|crispy`, `{% crispy %}` and `|as_crispy_errors`.
 - Through `{% crispy %}` the pack draws the form element and its CSRF token, and honours the `FormHelper` settings for the form element, labels, errors, `label_class` and `field_class`. `help_text_inline` and `error_text_inline` are ignored.
 - A demo page showing every text input in every state, inside the django-mvp shell and as a standalone page styled by daisyUI's CDN install alone.
+- A second demo page showing every select, boolean, radio and checkbox group, file and hidden input in empty, held-value, required, help-text, error and disabled states, plus a text input drawn disabled and another read-only and a multipart form to submit, inside the django-mvp shell and as a standalone page. A file you submit is checked and dropped, never stored.
 - The package skeleton: an installable app, a demo project and the test suite.

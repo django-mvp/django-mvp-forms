@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields so far, and nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs so far, and nothing is published to PyPI.
 
 ## Why
 
@@ -116,12 +116,13 @@ These inputs are drawn as daisyUI components, whichever way crispy-forms is aske
 
 - text, email, URL, number, password, date, time and date-time inputs, as `input`
 - textareas, as `textarea`
-- selects, multiple selects, null-boolean selects and selects with named groups, as `select`, and the three selects of a date drawn by `SelectDateWidget`, each named by an `aria-label` of Year, Month or Day
-- boolean fields, as `checkbox`, inside their own label, with `checkbox-error` when invalid
+- `Select`, `SelectMultiple` and `NullBooleanSelect`, and selects with named groups, as `select`, and the three selects of a date drawn by `SelectDateWidget`, each named by an `aria-label` of Year, Month or Day
+- `CheckboxInput`, as `checkbox`, inside its own label, with `checkbox-error` when invalid
 - `RadioSelect`, as a group of `radio` inputs, and `CheckboxSelectMultiple`, as a group of `checkbox` inputs: each option is an input inside a label of its own, tied to it by `for`, with `radio-error` or `checkbox-error` when invalid. Choices with named groups sit under their name in a nested `<fieldset>`, and an attribute a widget sets on one option stays on that option. A required checkbox group does not mark its options `required`, since that would demand all of them
-- file inputs, as `file-input`, with `file-input-error` when invalid. A `ClearableFileInput` whose field holds a file shows a link to it, and, when the field is optional, a removal checkbox in a label of its own; a required field offers no removal and its input is not `required`, so it can be submitted without choosing another file. A widget that allows several files keeps `multiple`
+- `FileInput` and `ClearableFileInput`, as `file-input`, with `file-input-error` when invalid. A `ClearableFileInput` whose field holds a file shows a link to it, and, when the field is optional, a removal checkbox in a label of its own; a required field offers no removal and its input is not `required`, so it can be submitted without choosing another file. A widget that allows several files keeps `multiple`
+- `HiddenInput` and `MultipleHiddenInput`, as `<input type="hidden">` and nothing around it, which is described below
 
-Each of them but the checkbox and the radio fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`, the one utility it writes. A width class of your own on the widget, such as `w-40`, replaces it. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
+Each of them but the checkbox, the radio and the hidden input fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`, the one utility it writes. A width class of your own on the widget, such as `w-40`, replaces it. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
 
 Errors that belong to the form as a whole are drawn once, in an element with `role="alert"` ahead of the fields. A form with none draws no such element, and `{{ form|as_crispy_errors }}` draws the same element on its own.
 
@@ -167,13 +168,20 @@ uv run python manage.py seed_demo
 uv run python manage.py runserver
 ```
 
-The demo has two pages that draw the same forms: every text input kind in each of
-five states (empty, holding a value, required, with help text, with an error),
-and a form to submit that comes back with a field error and a form-wide error.
+The demo has two pairs of pages, and each pair draws the same forms. One pair
+shows every text input kind in each of five states (empty, holding a value,
+required, with help text, with an error), and a form to submit that comes back
+with a field error and a form-wide error. The other shows every select, boolean,
+radio and checkbox group, file and hidden input in those five states and a sixth,
+disabled, with a text input drawn disabled and another read-only, and a multipart
+form to submit that comes back with a field error. An uploaded file is checked and
+dropped, and nothing is stored.
 
-- `/text-inputs/` is the page inside the django-mvp shell, reached from its sidebar.
-- `/text-inputs/standalone/` is the same page as a host project with neither
-  django-mvp nor Cotton would have it, styled by daisyUI's CDN build alone.
+- `/text-inputs/` and `/choice-inputs/` are the pages inside the django-mvp shell,
+  reached from its sidebar.
+- `/text-inputs/standalone/` and `/choice-inputs/standalone/` are the same pages
+  as a host project with neither django-mvp nor Cotton would have them, styled by
+  daisyUI's CDN build alone.
 
 ## License
 

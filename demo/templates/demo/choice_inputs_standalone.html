@@ -1,0 +1,46 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Choice, boolean and file inputs</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">Choice, boolean and file inputs</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and nothing else.
+        <a class="link" href="{% url 'choice-inputs' %}">The same page inside the django-mvp shell</a>
+      </p>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Try it</h2>
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        </div>
+      </section>
+      {% for state in states %}
+        <section class="card card-border bg-base-100">
+          <div class="card-body">
+            <h2 class="card-title">{{ state.title }}</h2>
+            {{ state.form|crispy }}
+          </div>
+        </section>
+      {% endfor %}
+      {% for state in text_states %}
+        <section class="card card-border bg-base-100">
+          <div class="card-body">
+            <h2 class="card-title">{{ state.title }}</h2>
+            {{ state.form|crispy }}
+          </div>
+        </section>
+      {% endfor %}
+    </main>
+  </body>
+</html>
