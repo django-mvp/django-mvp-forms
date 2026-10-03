@@ -812,6 +812,16 @@ A replacement is found by one of two routes, and the last column of the list bel
 
 An app listed after `mvp_forms` is never used. Once django-crispy-forms has loaded `daisyui/field.html`, `daisyui/uni_form.html`, `daisyui/uni_formset.html`, `daisyui/whole_uni_form.html` or `daisyui/whole_uni_formset.html` it keeps it in memory, so restart the development server after you add or edit a replacement for one of those five.
 
+#### A required marker of your own
+
+The pack draws a required field's marker with `daisyui/required_marker.html`, a star that assistive technology skips. To draw an abbreviation with a translated title instead, put this file at `templates/daisyui/required_marker.html` in a directory listed in your `TEMPLATES` setting's `DIRS`:
+
+```django
+{% load i18n %}{% if field.field.required %} <abbr title="{% translate "required" %}">*</abbr>{% endif %}
+```
+
+Every required field in the project now carries that marker, in its label, in a group's legend and in a table's column heading, and every other template is still the pack's. The template reads `field`, which is what its row in the list below says it is handed.
+
 #### The templates
 
 Each row is one template the pack distributes. `Draws` says what it draws. `Handed` lists the names the pack's own template reads from outside itself, which a replacement can read too: a value Django or django-crispy-forms supplies is listed by its name alone, and `drawn` and `table`, which the pack supplies, are listed one level down, by the part read, as `drawn.is_group`. A template that sets `drawn` or `table` itself is not handed it and lists none, and `daisyui/frame.html` and `daisyui/field_body.html` are handed `drawn` by whichever template includes them. `Found by` is the route above.
