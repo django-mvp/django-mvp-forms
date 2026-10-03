@@ -1,0 +1,5 @@
+<div{% if widget.attrs.id %} id="{{ widget.attrs.id }}"{% endif %} class="{{ widget.rating_class }}">
+  {% for option in widget.inputs %}
+    <input type="radio" name="{{ option.name }}" value="{{ option.value|stringformat:'s' }}"{% include "daisyui/widgets/attrs.html" with widget=option %}>
+  {% endfor %}
+</div>

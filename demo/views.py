@@ -42,6 +42,7 @@ from demo.forms import (
     UneditableFieldForm,
 )
 from mvp_forms.choices import FormChoices, Modifiers
+from mvp_forms.templatetags.daisyui import FieldInput
 
 
 class OverviewView(MVPTemplateView):
@@ -832,7 +833,7 @@ class DrawingsMixin:
     """
 
     drawings_prefix = "drawings"
-    drawing_names = tuple(Modifiers.drawings)
+    drawing_names = FieldInput.boolean_drawings
     drawing_states = ("off", "on", "help", "error", "disabled")
 
     def build_cleaned(self, form):

@@ -300,6 +300,7 @@ class TestModifiersDrawings:
             "checkbox": "checkbox",
             "toggle": "toggle",
             "switch": "toggle",
+            "rating": "rating",
         }
 
 
