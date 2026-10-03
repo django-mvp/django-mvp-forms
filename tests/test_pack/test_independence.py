@@ -2,6 +2,7 @@
 
 import ast
 import re
+from functools import partial
 from pathlib import Path
 
 import pytest
@@ -417,6 +418,13 @@ FLOATING_LABELS = FormChoices(label="floating")
 EVERY_BUTTON_CHOICE = FormChoices(
     size="lg", color="accent", button_color="neutral", button_variant="outline"
 )
+CHOSEN = [
+    (kind, name)
+    for kind in ("size", "color", "variant")
+    for name in Modifiers.names(kind, None)
+]
+CHOSEN_IN_ERROR = [(kind, name) for kind, name in CHOSEN if kind == "color"]
+ONE_MEMBER_FAILS = {"country_code": "+49", "number": ""}
 ERRORS_ONLY = "{{ form|as_crispy_errors }}"
 
 STATES = [
@@ -800,6 +808,46 @@ STATES = [
         MINE,
         id="joined group with a disabled, a read-only and a hidden member, invalid",
     ),
+    *[
+        pytest.param(
+            "{{ form|crispy }}",
+            partial(
+                FloatingForm, choices=FormChoices(label="floating", **{kind: name})
+            ),
+            NOTHING,
+            id=f"floating labels at {kind} {name}",
+        )
+        for kind, name in CHOSEN
+    ],
+    *[
+        pytest.param(
+            "{% crispy form %}",
+            partial(
+                FloatingForm, {}, choices=FormChoices(label="floating", **{kind: name})
+            ),
+            NOTHING,
+            id=f"floating labels at {kind} {name}, invalid",
+        )
+        for kind, name in CHOSEN_IN_ERROR
+    ],
+    *[
+        pytest.param(
+            "{% crispy form %}",
+            partial(JoinedForm, choices=FormChoices(**{kind: name})),
+            NOTHING,
+            id=f"joined group at {kind} {name}",
+        )
+        for kind, name in CHOSEN
+    ],
+    *[
+        pytest.param(
+            "{% crispy form %}",
+            partial(JoinedForm, ONE_MEMBER_FAILS, choices=FormChoices(**{kind: name})),
+            NOTHING,
+            id=f"joined group at {kind} {name}, one member invalid",
+        )
+        for kind, name in CHOSEN_IN_ERROR
+    ],
 ]
 
 
