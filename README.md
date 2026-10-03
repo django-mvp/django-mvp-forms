@@ -14,14 +14,17 @@ Two packs exist. [crispy-tailwind](https://github.com/django-crispy-forms/crispy
 
 The package covers how a form is drawn and what goes in it:
 
-- a complete daisyUI template pack for django-crispy-forms, including its layout objects
+- a complete daisyUI template pack for django-crispy-forms, covering every layout object it ships
+- formsets, drawn when one is handed to the pack
 - form fields and widgets that have proved useful across django-mvp projects
 
-It stays out of everything around the form. Form views, inline formset handling and form page templates belong to django-mvp. There are no models, no URLs and no migrations here.
+It stays out of everything around the form. Form views, adding and removing formset rows, and form page templates belong to django-mvp. There are no models, no URLs and no migrations here.
 
 The pack's templates are plain Django templates. They do not use [django-cotton](https://github.com/wrabit/django-cotton) or daisy-cotton, so the pack works in any daisyUI project, with or without django-mvp. For the same reason this package does not depend on django-mvp. The dependency runs the other way.
 
-Fields and widgets are collected as real projects need them. They are not planned ahead and do not appear on the roadmap, so the set grows unevenly and that is intended.
+Fields and widgets are collected as real projects need them. They are not planned ahead and do not appear on the roadmap, so the set grows unevenly and that is intended. The package is complete without any of them, and each one has to fit the pack without changing what the pack promises.
+
+Widgets from popular third-party Django packages may get templates here so they sit properly in a daisyUI form. Which packages are supported is the maintainers' call, and none of them becomes a dependency.
 
 When two reasonable designs conflict, stock daisyUI markup wins over custom styling, and matching crispy-forms' documented behaviour wins over inventing a new one.
 
