@@ -60,7 +60,7 @@
       "priority": "P1",
       "issue": 59,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -106,7 +106,7 @@
               "demo/forms.py:490",
               "demo/views.py:472",
               "demo/urls.py:55",
-              "demo/menus.py:54\n55",
+              "demo/menus.py:54",
               "demo/templates/demo/attached_text.html:1",
               "demo/templates/demo/decorated_fields_standalone.html:1"
             ],
@@ -230,7 +230,7 @@
       "max": 1
     },
     "tokens": {
-      "used": 0,
+      "used": 6.01,
       "max": 120
     }
   },
