@@ -2,7 +2,7 @@
   "feature": "007-size-colour-variant",
   "branch": "007-size-colour-variant",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "QUEUED",
@@ -38,6 +38,11 @@
       "state": "PR_READY",
       "at": "2026-10-03T18:43:53Z",
       "note": "review approved, five findings closed; walkthrough laid out"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-10-03T18:47:15Z",
+      "note": "PR #23 merged; approved by forge-aeo-reviewer"
     }
   ],
   "gates": {
@@ -53,8 +58,8 @@
       "at": "2026-10-03T17:50:39Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "forge-aeo-reviewer",
+      "at": "2026-10-03T18:47:11Z"
     },
     "design_review": {
       "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
@@ -81,8 +86,8 @@
       ]
     },
     "walkthrough": {
-      "approved_by": null,
-      "at": "2026-10-03T18:43:30Z",
+      "approved_by": "delegated review",
+      "at": "2026-10-03T18:47:12Z",
       "self_resolved": []
     }
   },
@@ -156,6 +161,19 @@
             "tests": [
               "tests/test_pack/test_choices.py::TestRemovalCheckboxOfAHandStyledFile",
               "tests/test_templatetags/test_daisyui.py::TestFieldInputRemovalModifiers"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestFormsetChoices"
             ],
             "commands": [
               "uv run pytest -n auto --dist loadscope"
@@ -341,7 +359,7 @@
       "max": 1
     },
     "tokens": {
-      "used": 17.76,
+      "used": 25.05,
       "max": 120
     }
   },
