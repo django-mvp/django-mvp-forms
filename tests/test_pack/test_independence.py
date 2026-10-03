@@ -9,6 +9,7 @@ from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
     FormActions,
+    Modal,
     StrictButton,
     Tab,
     TabHolder,
@@ -183,6 +184,23 @@ def accordioned(data=None):
     )
 
 
+def modalled(data=None):
+    return StructureForm(
+        data,
+        layout=(
+            Modal(
+                "first",
+                Row("second"),
+                css_id="box",
+                css_class="mine",
+                title="Details",
+                title_class="mine",
+            ),
+            "third",
+        ),
+    )
+
+
 def helper_buttons():
     return ButtonedForm(
         buttons=(
@@ -316,6 +334,8 @@ STATES = [
     pytest.param(
         "{% crispy form %}", lambda: accordioned({}), MINE, id="accordion, invalid"
     ),
+    pytest.param("{% crispy form %}", modalled, MINE, id="modal"),
+    pytest.param("{% crispy form %}", lambda: modalled({}), MINE, id="modal, invalid"),
     pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
     pytest.param(
         "{% crispy form %}",

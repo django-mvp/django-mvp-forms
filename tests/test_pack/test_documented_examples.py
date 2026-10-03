@@ -5,6 +5,7 @@ from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
     FormActions,
+    Modal,
     StrictButton,
     Tab,
     TabHolder,
@@ -180,6 +181,17 @@ EXAMPLES = {
         ),
         [*BOTH, "form_field"],
         ("details", {"open": True}),
+    ),
+    "Modal": (
+        lambda: Modal(
+            "form_field_1",
+            Div("form_field_2"),
+            css_id="modal-id-ex",
+            css_class="modal-class-ex",
+            title="This is my modal",
+        ),
+        BOTH,
+        ("dialog", {"id": "modal-id-ex"}),
     ),
     "StrictButton with a context-aware content": (
         lambda: StrictButton("Button for {{ user.username }}"),
