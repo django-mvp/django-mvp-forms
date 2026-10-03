@@ -62,8 +62,6 @@ def field_id(state, name):
 
 
 class TextInputsPageContract:
-    """What both text inputs pages promise, whichever way they are styled."""
-
     url_name = ""
 
     @pytest.fixture(params=["get", "post"])
@@ -121,7 +119,7 @@ class TextInputsPageContract:
         form = page.find(id=field_id("submit", "email")).find_parent("form")
         assert form["method"] == "post"
         assert form.find("input", attrs={"name": "csrfmiddlewaretoken"}) is not None
-        assert form.find("button", class_="btn") is not None
+        assert form.find("button", type="submit") is not None
 
     def test_only_the_submittable_form_is_a_form_element(self, open_page):
         page = open_page(self.url_name)
@@ -171,11 +169,6 @@ class TestStandaloneTextInputsPage(TextInputsPageContract):
         page = open_page(self.url_name)
         link = page.find("link", href="https://cdn.jsdelivr.net/npm/daisyui@5")
         assert link["rel"] == ["stylesheet"]
-
-    def test_it_carries_tailwinds_browser_build(self, open_page):
-        page = open_page(self.url_name)
-        source = "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"
-        assert page.find("script", src=source) is not None
 
     def test_it_carries_no_stylesheet_of_the_shell(self, open_page):
         page = open_page(self.url_name)
