@@ -1,1 +1,1 @@
-<button{{ button.flat_attrs }}>{{ button.content }}</button>
+{% load daisyui %}{% daisyui_button button as drawn %}<button{{ drawn.flat_attrs }}>{{ button.content }}</button>

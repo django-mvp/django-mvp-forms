@@ -1,0 +1,47 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Stated once, in Python" icon="choices">
+    <c-text>
+      Each form below states a size, a colour or a variant on its helper, and the
+      pack adds daisyUI's modifier to every input and button it draws. No form posts
+      anywhere.
+    </c-text>
+  </c-section>
+  <c-section title="Sizes" level="3">
+    {% for size in sizes %}
+      <c-section :title="size.title" level="4">
+        {% crispy size.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Colours" level="3">
+    {% for color in colors %}
+      <c-section :title="color.title" level="4">
+        {% crispy color.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Every kind of input at one size" level="3">
+    <c-text>The size stated for the form is {{ inputs_size }}.</c-text>
+    {% crispy inputs_form %}
+  </c-section>
+  <c-section title="Variants" level="3">
+    <c-text>
+      The inputs take {{ inputs_variant }}, where daisyUI has it for them. A button
+      bar holds one button in each variant of a button.
+    </c-text>
+    {% crispy variant_form %}
+    {% crispy buttons_form %}
+  </c-section>
+  <c-section title="Overriding what the form states" level="3">
+    <c-text>
+      The form states a size, a colour and a variant. One field overrides them in its
+      layout, one by name, one undoes the colour, and one button states its own.
+    </c-text>
+    {% crispy override_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'choices-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}

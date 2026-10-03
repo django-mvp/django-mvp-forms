@@ -32,12 +32,14 @@ from crispy_forms.layout import (
 from django.apps import apps
 
 import mvp_forms
+from mvp_forms.choices import FormChoices, Modifiers
 from tests.forms import (
     ButtonedForm,
     CheckboxForm,
     CheckboxGroupsForm,
     DateSelectsForm,
     DeveloperAttrsForm,
+    EveryInputForm,
     FieldAndFormWideErrorsForm,
     FilesForm,
     FormWideErrorsForm,
@@ -84,6 +86,11 @@ def helped(form, **settings):
     form.helper = FormHelper()
     for name, value in settings.items():
         setattr(form.helper, name, value)
+    return form
+
+
+def stating(form, choices):
+    form.helper.daisyui = choices
     return form
 
 
@@ -239,6 +246,10 @@ def failing_lines():
 
 
 NOTHING = frozenset()
+EVERY_CHOICE = FormChoices(size="sm", color="primary", variant="ghost")
+EVERY_BUTTON_CHOICE = FormChoices(
+    size="lg", color="accent", button_color="neutral", button_variant="outline"
+)
 ERRORS_ONLY = "{{ form|as_crispy_errors }}"
 
 STATES = [
@@ -387,6 +398,34 @@ STATES = [
         NOTHING,
         id="tag without errors",
     ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: stating(EveryInputForm(), EVERY_CHOICE),
+        NOTHING,
+        id="every choice stated, through the filter",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: stating(EveryInputForm({}), EVERY_CHOICE),
+        NOTHING,
+        id="every choice stated, invalid, through the tag",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: stating(
+            ButtonedForm(
+                buttons=(
+                    Submit("save", "Save"),
+                    Reset("clear", "Clear"),
+                    Button("help", "Help"),
+                    StrictButton("More"),
+                )
+            ),
+            EVERY_BUTTON_CHOICE,
+        ),
+        NOTHING,
+        id="buttons with every choice stated",
+    ),
     pytest.param("{% crispy form %}", LineFormSet, NOTHING, id="stacked formset"),
     pytest.param(
         "{% crispy form %}",
@@ -431,6 +470,21 @@ class TestEmittedClasses:
         soup = draw("{% crispy form %}", form=supplying_classes(DeveloperAttrsForm({})))
 
         assert {DEVELOPER_CLASS} | HELPER_CLASSES <= classes_in(soup)
+
+
+class TestModifierTables:
+    @pytest.mark.parametrize("kind", ["size", "color", "variant"])
+    def test_every_class_in_the_table_is_one_daisyui_defines(
+        self, daisyui_classes, kind
+    ):
+        written = {
+            name
+            for modifiers in Modifiers.tables[kind].values()
+            for name in modifiers.values()
+        }
+
+        assert written
+        assert written <= daisyui_classes, written - daisyui_classes
 
 
 class TestWithoutDjangoMvp:

@@ -1,5 +1,8 @@
 """The examples in django-crispy-forms' own docstrings, drawn as written."""
 
+import re
+from pathlib import Path
+
 import pytest
 from crispy_forms.bootstrap import (
     Accordion,
@@ -242,3 +245,65 @@ class TestDocumentedExamples:
         soup = draw("{% crispy form %}", form=form, saved=saved)
 
         assert (SAVED_TEXT in soup.get_text()) == saved
+
+
+README = Path(__file__).parents[2] / "README.md"
+
+
+def readme_example(heading):
+    section = README.read_text().split(f"### {heading}\n", 1)[1]
+    code = re.search(r"```python\n(.*?)```", section, re.DOTALL).group(1)
+    namespace = {}
+    exec(code, namespace)  # noqa: S102
+    return namespace
+
+
+class TestReadmeFormWideChoices:
+    @pytest.mark.parametrize("source", ["{{ form|crispy }}", "{% crispy form %}"])
+    def test_the_form_stating_its_choices_is_drawn_with_them(self, draw, source):
+        form = readme_example("Size, colour and variant")["SettingsForm"]()
+
+        soup = draw(source, form=form)
+
+        assert {"input-sm", "input-primary", "input-ghost"} <= set(
+            soup.find(id="id_name")["class"]
+        )
+        notes = set(soup.find(id="id_notes")["class"])
+        assert {"textarea-sm", "textarea-ghost"} <= notes
+        assert "textarea-primary" not in notes
+        newsletter = set(soup.find(id="id_newsletter")["class"])
+        assert {"checkbox-sm", "checkbox-primary"} <= newsletter
+        assert "checkbox-ghost" not in newsletter
+
+
+class TestReadmeFieldChoices:
+    def test_the_example_stating_a_choice_in_a_layout_draws(self, draw):
+        form = readme_example("One field's own choice")["SearchForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        search = set(soup.find(id="id_search")["class"])
+        assert {"input-lg", "input-primary"} <= search
+        assert "input-sm" not in search
+        for name in ("name", "city"):
+            tag = set(soup.find(id=f"id_{name}")["class"])
+            assert "input-sm" in tag
+            assert "input-primary" not in tag
+        notes = set(soup.find(id="id_notes")["class"])
+        assert {"textarea-sm", "textarea-primary"} <= notes
+
+
+class TestReadmeButtonChoices:
+    def test_the_example_stating_choices_for_buttons_draws(self, draw):
+        form = readme_example("Buttons")["ConfirmForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        for name in ("save", "clear"):
+            assert {"btn-sm", "btn-neutral", "btn-outline"} <= set(
+                soup.find("input", attrs={"name": name})["class"]
+            )
+        delete = set(soup.find("button")["class"])
+        assert {"btn-sm", "btn-error", "btn-outline"} <= delete
+        assert "btn-neutral" not in delete
+        assert "input-sm" in set(soup.find(id="id_name")["class"])

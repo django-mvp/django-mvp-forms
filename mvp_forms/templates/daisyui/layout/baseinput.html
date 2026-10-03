@@ -1,2 +1,2 @@
-{% load daisyui %}
-<input type="{{ input.input_type }}" name="{% if input.name|wordcount > 1 %}{{ input.name|slugify }}{% else %}{{ input.name }}{% endif %}" value="{{ input.value }}"{% if input.input_type != "hidden" %} class="{{ input.field_classes|daisyui_classes }}" id="{{ input.id }}"{% endif %}{{ input.flat_attrs }}>
+{% load daisyui %}{% daisyui_button input as drawn %}
+<input type="{{ input.input_type }}" name="{% if input.name|wordcount > 1 %}{{ input.name|slugify }}{% else %}{{ input.name }}{% endif %}" value="{{ input.value }}"{% if input.input_type != "hidden" %} class="{{ drawn.css_class }}" id="{{ input.id }}"{% endif %}{{ input.flat_attrs }}>

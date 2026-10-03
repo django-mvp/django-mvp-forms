@@ -1,0 +1,352 @@
+{
+  "feature": "007-size-colour-variant",
+  "branch": "007-size-colour-variant",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T15:06:21Z",
+      "note": "specification approved by delegated review at commit b5bc8e7e995a81c6b4107a6f0721eef4ec92b47d, on pull request #23; epic #11, stories #36 to #40"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T17:42:18Z",
+      "note": "plan.md, research.md, tasks.md: 5 stories, 6 tasks; continues on pull request #23"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T17:42:28Z",
+      "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T17:51:28Z",
+      "note": "plan gate open; design review applied"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T18:28:59Z",
+      "note": "all five stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T18:30:28Z",
+      "note": "converged on main with FS-005: ADRs 0017 to 0019, full verify green"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T18:43:53Z",
+      "note": "review approved, five findings closed; walkthrough laid out"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T15:06:21Z",
+      "self_resolved": [
+        "approved at commit b5bc8e7e995a81c6b4107a6f0721eef4ec92b47d (forge spec-gate, pull request #23); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T17:50:39Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T17:50:39Z",
+      "self_resolved": [
+        "DR-001 (medium) removal checkbox never takes file-input-error: applied to plan, research and T002 (D17)",
+        "DR-002 (medium) SC-005 checked by comparing every state's markup before and after T002 and T004: applied to plan and tasks",
+        "DR-003 (medium) a Submit given a colour drops the default btn-primary: applied to plan and T004 (D19)",
+        "DR-004 (medium) the statement is set on the helper instance, README says so: applied to plan and T002 (D11)",
+        "DR-005 (low) a page variable named daisyui is treated as absent: applied to plan and T005",
+        "DR-006 (low) StrictButton class attribute matched with its leading space: watch item in T004",
+        "DR-007 (low) demo per-size and per-colour forms hold one input and one button: applied to plan"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T18:42:39Z",
+      "self_resolved": [
+        "COR-001 (medium) a Submit recoloured on the instance no longer raises under a button colour: fixed, T008",
+        "COR-002 (medium) the removal checkbox takes only what the pack resolved, never hand-written classes: fixed, T007",
+        "COR-003 (low) a Choice holding several kinds is checked against each: kept, README says so, T009",
+        "COR-004 (low) a name in fields that is no field of the form raises UnknownField: fixed, T009",
+        "COR-005 (low) README says which helper's attribute raises TypeError: fixed, T009"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T18:43:30Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 36,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_choices.py",
+              "tests/test_pack/test_independence.py::TestModifierTables"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py tests/test_pack/test_independence.py -q",
+              "uv run mypy",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/choices.py:18",
+              "mvp_forms/choices.py:42",
+              "mvp_forms/choices.py:228",
+              "mvp_forms/choices.py:282",
+              "mvp_forms/choices.py:329",
+              "mvp_forms/choices.py:366"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputChoices",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiFieldChoices",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiRemovalCheckbox",
+              "tests/test_pack/test_documented_examples.py::TestReadmeFormWideChoices",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_choices.py tests/test_templatetags -n auto --dist loadscope",
+              "uv run python /tmp/fs007_sc005.py /tmp/fs007_sc005_after.json && cmp /tmp/fs007_sc005_before.json /tmp/fs007_sc005_after.json",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:28",
+              "mvp_forms/templatetags/daisyui.py:102",
+              "mvp_forms/templatetags/daisyui.py:315",
+              "mvp_forms/templatetags/daisyui.py:383",
+              "mvp_forms/templates/daisyui/widgets/clearable_file_input.html:6"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestRemovalCheckboxOfAHandStyledFile",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputRemovalModifiers"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 37,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestFieldChoices",
+              "tests/test_choices.py::TestChoiceRender",
+              "tests/test_pack/test_documented_examples.py::TestReadmeFieldChoices"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py tests/test_pack/test_choices.py tests/test_pack/test_documented_examples.py",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/choices.py:285",
+              "mvp_forms/choices.py:333",
+              "mvp_forms/templatetags/daisyui.py:102"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 38,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestButtonChoices",
+              "tests/test_templatetags/test_daisyui.py::TestDrawnButton",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiButton",
+              "tests/test_pack/test_documented_examples.py::TestReadmeButtonChoices",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags tests/test_choices.py -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              ".venv/bin/python /tmp/fs007_render.py /tmp/fs007-states-after-T004.txt && diff /tmp/fs007-states-base.txt /tmp/fs007-states-after-T004.txt",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:317",
+              "mvp_forms/templatetags/daisyui.py:402",
+              "mvp_forms/templatetags/daisyui.py:419",
+              "mvp_forms/templatetags/daisyui.py:439"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestDrawnButton::test_a_submit_recoloured_on_the_instance_keeps_its_colour_and_takes_the_forms"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 39,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestMistakes",
+              "tests/test_choices.py::TestFormChoicesCheck"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py tests/test_pack/test_choices.py tests/test_pack/test_documented_examples.py -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/choices.py:406",
+              "mvp_forms/choices.py:432"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestUnknownFieldNames"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 40,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestChoicesPage",
+              "tests/test_demo.py::TestStandaloneChoicesPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -k Choices -q",
+              "uv run pytest tests/test_demo.py -q -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "demo/forms.py:488",
+              "demo/views.py:472",
+              "demo/urls.py:51",
+              "demo/menus.py:54"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 17.76,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 23,
+    "draft": false
+  }
+}

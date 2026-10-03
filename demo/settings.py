@@ -126,6 +126,7 @@ EASY_ICONS = {
             "accordion": "bi bi-chevron-bar-expand",
             "modal": "bi bi-window-stack",
             "alert": "bi bi-exclamation-triangle",
+            "choices": "bi bi-palette",
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",
         },
