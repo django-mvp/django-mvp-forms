@@ -81,8 +81,8 @@
       ]
     },
     "walkthrough": {
-      "approved_by": null,
-      "at": "2026-10-03T18:43:30Z",
+      "approved_by": "delegated review",
+      "at": "2026-10-03T18:47:12Z",
       "self_resolved": []
     }
   },
@@ -156,6 +156,19 @@
             "tests": [
               "tests/test_pack/test_choices.py::TestRemovalCheckboxOfAHandStyledFile",
               "tests/test_templatetags/test_daisyui.py::TestFieldInputRemovalModifiers"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestFormsetChoices"
             ],
             "commands": [
               "uv run pytest -n auto --dist loadscope"

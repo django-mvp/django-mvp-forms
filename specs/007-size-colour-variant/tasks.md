@@ -212,3 +212,9 @@ The default colour is removed only when the instance still carries it.
 
 `UnknownField`, raised when a field of the form is drawn. The README says what a `Choice` holding
 several kinds is checked against, and which helper's attribute raises `TypeError`.
+
+### T010 — The choices reach a formset, stacked and as a table (US1)
+
+Formsets arrived on main while this feature was built. A test draws a formset in both layouts
+with a size and a button colour stated on its helper and reads every visible input and the
+helper's button. No production code changed.

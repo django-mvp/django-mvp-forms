@@ -27,6 +27,7 @@ from tests.forms import (
     EveryInputForm,
     FilesForm,
     HeldFile,
+    OrderedLineFormSet,
     StructureForm,
     UncoveredWidgetsForm,
 )
@@ -1024,3 +1025,50 @@ class TestMistakes:
         soup = draw(source, form=form, daisyui=["the page's own"])
 
         assert "input-lg" in named(soup, "first")
+
+
+FORMSET_LAYOUTS = [
+    pytest.param(None, id="stacked"),
+    pytest.param("daisyui/table_inline_formset.html", id="table"),
+]
+
+
+class TestFormsetChoices:
+    def drawn(self, draw, template):
+        formset = OrderedLineFormSet()
+        formset.helper = FormHelper()
+        formset.helper.daisyui = FormChoices(size="sm", button_color="neutral")
+        formset.helper.add_input(Submit("save", "Save"))
+        if template:
+            formset.helper.template = template
+        return draw("{% crispy form %}", form=formset)
+
+    @pytest.mark.parametrize("template", FORMSET_LAYOUTS)
+    def test_every_visible_input_of_every_form_takes_the_size(self, draw, template):
+        soup = self.drawn(draw, template)
+
+        components = {"input", "checkbox"}
+        shown = [
+            tag
+            for tag in soup.find_all("input")
+            if tag.get("type") not in {"hidden", "submit"}
+        ]
+        assert len(shown) >= 6
+        for tag in shown:
+            component = (classes(tag) & components).pop()
+            assert f"{component}-sm" in classes(tag)
+
+    @pytest.mark.parametrize("template", FORMSET_LAYOUTS)
+    def test_the_helpers_button_takes_the_size_and_the_colour(self, draw, template):
+        soup = self.drawn(draw, template)
+
+        button = soup.find("input", attrs={"name": "save"})
+
+        assert {"btn-sm", "btn-neutral"} <= classes(button)
+
+    @pytest.mark.parametrize("template", FORMSET_LAYOUTS)
+    def test_hidden_inputs_are_unchanged(self, draw, template):
+        soup = self.drawn(draw, template)
+
+        for tag in soup.find_all("input", type="hidden"):
+            assert not tag.get("class")
