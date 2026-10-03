@@ -1134,10 +1134,6 @@ class ThemesMixin:
                 "Accordion, chosen groups", ChosenGroupsForm(prefix="chosen")
             ),
             self.build_item("Modal", ModalForm(prefix=self.modal_prefix)),
-            self.build_item(
-                "Modal, with errors",
-                ModalForm({}, prefix=f"{self.modal_prefix}-errors"),
-            ),
             *self.build_pairs("Alerts", AlertForm),
             self.build_item(
                 "Alerts in every colour", AlertColoursForm(prefix="alerts")
