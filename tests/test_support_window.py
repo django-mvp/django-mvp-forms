@@ -2,6 +2,7 @@
 
 import copy
 import tomllib
+from types import SimpleNamespace
 
 import pytest
 
@@ -14,6 +15,7 @@ from support_window import (
     class_list,
     class_names,
     installed_versions,
+    main,
     relative_links,
     write_class_list,
 )
@@ -528,3 +530,107 @@ class TestClassLists:
         assert raised.value.version == version
         assert fetched == []
         assert list(tmp_path.iterdir()) == []
+
+
+class RecordedRun:
+    def __init__(self, status=0):
+        self.status = status
+        self.calls = []
+
+    def __call__(self, command, **options):
+        self.calls.append((command, options))
+        return SimpleNamespace(returncode=self.status)
+
+
+class TestRunSuite:
+    def test_a_named_pair_runs_one_command_that_pins_both_versions(self):
+        run = RecordedRun()
+
+        Window.from_mapping(MAPPING).run_suite("5.2", "2.7", ["-x"], run=run)
+
+        assert [command for command, options in run.calls] == [
+            [
+                "uv",
+                "run",
+                "--isolated",
+                "--with",
+                "django==5.2.*",
+                "--with",
+                "django-crispy-forms==2.7.*",
+                "pytest",
+                "-x",
+            ]
+        ]
+
+    def test_the_command_carries_both_versions_in_its_environment(self):
+        run = RecordedRun()
+
+        Window.from_mapping(MAPPING).run_suite("6.0", "2.7", [], run=run)
+
+        environment = run.calls[0][1]["env"]
+        assert environment["SUPPORT_WINDOW_DJANGO"] == "6.0"
+        assert environment["SUPPORT_WINDOW_CRISPY_FORMS"] == "2.7"
+
+    def test_the_status_of_the_command_is_returned(self):
+        status = Window.from_mapping(MAPPING).run_suite(
+            "5.2", "2.7", [], run=RecordedRun(status=3)
+        )
+
+        assert status == 3
+
+    def test_a_django_series_the_window_does_not_name_runs_nothing(self):
+        run = RecordedRun()
+
+        status = Window.from_mapping(MAPPING).run_suite("4.2", "2.7", [], run=run)
+
+        assert run.calls == []
+        assert status != 0
+
+    def test_a_crispy_forms_release_the_window_does_not_name_runs_nothing(self):
+        run = RecordedRun()
+
+        status = Window.from_mapping(MAPPING).run_suite("5.2", "2.5", [], run=run)
+
+        assert run.calls == []
+        assert status != 0
+
+    def test_a_pair_the_window_does_not_hold_runs_nothing(self):
+        run = RecordedRun()
+
+        status = Window.from_mapping(MAPPING).run_suite("6.0", "2.6", [], run=run)
+
+        assert run.calls == []
+        assert status != 0
+
+
+class TestMain:
+    def test_the_test_command_runs_the_suite_on_the_pair_it_names(self, tmp_path):
+        declaration = tmp_path / "window.toml"
+        declaration.write_text(DECLARATION_TEXT)
+        run = RecordedRun()
+
+        status = main(["test", "5.2", "2.7"], run=run, declaration=declaration)
+
+        command = run.calls[0][0]
+        assert "django==5.2.*" in command
+        assert "django-crispy-forms==2.7.*" in command
+        assert status == 0
+
+    def test_arguments_after_the_pair_are_given_to_pytest(self, tmp_path):
+        declaration = tmp_path / "window.toml"
+        declaration.write_text(DECLARATION_TEXT)
+        run = RecordedRun()
+
+        main(
+            ["test", "5.2", "2.7", "-x", "tests/test_smoke.py"],
+            run=run,
+            declaration=declaration,
+        )
+
+        assert run.calls[0][0][-3:] == ["pytest", "-x", "tests/test_smoke.py"]
+
+    def test_the_classes_command_refuses_a_version_that_is_not_two_numbers(self):
+        with pytest.raises(InvalidWindow) as raised:
+            main(["classes", "5.0.1"])
+
+        assert raised.value.version == "5.0.1"

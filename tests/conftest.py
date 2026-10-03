@@ -1,6 +1,7 @@
 """Fixtures shared across the test suite."""
 
 import copy
+import os
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -16,7 +17,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 import mvp_forms
-from support_window import DECLARATION, Window, class_list
+from support_window import ASKED, DECLARATION, Window, class_list, installed_versions
 from tests.forms import (
     GroupFormSet,
     LineFormSet,
@@ -25,6 +26,23 @@ from tests.forms import (
     StructureForm,
 )
 from tests.template_surface import TemplateSurface
+
+
+def pytest_report_header():
+    """Name the Django and django-crispy-forms this run is on."""
+    return [f"{name} {version}" for name, version in installed_versions().items()]
+
+
+def pytest_sessionstart():
+    """Stop a run that is on a version other than the one it was asked for."""
+    asked = {name: os.environ[key] for name, key in ASKED.items() if key in os.environ}
+    disagreements = Window.read(DECLARATION).installed_disagreements(
+        installed_versions(), asked
+    )
+    unmet = [d for d in disagreements if d.package in asked]
+    if unmet:
+        found = ", ".join(f"{d.package} {d.version}" for d in unmet)
+        raise pytest.UsageError(f"This run was asked for other versions: {found}")
 
 
 @pytest.fixture

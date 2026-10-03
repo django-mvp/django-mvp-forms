@@ -991,6 +991,44 @@ uv run pytest
 uv run pre-commit install
 ```
 
+### Changing the support window
+
+The versions this package supports are declared in
+[support-window.toml](https://github.com/django-mvp/django-mvp-forms/blob/main/support-window.toml).
+The tables in
+[Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions), the
+package metadata, the lockfile, the installed versions and the daisyUI class lists are checked
+against that file on every test run, so a change to one that the others do not follow fails the
+suite.
+
+To add a version, change these together:
+
+1. Add the version to `support-window.toml`. A django-crispy-forms release also gets a line under
+   `[django-crispy-forms.pairs]` naming the Django series it supports.
+2. Add it to the two tables in "Supported versions".
+3. For a Django series or a Python version, add its trove classifier to `pyproject.toml`. The
+   requirements there say `>=` the oldest named version and nothing else.
+4. For a daisyUI version that becomes the minimum or the newest, write its class list with
+   `uv run python support_window.py classes 5.8`. It finds the newest patch release of that minor
+   version, reads the stylesheet daisyUI publishes for it and writes
+   `tests/data/daisyui-classes-5.8.txt`. It uses the network. Delete the list of a version that is
+   no longer one end of the range. Every test that compares the pack's classes with daisyUI's runs
+   once for each list.
+5. Run the suite on the new pair, as below.
+
+`uv run python support_window.py test 5.2 2.7` runs the whole suite on Django 5.2 and
+django-crispy-forms 2.7. The two versions are laid over the project's environment for that one
+command, so your own environment is left as it was. Arguments after the pair go to pytest instead
+of the default of running in parallel. The header of every test run names the Django and
+django-crispy-forms it ran on, and a run that finds other versions than the ones it was asked for
+stops before the first test with a usage error. A pair the window does not offer runs nothing and
+exits with a failing status.
+
+The test workflow runs every Django series and Python version named in the window, and the one
+django-crispy-forms release named today. Naming a second django-crispy-forms release needs the
+workflow to read its versions from the declaration, which is tracked in
+[issue 92](https://github.com/django-mvp/django-mvp-forms/issues/92).
+
 `demo/` is a Django project on django-mvp's application shell, for looking at
 this package in a browser while working on it:
 

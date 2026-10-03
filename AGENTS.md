@@ -18,6 +18,8 @@ depend on django-mvp at runtime.
 - **Test (whole suite):** `uv run pytest -n auto --dist loadscope`
 - **Test (one class or file, while iterating):** `uv run pytest <path> -x` —
   serial, because starting the workers costs more than a focused run takes
+- **Test (one named Django and django-crispy-forms pair):**
+  `uv run python support_window.py test 5.2 2.7` — the pair must be one the window offers
 - **Lint:** `uv run pre-commit run --all-files`
 - **Type-check:** `uv run mypy`
 - **Build:** `uv build`

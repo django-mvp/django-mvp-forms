@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import argparse
 import json
+import os
 import re
+import subprocess
+import sys
 import tomllib
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from importlib import metadata
 from pathlib import Path
@@ -16,6 +20,11 @@ ROOT = Path(__file__).resolve().parent
 DECLARATION = ROOT / "support-window.toml"
 CLASS_DIRECTORY = ROOT / "tests" / "data"
 TIMEOUT = 30
+ASKED = {
+    "django": "SUPPORT_WINDOW_DJANGO",
+    "django-crispy-forms": "SUPPORT_WINDOW_CRISPY_FORMS",
+}
+SUITE_ARGUMENTS = ("-n", "auto", "--dist", "loadscope")
 
 VERSION = re.compile(r"\d+\.\d+")
 CLAUSE = re.compile(r"\s*(==|!=|~=|>=|<=|>|<)\s*([\w.*]+)\s*")
@@ -405,6 +414,60 @@ class Window:
                 )
         return found
 
+    def run_suite(
+        self,
+        django: str,
+        crispy_forms: str,
+        extra: Sequence[str] = SUITE_ARGUMENTS,
+        run: Callable[..., Any] = subprocess.run,
+    ) -> int:
+        """Run the whole suite on one named Django and django-crispy-forms pair.
+
+        The two versions are laid over the project's environment for that one
+        command, so the development environment is left as it was. Both are
+        also put in the environment of the run, where ``tests/conftest.py``
+        reads them to stop a run that is on other versions.
+
+        Args:
+            django: The Django release series, such as ``5.2``.
+            crispy_forms: The django-crispy-forms release, such as ``2.7``.
+            extra: The arguments given to pytest.
+            run: Runs a command and returns an object with a ``returncode``.
+
+        Returns:
+            The status of the run, or ``2`` when the window does not offer the
+            pair, in which case nothing is run.
+        """
+        offered = (
+            django in self.django
+            and crispy_forms in self.crispy_forms
+            and django in self.pairs.get(crispy_forms, ())
+        )
+        if not offered:
+            print(
+                f"The window does not offer Django {django} with "
+                f"django-crispy-forms {crispy_forms}.",
+                file=sys.stderr,
+            )
+            return 2
+        command = [
+            "uv",
+            "run",
+            "--isolated",
+            "--with",
+            f"django=={django}.*",
+            "--with",
+            f"django-crispy-forms=={crispy_forms}.*",
+            "pytest",
+            *extra,
+        ]
+        environment = {
+            **os.environ,
+            ASKED["django"]: django,
+            ASKED["django-crispy-forms"]: crispy_forms,
+        }
+        return run(command, env=environment, cwd=ROOT, check=False).returncode
+
     @staticmethod
     def series(version: str) -> str:
         """Reduce a version to its release series.
@@ -620,3 +683,55 @@ def write_class_list(
     path = directory / f"daisyui-classes-{version}.txt"
     path.write_text(header + "\n".join(names) + "\n")
     return path
+
+
+def main(
+    argv: Sequence[str] | None = None,
+    run: Callable[..., Any] = subprocess.run,
+    declaration: Path = DECLARATION,
+) -> int:
+    """Run a command of this module.
+
+    Args:
+        argv: The command line without the program name. Defaults to the
+            arguments the program was started with.
+        run: Runs a command, for the ``test`` command.
+        declaration: The file that declares the window.
+
+    Returns:
+        The exit status.
+    """
+    parser = argparse.ArgumentParser(
+        prog="support_window.py", description="Work with the support window."
+    )
+    commands = parser.add_subparsers(dest="command", required=True)
+    suite = commands.add_parser(
+        "test", help="run the whole suite on one named Django and django-crispy-forms"
+    )
+    suite.add_argument("django", help="a Django release series, such as 5.2")
+    suite.add_argument(
+        "crispy_forms", help="a django-crispy-forms release, such as 2.7"
+    )
+    suite.add_argument(
+        "extra",
+        nargs=argparse.REMAINDER,
+        help="arguments for pytest, which replace the default of running in parallel",
+    )
+    classes = commands.add_parser(
+        "classes", help="write the class list of a daisyUI version"
+    )
+    classes.add_argument("version", help="a daisyUI version, such as 5.0")
+    arguments = parser.parse_args(argv)
+    if arguments.command == "classes":
+        print(write_class_list(arguments.version))
+        return 0
+    return Window.read(declaration).run_suite(
+        arguments.django,
+        arguments.crispy_forms,
+        arguments.extra or SUITE_ARGUMENTS,
+        run=run,
+    )
+
+
+if __name__ == "__main__":
+    sys.exit(main())
