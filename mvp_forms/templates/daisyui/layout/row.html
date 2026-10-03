@@ -1,0 +1,3 @@
+<div{% if div.css_id %} id="{{ div.css_id }}"{% endif %} class="flex flex-col gap-4 md:flex-row{% if div.css_class %} {{ div.css_class }}{% endif %}"{{ div.flat_attrs }}>
+  {{ fields }}
+</div>

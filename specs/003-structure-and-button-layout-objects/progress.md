@@ -9,3 +9,10 @@ Planned the build: research.md, plan.md and tasks.md written. Four stories, nine
 **Verified:** `uv run pytest tests/test_pack/test_structure.py -q` -> 16 passed, exit 0. Mutation probe: dropping the legend guard, `flat_attrs` and the developer's class from the two templates failed 4 tests; restored. `uv run pre-commit run --all-files` clean.
 **Next:** T002, `Row` and `Column`, nesting and errors, and the class test.
 **Watch:** Tests build their layout objects per test inside the test, never on a module constant (crispy stores rendered values back on objects).
+
+## 2026-10-03T16:37:49Z · Implementer US1 · T002
+
+**Did:** Wrote `TestRowAndColumn` and `TestNesting` and two structural states in the class test first; 12 failed, 10 of them on the missing `daisyui/layout/column.html`. Added `daisyui/layout/row.html` and `daisyui/layout/column.html`. `LAYOUT_UTILITIES` gains `flex`, `flex-col`, `gap-4`, `md:flex-row`, `flex-1` and `min-w-0`.
+**Verified:** `uv run pytest tests/test_pack/test_structure.py tests/test_pack/test_independence.py -q` -> 63 passed, exit 0. Probe: removing `min-w-0` from `LAYOUT_UTILITIES` failed both new class-test states; restored. `uv run pre-commit run --all-files` clean.
+**Next:** T003, the demo page pair, README and CHANGELOG.
+**Watch:** No test names a layout utility outside `LAYOUT_UTILITIES`; the developer-class tests assert the developer's classes are a strict subset of the drawn ones.

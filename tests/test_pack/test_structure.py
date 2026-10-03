@@ -1,6 +1,6 @@
 """The layout objects that group fields: containers, rows, columns and fieldsets."""
 
-from crispy_forms.layout import Div, Fieldset
+from crispy_forms.layout import Column, Div, Fieldset, Row
 
 DEVELOPER_CLASSES = ["mine", "other"]
 DEVELOPER_ATTRS = {"data-role": "group", "title": "Group"}
@@ -145,3 +145,133 @@ class TestFieldset:
 
         assert field_ids(soup.find("section", id="own-container")) == ["id_first"]
         assert soup.find("fieldset", id="group") is None
+
+
+class TestRowAndColumn:
+    def test_each_field_is_in_its_own_column_inside_the_row_in_layout_order(
+        self, draw_layout
+    ):
+        soup = draw_layout(
+            Row(
+                Column("second", css_id="left"),
+                Column("first", css_id="right"),
+                css_id="line",
+            )
+        )
+
+        row = soup.find("div", id="line")
+        columns = row.find_all("div", id=["left", "right"])
+        assert [column["id"] for column in columns] == ["left", "right"]
+        assert field_ids(columns[0]) == ["id_second"]
+        assert field_ids(columns[1]) == ["id_first"]
+
+    def test_a_row_carries_the_id_the_classes_and_the_attributes_it_was_given(
+        self, draw_layout
+    ):
+        row = draw_layout(
+            Row(
+                "first",
+                css_id="line",
+                css_class=" ".join(DEVELOPER_CLASSES),
+                **DEVELOPER_ATTRS,
+            )
+        ).find("div", id="line")
+
+        assert set(DEVELOPER_CLASSES) < set(row["class"])
+        assert row["data-role"] == DEVELOPER_ATTRS["data-role"]
+        assert row["title"] == DEVELOPER_ATTRS["title"]
+
+    def test_a_column_carries_the_id_the_classes_and_the_attributes_it_was_given(
+        self, draw_layout
+    ):
+        column = draw_layout(
+            Row(
+                Column(
+                    "first",
+                    css_id="left",
+                    css_class=" ".join(DEVELOPER_CLASSES),
+                    **DEVELOPER_ATTRS,
+                )
+            )
+        ).find("div", id="left")
+
+        assert set(DEVELOPER_CLASSES) < set(column["class"])
+        assert column["data-role"] == DEVELOPER_ATTRS["data-role"]
+        assert column["title"] == DEVELOPER_ATTRS["title"]
+
+    def test_a_row_and_a_column_write_no_id_when_given_none(self, draw_layout):
+        soup = draw_layout(Row(Column("first", css_class="mine"), css_class="line"))
+
+        assert not soup.find("div", class_="line").has_attr("id")
+        assert not soup.find("div", class_="mine").has_attr("id")
+
+    def test_a_column_outside_a_row_draws_its_fields(self, draw_layout):
+        soup = draw_layout(Column("second", "first", css_id="left"))
+
+        assert field_ids(soup.find("div", id="left")) == ["id_second", "id_first"]
+
+    def test_a_row_holding_fields_directly_draws_them_in_order(self, draw_layout):
+        soup = draw_layout(Row("second", "first", css_id="line"))
+
+        assert field_ids(soup.find("div", id="line")) == ["id_second", "id_first"]
+
+    def test_an_empty_row_and_an_empty_column_are_drawn(self, draw_layout):
+        soup = draw_layout(Row(Column(css_id="left"), css_id="line"))
+
+        assert soup.find("div", id="line").find("div", id="left") is not None
+
+
+class TestNesting:
+    def test_every_field_is_drawn_once_inside_the_containers_nested_as_laid_out(
+        self, draw_layout
+    ):
+        soup = draw_layout(
+            Div(
+                Fieldset(
+                    LEGEND,
+                    Row(
+                        Column("first", css_id="left"),
+                        Column("second", "third", css_id="right"),
+                        css_id="line",
+                    ),
+                    css_id="group",
+                ),
+                "fourth",
+                css_id="box",
+            )
+        )
+
+        for name in ["first", "second", "third", "fourth"]:
+            assert len(soup.find_all(id=f"id_{name}")) == 1
+        first = soup.find(id="id_first")
+        column = first.find_parent("div", id="left")
+        row = column.find_parent("div", id="line")
+        fieldset = row.find_parent("fieldset", id="group")
+        assert fieldset.find_parent("div", id="box") is not None
+        assert soup.find(id="id_third").find_parent("div", id="right") is not None
+        assert soup.find(id="id_fourth").find_parent("fieldset") is None
+
+    def test_an_error_inside_nested_containers_is_drawn_in_its_own_frame(
+        self, draw_layout
+    ):
+        soup = draw_layout(
+            Row(
+                Column(Fieldset(LEGEND, "first", css_id="group"), css_id="left"),
+                css_id="line",
+            ),
+            bound=True,
+        )
+
+        error = soup.find(id="id_first_error")
+        frame = soup.find(id="div_id_first")
+        assert error.find_parent(id="div_id_first") is frame
+        assert frame.find_parent("fieldset", id="group") is not None
+        assert frame.find_parent("div", id="left") is not None
+
+    def test_the_input_in_nested_containers_names_its_error(self, draw_layout):
+        soup = draw_layout(
+            Row(Column(Fieldset(LEGEND, "first", css_id="group"))), bound=True
+        )
+
+        described = soup.find(id="id_first")["aria-describedby"].split()
+        assert "id_first_error" in described
