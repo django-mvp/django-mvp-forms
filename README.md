@@ -142,7 +142,7 @@ A class, placeholder, input type or row count you give a widget is kept. The pac
 
 ### Disabled and read-only fields
 
-The pack adds no class and no attribute for either state. A field with `disabled=True` is drawn by Django with `disabled` on its input, on every option of a radio or checkbox group, and on the removal checkbox of a file field that holds a file, and daisyUI draws its disabled look from that attribute for every component the pack uses. A disabled field still shows its value, except a password input, which never draws one. The browser does not submit a disabled input, and Django takes the field's initial value instead.
+The pack adds no class for either state, and no attribute either, except in one case: `UneditableField` writes `disabled` (see [An uneditable field](#an-uneditable-field)). A field with `disabled=True` is drawn by Django with `disabled` on its input, on every option of a radio or checkbox group, and on the removal checkbox of a file field that holds a file, and daisyUI draws its disabled look from that attribute for every component the pack uses. A disabled field still shows its value, except a password input, which never draws one. The browser does not submit a disabled input, and Django takes the field's initial value instead.
 
 Read-only is the browser's and exists only on text inputs and textareas. Set `readonly` on the widget, `forms.TextInput(attrs={"readonly": True})`, and it reaches the input unchanged, with the input's name and value, so the browser still submits it. The attribute does nothing on a select, a checkbox, a radio or a file input, and the pack does not try to make it: use `disabled` for those.
 
@@ -452,6 +452,38 @@ class SearchForm(forms.Form):
 - On a select the group is drawn as it is on an input. On a checkbox or a radio group both the field and the buttons are drawn, and no option carries `join-item`. A hidden field is drawn as its hidden input alone.
 - The input and the buttons take the same size. State it for the whole form, or put a `Choice` around the layout object: `Choice(FieldWithButtons("query", StrictButton("Go")), size="lg")` gives the input `input-lg` and the button `btn-lg`. A size stated for one field by name, `FormChoices(fields={"query": Choice(size="lg")})`, reaches the input and cannot reach its buttons, which django-crispy-forms draws before the field, so for a field with buttons state the size with `Choice` around the `FieldWithButtons` or for the whole form.
 - Give a button `css_class="join-item"` to close the doubled border where the joined parts meet.
+
+#### An uneditable field
+
+`UneditableField` comes from `crispy_forms.bootstrap`. It draws one field with its current value shown and the input disabled, such as an account number on a profile form:
+
+```python
+from crispy_forms.bootstrap import UneditableField
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+
+
+class ProfileForm(forms.Form):
+    account = forms.CharField(initial="AC-1001", help_text="Issued once")
+    reference = forms.CharField(initial="R-7", disabled=True)
+    nickname = forms.CharField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            UneditableField("account"),
+            UneditableField("reference"),
+            "nickname",
+        )
+```
+
+- The field is drawn in its usual frame, with its label, help text and errors, and its input keeps its component class (`input`, `select`, `textarea`, `checkbox`) and shows the field's value. A field with no value is drawn empty. The value is escaped, as it is for any field.
+- The input carries the `disabled` attribute and no class for it: daisyUI draws the disabled look from the attribute. A select, a checkbox and a textarea are disabled the same way, and every option of a radio group or a checkbox group is. The form's own field and widget are not changed, so the same field drawn without the layout object is editable.
+- **The browser does not submit a disabled input.** Wrapping a field in `UneditableField` does not make Django ignore what comes back, so a required field left out of the submitted data fails with the `required` code. A form that needs the value kept declares the field disabled in the form class, `forms.CharField(initial="R-7", disabled=True)` as `reference` does above, and Django then uses the initial value whatever is submitted.
+- `uneditable-input`, the class django-crispy-forms writes for other template packs, is never drawn. It is the only name dropped from an input's own classes, so a class of yours called `active` or `error` on an input is still drawn.
+- `css_class` and extra attributes go to the input, as they do for `Field`. `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
 
 ### Size, colour and variant
 

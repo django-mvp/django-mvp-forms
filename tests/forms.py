@@ -441,6 +441,29 @@ class DecoratedFieldsForm(forms.Form):
         self.helper.layout = Layout(*layout)
 
 
+class UneditableFieldsForm(forms.Form):
+    account = forms.CharField(
+        label="Account", initial="AC-1001", help_text="Issued once"
+    )
+    empty = forms.CharField(required=False)
+    markup = forms.CharField(initial='<b onclick="x()">&amp;</b>')
+    country = forms.ChoiceField(choices=FRUIT, initial="b")
+    agree = forms.BooleanField(initial=True)
+    pick = forms.ChoiceField(choices=FRUIT, widget=forms.RadioSelect, initial="b")
+    boxes = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.CheckboxSelectMultiple, initial=["a"]
+    )
+    notes = forms.CharField(widget=forms.Textarea, initial="Hello")
+    locked = forms.CharField(initial="Ada", disabled=True)
+    kept = forms.CharField(initial="Kept")
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
 class InlineRadiosForm(RadioGroupsForm):
     text = forms.CharField(required=False)
     fixed = forms.ChoiceField(

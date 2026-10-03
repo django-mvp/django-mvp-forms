@@ -24,6 +24,8 @@ DATE_PARTS = {
     "_month": gettext_lazy("Month"),
     "_day": gettext_lazy("Day"),
 }
+# The class UneditableField writes onto the widget it wraps.
+UNEDITABLE_CLASS = "uneditable-input"
 # Class names django-crispy-forms writes for other template packs. daisyUI does
 # not define them, so a button or a group is drawn without them.
 UPSTREAM_ONLY_CLASSES = frozenset(
@@ -35,6 +37,7 @@ UPSTREAM_ONLY_CLASSES = frozenset(
         "tab-pane",
         "active",
         "alert-block",
+        UNEDITABLE_CLASS,
     }
 )
 # Written by layout/tab-pane.html in place of a group name; daisyui_tab_group
@@ -67,6 +70,8 @@ class FieldInput:
             does not fit, and not one under another.
         join: The ``FieldWithButtons`` whose buttons are joined to the input, if
             any. Its buttons were drawn by django-crispy-forms before the field.
+        disabled: Whether the input is drawn disabled, whatever the form field
+            says. The form field and its widget are not changed.
 
     Raises:
         InvalidChoice: A size, colour or variant stated for the form or the
@@ -130,6 +135,7 @@ class FieldInput:
         appended: str | None = None,
         inline: bool = False,
         join: Any = None,
+        disabled: bool = False,
     ) -> None:
         self.field = field
         self.show_labels = show_labels
@@ -139,6 +145,7 @@ class FieldInput:
         self.appended = appended
         self.inline = inline
         self.join = join
+        self.disabled = disabled
         choices = choices or FormChoices()
         self.modifiers = self.resolve_modifiers(choices, placed, self.component)
         self.removal_modifiers = (
@@ -275,8 +282,12 @@ class FieldInput:
 
     @property
     def own_classes(self) -> list[str]:
-        """The class names the widget already carries."""
-        return str(self.field.field.widget.attrs.get("class", "")).split()
+        """The class names the widget already carries, but one daisyUI lacks.
+
+        Only the class ``UneditableField`` writes onto the widget is dropped. Any other name is the developer's and is kept.
+        """
+        names = str(self.field.field.widget.attrs.get("class", "")).split()
+        return [name for name in names if name != UNEDITABLE_CLASS]
 
     @property
     def is_joined(self) -> bool:
@@ -330,6 +341,8 @@ class FieldInput:
             attrs["class"] = " ".join(self.own_classes) or False
         elif self.component:
             attrs["class"] = self.css_class
+        if self.disabled:
+            attrs["disabled"] = True
         if self.requires_aria_required:
             attrs["aria-required"] = "true"
         if self.requires_aria_label:

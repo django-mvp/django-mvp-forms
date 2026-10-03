@@ -19,6 +19,7 @@ from crispy_forms.bootstrap import (
     StrictButton,
     Tab,
     TabHolder,
+    UneditableField,
 )
 from crispy_forms.layout import (
     HTML,
@@ -242,6 +243,11 @@ EXAMPLES = {
         ["form_field"],
         ("div", {"class": "join"}),
     ),
+    "UneditableField": (
+        lambda: UneditableField("form_field", css_class="input-xlarge"),
+        ["form_field"],
+        ("input", {"disabled": True}),
+    ),
     "InlineCheckboxes": (
         lambda: InlineCheckboxes("form_field"),
         ["form_field"],
@@ -379,3 +385,17 @@ class TestReadmeFieldWithButtons:
             "go",
             "clear",
         ]
+
+
+class TestReadmeUneditableField:
+    def test_the_example_draws_the_uneditable_fields_disabled_and_the_other_editable(
+        self, draw
+    ):
+        form = readme_example("An uneditable field")["ProfileForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert soup.find(id="id_account")["value"] == "AC-1001"
+        assert soup.find(id="id_account").has_attr("disabled")
+        assert soup.find(id="id_reference").has_attr("disabled")
+        assert not soup.find(id="id_nickname").has_attr("disabled")

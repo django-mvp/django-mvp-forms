@@ -20,6 +20,7 @@ from crispy_forms.bootstrap import (
     StrictButton,
     Tab,
     TabHolder,
+    UneditableField,
 )
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
@@ -60,6 +61,7 @@ from tests.forms import (
     StructureForm,
     TextInputsForm,
     UncoveredWidgetsForm,
+    UneditableFieldsForm,
     ruled_data,
 )
 
@@ -261,6 +263,21 @@ def with_buttons(data=None):
     )
 
 
+def uneditable(data=None):
+    return UneditableFieldsForm(
+        data,
+        layout=(
+            UneditableField("account"),
+            UneditableField("country"),
+            UneditableField("agree"),
+            UneditableField("pick"),
+            UneditableField("boxes"),
+            UneditableField("notes"),
+            UneditableField("empty", css_class="mine"),
+        ),
+    )
+
+
 def inlined_radios(data=None):
     return InlineRadiosForm(
         data,
@@ -447,6 +464,13 @@ STATES = [
         lambda: with_buttons({}),
         NOTHING,
         id="field with buttons, invalid",
+    ),
+    pytest.param("{% crispy form %}", uneditable, MINE, id="uneditable fields"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: uneditable({}),
+        MINE,
+        id="uneditable fields, invalid",
     ),
     pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
     pytest.param(

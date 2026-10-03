@@ -1336,3 +1336,46 @@ class TestFieldInputJoin:
         )
 
         assert field_input.pack_classes == []
+
+
+class ClassedForm(forms.Form):
+    name = forms.CharField(
+        widget=forms.TextInput(attrs={"class": "uneditable-input active wide"})
+    )
+
+
+class TestFieldInputDisabled:
+    def test_a_disabled_input_has_the_disabled_attribute(self):
+        field_input = FieldInput(TextInputsForm()["text"], disabled=True)
+
+        assert field_input.attrs["disabled"] is True
+
+    def test_an_input_is_not_disabled_by_default(self):
+        assert "disabled" not in FieldInput(TextInputsForm()["text"]).attrs
+
+    def test_a_disabled_input_adds_no_class(self):
+        plain = FieldInput(TextInputsForm()["text"])
+        disabled = FieldInput(TextInputsForm()["text"], disabled=True)
+
+        assert disabled.css_class == plain.css_class
+
+    def test_the_render_draws_the_widget_disabled_without_changing_it(self, parse):
+        form = TextInputsForm()
+
+        drawn = parse(FieldInput(form["text"], disabled=True).render())
+
+        assert drawn.find("input").has_attr("disabled")
+        assert "disabled" not in form.fields["text"].widget.attrs
+        assert form.fields["text"].disabled is False
+
+    def test_the_class_written_for_another_pack_is_not_an_own_class(self):
+        field_input = FieldInput(ClassedForm()["name"])
+
+        assert "uneditable-input" not in field_input.own_classes
+        assert "uneditable-input" not in field_input.css_class.split()
+
+    def test_a_class_of_the_developers_called_active_is_kept(self):
+        field_input = FieldInput(ClassedForm()["name"])
+
+        assert field_input.own_classes == ["active", "wide"]
+        assert "active" in field_input.css_class.split()
