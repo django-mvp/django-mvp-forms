@@ -15,6 +15,7 @@ from crispy_forms.bootstrap import (
     StrictButton,
     Tab,
     TabHolder,
+    UneditableField,
 )
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
@@ -744,6 +745,40 @@ class FieldWithButtonsForm(forms.Form):
         )
         if posts:
             self.helper.add_input(Submit(f"{prefix}-submit", _("Submit")))
+
+
+class UneditableFieldForm(forms.Form):
+    """A form with an uneditable field beside an editable one.
+
+    The account is declared disabled, so a submitted form keeps its initial value
+    and the browser leaving it out is no error. The nickname is optional, so a
+    bound form with nothing in it has no error to show. Its layout is built for
+    each instance, and the form's prefix is in the button name, so two forms on
+    one page repeat no id. The form must be given a prefix.
+    """
+
+    account = forms.CharField(
+        label=_("Account"),
+        initial="AC-1001",
+        disabled=True,
+        help_text=_("Issued once and never changed"),
+    )
+    nickname = forms.CharField(
+        label=_("Nickname"), required=False, help_text=_("Shown to others")
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in the button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(UneditableField("account"), "nickname")
+        self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
 
 
 ORDER_LINE_LIMIT = 10000

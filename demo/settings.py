@@ -129,6 +129,7 @@ EASY_ICONS = {
             "attached-text": "bi bi-currency-dollar",
             "inline-choices": "bi bi-ui-radios",
             "field-with-buttons": "bi bi-search",
+            "uneditable-field": "bi bi-lock",
             "choices": "bi bi-palette",
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",

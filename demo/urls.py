@@ -25,6 +25,7 @@ from demo.views import (
     TableFormsetView,
     TabsView,
     TextInputsView,
+    UneditableFieldView,
 )
 
 urlpatterns = [
@@ -61,6 +62,7 @@ urlpatterns = [
     path(
         "field-with-buttons/", FieldWithButtonsView.as_view(), name="field-with-buttons"
     ),
+    path("uneditable-field/", UneditableFieldView.as_view(), name="uneditable-field"),
     path(
         "decorated-fields/standalone/",
         DecoratedFieldsStandaloneView.as_view(),

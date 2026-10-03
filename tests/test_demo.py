@@ -1539,6 +1539,115 @@ class TestDecoratedFieldsStandaloneFieldWithButtons(FieldWithButtonsPageContract
         assert inline.find(id=layout_field_id(INLINE_PREFIX, "size") + "_error") is None
 
 
+UNEDITABLE_PREFIX = "uneditable"
+UNEDITABLE_POST = {f"{UNEDITABLE_PREFIX}-submit": "Submit"}
+
+
+def uneditable_input(page, name):
+    return page.find(id=layout_field_id(UNEDITABLE_PREFIX, name))
+
+
+class UneditableFieldPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = UNEDITABLE_POST if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    def test_the_uneditable_field_shows_its_value_and_is_disabled(self, page):
+        field = uneditable_input(page, "account")
+
+        assert field["value"]
+        assert field.has_attr("disabled")
+        assert "input" in field["class"]
+
+    def test_the_editable_field_beside_it_is_not_disabled(self, page):
+        field = uneditable_input(page, "nickname")
+
+        assert field is not None
+        assert not field.has_attr("disabled")
+        assert field.find_parent("form") is uneditable_input(
+            page, "account"
+        ).find_parent("form")
+
+    def test_the_form_has_a_form_element_that_posts(self, page):
+        field = uneditable_input(page, "account")
+
+        assert field.find_parent("form")["method"] == "post"
+
+    def test_a_post_comes_back_with_no_error_and_the_value_kept(self, open_page):
+        page = open_page(self.url_name, UNEDITABLE_POST)
+        frame = page.find(id=f"div_{layout_field_id(UNEDITABLE_PREFIX, 'account')}")
+
+        assert (
+            frame.find(id=layout_field_id(UNEDITABLE_PREFIX, "account") + "_error")
+            is None
+        )
+        assert uneditable_input(page, "account")["value"]
+
+    @pytest.mark.parametrize("data", [None, UNEDITABLE_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestUneditableFieldPage(UneditableFieldPageContract):
+    url_name = "uneditable-field"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("uneditable-field")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("decorated-fields-standalone")) is not None
+
+
+class TestDecoratedFieldsStandaloneUneditableField(UneditableFieldPageContract):
+    url_name = "decorated-fields-standalone"
+
+    def test_it_links_back_to_the_uneditable_field_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("uneditable-field")) is not None
+
+    def test_a_post_of_the_uneditable_form_leaves_the_others_unbound(self, open_page):
+        page = open_page(self.url_name, UNEDITABLE_POST)
+
+        attached = attached_frame(page, ATTACHED_PREFIX, "amount")
+        inline = inline_frame(page, INLINE_PREFIX, "size")
+        buttons = buttons_frame(page, BUTTONS_PREFIX, "search")
+
+        assert (
+            attached.find(id=layout_field_id(ATTACHED_PREFIX, "amount") + "_error")
+            is None
+        )
+        assert inline.find(id=layout_field_id(INLINE_PREFIX, "size") + "_error") is None
+        assert (
+            buttons.find(id=layout_field_id(BUTTONS_PREFIX, "search") + "_error")
+            is None
+        )
+
+    @pytest.mark.parametrize(
+        "data",
+        [ATTACHED_POST, INLINE_POST, BUTTONS_POST],
+        ids=["attached", "inline", "buttons"],
+    )
+    def test_a_post_of_another_form_leaves_the_uneditable_form_unbound(
+        self, open_page, data
+    ):
+        page = open_page(self.url_name, data)
+
+        assert uneditable_input(page, "account").has_attr("disabled")
+        assert uneditable_input(page, "account")["value"]
+
+
 CHOICES_OVERRIDE_PREFIX = "override"
 INPUT_ELEMENTS = ["input", "select", "textarea"]
 BUTTON_ELEMENTS = ["input", "button"]

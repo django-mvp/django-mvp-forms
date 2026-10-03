@@ -33,6 +33,7 @@ from demo.forms import (
     TabsForm,
     TextInputsForm,
     TextStatesForm,
+    UneditableFieldForm,
 )
 from mvp_forms.choices import FormChoices, Modifiers
 
@@ -591,8 +592,46 @@ class FieldWithButtonsView(FieldWithButtonsMixin, MVPTemplateView):
     breadcrumbs = [{"text": "Field with buttons"}]
 
 
+class UneditableFieldMixin:
+    """The form the uneditable-field page and the standalone page draw.
+
+    The form has a prefix of its own, so no id repeats on a page.
+    """
+
+    uneditable_prefix = "uneditable"
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post."""
+        kwargs.setdefault(
+            "uneditable_form", UneditableFieldForm(prefix=self.uneditable_prefix)
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form bound to what was posted."""
+        form = UneditableFieldForm(request.POST, prefix=self.uneditable_prefix)
+        return self.render_to_response(self.get_context_data(uneditable_form=form))
+
+
+class UneditableFieldView(UneditableFieldMixin, MVPTemplateView):
+    """An uneditable field beside an editable one, inside the application shell."""
+
+    template_name = "demo/uneditable_field.html"
+    page_title = "Uneditable field"
+    page_subtitle = "A value shown and not changed, beside one that can be"
+    breadcrumbs = [{"text": "Uneditable field"}]
+
+
 class DecoratedFieldsStandaloneView(
-    FieldWithButtonsMixin, InlineChoicesMixin, AttachedTextMixin, TemplateView
+    UneditableFieldMixin,
+    FieldWithButtonsMixin,
+    InlineChoicesMixin,
+    AttachedTextMixin,
+    TemplateView,
 ):
     """The decorated-field forms for a host project without django-mvp or Cotton.
 
@@ -604,6 +643,8 @@ class DecoratedFieldsStandaloneView(
 
     def post(self, request, *args, **kwargs):
         """Bind the form whose submit button was pressed and no other."""
+        if f"{self.uneditable_prefix}-submit" in request.POST:
+            return UneditableFieldMixin.post(self, request, *args, **kwargs)
         if f"{self.buttons_prefix}-submit" in request.POST:
             return FieldWithButtonsMixin.post(self, request, *args, **kwargs)
         if f"{self.inline_prefix}-submit" in request.POST:
