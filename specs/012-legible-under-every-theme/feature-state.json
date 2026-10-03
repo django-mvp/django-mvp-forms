@@ -29,12 +29,28 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-03T22:16:48Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T22:16:48Z",
+      "self_resolved": [
+        "DR-001 (medium) a template's classes must be drawn by a catalogue state, not only known to the reader: applied to plan, T004",
+        "DR-002 (medium) the catalogue draws disabled and read-only forms, a disabled file input, toggle and switch: applied to plan, T002",
+        "DR-003 (medium) every button colour is drawn with every variant: applied to plan, T002",
+        "DR-004 (medium) the dismiss button in a developer-coloured alert is measured: applied to plan, D19, T002",
+        "DR-005 (low) the sweep states a toggle: applied to plan",
+        "DR-006 (low) the catalogue draws without pytest fixtures and the report sets up Django: applied to plan",
+        "DR-007 (low) attached text on its wrapper's fill, a disabled button row, an input with no class: applied to plan, research, T002",
+        "DR-008 (low) per-theme report listing and two assertions that could not fail dropped: applied to plan, T004",
+        "DR-009 (low) the published table is compared by pairing and themes only: applied to plan",
+        "DR-010 (low) the demo test reads the element holding the forms; radios override the shell's chooser: applied to plan, T005"
+      ]
     }
   },
   "stories": [

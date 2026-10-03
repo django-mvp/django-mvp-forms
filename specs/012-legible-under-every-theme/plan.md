@@ -40,7 +40,7 @@ added and nothing under `.github/` changes.
 literals; no leading-underscore names; line length 88; no compatibility aliases; the check needs
 no browser and no network.
 
-**Scale/Scope**: seven pack templates change a class; one new helper package under `tests/`; one
+**Scale/Scope**: eight pack templates change a class; one new helper package under `tests/`; one
 data file; one demo page in two forms; one README section.
 
 ## Constitution Check
@@ -167,10 +167,15 @@ which carries the class and the form state (FR-016).
   inside a `table` gives `base-content` at 60%; an `alert` gives what research R3 says for its
   modifiers; otherwise the ink is inherited. A colour class beside a component class wins.
 - **Surface rules**: `modal-box` gives `base-100`; `bg-base-200` gives `base-200`; an `alert`
-  gives its fill; otherwise the surface is inherited.
+  gives its fill; an input or select wrapper gives its fill to what is inside it; otherwise the
+  surface is inherited.
 - **Alerts.** The pack writes `alert` alone and `alert alert-error alert-soft`. An alert with any
-  other colour modifier carries the developer's own class (spec, *Edge Cases*): its fill and
-  text are not measured, and nothing inside it is.
+  other colour modifier carries the developer's own class (spec, *Edge Cases*): the developer's
+  content in it is not measured. A control the pack writes inside it, the dismiss button, is
+  measured as `button text` on the alert's fill, and is `own`, because its variant is the pack's
+  choice.
+- **An input with no daisyUI class.** An `input`, `select` or `textarea` element the pack draws
+  with no class of its own (issue #70) yields its value text and placeholder and no border.
 - **Inputs** (`input`, `textarea`, `select`, `file-input`, on the element or on the `label` that
   wraps attached text): a `border` pairing of the border ink on the surface outside, unless the
   variant is ghost; a `text` pairing for the value on the fill; a `placeholder` pairing when the
@@ -185,7 +190,7 @@ which carries the class and the form state (FR-016).
 - **Tabs**: a `text` pairing chosen and one not chosen, and a `mark` pairing for the bar.
 - **Accordion**: a `mark` pairing for the arrow.
 - **Disabled.** An element with `disabled` yields its pairings dimmed as research R3 says, with
-  `held` false. Read-only changes nothing (ADR 0013).
+  `held` false, a disabled button included. Read-only changes nothing (ADR 0013).
 - A hidden input yields nothing.
 
 Tests draw small fragments and whole forms and assert the pairings read: by part, ink, surface,
@@ -194,19 +199,30 @@ class.
 
 ### `Catalogue` (`tests/legibility/catalogue.py`)
 
-`Catalogue.states()` is every drawn state: each entry of `STATES` in
-`tests/test_pack/test_independence.py` under its id, plus the sweep of FS-007's choices, which
-draws `EveryInputForm` and a form with every kind of button once per colour, once per variant
-and once per size. `Catalogue.measurements()` reads them all with `Reader` and caches the result.
-It is the same under every theme, because the pack's output is.
+`Catalogue.states()` is every drawn state:
+
+- each entry of `STATES` in `tests/test_pack/test_independence.py` under its id. `STATES` stays
+  where it is; the catalogue reads `values` and `id` from each `pytest.param`;
+- `DisabledInputsForm` and `ReadOnlyInputsForm` from `tests/forms.py`, a disabled file input,
+  and a form with a disabled toggle and a disabled switch;
+- the sweep of FS-007's choices. `EveryInputForm`, with one boolean field stated as a toggle, is
+  drawn once per colour, once per variant and once per size. A form with every kind of button is
+  drawn once per size, once per colour, once per variant and once per colour with each variant,
+  because the colour is the text under every variant but the plain one;
+- an `Alert` with each colour and its dismiss button.
+
+The catalogue draws with `Template` and `Context` itself, so it works outside pytest.
+`Catalogue.measurements()` reads every state with `Reader` and caches the result. It is the same
+under every theme, because the pack's output is.
 
 ### `KnownExceptions` (`tests/legibility/exceptions.py`)
 
 - `KnownExceptions.found(measurements, themes)` gives the held measurements that fall short, as
   a mapping from pairing name to the set of theme names.
 - `KnownExceptions.published(text)` parses the table between the two marker comments in the
-  README and gives the same mapping. A row is the pairing's name, the form states it is seen in
-  and the themes.
+  README and gives the same mapping. A row is the pairing's name, what it is seen on (the kinds
+  of element, such as `input`, `checkbox` or `btn`, never the id of a drawn state) and the
+  themes. Only the name and the themes are compared.
 - `KnownExceptions.table(measurements, themes)` writes that table as markdown, sorted, for the
   report.
 - `KnownExceptions.unlisted(found, published)` and `KnownExceptions.stale(found, published)` are
@@ -216,22 +232,22 @@ It is the same under every theme, because the pack's output is.
 
 `uv run python -m tests.legibility` prints the known-exceptions table as the README should hold
 it, then every disabled control's dimmed pairings with their ratio under each theme (FR-004).
-`uv run python -m tests.legibility --theme retro` prints every measurement under one theme.
+It sets `DJANGO_SETTINGS_MODULE` to `tests.settings` and calls `django.setup()` first.
 
 ## The check (`tests/test_pack/test_legibility.py`)
 
 - `TestEveryTheme`, parametrised by theme: every held measurement meets its figure or is
   published for that theme. The failure lists each one as form state, theme, pairing, ratio and
   figure (FR-008, FR-012).
-- `TestPublishedExceptions`: nothing is published that the check does not find (FR-009); the
-  README's table equals `KnownExceptions.table(...)` row for row (FR-023); every published theme
-  is a shipped one.
+- `TestPublishedExceptions`: nothing is published that the check does not find (FR-009);
+  `KnownExceptions.published(readme)` equals `KnownExceptions.found(...)` (FR-023); every
+  published theme is a shipped one.
 - `TestRepairs`: no measurement that is `own` falls short under any theme (SC-003, scenario 8).
-- `TestCoverage`: every class in `Modifiers.tables`, `FieldInput.components` and
-  `FieldInput.error_modifiers` is drawn by a state in the catalogue; every daisyUI class written
-  as a literal in a pack template is in `Reader.paints` or `Reader.silent` (FR-016); every theme
-  in the pinned file is checked (FR-005); every disabled control in the catalogue has its dimmed
-  pairings measured under every theme and none of them is held (FR-004).
+- `TestCoverage`: every daisyUI class written as a literal in a pack template is written by at
+  least one state in the catalogue, where reading it raises `Uncovered` if the reader has no row
+  (FR-016); every disabled control in the catalogue has its dimmed pairings measured under every
+  theme and none of them is held (FR-004). What this cannot catch is a new template that writes
+  only classes another state already draws.
 - `TestTheCheckCatches`: a fragment drawn with a class removed or changed falls short, and the
   failure names the form state, the theme and the pairing (US2 scenario 2); a list with an entry
   that now passes is reported stale (scenario 3); a theme added to a copy of the pinned text is
@@ -239,7 +255,7 @@ it, then every disabled control's dimmed pairings with their ratio under each th
   (scenario 6).
 
 `TestDistributedFiles` in `test_independence.py` gains one test: no pack template or module
-names a theme, `data-theme` or `theme-controller` (FR-011).
+writes `data-theme` or `theme-controller` (FR-011).
 
 FR-010 is held by the tests FS-001 to FS-008 already have, which this feature may change only by
 the class names it repairs. FR-014 follows from the calculation having no input but the two
@@ -255,6 +271,8 @@ pinned files and the markup.
 | `daisyui/table_inline_formset.html` | `thead` gains `class="text-base-content"`. The row's errors lose `text-error` |
 | `daisyui/layout/tab-pane.html` | the radio: `tab text-base-content` |
 | `daisyui/widgets/clearable_file_input.html` | the clear checkbox's label: `label text-base-content` |
+| `daisyui/widgets/group_options.html` | the label around each option of a radio or checkbox group: `label text-base-content`. A radio draws its ring in the inherited text colour, so this changes that too |
+| `daisyui/layout/alert.html` | the dismiss button, if `TestRepairs` names it: `btn btn-sm`, which passes on every fill |
 | any other template | wherever `TestRepairs` names a `label` or a `text-error` the list above missed |
 
 Every change is to a `class` attribute. No element is added, removed or moved, and no id
@@ -282,13 +300,16 @@ each, one sidebar entry and one icon.
 
 - The chooser is one radio per shipped theme with the class `theme-controller`, drawn from a
   list of names in `demo/forms.py`. Each page loads daisyUI's `themes.css` for the pinned version
-  in its head. No script, no setting (research R2, R9).
+  in its head. No script, no setting (research R2, R9). On the shell page the radios override the
+  shell's own chooser of four themes while one is checked; the page says so.
+- The forms sit in one element with an id, so a test can read them without the shell around
+  them.
 - The page gathers the forms the demo already has for each form state, bound and unbound, and
   the colour, variant and size gallery of the choices page.
 
 Tests in `tests/test_demo.py`: both pages answer; the shell page is in the sidebar; each page
-has one chooser entry per theme in `Themes.shipped()`; the pairings `Reader` reads from each
-page include every pairing in the catalogue (FR-020, FR-021); the standalone page loads neither
+has one chooser entry per theme in `Themes.shipped()`; the pairings `Reader` reads from the
+element holding the forms on each page include every pairing in the catalogue (FR-020, FR-021); the standalone page loads neither
 django-mvp's stylesheet nor a Cotton component.
 
 ## Story order

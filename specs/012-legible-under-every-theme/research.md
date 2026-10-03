@@ -62,7 +62,7 @@ daisyUI 5.7.47 ships 35 themes. `daisyui.css` carries only `light` and `dark`; a
 --color-primary:...;--color-primary-content:...; ... --color-error-content:...;--radius-...}
 ```
 
-Each theme states `color-scheme` (22 light, 13 dark) and twenty colours: `base-100`, `base-200`,
+Each theme states `color-scheme` (21 light, 14 dark) and twenty colours: `base-100`, `base-200`,
 `base-300`, `base-content`, and a colour and its `-content` for `neutral`, `primary`,
 `secondary`, `accent`, `info`, `success`, `warning` and `error`. Every colour is written as
 `oklch(L% C H)`.
@@ -86,7 +86,7 @@ Read from `https://cdn.jsdelivr.net/npm/daisyui@5.7.47/daisyui.css` with nested 
 | Class | What it paints |
 |---|---|
 | `fieldset-legend` | text `content` |
-| `label` | text 60% of the inherited text colour |
+| `label` | text 60% of the inherited text colour. Inside an `input` or `select` wrapper (attached text) the surface behind it is the wrapper's fill |
 | `text-error` | text `error` |
 | `text-base-content` | text `content`. It is in the stylesheet's utilities layer and wins over every component rule below |
 | `link` | text inherited |
@@ -107,6 +107,7 @@ Read from `https://cdn.jsdelivr.net/npm/daisyui@5.7.47/daisyui.css` with nested 
 | `btn-outline`, `btn-dash`, `btn-ghost` | no fill; text in the colour, or `content` when none is stated |
 | `btn-soft` | text in the colour (or `content`); fill is 8% of that mixed into `base-100`. With `btn-neutral` the fill is `color-mix(in oklab, neutral 8%, neutral-content 80%)`, which is 88% opaque |
 | `btn-link` | no fill; text in the colour, or `primary` when none is stated |
+| `btn`, `disabled` | text 20% of `content`; fill 10% of `content`, and none with `btn-ghost` or `btn-link` |
 | `alert` | fill `base-200`; text `content` |
 | `alert-soft` with `alert-error` | text `error`; fill is 8% of `error` mixed into `base-100` |
 | `alert-{colour}` alone | fill in the colour; text in its `-content` |

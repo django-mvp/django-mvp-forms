@@ -266,7 +266,8 @@ text is held and its outline is not, which is WCAG's own reading of a button.
 
 **Chosen:** the pack writes `alert` alone and `alert alert-error alert-soft`. An `Alert` layout
 object given another colour class carries the developer's class, and the spec's edge cases leave
-that to the developer.
+its fill and its text to the developer. The dismiss button inside it is the pack's, so its text
+is measured on the alert's fill.
 
 **ADR:** none. It follows the spec's edge case.
 
@@ -277,3 +278,25 @@ repaired element has that class name updated. Nothing else in it changes. The ma
 drawn state with its `class` attributes stripped is compared before and after, and is identical.
 
 **ADR:** none. It is how this feature shows FR-010.
+
+## D21. The design review's findings
+
+One review of the plan before any code: approve, nothing critical or high. Four medium findings
+and six low ones, all applied to the plan and the tasks.
+
+- The scan of template classes now asks that each is drawn by a state, and not only known to the
+  reader. What it still cannot catch is a new template that writes only classes another state
+  already draws.
+- The catalogue draws the disabled and read-only forms, a disabled file input, a disabled toggle
+  and switch, a toggle in the sweep, and every button colour with every variant.
+- The dismiss button the pack writes inside an alert is measured even when the developer
+  coloured the alert.
+- Attached text is read on its wrapper's fill. An input drawn with no daisyUI class yields its
+  text and no border. A disabled button has a row.
+- The published table is compared by pairing and themes only, and names what a pairing is seen
+  on by the kind of element.
+- The report loses its per-theme listing, and two assertions that could not fail are dropped.
+- The demo page's test reads the element holding the forms. The radios override the shell's own
+  chooser on that page.
+
+**ADR:** none. It is the record of a review.

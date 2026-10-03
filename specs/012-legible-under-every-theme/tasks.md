@@ -94,9 +94,18 @@ Plan, *`Ink`, `Pairing`, `Measurement`*, *`Reader`*, *`Catalogue`*; research R3,
   passed over; a daisyUI class the reader has no row for raises `Uncovered` with the class and
   the form state. `own` is true for text coloured by `label`, `text-error`, a table header, a
   tab and the pack's alert, and false for a border, a placeholder and a button's text.
+- The catalogue's states as the plan lists them: `STATES`, the disabled and read-only forms, a
+  disabled file input, a disabled toggle and switch, the sweep (inputs with a toggle once per
+  colour, variant and size; buttons once per size, colour, variant and each colour with each
+  variant) and an `Alert` in each colour with its dismiss button.
+- Further `TestReader` cases: attached text sits on its wrapper's fill; an input with no daisyUI
+  class yields its value and placeholder and no border; a disabled button yields a dimmed
+  pairing that is not held; the dismiss button in a coloured alert yields `button text` on the
+  alert's fill and is `own`, while the alert's own text yields nothing.
 - Tests, `TestCatalogue`: every id in `STATES` is a state; every class in `Modifiers.tables`,
   `FieldInput.components` and `FieldInput.error_modifiers` is written by at least one state;
-  reading every state raises nothing.
+  every button colour is drawn with every button variant; a disabled input of each kind, a
+  disabled toggle and a read-only input are drawn; reading every state raises nothing.
 
 ### T003 — The check, the repairs and the published list
 
@@ -121,7 +130,7 @@ research R6, R7.
 - Verification, reported and not committed: render every entry of `STATES` at the base commit
   and after this task, strip every `class` attribute from both, and compare. They are identical
   (FR-010, SC-006).
-- `TestDistributedFiles` gains: no pack template or module names a theme, `data-theme` or
+- `TestDistributedFiles` gains: no pack template or module writes `data-theme` or
   `theme-controller` (FR-011).
 - README: the *Themes* section in the public surface, with the table between its two markers
   pasted from `uv run python -m tests.legibility`. CHANGELOG, under Changed: each class the pack
@@ -150,14 +159,13 @@ Plan, *The check*.
   a theme added to a copy of the pinned text is checked and its shortfalls are found (5); a
   class the reader has no row for raises `Uncovered` (6).
 - Tests, `TestCoverage`: every daisyUI class written as a literal in a pack template, read from
-  the template sources, is in `Reader.paints` or `Reader.silent`; every theme in
-  `Themes.shipped()` is a parameter of `TestEveryTheme`; every disabled control in the catalogue
-  yields dimmed pairings, none held, and each has a ratio under every theme (FR-004).
+  the template sources, is written by at least one state in the catalogue; every disabled
+  control in the catalogue yields dimmed pairings, none held, and each has a ratio under every
+  theme (FR-004).
 - These hold on arrival where T001 to T003 are right, so each is proven by a probe: break what
   it guards, see it fail, restore it. Report the probes. Anything a probe shows missing is fixed
   here.
-- The report lists the disabled controls' dimmed pairings per theme, and `--theme` prints every
-  measurement under one theme.
+- The report lists the disabled controls' dimmed pairings per theme.
 - README, in *Themes*: how a contributor runs the report and what to do when the check fails.
 - FR-013 and SC-007: nothing under `.github/` changes. Say so in the report.
 
@@ -185,7 +193,8 @@ Plan, *The demo project*; research R2, R9.
 - Tests, a `ThemesPageContract` with a class for each form of the page: it answers; the shell
   page is in the sidebar; there is one chooser entry per theme in `Themes.shipped()` and no
   other; the list in `demo/forms.py` equals the names in the pinned file; the pairings `Reader`
-  reads from the page include every pairing in the catalogue; the standalone page loads no
+  reads from the element holding the forms, found by id, include every pairing in the
+  catalogue; the standalone page loads no
   stylesheet of django-mvp's and draws no Cotton component; each page links daisyUI's themes
   stylesheet at the pinned version.
 
@@ -197,6 +206,5 @@ Plan, *The demo project*; research R2, R9.
   35 themes of the pinned daisyUI version are covered, what a host project with a theme of its
   own should know, that a disabled control's own content is measured and not held, and where the
   demo page is. The table is already there from T003.
-- Test, in `TestPublishedExceptions`: every theme the README's table names is a shipped theme,
-  and the section names the pinned daisyUI version the themes file carries.
+- Test, in `TestPublishedExceptions`: every theme the README's table names is a shipped theme.
 - CHANGELOG, under Added: the check, the demo page and the README section.
