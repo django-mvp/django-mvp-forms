@@ -16,3 +16,10 @@ Planned the build: research.md, plan.md and tasks.md written. Four stories, nine
 **Verified:** `uv run pytest tests/test_pack/test_structure.py tests/test_pack/test_independence.py -q` -> 63 passed, exit 0. Probe: removing `min-w-0` from `LAYOUT_UTILITIES` failed both new class-test states; restored. `uv run pre-commit run --all-files` clean.
 **Next:** T003, the demo page pair, README and CHANGELOG.
 **Watch:** No test names a layout utility outside `LAYOUT_UTILITIES`; the developer-class tests assert the developer's classes are a strict subset of the drawn ones.
+
+## 2026-10-03T16:39:46Z · Implementer US1 · T003
+
+**Did:** Wrote the page contract tests in tests/test_demo.py first (failed on `NoReverseMatch` for `layout-objects`). Added `LayoutObjectsForm`, `LayoutObjectsMixin`, the two views, the two routes, the sidebar entry and its icon, the Cotton shell page and the standalone page. README gains a Layout objects part and the two new demo pages; CHANGELOG gains one Added line under Unreleased. D16 records why the page, not the helper, draws the form element for now.
+**Verified:** `uv run pytest tests/test_demo.py -q` -> 180 passed, exit 0. Rendered `/layout-objects/` with the test client and read the markup: fieldset, legend, row, two columns, div, ids all prefixed. The README example drawn against the branch gave the fieldset, the legend with the context value, and the div with its id. `uv run pre-commit run --all-files` clean.
+**Next:** Report. Forge re-verifies.
+**Watch:** README status line (`draws text-like fields so far`) still omits layout objects; left alone because the parallel feature edits README too.

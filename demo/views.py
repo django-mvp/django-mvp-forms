@@ -9,7 +9,7 @@ from django.views.generic import TemplateView
 # breadcrumbs the application shell draws around the content.
 from mvp.views import MVPTemplateView
 
-from demo.forms import TextInputsForm
+from demo.forms import LayoutObjectsForm, TextInputsForm
 
 
 class OverviewView(MVPTemplateView):
@@ -109,3 +109,45 @@ class StandaloneTextInputsView(TextInputsMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/text_inputs_standalone.html"
+
+
+class LayoutObjectsMixin:
+    """The forms both layout objects pages draw.
+
+    Each form has a prefix of its own, so no id repeats on the page.
+    """
+
+    submit_prefix = "layout"
+    failing_prefix = "failing"
+    owner = "Ada Lovelace"
+
+    def get_context_data(self, **kwargs):
+        """Add the submittable form, the form that already fails and the owner."""
+        kwargs.setdefault("form", LayoutObjectsForm(prefix=self.submit_prefix))
+        kwargs["failing_form"] = LayoutObjectsForm({}, prefix=self.failing_prefix)
+        kwargs["owner"] = self.owner
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the submittable form unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the submittable form bound to what was posted."""
+        form = LayoutObjectsForm(request.POST, prefix=self.submit_prefix)
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class LayoutObjectsView(LayoutObjectsMixin, MVPTemplateView):
+    """The layout objects, inside the application shell."""
+
+    template_name = "demo/layout_objects.html"
+    page_title = "Layout objects"
+    page_subtitle = "Fields arranged in groups, rows and columns"
+    breadcrumbs = [{"text": "Layout objects"}]
+
+
+class StandaloneLayoutObjectsView(LayoutObjectsMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/layout_objects_standalone.html"

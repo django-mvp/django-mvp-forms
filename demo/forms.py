@@ -1,5 +1,7 @@
 """The forms the demo project draws."""
 
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Column, Div, Fieldset, Layout, Row
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -59,4 +61,37 @@ class TextInputsForm(forms.Form):
         raise ValidationError(
             _("The form as a whole was refused, whatever its fields hold."),
             code="demo_refusal",
+        )
+
+
+class LayoutObjectsForm(forms.Form):
+    """A form whose layout uses every layout object the pack draws so far.
+
+    Its layout is built for each instance, and every id in it carries the
+    form's prefix, so two of these forms on one page repeat no id. The form
+    must be given a prefix.
+    """
+
+    first_name = forms.CharField(label=_("First name"))
+    last_name = forms.CharField(label=_("Last name"))
+    email = forms.EmailField(label=_("Email"))
+    note = forms.CharField(label=_("Note"))
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id."""
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Fieldset(
+                "Details for {{ owner }}",
+                Row(
+                    Column("first_name", css_id=f"{prefix}-first"),
+                    Column("last_name", css_id=f"{prefix}-last"),
+                    css_id=f"{prefix}-row",
+                ),
+                Div("email", "note", css_id=f"{prefix}-more"),
+                css_id=f"{prefix}-details",
+            )
         )

@@ -1,0 +1,36 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Layout objects</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">Layout objects</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and nothing else.
+        <a class="link" href="{% url 'layout-objects' %}">The same page inside the django-mvp shell</a>
+      </p>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Try it</h2>
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {% crispy form %}
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Errors inside the containers</h2>
+          {% crispy failing_form %}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

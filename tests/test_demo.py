@@ -184,3 +184,93 @@ class TestStandaloneTextInputsPage(TextInputsPageContract):
     def test_it_links_back_to_the_shell_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("text-inputs")) is not None
+
+
+LAYOUT_SUBMIT_PREFIX = "layout"
+LAYOUT_FAILING_PREFIX = "failing"
+LAYOUT_ROW_FIELDS = ["first_name", "last_name"]
+
+
+def layout_field_id(prefix, name):
+    return f"id_{prefix}-{name}"
+
+
+class LayoutObjectsPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = {} if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    def test_it_holds_a_fieldset_with_a_legend(self, page):
+        fieldset = page.find("fieldset", id=f"{LAYOUT_SUBMIT_PREFIX}-details")
+        assert fieldset.find("legend") is not None
+
+    @pytest.mark.parametrize("name", LAYOUT_ROW_FIELDS)
+    def test_the_row_holds_its_fields_by_id(self, page, name):
+        row = page.find(id=f"{LAYOUT_SUBMIT_PREFIX}-row")
+        assert row.find("input", id=layout_field_id(LAYOUT_SUBMIT_PREFIX, name))
+
+    def test_the_bound_form_shows_its_errors_without_a_post(self, open_page):
+        page = open_page(self.url_name)
+        fieldset = page.find("fieldset", id=f"{LAYOUT_FAILING_PREFIX}-details")
+        error_id = layout_field_id(LAYOUT_FAILING_PREFIX, "first_name") + "_error"
+        assert fieldset.find(id=error_id) is not None
+
+    def test_the_submittable_form_starts_without_errors(self, open_page):
+        page = open_page(self.url_name)
+        error_id = layout_field_id(LAYOUT_SUBMIT_PREFIX, "first_name") + "_error"
+        assert page.find(id=error_id) is None
+
+    def test_a_post_of_the_empty_form_comes_back_with_a_field_error(self, open_page):
+        page = open_page(self.url_name, {})
+        error_id = layout_field_id(LAYOUT_SUBMIT_PREFIX, "first_name") + "_error"
+        assert page.find(id=error_id) is not None
+
+    def test_every_described_id_exists(self, page):
+        described = page.find_all(attrs={"aria-describedby": True})
+        assert described
+        for element in described:
+            for described_id in element["aria-describedby"].split():
+                assert page.find(id=described_id) is not None
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestLayoutObjectsPage(LayoutObjectsPageContract):
+    url_name = "layout-objects"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("layout-objects")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("layout-objects-standalone")) is not None
+
+
+class TestStandaloneLayoutObjectsPage(LayoutObjectsPageContract):
+    url_name = "layout-objects-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, open_page):
+        page = open_page(self.url_name)
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("layout-objects")) is not None

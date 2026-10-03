@@ -152,3 +152,11 @@ One reviewer read the plan before any code, as a check on fit with the specifica
 - The demo gains a row that holds fields directly with no column, which is the form django-crispy-forms documents, so the maintainer sees it when confirming issue #18.
 
 **ADR:** none — a record of plan edits, nothing a later feature inherits
+
+## D16. The first layout objects page draws its form without the helper's form element
+
+**Decision:** `LayoutObjectsForm` sets `form_tag` off and the demo page writes the `<form>`, its CSRF token and its submit button itself, as the text inputs page does. Both pages build the submittable form and the form that already fails from the one class, each with a prefix.
+
+**Why:** The buttons that belong inside the helper's form element arrive in the next story. Until then the page needs a submit button, and the only place for one is the page. One class with a prefix keeps every id apart and repeats no layout.
+
+**Revisit if:** The buttons story moves the submit button into the layout, at which point the submittable form draws its own `<form>`.

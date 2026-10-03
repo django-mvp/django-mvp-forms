@@ -29,4 +29,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Errors that belong to a form as a whole are drawn once, in an element with `role="alert"`, through `|crispy`, `{% crispy %}` and `|as_crispy_errors`.
 - Through `{% crispy %}` the pack draws the form element and its CSRF token, and honours the `FormHelper` settings for the form element, labels, errors, `label_class` and `field_class`. `help_text_inline` and `error_text_inline` are ignored.
 - A demo page showing every text input in every state, inside the django-mvp shell and as a standalone page styled by daisyUI's CDN install alone.
+- `Fieldset`, `Div`, `Row` and `Column` from django-crispy-forms are drawn by the `daisyui` pack: a daisyUI `fieldset` with its legend, a `div`, and a row that sets its columns side by side on a wide page. Your `css_id`, `css_class` and attributes are kept, and a container given `template=` is drawn with it. A demo page shows them, inside the django-mvp shell and as a standalone page.
 - The package skeleton: an installable app, a demo project and the test suite.

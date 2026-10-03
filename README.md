@@ -131,6 +131,43 @@ With `{% crispy form %}` the pack follows these `FormHelper` settings:
 
 A class, placeholder, input type or row count you give a widget is kept. The pack never changes an input's type, so a date field is a text input unless its widget says otherwise. Fields with any other widget are still drawn in place, without a daisyUI class.
 
+### Layout objects
+
+The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import them from django-crispy-forms as its documentation says. This package adds no layout classes of its own:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Column, Div, Fieldset, Layout, Row
+from django import forms
+
+
+class ProfileForm(forms.Form):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+    email = forms.EmailField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Fieldset(
+                "Data for {{ user.username }}",
+                Row(Column("first_name"), Column("last_name")),
+                Div("email", css_id="contact"),
+                css_class="profile",
+            )
+        )
+```
+
+Build the layout in the form's `__init__`, as above, so each form has its own. django-crispy-forms stores some rendered values back on its layout objects, so one shared between forms or kept on a class is drawn wrongly the second time.
+
+- `Fieldset` is a daisyUI `fieldset` and its legend is a `fieldset-legend`. An empty legend draws no `<legend>`. The legend is rendered as a template against the page's context, as in the example, and markup in a context value is escaped.
+- `Div` is a plain `<div>` around its fields.
+- `Row` is a `<div>` that sets its columns side by side on a wide page and stacks them on a narrow one. It uses Tailwind layout utilities, because daisyUI has no component for a row.
+- `Column` is a `<div>` that takes an equal share of its row. Outside a `Row` it is a plain `<div>`. A `Row` that holds fields directly draws them in order, without columns.
+
+Each of them holds its fields and further layout objects in the order the layout gives, and can be nested to any depth. The `css_id`, `css_class` and attributes you give one are kept on its element, and your classes come after the pack's. Every field inside is still drawn with its own label, help text and errors. An empty container is drawn, and `template=` draws a container with a template of your own.
+
 ## Contributing
 
 Standards for this repository live in
@@ -160,6 +197,12 @@ and a form to submit that comes back with a field error and a form-wide error.
 - `/text-inputs/` is the page inside the django-mvp shell, reached from its sidebar.
 - `/text-inputs/standalone/` is the same page as a host project with neither
   django-mvp nor Cotton would have it, styled by daisyUI's CDN build alone.
+
+Two more pages draw the layout objects, a form to submit and a form that already
+fails, so an error inside a fieldset, a row and a column can be seen:
+
+- `/layout-objects/` is the page inside the django-mvp shell, reached from its sidebar.
+- `/layout-objects/standalone/` is the same page styled by daisyUI's CDN build alone.
 
 ## License
 
