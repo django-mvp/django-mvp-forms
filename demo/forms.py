@@ -1,6 +1,15 @@
 """The forms the demo project draws."""
 
-from crispy_forms.bootstrap import FormActions, StrictButton
+from crispy_forms.bootstrap import (
+    Accordion,
+    AccordionGroup,
+    Alert,
+    FormActions,
+    Modal,
+    StrictButton,
+    Tab,
+    TabHolder,
+)
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
     HTML,
@@ -295,6 +304,184 @@ class RowButtonsForm(forms.Form):
                 Submit(f"{prefix}-submit", _("Submit")), css_id=f"{prefix}-actions"
             ),
         )
+
+
+class TabsForm(forms.Form):
+    """A form whose fields sit behind three tabs.
+
+    The first tab holds an optional field and the second and third hold required
+    ones, so a bound form with nothing in it opens the second tab. Its layout is
+    built for each instance, and every id and button name in it carries the form's
+    prefix, so two of these forms on one page repeat no id. The form must be given
+    a prefix.
+    """
+
+    name = forms.CharField(label=_("Name"), required=False)
+    street = forms.CharField(label=_("Street"))
+    city = forms.CharField(label=_("City"))
+    note = forms.CharField(label=_("Note"))
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in every id and button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            TabHolder(
+                Tab(_("Profile"), "name", css_id=f"{prefix}-profile"),
+                Tab(_("Address"), "street", "city", css_id=f"{prefix}-address"),
+                Tab(_("Notes"), "note", css_id=f"{prefix}-notes"),
+                css_id=f"{prefix}-tabs",
+            ),
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{prefix}-submit", _("Submit")))
+
+
+class AccordionForm(forms.Form):
+    """A form whose fields sit in three accordion groups.
+
+    The first group holds an optional field, the second an optional one and the
+    third a required one, so a bound form with nothing in it opens the third. Its
+    layout is built for each instance, and every id and button name in it carries
+    the form's prefix, so two of these forms on one page repeat no id. The form
+    must be given a prefix.
+    """
+
+    name = forms.CharField(label=_("Name"), required=False)
+    street = forms.CharField(label=_("Street"), required=False)
+    note = forms.CharField(label=_("Note"))
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id and button name."""
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            Accordion(
+                AccordionGroup(_("Profile"), "name", css_id=f"{prefix}-profile"),
+                AccordionGroup(_("Address"), "street", css_id=f"{prefix}-address"),
+                AccordionGroup(_("Notes"), "note", css_id=f"{prefix}-notes"),
+                css_id=f"{prefix}-groups",
+            ),
+        )
+        self.helper.add_input(Submit(f"{prefix}-submit", _("Submit")))
+
+
+class ChosenGroupsForm(forms.Form):
+    """A form whose developer decided which of two groups is open.
+
+    The first group is given ``active=False``, so it starts closed although it is
+    first, and the second is given ``active=True``. The form is drawn without a
+    form element. Every id carries the form's prefix, which it must be given.
+    """
+
+    name = forms.CharField(label=_("Name"), required=False)
+    street = forms.CharField(label=_("Street"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id."""
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Accordion(
+                AccordionGroup(
+                    _("Closed"), "name", active=False, css_id=f"{prefix}-closed"
+                ),
+                AccordionGroup(
+                    _("Open"), "street", active=True, css_id=f"{prefix}-open"
+                ),
+                css_id=f"{prefix}-groups",
+            ),
+        )
+
+
+class ModalForm(forms.Form):
+    """A form whose address fields sit in a modal.
+
+    The name is outside the modal and the street and the city, both required, are
+    inside it, so a bound form with nothing in it comes back with the modal open.
+    The pack draws nothing that opens the modal: the page does, by ``dialog_id``.
+    Its layout is built for each instance, and every id and button name in it
+    carries the form's prefix, so two of these forms on one page repeat no id. The
+    form must be given a prefix.
+    """
+
+    name = forms.CharField(label=_("Name"), required=False)
+    street = forms.CharField(label=_("Street"))
+    city = forms.CharField(label=_("City"))
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id and button name."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            "name",
+            Modal(
+                "street",
+                "city",
+                css_id=self.dialog_id,
+                title=_("Address"),
+                title_id=f"{self.prefix}-title",
+            ),
+        )
+        self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+    @property
+    def dialog_id(self):
+        """The id of the modal's dialog, for the control that opens it."""
+        return f"{self.prefix}-dialog"
+
+
+class AlertForm(forms.Form):
+    """A form with three alerts between its fields.
+
+    One alert can be dismissed, one is permanent and one carries a daisyUI colour
+    modifier. The field is required, so a bound form with nothing in it comes back
+    with the alerts drawn again. Its layout is built for each instance, and every
+    id and button name in it carries the form's prefix, so two of these forms on
+    one page repeat no id. The form must be given a prefix.
+    """
+
+    name = forms.CharField(label=_("Name"))
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id and button name."""
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            Alert(
+                _("A notice the reader can dismiss."),
+                css_id=f"{prefix}-dismissible",
+            ),
+            Alert(
+                _("A notice that stays."),
+                dismiss=False,
+                css_id=f"{prefix}-permanent",
+            ),
+            Alert(
+                _("A notice with a daisyUI colour."),
+                css_class="alert-success",
+                css_id=f"{prefix}-coloured",
+            ),
+            "name",
+        )
+        self.helper.add_input(Submit(f"{prefix}-submit", _("Submit")))
 
 
 ORDER_LINE_LIMIT = 10000

@@ -31,6 +31,26 @@ AppMenu.extend(
             extra_context={"label": "Layout objects", "icon": "layout-objects"},
         ),
         MenuItem(
+            name="tabs",
+            view_name="tabs",
+            extra_context={"label": "Tabs", "icon": "tabs"},
+        ),
+        MenuItem(
+            name="accordion",
+            view_name="accordion",
+            extra_context={"label": "Accordion", "icon": "accordion"},
+        ),
+        MenuItem(
+            name="modal",
+            view_name="modal",
+            extra_context={"label": "Modal", "icon": "modal"},
+        ),
+        MenuItem(
+            name="alert",
+            view_name="alert",
+            extra_context={"label": "Alert", "icon": "alert"},
+        ),
+        MenuItem(
             name="formset-stacked",
             view_name="formset-stacked",
             extra_context={"label": "Formset, stacked", "icon": "formset-stacked"},

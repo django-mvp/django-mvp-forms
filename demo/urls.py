@@ -3,8 +3,12 @@
 from django.urls import include, path
 
 from demo.views import (
+    AccordionView,
+    AlertView,
     ChoiceInputsView,
+    ContainersStandaloneView,
     LayoutObjectsView,
+    ModalView,
     OverviewView,
     StackedFormsetView,
     StandaloneChoiceInputsView,
@@ -13,6 +17,7 @@ from demo.views import (
     StandaloneTableFormsetView,
     StandaloneTextInputsView,
     TableFormsetView,
+    TabsView,
     TextInputsView,
 )
 
@@ -35,6 +40,15 @@ urlpatterns = [
         "layout-objects/standalone/",
         StandaloneLayoutObjectsView.as_view(),
         name="layout-objects-standalone",
+    ),
+    path("tabs/", TabsView.as_view(), name="tabs"),
+    path("accordion/", AccordionView.as_view(), name="accordion"),
+    path("modal/", ModalView.as_view(), name="modal"),
+    path("alert/", AlertView.as_view(), name="alert"),
+    path(
+        "containers/standalone/",
+        ContainersStandaloneView.as_view(),
+        name="containers-standalone",
     ),
     path("formset-stacked/", StackedFormsetView.as_view(), name="formset-stacked"),
     path(

@@ -1,4 +1,4 @@
-# ADR 0015 — In a table, every form is exactly one row
+# ADR 0018 — In a table, every form is exactly one row
 
 **Status:** accepted
 

@@ -1,0 +1,16 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="modal">
+    <c-text>
+      The street and the city are in a modal and both are required. Open the modal
+      with the button, or submit the form empty to see the modal open on its own
+      with the error inside it.
+    </c-text>
+    <c-button type="button" variant="primary" text="Edit the address" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()" />
+    {% crispy modal_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'containers-standalone' %}" text="The same form without django-mvp" />
+  </c-text>
+{% endblock page.content %}

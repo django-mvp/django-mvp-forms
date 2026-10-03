@@ -25,7 +25,7 @@ So the pack adds no setting, no template tag argument and no helper subclass. St
 default because it is what crispy-forms draws when nothing is chosen, and it is the only layout
 available when a formset is drawn without a helper.
 
-**ADR:** docs/adr/0014-a-formsets-layout-is-chosen-with-the-helpers-template.md
+**ADR:** docs/adr/0017-a-formsets-layout-is-chosen-with-the-helpers-template.md
 
 ## D3: In the table, labels are column headings and every input is still named
 
@@ -109,7 +109,7 @@ element with `aria-describedby`. The form's hidden fields sit in the same cell.
 **Why**: FR-005 and FR-011 together. **Revisit if**: the walkthrough finds the first cell too
 narrow to read an error in.
 
-**ADR:** docs/adr/0015-in-a-table-every-form-is-exactly-one-row.md
+**ADR:** docs/adr/0018-in-a-table-every-form-is-exactly-one-row.md
 
 
 ## D11: A formset with no forms draws no table
@@ -122,7 +122,7 @@ are still drawn, so the page submits as a valid empty formset.
 **Why**: the simplest thing that meets US1.6 in the table. **Revisit if**: django-mvp's row
 adding needs the headings on the page before the first row exists (#13).
 
-**ADR:** docs/adr/0015-in-a-table-every-form-is-exactly-one-row.md
+**ADR:** docs/adr/0018-in-a-table-every-form-is-exactly-one-row.md
 
 
 ## D12: A formset's media is drawn once

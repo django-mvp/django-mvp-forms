@@ -1,4 +1,4 @@
-# ADR 0014 — A formset's layout is chosen with the helper's template
+# ADR 0017 — A formset's layout is chosen with the helper's template
 
 **Status:** accepted
 
