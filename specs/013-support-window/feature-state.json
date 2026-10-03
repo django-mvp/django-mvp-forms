@@ -121,18 +121,78 @@
       "tasks": [
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestReadme",
+              "tests/test_support_window.py::TestLockfile",
+              "tests/test_support_window.py::TestInstalled"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -x -q (exit 0, 44 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "support_window.py:293",
+              "support_window.py:353",
+              "support_window.py:377",
+              "support_window.py:529"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestClassNames",
+              "tests/test_support_window.py::TestClassLists",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_independence.py::TestModifierTables"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py tests/test_pack/test_independence.py -q -n auto --dist loadscope (exit 0, 287 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run python -c, calling write_class_list for 5.0 and for 5.7 (exit 0, by hand, network)"
+            ],
+            "code": [
+              "support_window.py:563",
+              "support_window.py:578",
+              "support_window.py:591",
+              "support_window.py:604",
+              "support_window.py:626",
+              "support_window.py:646",
+              "tests/conftest.py:138"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestRunSuite",
+              "tests/test_support_window.py::TestMain"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -x -q (exit 0, 67 passed)",
+              "uv run python support_window.py test 5.2 2.7 (exit 0, 3964 passed on Django 5.2.17)",
+              "SUPPORT_WINDOW_DJANGO=5.2 uv run pytest tests/test_smoke.py (exit 4, usage error, no test run)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "support_window.py:417",
+              "support_window.py:688",
+              "tests/conftest.py:31",
+              "tests/conftest.py:36"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
