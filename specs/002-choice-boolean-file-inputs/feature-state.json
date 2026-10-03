@@ -2,7 +2,7 @@
   "feature": "002-choice-boolean-file-inputs",
   "branch": "002-choice-boolean-file-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "QUEUED",
@@ -23,6 +23,11 @@
       "state": "IMPLEMENT",
       "at": "2026-10-03T16:35:15Z",
       "note": "plan gate open; design review applied"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T17:10:50Z",
+      "note": "all seven stories accepted"
     }
   ],
   "gates": {
@@ -323,7 +328,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {
