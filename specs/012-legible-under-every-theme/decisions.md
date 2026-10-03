@@ -39,8 +39,7 @@ for text, for large text and for the parts of a control that identify it and sho
 **Why defensible:** it is the standard a host project is most likely to be held to itself, and it
 is a calculation, which the constitution's test rules need.
 
-**ADR:** expected. It is the bar every later input and layout object is held to, and someone will
-ask why this level.
+**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D3. The themes are those built into the daisyUI version the suite pins
 
@@ -83,8 +82,7 @@ names the rest precisely enough to be reported to daisyUI.
 text are the likely places. If it is, the maintainer is told at the build with the numbers, and
 the choice between living with it and loosening Article XIV is his.
 
-**ADR:** expected. It settles what the pack does when daisyUI itself falls short, and it will come
-up again with every new component.
+**ADR:** docs/adr/0031-a-shortfall-in-daisyuis-own-drawing-is-published-never-patched.md
 
 ## D5. A disabled control's own content is measured and not held to the figure
 
@@ -100,7 +98,7 @@ check (FR-004).
 - Leaving it out. The issue names disabled fields, and a theme where a disabled value all but
   vanishes is worth seeing in a report.
 
-**ADR:** none. It is a detail of the standard in D2 and can be noted there.
+**ADR:** none. It is a detail of the standard and is noted in docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D6. Pairings are measured on the page background and on surfaces the pack draws
 
@@ -110,7 +108,7 @@ itself draws there, such as an accordion group, a modal's box, an alert or a tab
 **Rejected:** measuring against every surface colour a theme has. The host project decides where a
 form sits, and a form on a coloured card is the host project's to check.
 
-**ADR:** none.
+**ADR:** none. It restates FR-002 and nothing downstream inherits more than the spec says
 
 ## D7. Colour and variant choices are form states
 
@@ -121,7 +119,7 @@ it, and every drawing from FS-008, is checked (FR-001).
 contrast and that this roadmap item does. Shortfalls here are almost certainly daisyUI's own and
 fall under D4.
 
-**ADR:** none.
+**ADR:** none. It restates FR-001; FS-007's own records cover the choices
 
 ## D8. The check is a calculation inside the existing test command
 
@@ -136,7 +134,7 @@ the documented test command, gives the same result every run, and needs nothing 
   planning finds the check cannot run inside the existing jobs, everything else is built and the
   workflow part is filed as a separate request for the maintainer.
 
-**ADR:** expected, with D2, once planning has settled how the colours are read.
+**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D9. New inputs join the check when they are built
 
@@ -144,7 +142,7 @@ the documented test command, gives the same result every run, and needs nothing 
 (FR-016). Rating, range, floating labels and joined inputs (#86, #87) are specified alongside this
 feature and do not depend on it, so whichever is built second adds those states.
 
-**ADR:** none.
+**ADR:** none. It restates FR-016, and how it is held is in docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D10. Focus, hover and pressed are not form states
 
@@ -153,7 +151,7 @@ moment are daisyUI's, are the same for every component, and the pack writes noth
 
 **Revisit if:** a host project reports a focus ring it cannot see under a shipped theme.
 
-**ADR:** none.
+**ADR:** none. It is a boundary of the spec, with its own revisit line here
 
 ## D11. Open questions on the tracker are measured as built
 
@@ -161,14 +159,14 @@ moment are daisyUI's, are the same for every component, and the pack writes noth
 today, and whatever they decide comes under the check through D9. #16 is not settled either: a fix
 uses only what ADR 0003 already allows.
 
-**ADR:** none.
+**ADR:** none. It defers to open issues and decides nothing
 
 ## D12. No sketch before the build
 
 **Chosen:** the feature goes to the build without a prototype. The demo page gathers forms the
 demo project already shows and adds a theme chooser, and the README section is text.
 
-**ADR:** none.
+**ADR:** none. It is about how this feature was built, not about the pack
 
 ## D13. The contrast maths is written in the test suite
 
@@ -182,7 +180,7 @@ sibling branches are also changing.
 
 **Revisit if:** the shared bundle gains a colour library.
 
-**ADR:** pending. Judged at convergence with D2 and D8.
+**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D14. The check reads the drawn markup through a table of what each class paints
 
@@ -201,7 +199,7 @@ no row is an error.
 **Risk:** the table is a reading of daisyUI's stylesheet for one version. It was checked against
 a browser for 5.7.47. When the pinned version moves, the rows are re-read with it.
 
-**ADR:** pending. Judged at convergence with D2 and D8.
+**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D15. A repair changes the colour of text the pack writes, and never repaints a control
 
@@ -229,7 +227,7 @@ colour modifier that would have the pack state a colour for the developer. FR-00
 scenario 8's test, "under every shipped theme", and says a colour or variant modifier is the
 developer's to state.
 
-**ADR:** pending. Judged at convergence.
+**ADR:** docs/adr/0032-text-the-pack-writes-is-drawn-in-the-themes-content-colour.md
 
 ## D16. The README table is the list of known exceptions
 
@@ -240,7 +238,7 @@ one row. The check parses the README's table and compares it with what it measur
 **Rejected:** a list in the test suite and a copy in the README. Two lists need a test that they
 agree, and the README copy is the one that goes stale.
 
-**ADR:** pending. Judged at convergence with D4.
+**ADR:** docs/adr/0031-a-shortfall-in-daisyuis-own-drawing-is-published-never-patched.md
 
 ## D17. Nothing the pack draws is large text
 
@@ -260,7 +258,7 @@ the arrow of a select and of an accordion group; the bar under the chosen tab. E
 a person the control is there or what state it is in. A button is identified by its text, so its
 text is held and its outline is not, which is WCAG's own reading of a button.
 
-**ADR:** pending. Judged at convergence with D2.
+**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
 
 ## D19. An alert whose colour the developer chose is not measured
 
@@ -312,6 +310,8 @@ gives 178, which is what research R4's vector and the browser give.
 
 **Revisit if:** the vectors in research R4 are regenerated from a different engine.
 
+**ADR:** docs/adr/0030-legibility-is-calculated-from-the-themes-published-colours.md
+
 ## D23. A radio's ring and dot are the text ink, and only they are `own`
 
 **Decision:** a radio's ring and dot are read in the inherited text ink, and are `own` when
@@ -324,6 +324,8 @@ of it.
 
 **Revisit if:** the pack draws a radio outside a label.
 
+**ADR:** docs/adr/0032-text-the-pack-writes-is-drawn-in-the-themes-content-colour.md
+
 ## D24. A measurement names its element by an `Element`, not a string
 
 **Decision:** `Measurement.element` is an `Element` (tag, id, classes, kind) whose `str` is a
@@ -333,6 +335,8 @@ selector for a failure message, and whose `kind` is what the README's *Seen on* 
 or `btn`, and never by a drawn state, and the reader is the one that knows the kind.
 
 **Revisit if:** the table stops naming what a pairing is seen on.
+
+**ADR:** none. A detail sealed inside the test helpers
 
 ## D25. The failure text is built by `KnownExceptions.failures`
 
@@ -347,6 +351,8 @@ field. The one method is the message a contributor reads.
 
 **Revisit if:** the failure is reported another way than text.
 
+**ADR:** none. A detail sealed inside the test helpers
+
 ## D26. The Themes page draws its forms apart, and four demo forms exist for it
 
 **Decision:** every form on the Themes page is drawn with no form element and no token, so
@@ -360,3 +366,5 @@ reads the page against the catalogue and names what is missing, so these are wha
 empty that list.
 
 **Revisit if:** the catalogue gains a state the page does not draw; the test says which.
+
+**ADR:** none. Local to the demo project, which is not distributed
