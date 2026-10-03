@@ -232,8 +232,24 @@
       "tasks": [
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_hidden_inputs.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_hidden_inputs.py -x",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/errors.html:1"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

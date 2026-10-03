@@ -43,3 +43,10 @@ Did: FileInput and its subclass ClearableFileInput join FieldInput.components as
 Verified: RED first: 29 of 140 new/related cases failed for the missing class and template. Focused: `uv run pytest tests/test_pack/test_file_inputs.py tests/test_templatetags/test_daisyui.py -q` 140 passed. Probes by mutation: removing the required guard, the checkbox class, the label's for, and escaping each failed 2 tests. Full: `uv run pytest -n auto --dist loadscope` 566 passed; `uv run pre-commit run --all-files`, `uv run mypy`, `uv build` exit 0; Django 5.2 run of tests/test_pack and tests/test_templatetags 417 passed.
 Next: US5 (T006), hidden fields and the form-wide alert.
 Watch: tests/forms.py's OwnTemplateFileInput names django's file.html, not the clearable template, since naming the clearable one is the class's own template and so is covered. The demo project has no file input yet; T007/T008 own that.
+
+## 2026-10-03T16:59:28Z · Implementer US5 · T006
+
+Did: errors.html now draws from {% with errors=form.get_context.errors %}, so a hidden field's errors join the form-wide alert as Django's own "(Hidden field %(name)s) %(error)s". No tag needed; the planned fallback was not required. Added tests/test_pack/test_hidden_inputs.py (27 cases through |crispy, {% crispy %}, |as_crispy_errors) and the hidden-input forms in tests/forms.py. README and CHANGELOG describe hidden inputs and their errors.
+Verified: tests/test_pack/test_hidden_inputs.py 27 passed; 12 of them fail with errors.html reverted (the alert cases), so they hold the change. Full: uv run pytest -n auto --dist loadscope 593 passed; pre-commit all passed; mypy clean; uv build ok; Django 5.2 run of the new file 27 passed.
+Next: US6 (T007).
+Watch: form.get_context also feeds the alert for any future form whose get_context is overridden; a hidden field's errors rely on Django 5.2+ get_context behaviour, confirmed on 5.2 and the installed version.
