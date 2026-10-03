@@ -242,8 +242,32 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_independence.py::TestWithoutDjangoMvp",
+              "tests/test_pack/test_independence.py::TestDistributedFiles"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_independence.py",
+              "uv run pytest",
+              "uv run pre-commit run --all-files",
+              "uv build",
+              "/home/sam/.openclaw/workspaces/forge/engineering-org/kit/forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-001-text-inputs --base origin/main"
+            ],
+            "code": [
+              "tests/conftest.py:37",
+              "tests/conftest.py:44",
+              "tests/conftest.py:52",
+              "tests/test_pack/test_independence.py:135",
+              "tests/test_pack/test_independence.py:153",
+              "tests/test_pack/test_independence.py:179",
+              "README.md:42"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
