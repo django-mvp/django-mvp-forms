@@ -27,9 +27,10 @@ the inner one is used.
 
 **The check.** `tests/test_pack/test_template_list.py` reads the README's table and the package
 and fails on a distributed template that is not listed, a listed path that is not distributed, a
-name a template reads that its row leaves out, and a route listed wrongly.
+name a template reads that its row leaves out, and a route listed wrongly. It refuses a template
+that uses a tag it cannot read, so that a new tag is taught to the check before it is used.
 `tests/test_pack/test_replacements.py` replaces every distributed template in turn with a copy
-of itself and requires every form the suite draws to come out the same.
+of itself and requires every form in the suite's list of states to come out the same.
 
 **Changing a listed template.** A path, or a name a template is handed, changes only through one
 minor version in which the old one still works. A release that moves a template or stops using

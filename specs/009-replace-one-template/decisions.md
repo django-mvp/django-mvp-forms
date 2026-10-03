@@ -325,3 +325,21 @@ from the one the `template_surface` fixture returns.
 flag them as it flagged D20.
 
 **ADR:** none — a record of a flag that is expected and harmless.
+
+## D22. The code review's findings, all fixed
+
+**Chosen:** one medium finding and four low, each fixed in code or in the tests, and three of
+the review's notes applied to the README and the decision record.
+
+- The check passed over the arguments of a tag it did not know. It now refuses such a tag, so a
+  template that starts using one fails the check until the check is taught to read it.
+- A withdrawn path the package still distributes, and a path with two rows, are each reported.
+- The test that pinned the withdrawn paths to none is removed.
+- App order is tested for a page template as well as for a widget template.
+
+Left as they are, with the reason: the deprecation warning is attributed to the pack's code and
+not the host project's, because the pack cannot know which of the host project's files holds the
+template; a replacement that fails to compile raises the error an `{% include %}` of it would.
+
+**ADR:** none — corrections found in review; the record of the template surface carries the one
+that outlives them.

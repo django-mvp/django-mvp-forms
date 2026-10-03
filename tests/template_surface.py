@@ -6,10 +6,15 @@ from pathlib import Path
 from typing import Any
 
 from django.template import Variable, engines
+from django.template.base import TextNode
 from django.template.defaulttags import (
+    AutoEscapeControlNode,
+    CommentNode,
     CsrfTokenNode,
     ForNode,
     IfNode,
+    LoadNode,
+    SpacelessNode,
     TemplateLiteral,
     WithNode,
 )
@@ -25,6 +30,22 @@ BACKTICKED = re.compile(r"`([^`]*)`")
 TABLE_COLUMNS = 4
 RENDERER_ROUTE = "FORM_RENDERER"
 ENGINE_ROUTE = "TEMPLATES"
+# Tags that read no name themselves. What they hold is read.
+READS_NOTHING = (
+    TextNode,
+    CommentNode,
+    LoadNode,
+    SpacelessNode,
+    AutoEscapeControlNode,
+)
+
+
+class UnreadTag(Exception):
+    """A template uses a tag whose arguments ``TemplateSurface`` cannot read.
+
+    Teach ``TemplateSurface.read_nodes`` the tag before a template uses it, so
+    that a name it reads cannot go unlisted.
+    """
 
 
 class TemplateSurface:
@@ -77,6 +98,10 @@ class TemplateSurface:
 
         Returns:
             The names the template is handed.
+
+        Raises:
+            UnreadTag: The template uses a tag this class has not been taught to
+                read.
         """
         names: set[str] = set()
         nodelist = engines["django"].from_string(source).template.nodelist
@@ -143,13 +168,21 @@ class TemplateSurface:
         Returns:
             Tuples naming the kind and the path, and the name for a name left out
             of a row: ``("not listed", path)``, ``("not distributed", path)``,
-            ``("withdrawn not listed", path)``, ``("name not listed", path, name)``
-            and ``("wrong route", path)``.
+            ``("listed twice", path)``, ``("withdrawn not listed", path)``,
+            ``("withdrawn still distributed", path)``,
+            ``("name not listed", path, name)`` and ``("wrong route", path)``.
         """
+        listed = [row["path"] for row in self.listed()]
         rows = {row["path"]: row for row in self.listed()}
         distributed = self.distributed()
         route = self.renderer_route()
         found: list[tuple[str, ...]] = []
+        found.extend(("listed twice", path) for path in rows if listed.count(path) > 1)
+        found.extend(
+            ("withdrawn still distributed", path)
+            for path in distributed
+            if path in self.withdrawn
+        )
         found.extend(("not listed", path) for path in distributed if path not in rows)
         found.extend(
             ("not distributed", path)
@@ -204,6 +237,9 @@ class TemplateSurface:
             nodelist: The nodes of a template or of one tag's body.
             bound: The names the template has set by this point.
             names: The set the names read are added to.
+
+        Raises:
+            UnreadTag: A node is of a tag this method does not know.
         """
         for node in nodelist:
             if isinstance(node, ForNode):
@@ -235,9 +271,14 @@ class TemplateSurface:
                     names.add("csrf_token")
             elif hasattr(node, "filter_expression"):
                 self.read_expression(node.filter_expression, bound, names)
-            else:
+                # {% translate "..." as name %} sets a name for what follows.
+                if getattr(node, "asvar", None):
+                    bound = bound | {node.asvar}
+            elif isinstance(node, READS_NOTHING):
                 for attribute in node.child_nodelists:
                     self.read_nodes(getattr(node, attribute, None) or [], bound, names)
+            else:
+                raise UnreadTag(type(node).__name__)
 
     def read_condition(
         self, condition: Any, bound: frozenset[str], names: set[str]

@@ -1,6 +1,8 @@
 """The check that keeps the README's template list and the pack's templates true."""
 
-from tests.template_surface import TemplateSurface
+import pytest
+
+from tests.template_surface import TemplateSurface, UnreadTag
 
 TABLE_HEAD = "| Template | Draws | Handed | Found by |\n|---|---|---|---|\n"
 
@@ -97,6 +99,19 @@ class TestNamesRead:
 
     def test_a_tag_that_holds_nodes_has_them_read(self, names_read):
         assert names_read("{% spaceless %}{{ a }}{% endspaceless %}") == {"a"}
+
+    @pytest.mark.parametrize(
+        "source",
+        [
+            "{% firstof a b %}",
+            "{% url 'overview' a %}",
+            "{% regroup a by b as c %}{{ c }}",
+            "{% filter default:a %}{{ b }}{% endfilter %}",
+        ],
+    )
+    def test_a_tag_it_cannot_read_is_refused(self, names_read, source):
+        with pytest.raises(UnreadTag):
+            names_read(source)
 
 
 class TestDistributed:
@@ -258,6 +273,20 @@ class TestDisagreements:
         )
 
         assert surface.disagreements() == []
+
+    def test_a_withdrawn_path_the_package_still_distributes_is_reported(
+        self, template_surface
+    ):
+        surface = self.surface_with_withdrawn(
+            template_surface, [self.ROW], [self.ROW[0]]
+        )
+
+        assert surface.disagreements() == [("withdrawn still distributed", self.ROW[0])]
+
+    def test_a_path_with_two_rows_is_reported(self, template_surface):
+        surface = template_surface(readme(self.ROW, self.ROW), self.TEMPLATES)
+
+        assert surface.disagreements() == [("listed twice", self.ROW[0])]
 
     def test_a_listed_path_that_is_not_withdrawn_is_reported_as_not_distributed(
         self, template_surface

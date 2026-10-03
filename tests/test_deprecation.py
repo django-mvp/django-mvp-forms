@@ -20,11 +20,6 @@ def something_there(path):
     return object()
 
 
-class TestWithdrawn:
-    def test_no_path_is_withdrawn_as_shipped(self):
-        assert WITHDRAWN == {}
-
-
 class TestHostTemplate:
     def test_a_template_at_the_old_path_is_returned_and_warned_about(self, monkeypatch):
         monkeypatch.setitem(WITHDRAWN, OLD, NEW)

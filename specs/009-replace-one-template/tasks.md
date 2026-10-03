@@ -142,3 +142,46 @@ Plan, *Changing a listed template later*, *The README, the CHANGELOG and the glo
   table with what replaces it; the markup and the classes inside a pack template are not part
   of the promise.
 - CHANGELOG: the entry from T004 gains what happens when a listed template changes.
+
+---
+
+## After the code review
+
+One review of the whole diff: approve, one medium finding and four low. Each is fixed as a task
+on the story it corrects.
+
+### T007 — The check refuses a tag it cannot read (US2)
+
+**Files**: `tests/template_surface.py`, `tests/test_pack/test_template_surface.py`
+
+`names_read` passed over the arguments of a tag it did not know, so a name read there could go
+unlisted. It now raises `UnreadTag` for any tag it has not been taught, and a name set by
+`{% translate … as name %}` is the template's own.
+
+### T008 — A withdrawn path the package still distributes is reported (US3)
+
+**Files**: `tests/template_surface.py`, `tests/test_pack/test_template_surface.py`
+
+### T009 — A path with two rows is reported (US2)
+
+**Files**: `tests/template_surface.py`, `tests/test_pack/test_template_surface.py`
+
+### T010 — No test pins the withdrawn paths to none (US3)
+
+**Files**: `tests/test_deprecation.py`
+
+The test would have failed at the first release that withdraws a path. The list check already
+fails on a withdrawn path with no row.
+
+### T011 — App order is tested for a page template too (US1)
+
+**Files**: `tests/host_app/templates/daisyui/required_marker.html` (new),
+`tests/test_pack/test_replacements.py`
+
+### T012 — The README's example path, the multifield row and what the tags read (US2)
+
+**Files**: `README.md`, `docs/adr/0029-every-pack-template-is-public.md`
+
+The example said `templates/daisyui/…` inside a `DIRS` directory, which Django does not find.
+The row for `daisyui/multifield.html` names `field`, which it passes on. One paragraph says the
+pack's tags read the page's context and that the list does not cover it.

@@ -814,7 +814,7 @@ An app listed after `mvp_forms` is never used. Once django-crispy-forms has load
 
 #### A required marker of your own
 
-The pack draws a required field's marker with `daisyui/required_marker.html`, a star that assistive technology skips. To draw an abbreviation with a translated title instead, put this file at `templates/daisyui/required_marker.html` in a directory listed in your `TEMPLATES` setting's `DIRS`:
+The pack draws a required field's marker with `daisyui/required_marker.html`, a star that assistive technology skips. To draw an abbreviation with a translated title instead, put this file at `daisyui/required_marker.html` in a directory listed in your `TEMPLATES` setting's `DIRS`:
 
 ```django
 {% load i18n %}{% if field.field.required %} <abbr title="{% translate "required" %}">*</abbr>{% endif %}
@@ -825,6 +825,8 @@ Every required field in the project now carries that marker, in its label, in a 
 #### The templates
 
 Each row is one template the pack distributes. `Draws` says what it draws. `Handed` lists the names the pack's own template reads from outside itself, which a replacement can read too: a value Django or django-crispy-forms supplies is listed by its name alone, and `drawn` and `table`, which the pack supplies, are listed one level down, by the part read, as `drawn.is_group`. A template that sets `drawn` or `table` itself is not handed it and lists none, and `daisyui/frame.html` and `daisyui/field_body.html` are handed `drawn` by whichever template includes them. `Found by` is the route above.
+
+The pack's own template tags also read the page's context, which no template shows. For example `daisyui_field` reads `form_show_labels`, `form_show_errors` and `wrapper_class`, and `daisyui_layout_object` reads `form` and `template_pack`. A replacement that calls a tag gets what the pack's template gets. The list covers what is written in a template and not what the tags read.
 
 | Template | Draws | Handed | Found by |
 |---|---|---|---|
@@ -837,7 +839,7 @@ Each row is one template the pack distributes. `Draws` says what it draws. `Hand
 | `daisyui/frame.html` | The frame around a field's widget: a daisyUI fieldset holding the label, or the legend of a group, with the required marker, and then the field's body, and a hidden field is its input alone. | `drawn.group_description`, `drawn.is_group`, `drawn.is_single_checkbox`, `drawn.label_text`, `drawn.show_labels`, `drawn.wrapper_class`, `field`, `label_class` | `TEMPLATES` |
 | `daisyui/field_body.html` | What sits inside the frame: the widget, which may be a single checkbox in its own label, have text attached or have buttons joined to it, then the field's help text and its errors. | `buttons`, `drawn.appended`, `drawn.attached_class`, `drawn.has_attached_text`, `drawn.is_joined`, `drawn.is_single_checkbox`, `drawn.join`, `drawn.prepended`, `drawn.render`, `drawn.show_labels`, `field`, `field_class`, `form_show_errors`, `label_class` | `TEMPLATES` |
 | `daisyui/required_marker.html` | The marker a required field's label and a required column's heading carry, and nothing for an optional field. | `field` | `TEMPLATES` |
-| `daisyui/multifield.html` | A field inside a `MultiField`, drawn as any field is by including `daisyui/field.html`. |  | `TEMPLATES` |
+| `daisyui/multifield.html` | A field inside a `MultiField`, drawn as any field is: it reads nothing itself and passes `field` on to `daisyui/field.html`. | `field` | `TEMPLATES` |
 | `daisyui/layout/fieldset.html` | A `Fieldset`: a daisyUI fieldset with its legend, holding its fields. | `fields`, `fieldset`, `legend` | `TEMPLATES` |
 | `daisyui/layout/div.html` | A `Div`: a `<div>` holding its fields, or the pane of a tab when it is one. | `div`, `fields` | `TEMPLATES` |
 | `daisyui/layout/row.html` | A `Row`: a `<div>` that lays its fields out along a row. | `div`, `fields` | `TEMPLATES` |

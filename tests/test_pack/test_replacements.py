@@ -13,7 +13,11 @@ from django.conf import settings
 from django.template import Context, Template
 from django.test import override_settings
 
-from tests.conftest import FORM_RENDERER_THAT_READS_TEMPLATES, PACK_TEMPLATES
+from tests.conftest import (
+    FORM_RENDERER_THAT_READS_TEMPLATES,
+    PACK_TEMPLATES,
+    clear_crispy_template_caches,
+)
 from tests.forms import (
     CheckboxForm,
     DateSelectsForm,
@@ -364,6 +368,32 @@ class TestWhereAReplacementIsFound:
             soup = draw(FILTER, form=DateSelectsForm())
 
         assert found(soup, "host-select-date")
+
+    def test_a_page_template_in_an_app_listed_after_the_pack_is_not_used(
+        self, draw, settings
+    ):
+        apps = [*settings.INSTALLED_APPS, "tests.host_app"]
+
+        with override_settings(INSTALLED_APPS=apps):
+            clear_crispy_template_caches()
+            soup = draw(FILTER, form=TextInputsForm())
+        clear_crispy_template_caches()
+
+        assert soup.find_all("input")
+        assert not found(soup, "host-marker")
+
+    def test_a_page_template_in_an_app_listed_before_the_pack_is_used(
+        self, draw, settings
+    ):
+        apps = list(settings.INSTALLED_APPS)
+        apps.insert(apps.index("mvp_forms"), "tests.host_app")
+
+        with override_settings(INSTALLED_APPS=apps):
+            clear_crispy_template_caches()
+            soup = draw(FILTER, form=TextInputsForm())
+        clear_crispy_template_caches()
+
+        assert found(soup, "host-marker")
 
     def test_a_widget_replacement_in_dirs_is_not_used_by_the_default_renderer(
         self, draw, settings, tmp_path
