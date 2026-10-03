@@ -2,7 +2,7 @@
   "feature": "002-choice-boolean-file-inputs",
   "branch": "002-choice-boolean-file-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -43,6 +43,11 @@
       "state": "REVIEW",
       "at": "2026-10-03T17:15:29Z",
       "note": "converged on main with FS-003: ADRs 0011 to 0013, full verify green, S5 gate green"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T17:29:08Z",
+      "note": "review approved, four low findings fixed; walkthrough laid out"
     }
   ],
   "gates": {
@@ -84,6 +89,11 @@
         "COR-003 (low) demo error state shows an error on every visible kind, and the test reads each: fixed, T010",
         "COR-004 (low) comment above FieldInput.width split onto the attributes it describes: fixed, T009"
       ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T17:29:10Z",
+      "self_resolved": []
     }
   },
   "stories": [
