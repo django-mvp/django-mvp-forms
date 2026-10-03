@@ -51,3 +51,10 @@ Did: Alert drawn by daisyui/layout/alert.html: a div with role="alert", the aler
 Verified: `uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope` 809 passed; `uv run pre-commit run --all-files` clean. Red observed first (TemplateDoesNotExist for daisyui/layout/alert.html). Probe: renaming alert-block in UPSTREAM_ONLY_CLASSES fails the block test and the filter test. The README Alert example run against this branch draws the alert between the two fields.
 Next: T008, the alert demo page.
 Watch: Alert.css_class is a plain str, so block=True sets it on the instance, never on the class.
+
+## 2026-10-03T18:03:30Z · Implementer US4 · T008
+
+Did: the alert page on the shell (route alert, demo/alert.html on Cotton components, menu entry and the icon name alert in EASY_ICONS) and its form added to the standalone page. AlertForm in demo/forms.py: a dismissible alert, a permanent one (dismiss=False) and one with alert-success between the fields, a required name field, novalidate, the prefix in every id and the submit name. AlertMixin in demo/views.py; ContainersStandaloneView adds an alert-submit branch before the modal one and still falls back to the tabs form. The standalone page now holds a tabs element, details, a dialog and an alert. README's Demo section lists /alert/ and the standalone page's four forms; CHANGELOG has the entry.
+Verified: `uv run pytest tests/test_demo.py -n auto --dist loadscope` 652 passed (23 new, red first on NoReverseMatch); `uv run pre-commit run --all-files` clean. Probe: removing the standalone alert branch fails the bind-only-that-form test.
+Next: full verify, then the report.
+Watch: the alert form posts so that a bound render shows the alerts drawn again; its text is plain English in the demo, as the other pages' prose is.
