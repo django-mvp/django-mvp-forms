@@ -178,13 +178,51 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_deprecation.py::TestHostTemplate",
+              "tests/test_deprecation.py::TestWithdrawn",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiHostTemplate",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiHostTemplateInAWidget"
+            ],
+            "commands": [
+              "uv run pytest tests/test_deprecation.py tests/test_templatetags/test_daisyui.py tests/test_pack/test_replacements.py -q -n auto --dist loadscope",
+              "uv run mypy"
+            ],
+            "code": [
+              "mvp_forms/deprecation.py:10",
+              "mvp_forms/deprecation.py:13",
+              "mvp_forms/templatetags/daisyui.py:801",
+              "tests/test_deprecation.py:28",
+              "tests/test_templatetags/test_daisyui.py:1813",
+              "tests/test_templatetags/test_daisyui.py:1881"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_template_surface.py::TestDisagreements",
+              "tests/test_pack/test_template_list.py::TestTheListMatchesThePackage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_template_surface.py tests/test_pack/test_template_list.py tests/test_pack/test_documented_examples.py -q"
+            ],
+            "code": [
+              "tests/template_surface.py:44",
+              "tests/template_surface.py:137",
+              "tests/test_pack/test_template_surface.py:240",
+              "tests/test_pack/test_template_list.py:13",
+              "README.md:874"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }

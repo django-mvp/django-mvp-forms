@@ -312,3 +312,18 @@ imported for the worked example's test, which is added at the end of the file. N
 or assertion is changed.
 
 **ADR:** none — a record of a flag that was read and found harmless.
+
+## D21. Existing test modules were extended, none of their tests changed
+
+**Chosen:** the brief names three existing test modules for additions: `tests/test_templatetags/test_daisyui.py`
+(imports for `warnings`, `override_settings`, `WITHDRAWN` and `clear_crispy_template_caches`, and two
+new classes and a widget at the end), `tests/test_pack/test_template_surface.py` (an import and three
+tests added to `TestDisagreements`) and `tests/test_pack/test_template_list.py` (the real registry passed
+as the third argument of `TemplateSurface`). No existing test body or assertion is edited, and
+`tests/conftest.py` is not touched, so the cases that need withdrawn paths build a `TemplateSurface`
+from the one the `template_surface` fixture returns.
+
+**Why:** the brief asks for exactly these additions, and the check on changes to existing tests may
+flag them as it flagged D20.
+
+**ADR:** none — a record of a flag that is expected and harmless.

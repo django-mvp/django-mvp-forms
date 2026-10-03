@@ -43,3 +43,17 @@ Did: moved the helper tests to tests/test_pack/test_template_surface.py, because
 Verified: uv run pytest tests/test_pack/test_template_surface.py -q, 27 passed.
 Next: the full forge verify, then the report.
 Watch: Forge may prefer the module beside the helper, which needs tests/test_template_surface.py declared in non-mirror-paths.
+
+## 2026-10-03T22:40:38Z · Implementer US3 · T005
+
+Did: mvp_forms/deprecation.py (WITHDRAWN, empty, and host_template), the tag daisyui_host_template in mvp_forms/templatetags/daisyui.py, tests/test_deprecation.py, TestDaisyuiHostTemplate and TestDaisyuiHostTemplateInAWidget in tests/test_templatetags/test_daisyui.py, and three templates under tests/host_app/templates/host_app/ for the default-renderer case. No pack template changed.
+Verified: uv run pytest tests/test_deprecation.py tests/test_templatetags/test_daisyui.py tests/test_pack/test_replacements.py -q -n auto --dist loadscope, 417 passed; uv run mypy clean; pre-commit run --all-files passed. Probes, not committed: the tag asking django.template.loader.get_template instead of the engine drawing the template made the DIRS case under the default renderer fail and nothing else; all 75 entries of STATES drawn at 121464d and at the tip hash the same.
+Next: T006, the withdrawn paths in TemplateSurface, the README part and the CHANGELOG.
+Watch: Context.template is typed as optional, so the tag casts it; a tag only runs while a template renders.
+
+## 2026-10-03T22:40:39Z · Implementer US3 · T006
+
+Did: TemplateSurface takes the withdrawn paths as a third argument and reports one the table does not list as "withdrawn not listed", and does not report a listed withdrawn path as not distributed; three tests in TestDisagreements; test_template_list.py passes mvp_forms.deprecation.WITHDRAWN; the README part "#### When a listed template changes" after the table; the CHANGELOG entry extended. decisions.md D21 records the additions to existing test modules.
+Verified: uv run pytest tests/test_pack/test_template_surface.py tests/test_pack/test_template_list.py tests/test_pack/test_documented_examples.py -q, 119 passed; pre-commit run --all-files passed. Probes, not committed: dropping the withdrawn exemption failed the not-distributed case, and dropping the withdrawn-not-listed report failed the other.
+Next: the full forge verify, then the ledger and the report.
+Watch: the README does not name the tag or mvp_forms.deprecation; the docs step of forge verify decides whether that stands.
