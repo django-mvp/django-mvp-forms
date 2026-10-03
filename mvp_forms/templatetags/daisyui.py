@@ -1,6 +1,7 @@
-"""The pack's input tag, which draws a widget as a daisyUI component."""
+"""The pack's tags and filters, which draw inputs and buttons as daisyUI."""
 
 from html import unescape
+from typing import Any
 
 from django import forms, template
 from django.forms.boundfield import BoundField
@@ -9,6 +10,10 @@ from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
 
 register = template.Library()
+
+# Class names django-crispy-forms writes for other template packs. daisyUI does
+# not define them, so a button or a group is drawn without them.
+UPSTREAM_ONLY_CLASSES = frozenset({"btn-inverse", "ctrlHolder", "blockLabel", "error"})
 
 
 class FieldInput:
@@ -185,3 +190,59 @@ def daisyui_input(context: Context, field: BoundField) -> SafeString:
         show_labels=context.get("form_show_labels") != False,  # noqa: E712
         show_errors=context.get("form_show_errors") != False,  # noqa: E712
     ).render()
+
+
+@register.filter
+def daisyui_classes(value: str | None) -> str:
+    """Return a class string without the names written for other template packs.
+
+    Repeated names are dropped and the order of the rest is kept.
+
+    Args:
+        value: The class string django-crispy-forms wrote, or None.
+
+    Returns:
+        The class string, empty when nothing is left.
+    """
+    names = (
+        name for name in (value or "").split() if name not in UPSTREAM_ONLY_CLASSES
+    )
+    return " ".join(dict.fromkeys(names))
+
+
+@register.filter
+def daisyui_shown(inputs: list | None) -> list:
+    """Return the inputs a form helper holds that a person can see.
+
+    Args:
+        inputs: The objects added to the helper with ``add_input``, or None.
+
+    Returns:
+        Every one of them that is not a hidden input, in the order given.
+    """
+    return [
+        item for item in inputs or [] if getattr(item, "input_type", "") != "hidden"
+    ]
+
+
+@register.simple_tag(takes_context=True)
+def daisyui_layout_object(context: Context, layout_object: Any) -> SafeString:
+    """Draw a layout object held by a form helper as a layout would draw it.
+
+    django-crispy-forms never renders what ``add_input`` was given, so an
+    object that draws itself, such as a ``StrictButton``, is rendered here.
+
+    Args:
+        context: The template context, read for the form and the pack's name,
+            both of which the crispy tag supplies.
+        layout_object: The object added to the helper.
+
+    Returns:
+        The object's markup.
+    """
+    with context.push():
+        return SafeString(
+            layout_object.render(
+                context.get("form"), context, template_pack=context["template_pack"]
+            )
+        )

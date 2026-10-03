@@ -1,0 +1,435 @@
+{
+  "feature": "003-structure-and-button-layout-objects",
+  "branch": "003-structure-and-button-layout-objects",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T15:07:27Z",
+      "note": "specification approved by delegated review at commit 24617188024d1c22dea09d13483ccd06dc298073, on pull request #24; epic #7, stories #48, #49, #50, #51"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T16:27:17Z",
+      "note": "plan.md, research.md, tasks.md: 4 stories, 9 tasks; continues on pull request #24"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T16:27:40Z",
+      "note": "one reviewer, three lenses, on plan.md, tasks.md and research.md at 74acfa1"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T16:33:36Z",
+      "note": "plan gate open; design review applied at 2a144e4"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T16:58:32Z",
+      "note": "all four stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T16:59:49Z",
+      "note": "one reviewer, correctness and spec compliance, on the feature diff"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T17:08:33Z",
+      "note": "review approved, six findings fixed; walkthrough laid out"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T15:07:27Z",
+      "self_resolved": [
+        "approved at commit 24617188024d1c22dea09d13483ccd06dc298073 (forge spec-gate, pull request #24); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T16:33:27Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
+      "at": "2026-10-03T16:33:27Z",
+      "self_resolved": [
+        "DR-001 (medium) the documented-examples test names the source of each example and the one repair allowed: applied to plan and T009",
+        "DR-002 (low) each demo form builds its own layout and prefixes every id and button name: applied to plan, T003, T006",
+        "DR-003 (low) a layout object is built per form instance and never shared: applied to research R7, carried into every brief",
+        "DR-004 (low) tests/settings.py already lists the test template directory: edit dropped from T001",
+        "DR-005 (low) ButtonHolder accepts no attributes: applied to plan and T005",
+        "DR-006 (low) the demo gains a row holding fields with no column: applied to plan and T006"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T17:08:13Z",
+      "self_resolved": [
+        "CR-001 (medium) a StrictButton added to the helper is drawn by its own render: fixed, T010",
+        "CR-002 (low) a helper-added value is drawn as written and template= is layout only: kept as django-crispy-forms has it, README states both, T010",
+        "CR-003 (low) hidden inputs drawn outside the buttons' container, no container without a button: fixed, T010",
+        "CR-004 (low) the four dropped class names are named in the README: fixed, T010",
+        "CR-005 (low) every documented example names an element drawn once: fixed, T011",
+        "CR-006 (low) the demo's legend and note are wrapped for translation: fixed, T011"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T17:09:32Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 48,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_structure.py::TestDiv",
+              "tests/test_pack/test_structure.py::TestFieldset"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_structure.py -q (16 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/div.html:1",
+              "mvp_forms/templates/daisyui/layout/fieldset.html:1",
+              "tests/forms.py:99",
+              "tests/test_pack/test_structure.py:14",
+              "tests/test_pack/test_structure.py:68"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_structure.py::TestRowAndColumn",
+              "tests/test_pack/test_structure.py::TestNesting",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_structure.py tests/test_pack/test_independence.py -q (63 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/row.html:1",
+              "mvp_forms/templates/daisyui/layout/column.html:1",
+              "tests/test_pack/test_structure.py:150",
+              "tests/test_pack/test_structure.py:224",
+              "tests/test_pack/test_independence.py:35"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestLayoutObjectsPage",
+              "tests/test_demo.py::TestStandaloneLayoutObjectsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -q (180 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)"
+            ],
+            "code": [
+              "demo/forms.py:67",
+              "demo/views.py:114",
+              "demo/views.py:141",
+              "demo/views.py:150",
+              "demo/urls.py:21",
+              "demo/menus.py:20",
+              "demo/settings.py:123",
+              "demo/templates/demo/layout_objects.html:1",
+              "demo/templates/demo/layout_objects_standalone.html:1",
+              "README.md:134",
+              "CHANGELOG.md:32"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 49,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiClasses",
+              "tests/test_pack/test_buttons.py::TestBaseInputs"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags/test_daisyui.py::TestDaisyuiClasses tests/test_pack/test_buttons.py -q (29 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:15",
+              "mvp_forms/templatetags/daisyui.py:195",
+              "mvp_forms/templates/daisyui/layout/baseinput.html:1",
+              "tests/test_pack/test_buttons.py:18"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_buttons.py::TestStrictButton",
+              "tests/test_pack/test_buttons.py::TestHolders",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack -q (176 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/button.html:1",
+              "mvp_forms/templates/daisyui/layout/buttonholder.html:1",
+              "mvp_forms/templates/daisyui/layout/formactions.html:1",
+              "tests/test_pack/test_buttons.py:83",
+              "tests/test_pack/test_buttons.py:143",
+              "tests/test_pack/test_independence.py:46"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_buttons.py::TestHelperButtons",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_demo.py::TestLayoutObjectsPage",
+              "tests/test_demo.py::TestStandaloneLayoutObjectsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_buttons.py tests/test_demo.py tests/test_templatetags/test_daisyui.py -q (340 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)",
+              "forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-003-structure-and-button-layout-objects --base origin/main (conformance, docs, lint, typecheck, test, build all passed, exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/inputs.html:1",
+              "mvp_forms/templates/daisyui/whole_uni_form.html:4",
+              "demo/forms.py:126",
+              "demo/forms.py:144",
+              "demo/views.py:131",
+              "demo/templates/demo/layout_objects.html:1",
+              "demo/templates/demo/layout_objects_standalone.html:1",
+              "tests/test_pack/test_buttons.py:204",
+              "README.md:171",
+              "CHANGELOG.md:33"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_buttons.py::TestHelperButtons",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiShown"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:213",
+              "mvp_forms/templates/daisyui/inputs.html:1"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P3",
+      "issue": 50,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_raw_content.py::TestHTML",
+              "tests/test_pack/test_raw_content.py::TestHidden",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_demo.py::TestLayoutObjectsPage",
+              "tests/test_demo.py::TestStandaloneLayoutObjectsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_raw_content.py tests/test_pack/test_buttons.py (63 passed, exit 0)",
+              "uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope (439 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)",
+              "forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-003-structure-and-button-layout-objects --base origin/main (conformance, docs, lint, typecheck, test, build all passed, exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/baseinput.html:2",
+              "tests/test_pack/test_raw_content.py:20",
+              "tests/test_pack/test_raw_content.py:63",
+              "tests/test_pack/test_independence.py:96",
+              "tests/test_pack/test_independence.py:109",
+              "demo/forms.py:115",
+              "demo/forms.py:119",
+              "tests/test_demo.py:250",
+              "README.md:190",
+              "CHANGELOG.md:34"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P3",
+      "issue": 51,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_structure.py::TestMultiField",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_demo.py::TestLayoutObjectsPage",
+              "tests/test_demo.py::TestStandaloneLayoutObjectsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_structure.py::TestMultiField (16 passed, exit 0)",
+              "uv run pytest tests/test_pack/test_independence.py tests/test_demo.py (291 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)",
+              "forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-003-structure-and-button-layout-objects --base origin/main (conformance, docs, lint, typecheck, test, build all passed, exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/multifield.html:1",
+              "mvp_forms/templates/daisyui/multifield.html:1",
+              "tests/test_pack/test_structure.py:281",
+              "tests/test_pack/test_independence.py:122",
+              "tests/test_pack/test_independence.py:223",
+              "demo/forms.py:118",
+              "tests/test_demo.py:291",
+              "README.md:168",
+              "CHANGELOG.md:35"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples",
+              "tests/test_demo.py::TestLayoutObjectsPage",
+              "tests/test_demo.py::TestStandaloneLayoutObjectsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_documented_examples.py (42 passed, exit 0)",
+              "uv run pytest tests/test_demo.py -k every_layout_object (52 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)",
+              "forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-003-structure-and-button-layout-objects --base origin/main (conformance, docs, lint, typecheck, test, build all passed, exit 0)"
+            ],
+            "code": [
+              "tests/test_pack/test_documented_examples.py:125",
+              "tests/forms.py:123",
+              "tests/test_demo.py:197",
+              "tests/test_demo.py:231",
+              "README.md:5",
+              "README.md:168"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "tests/test_pack/test_documented_examples.py:150",
+              "demo/forms.py:111"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 11.64,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 24,
+    "draft": true
+  }
+}

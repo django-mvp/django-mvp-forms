@@ -5,15 +5,31 @@ import re
 from pathlib import Path
 
 import pytest
+from crispy_forms.bootstrap import FormActions, StrictButton
 from crispy_forms.helper import FormHelper
+from crispy_forms.layout import (
+    HTML,
+    Button,
+    ButtonHolder,
+    Column,
+    Div,
+    Fieldset,
+    Hidden,
+    MultiField,
+    Reset,
+    Row,
+    Submit,
+)
 from django.apps import apps
 
 import mvp_forms
 from tests.forms import (
+    ButtonedForm,
     DeveloperAttrsForm,
     FieldAndFormWideErrorsForm,
     FormWideErrorsForm,
     HelpedForm,
+    StructureForm,
     TextInputsForm,
     UncoveredWidgetsForm,
 )
@@ -30,7 +46,18 @@ FORM_CLASS = "supplied-by-form-class"
 HELPER_CLASSES = {LABEL_CLASS, FIELD_CLASS, FORM_CLASS}
 # Tailwind utilities the pack writes where daisyUI has no class for the job.
 # Each is named here so that adding one is a reviewed change.
-LAYOUT_UTILITIES = {"w-full"}
+LAYOUT_UTILITIES = {
+    "w-full",
+    "flex",
+    "flex-col",
+    "gap-4",
+    "md:flex-row",
+    "flex-1",
+    "min-w-0",
+    "flex-wrap",
+    "gap-2",
+    "mt-4",
+}
 
 
 def helped(form, **settings):
@@ -58,6 +85,70 @@ def imported_modules(path):
         elif isinstance(node, ast.ImportFrom) and node.level == 0:
             modules.add(node.module.split(".")[0])
     return modules
+
+
+def structured(data=None):
+    return StructureForm(
+        data,
+        layout=(
+            Fieldset(
+                "Account",
+                Div(Row(Column("first"), Column("second")), css_id="box"),
+                HTML("<p>Written for {{ who }}</p>"),
+                "third",
+            ),
+            "fourth",
+        ),
+    )
+
+
+def buttoned(data=None):
+    return StructureForm(
+        data,
+        layout=(
+            "first",
+            Hidden("step", "two"),
+            FormActions(
+                Submit("save", "Save"),
+                Reset("clear", "Clear"),
+                Button("help", "Help"),
+                StrictButton("More", css_id="more"),
+            ),
+            ButtonHolder(Submit("again", "Again")),
+        ),
+    )
+
+
+def everything(data=None):
+    return StructureForm(
+        data,
+        layout=(
+            Fieldset(
+                "Account",
+                Div(Row(Column("first"), Column("second")), css_id="box"),
+                HTML("<p>Written for {{ who }}</p>"),
+            ),
+            MultiField("Contact", "third", css_id="contact"),
+            Hidden("step", "two"),
+            FormActions(
+                Submit("save", "Save"),
+                Reset("clear", "Clear"),
+                Button("help", "Help"),
+                StrictButton("More", css_id="more"),
+            ),
+            ButtonHolder(Submit("again", "Again")),
+        ),
+    )
+
+
+def helper_buttons():
+    return ButtonedForm(
+        buttons=(
+            Submit("save", "Save"),
+            Reset("clear", "Clear"),
+            Button("help", "Help"),
+        )
+    )
 
 
 NOTHING = frozenset()
@@ -119,6 +210,32 @@ STATES = [
         lambda: helped(FormWideErrorsForm({}), form_error_title="Mind this"),
         NOTHING,
         id="tag with a title",
+    ),
+    pytest.param(
+        "{% crispy form %}", structured, NOTHING, id="structural layout objects"
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: structured({}),
+        NOTHING,
+        id="structural layout objects, invalid",
+    ),
+    pytest.param("{% crispy form %}", everything, NOTHING, id="all thirteen objects"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: everything({}),
+        NOTHING,
+        id="all thirteen objects, invalid",
+    ),
+    pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: buttoned({}),
+        NOTHING,
+        id="buttons in a layout, invalid",
+    ),
+    pytest.param(
+        "{% crispy form %}", helper_buttons, NOTHING, id="buttons added to the helper"
     ),
     pytest.param(
         "{% crispy form %}",

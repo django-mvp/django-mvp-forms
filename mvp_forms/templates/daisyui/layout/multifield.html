@@ -1,0 +1,7 @@
+{% load daisyui %}
+{% with group_class=multifield.css_class|daisyui_classes legend_class=multifield.label_class|daisyui_classes %}
+<fieldset{% if multifield.css_id %} id="{{ multifield.css_id }}"{% endif %} class="fieldset{% if group_class %} {{ group_class }}{% endif %}"{{ multifield.flat_attrs }}>
+  {% if multifield.label_html %}<legend class="fieldset-legend{% if legend_class %} {{ legend_class }}{% endif %}">{{ multifield.label_html|safe }}</legend>{% endif %}
+  {{ fields_output }}
+</fieldset>
+{% endwith %}

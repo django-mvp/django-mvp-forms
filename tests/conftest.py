@@ -11,6 +11,8 @@ from django.template import Context, Template
 from django.test import override_settings
 from django.urls import reverse
 
+from tests.forms import StructureForm
+
 
 @pytest.fixture
 def overview_page(client, db):
@@ -43,6 +45,15 @@ def draw(parse):
         return parse(template.render(Context({"csrf_token": "token", **context})))
 
     return draw_template
+
+
+@pytest.fixture
+def draw_layout(draw):
+    def draw_layout_objects(*layout, bound=False, **context):
+        form = StructureForm({} if bound else None, layout=layout)
+        return draw("{% crispy form %}", form=form, **context)
+
+    return draw_layout_objects
 
 
 @pytest.fixture(scope="session")
