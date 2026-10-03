@@ -194,6 +194,23 @@ HELPER_PREFIX = "helper"
 SMALL_PREFIX = "small"
 
 
+ELEMENTS_OF_THE_THIRTEEN_OBJECTS = {
+    "Fieldset": {"id": f"{LAYOUT_SUBMIT_PREFIX}-details"},
+    "Div": {"id": f"{LAYOUT_SUBMIT_PREFIX}-more"},
+    "Row": {"id": f"{LAYOUT_SUBMIT_PREFIX}-row"},
+    "Column": {"id": f"{LAYOUT_SUBMIT_PREFIX}-first"},
+    "MultiField": {"id": f"{LAYOUT_SUBMIT_PREFIX}-contact"},
+    "HTML": {"id": f"{LAYOUT_SUBMIT_PREFIX}-aside"},
+    "Submit": {"name": f"{LAYOUT_SUBMIT_PREFIX}-submit"},
+    "Reset": {"name": f"{LAYOUT_SUBMIT_PREFIX}-reset"},
+    "Button": {"name": f"{LAYOUT_SUBMIT_PREFIX}-button"},
+    "StrictButton": {"id": f"{LAYOUT_SUBMIT_PREFIX}-strict"},
+    "Hidden": {"name": f"{LAYOUT_SUBMIT_PREFIX}-step"},
+    "ButtonHolder": {"id": f"{SMALL_PREFIX}-actions"},
+    "FormActions": {"id": f"{LAYOUT_SUBMIT_PREFIX}-actions"},
+}
+
+
 def layout_field_id(prefix, name):
     return f"id_{prefix}-{name}"
 
@@ -205,6 +222,14 @@ class LayoutObjectsPageContract:
     def page(self, request, open_page):
         data = {} if request.param == "post" else None
         return open_page(self.url_name, data)
+
+    @pytest.mark.parametrize(
+        "attrs",
+        ELEMENTS_OF_THE_THIRTEEN_OBJECTS.values(),
+        ids=ELEMENTS_OF_THE_THIRTEEN_OBJECTS,
+    )
+    def test_every_layout_object_is_drawn_once(self, page, attrs):
+        assert len(page.find_all(attrs=attrs)) == 1
 
     def test_it_holds_a_fieldset_with_a_legend(self, page):
         fieldset = page.find("fieldset", id=f"{LAYOUT_SUBMIT_PREFIX}-details")

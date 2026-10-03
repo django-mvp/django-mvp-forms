@@ -118,3 +118,15 @@ class ButtonedForm(forms.Form):
         self.helper = FormHelper(self)
         for button in buttons:
             self.helper.add_input(button)
+
+
+class DocumentedExamplesForm(forms.Form):
+    form_field = forms.CharField()
+    form_field_1 = forms.CharField()
+    form_field_2 = forms.CharField()
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
