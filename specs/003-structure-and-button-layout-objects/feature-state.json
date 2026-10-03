@@ -2,7 +2,7 @@
   "feature": "003-structure-and-button-layout-objects",
   "branch": "003-structure-and-button-layout-objects",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-03T16:59:49Z",
       "note": "one reviewer, correctness and spec compliance, on the feature diff"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T17:08:33Z",
+      "note": "review approved, six findings fixed; walkthrough laid out"
     }
   ],
   "gates": {
@@ -74,6 +79,11 @@
         "CR-005 (low) every documented example names an element drawn once: fixed, T011",
         "CR-006 (low) the demo's legend and note are wrapped for translation: fixed, T011"
       ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T17:09:32Z",
+      "self_resolved": []
     }
   },
   "stories": [
