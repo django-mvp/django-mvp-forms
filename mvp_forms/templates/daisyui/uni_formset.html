@@ -1,0 +1,8 @@
+{% if include_media %}{{ formset.media }}{% endif %}
+{% for field in formset.management_form %}{{ field }}{% endfor %}
+{% for form in formset %}
+  <div>
+    {% if not forloop.first %}<div class="divider"></div>{% endif %}
+    {% include "daisyui/display_form.html" with include_media=False %}
+  </div>
+{% endfor %}

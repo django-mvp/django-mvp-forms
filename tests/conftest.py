@@ -7,11 +7,20 @@ import pytest
 from bs4 import BeautifulSoup
 from crispy_forms.templatetags import crispy_forms_filters, crispy_forms_tags
 from crispy_forms.utils import default_field_template
+from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
+from django.http import QueryDict
 from django.template import Context, Template
 from django.test import override_settings
 from django.urls import reverse
 
-from tests.forms import StructureForm
+from tests.forms import (
+    GroupFormSet,
+    LineFormSet,
+    NoLinesFormSet,
+    PermissionFormSet,
+    StructureForm,
+)
 
 
 @pytest.fixture
@@ -54,6 +63,53 @@ def draw_layout(draw):
         return draw("{% crispy form %}", form=form, **context)
 
     return draw_layout_objects
+
+
+@pytest.fixture
+def posted():
+    def read_inputs(soup):
+        data = QueryDict(mutable=True)
+        for tag in soup.find_all(["input", "select", "textarea"]):
+            name = tag.get("name")
+            if not name or tag.has_attr("disabled"):
+                continue
+            if tag.name == "textarea":
+                data.appendlist(name, tag.get_text())
+            elif tag.name == "select":
+                chosen = tag.find_all("option", selected=True) or tag("option")[:1]
+                for option in chosen:
+                    data.appendlist(name, option.get("value", option.get_text()))
+            elif tag.get("type") in {"checkbox", "radio"}:
+                if tag.has_attr("checked"):
+                    data.appendlist(name, tag.get("value", "on"))
+            elif tag.get("type") not in {"submit", "reset", "button", "image"}:
+                data.appendlist(name, tag.get("value", ""))
+        return data
+
+    return read_inputs
+
+
+@pytest.fixture
+def plain_formset():
+    return lambda data=None: LineFormSet(data)
+
+
+@pytest.fixture
+def no_forms_formset():
+    return lambda data=None: NoLinesFormSet(data)
+
+
+@pytest.fixture
+def model_formset(db):
+    Group.objects.create(name="Editors")
+    Group.objects.create(name="Readers")
+    return lambda data=None: GroupFormSet(data, queryset=Group.objects.order_by("pk"))
+
+
+@pytest.fixture
+def inline_formset(db):
+    owner = ContentType.objects.get_for_model(Group)
+    return lambda data=None: PermissionFormSet(data, instance=owner)
 
 
 @pytest.fixture(scope="session")

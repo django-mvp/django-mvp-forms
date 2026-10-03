@@ -33,6 +33,7 @@ from tests.forms import (
     FilesForm,
     FormWideErrorsForm,
     HelpedForm,
+    LineFormSet,
     RadioGroupsForm,
     SelectsForm,
     StructureForm,
@@ -297,6 +298,7 @@ STATES = [
         NOTHING,
         id="tag without errors",
     ),
+    pytest.param("{% crispy form %}", LineFormSet, NOTHING, id="stacked formset"),
 ]
 
 

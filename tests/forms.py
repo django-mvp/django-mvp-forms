@@ -5,8 +5,15 @@ import datetime
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.forms import widgets
+from django.forms import (
+    formset_factory,
+    inlineformset_factory,
+    modelformset_factory,
+    widgets,
+)
 
 
 class TextInputsForm(forms.Form):
@@ -403,3 +410,29 @@ class DocumentedExamplesForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(*layout)
+
+
+class LineForm(forms.Form):
+    name = forms.CharField(help_text="What it is")
+    quantity = forms.IntegerField(required=False)
+    ref = forms.CharField(required=False, widget=forms.HiddenInput)
+
+
+LineFormSet = formset_factory(LineForm, extra=3)
+NoLinesFormSet = formset_factory(LineForm, extra=0)
+MediaFormSet = formset_factory(MediaForm, extra=2)
+GroupFormSet = modelformset_factory(Group, fields=["name"], extra=1)
+PermissionFormSet = inlineformset_factory(
+    ContentType, Permission, fields=["name", "codename"], extra=1
+)
+
+
+def formset_helper(*layout, buttons=(), **settings):
+    helper = FormHelper()
+    for name, value in settings.items():
+        setattr(helper, name, value)
+    if layout:
+        helper.layout = Layout(*layout)
+    for button in buttons:
+        helper.add_input(button)
+    return helper
