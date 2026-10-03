@@ -151,4 +151,5 @@ non-mirror-paths = [
   "tests/test_smoke.py",
   "tests/test_demo.py",
   "tests/test_pack/",
+  "tests/test_legibility/",
 ]
