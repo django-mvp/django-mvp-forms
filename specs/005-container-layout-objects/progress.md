@@ -37,3 +37,10 @@ Did: Modal drawn by daisyui/layout/modal.html: a dialog.modal with the developer
 Verified: `uv run pytest tests/test_pack -n auto --dist loadscope` 675 passed; `uv run pre-commit run --all-files` clean. Red observed first (TemplateDoesNotExist for daisyui/layout/modal.html). Probe: removing the open clause fails 4 tests.
 Next: T006, the modal demo page.
 Watch: a test attribute named title collides with Modal's own title argument, so the developer-attrs test uses lang.
+
+## 2026-10-03T17:56:53Z · Implementer US3 · T006
+
+Did: the modal page on the shell (route modal, demo/modal.html on Cotton components with a c-button that calls showModal() on the dialog's id, menu entry, the icon name modal in EASY_ICONS) and its form added to the standalone page with a plain button for the same job. ModalForm in demo/forms.py: name outside the modal, street and city required inside it, novalidate, the prefix in every id and the submit name, `dialog_id` the one source of the dialog's id. ModalMixin in demo/views.py; ContainersStandaloneView adds a modal-submit branch before the accordion one and still falls back to the tabs form. README's Demo section lists /modal/ and the standalone page's three forms; CHANGELOG entry.
+Verified: `uv run pytest tests/test_demo.py -n auto --dist loadscope` 629 passed (20 new, red first on NoReverseMatch); `uv run pre-commit run --all-files` clean. Probe: removing the standalone modal branch fails 3 tests.
+Next: full verify, then the report.
+Watch: the standalone page's open control is a plain button with daisyUI's btn classes because that page has no Cotton.
