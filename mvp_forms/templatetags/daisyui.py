@@ -40,10 +40,12 @@ class FieldInput:
 
     @property
     def css_class(self) -> str:
-        """The widget's own classes followed by the component, each once."""
+        """The widget's own classes, the component, then its error modifier."""
         classes = self.field.field.widget.attrs.get("class", "").split()
         if self.component:
             classes.append(self.component)
+            if self.field.errors:
+                classes.append(f"{self.component}-error")
         return " ".join(dict.fromkeys(classes))
 
     @property

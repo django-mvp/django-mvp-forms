@@ -179,3 +179,14 @@ still owns the label's marker, the description and invalid attributes tied to th
 modifier, escaping and prefixes, and tests them.
 
 **Revisit if:** US2 splits the frame into smaller templates.
+
+## D17. Error modifier and aria-required in US2
+
+**Decision:** `FieldInput.css_class` adds `<component>-error` whenever the field has errors, and
+`aria-required` is written as the string `"true"`.
+
+**Why:** the helper's switch for turning errors off belongs to US3, which gives `FieldInput` its
+`show_errors` argument and narrows the modifier then. A `True` attribute value would be drawn by
+Django as a bare `aria-required`, which is not a valid ARIA value.
+
+**Revisit if:** US3 finds the modifier wants a different condition from the error element.

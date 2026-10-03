@@ -84,6 +84,8 @@ Draw it in a template of a page that loads daisyUI:
 
 Selected with the two settings above. Every field is drawn inside a daisyUI `fieldset` with a label and its input.
 
+The label is tied to the input, and a required field's label carries a marker that assistive technology skips. The input announces itself as required, as invalid when it has errors, and by its help text and error messages as its description. Label, help text and errors are escaped unless you mark them safe. Every id the pack writes is built from the form's `auto_id`, so forms with different prefixes never share one, and a form with `auto_id=False` gets none.
+
 These inputs are drawn as daisyUI components, whichever way crispy-forms is asked to draw the form (`|crispy`, `{% crispy form %}` or `|as_crispy_field`):
 
 - text, email, URL, number, password, date, time and date-time inputs, as `input`

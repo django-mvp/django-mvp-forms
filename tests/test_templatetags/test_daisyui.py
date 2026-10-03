@@ -102,3 +102,20 @@ class TestFieldInput:
         field_input = FieldInput(OptionalRequiredAttributeForm()["choice"])
 
         assert "aria-required" not in field_input.attrs
+
+    @pytest.mark.parametrize(("name", "component"), KINDS)
+    def test_an_invalid_field_gets_its_components_error_modifier(self, name, component):
+        field_input = FieldInput(TextInputsForm({})[name])
+
+        assert f"{component}-error" in field_input.css_class.split()
+
+    @pytest.mark.parametrize(("name", "component"), KINDS)
+    def test_a_valid_field_gets_no_error_modifier(self, name, component):
+        field_input = FieldInput(TextInputsForm()[name])
+
+        assert f"{component}-error" not in field_input.css_class.split()
+
+    def test_an_invalid_field_with_an_uncovered_widget_gets_no_class(self):
+        field_input = FieldInput(UncoveredForm({})["choice"])
+
+        assert "class" not in field_input.attrs
