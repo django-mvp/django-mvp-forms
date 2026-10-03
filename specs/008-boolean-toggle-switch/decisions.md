@@ -47,8 +47,7 @@ or agreement reads more naturally as a checkbox. The developer knows which one a
 **Open with the maintainer:** #17 asks whether this is the distinction he had in mind. If he
 answers differently, FR-004 and FR-005 change and nothing else in the specification does.
 
-**ADR:** expected. It is durable, it shapes the public surface, and a reader of the code will ask
-why two options draw the same component. To be written when the feature is built.
+**ADR:** docs/adr/0022-a-switch-is-a-toggle-announced-as-a-switch.md
 
 ## D3. Checkbox is the default and existing forms do not change
 
@@ -128,7 +127,7 @@ is FS-007's to answer once.
 **Why:** it places stock daisyUI components in a form and adds one page to the demo project. There
 is no new page design and no flow to judge.
 
-**ADR:** none.
+**ADR:** none — a choice about how this feature was built, not about the code.
 
 ## D10. The drawing is a fourth argument of `Choice`, and the form's statement has none
 
@@ -244,4 +243,18 @@ that shows one of each is the right place for it. The test is not edited.
 **Revisit if:** the choices page is split by kind of input, or the test is changed to read the
 drawings page too.
 
-**ADR:** none.
+**ADR:** none — a change to the demo project, which is not distributed.
+
+## D18. A switch's role replaces a role the developer wrote on the widget
+
+**Decision:** when a field is drawn as a switch, the pack's `role="switch"` wins over a `role` in
+the widget's own attributes.
+
+**Why:** the developer asked for a switch by name, and every other attribute the pack adds for a
+render already wins over the widget's own in the same way. Keeping the developer's role would
+draw a switch that is not announced as one.
+
+**Revisit if:** a real form needs a different role on an input it also asks to be a switch.
+
+**ADR:** none — a detail of one attribute, covered by ADR 0022's statement that a switch carries
+the role.
