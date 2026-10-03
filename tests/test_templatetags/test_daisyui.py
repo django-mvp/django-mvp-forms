@@ -532,6 +532,9 @@ class TestDaisyuiClasses:
     def test_a_name_written_for_tabs_is_dropped(self, name):
         assert daisyui_classes(f"tab-content {name} mine") == "tab-content mine"
 
+    def test_a_name_written_for_alerts_is_dropped(self):
+        assert daisyui_classes("alert alert-block mine") == "alert mine"
+
     def test_a_repeated_name_is_dropped(self):
         assert daisyui_classes("btn mine btn mine") == "btn mine"
 

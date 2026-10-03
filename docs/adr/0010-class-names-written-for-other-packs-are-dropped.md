@@ -6,8 +6,9 @@
 
 The filter `daisyui_classes` in `mvp_forms/templatetags/daisyui.py` removes the names in
 `UPSTREAM_ONLY_CLASSES` from a class string and removes repeats. The names are `btn-inverse`,
-`ctrlHolder`, `blockLabel`, `error`, `tab-pane` and `active`. The templates for `Submit`,
-`Reset`, `Button`, `MultiField` and `Tab` pass django-crispy-forms' class strings through it.
+`ctrlHolder`, `blockLabel`, `error`, `tab-pane`, `active` and `alert-block`. The templates for
+`Submit`, `Reset`, `Button`, `MultiField`, `Tab` and `Alert` pass django-crispy-forms' class
+strings through it.
 
 The buttons keep `btn`, and a `Submit` keeps `btn-primary`. django-crispy-forms writes both
 itself and daisyUI defines both. The pack does not add them.

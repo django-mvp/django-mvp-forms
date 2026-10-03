@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-mvp-forms\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-03 19:53+0200\n"
+"POT-Creation-Date: 2026-10-03 20:01+0200\n"
 "PO-Revision-Date: 2026-10-03 18:41+0200\n"
 "Last-Translator: django-mvp-forms\n"
 "Language-Team: English\n"
@@ -16,6 +16,10 @@ msgstr ""
 
 #: apps.py:18
 msgid "Forms"
+msgstr ""
+
+#: templates/daisyui/layout/alert.html:4
+msgid "Dismiss"
 msgstr ""
 
 #: templates/daisyui/layout/modal.html:7

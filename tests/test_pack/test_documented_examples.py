@@ -4,6 +4,7 @@ import pytest
 from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
+    Alert,
     FormActions,
     Modal,
     StrictButton,
@@ -192,6 +193,16 @@ EXAMPLES = {
         ),
         BOTH,
         ("dialog", {"id": "modal-id-ex"}),
+    ),
+    "Alert": (
+        lambda: Alert(
+            content=(
+                "<strong>Warning!</strong> Best check yo self, "
+                "you're not looking too good."
+            )
+        ),
+        [],
+        ("div", {"role": "alert"}),
     ),
     "StrictButton with a context-aware content": (
         lambda: StrictButton("Button for {{ user.username }}"),

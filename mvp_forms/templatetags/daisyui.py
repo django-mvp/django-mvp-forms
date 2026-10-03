@@ -22,7 +22,15 @@ DATE_PARTS = {
 # Class names django-crispy-forms writes for other template packs. daisyUI does
 # not define them, so a button or a group is drawn without them.
 UPSTREAM_ONLY_CLASSES = frozenset(
-    {"btn-inverse", "ctrlHolder", "blockLabel", "error", "tab-pane", "active"}
+    {
+        "btn-inverse",
+        "ctrlHolder",
+        "blockLabel",
+        "error",
+        "tab-pane",
+        "active",
+        "alert-block",
+    }
 )
 # Written by layout/tab-pane.html in place of a group name; daisyui_tab_group
 # swaps it for the name one tab holder's radios share.

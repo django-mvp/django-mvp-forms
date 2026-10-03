@@ -8,6 +8,7 @@ import pytest
 from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
+    Alert,
     FormActions,
     Modal,
     StrictButton,
@@ -201,6 +202,18 @@ def modalled(data=None):
     )
 
 
+def alerted(data=None):
+    return StructureForm(
+        data,
+        layout=(
+            "first",
+            Alert("Mind <b>this</b>", css_id="note", css_class="alert-warning mine"),
+            Alert("Stay", dismiss=False, block=True),
+            "second",
+        ),
+    )
+
+
 def helper_buttons():
     return ButtonedForm(
         buttons=(
@@ -336,6 +349,8 @@ STATES = [
     ),
     pytest.param("{% crispy form %}", modalled, MINE, id="modal"),
     pytest.param("{% crispy form %}", lambda: modalled({}), MINE, id="modal, invalid"),
+    pytest.param("{% crispy form %}", alerted, MINE, id="alert"),
+    pytest.param("{% crispy form %}", lambda: alerted({}), MINE, id="alert, invalid"),
     pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
     pytest.param(
         "{% crispy form %}",
