@@ -29,7 +29,7 @@ Everything needed to reach a minimum usable release.
 
 ### R1 — Plain forms draw as daisyUI
 
-*feature · advances G1, G3, G6*
+*delivered in [#5](https://github.com/django-mvp/django-mvp-forms/issues/5), [#6](https://github.com/django-mvp/django-mvp-forms/issues/6), [#26](https://github.com/django-mvp/django-mvp-forms/issues/26) · advances G1, G3, G6*
 
 A host project that selects the template pack gets every form drawn as daisyUI markup, whether it uses the crispy filter or the crispy tag, and without writing a layout. This comes first because every later item draws its fields through it.
 
@@ -46,7 +46,7 @@ Serves G1, G3 and G6. Layout objects, formsets and per-field styling choices are
 
 ### R2 — Core layout objects
 
-*feature · advances G2, G3*
+*delivered in [#7](https://github.com/django-mvp/django-mvp-forms/issues/7), [#8](https://github.com/django-mvp/django-mvp-forms/issues/8) · advances G2, G3*
 
 A form with a layout can arrange its fields using the layout objects django-crispy-forms provides for structure and buttons. Depends on R1 for the fields inside them.
 
@@ -64,7 +64,7 @@ Serves G2 and G3. Tabs, accordion, modal and alert are R3.
 
 ### R3 — Container layout objects
 
-*feature · advances G2*
+*delivered in [#9](https://github.com/django-mvp/django-mvp-forms/issues/9) · advances G2*
 
 The layout objects that group parts of a form behind an interaction or a notice, drawn with daisyUI's own components. Depends on R1, and is separate from R2 because each of these carries behaviour as well as markup.
 
@@ -80,7 +80,7 @@ Serves G2. With R2 this covers every layout object django-crispy-forms ships.
 
 ### R4 — Formsets
 
-*feature · advances G1*
+*delivered in [#10](https://github.com/django-mvp/django-mvp-forms/issues/10) · advances G1*
 
 A formset handed to the pack draws as a set of forms, either stacked or as a table with one form per row. Depends on R1.
 
@@ -96,7 +96,7 @@ Serves G1. Adding and removing rows in the browser, and the views around a forms
 
 ### R5 — Variants, colours and sizes from Python
 
-*feature · advances G4*
+*delivered in [#11](https://github.com/django-mvp/django-mvp-forms/issues/11), [#12](https://github.com/django-mvp/django-mvp-forms/issues/12) · advances G4*
 
 A developer chooses how a form's inputs look from Python, once for a whole form and again for any single field. It comes last among the Essential items so it can cover every input and layout object the earlier items introduce.
 
