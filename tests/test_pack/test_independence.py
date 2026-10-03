@@ -32,13 +32,14 @@ from crispy_forms.layout import (
 from django.apps import apps
 
 import mvp_forms
-from mvp_forms.choices import FormChoices, Modifiers
+from mvp_forms.choices import Choice, FormChoices, Modifiers
 from tests.forms import (
     ButtonedForm,
     CheckboxForm,
     CheckboxGroupsForm,
     DateSelectsForm,
     DeveloperAttrsForm,
+    DrawnBooleansForm,
     EveryInputForm,
     FieldAndFormWideErrorsForm,
     FilesForm,
@@ -46,6 +47,7 @@ from tests.forms import (
     HelpedForm,
     LineFormSet,
     RadioGroupsForm,
+    RequiredDrawnBooleanForm,
     RuledLineFormSet,
     SelectsForm,
     StructureForm,
@@ -246,6 +248,28 @@ def failing_lines():
 
 
 NOTHING = frozenset()
+TOGGLE_AND_SWITCH = FormChoices(
+    fields={"notify": Choice(drawing="toggle"), "publish": Choice(drawing="switch")}
+)
+TOGGLE_AND_SWITCH_IN_ERROR = FormChoices(
+    fields={"agree": Choice(drawing="toggle"), "notify": Choice(drawing="switch")}
+)
+TOGGLE_AND_SWITCH_SIZED = FormChoices(
+    size="sm",
+    color="primary",
+    fields={
+        "notify": Choice(drawing="toggle"),
+        "publish": Choice(drawing="switch", size="lg", color="accent"),
+    },
+)
+TOGGLE_AND_SWITCH_SIZED_IN_ERROR = FormChoices(
+    size="sm",
+    color="primary",
+    fields={
+        "agree": Choice(drawing="toggle"),
+        "notify": Choice(drawing="switch", size="xl", color="success"),
+    },
+)
 EVERY_CHOICE = FormChoices(size="sm", color="primary", variant="ghost")
 EVERY_BUTTON_CHOICE = FormChoices(
     size="lg", color="accent", button_color="neutral", button_variant="outline"
@@ -450,6 +474,42 @@ STATES = [
         failing_lines,
         NOTHING,
         id="formset-wide errors on their own",
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: DrawnBooleansForm(choices=TOGGLE_AND_SWITCH),
+        NOTHING,
+        id="a toggle and a switch, through the filter",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: DrawnBooleansForm({}, choices=TOGGLE_AND_SWITCH),
+        NOTHING,
+        id="a toggle and a switch, bound, through the tag",
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: RequiredDrawnBooleanForm({}, choices=TOGGLE_AND_SWITCH_IN_ERROR),
+        NOTHING,
+        id="a toggle and a switch in error, through the filter",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: RequiredDrawnBooleanForm({}, choices=TOGGLE_AND_SWITCH_IN_ERROR),
+        NOTHING,
+        id="a toggle and a switch in error, through the tag",
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: DrawnBooleansForm(choices=TOGGLE_AND_SWITCH_SIZED),
+        NOTHING,
+        id="a toggle and a switch with a size and a colour, through the filter",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: RequiredDrawnBooleanForm({}, choices=TOGGLE_AND_SWITCH_SIZED_IN_ERROR),
+        NOTHING,
+        id="a toggle and a switch with a size and a colour in error, through the tag",
     ),
 ]
 

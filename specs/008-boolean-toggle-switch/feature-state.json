@@ -1,0 +1,283 @@
+{
+  "feature": "008-boolean-toggle-switch",
+  "branch": "008-boolean-toggle-switch",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T15:05:30Z",
+      "note": "specification approved by delegated review at commit ca5a2deebd666b3ce41c8658b088cf31b01d8534, on pull request #19; epic #12, stories #28 to #30"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T18:52:34Z",
+      "note": "plan.md, research.md, tasks.md: 3 stories, 5 tasks; continues on pull request #19"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T18:52:54Z",
+      "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T18:58:29Z",
+      "note": "plan gate open; design review applied"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T19:24:45Z",
+      "note": "three stories done; converge"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T19:26:03Z",
+      "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T19:48:02Z",
+      "note": "review recorded, walkthrough laid out, ready for review"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T15:05:30Z",
+      "self_resolved": [
+        "approved at commit ca5a2deebd666b3ce41c8658b088cf31b01d8534 (forge spec-gate, pull request #19); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T18:57:49Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T18:57:49Z",
+      "self_resolved": [
+        "DR-001 (medium) size and colour reach a toggle only in US3; the README example and demo form state a drawing only until then: applied to plan, T002, T003",
+        "DR-002 (low) the submission test builds its posted data from the drawn inputs: applied to T002",
+        "DR-003 (low) a drawing stated around a button is refused: applied to plan, research and T001 (D15)",
+        "DR-004 (low) CONTEXT's Choice and Variant entries amended with the new term: applied to T002",
+        "DR-005 (low) the widget is checked before the name, and the name against a tuple: applied to plan and T001"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T19:45:11Z",
+      "self_resolved": [
+        "COR-001 (low) three tests asserted where the label sits and the absence of a width class: fixed, T006",
+        "COR-002 (low) a drawing stated by name for a field the layout leaves out is never checked: the reading is recorded (D19) and the README says so, T006"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T19:47:50Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 28,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_choices.py::TestChoiceDrawing",
+              "tests/test_choices.py::TestModifiersDrawings",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputDrawing",
+              "tests/test_templatetags/test_daisyui.py::TestDrawnButtonDrawing"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py tests/test_templatetags/test_daisyui.py -q",
+              "uv run pytest tests/test_pack/test_checkbox.py tests/test_pack/test_choices.py tests/test_pack/test_independence.py -q"
+            ],
+            "code": [
+              "mvp_forms/choices.py:215",
+              "mvp_forms/choices.py:334",
+              "mvp_forms/choices.py:342",
+              "mvp_forms/templatetags/daisyui.py:132",
+              "mvp_forms/templatetags/daisyui.py:148",
+              "mvp_forms/templatetags/daisyui.py:478"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_drawings.py::TestDrawings",
+              "tests/test_pack/test_drawings.py::TestDrawingsInAFormset",
+              "tests/test_pack/test_drawings.py::TestDrawingMistakes",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestReadmeDrawings"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_drawings.py -q",
+              "uv run pytest tests/test_pack/test_documented_examples.py::TestReadmeDrawings -q",
+              "uv run pytest tests/test_pack tests/test_choices.py tests/test_templatetags -q -n auto --dist loadscope",
+              "uv run python /tmp/fs008/render_states.py /tmp/fs008/after.json && cmp /tmp/fs008/before.json /tmp/fs008/after.json"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:124",
+              "README.md:475",
+              "CONTEXT.md:88",
+              "tests/test_pack/test_drawings.py:52",
+              "tests/test_pack/test_independence.py:251"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestDrawingsPage",
+              "tests/test_demo.py::TestStandaloneDrawingsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -q -k Drawings",
+              "uv run pytest tests/test_demo.py -q -n auto --dist loadscope"
+            ],
+            "code": [
+              "demo/forms.py:611",
+              "demo/views.py:550",
+              "demo/views.py:592",
+              "demo/views.py:601",
+              "demo/urls.py:63",
+              "demo/menus.py:59",
+              "demo/settings.py:130",
+              "tests/test_demo.py:1290"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_drawings.py::TestDrawingKeepsWhatACheckboxHas",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputDrawing"
+            ],
+            "commands": [
+              "forge verify --repo . --base origin/main"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 29,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_drawings.py::TestDrawingKeepsWhatACheckboxHas",
+              "tests/test_demo.py::TestDrawingStatesInThePage",
+              "tests/test_demo.py::TestDrawingStatesInTheStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_drawings.py::TestDrawingKeepsWhatACheckboxHas -q",
+              "uv run pytest tests/test_demo.py -k Drawing -q"
+            ],
+            "code": [
+              "demo/forms.py:637",
+              "demo/views.py:578",
+              "tests/forms.py:587"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P3",
+      "issue": 30,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_choices.py::TestModifiersToggle",
+              "tests/test_pack/test_drawings.py::TestDrawingSizeAndColour",
+              "tests/test_pack/test_documented_examples.py::TestReadmeDrawingSizeAndColour",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_independence.py::TestModifierTables",
+              "tests/test_demo.py::TestDrawingSizesInThePage",
+              "tests/test_demo.py::TestDrawingSizesInTheStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py::TestModifiersToggle tests/test_pack/test_drawings.py::TestDrawingSizeAndColour -q",
+              "uv run pytest tests/test_pack/test_independence.py tests/test_pack/test_documented_examples.py -q",
+              "uv run pytest tests/test_demo.py -q -n auto --dist loadscope"
+            ],
+            "code": [
+              "mvp_forms/choices.py:105",
+              "mvp_forms/choices.py:178",
+              "demo/forms.py:681",
+              "demo/forms.py:712",
+              "demo/views.py:604"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 17.72,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 19,
+    "draft": false
+  }
+}

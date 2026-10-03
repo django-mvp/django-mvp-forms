@@ -545,3 +545,54 @@ def ruled_data(*lines, prefix="form"):
         for name, value in line.items():
             data[f"{prefix}-{index}-{name}"] = value
     return data
+
+
+class DrawnBooleansForm(forms.Form):
+    remember = forms.BooleanField(required=False)
+    notify = forms.BooleanField(required=False)
+    publish = forms.BooleanField(required=False)
+    title = forms.CharField(required=False)
+    token = forms.BooleanField(required=False, widget=forms.HiddenInput)
+
+    def __init__(self, *args, layout=None, choices=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        if layout is not None:
+            self.helper.layout = Layout(*layout)
+        if choices is not None:
+            self.helper.daisyui = choices
+
+
+class DrawnBooleanLineForm(forms.Form):
+    name = forms.CharField(required=False)
+    done = forms.BooleanField(required=False)
+
+
+DrawnBooleanLineFormSet = formset_factory(DrawnBooleanLineForm, extra=3)
+
+
+class RequiredDrawnBooleanForm(forms.Form):
+    agree = forms.BooleanField()
+    notify = forms.BooleanField(required=False)
+
+    def __init__(self, *args, choices=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        if choices is not None:
+            self.helper.daisyui = choices
+
+
+class KeptBooleansForm(forms.Form):
+    agree = forms.BooleanField(label="Agree", help_text="Read the terms first")
+    news = forms.BooleanField(label="News", required=False)
+    locked = forms.BooleanField(label="Locked", required=False, disabled=True)
+
+    def __init__(self, *args, choices=None, show_labels=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.form_show_labels = show_labels
+        if choices is not None:
+            self.helper.daisyui = choices

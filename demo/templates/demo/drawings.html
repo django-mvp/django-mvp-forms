@@ -1,0 +1,65 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Drawn in Python" icon="drawings">
+    <c-text>
+      Three boolean fields, each drawn a different way. The first states nothing and is
+      a checkbox, the second is a toggle by its name in the form's statement, and the
+      third is a switch in the layout. Turn some on, submit the form, and the page shows
+      what the form cleaned to.
+    </c-text>
+    {% crispy form %}
+  </c-section>
+  {% if cleaned %}
+    <c-section title="What the form cleaned to" level="3">
+      <ul id="{{ prefix }}-cleaned">
+        {% for item in cleaned %}
+          <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+        {% endfor %}
+      </ul>
+    </c-section>
+  {% endif %}
+  <c-text>
+    Each drawing keeps its label, its help text, its required marker, its error and its
+    disabled state. No form below posts anywhere.
+  </c-text>
+  {% for drawing in drawing_states %}
+    <c-section :title="drawing.heading" level="3">
+      {% for state in drawing.states %}
+        <c-section :title="state.title" level="4">
+          {% crispy state.form %}
+        </c-section>
+      {% endfor %}
+    </c-section>
+  {% endfor %}
+  <c-section title="Sizes" level="3">
+    <c-text>
+      A toggle and a switch take the size stated for the form, as a checkbox does.
+    </c-text>
+    {% for size in sizes %}
+      <c-section :title="size.title" level="4">
+        {% crispy size.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Colours" level="3">
+    <c-text>
+      They take its colour too. A toggle and a switch have no variant.
+    </c-text>
+    {% for color in colors %}
+      <c-section :title="color.title" level="4">
+        {% crispy color.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Overriding what the form states" level="3">
+    <c-text>
+      The form states a small size and the primary colour. The switch takes both, and
+      the toggle states a size and a colour of its own in the layout.
+    </c-text>
+    {% crispy override_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'drawings-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}

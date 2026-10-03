@@ -518,7 +518,11 @@ class PairForm(ChosenForm):
 
 
 class InputKindsForm(ChosenForm):
-    """One field of every kind of input that has a size, a colour or a variant."""
+    """One field of every kind of input that has a size, a colour or a variant.
+
+    Args:
+        choices: What the form states for its inputs, or None. A toggle is added.
+    """
 
     text = forms.CharField(label=_("Text"), required=False)
     textarea = forms.CharField(
@@ -529,6 +533,7 @@ class InputKindsForm(ChosenForm):
     )
     file = forms.FileField(label=_("File"), required=False, widget=forms.FileInput)
     checkbox = forms.BooleanField(label=_("Checkbox"), required=False)
+    toggle = forms.BooleanField(label=_("Toggle"), required=False)
     radio = forms.ChoiceField(
         label=_("Radio group"),
         required=False,
@@ -541,6 +546,12 @@ class InputKindsForm(ChosenForm):
         choices=[("a", "A"), ("b", "B")],
         widget=forms.CheckboxSelectMultiple,
     )
+
+    def __init__(self, *args, choices=None, **kwargs):
+        """Draw ``toggle`` as a toggle, beside whatever the form states."""
+        choices = choices or FormChoices()
+        choices.fields.setdefault("toggle", Choice(drawing="toggle"))
+        super().__init__(*args, choices=choices, **kwargs)
 
 
 class ButtonBarForm(ChosenForm):
@@ -605,6 +616,123 @@ class OverrideForm(ChosenForm):
                     variant="soft",
                 ),
             ),
+        )
+
+
+class DrawingsForm(forms.Form):
+    """Three boolean fields, each drawn a different way, which can be posted.
+
+    ``remember`` states nothing and is a checkbox, ``notify`` is a toggle by name
+    in ``FormChoices`` and ``publish`` is a switch in the layout. Every id and the
+    button's name carry the form's prefix. The form must be given a prefix.
+    """
+
+    remember = forms.BooleanField(label=_("Remember me"), required=False)
+    notify = forms.BooleanField(label=_("Email me about replies"), required=False)
+    publish = forms.BooleanField(label=_("Publish this record"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Build the helper, with the drawings stated and a submit button."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.daisyui = FormChoices(fields={"notify": Choice(drawing="toggle")})
+        self.helper.layout = Layout(
+            "remember",
+            "notify",
+            Choice("publish", drawing="switch"),
+        )
+        self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class DrawingStateForm(ChosenForm):
+    """One boolean field, drawn in one drawing and in one state.
+
+    Give the form a prefix of the drawing's name and the state's, so no id
+    repeats on the page. The field is ``flag``.
+
+    Args:
+        drawing: ``"checkbox"``, ``"toggle"`` or ``"switch"``.
+        state: ``"off"``, ``"on"``, ``"help"``, ``"error"`` or ``"disabled"``.
+            The form for ``"error"`` is bound with nothing posted, so the
+            required field fails.
+    """
+
+    flag = forms.BooleanField(label=_("Email me about replies"), required=False)
+
+    def __init__(self, *args, drawing, state, **kwargs):
+        """Put the field in its state, and state its drawing for the form."""
+        if state == "error":
+            args = args or ({},)
+        super().__init__(
+            *args,
+            choices=FormChoices(fields={"flag": Choice(drawing=drawing)}),
+            **kwargs,
+        )
+        flag = self.fields["flag"]
+        flag.required = state == "error"
+        flag.disabled = state == "disabled"
+        if state == "on":
+            self.initial["flag"] = True
+        if state == "help":
+            flag.help_text = _("Sent once a day at most.")
+
+
+class DrawingTrioForm(ChosenForm):
+    """A checkbox, a toggle and a switch, at one size or in one colour.
+
+    The fields are ``checkbox``, ``toggle`` and ``switch``. Give the form a
+    prefix, so no id repeats on the page.
+
+    Args:
+        size: The size stated for the form, or None.
+        color: The colour stated for the form, or None.
+    """
+
+    checkbox = forms.BooleanField(label=_("Checkbox"), required=False)
+    toggle = forms.BooleanField(label=_("Toggle"), required=False)
+    switch = forms.BooleanField(label=_("Switch"), required=False)
+
+    def __init__(self, *args, size=None, color=None, **kwargs):
+        """State the size and colour for the form, and the drawing of two fields."""
+        super().__init__(
+            *args,
+            choices=FormChoices(
+                size=size,
+                color=color,
+                fields={
+                    "toggle": Choice(drawing="toggle"),
+                    "switch": Choice(drawing="switch"),
+                },
+            ),
+            **kwargs,
+        )
+
+
+class DrawingOverrideForm(ChosenForm):
+    """A form that states a size and a colour, and one field that overrides both.
+
+    ``inherits`` is a switch that takes the form's size and colour. ``overrides``
+    is a toggle that states its own in the layout. Give the form a prefix.
+    """
+
+    inherits = forms.BooleanField(label=_("Takes the form's"), required=False)
+    overrides = forms.BooleanField(label=_("States its own"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        """State the form's choices, and the two fields' drawings."""
+        super().__init__(
+            *args,
+            choices=FormChoices(
+                size="sm",
+                color="primary",
+                fields={"inherits": Choice(drawing="switch")},
+            ),
+            **kwargs,
+        )
+        self.helper.layout = Layout(
+            "inherits",
+            Choice("overrides", drawing="toggle", size="xl", color="accent"),
         )
 
 

@@ -15,7 +15,7 @@ from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
 from django.utils.translation import gettext_lazy
 
-from mvp_forms.choices import Choice, FormChoices, Modifiers
+from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice, Modifiers
 
 register = template.Library()
 
@@ -64,7 +64,8 @@ class FieldInput:
     Raises:
         InvalidChoice: A size, colour or variant stated for the form or the
             field is not one daisyUI has, or the field states one its input has
-            no modifier for.
+            no modifier for. A drawing the field states is not one of the three,
+            or the field is not a boolean field.
     """
 
     components: dict[type[forms.Widget], str] = {
@@ -84,8 +85,8 @@ class FieldInput:
     # Makes an input fill its field, unless the developer's own class holds a
     # width. See docs/adr/0007-inputs-fill-their-container.md.
     width = "w-full"
-    # A checkbox and a radio are fixed-size and never widened.
-    fixed_size: set[str] = {"checkbox", "radio"}
+    # A checkbox, a radio and a toggle are fixed-size and never widened.
+    fixed_size: set[str] = {"checkbox", "radio", "toggle"}
     templates: dict[type[forms.Widget], str] = {
         forms.CheckboxSelectMultiple: "daisyui/widgets/group.html",
         forms.RadioSelect: "daisyui/widgets/group.html",
@@ -102,6 +103,7 @@ class FieldInput:
         "textarea": "textarea-error",
         "select": "select-error",
         "checkbox": "checkbox-error",
+        "toggle": "toggle-error",
         "radio": "radio-error",
         "file-input": "file-input-error",
     }
@@ -118,17 +120,61 @@ class FieldInput:
         self.show_labels = show_labels
         self.show_errors = show_errors
         choices = choices or FormChoices()
-        self.modifiers = self.resolve_modifiers(choices, placed, self.component)
+        own = self.own_choice(choices, placed)
+        self.drawing = self.resolve_drawing(own)
+        self.modifiers = self.resolve_modifiers(choices, own, self.component)
         self.removal_modifiers = (
-            self.resolve_modifiers(choices, placed, "checkbox", self.removal_kinds)
+            self.resolve_modifiers(choices, own, "checkbox", self.removal_kinds)
             if self.component == "file-input"
             else []
         )
 
+    def own_choice(self, choices: FormChoices, placed: Choice | None) -> Choice:
+        """Return what is stated for this field alone.
+
+        Args:
+            choices: The form's statement.
+            placed: The ``Choice`` of a layout around the field, or None.
+
+        Returns:
+            The layout's choice merged over the one named for the field on the
+            form, whichever of the two there is, or an empty choice.
+        """
+        named = choices.fields.get(self.field.name)
+        if placed is None:
+            return Choice() if named is None else named
+        return placed if named is None else placed.over(named)
+
+    def resolve_drawing(self, own: Choice) -> str | None:
+        """Return the name of the drawing stated for the field, or None.
+
+        Resolved before the modifiers, because the component they are for
+        depends on it, and when the input is built, so a mistake is raised from
+        the tag and not from inside a template's ``{% if %}``.
+
+        Args:
+            own: What is stated for this field alone.
+
+        Returns:
+            The drawing's name, or None when none is stated.
+
+        Raises:
+            InvalidChoice: See the class.
+        """
+        drawing = own.drawing
+        if drawing is None or drawing is INHERIT:
+            return None
+        if not isinstance(self.field.field.widget, forms.CheckboxInput):
+            raise InvalidChoice("drawing", drawing, (), self.field.name)
+        allowed = tuple(Modifiers.drawings)
+        if drawing not in allowed:
+            raise InvalidChoice("drawing", drawing, allowed, self.field.name)
+        return str(drawing)
+
     def resolve_modifiers(
         self,
         choices: FormChoices,
-        placed: Choice | None,
+        own: Choice,
         component: str | None,
         kinds: tuple[str, ...] = ("size", "color", "variant"),
     ) -> list[str]:
@@ -139,7 +185,7 @@ class FieldInput:
 
         Args:
             choices: The form's statement.
-            placed: The ``Choice`` of a layout around the field, or None.
+            own: What is stated for this field alone.
             component: The component the classes are for: the field's own, or
                 the checkbox that removes a held file.
             kinds: Which of size, colour and variant to resolve.
@@ -151,13 +197,6 @@ class FieldInput:
         Raises:
             InvalidChoice: See the class.
         """
-        named = choices.fields.get(self.field.name)
-        if placed is None:
-            own = Choice() if named is None else named
-        elif named is None:
-            own = placed
-        else:
-            own = placed.over(named)
         stated = {
             "size": choices.size,
             "color": choices.color,
@@ -183,7 +222,12 @@ class FieldInput:
 
     @property
     def component(self) -> str | None:
-        """The daisyUI class for the field's widget, or None when it has none."""
+        """The daisyUI class for the field's widget, or None when it has none.
+
+        A drawing stated for the field decides it, for a boolean field.
+        """
+        if self.drawing:
+            return Modifiers.drawings[self.drawing]
         for widget_class, component in self.components.items():
             if isinstance(self.field.field.widget, widget_class):
                 return component
@@ -247,8 +291,11 @@ class FieldInput:
 
     @property
     def is_single_checkbox(self) -> bool:
-        """Whether the field is one checkbox, which sits inside its own label."""
-        return self.component == "checkbox" and not self.is_group
+        """Whether the field is one checkbox, which sits inside its own label.
+
+        A toggle and a switch are one too.
+        """
+        return self.component in {"checkbox", "toggle"} and not self.is_group
 
     @property
     def css_class(self) -> str:
@@ -271,6 +318,8 @@ class FieldInput:
         attrs: dict[str, str | bool] = {}
         if self.component:
             attrs["class"] = self.css_class
+        if self.drawing == "switch":
+            attrs["role"] = "switch"
         if self.requires_aria_required:
             attrs["aria-required"] = "true"
         if self.requires_aria_label:
@@ -386,7 +435,8 @@ class DrawnButton:
 
     Raises:
         InvalidChoice: A size, colour or variant stated for the form or the
-            button is not one daisyUI has.
+            button is not one daisyUI has, or the layout around the button
+            states a drawing, which a button has none of.
     """
 
     # The colour django-crispy-forms gives a Submit when none is chosen.
@@ -424,6 +474,8 @@ class DrawnButton:
         if getattr(self.button, "input_type", "") == "hidden":
             return []
         own = Choice() if placed is None else placed
+        if own.drawing is not None and own.drawing is not INHERIT:
+            raise InvalidChoice("drawing", own.drawing, (), self.target)
         stated = {
             "size": choices.size,
             "color": choices.button_color,
@@ -541,7 +593,8 @@ def daisyui_field(context: Context, field: BoundField) -> FieldInput:
         The field's input.
 
     Raises:
-        InvalidChoice: A choice that applies to the field is not one daisyUI has.
+        InvalidChoice: A choice that applies to the field is not one daisyUI has,
+            or a drawing is stated for a field that is not a boolean field.
         TypeError: The form's helper holds a ``daisyui`` attribute that is not a
             ``FormChoices``.
     """

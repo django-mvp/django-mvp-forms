@@ -393,9 +393,9 @@ For buttons, the same sizes and colours and these variants:
 
 The classes the names mean are written out in the tables of `Modifiers`, in `mvp_forms.choices`, one for sizes, one for colours and one for variants. The keyword is spelt `color`, as daisyUI spells it. The three are independent: changing one leaves the other two as they were. Every one is optional, and a form that states nothing is drawn exactly as it was before.
 
-- `fields` gives one field a `Choice` of its own, by the field's name. Each of the three that the `Choice` states wins over the form's for that field, and each it leaves out, which is `INHERIT` and the default, falls back to the form's. `None` is the pack's ordinary drawing, so `Choice(color=None)` undoes the form's colour for that field, as `notes` does above. `INHERIT` is the one value of the type `Inherit`.
+- `fields` gives one field a `Choice` of its own, by the field's name. Each of size, colour and variant that the `Choice` states wins over the form's for that field, and each it leaves out, which is `INHERIT` and the default, falls back to the form's. A `Choice` also states a drawing for a boolean field, which the form has no statement of: see "Checkbox, toggle and switch" below. `None` is the pack's ordinary drawing, so `Choice(color=None)` undoes the form's colour for that field, as `notes` does above. `INHERIT` is the one value of the type `Inherit`.
 - Every input of a field takes the choices: each option of a radio or checkbox group, each select of a date, and the removal checkbox of a file field that holds a file, which takes the size and the colour.
-- A choice that one kind of input has no modifier for is passed over for that kind. `variant="ghost"` leaves a checkbox and a radio as they are and draws the text input beside them in ghost.
+- A choice that one kind of input has no modifier for is passed over for that kind. `variant="ghost"` leaves a checkbox, a toggle and a radio as they are and draws the text input beside them in ghost.
 - A name that is not in the lists above raises `InvalidChoice`, a `ValueError`, when the form is drawn. It carries the `kind`, the `value` and the names `allowed`.
 - A field in error keeps its error modifier and is drawn without the chosen colour, so the error is the only colour it shows. Its size and variant still apply.
 - Hidden inputs, labels, help text, error text and the `required`, `disabled` and `readonly` attributes are never changed, and classes you put on a widget are kept.
@@ -403,7 +403,7 @@ The classes the names mean are written out in the tables of `Modifiers`, in `mvp
 
 ### One field's own choice
 
-One field can state a size, a colour or a variant of its own. There are two ways, and they combine.
+One field can state a size, a colour or a variant of its own, and a boolean field a drawing as well. There are two ways, and they combine.
 
 In a layout, wrap the field in a `Choice`. It draws what it holds, with its choice in force for everything inside it:
 
@@ -431,11 +431,11 @@ class SearchForm(forms.Form):
         )
 ```
 
-Here `search` is large and keeps the form's colour, `name` and `city` keep the form's size and lose its colour, and `notes` takes the form's choices. A `Choice` may hold a `Row`, a `Fieldset` or any other layout object, and a `Choice` inside a `Choice` is merged over the outer one, each of the three on its own, so the inner one wins for what it states. You can also wrap fields already in a layout, with `helper["search"].wrap(Choice, size="lg")`.
+Here `search` is large and keeps the form's colour, `name` and `city` keep the form's size and lose its colour, and `notes` takes the form's choices. A `Choice` may hold a `Row`, a `Fieldset` or any other layout object, and a `Choice` inside a `Choice` is merged over the outer one, each of its four kinds on its own, so the inner one wins for what it states. You can also wrap fields already in a layout, with `helper["search"].wrap(Choice, size="lg")`.
 
 For a form drawn without a layout, name the field in `FormChoices`, as `notes` was in the section above: `FormChoices(fields={"search": Choice(size="lg")})`. It works with `{{ form|crispy }}` and with `{% crispy form %}`, and changes no other field.
 
-When both are given for a field, the `Choice` in the layout wins over the one in `fields`, which wins over the form's, for each of the three on its own. What a `Choice` leaves out is inherited, and `None` is the pack's ordinary drawing: `Choice("notes", color=None)` undoes the form's colour for that field and keeps its size. A size, colour or variant that the field's input has no modifier for raises `InvalidChoice` when the form is drawn, because you asked for it by name. The form's own statement is passed over for such an input.
+When both are given for a field, the `Choice` in the layout wins over the one in `fields`, which wins over the form's, for each of size, colour and variant on its own, and the drawing is taken from the first of the two that states one. What a `Choice` leaves out is inherited, and `None` is the pack's ordinary drawing: `Choice("notes", color=None)` undoes the form's colour for that field and keeps its size. A size, colour or variant that the field's input has no modifier for raises `InvalidChoice` when the form is drawn, because you asked for it by name. The form's own statement is passed over for such an input.
 
 ### Buttons
 
@@ -472,11 +472,57 @@ Here every button is small and outlined, `Delete` is in the error colour and the
 - Your `css_class`, `css_id` and attributes are kept on every button, and a `Hidden` is never changed.
 - The statement reaches a button as the context name `daisyui`, which django-crispy-forms copies from the helper, so it works under whatever name the page gives its form, and with `{% crispy form %}`. Buttons are drawn only by the tag: `{{ form|crispy }}` draws no layout and no helper.
 
+### Checkbox, toggle and switch
+
+A boolean field, which is any field whose widget is a `CheckboxInput` or a subclass of one, such as a `BooleanField`, is drawn as a checkbox. To draw it another way, state a `drawing` in a `Choice`, in a layout or by the field's name, the same two ways as a size or a colour:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+from mvp_forms.choices import Choice, FormChoices
+
+
+class SettingsForm(forms.Form):
+    remember = forms.BooleanField(required=False)
+    notify = forms.BooleanField(required=False)
+    publish = forms.BooleanField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(
+            size="sm", fields={"notify": Choice(drawing="toggle")}
+        )
+        self.helper.layout = Layout(
+            "remember",
+            "notify",
+            Choice("publish", drawing="switch", color="primary"),
+        )
+```
+
+Here `remember` is a checkbox, `notify` is a toggle and `publish` is a switch in the primary colour, all small. The three drawings are:
+
+- `"checkbox"`, daisyUI's checkbox. It is what a boolean field is drawn as when no drawing is stated, and stating it changes nothing.
+- `"toggle"`, daisyUI's toggle: the same checkbox input with the class `toggle` in place of `checkbox`.
+- `"switch"`, daisyUI's toggle again, with `role="switch"` on the input, so assistive technology announces a switch and not a checkbox. daisyUI has no separate switch, so a toggle and a switch look the same. The role replaces a `role` written on the widget's own attributes.
+
+Each is still one `<input type="checkbox">` with the field's name, inside the label a checkbox sits in, so a form posts and cleans to `True` and `False` exactly as it does with checkboxes. The pack adds no script. A bound or initial `True` is drawn checked in every drawing, and a field in error keeps an error modifier of its own, `toggle-error`, as a checkbox keeps `checkbox-error`. A toggle and a switch are never widened. A toggle and a switch keep what a checkbox has: the label is tied to the input, the help text and the errors describe it, a required field carries the required marker, and a disabled field is disabled.
+
+- The drawing is stated one field at a time. `FormChoices` has no `drawing` of its own, so a form cannot say that all its boolean fields are toggles. Name each one in `fields`, or wrap it in a `Choice`.
+- A `Choice` in a layout wins over the one in `fields`, and a `Choice` that leaves the drawing out takes the one around it. `None` is the ordinary drawing, so `Choice("remember", drawing=None)` undoes a drawing stated around it.
+- A field that states no drawing is drawn exactly as it was before, whatever the other fields of the form state.
+- Only a boolean field takes a drawing. A field that is a null-boolean select, a checkbox group, a text input or anything else that is not a `CheckboxInput` does not, and neither does a button.
+- A hidden boolean field is a hidden input whatever is stated for it.
+- A toggle and a switch take the form's size and colour, and the field's own, like any input: `toggle-sm` and `toggle-primary` for a toggle or a switch, where a checkbox takes `checkbox-sm` and `checkbox-primary`. They have no variant. A variant stated for the form is passed over for them and one stated on the field itself raises `InvalidChoice`, as for a checkbox. A field in error keeps `toggle-error` and is drawn without the colour.
+
+A name that is not one of the three raises `InvalidChoice` with `kind="drawing"`, naming the field as `target`, with `checkbox`, `toggle` and `switch` as the names `allowed`. A drawing of any name, `checkbox` included, stated for a field that is not a boolean field, or around a button, raises the same error with nothing allowed. A `Choice` that holds fields states its drawing for each of them, so `Choice(Row("name", "agree"), drawing="toggle")` raises for a text input `name`. `None` and `INHERIT` state nothing and never raise. A drawing stated by name in `FormChoices(fields=...)` is checked when its field is drawn, so one for a field the layout leaves out is never looked at.
+
 ### What is refused and what is passed over
 
-A name daisyUI does not have is refused when the form is drawn, never written as a class that does nothing. It raises `InvalidChoice`, a `ValueError` carrying `kind` (`"size"`, `"color"` or `"variant"`), the `value` you stated and the names `allowed`. It is raised for a choice stated for the form's inputs, for its buttons (`button_color` and `button_variant`), on one field by name, on one field with a `Choice` in a layout, and on one button. When it was stated on a field or a button, `target` names it: the field's name, or a button's name, or the content of a `StrictButton`. For a choice stated for the form, `target` is `None`. What is stated for the form is checked whenever a form is drawn, so `{{ form|crispy }}`, which draws no button, still reports a mistake in `button_color`.
+A name daisyUI does not have is refused when the form is drawn, never written as a class that does nothing. It raises `InvalidChoice`, a `ValueError` carrying `kind` (`"size"`, `"color"`, `"variant"` or `"drawing"`), the `value` you stated and the names `allowed`. It is raised for a choice stated for the form's inputs, for its buttons (`button_color` and `button_variant`), on one field by name, on one field with a `Choice` in a layout, and on one button. When it was stated on a field or a button, `target` names it: the field's name, or a button's name, or the content of a `StrictButton`. For a choice stated for the form, `target` is `None`. What is stated for the form is checked whenever a form is drawn, so `{{ form|crispy }}`, which draws no button, still reports a mistake in `button_color`.
 
-A choice stated for the form that a kind of input has no modifier for is passed over, with no error: `variant="ghost"` leaves a checkbox, a radio group and a checkbox group as they are and the rest take it. The same choice stated on one of those fields raises, and so does any choice stated on a field whose widget the pack does not draw as an input of its own, because you asked for it by name.
+A choice stated for the form that a kind of input has no modifier for is passed over, with no error: `variant="ghost"` leaves a checkbox, a toggle, a radio group and a checkbox group as they are and the rest take it. The same choice stated on one of those fields raises, and so does any choice stated on a field whose widget the pack does not draw as an input of its own, because you asked for it by name.
 
 A name in `FormChoices(fields=...)` that is not a field of the form raises `UnknownField`, a `KeyError` whose `names` lists them, when a field of the form is drawn.
 
@@ -606,6 +652,11 @@ One more page draws the size, colour and variant of a form's inputs and buttons.
 
 - `/choices/` is the page inside the django-mvp shell, reached from its sidebar as "Size, colour and variant".
 - `/choices/standalone/` is the same page styled by daisyUI's CDN build alone.
+
+One more page draws a boolean field as a checkbox, a toggle and a switch. It holds one form with three boolean fields, drawn those three ways: the first states nothing, the second is a toggle by its name in `FormChoices`, and the third is a switch in the layout. Turning some on and submitting the form draws the page again with each field as it was posted and the values the form cleaned to. Nothing is saved. The page also draws each of the three in each state (off, on, with help text, required and in error, and disabled), at every size and in every colour a toggle has, and in a form whose size and colour one field overrides.
+
+- `/drawings/` is the page inside the django-mvp shell, reached from its sidebar as "Checkbox, toggle and switch".
+- `/drawings/standalone/` is the same page styled by daisyUI's CDN build alone.
 
 Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset, groups two fields in a `MultiField`, and carries a `Hidden` input.
 

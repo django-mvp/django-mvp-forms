@@ -17,6 +17,10 @@ from demo.forms import (
     ButtonBarForm,
     ChoiceInputsForm,
     ChosenGroupsForm,
+    DrawingOverrideForm,
+    DrawingsForm,
+    DrawingStateForm,
+    DrawingTrioForm,
     HelperButtonsForm,
     InputKindsForm,
     LayoutObjectsForm,
@@ -544,6 +548,121 @@ class StandaloneChoicesView(ChoicesMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/choices_standalone.html"
+
+
+class DrawingsMixin:
+    """The form both drawings pages draw, with what it cleaned to once posted.
+
+    A post binds the form and draws the page again. Nothing is saved.
+    """
+
+    drawings_prefix = "drawings"
+    drawing_names = tuple(Modifiers.drawings)
+    drawing_states = ("off", "on", "help", "error", "disabled")
+
+    def build_cleaned(self, form):
+        """List what a posted form cleaned to, for the page to show.
+
+        Args:
+            form: The form to read.
+
+        Returns:
+            A list of dicts holding each field's name, label and cleaned value,
+            or an empty list when the form is not bound or does not validate.
+        """
+        if not form.is_valid():
+            return []
+        return [
+            {"name": name, "label": form.fields[name].label, "value": value}
+            for name, value in form.cleaned_data.items()
+        ]
+
+    def build_drawing_states(self):
+        """Build one small form for each drawing in each state.
+
+        Returns:
+            A list with a dict for each drawing, holding its name, a heading and a
+            list of dicts for its states, each with the state's name and form.
+        """
+        return [
+            {
+                "title": drawing,
+                "heading": _("%(drawing)s in every state") % {"drawing": drawing},
+                "states": [
+                    {
+                        "title": state,
+                        "form": DrawingStateForm(
+                            prefix=f"{drawing}-{state}", drawing=drawing, state=state
+                        ),
+                    }
+                    for state in self.drawing_states
+                ],
+            }
+            for drawing in self.drawing_names
+        ]
+
+    def build_sizes(self):
+        """Build one form of the three drawings for each size a toggle has.
+
+        Returns:
+            A list of dicts holding each size's name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": DrawingTrioForm(prefix=f"size-{name}", size=name),
+            }
+            for name in Modifiers.names("size", "toggle")
+        ]
+
+    def build_colors(self):
+        """Build one form of the three drawings for each colour a toggle has.
+
+        Returns:
+            A list of dicts holding each colour's name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": DrawingTrioForm(prefix=f"color-{name}", color=name),
+            }
+            for name in Modifiers.names("color", "toggle")
+        ]
+
+    def get_context_data(self, **kwargs):
+        """Add the form, what it cleaned to when it was posted, and the states."""
+        form = kwargs.setdefault("form", DrawingsForm(prefix=self.drawings_prefix))
+        kwargs["drawing_states"] = self.build_drawing_states()
+        kwargs["sizes"] = self.build_sizes()
+        kwargs["colors"] = self.build_colors()
+        kwargs["override_form"] = DrawingOverrideForm(prefix="override")
+        kwargs["cleaned"] = self.build_cleaned(form)
+        kwargs["prefix"] = self.drawings_prefix
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form bound to what was posted."""
+        form = DrawingsForm(request.POST, prefix=self.drawings_prefix)
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class DrawingsView(DrawingsMixin, MVPTemplateView):
+    """A boolean field drawn as a checkbox, a toggle and a switch, in the shell."""
+
+    template_name = "demo/drawings.html"
+    page_title = "Checkbox, toggle and switch"
+    page_subtitle = "How a boolean field is drawn, chosen in Python"
+    breadcrumbs = [{"text": "Checkbox, toggle and switch"}]
+
+
+class StandaloneDrawingsView(DrawingsMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/drawings_standalone.html"
 
 
 class OrderFormsetMixin:
