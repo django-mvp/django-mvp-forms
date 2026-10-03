@@ -423,6 +423,40 @@ class DocumentedExamplesForm(forms.Form):
         self.helper.layout = Layout(*layout)
 
 
+class DecoratedFieldsForm(forms.Form):
+    amount = forms.CharField(label="Amount", help_text="In whole units")
+    other = forms.CharField(label="Other", required=False)
+    country = forms.ChoiceField(choices=FRUIT, label="Fruit")
+    agree = forms.BooleanField()
+    pick = forms.ChoiceField(choices=FRUIT, widget=forms.RadioSelect)
+    born = forms.DateField(widget=forms.SelectDateWidget)
+    notes = forms.CharField(widget=forms.Textarea)
+    upload = forms.FileField()
+    token = forms.CharField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+def refuse_markup(value):
+    raise ValidationError("<script>alert(1)</script>", code="markup")
+
+
+class MarkedUpDecoratedForm(forms.Form):
+    amount = forms.CharField(
+        label="<b>Amount</b>", help_text="<i>Help</i>", validators=[refuse_markup]
+    )
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
 class LineForm(forms.Form):
     name = forms.CharField(help_text="What it is")
     quantity = forms.IntegerField(required=False)

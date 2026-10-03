@@ -3,6 +3,12 @@
   <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="label{% if label_class %} {{ label_class }}{% endif %}">
     {{ drawn.render }}{{ field.label }}{% include "daisyui/required_marker.html" %}
   </label>
+{% elif drawn.has_attached_text %}
+  <label class="{{ drawn.attached_class }}">
+    {% if drawn.prepended %}<span class="label">{{ drawn.prepended|safe }}</span>{% endif %}
+    {{ drawn.render }}
+    {% if drawn.appended %}<span class="label">{{ drawn.appended|safe }}</span>{% endif %}
+  </label>
 {% else %}
   {{ drawn.render }}
 {% endif %}

@@ -65,8 +65,29 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_attached_text.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputClassParts",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputAttachedText",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiFieldTag",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (exit 0, 1008 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:158",
+              "mvp_forms/templatetags/daisyui.py:182",
+              "mvp_forms/templates/daisyui/frame.html:1",
+              "mvp_forms/templates/daisyui/layout/prepended_appended_text.html:1"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",

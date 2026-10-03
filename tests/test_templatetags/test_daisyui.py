@@ -701,3 +701,150 @@ class TestFormsetTable:
 
         assert isinstance(table, FormsetTable)
         assert [row["form"] for row in table.rows] == formset.forms
+
+
+class TestFieldInputClassParts:
+    def test_the_own_classes_are_the_widgets_own_names(self):
+        field_input = FieldInput(DeveloperAttrsForm()["name"])
+
+        assert field_input.own_classes == ["wide"]
+
+    def test_a_widget_with_no_class_has_no_own_classes(self):
+        assert FieldInput(TextInputsForm()["text"]).own_classes == []
+
+    def test_the_pack_classes_are_the_component_the_width_and_the_error_modifier(self):
+        field_input = FieldInput(DeveloperAttrsForm({})["name"])
+
+        assert field_input.pack_classes == ["input", "w-full", "input-error"]
+
+    def test_the_pack_classes_of_an_uncovered_widget_are_none(self):
+        assert FieldInput(UncoveredForm()["choice"]).pack_classes == []
+
+    def test_the_css_class_is_the_own_classes_then_the_pack_classes(self):
+        field_input = FieldInput(DeveloperAttrsForm({})["name"])
+
+        assert field_input.css_class.split() == (
+            field_input.own_classes + field_input.pack_classes
+        )
+
+    def test_a_name_in_both_is_written_once(self):
+        class Form(forms.Form):
+            name = forms.CharField(widget=forms.TextInput(attrs={"class": "input a"}))
+
+        field_input = FieldInput(Form()["name"])
+
+        assert field_input.css_class.split() == ["input", "a", "w-full"]
+
+
+class TestFieldInputAttachedText:
+    @pytest.mark.parametrize(
+        ("prepended", "appended"),
+        [("$", None), (None, ".00"), ("$", ".00"), ("$", ""), ("", ".00")],
+    )
+    def test_a_text_on_an_input_is_attached_text(self, prepended, appended):
+        field_input = FieldInput(
+            TextInputsForm()["text"], prepended=prepended, appended=appended
+        )
+
+        assert field_input.has_attached_text
+
+    @pytest.mark.parametrize(("prepended", "appended"), [(None, None), ("", "")])
+    def test_no_text_is_not_attached_text(self, prepended, appended):
+        field_input = FieldInput(
+            TextInputsForm()["text"], prepended=prepended, appended=appended
+        )
+
+        assert not field_input.has_attached_text
+
+    def test_a_text_on_a_select_is_attached_text(self):
+        field_input = FieldInput(SelectsForm()["choice"], prepended="#")
+
+        assert field_input.has_attached_text
+
+    @pytest.mark.parametrize(
+        ("form", "name"),
+        [
+            (TextInputsForm, "message"),
+            (CheckboxForm, "agree"),
+            (HostSelectForm, "born"),
+            (UncoveredForm, "choice"),
+            (FilesForm, "plain"),
+        ],
+    )
+    def test_a_text_on_a_widget_that_does_not_suit_it_is_not_attached_text(
+        self, form, name
+    ):
+        field_input = FieldInput(form()[name], prepended="$", appended=".00")
+
+        assert not field_input.has_attached_text
+
+    def test_a_group_is_not_attached_text(self):
+        field_input = FieldInput(
+            OptionalRequiredAttributeForm()["choice"], appended="x"
+        )
+
+        assert not field_input.has_attached_text
+
+    def test_the_wrapper_gets_the_pack_classes_as_one_string(self):
+        field_input = FieldInput(TextInputsForm({})["text"], prepended="$")
+
+        assert field_input.attached_class == "input w-full input-error"
+
+    def test_the_wrapper_of_a_select_gets_the_select_classes(self):
+        field_input = FieldInput(SelectsForm({})["choice"], prepended="#")
+
+        assert field_input.attached_class == "select w-full select-error"
+
+    def test_the_input_inside_is_drawn_with_only_its_own_classes(self, parse):
+        field_input = FieldInput(DeveloperAttrsForm()["name"], prepended="$")
+
+        assert parse(field_input.render()).find("input")["class"] == ["wide"]
+
+    def test_an_input_with_no_own_class_is_drawn_without_a_class_attribute(self, parse):
+        field_input = FieldInput(TextInputsForm()["text"], prepended="$")
+
+        assert not parse(field_input.render()).find("input").has_attr("class")
+
+    def test_a_field_without_attached_text_keeps_the_pack_classes_on_the_input(
+        self, parse
+    ):
+        field_input = FieldInput(TextInputsForm()["text"], prepended="")
+
+        assert "input" in parse(field_input.render()).find("input")["class"]
+
+    def test_the_render_leaves_the_widgets_attrs_unchanged(self):
+        form = DeveloperAttrsForm()
+        before = copy.deepcopy(form.fields["name"].widget.attrs)
+
+        FieldInput(form["name"], prepended="$").render()
+
+        assert form.fields["name"].widget.attrs == before
+
+
+class TestDaisyuiFieldTag:
+    def render(self, **context):
+        template = Template(
+            "{% load daisyui %}"
+            "{% daisyui_field field prepended='$' appended=after as drawn %}"
+            "{{ drawn.prepended }}|{{ drawn.appended }}|{{ drawn.wrapper_class }}"
+        )
+        return template.render(Context(context))
+
+    def test_the_keyword_options_reach_the_input(self):
+        form = TextInputsForm()
+
+        assert self.render(field=form["text"], after=".00") == "$|.00|"
+
+    def test_the_wrapper_class_is_read_from_the_context(self):
+        form = TextInputsForm()
+
+        rendered = self.render(field=form["text"], after="", wrapper_class="mine")
+
+        assert rendered == "$||mine"
+
+    def test_a_wrapper_class_of_none_is_an_empty_string(self):
+        form = TextInputsForm()
+
+        rendered = self.render(field=form["text"], after="", wrapper_class=None)
+
+        assert rendered == "$||"

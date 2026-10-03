@@ -5,8 +5,11 @@ from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
     Alert,
+    AppendedText,
     FormActions,
     Modal,
+    PrependedAppendedText,
+    PrependedText,
     StrictButton,
     Tab,
     TabHolder,
@@ -208,6 +211,21 @@ EXAMPLES = {
         lambda: StrictButton("Button for {{ user.username }}"),
         [],
         ("button", {"type": "button"}),
+    ),
+    "PrependedAppendedText": (
+        lambda: PrependedAppendedText("form_field", "$", ".00"),
+        ["form_field"],
+        ("label", {"class": "input"}),
+    ),
+    "AppendedText": (
+        lambda: AppendedText("form_field", ".00"),
+        ["form_field"],
+        ("label", {"class": "input"}),
+    ),
+    "PrependedText": (
+        lambda: PrependedText("form_field", "$"),
+        ["form_field"],
+        ("label", {"class": "input"}),
     ),
 }
 

@@ -52,6 +52,9 @@ class FieldInput:
             named by an ``aria-label``.
         show_errors: Whether the form draws errors. Without them the input has
             no error modifier and no description naming the error element.
+        wrapper_class: A class for the frame's outer element.
+        prepended: Text drawn before the input, as markup.
+        appended: Text drawn after the input, as markup.
     """
 
     components: dict[type[forms.Widget], str] = {
@@ -91,11 +94,21 @@ class FieldInput:
     }
 
     def __init__(
-        self, field: BoundField, show_labels: bool = True, show_errors: bool = True
+        self,
+        field: BoundField,
+        show_labels: bool = True,
+        show_errors: bool = True,
+        *,
+        wrapper_class: str = "",
+        prepended: str | None = None,
+        appended: str | None = None,
     ) -> None:
         self.field = field
         self.show_labels = show_labels
         self.show_errors = show_errors
+        self.wrapper_class = wrapper_class
+        self.prepended = prepended
+        self.appended = appended
 
     @property
     def component(self) -> str | None:
@@ -142,24 +155,53 @@ class FieldInput:
         return self.component == "checkbox" and not self.is_group
 
     @property
-    def css_class(self) -> str:
-        """The widget's own classes, the component, a width, then its error modifier."""
-        classes = self.field.field.widget.attrs.get("class", "").split()
+    def own_classes(self) -> list[str]:
+        """The class names the widget already carries."""
+        return str(self.field.field.widget.attrs.get("class", "")).split()
+
+    @property
+    def pack_classes(self) -> list[str]:
+        """The component, a width, then the error modifier. Empty with no component."""
+        classes: list[str] = []
         if self.component:
             classes.append(self.component)
             if self.component not in self.fixed_size and not any(
-                name.startswith("w-") for name in classes
+                name.startswith("w-") for name in self.own_classes
             ):
                 classes.append(self.width)
             if self.show_errors and self.field.errors:
                 classes.append(self.error_modifiers[self.component])
-        return " ".join(dict.fromkeys(classes))
+        return classes
+
+    @property
+    def css_class(self) -> str:
+        """The widget's own classes, the component, a width, then its error modifier."""
+        return " ".join(dict.fromkeys(self.own_classes + self.pack_classes))
+
+    @property
+    def has_attached_text(self) -> bool:
+        """Whether text is drawn beside an input or a select that can hold it.
+
+        A group is several inputs, so it never holds attached text.
+        """
+        return (
+            bool(self.prepended or self.appended)
+            and self.component in {"input", "select"}
+            and not self.is_group
+        )
+
+    @property
+    def attached_class(self) -> str:
+        """The pack's classes as one string, for the element holding attached text."""
+        return " ".join(self.pack_classes)
 
     @property
     def attrs(self) -> dict[str, str | bool]:
         """The attributes the pack adds to the widget for this render."""
         attrs: dict[str, str | bool] = {}
-        if self.component:
+        if self.component and self.has_attached_text:
+            attrs["class"] = " ".join(self.own_classes) or False
+        elif self.component:
             attrs["class"] = self.css_class
         if self.requires_aria_required:
             attrs["aria-required"] = "true"
@@ -262,17 +304,20 @@ class FieldInput:
 
 
 @register.simple_tag(takes_context=True)
-def daisyui_field(context: Context, field: BoundField) -> FieldInput:
+def daisyui_field(context: Context, field: BoundField, **decoration: Any) -> FieldInput:
     """Return the pack's drawing of a bound field's widget.
 
     Used as ``{% daisyui_field field as drawn %}``: the frame asks the result
-    which shape to draw, then draws it with ``drawn.render``.
+    which shape to draw, then draws it with ``drawn.render``. A layout object's
+    template adds the options that say how the field is decorated, such as
+    ``prepended="$"``.
 
     Args:
         context: The template context, read for the helper's label and error
             switches. Each is off only when it equals False, as the
             templates read it, and on when absent.
         field: The bound field whose widget is drawn.
+        **decoration: The keyword-only arguments of ``FieldInput``, passed on.
 
     Returns:
         The field's input.
@@ -281,6 +326,8 @@ def daisyui_field(context: Context, field: BoundField) -> FieldInput:
         field,
         show_labels=context.get("form_show_labels") != False,  # noqa: E712
         show_errors=context.get("form_show_errors") != False,  # noqa: E712
+        wrapper_class=context.get("wrapper_class") or "",
+        **decoration,
     )
 
 

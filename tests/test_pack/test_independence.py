@@ -9,8 +9,11 @@ from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
     Alert,
+    AppendedText,
     FormActions,
     Modal,
+    PrependedAppendedText,
+    PrependedText,
     StrictButton,
     Tab,
     TabHolder,
@@ -37,6 +40,7 @@ from tests.forms import (
     CheckboxForm,
     CheckboxGroupsForm,
     DateSelectsForm,
+    DecoratedFieldsForm,
     DeveloperAttrsForm,
     FieldAndFormWideErrorsForm,
     FilesForm,
@@ -218,6 +222,17 @@ def alerted(data=None):
     )
 
 
+def attached(data=None):
+    return DecoratedFieldsForm(
+        data,
+        layout=(
+            PrependedText("amount", "$"),
+            AppendedText("country", "#"),
+            PrependedAppendedText("other", "$", ".00"),
+        ),
+    )
+
+
 def helper_buttons():
     return ButtonedForm(
         buttons=(
@@ -365,6 +380,13 @@ STATES = [
     pytest.param("{% crispy form %}", lambda: modalled({}), MINE, id="modal, invalid"),
     pytest.param("{% crispy form %}", alerted, MINE, id="alert"),
     pytest.param("{% crispy form %}", lambda: alerted({}), MINE, id="alert, invalid"),
+    pytest.param("{% crispy form %}", attached, NOTHING, id="attached text"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: attached({}),
+        NOTHING,
+        id="attached text, invalid",
+    ),
     pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
     pytest.param(
         "{% crispy form %}",
