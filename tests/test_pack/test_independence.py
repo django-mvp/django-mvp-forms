@@ -11,11 +11,13 @@ from django.apps import apps
 import mvp_forms
 from tests.forms import (
     CheckboxForm,
+    CheckboxGroupsForm,
     DateSelectsForm,
     DeveloperAttrsForm,
     FieldAndFormWideErrorsForm,
     FormWideErrorsForm,
     HelpedForm,
+    RadioGroupsForm,
     SelectsForm,
     TextInputsForm,
     UncoveredWidgetsForm,
@@ -34,7 +36,7 @@ HELPER_CLASSES = {LABEL_CLASS, FIELD_CLASS, FORM_CLASS}
 MINE = frozenset({"mine"})
 # Tailwind utilities the pack writes where daisyUI has no class for the job.
 # Each is named here so that adding one is a reviewed change.
-LAYOUT_UTILITIES = {"w-full", "flex", "gap-2"}
+LAYOUT_UTILITIES = {"w-full", "flex", "flex-col", "gap-2"}
 
 
 def helped(form, **settings):
@@ -114,6 +116,19 @@ STATES = [
         lambda: helped(CheckboxForm({}), form_show_labels=False),
         MINE,
         id="checkboxes without labels",
+    ),
+    pytest.param("{{ form|crispy }}", RadioGroupsForm, NOTHING, id="radio groups"),
+    pytest.param(
+        "{{ form|crispy }}", lambda: RadioGroupsForm({}), NOTHING, id="invalid radios"
+    ),
+    pytest.param(
+        "{{ form|crispy }}", CheckboxGroupsForm, NOTHING, id="checkbox groups"
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: CheckboxGroupsForm({}),
+        NOTHING,
+        id="invalid checkbox groups",
     ),
     pytest.param(
         "{{ form|crispy }}",

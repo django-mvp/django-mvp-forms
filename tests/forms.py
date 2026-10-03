@@ -149,3 +149,85 @@ class CheckboxForm(forms.Form):
     styled = forms.BooleanField(
         required=False, widget=forms.CheckboxInput(attrs={"class": "mine"})
     )
+
+
+class SecondOptionDisabled:
+    def create_option(self, name, value, *args, **kwargs):
+        option = super().create_option(name, value, *args, **kwargs)
+        if value == "b":
+            option["attrs"]["disabled"] = True
+        return option
+
+
+class DisablingRadio(SecondOptionDisabled, forms.RadioSelect):
+    pass
+
+
+class DisablingCheckboxes(SecondOptionDisabled, forms.CheckboxSelectMultiple):
+    pass
+
+
+class OwnTemplateRadio(forms.RadioSelect):
+    template_name = "django/forms/widgets/multiple_input.html"
+
+
+class OwnOptionTemplateRadio(forms.RadioSelect):
+    option_template_name = "django/forms/widgets/checkbox_option.html"
+
+
+class OwnTemplateCheckboxes(forms.CheckboxSelectMultiple):
+    template_name = "django/forms/widgets/multiple_input.html"
+
+
+class OwnOptionTemplateCheckboxes(forms.CheckboxSelectMultiple):
+    option_template_name = "django/forms/widgets/radio_option.html"
+
+
+MARKED = [("<b>", "<b>Bold</b>"), ("x", "Tom & Jerry")]
+MARKED_GROUPS = [("<i>Group</i>", [("y", "Yes")])]
+
+
+class RadioGroupsForm(forms.Form):
+    choice = forms.ChoiceField(
+        choices=FRUIT, widget=forms.RadioSelect, help_text="Pick one"
+    )
+    grouped = forms.ChoiceField(
+        choices=GROUPED, widget=forms.RadioSelect, required=False
+    )
+    empty = forms.ChoiceField(choices=[], widget=forms.RadioSelect, required=False)
+    marked = forms.ChoiceField(choices=MARKED, widget=forms.RadioSelect, required=False)
+    marked_groups = forms.ChoiceField(
+        choices=MARKED_GROUPS, widget=forms.RadioSelect, required=False
+    )
+    locked = forms.ChoiceField(choices=FRUIT, widget=DisablingRadio, required=False)
+    own = forms.ChoiceField(choices=FRUIT, widget=OwnTemplateRadio, required=False)
+    own_option = forms.ChoiceField(
+        choices=FRUIT, widget=OwnOptionTemplateRadio, required=False
+    )
+
+
+class CheckboxGroupsForm(forms.Form):
+    choice = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.CheckboxSelectMultiple, help_text="Pick any"
+    )
+    grouped = forms.MultipleChoiceField(
+        choices=GROUPED, widget=forms.CheckboxSelectMultiple, required=False
+    )
+    empty = forms.MultipleChoiceField(
+        choices=[], widget=forms.CheckboxSelectMultiple, required=False
+    )
+    marked = forms.MultipleChoiceField(
+        choices=MARKED, widget=forms.CheckboxSelectMultiple, required=False
+    )
+    marked_groups = forms.MultipleChoiceField(
+        choices=MARKED_GROUPS, widget=forms.CheckboxSelectMultiple, required=False
+    )
+    locked = forms.MultipleChoiceField(
+        choices=FRUIT, widget=DisablingCheckboxes, required=False
+    )
+    own = forms.MultipleChoiceField(
+        choices=FRUIT, widget=OwnTemplateCheckboxes, required=False
+    )
+    own_option = forms.MultipleChoiceField(
+        choices=FRUIT, widget=OwnOptionTemplateCheckboxes, required=False
+    )

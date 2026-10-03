@@ -43,6 +43,8 @@ class FieldInput:
         forms.PasswordInput: "input",
         forms.Textarea: "textarea",
         forms.CheckboxInput: "checkbox",
+        forms.CheckboxSelectMultiple: "checkbox",
+        forms.RadioSelect: "radio",
         forms.Select: "select",
         forms.SelectDateWidget: "select",
     }
@@ -50,11 +52,13 @@ class FieldInput:
     # Tailwind build finds them when it scans this module.
     # daisyUI gives an input a fixed width and has no modifier to change it, so
     # the one Tailwind utility the pack writes makes the input fill its field.
-    # A width utility the developer put on the widget replaces it. A checkbox is a
-    # fixed-size box and is never widened.
+    # A width utility the developer put on the widget replaces it. A checkbox and a
+    # radio are fixed-size and never widened.
     width = "w-full"
-    fixed_size: set[str] = {"checkbox"}
+    fixed_size: set[str] = {"checkbox", "radio"}
     templates: dict[type[forms.Widget], str] = {
+        forms.CheckboxSelectMultiple: "daisyui/widgets/group.html",
+        forms.RadioSelect: "daisyui/widgets/group.html",
         forms.SelectDateWidget: "daisyui/widgets/select_date.html",
     }
     error_modifiers: dict[str, str] = {
@@ -62,6 +66,7 @@ class FieldInput:
         "textarea": "textarea-error",
         "select": "select-error",
         "checkbox": "checkbox-error",
+        "radio": "radio-error",
     }
 
     def __init__(
@@ -83,14 +88,15 @@ class FieldInput:
     def template_name(self) -> str | None:
         """The pack's template for the field's widget, or None when it has none.
 
-        A widget that names a template of its own is drawn by that template, so
-        the pack's applies only while the widget has its class's template.
+        A widget that names a template of its own, or an option template of its
+        own, is drawn by that template, so the pack's applies only while the
+        widget has its class's templates.
         """
         widget = self.field.field.widget
         for widget_class, name in self.templates.items():
-            if (
-                isinstance(widget, widget_class)
-                and widget.template_name == widget_class.template_name
+            if isinstance(widget, widget_class) and all(
+                getattr(widget, attr, None) == getattr(widget_class, attr, None)
+                for attr in ("template_name", "option_template_name")
             ):
                 return name
         return None

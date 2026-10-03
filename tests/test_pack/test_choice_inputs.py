@@ -1,11 +1,18 @@
 """Fields with choices, drawn through django-crispy-forms."""
 
 import copy
+from typing import NamedTuple
 
 import pytest
 from crispy_forms.helper import FormHelper
 
-from tests.forms import DateSelectsForm, SelectEdgesForm, SelectsForm
+from tests.forms import (
+    CheckboxGroupsForm,
+    DateSelectsForm,
+    RadioGroupsForm,
+    SelectEdgesForm,
+    SelectsForm,
+)
 
 SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
 SELECTS = ["choice", "many", "maybe", "grouped"]
@@ -243,3 +250,223 @@ class TestSelectDate:
         assert all("select" in select["class"] for select in own)
         assert not any(select.has_attr("aria-label") for select in own)
         assert all(select.has_attr("aria-label") for select in pack)
+
+
+class Kind(NamedTuple):
+    form: type
+    input_type: str
+    held: dict
+    invalid: dict
+
+
+KINDS = [
+    pytest.param(
+        Kind(RadioGroupsForm, "radio", {"choice": "b"}, {"choice": "nowhere"}),
+        id="radio",
+    ),
+    pytest.param(
+        Kind(
+            CheckboxGroupsForm,
+            "checkbox",
+            {"choice": ["a", "b"]},
+            {"choice": ["nowhere"]},
+        ),
+        id="checkbox",
+    ),
+]
+
+
+def inputs_in(soup, name):
+    return soup.find(id=f"div_id_{name}").find_all("input")
+
+
+@pytest.mark.parametrize("kind", KINDS)
+@pytest.mark.parametrize("source", SOURCES)
+class TestChoiceGroups:
+    def test_every_option_is_an_input_of_the_type_sharing_one_name(
+        self, draw, source, kind
+    ):
+        soup = draw(source, form=kind.form())
+
+        options = inputs_in(soup, "choice")
+
+        assert [option["value"] for option in options] == ["a", "b"]
+        assert {option["type"] for option in options} == {kind.input_type}
+        assert {option["name"] for option in options} == {"choice"}
+        assert all(kind.input_type in option["class"] for option in options)
+
+    def test_an_option_is_never_widened(self, draw, source, kind):
+        soup = draw(source, form=kind.form())
+
+        options = inputs_in(soup, "choice")
+
+        assert not any("w-full" in option["class"] for option in options)
+
+    def test_every_option_has_a_label_of_its_own_tied_to_it(self, draw, source, kind):
+        soup = draw(source, form=kind.form())
+
+        options = inputs_in(soup, "choice")
+
+        assert len({option["id"] for option in options}) == 2
+        for option in options:
+            labels = soup.find_all("label", attrs={"for": option["id"]})
+            assert len(labels) == 1
+            assert labels[0].text.strip()
+
+    def test_the_wrapper_around_the_options_carries_no_component_class(
+        self, draw, source, kind
+    ):
+        soup = draw(source, form=kind.form())
+
+        wrapper = soup.find(id="id_choice")
+
+        assert wrapper.name == "div"
+        assert kind.input_type not in wrapper.get("class", [])
+        assert not wrapper.has_attr("aria-invalid")
+
+    def test_the_frame_is_a_fieldset_with_one_legend(self, draw, source, kind):
+        soup = draw(source, form=kind.form())
+
+        frame = soup.find(id="div_id_choice")
+
+        assert frame.name == "fieldset"
+        assert len(frame.find_all("legend", recursive=False)) == 1
+
+    def test_exactly_the_held_options_are_checked(self, draw, source, kind):
+        soup = draw(source, form=kind.form(kind.held))
+
+        checked = [
+            o["value"] for o in inputs_in(soup, "choice") if o.has_attr("checked")
+        ]
+
+        assert checked == ["b"] if kind.input_type == "radio" else ["a", "b"]
+
+    def test_the_initial_option_is_checked(self, draw, source, kind):
+        initial = {"choice": "a" if kind.input_type == "radio" else ["a"]}
+
+        soup = draw(source, form=kind.form(initial=initial))
+
+        checked = [
+            o["value"] for o in inputs_in(soup, "choice") if o.has_attr("checked")
+        ]
+        assert checked == ["a"]
+
+    def test_nothing_is_checked_when_nothing_is_held(self, draw, source, kind):
+        soup = draw(source, form=kind.form())
+
+        assert not any(o.has_attr("checked") for o in inputs_in(soup, "choice"))
+
+    def test_an_invalid_group_has_one_error_element_describing_the_fieldset(
+        self, draw, source, kind
+    ):
+        soup = draw(source, form=kind.form(kind.invalid))
+
+        frame = soup.find(id="div_id_choice")
+        described = frame["aria-describedby"].split()
+
+        assert len(frame.find_all(id="id_choice_error")) == 1
+        assert described == ["id_choice_helptext", "id_choice_error"]
+        assert all(soup.find(id=name) is not None for name in described)
+        options = inputs_in(soup, "choice")
+        assert all(option["aria-invalid"] == "true" for option in options)
+        assert all(f"{kind.input_type}-error" in o["class"] for o in options)
+        assert not any(option.has_attr("aria-describedby") for option in options)
+
+    def test_a_valid_group_carries_no_error_modifier(self, draw, source, kind):
+        soup = draw(source, form=kind.form(kind.held))
+
+        options = inputs_in(soup, "choice")
+
+        assert not any(f"{kind.input_type}-error" in o["class"] for o in options)
+        assert not any(option.has_attr("aria-invalid") for option in options)
+
+    def test_named_groups_each_sit_under_their_name(self, draw, source, kind):
+        soup = draw(source, form=kind.form())
+
+        frame = soup.find(id="div_id_grouped")
+        named = {
+            nested.find("legend").text.strip(): [
+                option["value"] for option in nested.find_all("input")
+            ]
+            for nested in frame.find_all("fieldset")
+        }
+
+        assert named == {"Fruit": ["a", "b"], "Vegetable": ["c"]}
+        assert [o["value"] for o in frame.find_all("input")] == ["a", "b", "c", "d"]
+
+    def test_an_attribute_set_on_one_option_stays_on_that_option(
+        self, draw, source, kind
+    ):
+        soup = draw(source, form=kind.form())
+
+        first, second = inputs_in(soup, "locked")
+
+        assert second.has_attr("disabled")
+        assert not first.has_attr("disabled")
+
+    def test_no_choices_draws_no_option(self, draw, source, kind):
+        soup = draw(source, form=kind.form())
+
+        assert inputs_in(soup, "empty") == []
+        assert soup.find(id="div_id_empty").name == "fieldset"
+
+    def test_markup_in_an_option_label_and_a_group_name_is_escaped(
+        self, draw, source, kind
+    ):
+        soup = draw(source, form=kind.form())
+
+        marked = soup.find(id="div_id_marked")
+        groups = soup.find(id="div_id_marked_groups")
+
+        assert marked.find("b") is None
+        assert "<b>Bold</b>" in marked.text
+        assert groups.find("i") is None
+        assert groups.find("fieldset").find("legend").text.strip() == "<i>Group</i>"
+
+    def test_no_id_is_repeated(self, draw, source, kind):
+        soup = draw(source, form=kind.form(kind.invalid))
+
+        ids = [element["id"] for element in soup.find_all(id=True)]
+
+        assert len(ids) == len(set(ids))
+
+    def test_a_subclass_naming_its_own_template_is_drawn_by_it(
+        self, draw, source, kind
+    ):
+        soup = draw(source, form=kind.form())
+
+        pack = soup.find(id="div_id_choice")
+        own = soup.find(id="div_id_own")
+
+        assert pack.find("label", class_="label") is not None
+        assert own.find("label", class_="label") is None
+        assert len(own.find_all("input")) == 2
+
+    def test_a_subclass_naming_its_own_option_template_is_drawn_by_it(
+        self, draw, source, kind
+    ):
+        soup = draw(source, form=kind.form())
+
+        own = soup.find(id="div_id_own_option")
+
+        assert own.find("label", class_="label") is None
+        assert len(own.find_all("input")) == 2
+
+
+class TestRadioGroup:
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_required_radio_group_marks_its_options_required(self, draw, source):
+        soup = draw(source, form=RadioGroupsForm())
+
+        assert all(o.has_attr("required") for o in inputs_in(soup, "choice"))
+
+
+class TestCheckboxGroup:
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_no_option_of_a_required_group_has_required(self, draw, source):
+        form = CheckboxGroupsForm()
+
+        soup = draw(source, form=form)
+
+        assert form.fields["choice"].required
+        assert not any(o.has_attr("required") for o in inputs_in(soup, "choice"))
