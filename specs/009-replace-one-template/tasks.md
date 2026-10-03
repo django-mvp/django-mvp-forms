@@ -41,7 +41,8 @@ Issue: #102. Delivers FR-001 to FR-008, FR-017, FR-018; SC-001, SC-002, SC-007.
 Plan, *The test fixtures*, *The first story's tests*, *Tests that pass on arrival*; research R1,
 R3, R6.
 
-- The `replace` and `pack_source` fixtures.
+- The `replace` and `pack_source` fixtures. `clear_crispy_template_caches` also clears
+  `crispy_forms_tags.whole_uni_formset_template`, which it missed.
 - `TestEveryTemplate`: parametrised over every distributed template. A copy with a marker draws
   every entry of `STATES` the same as the pack once the marker is taken out, and the marker is
   drawn in at least one state. `layout/tab-link.html` is left out of the second half.
@@ -70,17 +71,18 @@ Issue: #103. Delivers FR-007, FR-009, FR-010, FR-011, FR-019; SC-003, SC-004.
 
 ### T003 — The list, and the check that keeps it true
 
-**Files**: `tests/template_surface.py` (new), `tests/test_pack/test_template_list.py` (new),
-`README.md`
+**Files**: `tests/template_surface.py` (new), `tests/test_template_surface.py` (new),
+`tests/test_pack/test_template_list.py` (new), `README.md`
 
 Plan, *The list*, *The check*; research R2, R5.
 
-- `tests/template_surface.py`: `distributed`, `names_read`, `renderer_route`, `listed`,
-  `disagreements`.
-- `TestNamesRead`: one test per rule of research R5, on templates written in the test.
-- `TestTheListMatchesThePackage`: no disagreements between the README and the package; every row
-  says what its template draws.
-- `TestTheCheckFails`: each kind of disagreement is reported, with made-up inputs.
+- `tests/template_surface.py`: the class `TemplateSurface` with `distributed`, `names_read`,
+  `renderer_route`, `listed` and `disagreements`.
+- `tests/test_template_surface.py`, `TestNamesRead`: one test per rule of research R5, on
+  templates written in the test, `{% csrf_token %}` among them. `TestDisagreements`: each kind
+  of disagreement is reported, with a made-up README and a made-up directory.
+- `tests/test_pack/test_template_list.py`, `TestTheListMatchesThePackage`: no disagreements
+  between the README and the package; every row says what its template draws.
 - README: `### Replacing one template` with what a replacement is, where to put it for each
   route, the note on the templates django-crispy-forms keeps in memory, and the table. The
   sentence about the form renderer in *Template pack `daisyui`* points at it.
@@ -93,6 +95,8 @@ Plan, *The list*, *The check*; research R2, R5.
 Plan, *The worked example*, *The README, the CHANGELOG and the glossary*.
 
 - README: the worked example under a `#### ` heading inside the section.
+- `readme_template`, a reader beside `readme_example` that returns the `django` block under a
+  `#### ` heading and runs nothing.
 - `TestReadmeReplacement`: the example as written, put in place with `replace`, draws its marker
   on a required field and not on an optional one, and the pack's marker is not drawn.
 - CHANGELOG, under Added: replacing one template, the list, and that the paths and the names
@@ -108,31 +112,33 @@ Issue: #104. Delivers FR-012 to FR-016, FR-019; SC-005, SC-006.
 ### T005 — A replacement at a path the pack has moved away from is honoured and warned about
 
 **Files**: `mvp_forms/deprecation.py` (new), `mvp_forms/templatetags/daisyui.py`,
-`tests/test_deprecation.py` (new), `tests/test_templatetags/test_daisyui.py`
+`tests/test_deprecation.py` (new), `tests/test_templatetags/test_daisyui.py`,
+`tests/host_app/templates/` (templates for the renderer case)
 
 Plan, *Changing a listed template later*; research R7.
 
-- `WITHDRAWN` and `host_template`.
+- `WITHDRAWN` and `host_template`, which returns the path to draw.
 - The tag `daisyui_host_template`.
 - `tests/test_deprecation.py` and `TestHostTemplate`, as the plan lists them. A row is put into
-  `WITHDRAWN` with `monkeypatch.setitem`, so the registry is empty again after each test.
+  `WITHDRAWN` with `monkeypatch.setitem`, so the registry is empty again after each test. The
+  renderer case runs under the default renderer with `tests.host_app` listed before
+  `mvp_forms`.
 
 ### T006 — The list carries a path on its way out, and the documents say what is promised
 
-**Files**: `tests/template_surface.py`, `tests/test_pack/test_template_list.py`, `README.md`,
+**Files**: `tests/template_surface.py`, `tests/test_template_surface.py`, `README.md`,
 `CHANGELOG.md`
 
 Plan, *Changing a listed template later*, *The README, the CHANGELOG and the glossary*.
 
-- `withdrawn_listed`, and `disagreements` taking the withdrawn paths: one in `WITHDRAWN` and not
-  in the README's table of paths on their way out, one in the table and not in `WITHDRAWN`, a
-  replacement that differs. A withdrawn path is not reported as listed but not distributed.
-- `TestTheCheckFails` gains those cases, with made-up inputs. The real check passes with
-  `WITHDRAWN` empty and no such table in the README.
+- `TemplateSurface.disagreements` reads the withdrawn paths: one that the table does not list is
+  reported, and a listed one is not reported as listed but not distributed.
+- `TestDisagreements` gains those two cases. The real check passes with `WITHDRAWN` empty.
 - README: the last part of the section. A listed path and the names it is handed change only
   through one minor version in which the old one still works; a replacement at an old path is
-  still drawn for that version and raises a `DeprecationWarning` naming what replaces it; an old
-  name keeps its value for that version; the CHANGELOG says what replaces each; the markup and
-  the classes inside a pack template are not part of the promise. It says how a path on its way
-  out is shown, without an empty table.
+  still drawn for that version and raises a `DeprecationWarning` naming what replaces it, which
+  a test runner or `python -W default` shows, as they do Django's; an old name keeps its value
+  for that version; the CHANGELOG says what replaces each; a path on its way out stays in the
+  table with what replaces it; the markup and the classes inside a pack template are not part
+  of the promise.
 - CHANGELOG: the entry from T004 gains what happens when a listed template changes.

@@ -203,7 +203,7 @@ whatever the page put there, and most of it is not the pack's to promise.
 **Why:** it is D3 made checkable. The check compares what a template reads with its entry, so a
 template cannot start reading a name without the list saying so.
 
-**ADR:** docs/adr/0029-every-pack-template-is-public.md
+**ADR:** expected, with D2.
 
 ## D14. A replacement at an old path is looked for where the template is drawn
 
@@ -216,6 +216,8 @@ asks.
 
 - A check when the project starts. Django's system checks do not run under a production server,
   and FR-013 asks for the warning no later than when a form is drawn.
+- A second table in the README for paths on their way out, with a parser of its own. Nothing
+  would exercise it until a path is withdrawn, so a withdrawn path stays a row of the one table.
 - A template left at the old path that forwards to the new one. The pack could not tell its own
   forwarding template from a replacement, so it could not warn only the projects that have one.
 - Changing every `{% include %}` in the pack to go through the tag now. It would change what
@@ -227,7 +229,7 @@ One lookup answers both "is there a replacement" and "which template to draw".
 **Revisit if:** django-crispy-forms renames one of the paths it chooses, which the pack cannot
 intercept from a template.
 
-**ADR:** docs/adr/0029-every-pack-template-is-public.md
+**ADR:** expected, with D2.
 
 ## D15. The check reads the README
 
@@ -251,3 +253,20 @@ break the issue describes.
 **Open with the maintainer:** #115.
 
 **ADR:** none — nothing is decided.
+
+## D17. The design review's findings, all applied
+
+**Chosen:** one medium and eight low findings, each applied to the plan before any code.
+
+- The suite cleared four of django-crispy-forms' five cached templates; the first task adds the
+  fifth, so a replacement of `whole_uni_formset.html` does not depend on test order.
+- `host_template` returns the path to draw, so what replaces a withdrawn path is stated once.
+- A withdrawn path stays a row of the one table. The second table and its parser are dropped.
+- The helper's own tests are in `tests/test_template_surface.py`, and the helper is one class.
+- `{% csrf_token %}` counts as reading `csrf_token`. What the pack's tags read in Python is
+  outside the list.
+- The README says how a deprecation warning is seen.
+- The renderer case of the tag's tests runs under the default renderer.
+- The worked example has a reader of its own, since it is a template and is not run.
+
+**ADR:** none — corrections to the plan, not decisions that outlive it.

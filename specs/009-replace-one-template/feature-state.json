@@ -2,7 +2,7 @@
   "feature": "009-replace-one-template",
   "branch": "009-replace-one-template",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-10-03T21:59:04Z",
       "note": "research and plan written on the specification's branch"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T22:01:24Z",
+      "note": "one reviewer, three lenses"
     }
   ],
   "gates": {
@@ -24,12 +29,27 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-03T22:08:12Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T22:08:12Z",
+      "self_resolved": [
+        "DR-001 (medium) the suite cleared four of django-crispy-forms' five cached templates: the fifth is added in T001",
+        "DR-002 (low) what replaces a withdrawn path is stated once, and host_template returns the path to draw: applied to plan and T005",
+        "DR-003 (low) no second table for withdrawn paths: applied to plan and T006",
+        "DR-004 (low) the helper's own tests live in tests/test_template_surface.py: applied to plan, T003, T006",
+        "DR-005 (low) the helper is one class, TemplateSurface: applied to plan and T003",
+        "DR-006 (low) csrf_token counts as read; what the pack's tags read in Python is outside the list: applied to research, plan, T003",
+        "DR-007 (low) the README says how a deprecation warning is seen: applied to T006",
+        "DR-008 (low) the renderer case of the tag's tests runs under the default renderer: applied to plan and T005",
+        "DR-009 (low) the worked example has its own reader: applied to plan and T004"
+      ]
     }
   },
   "stories": [
@@ -104,7 +124,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

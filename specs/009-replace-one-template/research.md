@@ -71,7 +71,7 @@ the behaviour in place for every template, and the edge cases around placement.
 The form renderer route is exactly the values of `FieldInput.templates` and
 `FieldInput.inline_templates`, plus every template those include: `widgets/group.html`,
 `widgets/inline_group.html`, `widgets/select_date.html`, `widgets/clearable_file_input.html`,
-`widgets/group_options.html` and `widgets/attrs.html`. The other forty are on the page route.
+`widgets/group_options.html` and `widgets/attrs.html`. The other thirty-six are on the page route.
 No template is included from both routes. The check computes the route this way and does not
 trust the directory name.
 
@@ -91,14 +91,14 @@ Five templates are loaded through functions wrapped in `functools.lru_cache`: `f
 (`crispy_forms_tags.py:188,193`). Django's development server resets its own template loaders
 when a template file changes (`django/template/autoreload.py:33-45`) but knows nothing of these
 caches. A replacement for one of the five that is added or edited while the server runs is not
-picked up until it restarts. The README says so. The test suite already clears them
-(`tests/conftest.py`, `clear_crispy_template_caches`).
+picked up until it restarts. The README says so. The test suite's `clear_crispy_template_caches` (`tests/conftest.py`) clears
+four of them, and the first task adds the fifth, `whole_uni_formset_template`.
 
 ## R5. What a template is handed
 
 "Handed" is read as D3 has it: the names the pack's own template reads from outside itself. They
-are found by compiling the template and walking its nodes, which is exact where a regular
-expression is not:
+are found by compiling the template and walking its nodes, which follows scope where a regular
+expression cannot:
 
 - a `{{ variable }}`, a tag argument and a filter argument are each a `FilterExpression` whose
   `var` is a `Variable` with `lookups`, or a literal with none
@@ -106,11 +106,17 @@ expression is not:
 - `{% for %}` binds its loop variables and `forloop` inside its body, `{% with %}` binds its
   names inside its body, and a tag used with `as name` binds `name` for what follows it. Those
   are the template's own and are not handed;
-- `{% include … with name=value %}` reads `value` and binds nothing in the including template.
+- `{% include … with name=value %}` reads `value` and binds nothing in the including template;
+- `{% csrf_token %}` reads `csrf_token`, though it has no expression.
+
+What the pack's own tags read from the context in Python, such as `form_show_labels` in
+`daisyui_field`, is not written in a template and is outside the list. Whether the tags are
+public is #115.
 
 A name is its first lookup: `field.auto_id` is `field`. Two values are the pack's own objects,
-`drawn` (a `FieldInput`, or a `DrawnButton` in the two button templates) and `table` (a
-`FormsetTable`). For those the promise reaches the part read, as D3 says, so they are listed and
+`drawn` (a `FieldInput`) and `table` (a `FormsetTable`). A template that sets one itself with a
+tag, as `field.html` and the two button templates do, is not handed it. `frame.html` and
+`field_body.html` are handed `drawn` by the template that includes them. For those the promise reaches the part read, as D3 says, so they are listed and
 checked one level down: `drawn.is_group`, `table.rows`. Everything else belongs to Django or to
 django-crispy-forms and is listed by its name alone.
 
@@ -144,7 +150,8 @@ without: a way to honour a replacement at a path the pack no longer ships, and t
   template, the form's renderer in `FieldInput`. Django's cached loader remembers a miss, so a
   project with nothing there pays for one lookup.
 - When one is found the pack draws it and raises a `DeprecationWarning` naming the old path and
-  what replaces it. When none is found nothing is raised. This is FR-013 as written, and it
+  what replaces it. Python shows a `DeprecationWarning` under a test runner or with
+  `-W default`, as it does Django's own. When none is found nothing is raised. This is FR-013 as written, and it
   covers a template the pack stops using as well as one it renames.
 - The paths django-crispy-forms chooses (`"%s/layout/div.html"` and the rest) are not the pack's
   to rename. They change only if django-crispy-forms changes them.

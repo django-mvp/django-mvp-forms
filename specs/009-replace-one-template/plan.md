@@ -40,15 +40,16 @@ the pack's.
 nothing under `.github/` changes.
 
 **Scale/Scope**: no pack template changes. One module and one template tag are added. One
-README section, one test helper module, three test modules.
+README section, one test helper module, four test modules.
 
 ## Constitution Check
 
 - **I, test-first**: every test is written before what it proves, or, where the behaviour is
   already there, proved by breaking it (see *Tests that pass on arrival*).
 - **II and III, simplicity**: no setting and no registry of replacements. The deprecation module
-  is one dictionary and one function, required by FR-013 and the specification's assumption that
-  the behaviour exists before the first release that needs it.
+  is one dictionary and one function. The specification's assumption that the behaviour exists
+  before the first release that needs it, and the third story's independent test, are what ask
+  for it now.
 - **VI, documentation**: the README section and the CHANGELOG entries land in the story that
   introduces what they describe.
 - **VII, dependencies**: none added.
@@ -76,8 +77,9 @@ In `tests/conftest.py`:
   source under a temporary directory, puts that directory first in `TEMPLATES[0]["DIRS"]`, sets
   `FORM_RENDERER` to `django.forms.renderers.TemplatesSetting` and adds `django.forms` to
   `INSTALLED_APPS`, through `override_settings`, and clears django-crispy-forms' template caches
-  on the way in and on the way out (`clear_crispy_template_caches`, already there). Leaving the
-  block takes the replacements away.
+  on the way in and on the way out. `clear_crispy_template_caches` is already there and clears
+  four of the five; this feature adds `whole_uni_formset_template` to it. Leaving the block
+  takes the replacements away.
 - `pack_source`: returns the source of a distributed template by its path.
 
 `tests/host_app/` is a small app that exists only for the tests: an `__init__.py` and one
@@ -102,7 +104,8 @@ default `INSTALLED_APPS` of the suite.
   (1), one layout object among others (2), a widget template through the renderer with the frame
   still the pack's (3), a template several pack templates include (4), the filter, the tag and a
   formset in both layouts (5), taken away again (7), and a form's own `template=`,
-  `field_template` and helper `template` still winning (9).
+  `field_template` and helper `template` still winning (9). Scenario 6 is the parametrised test
+  and scenario 8 is the comparison of base and tip below.
 - **Placement** (edge cases): an app listed after the pack is not used; a widget replacement in
   `DIRS` under the default renderer is not used; the same one in an app listed before the pack
   is; two replacements, one including the other, are both used; `tab-link.html` beside a
@@ -127,7 +130,8 @@ A section of the README's public surface, `### Replacing one template`. It holds
    in memory (research R4);
 3. the worked example, a fenced `django` block under a `#### ` heading of its own;
 4. the list: one markdown table, a row per template;
-5. what happens when the pack changes a listed template (third story).
+5. what happens when the pack changes a listed template, and how the warning is seen (third
+   story).
 
 The table's columns are `Template`, `Draws`, `Handed` and `Found by`:
 
@@ -142,42 +146,46 @@ formsets, widgets.
 
 ## The check
 
-`tests/template_surface.py` is a helper module for the tests, holding what the check needs and
-nothing that asserts:
+`tests/template_surface.py` is a helper module for the tests. It holds one class,
+`TemplateSurface(readme, templates_directory, withdrawn)`, built from the README's text, the
+directory the package's templates are in and the withdrawn paths. It asserts nothing. Its
+methods:
 
-- `distributed()`: the paths of every template under the package's `templates` directory.
+- `distributed()`: the paths of every template under the directory.
 - `names_read(source)`: the names a template reads from outside itself, as research R5 describes,
   by compiling it with the `django` engine and walking its nodes. Parts of `drawn` and `table`
   come back with their dot.
 - `renderer_route()`: the paths on the form renderer route, as research R2 describes.
-- `listed(readme)`: the table's rows, each with its path, its handed names and its route.
-- `withdrawn_listed(readme)`: the rows of the table of paths on their way out, added in the
-  third story.
-- `disagreements(listed, distributed, reads, renderer_route, …)`: every way the list and the
-  package differ, as a list of short tuples naming the kind and the path: a distributed
-  template not listed, a listed path not distributed, a name read and not listed, a route
-  listed wrongly.
+- `listed()`: the table's rows, each with its path, its handed names and its route.
+- `disagreements()`: every way the list and the package differ, as a list of short tuples naming
+  the kind and the path: a distributed template not listed, a listed path not distributed, a
+  name read and not listed, a route listed wrongly.
 
-`tests/test_pack/test_template_list.py`:
+`tests/test_template_surface.py` tests the helper, as `tests/test_factories.py` would test
+`tests/factories.py`:
+
+- `TestNamesRead`: one test per rule in research R5, on small templates written in the test.
+- `TestDisagreements`: given a made-up README and a made-up directory of templates, each kind of
+  disagreement is reported: a template added, one removed, one renamed, a name read that the row
+  leaves out, the wrong route (US2 scenario 5).
+
+`tests/test_pack/test_template_list.py`, whose subject is the README and the pack's templates:
 
 - the real list and the real package have no disagreements (US2 scenarios 1, 3, 6; SC-003);
-- every row has something in `Draws` (scenario 2), asserted as non-empty and never by its words;
-- given made-up inputs, each kind of disagreement is reported: a template added, one removed,
-  one renamed, a name read that the row leaves out, the wrong route (scenario 5).
-
-`names_read` has tests of its own in the same module, one per rule in research R5, on small
-templates written in the test.
+- every row has something in `Draws` (scenario 2), asserted as non-empty and never by its words.
 
 The check lives in the tests and not in the package: nothing in the issue needs the list at run
 time (D6).
 
 ## The worked example
 
-The README's example replaces `daisyui/required_marker.html`. A test in
-`tests/test_pack/test_documented_examples.py` reads the fenced block from under its heading, as
-`readme_example` already does for the others, puts it in place with `replace`, and draws a form
-with a required field and an optional one. The required field's label holds the element the
-example writes, the optional one's does not, and the pack's own marker element is not drawn.
+The README's example replaces `daisyui/required_marker.html`. `readme_example` in
+`tests/test_pack/test_documented_examples.py` reads a `python` block under a `### ` heading and
+runs it, which does not fit a template. A second reader beside it, `readme_template`, returns
+the source of the `django` block under the example's `#### ` heading and runs nothing. The test
+puts that source in place with `replace` and draws a form with a required field and an optional
+one. The required field's label holds the element the example writes, the optional one's does
+not, and the pack's own marker element is not drawn.
 
 ## Changing a listed template later
 
@@ -188,7 +196,7 @@ WITHDRAWN: dict[str, str | None] = {}
 
 
 def host_template(path: str, get_template: Callable[[str], object]) -> str:
-    """Return ``path`` when the host project has a template there, or ``""``."""
+    """Return the path to draw where the pack used to draw ``path``."""
 ```
 
 - `WITHDRAWN` maps a path the pack has moved away from to the path that replaces it, or to None
@@ -196,44 +204,52 @@ def host_template(path: str, get_template: Callable[[str], object]) -> str:
 - `host_template` looks `path` up in `WITHDRAWN` (a path that is not there is a mistake in the
   pack and raises `KeyError`), then asks `get_template` for it. Found: it raises a
   `DeprecationWarning` naming the path and what replaces it, or saying that nothing does, and
-  returns the path. `TemplateDoesNotExist`: it returns `""` and warns of nothing.
+  returns the path. `TemplateDoesNotExist`: it warns of nothing and returns the path that
+  replaces it, or `""` when nothing does. The replacement is stated once, in `WITHDRAWN`.
 - `get_template` is the engine's or the renderer's own, so the question is asked of whichever
   would draw the template.
 
-In `mvp_forms/templatetags/daisyui.py`, one tag:
+In `mvp_forms/templatetags/daisyui.py`, one tag, used the same way for a template that moved and
+for one the pack stopped using:
 
 ```django
-{% daisyui_host_template "daisyui/old.html" as old %}{% include old|default:"daisyui/new.html" %}
+{% daisyui_host_template "daisyui/old.html" as name %}{% if name %}{% include name %}{% endif %}
 ```
 
 `daisyui_host_template` takes the context and calls `host_template` with
-`context.template.engine.get_template`. A template the pack has stopped using is the same tag
-with `{% if old %}{% include old %}{% endif %}`. `FieldInput` would call `host_template` with
+`context.template.engine.get_template`. `FieldInput` would call `host_template` with
 `self.field.form.renderer.get_template`, at the release that moves a widget template.
 
-No draw site uses the tag in this release, because nothing is withdrawn. A release that moves a
-template adds its row to `WITHDRAWN`, changes the draw site, lists the old path in the README's
-table of paths on their way out, and says what replaces it in the CHANGELOG. The decision record
-written at convergence states that procedure.
+No template in the pack uses the tag in this release, because nothing is withdrawn. A release
+that moves a template adds its row to `WITHDRAWN`, changes the place it is drawn from, keeps the
+old path's row in the README's table with what replaces it, and says so in the CHANGELOG. The
+decision record written at convergence states that procedure.
 
 Tests:
 
 - `tests/test_deprecation.py`, mirroring the module: with a row put into `WITHDRAWN` for the
   test, a template at the old path is returned and warned about, with both paths in the
-  warning; none there returns `""` and warns of nothing, with warnings turned into errors; a row
-  whose value is None warns without naming a replacement path; a path that is not withdrawn
-  raises `KeyError`.
+  warning; none there returns the replacing path and warns of nothing, with warnings turned into
+  errors; a row whose value is None returns `""` when the host project has nothing there, and
+  warns without naming a replacement path when it has; a path that is not withdrawn raises
+  `KeyError`.
 - `tests/test_templatetags/test_daisyui.py`, a `TestHostTemplate` class: a template that draws
   through the tag draws the host project's template at the old path and warns (US3 scenario 2),
   draws the new one with no warning when the host project has none (6), and draws nothing for a
-  path with no replacement when the host project has none (3). One of them through the form
-  renderer, in a widget template, so the engine asked is the renderer's.
-- `tests/test_pack/test_template_list.py`: a path in `WITHDRAWN` must be in the README's table of
-  paths on their way out with the same replacement, a path in that table must be in `WITHDRAWN`,
-  and a withdrawn path does not count as "listed but not distributed". With made-up inputs.
+  path with no replacement when the host project has none (3). One case runs under the default
+  renderer, in a widget template kept in `tests/host_app/templates/` with `tests.host_app`
+  listed before `mvp_forms`, so the engine asked is the renderer's own and not the one
+  `TEMPLATES` describes.
+- `tests/test_template_surface.py`: a path in `WITHDRAWN` that the README's table does not list
+  is a disagreement, and a listed path that is in `WITHDRAWN` is not reported as listed but not
+  distributed. With made-up inputs.
+
+A withdrawn path stays a row of the one table, with what replaces it said in its `Draws` cell.
+There is no second table.
 
 FR-014, a renamed name, has no mechanism (research R7) and so no test. FR-012, FR-015 and FR-016
-are rules for later releases; the decision record and the README state them.
+are rules for later releases; the decision record and the README state them. Scenarios 1, 4, 5
+and 7 of the third story describe later releases and have nothing to test in this one.
 
 ## Tests that pass on arrival
 
