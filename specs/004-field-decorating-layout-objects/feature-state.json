@@ -185,8 +185,31 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_field_with_buttons.py",
+              "tests/test_pack/test_attached_text.py::TestAttachedTextSize",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputJoin",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples",
+              "tests/test_pack/test_documented_examples.py::TestReadmeFieldWithButtons"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_field_with_buttons.py tests/test_pack/test_attached_text.py tests/test_pack/test_independence.py tests/test_pack/test_documented_examples.py tests/test_templatetags/test_daisyui.py -q (exit 0, 503 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:132",
+              "mvp_forms/templatetags/daisyui.py:282",
+              "mvp_forms/templatetags/daisyui.py:294",
+              "mvp_forms/templates/daisyui/field_body.html:2",
+              "mvp_forms/templates/daisyui/layout/field_with_buttons.html:2"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T006",

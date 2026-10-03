@@ -65,6 +65,8 @@ class FieldInput:
         appended: Text drawn after the input, as markup.
         inline: Whether a group of choices is drawn along a line, wrapping when it
             does not fit, and not one under another.
+        join: The ``FieldWithButtons`` whose buttons are joined to the input, if
+            any. Its buttons were drawn by django-crispy-forms before the field.
 
     Raises:
         InvalidChoice: A size, colour or variant stated for the form or the
@@ -127,6 +129,7 @@ class FieldInput:
         prepended: str | None = None,
         appended: str | None = None,
         inline: bool = False,
+        join: Any = None,
     ) -> None:
         self.field = field
         self.show_labels = show_labels
@@ -135,6 +138,7 @@ class FieldInput:
         self.prepended = prepended
         self.appended = appended
         self.inline = inline
+        self.join = join
         choices = choices or FormChoices()
         self.modifiers = self.resolve_modifiers(choices, placed, self.component)
         self.removal_modifiers = (
@@ -275,12 +279,19 @@ class FieldInput:
         return str(self.field.field.widget.attrs.get("class", "")).split()
 
     @property
+    def is_joined(self) -> bool:
+        """Whether the field is drawn with buttons joined to it."""
+        return bool(self.join)
+
+    @property
     def pack_classes(self) -> list[str]:
         """The component, the choices, a width, the error. Empty with no component."""
         classes: list[str] = []
         if self.component:
             classes.append(self.component)
             classes.extend(self.modifiers)
+            if self.is_joined and not self.is_group:
+                classes.append("join-item")
             if self.component not in self.fixed_size and not any(
                 name.startswith("w-") for name in self.own_classes
             ):

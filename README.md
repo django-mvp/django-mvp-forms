@@ -384,6 +384,7 @@ class PriceForm(forms.Form):
 - The text is markup. It is written into the page as it is, so `"<b>US</b>"` is drawn as a bold element and a currency symbol such as `&euro;` works. When you build it from anything a person typed, escape it first, for example with `django.utils.html.escape` or `format_html`. The label, the help text, the errors and the value stay escaped.
 - On a checkbox, a radio group, a date drawn as three selects, a textarea or a file input there is nowhere to attach the text, so the field is drawn exactly as it is without the layout object. A hidden field is drawn as its hidden input alone.
 - `css_class` and extra attributes go to the input, as they do for `Field`. `template=` draws your own template. `input_size` and `active` are accepted and do nothing.
+- The wrapper takes the size of the field. With a size stated for the form, or with a `Choice` around the layout object, the size class (`input-lg`, or `select-lg` on a select) is on the wrapper and the input inside carries none, so the text and the input read as one control.
 - `wrapper_class` now works on any field, not only on these three: it is added to the class of the frame's outer element, whether that is a `<div>` or a `<fieldset>`. `Field("name", wrapper_class="wide")` draws `class="fieldset wide"`.
 
 #### Choices in a line
@@ -418,6 +419,39 @@ class SurveyForm(forms.Form):
 - The frame is the group's usual one: a `<fieldset>` with a `<legend>`, the required marker, the help text and the errors, described by the help text and the error. Initial and submitted values check the same options, disabled options stay disabled, choices with named groups sit under their names, and `cleaned_data` is what the group without the layout object gives.
 - A widget that names a template or an option template of its own is drawn by it. A field with no choices is drawn with its frame and no option, and a field that is not a group, such as a text field, is drawn as it is without the layout object.
 - `css_class` and extra attributes go to every option, as they do for `Field`. `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
+
+#### A field with buttons
+
+`FieldWithButtons` comes from `crispy_forms.bootstrap`. It draws one field with any number of buttons joined to it, such as a search box with a button beside it. The first item is the field, as a name or as a `Field`, and the rest are the buttons:
+
+```python
+from crispy_forms.bootstrap import FieldWithButtons, StrictButton
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Button, Field, Layout
+from django import forms
+
+
+class SearchForm(forms.Form):
+    query = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            FieldWithButtons(
+                Field("query", css_class="mine"),
+                StrictButton("Go", type="submit", name="go"),
+                Button("clear", "Clear"),
+            ),
+        )
+```
+
+- The field is drawn in its usual frame, with its label, help text and errors. Inside it one daisyUI `join` element holds the input, which carries `join-item`, and then every button in the order you gave them. The buttons are the ones `StrictButton`, `Submit` and `Button` draw anywhere else, and each is drawn once, so a `Submit` keeps its name and value and a button whose content holds markup or `{{ ... }}` from a value is escaped, never evaluated.
+- With no buttons the group holds the input alone. A failing field has its error modifier on the input, which is marked invalid and described by the error element in the frame.
+- A `Field` as the first item gives its class and attributes to the input. `css_id`, `css_class` and any other attribute go to the `join` element, and a class written for another template pack is dropped from it. `template=` draws your own template. `input_size` is accepted and does nothing.
+- On a select the group is drawn as it is on an input. On a checkbox or a radio group both the field and the buttons are drawn, and no option carries `join-item`. A hidden field is drawn as its hidden input alone.
+- The input and the buttons take the same size. State it for the whole form, or put a `Choice` around the layout object: `Choice(FieldWithButtons("query", StrictButton("Go")), size="lg")` gives the input `input-lg` and the button `btn-lg`. A size stated for one field by name, `FormChoices(fields={"query": Choice(size="lg")})`, reaches the input and cannot reach its buttons, which django-crispy-forms draws before the field, so for a field with buttons state the size with `Choice` around the `FieldWithButtons` or for the whole form.
+- Give a button `css_class="join-item"` to close the doubled border where the joined parts meet.
 
 ### Size, colour and variant
 

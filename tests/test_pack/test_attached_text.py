@@ -4,6 +4,7 @@ import pytest
 from crispy_forms.bootstrap import AppendedText, PrependedAppendedText, PrependedText
 from crispy_forms.layout import Field
 
+from mvp_forms.choices import Choice, FormChoices
 from tests.forms import DecoratedFieldsForm, MarkedUpDecoratedForm
 
 OBJECTS = [
@@ -337,3 +338,38 @@ class TestWrapperClass:
         soup = draw_form(draw, Field("amount", wrapper_class="mine"), "other")
 
         assert frame_of(soup, "other")["class"] == ["fieldset"]
+
+
+class TestAttachedTextSize:
+    @pytest.mark.parametrize("build", OBJECTS)
+    def test_the_forms_size_is_on_the_wrapper_and_not_on_the_input_inside(
+        self, draw, build
+    ):
+        form = DecoratedFieldsForm(None, layout=[build()])
+        form.helper.daisyui = FormChoices(size="lg")
+
+        frame = frame_of(draw("{% crispy form %}", form=form))
+
+        assert "input-lg" in wrapper_of(frame)["class"]
+        assert "input-lg" not in frame.find(id="id_amount").get("class", [])
+
+    @pytest.mark.parametrize("build", OBJECTS)
+    def test_a_choice_around_the_layout_object_puts_its_size_on_the_wrapper_only(
+        self, draw, build
+    ):
+        soup = draw_form(draw, Choice(build(), size="sm"))
+
+        frame = frame_of(soup)
+
+        assert "input-sm" in wrapper_of(frame)["class"]
+        assert "input-sm" not in frame.find(id="id_amount").get("class", [])
+
+    def test_a_choice_around_the_layout_object_sizes_the_wrapper_of_a_select(
+        self, draw
+    ):
+        soup = draw_form(draw, Choice(PrependedText("country", "#"), size="sm"))
+
+        frame = frame_of(soup, "country")
+
+        assert "select-sm" in wrapper_of(frame, "select")["class"]
+        assert "select-sm" not in frame.find(id="id_country").get("class", [])

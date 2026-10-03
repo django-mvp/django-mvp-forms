@@ -3,7 +3,7 @@
 import copy
 
 import pytest
-from crispy_forms.bootstrap import StrictButton
+from crispy_forms.bootstrap import FieldWithButtons, StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Button, Hidden, Reset, Submit
 from django import forms
@@ -38,6 +38,7 @@ from tests.forms import (
     SelectsForm,
     TextInputsForm,
     UncoveredInput,
+    UncoveredWidgetsForm,
 )
 
 KINDS = [
@@ -1288,3 +1289,50 @@ class TestFieldInputInline:
 
     def test_an_inline_group_is_still_a_group(self):
         assert FieldInput(RadioGroupsForm()["choice"], inline=True).is_group
+
+
+class TestFieldInputJoin:
+    def test_a_field_with_a_join_is_joined(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"], join=FieldWithButtons("text")
+        )
+
+        assert field_input.is_joined
+
+    def test_a_field_without_a_join_is_not_joined(self):
+        assert not FieldInput(TextInputsForm()["text"]).is_joined
+
+    @pytest.mark.parametrize("join", [None, False, ""])
+    def test_a_join_that_is_not_true_is_not_joined(self, join):
+        assert not FieldInput(TextInputsForm()["text"], join=join).is_joined
+
+    @pytest.mark.parametrize(
+        ("form", "name"),
+        [(TextInputsForm, "text"), (SelectsForm, "choice"), (CheckboxForm, "agree")],
+    )
+    def test_a_joined_input_carries_join_item(self, form, name):
+        field_input = FieldInput(form()[name], join=FieldWithButtons(name))
+
+        assert "join-item" in field_input.pack_classes
+        assert "join-item" in field_input.css_class.split()
+
+    @pytest.mark.parametrize(
+        ("form", "name"),
+        [(TextInputsForm, "text"), (SelectsForm, "choice"), (CheckboxForm, "agree")],
+    )
+    def test_an_input_that_is_not_joined_carries_no_join_item(self, form, name):
+        assert "join-item" not in FieldInput(form()[name]).pack_classes
+
+    @pytest.mark.parametrize("form", [RadioGroupsForm, CheckboxGroupsForm])
+    def test_a_joined_group_carries_no_join_item(self, form):
+        field_input = FieldInput(form()["choice"], join=FieldWithButtons("choice"))
+
+        assert field_input.is_group
+        assert "join-item" not in field_input.pack_classes
+
+    def test_a_joined_field_with_no_component_carries_no_join_item(self):
+        field_input = FieldInput(
+            UncoveredWidgetsForm()["choice"], join=FieldWithButtons("choice")
+        )
+
+        assert field_input.pack_classes == []

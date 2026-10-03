@@ -34,3 +34,10 @@ Did: InlineChoicesForm (a required radio group and a required checkbox group, la
 Verified: uv run pytest tests/test_demo.py -n auto --dist loadscope: 885 passed; pre-commit run --all-files clean.
 Next: full verify, then the completion report.
 Watch: the failing form is bound to an invalid size and no extras, so both groups show an error; the forms of US3 to US6 add their own mixin to the standalone view and their submit names to its post.
+
+## 2026-10-03T19:08:28Z · Implementer US3 · T005
+
+Did: FieldWithButtons is drawn as one `join` element around the input (carrying `join-item`) and the buttons crispy already drew, read once from `buttons` inside the joined branch of `field_body.html`. `FieldInput` gained `join`, `is_joined` and `join-item` in `pack_classes` (never on a group). `layout/field_with_buttons.html` is the two-line template. Size tests for attached text and for joined buttons passed with no production change, as the brief predicted (FS-007 already resolves them). README gets a "A field with buttons" section and the size rule in it and in the attached-text bullets; CHANGELOG entry under Added.
+Verified: red first, 24 of 26 tests in test_field_with_buttons.py failed before the template existed; `uv run pytest tests/test_pack/test_field_with_buttons.py tests/test_pack/test_attached_text.py tests/test_pack/test_independence.py tests/test_pack/test_documented_examples.py tests/test_templatetags/test_daisyui.py -q` exit 0, 503 passed; `uv run pre-commit run --all-files` exit 0; `uv run mypy` exit 0.
+Next: T006, the field-with-buttons demo page and its forms on the standalone page.
+Watch: the join element is inside the `field_class` div and wraps the input of any widget with a template, so on a radio group it holds the group and the buttons. A single checkbox gets `join-item` as the plan says.

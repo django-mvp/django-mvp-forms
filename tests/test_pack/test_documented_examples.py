@@ -9,6 +9,7 @@ from crispy_forms.bootstrap import (
     AccordionGroup,
     Alert,
     AppendedText,
+    FieldWithButtons,
     FormActions,
     InlineCheckboxes,
     InlineRadios,
@@ -232,6 +233,15 @@ EXAMPLES = {
         ["form_field"],
         ("label", {"class": "input"}),
     ),
+    "FieldWithButtons": (
+        lambda: FieldWithButtons(
+            Field("form_field", css_class="span4"),
+            StrictButton("Go!", css_id="go-button"),
+            input_size="input-group-sm",
+        ),
+        ["form_field"],
+        ("div", {"class": "join"}),
+    ),
     "InlineCheckboxes": (
         lambda: InlineCheckboxes("form_field"),
         ["form_field"],
@@ -349,3 +359,23 @@ class TestReadmeInlineChoices:
         extras = soup.find(id="div_id_extras").find_all("input", type="checkbox")
         assert [option["value"] for option in sizes] == ["s", "m", "l"]
         assert [option["value"] for option in extras] == ["a", "b"]
+
+
+class TestReadmeFieldWithButtons:
+    def test_the_example_drawing_a_field_with_buttons_joins_them_to_the_input(
+        self, draw
+    ):
+        form = readme_example("A field with buttons")["SearchForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        parts = (
+            soup.find(id="div_id_query")
+            .find(class_="join")
+            .find_all(True, recursive=False)
+        )
+        assert [part["name"] for part in parts] == [
+            "query",
+            "go",
+            "clear",
+        ]

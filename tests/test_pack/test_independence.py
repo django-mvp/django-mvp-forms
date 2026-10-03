@@ -10,6 +10,7 @@ from crispy_forms.bootstrap import (
     AccordionGroup,
     Alert,
     AppendedText,
+    FieldWithButtons,
     FormActions,
     InlineCheckboxes,
     InlineRadios,
@@ -244,6 +245,22 @@ def attached(data=None):
     )
 
 
+def with_buttons(data=None):
+    return DecoratedFieldsForm(
+        data,
+        layout=(
+            FieldWithButtons("amount", StrictButton("Go")),
+            FieldWithButtons(
+                "country",
+                Submit("search", "Search"),
+                Button("clear", "Clear"),
+                css_id="joined-country",
+            ),
+            FieldWithButtons("other"),
+        ),
+    )
+
+
 def inlined_radios(data=None):
     return InlineRadiosForm(
         data,
@@ -423,6 +440,13 @@ STATES = [
         lambda: attached({}),
         NOTHING,
         id="attached text, invalid",
+    ),
+    pytest.param("{% crispy form %}", with_buttons, NOTHING, id="field with buttons"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: with_buttons({}),
+        NOTHING,
+        id="field with buttons, invalid",
     ),
     pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
     pytest.param(
