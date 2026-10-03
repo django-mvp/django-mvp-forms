@@ -1,5 +1,7 @@
 """The forms the suite draws."""
 
+import datetime
+
 from crispy_forms.helper import FormHelper
 from django import forms
 from django.core.exceptions import ValidationError
@@ -267,4 +269,44 @@ class FilesForm(forms.Form):
         required=False,
         initial=HeldFile("locked.pdf"),
         widget=forms.ClearableFileInput(attrs={"disabled": True}),
+    )
+
+
+def refuse_hidden(value):
+    raise ValidationError(
+        "<b>Refused</b> %(value)s", code="refused", params={"value": value}
+    )
+
+
+class HiddenInputsForm(forms.Form):
+    token = forms.CharField(widget=forms.HiddenInput, initial="abc")
+    ids = forms.MultipleChoiceField(
+        choices=[("1", "One"), ("2", "Two")],
+        widget=forms.MultipleHiddenInput,
+        initial=["1", "2"],
+    )
+    name = forms.CharField(help_text="Visible help")
+
+
+class HiddenOnlyForm(forms.Form):
+    token = forms.CharField(widget=forms.HiddenInput, initial="abc")
+
+
+class HiddenErrorForm(HiddenInputsForm):
+    token = forms.CharField(widget=forms.HiddenInput, validators=[refuse_hidden])
+
+
+class HiddenAndFormWideErrorsForm(HiddenErrorForm):
+    def clean(self):
+        raise ValidationError("It failed as a whole", code="whole")
+
+
+class DisabledHiddenForm(forms.Form):
+    token = forms.CharField(widget=forms.HiddenInput, initial="abc", disabled=True)
+
+
+class SplitHiddenForm(forms.Form):
+    moment = forms.SplitDateTimeField(
+        widget=forms.SplitHiddenDateTimeWidget,
+        initial=datetime.datetime(2026, 10, 3, 12, 30),
     )
