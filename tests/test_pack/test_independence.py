@@ -8,11 +8,13 @@ import pytest
 from crispy_forms.bootstrap import FormActions, StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
+    HTML,
     Button,
     ButtonHolder,
     Column,
     Div,
     Fieldset,
+    Hidden,
     Reset,
     Row,
     Submit,
@@ -91,6 +93,7 @@ def structured(data=None):
             Fieldset(
                 "Account",
                 Div(Row(Column("first"), Column("second")), css_id="box"),
+                HTML("<p>Written for {{ who }}</p>"),
                 "third",
             ),
             "fourth",
@@ -103,6 +106,7 @@ def buttoned(data=None):
         data,
         layout=(
             "first",
+            Hidden("step", "two"),
             FormActions(
                 Submit("save", "Save"),
                 Reset("clear", "Clear"),
