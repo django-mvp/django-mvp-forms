@@ -47,3 +47,10 @@ Did: demo pages /joined-groups/ in the shell and /joined-groups/standalone/ on d
 Verified: uv run pytest tests/test_demo.py -q -k JoinedGroups, 34 passed; they failed first on the missing route.
 Next: the full verify, then the report.
 Watch: the shell page uses the shell's Cotton components and no include; nothing states a size or a colour, which T007 adds. The page's Submit has the form's prefix in its name.
+
+## 2026-10-03T23:56:36Z · Implementer US3 · T007
+
+Did: tests for size, colour and variant on floating fields (TestFloatingLabelChoices) and joined members (TestJoinedGroupChoices); STATES gains floating and joined forms at every size, colour and variant, plain and in error for the colours; both demo pages gain forms at each size, colour and variant, a coloured group with one member in error and a Choice around a group; README and CHANGELOG extended. Nothing under mvp_forms/ changed.
+Verified: every new library test passed on first run, as expected; probed by mutating FieldInput.classes_for (drop modifiers for a member, for a floating field, drop the error modifier for a member) and a bad class in the colour table: each turned the tests red, then reverted. Full verify: pytest -n auto --dist loadscope 4279 passed; pre-commit, mypy and uv build exit 0.
+Next: Forge review of US3.
+Watch: the new library tests pass without any change to the pack, so they pin behaviour that US1 and US2 already delivered.

@@ -246,8 +246,38 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_floating_labels.py::TestFloatingLabelChoices",
+              "tests/test_pack/test_joined_groups.py::TestJoinedGroupChoices",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_demo.py::TestFloatingLabelsPage",
+              "tests/test_demo.py::TestStandaloneFloatingLabelsPage",
+              "tests/test_demo.py::TestJoinedGroupsPage",
+              "tests/test_demo.py::TestStandaloneJoinedGroupsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_floating_labels.py tests/test_pack/test_joined_groups.py -q",
+              "uv run pytest tests/test_pack/test_independence.py -q -k TestEmittedClasses",
+              "uv run pytest tests/test_demo.py -q -k 'Floating or Joined'",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build"
+            ],
+            "code": [
+              "tests/test_pack/test_floating_labels.py:215",
+              "tests/test_pack/test_joined_groups.py:315",
+              "tests/test_pack/test_independence.py:421",
+              "demo/forms.py:877",
+              "demo/forms.py:931",
+              "demo/views.py:1084",
+              "demo/views.py:1159"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }
