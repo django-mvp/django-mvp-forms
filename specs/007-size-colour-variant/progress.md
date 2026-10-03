@@ -22,3 +22,10 @@ Did: FieldInput takes choices and placed and resolves its modifiers in __init__;
 Verified: drawn-form tests red first (90 failed, 34 passed before the code; the 34 are the nothing-stated and hidden guards). `uv run pytest tests/test_pack tests/test_choices.py tests/test_templatetags -n auto --dist loadscope` 926 passed. Probes: colour not dropped in error, colour wired to size, and file-input-error mapped each fail tests. SC-005: `uv run python /tmp/fs007_sc005.py <out>` renders every STATES entry of the base test_independence.py (35) and cmp against the render at bd11a24 is identical. mypy and pre-commit clean.
 Next: full gate, then the completion report.
 Watch: a form-wide colour of error writes file-input-error, which the removal-checkbox filter cannot tell from the error mark, so that checkbox takes no colour. FormChoices docstring already names button_color and button_variant, which reach buttons in a later story.
+
+## 2026-10-03T18:04:59Z · Implementer US1 · T002
+
+Did: the first full gate failed its docs step (Choice, Inherit, Modifiers, Stated had no page quoting them), so I dropped the Stated alias, documented Choice, Modifiers, Inherit and the per-field `fields` mapping in the README, and drew that README example through the filter and the tag in test_documented_examples.py. Filled in the ledger rows for T001 and T002.
+Verified: `forge verify --repo . --base origin/main --steps all` second run: conformance, docs, lint, typecheck, test, build all passed, exit 0. SC-005: `uv run python /tmp/fs007_sc005.py <out>` over the 35 STATES entries of the base test_independence.py, compared with `cmp` against the render at bd11a24, before and after T002 and again at the end: identical each time.
+Next: the Forge review of US1; US2 gives Choice its layout drawing.
+Watch: Choice is a plain class here and becomes a LayoutObject in T003; the README's by-name `fields` paragraph is true today and T003 extends it.

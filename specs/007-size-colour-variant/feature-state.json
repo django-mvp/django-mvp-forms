@@ -66,13 +66,56 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_choices.py",
+              "tests/test_pack/test_independence.py::TestModifierTables"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py tests/test_pack/test_independence.py -q",
+              "uv run mypy",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/choices.py:18",
+              "mvp_forms/choices.py:42",
+              "mvp_forms/choices.py:228",
+              "mvp_forms/choices.py:282",
+              "mvp_forms/choices.py:329",
+              "mvp_forms/choices.py:366"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputChoices",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiFieldChoices",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiRemovalCheckbox",
+              "tests/test_pack/test_documented_examples.py::TestReadmeFormWideChoices",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_choices.py tests/test_templatetags -n auto --dist loadscope",
+              "uv run python /tmp/fs007_sc005.py /tmp/fs007_sc005_after.json && cmp /tmp/fs007_sc005_before.json /tmp/fs007_sc005_after.json",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:28",
+              "mvp_forms/templatetags/daisyui.py:102",
+              "mvp_forms/templatetags/daisyui.py:315",
+              "mvp_forms/templatetags/daisyui.py:383",
+              "mvp_forms/templates/daisyui/widgets/clearable_file_input.html:6"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
