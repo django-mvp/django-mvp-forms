@@ -1,0 +1,106 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rating and range</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">Rating and range</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and nothing else.
+        <a class="link" href="{% url 'rating-and-range' %}">The same page inside the django-mvp shell</a>
+      </p>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Drawn in Python</h2>
+          <p>
+            Two fields that each hold one choice, drawn as a rating, one star for each choice,
+            and a number field drawn as a range. The first rating states its drawing by its name
+            in the form's statement and cannot be cleared. The second states it in the layout and
+            has an empty choice, which clears it. The range states it in the layout, and its
+            limits and step are the ones the field declares. Pick a star, move the slider, submit
+            the form, and the page shows what the form cleaned to.
+          </p>
+          {% crispy form %}
+        </div>
+      </section>
+      {% if cleaned %}
+        <section class="card card-border bg-base-100">
+          <div class="card-body">
+            <h2 class="card-title">What the form cleaned to</h2>
+            <ul id="{{ prefix }}-cleaned">
+              {% for item in cleaned %}
+                <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </section>
+      {% endif %}
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">A rating in every state</h2>
+          <p>
+            A rating keeps its label, its help text, its required marker, its error and its
+            disabled state. No form below posts anywhere.
+          </p>
+          {% for state in rating_states %}
+            <h3 class="font-semibold">{{ state.title }}</h3>
+            {% crispy state.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">A range in every state</h2>
+          <p>
+            A range keeps its label, its help text, its required marker, its error and its
+            disabled state. No form below posts anywhere.
+          </p>
+          {% for state in range_states %}
+            <h3 class="font-semibold">{{ state.title }}</h3>
+            {% crispy state.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Sizes</h2>
+          <p>
+            A rating and a range take the size stated for the form, as every input does. A
+            rating's size is on the group and its colour is on each star.
+          </p>
+          {% for size in sizes %}
+            <h3 class="font-semibold">{{ size.title }}</h3>
+            {% crispy size.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Colours</h2>
+          <p>They take its colour too. A rating and a range have no variant.</p>
+          {% for color in colors %}
+            <h3 class="font-semibold">{{ color.title }}</h3>
+            {% crispy color.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Overriding what the form states</h2>
+          <p>
+            The form states a small size and the primary colour. The first rating and range
+            take both, and the second of each states a size and a colour of its own in the
+            layout.
+          </p>
+          {% crispy override_form %}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

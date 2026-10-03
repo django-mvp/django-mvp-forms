@@ -111,8 +111,9 @@ class TemplateSurface:
     def renderer_route(self) -> set[str]:
         """Return the paths the form renderer loads, not Django's template engine.
 
-        These are the templates ``FieldInput`` names for a widget and every
-        template those include, by a literal name, however deep.
+        These are the templates ``FieldInput`` names for a widget or for a
+        rating, and every template those include, by a literal name, however
+        deep.
 
         Returns:
             The paths on the form renderer's route.
@@ -121,6 +122,7 @@ class TemplateSurface:
         pending = [
             *FieldInput.templates.values(),
             *FieldInput.inline_templates.values(),
+            FieldInput.rating_template,
         ]
         while pending:
             path = pending.pop()

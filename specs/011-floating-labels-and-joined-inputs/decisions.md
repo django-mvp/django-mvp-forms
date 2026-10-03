@@ -325,3 +325,18 @@ say which `join` and which `label` they mean; the report pastes the command and 
 comparison for SC-003.
 
 **ADR:** none. It records a review, and each remedy is in the plan or the tasks.
+
+## D21. A rating and a range take no floating label and cannot be joined
+
+**Chosen:** a field drawn as a rating or as a range is not an input, a textarea or a select as
+the pack draws them. The form's floating label passes it over, a floating label stated on it
+raises `InvalidChoice` naming the field, and as a member of a joined group it raises
+`InvalidMember` naming the field.
+
+**Why:** rating and range inputs arrived on the main branch while this feature was being built.
+A rating is a group of radio inputs and a range is a slider, and daisyUI documents neither
+inside a floating label or a join. FR-003 and FR-013 already limit both parts to an input, a
+textarea and a select, so this is the specification applied to two drawings it could not have
+named.
+
+**ADR:** none. It follows from the two records this feature writes.

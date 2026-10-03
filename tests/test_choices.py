@@ -344,6 +344,8 @@ class TestModifiersDrawings:
             "checkbox": "checkbox",
             "toggle": "toggle",
             "switch": "toggle",
+            "rating": "rating",
+            "range": "range",
         }
 
 
@@ -384,6 +386,56 @@ class TestModifiersToggle:
             Modifiers.resolve("size", "toggle", own="huge", target="notify")
 
         assert (caught.value.allowed, caught.value.target) == (SIZES, "notify")
+
+
+class TestModifiersRatingAndRange:
+    @pytest.mark.parametrize("component", ["rating", "range"])
+    def test_each_has_the_sizes_and_colours_of_the_other_inputs(self, component):
+        assert tuple(Modifiers.sizes[component]) == SIZES
+        assert tuple(Modifiers.colors[component]) == COLORS
+
+    @pytest.mark.parametrize("component", ["rating", "range"])
+    def test_neither_has_a_variant(self, component):
+        assert component not in Modifiers.variants
+
+    @pytest.mark.parametrize("name", SIZES)
+    @pytest.mark.parametrize("component", ["rating", "range"])
+    def test_each_size_resolves_to_its_class(self, component, name):
+        assert Modifiers.resolve("size", component, form=name) == f"{component}-{name}"
+
+    @pytest.mark.parametrize("name", COLORS)
+    def test_each_colour_resolves_to_its_range_class(self, name):
+        assert Modifiers.resolve("color", "range", own=name) == f"range-{name}"
+
+    @pytest.mark.parametrize("name", COLORS)
+    def test_each_colour_resolves_to_daisyuis_background_class_for_a_rating(self, name):
+        assert Modifiers.resolve("color", "rating", own=name) == f"bg-{name}"
+
+    @pytest.mark.parametrize("component", ["rating", "range"])
+    def test_a_variant_the_form_states_is_passed_over(self, component):
+        assert Modifiers.resolve("variant", component, form="ghost") is None
+
+    @pytest.mark.parametrize("component", ["rating", "range"])
+    def test_a_variant_a_field_states_raises_with_nothing_allowed(self, component):
+        with pytest.raises(InvalidChoice) as caught:
+            Modifiers.resolve("variant", component, own="ghost", target="score")
+
+        assert (caught.value.kind, caught.value.value) == ("variant", "ghost")
+        assert (caught.value.allowed, caught.value.target) == ((), "score")
+
+    @pytest.mark.parametrize("component", ["rating", "range"])
+    def test_a_field_in_error_drops_the_colour_and_keeps_the_size(self, component):
+        assert Modifiers.resolve("color", component, form="info", in_error=True) is None
+        assert Modifiers.resolve("size", component, form="sm", in_error=True) == (
+            f"{component}-sm"
+        )
+
+    @pytest.mark.parametrize("component", ["rating", "range"])
+    def test_an_unknown_size_raises_with_the_names_allowed(self, component):
+        with pytest.raises(InvalidChoice) as caught:
+            Modifiers.resolve("size", component, own="huge", target="score")
+
+        assert (caught.value.allowed, caught.value.target) == (SIZES, "score")
 
 
 class Recorder:

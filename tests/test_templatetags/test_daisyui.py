@@ -11,7 +11,7 @@ from django import forms
 from django.forms import formset_factory
 from django.template import Context, Template
 from django.test import override_settings
-from django.utils.functional import Promise
+from django.utils.functional import Promise, lazy
 from django.utils.safestring import SafeString, mark_safe
 
 from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice
@@ -2155,6 +2155,525 @@ class TestFieldInputMultiWidget:
     def test_a_field_with_one_widget_is_not_a_multi_widget(self):
         assert not FieldInput(MultiWidgetsForm()["name"]).is_multi_widget
         assert FieldInput(MultiWidgetsForm()["moment"]).is_multi_widget
+
+
+class OwnTemplateSelect(forms.Select):
+    template_name = "django/forms/widgets/radio.html"
+
+
+class OwnOptionTemplateRadios(forms.RadioSelect):
+    option_template_name = "django/forms/widgets/select_option.html"
+
+
+STARS = [("1", "One"), ("2", "Two"), ("3", "Three")]
+
+
+class RatingFieldsForm(forms.Form):
+    pick = forms.ChoiceField(choices=STARS)
+    optional = forms.ChoiceField(choices=[("", "None"), *STARS], required=False)
+    group = forms.ChoiceField(choices=STARS, widget=forms.RadioSelect)
+    many = forms.MultipleChoiceField(choices=STARS)
+    boxes = forms.MultipleChoiceField(
+        choices=STARS, widget=forms.CheckboxSelectMultiple
+    )
+    maybe = forms.NullBooleanField()
+    text = forms.CharField(required=False)
+    flag = forms.BooleanField(required=False)
+    own_select = forms.ChoiceField(choices=STARS, widget=OwnTemplateSelect)
+    own_group = forms.ChoiceField(choices=STARS, widget=OwnOptionTemplateRadios)
+    hidden = forms.ChoiceField(choices=STARS, widget=forms.HiddenInput)
+    last_empty = forms.ChoiceField(choices=[*STARS, ("", "None")], required=False)
+    zero_first = forms.ChoiceField(
+        choices=[("0", "Zero"), ("1", "One")], widget=forms.RadioSelect
+    )
+    zero_number = forms.TypedChoiceField(
+        choices=[(0, "Zero"), (1, "One")], coerce=int, required=False
+    )
+    marked = forms.ChoiceField(
+        choices=[("a", mark_safe('<b class="x">Bold</b> "quoted"')), ("b", "B")],
+        widget=forms.RadioSelect,
+    )
+    classed = forms.ChoiceField(
+        choices=[("", "None"), *STARS],
+        required=False,
+        widget=forms.Select(attrs={"class": "mine", "data-own": "yes"}),
+    )
+    described = forms.ChoiceField(
+        choices=STARS,
+        help_text="Some help",
+        widget=forms.Select(attrs={"aria-describedby": "mine"}),
+    )
+    helped = forms.ChoiceField(choices=STARS, help_text="Some help")
+
+
+def rated(name, form=None, **kwargs):
+    kwargs.setdefault("placed", Choice(drawing="rating"))
+    return FieldInput((form or RatingFieldsForm())[name], **kwargs)
+
+
+class TestFieldInputRating:
+    @pytest.mark.parametrize("name", ["pick", "group", "optional", "zero_first"])
+    def test_a_field_that_holds_one_value_takes_rating_and_nothing_else(self, name):
+        field_input = FieldInput((RatingFieldsForm())[name])
+
+        assert field_input.drawings_of(field_input.field.field.widget) == ("rating",)
+
+    @pytest.mark.parametrize("name", ["pick", "group"])
+    def test_a_rating_stated_in_a_layout_gives_the_rating_component(self, name):
+        field_input = rated(name)
+
+        assert field_input.drawing == "rating"
+        assert field_input.component == "rating"
+
+    @pytest.mark.parametrize("name", ["pick", "group"])
+    def test_a_rating_stated_by_name_gives_the_rating_component(self, name):
+        choices = FormChoices(fields={name: Choice(drawing="rating")})
+
+        field_input = rated(name, choices=choices, placed=None)
+
+        assert field_input.component == "rating"
+
+    def test_the_drawing_in_a_layout_wins_over_the_one_stated_by_name(self):
+        choices = FormChoices(fields={"pick": Choice(drawing="rating")})
+
+        field_input = rated("pick", choices=choices, placed=Choice(drawing=None))
+
+        assert field_input.component == "select"
+
+    @pytest.mark.parametrize("name", ["pick", "group"])
+    def test_a_rating_is_a_group_to_the_frame(self, name):
+        assert rated(name).is_group
+
+    def test_a_select_with_nothing_stated_is_not_a_group(self):
+        assert not FieldInput(RatingFieldsForm()["pick"]).is_group
+
+    @pytest.mark.parametrize(
+        ("name", "allowed"),
+        [
+            ("many", ()),
+            ("boxes", ()),
+            ("maybe", ()),
+            ("text", ()),
+            ("own_select", ()),
+            ("own_group", ()),
+            ("flag", ("checkbox", "toggle", "switch")),
+        ],
+    )
+    def test_a_field_that_is_not_a_single_choice_field_refuses_rating(
+        self, name, allowed
+    ):
+        with pytest.raises(InvalidChoice) as caught:
+            rated(name)
+
+        assert caught.value.kind == "drawing"
+        assert caught.value.value == "rating"
+        assert caught.value.allowed == allowed
+        assert caught.value.target == name
+
+    @pytest.mark.parametrize("name", ["pick", "group"])
+    @pytest.mark.parametrize("drawing", ["checkbox", "toggle", "switch"])
+    def test_a_drawing_of_a_boolean_field_is_refused_with_rating_allowed(
+        self, name, drawing
+    ):
+        with pytest.raises(InvalidChoice) as caught:
+            rated(name, placed=Choice(drawing=drawing))
+
+        assert caught.value.allowed == ("rating",)
+        assert caught.value.target == name
+
+    @pytest.mark.parametrize("name", ["pick", "group"])
+    def test_an_unknown_name_has_rating_allowed(self, name):
+        with pytest.raises(InvalidChoice) as caught:
+            rated(name, placed=Choice(drawing="slider"))
+
+        assert caught.value.allowed == ("rating",)
+
+    @pytest.mark.parametrize("name", ["pick", "group", "own_select", "text"])
+    def test_a_list_given_as_the_name_raises_invalid_choice(self, name):
+        with pytest.raises(InvalidChoice):
+            rated(name, placed=Choice(drawing=["rating"]))
+
+    @pytest.mark.parametrize("name", ["pick", "group"])
+    @pytest.mark.parametrize("drawing", [None, INHERIT])
+    def test_none_and_inherit_state_nothing(self, name, drawing):
+        field_input = rated(name, placed=Choice(drawing=drawing))
+
+        assert field_input.drawing is None
+
+    def test_a_hidden_field_with_rating_stated_raises_nothing(self):
+        assert rated("hidden").drawing is None
+
+    def test_a_rating_stated_by_name_for_a_text_field_raises_naming_it(self):
+        choices = FormChoices(fields={"text": Choice(drawing="rating")})
+
+        with pytest.raises(InvalidChoice) as caught:
+            rated("text", choices=choices, placed=None)
+
+        assert caught.value.target == "text"
+
+    @pytest.mark.parametrize("name", ["pick", "group"])
+    def test_the_widget_is_drawn_from_a_copy_naming_the_rating_template(self, name):
+        form = RatingFieldsForm()
+        own = form.fields[name].widget
+
+        widget = rated(name, form).widget
+
+        assert widget is not own
+        assert widget.template_name == "daisyui/widgets/rating.html"
+        assert isinstance(widget, forms.RadioSelect)
+
+    @pytest.mark.parametrize("name", ["pick", "group"])
+    def test_a_draw_leaves_the_forms_own_widget_as_it_was(self, name):
+        form = RatingFieldsForm()
+        own = form.fields[name].widget
+        before = (type(own), copy.deepcopy(own.attrs), own.template_name)
+        before_choices = list(own.choices)
+
+        rated(name, form).render()
+
+        assert form.fields[name].widget is own
+        assert (type(own), own.attrs, own.template_name) == before
+        assert list(own.choices) == before_choices
+        assert "get_context" not in vars(own)
+
+    def test_a_widget_made_for_a_select_keeps_what_the_field_told_it(self):
+        form = RatingFieldsForm()
+        own = form.fields["pick"].widget
+
+        widget = rated("pick", form).widget
+
+        assert widget.is_required is own.is_required
+        assert widget.is_localized is own.is_localized
+
+    def test_the_rating_is_chosen_before_the_inline_template(self):
+        widget = rated("group", inline=True).widget
+
+        assert widget.template_name == "daisyui/widgets/rating.html"
+
+    def test_the_class_is_not_passed_to_the_widget_through_attrs(self):
+        assert "class" not in rated("classed").attrs
+
+    @pytest.mark.parametrize("name", ["pick", "group"])
+    def test_the_stars_are_bare_radio_inputs_inside_the_rating(self, name, parse):
+        soup = parse(rated(name).render())
+
+        wrapper = soup.find(class_="rating")
+        inputs = wrapper.find_all("input")
+
+        assert [tag["type"] for tag in inputs] == ["radio"] * 3
+        assert {tag["name"] for tag in inputs} == {name}
+        assert [tag["value"] for tag in inputs] == ["1", "2", "3"]
+        assert soup.find("label") is None
+        assert soup.find("select") is None
+
+    def test_a_select_and_a_radio_group_with_the_same_choices_draw_the_same_inputs(
+        self, parse
+    ):
+        class SameChoicesForm(forms.Form):
+            pick = forms.ChoiceField(choices=[("", "None"), *STARS], required=False)
+            group = forms.ChoiceField(
+                choices=[("", "None"), *STARS],
+                required=False,
+                widget=forms.RadioSelect,
+            )
+
+        form = SameChoicesForm({"pick": "2", "group": "2"})
+
+        select = rated("pick", form).render().replace("pick", "group")
+        group = rated("group", form).render()
+
+        assert parse(select).prettify() == parse(group).prettify()
+
+    def test_the_stars_of_a_select_do_not_carry_the_description_django_adds(
+        self, parse
+    ):
+        soup = parse(rated("helped").render())
+
+        assert all(not tag.has_attr("aria-describedby") for tag in soup("input"))
+
+    def test_the_description_a_developer_set_on_the_widget_is_kept(self, parse):
+        soup = parse(rated("described").render())
+
+        assert {tag.get("aria-describedby") for tag in soup("input")} == {"mine"}
+
+    def test_the_clearing_input_is_not_a_star_and_comes_first(self, parse):
+        soup = parse(rated("optional").render())
+
+        inputs = soup.find_all("input")
+
+        assert [tag["value"] for tag in inputs] == ["", "1", "2", "3"]
+        assert "rating-hidden" in inputs[0]["class"]
+        assert "mask" not in inputs[0]["class"]
+        assert all("mask" in tag["class"] for tag in inputs[1:])
+        assert all("rating-hidden" not in tag["class"] for tag in inputs[1:])
+
+    def test_an_empty_choice_listed_last_is_handed_over_first(self, parse):
+        soup = parse(rated("last_empty").render())
+
+        inputs = soup.find_all("input")
+
+        assert [tag["value"] for tag in inputs] == ["", "1", "2", "3"]
+        assert "rating-hidden" in inputs[0]["class"]
+
+    def test_a_choice_whose_value_is_zero_is_a_star(self, parse):
+        soup = parse(rated("zero_number").render())
+
+        zero = soup.find("input", value="0")
+
+        assert "mask" in zero["class"]
+        assert "rating-hidden" not in zero["class"]
+
+    def test_a_choice_marked_safe_names_its_star_as_plain_text_with_the_quote_escaped(
+        self,
+    ):
+        html = rated("marked").render()
+
+        assert 'aria-label="Bold &quot;quoted&quot;"' in html
+        assert "<b" not in html
+
+    def test_a_lazy_choice_marked_safe_names_its_star_as_plain_text(self):
+        class LazyStarsForm(forms.Form):
+            pick = forms.ChoiceField(
+                choices=[("a", lazy(mark_safe, str)('<b>Bold</b> "quoted"'))]
+            )
+
+        html = rated("pick", LazyStarsForm()).render()
+
+        assert 'aria-label="Bold &quot;quoted&quot;"' in html
+        assert "<b" not in html
+
+    def test_each_star_is_named_by_its_choices_label(self, parse):
+        soup = parse(rated("pick").render())
+
+        assert [tag["aria-label"] for tag in soup("input")] == ["One", "Two", "Three"]
+
+    def test_a_label_the_option_already_has_is_kept(self, parse):
+        class NamedStarsForm(forms.Form):
+            pick = forms.ChoiceField(
+                choices=STARS, widget=forms.RadioSelect(attrs={"aria-label": "Mine"})
+            )
+
+        soup = parse(rated("pick", NamedStarsForm()).render())
+
+        assert {tag["aria-label"] for tag in soup("input")} == {"Mine"}
+
+    def test_the_developers_class_is_on_every_input_the_clearing_one_included(
+        self, parse
+    ):
+        soup = parse(rated("classed").render())
+
+        inputs = soup.find_all("input")
+
+        assert len(inputs) == 4
+        assert all("mine" in tag["class"] for tag in inputs)
+        assert all(tag["data-own"] == "yes" for tag in inputs)
+
+    def test_a_field_in_error_draws_its_stars_with_the_error_colour(self, parse):
+        form = RatingFieldsForm({})
+
+        soup = parse(rated("pick", form).render())
+
+        assert all("bg-error" in tag["class"] for tag in soup("input"))
+
+    def test_a_field_not_in_error_draws_no_error_colour(self, parse):
+        soup = parse(rated("pick").render())
+
+        assert all("bg-error" not in tag["class"] for tag in soup("input"))
+
+    def test_the_clearing_input_takes_no_error_colour(self, parse):
+        form = RatingFieldsForm({"optional": "9"})
+
+        soup = parse(rated("optional", form).render())
+
+        assert "bg-error" not in soup.find("input", value="")["class"]
+        assert "bg-error" in soup.find("input", value="1")["class"]
+
+    def test_a_size_stated_on_the_field_itself_is_the_ratings_size(self):
+        field_input = rated("pick", placed=Choice(drawing="rating", size="lg"))
+
+        assert field_input.modifiers == ["rating-lg"]
+
+    def test_a_size_the_form_states_is_the_ratings_size(self):
+        field_input = rated("pick", choices=FormChoices(size="lg"))
+
+        assert field_input.modifiers == ["rating-lg"]
+
+    def test_a_variant_stated_on_the_field_itself_raises_naming_it(self):
+        with pytest.raises(InvalidChoice) as caught:
+            rated("pick", placed=Choice(drawing="rating", variant="ghost"))
+
+        assert (caught.value.kind, caught.value.allowed) == ("variant", ())
+        assert caught.value.target == "pick"
+
+    def test_a_variant_the_form_states_is_passed_over(self):
+        field_input = rated("pick", choices=FormChoices(variant="ghost"))
+
+        assert field_input.modifiers == []
+
+
+class OwnNumberInput(forms.NumberInput):
+    pass
+
+
+class RangeFieldsForm(forms.Form):
+    volume = forms.IntegerField(min_value=0, max_value=100, step_size=5)
+    bare = forms.IntegerField(required=False)
+    ratio = forms.FloatField(required=False)
+    price = forms.DecimalField(required=False, max_digits=5, decimal_places=2)
+    own = forms.IntegerField(required=False, widget=OwnNumberInput)
+    classed = forms.IntegerField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "mine", "data-own": "yes"}),
+    )
+    text = forms.CharField(required=False)
+    pick = forms.ChoiceField(choices=STARS)
+    flag = forms.BooleanField(required=False)
+    local_count = forms.IntegerField(required=False, localize=True)
+    local_price = forms.DecimalField(required=False, localize=True)
+    secret = forms.IntegerField(widget=forms.HiddenInput)
+
+
+def ranged(name, form=None, **kwargs):
+    kwargs.setdefault("placed", Choice(drawing="range"))
+    return FieldInput((form or RangeFieldsForm())[name], **kwargs)
+
+
+class TestFieldInputRange:
+    @pytest.mark.parametrize("name", ["volume", "bare", "ratio", "price", "own"])
+    def test_a_number_field_takes_range_and_nothing_else(self, name):
+        field_input = FieldInput(RangeFieldsForm()[name])
+
+        assert field_input.drawings_of(field_input.field.field.widget) == ("range",)
+
+    @pytest.mark.parametrize("name", ["volume", "ratio", "price", "own"])
+    def test_a_range_stated_in_a_layout_gives_the_range_component(self, name):
+        field_input = ranged(name)
+
+        assert field_input.drawing == "range"
+        assert field_input.component == "range"
+
+    @pytest.mark.parametrize("name", ["volume", "ratio", "price", "own"])
+    def test_a_range_stated_by_name_gives_the_range_component(self, name):
+        choices = FormChoices(fields={name: Choice(drawing="range")})
+
+        field_input = ranged(name, choices=choices, placed=None)
+
+        assert field_input.component == "range"
+
+    def test_the_drawing_in_a_layout_wins_over_the_one_stated_by_name(self):
+        choices = FormChoices(fields={"volume": Choice(drawing="range")})
+
+        field_input = ranged("volume", choices=choices, placed=Choice(drawing=None))
+
+        assert field_input.component == "input"
+
+    def test_a_range_is_one_input_to_the_frame(self):
+        assert not ranged("volume").is_group
+
+    @pytest.mark.parametrize(
+        ("name", "allowed"),
+        [
+            ("text", ()),
+            ("pick", ("rating",)),
+            ("flag", ("checkbox", "toggle", "switch")),
+            ("local_count", ()),
+            ("local_price", ()),
+        ],
+    )
+    def test_a_field_that_is_not_a_number_field_refuses_range(self, name, allowed):
+        with pytest.raises(InvalidChoice) as caught:
+            ranged(name)
+
+        assert caught.value.kind == "drawing"
+        assert caught.value.value == "range"
+        assert caught.value.allowed == allowed
+        assert caught.value.target == name
+
+    @pytest.mark.parametrize("drawing", ["checkbox", "toggle", "switch", "rating"])
+    def test_another_drawing_stated_for_a_number_field_is_refused_with_range_allowed(
+        self, drawing
+    ):
+        with pytest.raises(InvalidChoice) as caught:
+            ranged("volume", placed=Choice(drawing=drawing))
+
+        assert caught.value.value == drawing
+        assert caught.value.allowed == ("range",)
+        assert caught.value.target == "volume"
+
+    @pytest.mark.parametrize("drawing", [None, INHERIT])
+    def test_none_and_inherit_state_nothing(self, drawing):
+        field_input = ranged("volume", placed=Choice(drawing=drawing))
+
+        assert field_input.drawing is None
+
+    def test_a_hidden_field_with_range_stated_raises_nothing(self):
+        assert ranged("secret").drawing is None
+
+    def test_the_widget_is_drawn_from_a_copy_of_type_range(self):
+        form = RangeFieldsForm()
+        own = form.fields["volume"].widget
+
+        widget = ranged("volume", form).widget
+
+        assert widget is not own
+        assert widget.input_type == "range"
+        assert isinstance(widget, forms.NumberInput)
+
+    def test_a_subclass_of_number_input_is_drawn_as_a_copy_of_itself(self):
+        widget = ranged("own").widget
+
+        assert isinstance(widget, OwnNumberInput)
+        assert widget.input_type == "range"
+
+    def test_a_draw_leaves_the_forms_own_widget_as_it_was(self):
+        form = RangeFieldsForm()
+        own = form.fields["volume"].widget
+        before = (type(own), own.input_type, copy.deepcopy(own.attrs))
+
+        ranged("volume", form).render()
+
+        assert form.fields["volume"].widget is own
+        assert (type(own), own.input_type, own.attrs) == before
+
+    def test_the_range_is_drawn_as_one_input_of_type_range(self, parse):
+        soup = parse(ranged("volume").render())
+
+        tags = soup.find_all("input")
+
+        assert [tag["type"] for tag in tags] == ["range"]
+        assert "range" in tags[0]["class"]
+
+    def test_a_field_in_error_carries_range_error(self):
+        form = RangeFieldsForm({"volume": "500"})
+
+        assert "range-error" in ranged("volume", form).css_class.split()
+
+    def test_a_field_not_in_error_carries_no_error_class(self):
+        assert "range-error" not in ranged("volume").css_class.split()
+
+    def test_text_attached_to_a_range_is_not_held(self):
+        field_input = ranged("volume", prepended="$")
+
+        assert not field_input.has_attached_text
+
+    def test_the_forms_size_and_colour_are_classes_of_the_input(self):
+        choices = FormChoices(size="sm", color="primary")
+
+        classes = ranged("volume", choices=choices).css_class.split()
+
+        assert {"range-sm", "range-primary"} <= set(classes)
+
+    def test_a_variant_stated_on_the_field_itself_raises_naming_it(self):
+        with pytest.raises(InvalidChoice) as caught:
+            ranged("volume", placed=Choice(drawing="range", variant="ghost"))
+
+        assert (caught.value.kind, caught.value.allowed) == ("variant", ())
+        assert caught.value.target == "volume"
+
+    def test_a_variant_the_form_states_is_passed_over(self):
+        field_input = ranged("volume", choices=FormChoices(variant="ghost"))
+
+        assert field_input.modifiers == []
 
 
 class WithdrawnPathWidget(forms.Widget):

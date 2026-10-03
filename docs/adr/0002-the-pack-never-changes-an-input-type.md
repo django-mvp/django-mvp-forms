@@ -1,6 +1,6 @@
 # ADR 0002 — The pack never changes an input's type
 
-**Status:** accepted
+**Status:** accepted, amended by [ADR 0031](0031-a-stated-drawing-may-set-the-element-drawn.md)
 
 ## Decision
 

@@ -176,6 +176,11 @@ Plan, *The joined group*; research R2, R5, R6.
   `InvalidMember` with the field's name; a hidden field raises nothing; the member carries
   `join-item`; a floating label stated on a member raises `InvalidChoice` and the form's passes
   it over.
+- Tests for the two drawings that arrived on the main branch (decisions D21): a field drawn as
+  a rating or as a range raises `InvalidMember` as a member; in `TestFieldInputLabel`'s file, a
+  new class shows the form's floating label passes both over and one stated on either raises
+  `InvalidChoice` with `kind="label"`. The README's "Floating labels" section names both among
+  what is passed over.
 
 ### T005 — Joined groups drawn through the pack, and the public surface
 

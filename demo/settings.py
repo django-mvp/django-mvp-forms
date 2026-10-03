@@ -134,6 +134,7 @@ EASY_ICONS = {
             "multi-widget-field": "bi bi-calendar-event",
             "choices": "bi bi-palette",
             "drawings": "bi bi-toggles",
+            "rating-and-range": "bi bi-star",
             "floating-labels": "bi bi-tag",
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",

@@ -94,6 +94,11 @@ AppMenu.extend(
             extra_context={"label": "Checkbox, toggle and switch", "icon": "drawings"},
         ),
         MenuItem(
+            name="rating-and-range",
+            view_name="rating-and-range",
+            extra_context={"label": "Rating and range", "icon": "rating-and-range"},
+        ),
+        MenuItem(
             name="floating-labels",
             view_name="floating-labels",
             extra_context={"label": "Floating labels", "icon": "floating-labels"},

@@ -1,0 +1,330 @@
+{
+  "feature": "010-rating-and-range-inputs",
+  "branch": "010-rating-and-range-inputs",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "MERGED",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T21:42:44Z",
+      "note": "specification approved by delegated review at commit cf71e8a4caebd298d884eec8e165bee5f0c2e8e1, on pull request #96; epic #86, stories #105, #106 and #108"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T21:59:58Z",
+      "note": "plan.md, research.md, tasks.md: 3 stories, 5 tasks; continues on pull request #96"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T22:00:11Z",
+      "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T22:07:05Z",
+      "note": "plan gate open; US1 first"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T22:49:44Z",
+      "note": "all three stories done"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T22:51:47Z",
+      "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T23:09:50Z",
+      "note": "review approve; findings closed; main merged in"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-10-03T23:18:00Z",
+      "note": "PR #96 merged; approved by forge-aeo-reviewer"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T21:42:44Z",
+      "self_resolved": [
+        "approved at commit cf71e8a4caebd298d884eec8e165bee5f0c2e8e1 (forge spec-gate, pull request #96); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T22:06:56Z"
+    },
+    "merge": {
+      "approved_by": "forge-aeo-reviewer",
+      "at": "2026-10-03T23:17:56Z"
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T22:06:56Z",
+      "self_resolved": [
+        "DR-001 (medium) the existing drawings demo page names its three drawings itself: applied to plan and T001",
+        "DR-002 (medium) the clearing input is drawn before the stars whatever its place among the choices: applied to plan and T002 (D17)",
+        "DR-003 (low) the one existing test that pins the drawings table is named as extended: applied to T001 and T004",
+        "DR-004 (low) a star's aria-label is the choice's label as plain text: applied to plan and T001",
+        "DR-005 (low) empty means the empty string, and a choice whose value is 0 is a star: applied to plan and T002",
+        "DR-006 (low) an extra form of a formset that holds a range is always submitted as changed: README says so (T004), question filed as #116"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T23:09:50Z",
+      "self_resolved": [
+        "COR-001 (low) a lazy choice label marked safe reached aria-label unescaped: fixed, T006",
+        "TST-001 (low) a bare underscore as an unpacking name in a test: fixed, T006",
+        "TST-002 (low) two tests asserted a width on a range: removed, T006",
+        "COR-002 (low) modifiers and css_class of a rating mix the group's size with a star's error colour, read by nothing the pack draws: kept as built, recorded in D21"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T23:17:58Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 105,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputRating",
+              "tests/test_choices.py::TestModifiersDrawings"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags/test_daisyui.py::TestFieldInputRating tests/test_choices.py::TestModifiersDrawings -q",
+              "uv run pytest tests/test_templatetags tests/test_choices.py tests/test_demo.py tests/test_pack/test_drawings.py tests/test_pack/test_independence.py -q -n auto --dist loadscope"
+            ],
+            "code": [
+              "mvp_forms/choices.py:238",
+              "mvp_forms/templatetags/daisyui.py:214",
+              "mvp_forms/templatetags/daisyui.py:241",
+              "mvp_forms/templatetags/daisyui.py:375",
+              "mvp_forms/templatetags/daisyui.py:400",
+              "mvp_forms/templates/daisyui/widgets/rating.html:1",
+              "demo/views.py:836"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_rating.py::TestRating",
+              "tests/test_pack/test_rating.py::TestRatingKeepsWhatARadioGroupHas",
+              "tests/test_pack/test_rating.py::TestRatingAmongOtherFields",
+              "tests/test_pack/test_rating.py::TestRatingMistakes",
+              "tests/test_pack/test_documented_examples.py::TestReadmeRating",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_rating.py -q",
+              "uv run pytest tests/test_pack tests/test_templatetags tests/test_choices.py -q -n auto --dist loadscope",
+              "uv run python /tmp/fs010/render_states.py /tmp/fs010/after.json /tmp/fs010/ids.json && uv run python /tmp/fs010/compare.py"
+            ],
+            "code": [
+              "README.md:717",
+              "CONTEXT.md:103",
+              "CHANGELOG.md:25",
+              "tests/forms.py:761",
+              "tests/test_pack/test_rating.py:77",
+              "tests/test_pack/test_independence.py:384",
+              "tests/test_pack/test_documented_examples.py:488"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestRatingAndRangePage",
+              "tests/test_demo.py::TestStandaloneRatingAndRangePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -q -k RatingAndRange",
+              "uv run pytest tests/test_demo.py -q -n auto --dist loadscope"
+            ],
+            "code": [
+              "demo/forms.py:1096",
+              "demo/views.py:946",
+              "demo/urls.py:95",
+              "demo/menus.py:96",
+              "demo/settings.py:137",
+              "demo/templates/demo/rating_and_range.html:1",
+              "demo/templates/demo/rating_and_range_standalone.html:1",
+              "tests/test_demo.py:2359"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 106,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputRange",
+              "tests/test_choices.py::TestModifiersDrawings",
+              "tests/test_pack/test_range.py::TestRange",
+              "tests/test_pack/test_range.py::TestRangeKeepsWhatANumberInputHas",
+              "tests/test_pack/test_range.py::TestRangeAmongOtherFields",
+              "tests/test_pack/test_range.py::TestRangeMistakes",
+              "tests/test_pack/test_documented_examples.py::TestReadmeRange",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_demo.py::TestRatingAndRangePage",
+              "tests/test_demo.py::TestStandaloneRatingAndRangePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags/test_daisyui.py::TestFieldInputRange tests/test_choices.py::TestModifiersDrawings -q",
+              "uv run pytest tests/test_pack/test_range.py -q",
+              "uv run pytest tests/test_pack tests/test_templatetags tests/test_choices.py -q -n auto --dist loadscope",
+              "uv run pytest tests/test_demo.py -q -n auto --dist loadscope",
+              "uv run python /tmp/fs010/render_states.py /tmp/fs010/us2-after.json /tmp/fs010/us2-ids.json"
+            ],
+            "code": [
+              "mvp_forms/choices.py:239",
+              "mvp_forms/templatetags/daisyui.py:149",
+              "mvp_forms/templatetags/daisyui.py:230",
+              "mvp_forms/templatetags/daisyui.py:366",
+              "tests/test_pack/test_range.py:52",
+              "tests/forms.py:866",
+              "tests/test_pack/test_independence.py:388",
+              "tests/test_pack/test_documented_examples.py:509",
+              "README.md:755",
+              "CONTEXT.md:126",
+              "CHANGELOG.md:28",
+              "demo/forms.py:1096",
+              "demo/forms.py:1167",
+              "demo/views.py:947",
+              "demo/templates/demo/rating_and_range.html:1",
+              "demo/templates/demo/rating_and_range_standalone.html:1",
+              "tests/test_demo.py:2482"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P3",
+      "issue": 108,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_choices.py::TestModifiersRatingAndRange",
+              "tests/test_pack/test_rating.py::TestRatingSizeAndColour",
+              "tests/test_pack/test_range.py::TestRangeSizeAndColour",
+              "tests/test_pack/test_rating.py::TestRatingMistakes",
+              "tests/test_pack/test_range.py::TestRangeMistakes",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_independence.py::TestModifierTables",
+              "tests/test_pack/test_documented_examples.py::TestReadmeRatingAndRangeSizeAndColour",
+              "tests/test_demo.py::TestRatingAndRangePage",
+              "tests/test_demo.py::TestStandaloneRatingAndRangePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py -x -q",
+              "uv run pytest tests/test_pack/test_rating.py tests/test_pack/test_range.py -q -n auto",
+              "uv run pytest tests/test_demo.py -q -n auto",
+              "uv run pytest -n auto --dist loadscope -q --maxfail=1000",
+              "forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-010-rating-and-range-inputs --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/choices.py:121",
+              "mvp_forms/choices.py:128",
+              "mvp_forms/choices.py:214",
+              "mvp_forms/choices.py:224",
+              "mvp_forms/templatetags/daisyui.py:456",
+              "mvp_forms/templatetags/daisyui.py:464",
+              "demo/forms.py:1208",
+              "demo/forms.py:1240",
+              "demo/views.py:994",
+              "tests/test_pack/test_rating.py:538",
+              "tests/test_pack/test_range.py:392"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputRating::test_a_lazy_choice_marked_safe_names_its_star_as_plain_text"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags/test_daisyui.py -q -k lazy_choice",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:676"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 32.41,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 96,
+    "draft": false
+  }
+}
