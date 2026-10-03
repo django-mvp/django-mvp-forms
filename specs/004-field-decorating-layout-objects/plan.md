@@ -134,8 +134,10 @@ def daisyui_field(context: Context, field: BoundField, **decoration: Any) -> Fie
     )
 ```
 
-**`FieldInput`** gains keyword-only arguments, each off by default, and documents each in its
-docstring:
+**`FieldInput`** gains keyword-only arguments, each off by default and documented in its
+docstring. Each arrives in the task that gives it behaviour: the first three in T001, `inline`
+in T003, `join` in T005, `disabled` in T007 and `unlabelled` in T009. The tag passes any keyword
+on, so it does not change again.
 
 | Argument | Meaning |
 |---|---|
@@ -149,20 +151,24 @@ docstring:
 What changes inside it:
 
 - The classes are built in two parts. `own_classes` is the widget's own class names, without
-  `uneditable-input` (research R1, R7). `pack_classes` is the component, the width unless the
-  component is fixed-size or an own class is a width, `join-item` when the field is joined and
-  has a component, and the error modifier. `css_class` stays what it is today: the two together,
+  `uneditable-input` (research R1, R7): the name joins `UPSTREAM_ONLY_CLASSES`, as ADR 0010 asks of a class daisyUI
+  lacks, and `own_classes` drops that one name. An input's classes are not run through the whole
+  set, which would start dropping a developer's own `active` or `error` from every input.
+  `pack_classes` is the component, the width unless the
+  component is fixed-size or an own class is a width, `join-item` when the field is joined, has
+  a component and is not a group, and the error modifier. `css_class` stays what it is today: the two together,
   each name once.
-- `has_attached_text`: a prepended or appended text is set and the component is `input` or
-  `select`. Then the input is drawn bare: its class attribute is `own_classes`, or `False` when
+- `has_attached_text`: a prepended or appended text is set, the component is `input` or
+  `select`, and the field is not a group (a date drawn as three selects is a group). Then the input is drawn bare: its class attribute is `own_classes`, or `False` when
   there are none, which drops the attribute. `attached_class` is `pack_classes` as one string, for
   the wrapper.
-- `is_joined`: `join` is not None.
+- `is_joined`: `join` is set, tested by truth.
 - `attrs` adds `disabled: True` when `disabled` is set. It adds `placeholder`, holding
   `label_text`, when `unlabelled` is set, the component is `input` or `textarea`, the widget sets
   no placeholder and the field has a label.
-- `show_labels` is turned off by `unlabelled`, except for a single checkbox (FR-020). The frame
-  and its body read `drawn.show_labels` where they read `form_show_labels != False` today, so
+- `show_labels` is turned off by `unlabelled`, except for a single checkbox (FR-020). From
+  T009 the frame and its body read `drawn.show_labels` where they read
+  `form_show_labels != False` today, so
   one field can be drawn without its label. The existing `requires_aria_label` then names the
   input by `aria-label` (FR-017), and a group is named as FS-002 names one with labels off.
 - `template_name` looks in `inline_templates` first when `inline` is set: the same two widget
@@ -177,7 +183,8 @@ Every literal class stays written out in the module, so a host's Tailwind build 
 In `frame.html` the outer element's class becomes
 `fieldset{% if drawn.wrapper_class %} {{ drawn.wrapper_class }}{% endif %}`, on the `fieldset`
 and on the `div`. It is escaped like any other value. This is what django-crispy-forms documents
-for `wrapper_class` (FR-024), for the six of the nine that take it and for a plain `Field`.
+for `wrapper_class` (FR-024), for the eight of the nine that take it (all but
+`FieldWithButtons`) and for a plain `Field`.
 
 ### Attached text
 
@@ -230,7 +237,9 @@ buttons the string is empty and the group holds the input alone. The input carri
 
 `disabled` reaches the input through the attributes `as_widget` is given, so every widget the
 pack draws shows its value and is disabled, and a group's options are each disabled (FR-015,
-research R7). Nothing else is added: ADR 0013 draws the state from the attribute.
+research R7). No class is added: ADR 0013 draws the state from the attribute. ADR 0013 also says
+the pack writes no attribute for the state, and this is the one case where it does, for one
+render, because the layout object asks for it. The ADR and the README are amended to say so.
 
 ### Inline field
 
@@ -245,7 +254,7 @@ For a `forms.MultiWidget` it returns a deep copy whose parts are each given, for
 - a class: the part's own class names, then what `pack_classes` would give a field with that
   part's widget (the component for its kind, the width, the error modifier when the field has
   errors and errors are drawn). A part with no component keeps its own classes only.
-- an `aria-label`, unless the part has one: for a `forms.SplitDateTimeWidget` the translated
+- an `aria-label`, unless the part has one or is hidden: for a `forms.SplitDateTimeWidget` the translated
   `Date` and `Time`, in that order, and for any other multi-widget the field's label text.
 
 `SPLIT_DATE_TIME_PARTS = (gettext_lazy("Date"), gettext_lazy("Time"))` sits beside `DATE_PARTS`.
@@ -303,3 +312,7 @@ and the five after it each add one option's behaviour.
 - A layout object decorates a field through options on the tag that draws it, and the frame
   stays one.
 - The parts of a multi-widget field are classed and named on a copy, extending ADR 0012.
+- `UneditableField` is the one case where the pack writes `disabled`, amending ADR 0013.
+
+The convergence step writes these, and updates the status lines of the ADRs they amend. No task
+in `tasks.md` carries them.

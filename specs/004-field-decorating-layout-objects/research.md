@@ -75,8 +75,9 @@ says stock daisyUI markup wins.
 its direct children (`.join{…@scope(&){…& :where(:scope>:first-child){--join-ss:var(--radius-field);…}`)
 and `input`, `select` and `btn` read them
 (`border-start-start-radius:var(--join-ss,var(--radius-field))`). So a button inside a `join`
-is squared off on its joined side with no class added to it. `join-item` adds only the one-pixel
-overlap that hides the doubled border.
+is squared off on its joined side with no class added to it. What `join-item` adds for a button
+is the one-pixel overlap that hides the doubled border: the corners it sets are the ones the
+button already reads.
 
 django-crispy-forms draws the buttons before the template runs and hands them over as one string
 (`bootstrap.py:462-476`), so the template cannot add a class to them. It does not need to: the
@@ -114,8 +115,8 @@ template and is drawn as it would be undecorated.
 ## R5. `wrapper_class` and what the frame reads
 
 FR-024 requires `wrapper_class` to do what django-crispy-forms documents: put a class on the
-element around the field. Six of the nine take it, and `MultiWidgetField` draws through
-`field.html`.
+element around the field. Eight of the nine take it, all but `FieldWithButtons`, and
+`MultiWidgetField` draws through `field.html`.
 
 ADR 0006 says the frame reads four names from the context and takes no wrapper class, because
 `{% crispy %}` hands the template a copy of the page's context and any bare name could be the
@@ -155,7 +156,9 @@ other multi-widget have no kind the pack can know, so each takes the field's lab
 already has an `aria-label`, which is exactly what `MultiWidgetField` lets a developer give it,
 keeps it.
 
-`SplitHiddenDateTimeWidget` is hidden and never reaches this code.
+`SplitHiddenDateTimeWidget` is hidden and never reaches this code. A part that
+`MultiWidgetField` was told to make hidden (`type: hidden`) is replaced by a hidden widget on the
+form's own widget (`utils.py:81-82`). It has no component and needs no name, so it gets neither.
 
 ## R7. Uneditable field
 

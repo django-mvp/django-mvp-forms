@@ -143,6 +143,10 @@ plain form is assumed to belong to #5 and #6, which cover the widgets Django shi
 #21 settled both this and `MultiField`, the Bootstrap 3 container django-crispy-forms still
 ships: a multi-widget field is drawn part by part under #5 and #6, and `MultiField` is drawn by #7.
 
+On main, earlier features do not class or name the parts of a multi-widget field, so this
+feature does, for every multi-widget field, with or without the layout object (D16).
+`MultiWidgetField` draws through the ordinary field template, so the two cannot be separated.
+
 **ADR:** none. It is a boundary between features.
 
 ## D10. One demo page for each kind of decoration
@@ -205,8 +209,8 @@ already-rendered text as a template.
 **Chosen:** the tag reads `wrapper_class` and the frame writes it as a class on its outer
 element (research R5). FR-024 requires it and django-crispy-forms offers no other route.
 
-**Rejected:** honouring it only for `PrependedAppendedText`, the one layout object that always
-supplies it. The other five that document it would ignore it without a word.
+**Rejected:** honouring it only for `PrependedText`, `AppendedText` and `PrependedAppendedText`,
+the three that always supply it. The other five that document it would ignore it without a word.
 
 **ADR:** pending. It amends ADR 0006.
 
@@ -235,3 +239,37 @@ One implementer per story, six in sequence in the feature worktree, because ever
 the same shared files (plan, *Story order*).
 
 **ADR:** none. It is about how this one feature is delivered.
+
+## D19. The crispy filter does not draw a layout, so the spec's edge case was wrong
+
+The specification's last edge case said the crispy tag and the crispy filter draw these layout
+objects the same way. They cannot. `{{ form|crispy }}` in django-crispy-forms 2.7 renders the
+form's fields one by one and never reads the helper's layout
+(`crispy_forms/templatetags/crispy_forms_filters.py:48-61`), so no layout object of any kind is
+drawn through it. The design review found this before any code was written (DR-001).
+
+**Chosen:** the edge case in `spec.md` is reworded to say what happens, with a dated note, and
+the test that would have compared the two is dropped from T001. No requirement or acceptance
+scenario changes. All gates on this feature are open, so the amendment is recorded here and
+reported with the pull request.
+
+**ADR:** none. It corrects one sentence of this specification.
+
+## D20. What the design review changed
+
+One reviewer read the plan against the specification, for security and for structure. Verdict:
+approve. Applied:
+
+- DR-001, medium: D19.
+- DR-002, low: the inline arrangement is asserted by the widget template that drew it and by
+  nothing else.
+- DR-003, low: each of `inline`, `join`, `disabled` and `unlabelled` arrives in the task that
+  gives it behaviour.
+- DR-004, low: attached text and `join-item` never apply to a group, so a date drawn as three
+  selects is drawn undecorated.
+- DR-005, low: `uneditable-input` joins `UPSTREAM_ONLY_CLASSES` and an input drops that one name
+  only. Running an input's classes through the whole set would drop a developer's own `active`
+  or `error` from every input.
+- DR-006, low: `UneditableField` writing `disabled` amends ADR 0013 and a sentence in the README.
+
+**ADR:** none. It is a record of this feature's review.

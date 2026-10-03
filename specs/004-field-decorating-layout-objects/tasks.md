@@ -43,10 +43,10 @@ Plan, *One frame, told how the field is decorated*, *The frame takes a wrapper c
 *Attached text*; research R1, R2, R5, R9.
 
 - Move the frame to `frame.html`, with `field.html` reduced to the tag and the include. Give
-  `daisyui_field` its keyword options and `FieldInput` all the keyword-only arguments in the
-  plan's table, with `wrapper_class`, `prepended` and `appended` working. The other four are
-  accepted and stored, and their behaviour arrives in the story that needs each. The frame and
-  its body read `drawn.show_labels`. Split the classes into `own_classes` and `pack_classes`.
+  `daisyui_field` its keyword options and `FieldInput` the three keyword-only arguments this
+  story needs: `wrapper_class`, `prepended` and `appended`. Each of the other four arrives in
+  the task that gives it behaviour (`inline` in T003, `join` in T005, `disabled` in T007,
+  `unlabelled` in T009). Split the classes into `own_classes` and `pack_classes`.
 - Tests, `tests/test_pack/test_attached_text.py`, drawn through `{% crispy %}`:
   - prepended: one wrapper `label` carrying `input` holds a `span.label` before the input and
     none after, the input inside it carries no `input` class, and the frame holds one label for
@@ -64,9 +64,8 @@ Plan, *One frame, told how the field is decorated*, *The frame takes a wrapper c
   - `css_class` and an extra attribute reach the input, `wrapper_class` reaches the frame's
     outer element, `template=` draws a template of the developer's, and `input_size` and
     `active` raise nothing and add no class daisyUI lacks (FR-024, FR-027);
-  - on a checkbox, a radio group, a textarea and a file input the field is drawn with its input,
-    label and errors, and a hidden field is drawn as a hidden input alone (FR-025, Edge Cases);
-  - drawn the same through `{{ form|crispy }}` with a helper layout and through the tag;
+  - on a checkbox, a radio group, a date drawn as three selects, a textarea and a file input
+    the field is drawn as it is undecorated, with its input, label and errors, and a hidden field is drawn as a hidden input alone (FR-025, Edge Cases);
   - `wrapper_class` on a plain `Field` reaches the frame, on a `div` frame and on a `fieldset`
     frame, and a field with none has no extra class.
 - Tests, `tests/test_templatetags/test_daisyui.py`: `own_classes`, `pack_classes`,
@@ -78,7 +77,9 @@ Plan, *One frame, told how the field is decorated*, *The frame takes a wrapper c
 - README: a section for the layout objects that decorate a field, opening with these three:
   where to import each from, what is drawn, that the text is markup and must be escaped first
   when built from anything a person typed (FR-008), that `input_size` does nothing yet, and
-  that `wrapper_class` now works on any field. CHANGELOG entry.
+  that `wrapper_class` now works on any field. CHANGELOG entry, which also says that the frame
+  now lives in `daisyui/frame.html`, so a host project that overrides `daisyui/field.html` to
+  change the frame overrides `frame.html` instead.
 
 ### T002 — The attached-text demo page and the standalone page
 
@@ -116,8 +117,7 @@ Plan, *Inline groups*; research R4.
 - Tests, `tests/test_pack/test_inline_groups.py`:
   - every choice is a `radio` (or `checkbox`) input inside a `label` of its own tied by `for`
     (US2.1, US2.2); the group is drawn by the inline template and the stacked group by the
-    stacked one, asserted through `FieldInput.template_name` and by the two drawings differing
-    in the options' container (FR-009);
+    stacked one, asserted through `FieldInput.template_name` (FR-009);
   - the frame is a `fieldset` with a `legend`, the required marker and the help text, described
     by help text and error (US2.3, US2.4, FR-010);
   - initial and submitted values check exactly those options (US2.5); `cleaned_data` equals the
@@ -127,7 +127,7 @@ Plan, *Inline groups*; research R4.
   - choices with named groups are drawn under their names; a widget naming its own template or
     option template is drawn by it; `InlineRadios` on a field with no choices and on a text
     field draws the field (FR-025); `wrapper_class`, `css_class` and `template=` (FR-024).
-- `test_daisyui.py`: `template_name` with and without `inline`. A state in `STATES`. Upstream's
+- `FieldInput` gains `inline`. `test_daisyui.py`: `template_name` with and without `inline`. A state in `STATES`. Upstream's
   docstring examples for the two.
 - README and CHANGELOG.
 
@@ -172,7 +172,8 @@ Plan, *Field with buttons*; research R3.
     not evaluated (research R3);
   - on a select the group is drawn; on a checkbox and a radio group the field and the buttons
     are both drawn (FR-025); a hidden field is drawn alone.
-- `test_daisyui.py`: `is_joined`, and `join-item` in `pack_classes` only when joined. A state in
+- `FieldInput` gains `join`. `test_daisyui.py`: `is_joined`, and `join-item` in `pack_classes`
+  only when joined and never on a group. A state in
   `STATES`. Upstream's docstring example.
 - README (including that a button takes `css_class="join-item"` to close the doubled border)
   and CHANGELOG.
@@ -211,10 +212,15 @@ Plan, *Uneditable field*; research R1, R7.
   - a select, a single checkbox, every option of a radio group and a textarea are disabled;
   - `uneditable-input` is not drawn; the form's own widget is not changed to disabled by the
     pack; `css_class`, `wrapper_class` and `template=` (FR-024).
-- `test_daisyui.py`: `disabled` in `attrs`; `uneditable-input` absent from `own_classes`. A
+- `FieldInput` gains `disabled`. `uneditable-input` joins `UPSTREAM_ONLY_CLASSES`, as ADR 0010
+  asks, and `own_classes` drops that one name. `test_daisyui.py`: `disabled` in `attrs`;
+  `uneditable-input` absent from `own_classes`; a developer's own `active` class still on an
+  input. A
   state in `STATES`. Upstream's docstring example.
 - README, stating that the browser does not submit the value and that a form which needs it
-  kept declares the field disabled (FR-016). CHANGELOG.
+  kept declares the field disabled (FR-016), and correcting the sentence under *Disabled and
+  read-only fields* that says the pack adds no attribute for either state: `UneditableField` is
+  the one case where it writes `disabled`. CHANGELOG.
 
 ### T008 — The uneditable-field demo page
 
@@ -249,7 +255,9 @@ Plan, *Inline field* and the `unlabelled` rows under *One frame*; research R8.
     without a placeholder attribute, the group named by `aria-label` (FR-025);
   - a field beside it that is not inline keeps its label; `wrapper_class`, `css_class`,
     `template=` (FR-024); `cleaned_data` unchanged (SC-004).
-- `test_daisyui.py`: `show_labels` and the placeholder under `unlabelled`. A state in `STATES`.
+- `FieldInput` gains `unlabelled`, and the frame and its body read `drawn.show_labels` where
+  they read `form_show_labels != False`. `test_daisyui.py`: `show_labels` and the placeholder
+  under `unlabelled`. A state in `STATES`.
   Upstream's docstring example.
 - README and CHANGELOG.
 
@@ -283,7 +291,8 @@ Plan, *Multi-widget fields*; research R1, R6.
     `legend`, one help text and one error element, described by them (US6.3, FR-022);
   - each part has an `aria-label`, the two of a split date and time different from each other,
     and one given through `MultiWidgetField` is kept; the parts of another multi-widget are
-    named by the field's label;
+    named by the field's label; a part made hidden through `MultiWidgetField` gets neither a
+    class nor a name;
   - `cleaned_data` equals the undecorated field's (US6.5, SC-004);
   - the form's own widget and its parts carry no class or name of the pack's after drawing;
     drawing twice gives the same markup; a split date and time with no layout object is drawn
