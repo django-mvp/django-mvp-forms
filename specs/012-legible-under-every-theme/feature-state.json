@@ -187,13 +187,50 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestThemeList",
+              "tests/test_demo.py::TestThemesPage",
+              "tests/test_demo.py::TestStandaloneThemesPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy"
+            ],
+            "code": [
+              "demo/views.py:1039",
+              "demo/views.py:1309",
+              "demo/views.py:1318",
+              "demo/forms.py:1091",
+              "demo/urls.py:107",
+              "demo/templates/demo/themes.html:1",
+              "demo/templates/demo/themes_standalone.html:1",
+              "tests/test_demo.py:2362"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_legibility.py::TestPublishedExceptions"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_legibility.py::TestPublishedExceptions",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "README.md:804",
+              "CHANGELOG.md:25"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }

@@ -346,3 +346,17 @@ that it names the state, the theme and the pairing of a help text that lost
 field. The one method is the message a contributor reads.
 
 **Revisit if:** the failure is reported another way than text.
+
+## D26. The Themes page draws its forms apart, and four demo forms exist for it
+
+**Decision:** every form on the Themes page is drawn with no form element and no token, so
+nothing on it posts. `ReadOnlyKindsForm`, `AlertColoursForm`, `LockedKindsForm` and
+`UneditableChoicesForm` are added to `demo/forms.py`; the forms the demo already had are not
+changed.
+
+**Why:** the catalogue holds pairings that no earlier demo form draws: a disabled input in each
+variant, an invalid uneditable checkbox or radio, and an alert in each colour. The page test
+reads the page against the catalogue and names what is missing, so these are what it took to
+empty that list.
+
+**Revisit if:** the catalogue gains a state the page does not draw; the test says which.

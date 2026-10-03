@@ -27,3 +27,17 @@ Did: TestTheCheckCatches (help text without its ink, the failure text, stale, un
 Verified: uv run pytest tests/test_pack/test_legibility.py -q, 49 passed. Eleven probes, each reverted: the help text template without text-base-content (cupcake fails TestEveryTheme), the fragment keeping its ink, the failure text without state, theme or pairing, stale and unlisted reversed, Themes.read dropping or skipping the added theme, the reader no longer raising Uncovered, a literal in a branch no state draws, a state dropped from the catalogue, disabled content held, not read, or missing a theme, the README row gaining or losing a theme. Every one failed its test for the right reason. No gap in tests/legibility/ turned up.
 Next: full verify, then the report.
 Watch: the coverage test reads the template sources, so a class written only in a Python module is not covered by it.
+
+## 2026-10-03T22:59:39Z · Implementer US3 · T005
+
+Did: the Themes page in the shell (themes) and standalone (themes-standalone): ThemesMixin builds groups of forms from the demo's own forms, with a prefix each, drawn apart (no form element, no token); one element, theme-forms, holds only crispy output and plain headings; the chooser, the explanation and the modal button sit outside it. THEME_NAMES and DAISYUI_VERSION in demo/forms.py; routes, one sidebar entry, one icon. Added ReadOnlyKindsForm, AlertColoursForm, LockedKindsForm and UneditableChoicesForm because the catalogue holds pairings only they draw (a disabled ghost input; an invalid uneditable checkbox and radio; an alert in each colour).
+Verified: wrote ThemesPageContract first and saw it fail on the missing names; the pairing test then named six missing pairings, two rounds of forms emptied it. uv run pytest tests/test_demo.py -n auto --dist loadscope: 1246 passed. pre-commit run --all-files and mypy clean.
+Next: T006, README and CHANGELOG.
+Watch: the page weighs about 260 kB because it draws 105 forms; the shell page links themes.css through the styles block with block.super, so django-mvp's own stylesheet stays.
+
+## 2026-10-03T22:59:39Z · Implementer US3 · T006
+
+Did: README Themes section completed: the promise under a theme, the standard and the parts it holds, the 35 themes of the pinned version, error messages in the text colour, disabled content measured and not held, what a project with its own theme should know, the demo pages. The table and its two markers are untouched. CHANGELOG Added: the check, the demo page, the README section; the Changed entry stays.
+Verified: the test the task asks for, every theme the table names is a shipped theme, already exists as TestPublishedExceptions.test_every_theme_the_list_names_is_a_shipped_theme (US1). Probed it: a table row naming "bogus" failed it and the staleness test; restored, 3 passed. No new test written.
+Next: full verify, then the report.
+Watch: README and CHANGELOG already used the word component in earlier entries; none was added.
