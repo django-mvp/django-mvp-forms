@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.1.0] - 2026-10-03
+
 ### Added
 
 - A demo page, "Multi-widget field", at `/multi-widget-field/` in the django-mvp shell. It shows `MultiWidgetField` on a required split date and time with a different placeholder on each part, and a split date and time with no layout object, in a form to submit, which comes back with an error in the field's frame when it is submitted empty, and in a form that already fails. The same forms are on the standalone page at `/decorated-fields/standalone/`, styled by daisyUI's CDN install alone.
