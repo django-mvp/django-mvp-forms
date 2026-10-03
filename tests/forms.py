@@ -231,3 +231,40 @@ class CheckboxGroupsForm(forms.Form):
     own_option = forms.MultipleChoiceField(
         choices=FRUIT, widget=OwnOptionTemplateCheckboxes, required=False
     )
+
+
+class HeldFile:
+    def __init__(self, name):
+        self.name = name
+        self.url = f"/media/{name}"
+
+    def __str__(self):
+        return self.name
+
+    def __bool__(self):
+        return True
+
+
+class SeveralFilesInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class OwnTemplateFileInput(forms.ClearableFileInput):
+    template_name = "django/forms/widgets/file.html"
+
+
+class FilesForm(forms.Form):
+    plain = forms.FileField(widget=forms.FileInput, required=False, help_text="Plain")
+    empty = forms.FileField(required=False, help_text="Nothing held")
+    optional = forms.FileField(
+        required=False, initial=HeldFile("report.pdf"), help_text="Optional"
+    )
+    needed = forms.FileField(initial=HeldFile("contract.pdf"))
+    marked = forms.FileField(required=False, initial=HeldFile("<b>x</b>&.pdf"))
+    several = forms.FileField(widget=SeveralFilesInput, required=False)
+    own = forms.FileField(widget=OwnTemplateFileInput, required=False)
+    locked = forms.FileField(
+        required=False,
+        initial=HeldFile("locked.pdf"),
+        widget=forms.ClearableFileInput(attrs={"disabled": True}),
+    )

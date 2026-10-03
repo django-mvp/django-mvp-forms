@@ -15,6 +15,7 @@ from tests.forms import (
     DateSelectsForm,
     DeveloperAttrsForm,
     FieldAndFormWideErrorsForm,
+    FilesForm,
     FormWideErrorsForm,
     HelpedForm,
     RadioGroupsForm,
@@ -129,6 +130,10 @@ STATES = [
         lambda: CheckboxGroupsForm({}),
         NOTHING,
         id="invalid checkbox groups",
+    ),
+    pytest.param("{{ form|crispy }}", FilesForm, NOTHING, id="files"),
+    pytest.param(
+        "{{ form|crispy }}", lambda: FilesForm({}), NOTHING, id="invalid files"
     ),
     pytest.param(
         "{{ form|crispy }}",

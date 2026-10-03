@@ -47,6 +47,7 @@ class FieldInput:
         forms.RadioSelect: "radio",
         forms.Select: "select",
         forms.SelectDateWidget: "select",
+        forms.FileInput: "file-input",
     }
     # Written out, not built from the component's name, so a host project's
     # Tailwind build finds them when it scans this module.
@@ -60,6 +61,7 @@ class FieldInput:
         forms.CheckboxSelectMultiple: "daisyui/widgets/group.html",
         forms.RadioSelect: "daisyui/widgets/group.html",
         forms.SelectDateWidget: "daisyui/widgets/select_date.html",
+        forms.ClearableFileInput: "daisyui/widgets/clearable_file_input.html",
     }
     error_modifiers: dict[str, str] = {
         "input": "input-error",
@@ -67,6 +69,7 @@ class FieldInput:
         "select": "select-error",
         "checkbox": "checkbox-error",
         "radio": "radio-error",
+        "file-input": "file-input-error",
     }
 
     def __init__(

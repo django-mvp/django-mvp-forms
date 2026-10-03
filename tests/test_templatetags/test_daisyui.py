@@ -11,6 +11,7 @@ from tests.forms import (
     CheckboxForm,
     DateSelectsForm,
     DeveloperAttrsForm,
+    FilesForm,
     HelpedForm,
     OwnTemplateDateWidget,
     SelectsForm,
@@ -244,6 +245,38 @@ class TestFieldInputTemplate:
 
     def test_a_single_input_is_not_a_group(self):
         assert not FieldInput(TextInputsForm()["text"]).is_group
+
+
+class TestFieldInputFiles:
+    @pytest.mark.parametrize("name", ["plain", "empty", "several"])
+    def test_each_kind_of_file_input_has_the_file_input_component(self, name):
+        assert FieldInput(FilesForm()[name]).component == "file-input"
+
+    def test_an_invalid_file_input_fills_its_field_and_gets_its_error_modifier(self):
+        class Form(forms.Form):
+            upload = forms.FileField()
+
+        field_input = FieldInput(Form({})["upload"])
+
+        assert set(field_input.css_class.split()) == {
+            "file-input",
+            "w-full",
+            "file-input-error",
+        }
+
+    def test_a_clearable_file_input_has_the_packs_template(self):
+        assert FieldInput(FilesForm()["empty"]).template_name == (
+            "daisyui/widgets/clearable_file_input.html"
+        )
+
+    def test_a_plain_file_input_has_no_template_of_its_own(self):
+        assert FieldInput(FilesForm()["plain"]).template_name is None
+
+    def test_a_subclass_naming_its_own_template_has_none(self):
+        assert FieldInput(FilesForm()["own"]).template_name is None
+
+    def test_a_file_input_is_not_a_group(self):
+        assert not FieldInput(FilesForm()["empty"]).is_group
 
 
 class TestFieldInputGroupDescription:
