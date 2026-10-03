@@ -129,3 +129,107 @@ stock markup, so there is no design of the pack's own to judge in advance. The d
 for looking at the result.
 
 **ADR:** none — local to this feature
+
+## Decisions made while planning
+
+The entries from here on were made when the feature was planned and built, against the code
+FS-001 delivered. The evidence for each is in `research.md`.
+
+## D9. A field of several inputs is framed as a fieldset with a legend
+
+**Decision:** When Django marks a field's widget as a group (`use_fieldset`), the field frame is
+a `<fieldset class="fieldset">` and the field's label is its `<legend class="fieldset-legend">`.
+The fieldset is described by the help text and the error element. Every other field keeps the
+`div` and the `label`.
+
+**Why:** A radio group has no single input for a `label` to point at, and FR-007 asks for the
+options to be announced as one group named by the field's label. A native fieldset does that with
+no ARIA, it is what Django's own form templates draw, and it is daisyUI's own markup for the two
+classes the frame already uses. ADR 0006 fixed the frame's element as a `div` so that it could
+never be read from a page variable. `use_fieldset` is Django's flag on the widget and not a page
+variable, so the reason stands and only the sentence changes.
+
+**Revisit if:** a layout object needs a group drawn without a fieldset.
+
+**ADR:** docs/adr/0008-a-group-is-framed-as-a-fieldset.md
+
+## D10. The pack's own widget templates are drawn through a copy of the widget
+
+**Decision:** Three widgets are drawn from templates of the pack's: a radio or checkbox group, a
+date as three selects, and a clearable file input. `FieldInput` renders a shallow copy of the
+field's widget with `template_name` pointed at the pack's template. It does so only when the
+widget's `template_name` is still the one Django's class declares.
+
+**Why:** Django's group template writes the widget's class on the wrapper as well as on every
+option, and gives the option labels, the removal checkbox and the file link no class at all, so a
+class alone cannot make them daisyUI's. A copy keeps ADR 0004's promise that nothing is written
+to the form's widget. Checking the template name is what lets a host project's subclass keep a
+template of its own (FR-004).
+
+**Revisit if:** Django lets a caller name the template for one render.
+
+**ADR:** docs/adr/0009-widget-templates-through-a-copy-of-the-widget.md
+
+## D11. Read-only is the browser's state, and disabled is daisyUI's, both drawn from the attribute
+
+**Decision:** The pack adds no class and no attribute for either state. A disabled field carries
+Django's `disabled`, and daisyUI draws its disabled state from that attribute on every component
+the pack uses. A `readonly` attribute reaches the input as the developer wrote it. On a text input
+or a textarea the browser shows the value, refuses edits, announces the state and still submits
+the value. On every other input it does nothing, and the pack does not imitate it (D2).
+
+**Why:** daisyUI has no read-only rule for any component, and FR-023 limits the pack to daisyUI's
+standard classes. Every disabled rule in daisyUI's stylesheet keys on the attribute, so a modifier
+class would add nothing.
+
+**Revisit if:** daisyUI gains a read-only modifier.
+
+**ADR:** docs/adr/0010-disabled-and-read-only-are-drawn-from-the-attribute.md
+
+## D12. A hidden field's error uses Django's own message
+
+**Decision:** The form-wide alert lists each hidden field's errors as Django's
+`"(Hidden field %(name)s) %(error)s"`, through `gettext` with the same msgid.
+
+**Why:** It is what Django's own form rendering shows, and reusing the msgid gets every
+translation Django ships with no catalogue in this package.
+
+**Revisit if:** the package gains a catalogue of its own and wants other wording.
+
+**ADR:** none — matches Django's own behaviour, and is local to one template
+
+## D13. Three more layout utilities: `flex`, `flex-col`, `gap-2`
+
+**Decision:** The options of a group are stacked with `flex flex-col gap-2`, and a date's three
+selects are set side by side with `flex gap-2`. All three are named in the class test.
+
+**Why:** daisyUI has no component that stacks a list of labels or puts selects in a row. ADR 0003
+allows a Tailwind utility for layout in exactly that case.
+
+**Revisit if:** daisyUI gains a component for either.
+
+**ADR:** none — an application of ADR 0003, which already sets the rule
+
+## D14. `w-full` goes on selects and file inputs, and not on checkboxes or radios
+
+**Decision:** A select and a file input fill their container as text inputs do. A checkbox and a
+radio button get no width.
+
+**Why:** daisyUI gives `select` and `file-input` the same fixed width as `input`. A checkbox has
+no width to fill.
+
+**Revisit if:** ADR 0007 is revisited.
+
+**ADR:** none — an application of ADR 0007
+
+## D15. A split date and time stays uncovered
+
+**Decision:** `SplitDateTimeWidget` is not given a component here. FS-001's tests that needed "a
+widget the pack does not cover" are re-pointed at it, since the select, checkbox and file input
+they used are now covered.
+
+**Why:** FS-001's specification gives a field split across text inputs to #8.
+
+**Revisit if:** #8 draws it.
+
+**ADR:** none — a sibling boundary
