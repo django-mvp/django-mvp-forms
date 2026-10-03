@@ -155,8 +155,30 @@
       "tasks": [
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choice_inputs.py::TestChoiceGroups",
+              "tests/test_pack/test_choice_inputs.py::TestRadioGroup",
+              "tests/test_pack/test_choice_inputs.py::TestCheckboxGroup",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_choice_inputs.py tests/test_pack/test_independence.py -q",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build",
+              "uv run --with 'django~=5.2.0' pytest tests/test_pack tests/test_templatetags -q"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:46",
+              "mvp_forms/templatetags/daisyui.py:88",
+              "mvp_forms/templates/daisyui/widgets/group.html:1"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

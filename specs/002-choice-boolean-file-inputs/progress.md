@@ -29,3 +29,10 @@ Did: A BooleanField is drawn as daisyUI's checkbox inside <label class="label" f
 Verified: uv run pytest tests/test_pack/test_checkbox.py tests/test_templatetags tests/test_pack/test_independence.py -q (110+ green, exit 0); full: uv run pytest -n auto --dist loadscope (432 passed), pre-commit, mypy, uv build all exit 0.
 Next: US3 (radio and checkbox groups) can add CheckboxSelectMultiple to components; is_single_checkbox already excludes groups.
 Watch: docs/adr/0006 still says the frame's outer element is always a div, and does not mention the single checkbox's label; ADR 0007 does not mention the checkbox exemption. Both are Forge's to record.
+
+## 2026-10-03T16:52:19Z · Implementer US3 · T004
+
+Did: RadioSelect and CheckboxSelectMultiple draw from daisyui/widgets/group.html through FieldInput.templates (components, error modifiers, radio fixed-size). template_name now also requires option_template_name unchanged (DR-006, D19). README and CHANGELOG describe the groups. Tests: TestChoiceGroups (both widgets, both sources), TestRadioGroup, TestCheckboxGroup, four group states in TestEmittedClasses; flex-col joins LAYOUT_UTILITIES.
+Verified: tests/test_pack/test_choice_inputs.py 128 passed; probes: dropping the option_template_name comparison fails the option-template test, dropping radio from fixed_size fails the never-widened test, dropping flex-col from LAYOUT_UTILITIES fails TestEmittedClasses. Full: pytest -n auto --dist loadscope 509 passed; pre-commit, mypy, uv build clean; Django 5.2 run of tests/test_pack and tests/test_templatetags 360 passed.
+Next: US4 file inputs (T005) reuses the same template check and FieldInput.templates.
+Watch: group.html reads only the widget context Django builds; no docs page beyond README describes the groups.

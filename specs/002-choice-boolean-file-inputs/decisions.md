@@ -278,3 +278,18 @@ One reviewer, three lenses, verdict: changes requested. Each finding and what wa
   issue and listed at the merge gate.
 
 **ADR:** none — a record of the review, each decision above carries its own verdict
+
+## D19. A widget keeps the pack's template only while it keeps both of its class's templates
+
+**Decision:** `FieldInput.template_name` compares `template_name` and `option_template_name`
+with the matched class's, reading a missing attribute as None, so one loop serves a group, a date
+and a file input. A radio is a fixed-size component beside the checkbox.
+
+**Why:** A group whose subclass overrides only its option template is a widget naming a template
+of its own (FR-004); the pack's `group.html` ignores `option.template_name`, so without the second
+comparison the override would be dropped silently (DR-006). The test with the subclass fails when
+the second comparison is removed.
+
+**Revisit if:** a covered widget gains a third template attribute.
+
+**ADR:** none — follows D10
