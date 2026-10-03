@@ -282,13 +282,61 @@
       "tasks": [
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_structure.py::TestMultiField",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_demo.py::TestLayoutObjectsPage",
+              "tests/test_demo.py::TestStandaloneLayoutObjectsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_structure.py::TestMultiField (16 passed, exit 0)",
+              "uv run pytest tests/test_pack/test_independence.py tests/test_demo.py (291 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)",
+              "forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-003-structure-and-button-layout-objects --base origin/main (conformance, docs, lint, typecheck, test, build all passed, exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/multifield.html:1",
+              "mvp_forms/templates/daisyui/multifield.html:1",
+              "tests/test_pack/test_structure.py:281",
+              "tests/test_pack/test_independence.py:122",
+              "tests/test_pack/test_independence.py:223",
+              "demo/forms.py:118",
+              "tests/test_demo.py:291",
+              "README.md:168",
+              "CHANGELOG.md:35"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples",
+              "tests/test_demo.py::TestLayoutObjectsPage",
+              "tests/test_demo.py::TestStandaloneLayoutObjectsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_documented_examples.py (42 passed, exit 0)",
+              "uv run pytest tests/test_demo.py -k every_layout_object (52 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)",
+              "forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-003-structure-and-button-layout-objects --base origin/main (conformance, docs, lint, typecheck, test, build all passed, exit 0)"
+            ],
+            "code": [
+              "tests/test_pack/test_documented_examples.py:125",
+              "tests/forms.py:123",
+              "tests/test_demo.py:197",
+              "tests/test_demo.py:231",
+              "README.md:5",
+              "README.md:168"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }
