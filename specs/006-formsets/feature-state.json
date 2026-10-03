@@ -162,8 +162,26 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_formsets.py::TestFormsetErrors",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_formsets.py::TestFormsetErrors -q",
+              "uv run pytest tests/test_pack/test_independence.py -q",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/errors_formset.html:1",
+              "mvp_forms/templates/daisyui/uni_formset.html:3",
+              "mvp_forms/templates/daisyui/table_inline_formset.html:6",
+              "mvp_forms/templates/daisyui/table_inline_formset.html:21"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
@@ -177,8 +195,21 @@
       "tasks": [
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_formsets.py::TestDeleteAndOrder"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_formsets.py::TestDeleteAndOrder -q",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/table_inline_formset.html:32"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

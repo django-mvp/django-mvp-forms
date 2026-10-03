@@ -33,3 +33,17 @@ Did: added daisyui/table_inline_formset.html (form wrapper, media once, manageme
 Verified: uv run pytest tests/test_pack/test_formsets.py::TestTableFormset tests/test_pack/test_independence.py, 98 passed; red first was TemplateDoesNotExist. Probes: dropping the hidden-field loop fails 8 tests, dropping the required marker fails 1.
 Next: US3 adds formset-wide and row errors.
 Watch: the template reads no form.form_html; a form missing a column gets an empty cell.
+
+## 2026-10-03T18:04:55Z · Implementer US3 · T005
+
+Did: added daisyui/errors_formset.html (formset.non_form_errors once in the role=alert element, formset_error_title when set, nothing without errors), included it in uni_formset.html and table_inline_formset.html unless form_show_errors is off; the table row now draws its form-wide and hidden-field errors in the first cell (id <prefix>_errors) and the tr carries aria-describedby only then. Added RuledLineForm, RuledLineFormSet, MarkupRuledLineFormSet and ruled_data to tests/forms.py, TestFormsetErrors (23 cases over both layouts), three error states in test_independence.py, README Errors part and a CHANGELOG line.
+Verified: red first, 15 of 23 failed (TemplateDoesNotExist for errors_formset.html, missing alert, missing row errors; the field-error and stacked form-wide cases passed on their first run as the brief predicted). uv run pytest tests/test_pack/test_formsets.py tests/test_pack/test_independence.py: 151 passed. pre-commit run --all-files passed. Probe: removing the form_show_errors guard in both templates failed the errors-off test in both layouts.
+Next: T006, delete and order inputs.
+Watch: the row's aria-describedby is also gated on form_show_errors, so a row never names an element that is not drawn.
+
+## 2026-10-03T18:04:55Z · Implementer US4 · T006
+
+Did: added OrderedLineFormSet and KeptLineFormSet (can_delete_extra off) to tests/forms.py and TestDeleteAndOrder (12 cases) with a README part and a CHANGELOG line. No template change: table_inline_formset.html already draws an empty td where a row's cell is None.
+Verified: uv run pytest tests/test_pack/test_formsets.py::TestDeleteAndOrder: 12 passed. The tests passed on their first run, so each claim was probed: drawing no td for a None cell failed the cell-count test, and drawing the table's inputs with labels on failed the aria-label test. pre-commit run --all-files passed.
+Next: full verify, then the report.
+Watch: the delete and order checks rest on the pack's existing checkbox and number input; nothing new is drawn for them.
