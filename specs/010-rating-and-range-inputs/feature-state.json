@@ -262,8 +262,20 @@
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputRating::test_a_lazy_choice_marked_safe_names_its_star_as_plain_text"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags/test_daisyui.py -q -k lazy_choice",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:676"
+            ]
+          }
         }
       ]
     }

@@ -674,10 +674,10 @@ class FieldInput:
             when it is marked safe, and as written otherwise.
         """
         # A lazy label says whether it is safe only once it is read.
-        text = str(text)
-        if isinstance(text, SafeData):
-            return unescape(strip_tags(text)).strip()
-        return text
+        plain = str(text)
+        if isinstance(plain, SafeData):
+            return unescape(strip_tags(str(plain))).strip()
+        return plain
 
     @property
     def requires_placeholder(self) -> bool:
