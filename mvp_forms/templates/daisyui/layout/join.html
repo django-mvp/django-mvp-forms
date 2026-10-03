@@ -1,0 +1,11 @@
+{% load daisyui %}{% with join_class=join.css_class|daisyui_classes %}
+<fieldset class="fieldset"{% if join.label and form_show_labels == False %} aria-label="{{ join.label }}"{% endif %}>
+  {% if join.label and form_show_labels != False %}
+    <legend class="fieldset-legend{% if label_class %} {{ label_class }}{% endif %}">
+      {{ join.label }}{% if required %}{% with field=required %}{% include "daisyui/required_marker.html" %}{% endwith %}{% endif %}
+    </legend>
+  {% endif %}
+  <div{% if join.css_id %} id="{{ join.css_id }}"{% endif %} class="join w-full{% if join_class %} {{ join_class }}{% endif %}"{{ join.flat_attrs }}>{{ inputs }}</div>
+  {{ hidden }}
+  {% for field in members %}{% include "daisyui/field_messages.html" %}{% endfor %}
+</fieldset>{% endwith %}

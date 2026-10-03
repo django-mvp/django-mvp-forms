@@ -150,8 +150,37 @@
       "tasks": [
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_layout.py::TestJoinMembers",
+              "tests/test_layout.py::TestJoinRender",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputMember",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputLabelDrawings",
+              "tests/test_pack/test_template_list.py::TestTheListMatchesThePackage",
+              "tests/test_pack/test_replacements.py",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_layout.py tests/test_templatetags tests/test_pack/test_template_list.py tests/test_pack/test_independence.py tests/test_pack/test_documented_examples.py -q"
+            ],
+            "code": [
+              "mvp_forms/layout.py:15",
+              "mvp_forms/layout.py:49",
+              "mvp_forms/layout.py:92",
+              "mvp_forms/layout.py:172",
+              "mvp_forms/templatetags/daisyui.py:126",
+              "mvp_forms/templatetags/daisyui.py:194",
+              "mvp_forms/templatetags/daisyui.py:389",
+              "mvp_forms/templatetags/daisyui.py:398",
+              "mvp_forms/templates/daisyui/layout/join.html:1",
+              "mvp_forms/templates/daisyui/layout/join_member.html:1",
+              "mvp_forms/templates/daisyui/field_messages.html:1",
+              "mvp_forms/templates/daisyui/field_body.html:23"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T005",

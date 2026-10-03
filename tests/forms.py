@@ -3,7 +3,7 @@
 import datetime
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout
+from crispy_forms.layout import Field, Layout
 from django import forms
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -16,6 +16,8 @@ from django.forms import (
     widgets,
 )
 from django.utils.safestring import mark_safe
+
+from mvp_forms.layout import Join
 
 
 class TextInputsForm(forms.Form):
@@ -969,5 +971,40 @@ class FloatingForm(forms.Form):
         self.helper.form_show_labels = show_labels
         if layout is not None:
             self.helper.layout = Layout(*layout)
+        if choices is not None:
+            self.helper.daisyui = choices
+
+
+CODES = [("+49", "+49"), ("+44", "+44")]
+
+
+class JoinedForm(forms.Form):
+    notes = forms.CharField(label="Notes", required=False)
+    country_code = forms.ChoiceField(choices=CODES, label="Country code")
+    number = forms.CharField(label="Number", help_text="Digits only")
+    extension = forms.CharField(label="Extension", required=False)
+    token = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, layout=None, choices=None, show_labels=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.form_show_labels = show_labels
+        self.helper.layout = Layout(
+            *(
+                layout
+                if layout is not None
+                else (
+                    "notes",
+                    Join(
+                        "country_code",
+                        Field("number", autocomplete="tel"),
+                        "extension",
+                        "token",
+                        label="Phone",
+                    ),
+                )
+            )
+        )
         if choices is not None:
             self.helper.daisyui = choices

@@ -20,11 +20,4 @@
 {% endif %}
 {% if drawn.is_joined %}{{ buttons }}</div>{% endif %}
 {% if field_class %}</div>{% endif %}
-{% if field.help_text %}
-  <p{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %} class="label">{{ field.help_text }}</p>
-{% endif %}
-{% if field.errors and form_show_errors != False %}
-  <div{% if field.auto_id %} id="{{ field.auto_id }}_error"{% endif %} class="text-error">
-    {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
-  </div>
-{% endif %}
+{% include "daisyui/field_messages.html" %}

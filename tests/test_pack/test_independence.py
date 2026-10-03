@@ -59,6 +59,7 @@ from tests.forms import (
     InlineCheckboxesForm,
     InlineFieldsForm,
     InlineRadiosForm,
+    JoinedForm,
     LineFormSet,
     MediaForm,
     MultiWidgetsForm,
@@ -100,6 +101,7 @@ LAYOUT_UTILITIES = {
     "gap-2",
     "mt-4",
     "overflow-x-auto",
+    "w-auto",
 }
 
 
@@ -773,6 +775,13 @@ STATES = [
         lambda: FloatingForm({}, choices=FLOATING_LABELS),
         NOTHING,
         id="floating labels, invalid, through the tag",
+    ),
+    pytest.param("{% crispy form %}", JoinedForm, NOTHING, id="joined group"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: JoinedForm({"country_code": "+99"}),
+        NOTHING,
+        id="joined group, invalid",
     ),
 ]
 

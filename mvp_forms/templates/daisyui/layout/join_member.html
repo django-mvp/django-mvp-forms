@@ -1,0 +1,2 @@
+{% load daisyui %}
+{% if field.is_hidden %}{{ field }}{% else %}{% daisyui_field field member=True as drawn %}{{ drawn.render }}{% endif %}

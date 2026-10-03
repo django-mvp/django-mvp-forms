@@ -26,3 +26,10 @@ Did: demo pages /floating-labels/ in the shell and /floating-labels/standalone/ 
 Verified: uv run pytest tests/test_demo.py -q -k FloatingLabels, 48 passed; they failed first on the missing route.
 Next: the full verify, then the report.
 Watch: the shell page uses the shell's Cotton components and no include; nothing states a size or a colour.
+
+## 2026-10-03T23:40:56Z · Implementer US2 · T004
+
+Did: mvp_forms/layout.py with InvalidMember, Member and Join (members, draw, render); FieldInput's member option, can_join, is_member, member_widths and join-item; join.html, join_member.html and field_messages.html, which field_body.html now includes; JoinedForm in tests/forms.py; w-auto in LAYOUT_UTILITIES and two joined states; the three README template-list rows and rating and range in the floating label's passed-over list.
+Verified: uv run pytest tests/test_layout.py tests/test_templatetags tests/test_pack/test_template_list.py tests/test_pack/test_independence.py tests/test_pack/test_documented_examples.py -q, 863 passed; the new tests failed first on the missing mvp_forms.layout, and the rating and range tests failed when can_float was widened to them.
+Next: T005, the acceptance scenarios drawn through the tag, the README section, the CHANGELOG and CONTEXT.
+Watch: an empty Join in a layout of its own draws nothing, so the helper's display_form falls back to drawing every field; tests give the layout another field. The STATES that existed before differ after this task only by one added line break at the end of each field's body, from the include.
