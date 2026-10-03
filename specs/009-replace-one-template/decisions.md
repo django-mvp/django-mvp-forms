@@ -303,3 +303,12 @@ may not touch.
 when the file can move back beside the helper.
 
 **ADR:** none — a choice about where tests live.
+
+## D20. One existing test module's import line was changed
+
+**Chosen:** the check on changes to existing tests flagged `tests/test_pack/test_documented_examples.py`.
+The change is to its imports only: `HelpedForm`, `PACK_TEMPLATES` and `TemplateSurface` are
+imported for the worked example's test, which is added at the end of the file. No existing test
+or assertion is changed.
+
+**ADR:** none — a record of a flag that was read and found harmless.

@@ -807,8 +807,8 @@ A host project replaces one template of the pack by putting a file at the same p
 
 A replacement is found by one of two routes, and the last column of the list below says which:
 
-- The 36 templates outside `daisyui/widgets/` are found through `TEMPLATES`. Put the replacement in a directory listed in `DIRS`, or in the `templates` directory of an app listed in `INSTALLED_APPS` before `mvp_forms`.
-- The 6 under `daisyui/widgets/` are loaded by the form renderer, and Django's default renderer does not read `TEMPLATES`. It looks in Django's own form templates and then in the `templates` directory of each installed app, in order, so with the default renderer a replacement is found only in an app listed before `mvp_forms`. A project that keeps it in a `DIRS` directory sets `FORM_RENDERER = "django.forms.renderers.TemplatesSetting"` and adds `"django.forms"` to `INSTALLED_APPS`, so Django's own widget templates are still found.
+- The templates outside `daisyui/widgets/` are found through `TEMPLATES`. Put the replacement in a directory listed in `DIRS`, or in the `templates` directory of an app listed in `INSTALLED_APPS` before `mvp_forms`.
+- The templates under `daisyui/widgets/` are loaded by the form renderer, and Django's default renderer does not read `TEMPLATES`. It looks in Django's own form templates and then in the `templates` directory of each installed app, in order, so with the default renderer a replacement is found only in an app listed before `mvp_forms`. A project that keeps it in a `DIRS` directory sets `FORM_RENDERER = "django.forms.renderers.TemplatesSetting"` and adds `"django.forms"` to `INSTALLED_APPS`, so Django's own widget templates are still found.
 
 An app listed after `mvp_forms` is never used. Once django-crispy-forms has loaded `daisyui/field.html`, `daisyui/uni_form.html`, `daisyui/uni_formset.html`, `daisyui/whole_uni_form.html` or `daisyui/whole_uni_formset.html` it keeps it in memory, so restart the development server after you add or edit a replacement for one of those five.
 
