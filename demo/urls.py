@@ -15,6 +15,7 @@ from demo.views import (
     InlineFieldView,
     LayoutObjectsView,
     ModalView,
+    MultiWidgetFieldView,
     OverviewView,
     StackedFormsetView,
     StandaloneChoiceInputsView,
@@ -65,6 +66,11 @@ urlpatterns = [
     ),
     path("uneditable-field/", UneditableFieldView.as_view(), name="uneditable-field"),
     path("inline-field/", InlineFieldView.as_view(), name="inline-field"),
+    path(
+        "multi-widget-field/",
+        MultiWidgetFieldView.as_view(),
+        name="multi-widget-field",
+    ),
     path(
         "decorated-fields/standalone/",
         DecoratedFieldsStandaloneView.as_view(),

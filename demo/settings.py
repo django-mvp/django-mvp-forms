@@ -131,6 +131,7 @@ EASY_ICONS = {
             "field-with-buttons": "bi bi-search",
             "uneditable-field": "bi bi-lock",
             "inline-field": "bi bi-input-cursor",
+            "multi-widget-field": "bi bi-calendar-event",
             "choices": "bi bi-palette",
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",

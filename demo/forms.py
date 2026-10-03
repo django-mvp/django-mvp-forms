@@ -29,6 +29,7 @@ from crispy_forms.layout import (
     Hidden,
     Layout,
     MultiField,
+    MultiWidgetField,
     Reset,
     Row,
     Submit,
@@ -811,6 +812,45 @@ class InlineFieldForm(forms.Form):
         self.helper.attrs = {"novalidate": True}
         self.helper.layout = Layout(
             InlineField("email"), InlineField("city"), InlineField("remember")
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class MultiWidgetFieldForm(forms.Form):
+    """A form with a split date and time whose parts each have an attribute.
+
+    The start is required, so a bound form with nothing in it comes back with an
+    error in the frame. The end is optional and drawn with no layout object, as
+    any split date and time is. Its layout is built for each instance, and the
+    form's prefix is in the button name, so two of these forms on one page repeat
+    no id. The form must be given a prefix.
+    """
+
+    starts = forms.SplitDateTimeField(
+        label=_("Starts"), help_text=_("Local date and time")
+    )
+    ends = forms.SplitDateTimeField(label=_("Ends"), required=False)
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in the button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            MultiWidgetField(
+                "starts",
+                attrs=({"placeholder": "2026-10-03"}, {"placeholder": "12:30"}),
+            ),
+            "ends",
         )
         if posts:
             self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))

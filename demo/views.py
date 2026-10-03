@@ -25,6 +25,7 @@ from demo.forms import (
     InputKindsForm,
     LayoutObjectsForm,
     ModalForm,
+    MultiWidgetFieldForm,
     OrderLineFormSet,
     OverrideForm,
     PairForm,
@@ -671,7 +672,52 @@ class InlineFieldView(InlineFieldMixin, MVPTemplateView):
     breadcrumbs = [{"text": "Inline field"}]
 
 
+class MultiWidgetFieldMixin:
+    """The forms the multi-widget-field page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    multi_widget_prefix = "multi-widget"
+    multi_widget_failing_prefix = "failing-multi-widget"
+    multi_widget_failing_data = {
+        "failing-multi-widget-starts_0": "",
+        "failing-multi-widget-starts_1": "",
+    }
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault(
+            "multi_widget_form", MultiWidgetFieldForm(prefix=self.multi_widget_prefix)
+        )
+        kwargs["failing_multi_widget_form"] = MultiWidgetFieldForm(
+            self.multi_widget_failing_data,
+            prefix=self.multi_widget_failing_prefix,
+            posts=False,
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = MultiWidgetFieldForm(request.POST, prefix=self.multi_widget_prefix)
+        return self.render_to_response(self.get_context_data(multi_widget_form=form))
+
+
+class MultiWidgetFieldView(MultiWidgetFieldMixin, MVPTemplateView):
+    """A split date and time with an attribute on each part, inside the shell."""
+
+    template_name = "demo/multi_widget_field.html"
+    page_title = "Multi-widget field"
+    page_subtitle = "A split date and time with an attribute on each part"
+    breadcrumbs = [{"text": "Multi-widget field"}]
+
+
 class DecoratedFieldsStandaloneView(
+    MultiWidgetFieldMixin,
     InlineFieldMixin,
     UneditableFieldMixin,
     FieldWithButtonsMixin,
@@ -689,6 +735,8 @@ class DecoratedFieldsStandaloneView(
 
     def post(self, request, *args, **kwargs):
         """Bind the form whose submit button was pressed and no other."""
+        if f"{self.multi_widget_prefix}-submit" in request.POST:
+            return MultiWidgetFieldMixin.post(self, request, *args, **kwargs)
         if f"{self.inline_field_prefix}-submit" in request.POST:
             return InlineFieldMixin.post(self, request, *args, **kwargs)
         if f"{self.uneditable_prefix}-submit" in request.POST:

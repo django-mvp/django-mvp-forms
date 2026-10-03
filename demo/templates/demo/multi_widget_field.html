@@ -1,0 +1,19 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="multi-widget-field">
+    <c-text>
+      The start is required and its two parts, the date and the time, each have a placeholder of their own.
+      Submit the form empty to see an error in the field's frame. The end is a split date and time too,
+      drawn with no layout object, and it is optional.
+    </c-text>
+    {% crispy multi_widget_form %}
+  </c-section>
+  <c-section title="A form that already fails" level="3">
+    <c-text>Neither part of the start holds a value, so the field shows its error.</c-text>
+    {% crispy failing_multi_widget_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'decorated-fields-standalone' %}" text="The same forms without django-mvp" />
+  </c-text>
+{% endblock page.content %}
