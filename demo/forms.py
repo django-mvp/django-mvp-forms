@@ -78,6 +78,122 @@ class TextInputsForm(forms.Form):
         )
 
 
+class ChoiceInputsForm(forms.Form):
+    """One field of each choice, boolean, file and hidden input the pack draws.
+
+    Every field is optional, enabled and without help text until the constructor
+    says otherwise, so the same form can stand for each state a field can be in.
+    """
+
+    select = forms.ChoiceField(
+        label=_("Select"), choices=[("", "---------"), ("a", "A"), ("b", "B")]
+    )
+    grouped_select = forms.ChoiceField(
+        label=_("Select with groups"),
+        choices=[
+            ("", "---------"),
+            ("Fruit", [("apple", "Apple"), ("pear", "Pear")]),
+            ("Vegetables", [("leek", "Leek"), ("kale", "Kale")]),
+        ],
+    )
+    multiple_select = forms.MultipleChoiceField(
+        label=_("Multiple select"), choices=[("a", "A"), ("b", "B"), ("c", "C")]
+    )
+    null_boolean = forms.NullBooleanField(
+        label=_("Null boolean"), widget=forms.NullBooleanSelect
+    )
+    date = forms.DateField(
+        label=_("Date as three selects"),
+        widget=forms.SelectDateWidget(years=range(2025, 2031)),
+    )
+    radio = forms.ChoiceField(
+        label=_("Radio group"),
+        choices=[("a", "A"), ("b", "B"), ("c", "C")],
+        widget=forms.RadioSelect,
+    )
+    checkbox = forms.BooleanField(label=_("Checkbox"))
+    checkbox_group = forms.MultipleChoiceField(
+        label=_("Checkbox group"),
+        choices=[("a", "A"), ("b", "B"), ("c", "C")],
+        widget=forms.CheckboxSelectMultiple,
+    )
+    file = forms.FileField(label=_("File"), widget=forms.FileInput)
+    clearable_file = forms.FileField(label=_("Clearable file"))
+    hidden = forms.IntegerField(label=_("Hidden"), widget=forms.HiddenInput)
+
+    help_texts = {
+        "select": _("One of two choices."),
+        "grouped_select": _("A choice from named groups."),
+        "multiple_select": _("Any number of choices."),
+        "null_boolean": _("Yes, no or unknown."),
+        "date": _("A year, a month and a day."),
+        "radio": _("Exactly one of three."),
+        "checkbox": _("Tick it, or leave it."),
+        "checkbox_group": _("Any number of three."),
+        "file": _("A file to upload."),
+        "clearable_file": _("A file to upload, or to remove."),
+        "hidden": _("Nobody sees this."),
+    }
+
+    def __init__(
+        self, *args, required=False, with_help=False, disabled=False, **kwargs
+    ):
+        """Switch every field's required, help text and disabled flags at once.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            required: Whether every field is required.
+            with_help: Whether every field carries its help text.
+            disabled: Whether every field is disabled.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            field.required = required
+            field.disabled = disabled
+            field.help_text = self.help_texts[name] if with_help else ""
+
+    def clean_null_boolean(self):
+        """Refuse "unknown" when the field is required.
+
+        Django's own field accepts all three answers, so without this the error
+        state would show the select with no error.
+
+        Returns:
+            The answer given.
+
+        Raises:
+            ValidationError: When the field is required and the answer is unknown.
+        """
+        value = self.cleaned_data["null_boolean"]
+        if value is None and self.fields["null_boolean"].required:
+            raise ValidationError(_("Choose yes or no."), code="required")
+        return value
+
+
+class TextStatesForm(forms.Form):
+    """A text input and a textarea, drawn once disabled and once read-only."""
+
+    text = forms.CharField(label=_("Text"))
+    textarea = forms.CharField(label=_("Textarea"), widget=forms.Textarea)
+
+    def __init__(self, *args, disabled=False, read_only=False, **kwargs):
+        """Switch the state both fields are in.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            disabled: Whether both fields are disabled.
+            read_only: Whether both widgets carry the browser's ``readonly``.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.required = False
+            field.disabled = disabled
+            if read_only:
+                field.widget.attrs["readonly"] = True
+
+
 class LayoutObjectsForm(forms.Form):
     """A form whose layout uses every layout object the pack draws so far.
 

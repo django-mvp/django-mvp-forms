@@ -1,0 +1,420 @@
+{
+  "feature": "002-choice-boolean-file-inputs",
+  "branch": "002-choice-boolean-file-inputs",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T15:08:16Z",
+      "note": "specification approved by delegated review at commit 2f5b1280792f90ffedc56a47925f3a2edbf8a4cf, on pull request #22; epic #6, stories #52 to #58"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T16:27:33Z",
+      "note": "plan.md, research.md, tasks.md: 7 stories, 8 tasks; continues on pull request #22"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T16:28:11Z",
+      "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T16:35:15Z",
+      "note": "plan gate open; design review applied"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T17:10:50Z",
+      "note": "all seven stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T17:12:33Z",
+      "note": "converged: 3 ADRs, full verify green"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T17:14:40Z",
+      "note": "moved to REVIEW before the S5 gate was green: main gained FS-003 and its records took 0008 to 0010. Merged main, renumbered to 0011 to 0013, re-verifying"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T17:15:29Z",
+      "note": "converged on main with FS-003: ADRs 0011 to 0013, full verify green, S5 gate green"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T17:29:08Z",
+      "note": "review approved, four low findings fixed; walkthrough laid out"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T15:08:16Z",
+      "self_resolved": [
+        "approved at commit 2f5b1280792f90ffedc56a47925f3a2edbf8a4cf (forge spec-gate, pull request #22); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T16:34:58Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: changes requested, all applied",
+      "at": "2026-10-03T16:34:58Z",
+      "self_resolved": [
+        "DR-001 (high) uncovered-widget tests move to a test-local widget, not a split date and time: applied to plan and T001",
+        "DR-002 (high) base English catalogue for the three date-part names: applied to plan and T002 (D17)",
+        "DR-003 (medium) daisyui_field replaces daisyui_input, no alias: applied to plan and T002 (D16)",
+        "DR-004 (low) the alert reads Django's own error list, no tag: applied to plan and T006 (D12)",
+        "DR-005 (low) README names the form renderers the pack's widget templates need: applied to T002",
+        "DR-006 (low) a group subclass overriding only its option template keeps it: watch item in T004",
+        "DR-007 (low) the demo's post binds uploaded files and discards them: watch item in T008",
+        "DR-008 (low) a split hidden date and time gets a test: watch item in T006"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T17:27:43Z",
+      "self_resolved": [
+        "COR-001 (low) a developer's own aria-label on a date widget is the only one written: fixed, T009",
+        "COR-002 (low) README says the date part names come from the end of each select's name: fixed, T009",
+        "COR-003 (low) demo error state shows an error on every visible kind, and the test reads each: fixed, T010",
+        "COR-004 (low) comment above FieldInput.width split onto the attributes it describes: fixed, T009"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T17:29:10Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 52,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choice_inputs.py::TestSelect",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInput"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_choice_inputs.py tests/test_templatetags tests/test_pack/test_independence.py tests/test_pack/test_inputs.py -q"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:45",
+              "mvp_forms/templatetags/daisyui.py:60"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choice_inputs.py::TestSelectDate",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputTemplate",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputGroupDescription",
+              "tests/test_pack/test_field_frame.py::TestFrameShape"
+            ],
+            "commands": [
+              "uv run pytest tests -q"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:79",
+              "mvp_forms/templatetags/daisyui.py:189",
+              "mvp_forms/templatetags/daisyui.py:227",
+              "mvp_forms/templatetags/daisyui.py:250"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choice_inputs.py::TestSelectDate::test_a_developers_own_name_on_a_select_is_the_only_one_written"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/widgets/select_date.html:5",
+              "mvp_forms/templatetags/daisyui.py:56"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 53,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_checkbox.py::TestCheckbox",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInput",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_checkbox.py tests/test_templatetags tests/test_pack/test_independence.py -q",
+              "uv run pytest -n auto --dist loadscope -q",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:45",
+              "mvp_forms/templatetags/daisyui.py:113",
+              "mvp_forms/templates/daisyui/field_body.html:2",
+              "mvp_forms/templates/daisyui/field.html:17"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P1",
+      "issue": 54,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choice_inputs.py::TestChoiceGroups",
+              "tests/test_pack/test_choice_inputs.py::TestRadioGroup",
+              "tests/test_pack/test_choice_inputs.py::TestCheckboxGroup",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_choice_inputs.py tests/test_pack/test_independence.py -q",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build",
+              "uv run --with 'django~=5.2.0' pytest tests/test_pack tests/test_templatetags -q"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:46",
+              "mvp_forms/templatetags/daisyui.py:88",
+              "mvp_forms/templates/daisyui/widgets/group.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 55,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_file_inputs.py::TestFileInput",
+              "tests/test_pack/test_file_inputs.py::TestHeldFile",
+              "tests/test_pack/test_file_inputs.py::TestRejectedFile",
+              "tests/test_pack/test_file_inputs.py::TestOwnTemplate",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputFiles",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_file_inputs.py tests/test_templatetags/test_daisyui.py -q",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build",
+              "uv run --with 'django~=5.2.0' pytest tests/test_pack tests/test_templatetags -q"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:50",
+              "mvp_forms/templatetags/daisyui.py:64",
+              "mvp_forms/templatetags/daisyui.py:72",
+              "mvp_forms/templates/daisyui/widgets/clearable_file_input.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P2",
+      "issue": 56,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_hidden_inputs.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_hidden_inputs.py -x",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/errors.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US6",
+      "priority": "P2",
+      "issue": 57,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_states.py::TestDisabled",
+              "tests/test_pack/test_states.py::TestReadOnly"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_states.py -x",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build"
+            ],
+            "code": [
+              "tests/test_pack/test_states.py:40",
+              "tests/forms.py:315"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US7",
+      "priority": "P3",
+      "issue": 58,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestChoiceInputsPage",
+              "tests/test_demo.py::TestStandaloneChoiceInputsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build"
+            ],
+            "code": [
+              "demo/views.py:25",
+              "demo/forms.py:65",
+              "tests/test_demo.py:215"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::ChoiceInputsPageContract::test_every_visible_kind_is_invalid_in_the_error_state"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "demo/forms.py:173"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 2,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 16.07,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 22,
+    "draft": true
+  }
+}

@@ -1,0 +1,343 @@
+# Decisions: FS-002 Choice, boolean and file inputs drawn as daisyUI
+
+Each entry is a point the issue left open, the reading the specification takes, and why. The
+issue is three sentences long and nobody was asked to settle these, so every one of them is a
+reading made while writing the specification. Any of them can be reversed when it is reviewed.
+
+## The reading the specification was written from
+
+The pack already draws text-like fields (#5). This feature draws every other widget in
+`django.forms`: select and multiple select, radio groups, single checkboxes, checkbox groups and
+file inputs as daisyUI's own inputs, and hidden inputs with nothing shown. Each visible field
+reuses the label, required marker, help text and errors #5 delivers, tied to its input for
+assistive technology. A disabled field is drawn as unavailable, and so is a disabled or read-only text input from #5,
+which leaves both states to this feature. With #5 and this together, a form
+built from Django's own widgets draws completely with no layout and no per-field work. It serves
+G1 and G3. Inline groups, uneditable fields, toggles, sizes and colours, and the inputs of a set
+of forms stay with #8, #12, #11 and #10.
+
+## D1. Disabled and read-only are drawn here for every input the pack draws
+
+**Ambiguous:** The roadmap lists "disabled and read-only states" as one deliverable of R1, and it
+appears in this issue and not in #5. It could mean the states of every input the pack draws, or
+only of the inputs drawn here.
+
+**Chosen:** Every input the pack draws, the text inputs of #5 included (FR-015, FR-023).
+
+**Why:** The specification for #5 keeps the attributes Django emits and hands the drawing of both
+states to this feature by name. Limiting them to this feature's inputs would leave text inputs
+with no owner, and text inputs are the only ones HTML gives a read-only state, so the roadmap's
+read-only deliverable would be delivered by nothing. The question was raised as #26 and settled
+this way.
+
+**ADR:** none — a reading of this feature's boundary
+
+## D2. The pack does not imitate read-only where HTML has none
+
+**Ambiguous:** The issue asks for read-only states, but a select, a checkbox, a radio button and a
+file input have no read-only state in HTML. The attribute is ignored on all of them.
+
+**Chosen:** On these inputs, a read-only attribute set by the developer reaches the input
+unchanged, and the pack adds nothing to imitate the state. Text inputs and textareas have the
+state and are drawn in it (FR-023). A field that must not be edited is marked disabled, which
+Django enforces on the server as well (FR-016).
+
+**Why:** Every imitation has a cost. Disabling the input behind the developer's back stops its
+value being submitted, which changes what the form does. Blocking it with script needs JavaScript
+the pack does not ship. Styling it to look fixed while it still accepts input misleads the person.
+Django itself has no read-only field argument, only `disabled`, and the README says stock
+behaviour wins over invention. Showing a field as uneditable from a layout is #8's.
+
+**ADR:** docs/adr/0013-disabled-and-read-only-are-drawn-from-the-attribute.md
+## D3. A widget made of several inputs is split by the kind of each part
+
+**Ambiguous:** Django ships widgets built from several inputs: a date as three selects, a date
+and time as two text inputs, and a hidden version of the latter. The issues name none of them.
+
+**Chosen:** Each part is drawn by whichever feature draws that kind of input. The three selects
+and the hidden pair are drawn here, the two text inputs by #5. The field keeps one label, one help
+text and one set of errors (FR-005).
+
+**Why:** It needs no rule beyond the ones already written, and it leaves no widget in
+`django.forms` unowned. The layout object that arranges a multi-widget field is #8's and is not
+touched.
+
+**ADR:** none — follows from the two features' existing boundaries
+
+## D4. An error on a hidden field is shown with the form-wide errors
+
+**Ambiguous:** A hidden field has nowhere on the page to show an error. The issue does not say
+what happens to one.
+
+**Chosen:** It is shown with the form-wide errors and never dropped (FR-013).
+
+**Why:** Django's own form rendering does this, and G3 asks for errors the way current Django
+expects. The alternative is a form that is rejected with nothing on the page to say why. The
+drawing of form-wide errors is #5's, and this feature only requires that hidden-field errors reach
+it.
+
+**ADR:** none — matches Django's own behaviour
+
+## D5. Required follows Django's rule for each widget
+
+**Ambiguous:** Whether "required" on a checkbox group or on a file field with an existing file
+should use the browser's own required check.
+
+**Chosen:** The required marker is always shown. The browser's check is applied only where Django
+applies it for that widget (FR-009).
+
+**Why:** A browser check on every checkbox in a group would demand all of them be ticked, and one
+on a file input would demand a new upload when a file is already held. Django already leaves the
+attribute off in both cases, and the pack keeps what Django decides.
+
+**ADR:** none — matches Django's own behaviour
+
+## D6. Only widgets in `django.forms` are covered
+
+**Ambiguous:** "The remaining widgets Django ships" could include widgets in `django.contrib`,
+such as the admin's.
+
+**Chosen:** `django.forms` only. A host project's subclass of one of those widgets draws like its
+parent (FR-004).
+
+**Why:** The admin's widgets depend on the admin's own scripts and styles, and third-party
+widgets are goal G12, added when a project needs one.
+
+**ADR:** none — a reading of this feature's scope
+
+## D7. A boolean field is a checkbox here, and groups are not set in a line
+
+**Ambiguous:** Whether this feature should also offer a toggle, or options set in a line.
+
+**Chosen:** Neither. A boolean is daisyUI's checkbox, and a group has no inline form.
+
+**Why:** #12 owns toggles and switches and #8 owns inline checkboxes and radios.
+
+**ADR:** none — a sibling boundary
+
+## D8. One demo page, and no prototype before the build
+
+**Ambiguous:** How many demo pages the feature adds, and whether its screens need to be agreed by
+eye before it is built.
+
+**Chosen:** One page showing every input in every state (FR-021). No prototype first.
+
+**Why:** Every input is daisyUI's stock input, and the README settles a close call in favour of
+stock markup, so there is no design of the pack's own to judge in advance. The demo page is there
+for looking at the result.
+
+**ADR:** none — local to this feature
+
+## Decisions made while planning
+
+The entries from here on were made when the feature was planned and built, against the code
+FS-001 delivered. The evidence for each is in `research.md`.
+
+## D9. A field of several inputs is framed as a fieldset with a legend
+
+**Decision:** When Django marks a field's widget as a group (`use_fieldset`), the field frame is
+a `<fieldset class="fieldset">` and the field's label is its `<legend class="fieldset-legend">`.
+The fieldset is described by the help text and the error element. Every other field keeps the
+`div` and the `label`.
+
+**Why:** A radio group has no single input for a `label` to point at, and FR-007 asks for the
+options to be announced as one group named by the field's label. A native fieldset does that with
+no ARIA, it is what Django's own form templates draw, and it is daisyUI's own markup for the two
+classes the frame already uses. ADR 0006 fixed the frame's element as a `div` so that it could
+never be read from a page variable. `use_fieldset` is Django's flag on the widget and not a page
+variable, so the reason stands and only the sentence changes.
+
+**Revisit if:** a layout object needs a group drawn without a fieldset.
+
+**ADR:** docs/adr/0011-a-group-is-framed-as-a-fieldset.md
+
+## D10. The pack's own widget templates are drawn through a copy of the widget
+
+**Decision:** Three widgets are drawn from templates of the pack's: a radio or checkbox group, a
+date as three selects, and a clearable file input. `FieldInput` renders a shallow copy of the
+field's widget with `template_name` pointed at the pack's template. It does so only when the
+widget's `template_name` is still the one Django's class declares.
+
+**Why:** Django's group template writes the widget's class on the wrapper as well as on every
+option, and gives the option labels, the removal checkbox and the file link no class at all, so a
+class alone cannot make them daisyUI's. A copy keeps ADR 0004's promise that nothing is written
+to the form's widget. Checking the template name is what lets a host project's subclass keep a
+template of its own (FR-004).
+
+**Revisit if:** Django lets a caller name the template for one render.
+
+**ADR:** docs/adr/0012-widget-templates-through-a-copy-of-the-widget.md
+
+## D11. Read-only is the browser's state, and disabled is daisyUI's, both drawn from the attribute
+
+**Decision:** The pack adds no class and no attribute for either state. A disabled field carries
+Django's `disabled`, and daisyUI draws its disabled state from that attribute on every component
+the pack uses. A `readonly` attribute reaches the input as the developer wrote it. On a text input
+or a textarea the browser shows the value, refuses edits, announces the state and still submits
+the value. On every other input it does nothing, and the pack does not imitate it (D2).
+
+**Why:** daisyUI has no read-only rule for any component, and FR-023 limits the pack to daisyUI's
+standard classes. Every disabled rule in daisyUI's stylesheet keys on the attribute, so a modifier
+class would add nothing.
+
+**Revisit if:** daisyUI gains a read-only modifier.
+
+**ADR:** docs/adr/0013-disabled-and-read-only-are-drawn-from-the-attribute.md
+
+## D12. A hidden field's error uses Django's own message
+
+**Decision:** The form-wide alert draws the list Django's own `Form.get_context` builds: the
+form-wide errors, then each hidden field's errors as "(Hidden field name) error".
+
+**Why:** It is what Django's own form rendering shows, it is already translated by Django, and
+reading Django's list means the pack writes no code and no wording for it.
+
+**Revisit if:** a supported Django version stops returning that list from `get_context`.
+
+**ADR:** none — matches Django's own behaviour, and is local to one template
+
+## D13. Three more layout utilities: `flex`, `flex-col`, `gap-2`
+
+**Decision:** The options of a group are stacked with `flex flex-col gap-2`, and a date's three
+selects are set side by side with `flex gap-2`. All three are named in the class test.
+
+**Why:** daisyUI has no component that stacks a list of labels or puts selects in a row. ADR 0003
+allows a Tailwind utility for layout in exactly that case.
+
+**Revisit if:** daisyUI gains a component for either.
+
+**ADR:** none — an application of ADR 0003, which already sets the rule
+
+## D14. `w-full` goes on selects and file inputs, and not on checkboxes or radios
+
+**Decision:** A select and a file input fill their container as text inputs do. A checkbox and a
+radio button get no width.
+
+**Why:** daisyUI gives `select` and `file-input` the same fixed width as `input`. A checkbox has
+no width to fill.
+
+**Revisit if:** ADR 0007 is revisited.
+
+**ADR:** none — an application of ADR 0007
+
+## D15. A split date and time stays uncovered
+
+**Decision:** `SplitDateTimeWidget` is not given a component here. FS-001's tests that needed "a
+widget the pack does not cover" are re-pointed at a widget defined in the tests, since the select,
+checkbox and file input they used are now covered and a split date and time is a group.
+
+**Why:** FS-001's specification gives a field split across text inputs to #8.
+
+**Revisit if:** #8 draws it.
+
+**ADR:** none — a sibling boundary
+
+## D16. One tag, `daisyui_field`, replaces `daisyui_input`
+
+**Decision:** The frame gets the field's `FieldInput` from `{% daisyui_field field as drawn %}`
+and `{% daisyui_input %}` is deleted.
+
+**Why:** The frame now has to ask which shape to draw before it draws the input, and it was the
+only caller of the old tag. Keeping both would leave a tag nothing uses, which is an alias the
+repository's standards rule out. The old tag was never listed in the README's public surface.
+
+**Revisit if:** a layout object needs the input drawn without the frame.
+
+**ADR:** docs/adr/0012-widget-templates-through-a-copy-of-the-widget.md
+
+## D17. The pack ships a base English catalogue
+
+**Decision:** The three date-part names are the pack's first text of its own, so
+`mvp_forms/locale/en/LC_MESSAGES/django.po` is added with them.
+
+**Why:** Article VIII requires a catalogue from a package with user-facing strings, and Django's
+catalogues hold none of the three.
+
+**Revisit if:** never; later strings join the same catalogue.
+
+**ADR:** none — required by the constitution, nothing to decide
+
+## D18. Design review, 2026-10-03
+
+One reviewer, three lenses, verdict: changes requested. Each finding and what was done:
+
+- DR-001 (high): the uncovered-widget tests could not move to a split date and time without
+  changing their assertions. Applied: they move to a test-local widget (plan *Tests*, T001).
+- DR-002 (high): three strings of the pack's own and no catalogue. Applied: D17, T002.
+- DR-003 (medium): two tags building the same object. Applied: D16, T002.
+- DR-004 (low): the alert can read Django's own error list. Applied: D12, T006, one tag fewer.
+- DR-005 (low): Django's Jinja2 form renderer cannot find the pack's widget templates. Applied
+  as a README sentence in T002.
+- DR-006 (low): a group subclass that overrides only its option template. Carried into T004.
+- DR-007 (low): the demo's post has to bind uploaded files and discard them. Carried into T008.
+- DR-008 (low): no test drew the split hidden date and time. Carried into T006.
+- Noted and left: `ColorInput`, `SearchInput` and `TelInput` subclass `Input` directly and are in
+  no entry of `FieldInput.components`. They are text-like, so the gap is FS-001's. Filed as an
+  issue and listed at the merge gate.
+
+**ADR:** none — a record of the review, each decision above carries its own verdict
+
+## D19. A widget keeps the pack's template only while it keeps both of its class's templates
+
+**Decision:** `FieldInput.template_name` compares `template_name` and `option_template_name`
+with the matched class's, reading a missing attribute as None, so one loop serves a group, a date
+and a file input. A radio is a fixed-size component beside the checkbox.
+
+**Why:** A group whose subclass overrides only its option template is a widget naming a template
+of its own (FR-004); the pack's `group.html` ignores `option.template_name`, so without the second
+comparison the override would be dropped silently (DR-006). The test with the subclass fails when
+the second comparison is removed.
+
+**Revisit if:** a covered widget gains a third template attribute.
+
+**ADR:** none — follows D10
+
+## D20. The clearable file input stacks its parts and drops Django's line break
+
+**Decision:** `clearable_file_input.html` wraps the link, the removal label, the "Change" words
+and the file input in `<div class="flex flex-col gap-2">`, and writes the words as a `<span>`
+rather than a second label. Django's `<br>` is not reproduced.
+
+**Why:** The stack replaces the `<br>` with the layout utilities already allowed for stacking a
+group's options (D13). A second `<label for>` on the file input would give it two accessible
+names beside the frame's label, so the words stay plain text, as Django writes them.
+
+**Revisit if:** daisyUI gains a component for a file input with an attached current file.
+
+**ADR:** none — follows D10 and D13
+
+## D21. The demo's per-state logic is one mixin, parametrised by the form
+
+**Decision:** `StatesMixin` in `demo/views.py` holds the forms-per-state, the submittable form
+and the post (which binds `request.FILES` as well as `request.POST`). `TextInputsMixin` and
+`ChoiceInputsMixin` only name the form, the held values and the refused values. The choice page
+adds a sixth state and its text input states by extending `build_states` and `get_context_data`.
+The submittable form's hidden field starts at a value, so a visitor can get past it.
+
+**Why:** Two page pairs need the same shape and the plan says the logic is shared, not copied.
+A hidden input has no control to fill in, so a required one with no value would refuse every
+submission.
+
+**Revisit if:** a third page pair needs a different set of states.
+
+**ADR:** none — local to the demo project, which is not distributed and which nothing inherits from
+
+## D22. Code review, 2026-10-03
+
+One reviewer, correctness and spec compliance, verdict: approve. Four findings, all low, all
+fixed. The fixes were made directly and not dispatched, because each is a few lines with no
+design in it.
+
+- COR-001: a date widget carrying the developer's own `aria-label` drew two on each select.
+  Fixed: the pack's part name is written only when the select has none (T009).
+- COR-002: a date widget subclass that renames its parts gets no part names. Fixed in the
+  README, which now says where the names come from (T009).
+- COR-003: the demo's error state showed the three-way boolean select with no error, and the
+  test read one kind only. Fixed: the demo form refuses "unknown" when required, and the test
+  reads every visible kind (T010).
+- COR-004: a six-line comment above `FieldInput.width`. Fixed: split onto the attributes it
+  describes (T009).
+- Notes swept: the README no longer calls `w-full` the only utility the pack writes, and no
+  longer implies more widget templates than exist.
+
+**ADR:** none — a record of the review

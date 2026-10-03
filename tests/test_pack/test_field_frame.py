@@ -213,3 +213,14 @@ class TestIdsTurnedOff:
         assert soup.find_all(id=True) == []
         assert all(not label.has_attr("for") for label in soup("label"))
         assert all(not tag.has_attr("aria-describedby") for tag in soup("input"))
+
+
+class TestFrameShape:
+    def test_a_field_with_one_input_is_a_div_with_a_label(self, draw):
+        soup = draw("{{ form|crispy }}", form=RequirementForm())
+
+        frame = soup.find(id="div_id_name")
+
+        assert frame.name == "div"
+        assert frame.find("label")["for"] == "id_name"
+        assert frame.find("legend") is None

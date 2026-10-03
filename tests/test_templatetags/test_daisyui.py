@@ -1,4 +1,4 @@
-"""Tests for the pack's input tag."""
+"""Tests for the pack's field tag and the input it draws."""
 
 import copy
 
@@ -13,7 +13,17 @@ from mvp_forms.templatetags.daisyui import (
     daisyui_classes,
     daisyui_shown,
 )
-from tests.forms import DeveloperAttrsForm, HelpedForm, TextInputsForm
+from tests.forms import (
+    CheckboxForm,
+    DateSelectsForm,
+    DeveloperAttrsForm,
+    FilesForm,
+    HelpedForm,
+    OwnTemplateDateWidget,
+    SelectsForm,
+    TextInputsForm,
+    UncoveredInput,
+)
 
 KINDS = [
     ("text", "input"),
@@ -32,6 +42,19 @@ class ShortTextInput(forms.TextInput):
     pass
 
 
+class HostSelect(forms.Select):
+    pass
+
+
+class SubclassedDateWidget(forms.SelectDateWidget):
+    pass
+
+
+class HostSelectForm(forms.Form):
+    choice = forms.ChoiceField(choices=[("a", "A")], widget=HostSelect)
+    born = forms.DateField(widget=forms.SelectDateWidget)
+
+
 class OptionalRequiredAttributeForm(forms.Form):
     use_required_attribute = False
 
@@ -41,10 +64,10 @@ class OptionalRequiredAttributeForm(forms.Form):
 
 
 class UncoveredForm(forms.Form):
-    choice = forms.ChoiceField(choices=[("a", "A")])
+    choice = forms.ChoiceField(choices=[("a", "A")], widget=UncoveredInput)
     short = forms.CharField(widget=ShortTextInput)
     styled = forms.ChoiceField(
-        choices=[("a", "A")], widget=forms.Select(attrs={"class": "mine"})
+        choices=[("a", "A")], widget=UncoveredInput(attrs={"class": "mine"})
     )
 
 
@@ -80,6 +103,38 @@ class TestFieldInput:
     def test_a_subclass_of_a_covered_widget_is_covered(self):
         assert FieldInput(UncoveredForm()["short"]).component == "input"
 
+    @pytest.mark.parametrize("name", ["choice", "many", "maybe", "grouped"])
+    def test_each_kind_of_select_has_the_select_component(self, name):
+        assert FieldInput(SelectsForm()[name]).component == "select"
+
+    def test_a_date_drawn_as_three_selects_has_the_select_component(self):
+        assert FieldInput(HostSelectForm()["born"]).component == "select"
+
+    def test_a_host_subclass_of_select_is_covered(self):
+        assert FieldInput(HostSelectForm()["choice"]).component == "select"
+
+    def test_a_boolean_field_has_the_checkbox_component(self):
+        assert FieldInput(CheckboxForm()["agree"]).component == "checkbox"
+
+    def test_a_checkbox_is_not_a_group_and_is_drawn_in_its_label(self):
+        field_input = FieldInput(CheckboxForm()["agree"])
+
+        assert not field_input.is_group
+        assert field_input.is_single_checkbox
+
+    def test_a_select_is_not_a_single_checkbox(self):
+        assert not FieldInput(SelectsForm()["choice"]).is_single_checkbox
+
+    def test_a_checkbox_is_given_no_width_and_gets_its_error_modifier(self):
+        field_input = FieldInput(CheckboxForm({})["agree"])
+
+        assert set(field_input.css_class.split()) == {"checkbox", "checkbox-error"}
+
+    def test_an_invalid_select_gets_its_error_modifier(self):
+        field_input = FieldInput(SelectsForm({"choice": "nowhere"})["choice"])
+
+        assert "select-error" in field_input.css_class.split()
+
     def test_an_uncovered_widget_gets_no_pack_class(self):
         field_input = FieldInput(UncoveredForm()["choice"])
 
@@ -89,7 +144,7 @@ class TestFieldInput:
     def test_an_uncovered_widget_keeps_its_own_class(self, parse):
         html = FieldInput(UncoveredForm()["styled"]).render()
 
-        assert parse(html).find("select")["class"] == ["mine"]
+        assert parse(html).find("input")["class"] == ["mine"]
 
     def test_the_developers_class_is_kept_beside_the_component(self):
         field_input = FieldInput(DeveloperAttrsForm()["name"])
@@ -150,6 +205,116 @@ class TestFieldInput:
         field_input = FieldInput(UncoveredForm({})["choice"])
 
         assert "class" not in field_input.attrs
+
+
+class TestFieldInputTemplate:
+    def test_the_stock_date_widget_has_the_packs_template(self):
+        field_input = FieldInput(DateSelectsForm()["born"])
+
+        assert field_input.template_name == "daisyui/widgets/select_date.html"
+
+    def test_a_subclass_naming_its_own_template_has_none(self):
+        assert FieldInput(DateSelectsForm()["own"]).template_name is None
+
+    def test_a_widget_with_no_packs_template_has_none(self):
+        assert FieldInput(TextInputsForm()["text"]).template_name is None
+
+    def test_a_subclass_keeping_its_parents_template_has_the_packs(self):
+        class Form(forms.Form):
+            born = forms.DateField(widget=SubclassedDateWidget)
+
+        assert FieldInput(Form()["born"]).template_name == (
+            "daisyui/widgets/select_date.html"
+        )
+
+    def test_the_fields_widget_keeps_its_own_template_after_a_draw(self):
+        form = DateSelectsForm()
+        widget = form.fields["born"].widget
+        before = widget.template_name
+
+        FieldInput(form["born"]).render()
+
+        assert form.fields["born"].widget is widget
+        assert widget.template_name == before
+
+    def test_a_widget_with_its_own_template_is_never_copied(self):
+        form = DateSelectsForm()
+
+        FieldInput(form["own"]).render()
+
+        assert form.fields["own"].widget.template_name == (
+            OwnTemplateDateWidget.template_name
+        )
+
+    def test_a_date_is_a_group(self):
+        assert FieldInput(DateSelectsForm()["born"]).is_group
+
+    def test_a_single_input_is_not_a_group(self):
+        assert not FieldInput(TextInputsForm()["text"]).is_group
+
+
+class TestFieldInputFiles:
+    @pytest.mark.parametrize("name", ["plain", "empty", "several"])
+    def test_each_kind_of_file_input_has_the_file_input_component(self, name):
+        assert FieldInput(FilesForm()[name]).component == "file-input"
+
+    def test_an_invalid_file_input_fills_its_field_and_gets_its_error_modifier(self):
+        class Form(forms.Form):
+            upload = forms.FileField()
+
+        field_input = FieldInput(Form({})["upload"])
+
+        assert set(field_input.css_class.split()) == {
+            "file-input",
+            "w-full",
+            "file-input-error",
+        }
+
+    def test_a_clearable_file_input_has_the_packs_template(self):
+        assert FieldInput(FilesForm()["empty"]).template_name == (
+            "daisyui/widgets/clearable_file_input.html"
+        )
+
+    def test_a_plain_file_input_has_no_template_of_its_own(self):
+        assert FieldInput(FilesForm()["plain"]).template_name is None
+
+    def test_a_subclass_naming_its_own_template_has_none(self):
+        assert FieldInput(FilesForm()["own"]).template_name is None
+
+    def test_a_file_input_is_not_a_group(self):
+        assert not FieldInput(FilesForm()["empty"]).is_group
+
+
+class TestFieldInputGroupDescription:
+    def test_help_text_alone_is_named(self):
+        field_input = FieldInput(DateSelectsForm()["born"])
+
+        assert field_input.group_description == "id_born_helptext"
+
+    def test_errors_alone_are_named(self):
+        form = DateSelectsForm(
+            {"plain_year": "2020", "plain_month": "2", "plain_day": "31"}
+        )
+
+        assert FieldInput(form["plain"]).group_description == "id_plain_error"
+
+    def test_help_text_and_errors_are_both_named_help_text_first(self):
+        field_input = FieldInput(DateSelectsForm({})["born"])
+
+        assert field_input.group_description == "id_born_helptext id_born_error"
+
+    def test_neither_help_text_nor_errors_names_nothing(self):
+        assert FieldInput(DateSelectsForm()["plain"]).group_description == ""
+
+    def test_with_errors_off_only_the_help_text_is_named(self):
+        field_input = FieldInput(DateSelectsForm({})["born"], show_errors=False)
+
+        assert field_input.group_description == "id_born_helptext"
+
+    def test_a_form_without_ids_names_nothing(self):
+        form = DateSelectsForm({}, auto_id=False)
+
+        assert FieldInput(form["born"]).group_description == ""
 
 
 class TestFieldInputLabelsOff:

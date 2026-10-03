@@ -25,10 +25,16 @@ from django.apps import apps
 import mvp_forms
 from tests.forms import (
     ButtonedForm,
+    CheckboxForm,
+    CheckboxGroupsForm,
+    DateSelectsForm,
     DeveloperAttrsForm,
     FieldAndFormWideErrorsForm,
+    FilesForm,
     FormWideErrorsForm,
     HelpedForm,
+    RadioGroupsForm,
+    SelectsForm,
     StructureForm,
     TextInputsForm,
     UncoveredWidgetsForm,
@@ -44,6 +50,7 @@ LABEL_CLASS = "supplied-by-label-class"
 FIELD_CLASS = "supplied-by-field-class"
 FORM_CLASS = "supplied-by-form-class"
 HELPER_CLASSES = {LABEL_CLASS, FIELD_CLASS, FORM_CLASS}
+MINE = frozenset({"mine"})
 # Tailwind utilities the pack writes where daisyUI has no class for the job.
 # Each is named here so that adding one is a reviewed change.
 LAYOUT_UTILITIES = {
@@ -177,6 +184,47 @@ STATES = [
         lambda: DeveloperAttrsForm({}),
         {DEVELOPER_CLASS},
         id="developer class",
+    ),
+    pytest.param("{{ form|crispy }}", SelectsForm, NOTHING, id="selects"),
+    pytest.param(
+        "{{ form|crispy }}", lambda: SelectsForm({}), NOTHING, id="invalid selects"
+    ),
+    pytest.param("{{ form|crispy }}", DateSelectsForm, NOTHING, id="dates"),
+    pytest.param(
+        "{{ form|crispy }}", lambda: DateSelectsForm({}), NOTHING, id="invalid dates"
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: helped(DateSelectsForm({}), form_show_labels=False),
+        NOTHING,
+        id="dates without labels",
+    ),
+    pytest.param("{{ form|crispy }}", CheckboxForm, MINE, id="checkboxes"),
+    pytest.param(
+        "{{ form|crispy }}", lambda: CheckboxForm({}), MINE, id="invalid checkboxes"
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: helped(CheckboxForm({}), form_show_labels=False),
+        MINE,
+        id="checkboxes without labels",
+    ),
+    pytest.param("{{ form|crispy }}", RadioGroupsForm, NOTHING, id="radio groups"),
+    pytest.param(
+        "{{ form|crispy }}", lambda: RadioGroupsForm({}), NOTHING, id="invalid radios"
+    ),
+    pytest.param(
+        "{{ form|crispy }}", CheckboxGroupsForm, NOTHING, id="checkbox groups"
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: CheckboxGroupsForm({}),
+        NOTHING,
+        id="invalid checkbox groups",
+    ),
+    pytest.param("{{ form|crispy }}", FilesForm, NOTHING, id="files"),
+    pytest.param(
+        "{{ form|crispy }}", lambda: FilesForm({}), NOTHING, id="invalid files"
     ),
     pytest.param(
         "{{ form|crispy }}",

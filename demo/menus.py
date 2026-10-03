@@ -18,6 +18,14 @@ AppMenu.extend(
             extra_context={"label": "Text inputs", "icon": "text-inputs"},
         ),
         MenuItem(
+            name="choice-inputs",
+            view_name="choice-inputs",
+            extra_context={
+                "label": "Choice, boolean and file inputs",
+                "icon": "choice-inputs",
+            },
+        ),
+        MenuItem(
             name="layout-objects",
             view_name="layout-objects",
             extra_context={"label": "Layout objects", "icon": "layout-objects"},

@@ -3,8 +3,10 @@
 from django.urls import include, path
 
 from demo.views import (
+    ChoiceInputsView,
     LayoutObjectsView,
     OverviewView,
+    StandaloneChoiceInputsView,
     StandaloneLayoutObjectsView,
     StandaloneTextInputsView,
     TextInputsView,
@@ -17,6 +19,12 @@ urlpatterns = [
         "text-inputs/standalone/",
         StandaloneTextInputsView.as_view(),
         name="text-inputs-standalone",
+    ),
+    path("choice-inputs/", ChoiceInputsView.as_view(), name="choice-inputs"),
+    path(
+        "choice-inputs/standalone/",
+        StandaloneChoiceInputsView.as_view(),
+        name="choice-inputs-standalone",
     ),
     path("layout-objects/", LayoutObjectsView.as_view(), name="layout-objects"),
     path(

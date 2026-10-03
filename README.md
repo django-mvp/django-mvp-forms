@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields and the structural and button layout objects, and nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, and the structural and button layout objects, and nothing is published to PyPI.
 
 ## Why
 
@@ -106,7 +106,9 @@ Draw it in a template of a page that loads daisyUI:
 
 ### Template pack `daisyui`
 
-Selected with the two settings above. Every field is drawn inside a daisyUI `fieldset` with a label and its input.
+Selected with the two settings above. Every field is drawn inside a daisyUI `fieldset`. A field of one input has a label and its input, except a single checkbox, whose label holds the checkbox and is tied to it by `for`. A field of several inputs that share one label, such as a radio group, a checkbox group or a date drawn as three selects, is drawn as a `<fieldset>` with a `<legend>`, which is described by the field's help text and errors, and which is named by an `aria-label` when the form draws no labels.
+
+The pack draws radio and checkbox groups, a date's selects and a clearable file input from templates of its own, which the form renderer has to load. Django's default renderer and `TemplatesSetting` both do. A widget subclass that names a template of its own is drawn by that template, with the daisyUI class only.
 
 The label is tied to the input, and a required field's label carries a marker that assistive technology skips. The input announces itself as required, as invalid when it has errors, and by its help text and error messages as its description. Label, help text and errors are escaped unless you mark them safe. Every id the pack writes is built from the form's `auto_id`, so forms with different prefixes never share one, and a form with `auto_id=False` gets none.
 
@@ -114,10 +116,17 @@ These inputs are drawn as daisyUI components, whichever way crispy-forms is aske
 
 - text, email, URL, number, password, date, time and date-time inputs, as `input`
 - textareas, as `textarea`
+- `Select`, `SelectMultiple` and `NullBooleanSelect`, and selects with named groups, as `select`, and the three selects of a date drawn by `SelectDateWidget`, each named by an `aria-label` of Year, Month or Day unless the widget carries an `aria-label` of its own. The part is read from the end of the select's name, so a subclass that renames `year_field`, `month_field` or `day_field` names its own selects
+- `CheckboxInput`, as `checkbox`, inside its own label, with `checkbox-error` when invalid
+- `RadioSelect`, as a group of `radio` inputs, and `CheckboxSelectMultiple`, as a group of `checkbox` inputs: each option is an input inside a label of its own, tied to it by `for`, with `radio-error` or `checkbox-error` when invalid. Choices with named groups sit under their name in a nested `<fieldset>`, and an attribute a widget sets on one option stays on that option. A required checkbox group does not mark its options `required`, since that would demand all of them
+- `FileInput` and `ClearableFileInput`, as `file-input`, with `file-input-error` when invalid. A `ClearableFileInput` whose field holds a file shows a link to it, and, when the field is optional, a removal checkbox in a label of its own; a required field offers no removal and its input is not `required`, so it can be submitted without choosing another file. A widget that allows several files keeps `multiple`
+- `HiddenInput` and `MultipleHiddenInput`, as `<input type="hidden">` and nothing around it, which is described below
 
-Each of them fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`, the one utility it writes. A width class of your own on the widget, such as `w-40`, replaces it. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
+Each of them but the checkbox, the radio and the hidden input fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`. A width class of your own on the widget, such as `w-40`, replaces it. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
 
 Errors that belong to the form as a whole are drawn once, in an element with `role="alert"` ahead of the fields. A form with none draws no such element, and `{{ form|as_crispy_errors }}` draws the same element on its own.
+
+A hidden field is drawn as its `<input type="hidden">` alone, or one per value for a `MultipleHiddenInput`, with no frame, label, help text or error element. Nobody sees a hidden input, so an error on one joins the form-wide errors in that same element, worded by Django as `(Hidden field name) message` and escaped. With errors off it is not drawn.
 
 With `{% crispy form %}` the pack follows these `FormHelper` settings:
 
@@ -130,6 +139,12 @@ With `{% crispy form %}` the pack follows these `FormHelper` settings:
 `help_text_inline` and `error_text_inline` are ignored.
 
 A class, placeholder, input type or row count you give a widget is kept. The pack never changes an input's type, so a date field is a text input unless its widget says otherwise. Fields with any other widget are still drawn in place, without a daisyUI class.
+
+### Disabled and read-only fields
+
+The pack adds no class and no attribute for either state. A field with `disabled=True` is drawn by Django with `disabled` on its input, on every option of a radio or checkbox group, and on the removal checkbox of a file field that holds a file, and daisyUI draws its disabled look from that attribute for every component the pack uses. A disabled field still shows its value, except a password input, which never draws one. The browser does not submit a disabled input, and Django takes the field's initial value instead.
+
+Read-only is the browser's and exists only on text inputs and textareas. Set `readonly` on the widget, `forms.TextInput(attrs={"readonly": True})`, and it reaches the input unchanged, with the input's name and value, so the browser still submits it. The attribute does nothing on a select, a checkbox, a radio or a file input, and the pack does not try to make it: use `disabled` for those.
 
 ### Layout objects
 
@@ -226,13 +241,20 @@ uv run python manage.py seed_demo
 uv run python manage.py runserver
 ```
 
-The demo has two pages that draw the same forms: every text input kind in each of
-five states (empty, holding a value, required, with help text, with an error),
-and a form to submit that comes back with a field error and a form-wide error.
+The demo has two pairs of pages, and each pair draws the same forms. One pair
+shows every text input kind in each of five states (empty, holding a value,
+required, with help text, with an error), and a form to submit that comes back
+with a field error and a form-wide error. The other shows every select, boolean,
+radio and checkbox group, file and hidden input in those five states and a sixth,
+disabled, with a text input drawn disabled and another read-only, and a multipart
+form to submit that comes back with a field error. An uploaded file is checked and
+dropped, and nothing is stored.
 
-- `/text-inputs/` is the page inside the django-mvp shell, reached from its sidebar.
-- `/text-inputs/standalone/` is the same page as a host project with neither
-  django-mvp nor Cotton would have it, styled by daisyUI's CDN build alone.
+- `/text-inputs/` and `/choice-inputs/` are the pages inside the django-mvp shell,
+  reached from its sidebar.
+- `/text-inputs/standalone/` and `/choice-inputs/standalone/` are the same pages
+  as a host project with neither django-mvp nor Cotton would have them, styled by
+  daisyUI's CDN build alone.
 
 Two more pages draw the layout objects, a form to submit and a form that already
 fails, so an error inside a fieldset, a row and a column can be seen:
