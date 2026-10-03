@@ -22,3 +22,10 @@ Did: FieldInput gained templates, template_name, widget (a shallow copy carrying
 Verified: RED first: 22 new tests failed for the missing behaviour. `uv run pytest tests -q` 401 passed. `uv run pre-commit run --all-files` and `uv run mypy` pass. Probed by mutation: dropping the unchanged-template check failed 2 tests, and not setting the copy's template_name failed 3.
 Next: story report. The full verify and the ledger follow.
 Watch: makemessages also lists the existing "Forms" string from apps.py, so the catalogue holds four msgids. docs/adr/0004 still names {% daisyui_input %}, a landed record that is superseded by the ADR written at convergence.
+
+## 2026-10-03T16:48:06Z · Implementer US2 · T003
+
+Did: A BooleanField is drawn as daisyUI's checkbox inside <label class="label" for>, with the label text and required marker after the box. FieldInput maps CheckboxInput to checkbox with checkbox-error, never adds w-full to it (fixed_size), and answers is_single_checkbox; field_body.html draws the label around the box, field.html leaves its own label out for it. README and CHANGELOG say so.
+Verified: uv run pytest tests/test_pack/test_checkbox.py tests/test_templatetags tests/test_pack/test_independence.py -q (110+ green, exit 0); full: uv run pytest -n auto --dist loadscope (432 passed), pre-commit, mypy, uv build all exit 0.
+Next: US3 (radio and checkbox groups) can add CheckboxSelectMultiple to components; is_single_checkbox already excludes groups.
+Watch: docs/adr/0006 still says the frame's outer element is always a div, and does not mention the single checkbox's label; ADR 0007 does not mention the checkbox exemption. Both are Forge's to record.

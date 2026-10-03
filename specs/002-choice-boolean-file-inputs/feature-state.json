@@ -119,8 +119,29 @@
       "tasks": [
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_checkbox.py::TestCheckbox",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInput",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_checkbox.py tests/test_templatetags tests/test_pack/test_independence.py -q",
+              "uv run pytest -n auto --dist loadscope -q",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:45",
+              "mvp_forms/templatetags/daisyui.py:113",
+              "mvp_forms/templates/daisyui/field_body.html:2",
+              "mvp_forms/templates/daisyui/field.html:17"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
