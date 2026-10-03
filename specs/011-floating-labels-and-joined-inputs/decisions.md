@@ -194,3 +194,110 @@ This specification is told not to settle #15, so it keeps FS-007's order and nam
 only pages added are demo pages that list states, which follow the pattern of the existing ones.
 
 **ADR:** none.
+
+## D11. The floating label is spelt `label="floating"`
+
+**Chosen:** `Choice(label="floating")` and `FormChoices(label="floating")`. `None` is the
+ordinary label and undoes the form's statement for one field. The class is held in
+`Modifiers.labels`, written out as a literal.
+
+**Rejected:** a boolean, `floating=True`. Every other kind of choice is a name from a table with
+`None` as the ordinary drawing and `INHERIT` as the default, and `Choice.over` merges them all
+the same way. A boolean would be the one kind with three states spelt `True`, `False` and
+`INHERIT`. A name also leaves room for another label daisyUI may add.
+
+**Why defensible:** the spec says an unknown value for the label raises "as it does for an
+unknown size", which presumes a set of names.
+
+**ADR:** docs/adr/0030-a-floating-label-is-a-kind-of-choice.md
+
+## D12. A floating label stated around a button raises
+
+**Chosen:** `Choice(Submit(...), label="floating")` raises `InvalidChoice` with nothing allowed,
+as a drawing around a button does.
+
+**Why:** a `Choice` in a layout is checked against everything it holds (ADR 0020, FS-008 D15).
+Passing a button over would make the label the one kind that a `Choice` in a layout does not
+check.
+
+**Revisit if:** developers wrap whole sections, button bar included, to float their labels, and
+the error turns out to be in the way.
+
+**ADR:** none. It applies an existing rule to the new kind.
+
+## D13. A member is drawn by django-crispy-forms' own `Field` with a template of the pack's
+
+**Chosen:** `Join` builds a `Field` for each member, gives it the member template, and renders
+it through `render_field`, inside the accumulated `Choice` when the member is wrapped in one.
+
+**Rejected:**
+
+- Signalling a member through the template context and letting `daisyui/field.html` draw it.
+  The join has to keep hidden inputs out of its children, so it must draw members one by one
+  and know which is which. A context flag draws them as one string.
+- Calling the widget directly from `Join.render`. It would copy what `render_field` does:
+  recording the field as rendered, applying a `Field`'s attributes, and reporting a name the
+  form lacks.
+
+**ADR:** none of its own. It belongs in the record for the joined group.
+
+## D14. The developer's id, class and attributes go on the join element
+
+**Chosen:** on the `<div class="join">`, and not on the fieldset around it.
+
+**Why:** `join-vertical` only works on the element that carries `join`, and the spec's
+assumptions say that is how a developer stacks a group. `FieldWithButtons` already puts them
+there (ADR 0026).
+
+**ADR:** none of its own. It belongs in the record for the joined group.
+
+## D15. The group's label is escaped
+
+**Chosen:** `Join(label=...)` is text and is escaped.
+
+**Why:** ADR 0025 draws a developer's text as markup only where django-crispy-forms documents it
+as markup. `Join` is this package's own, so nothing documents it that way. Escaped text can also
+serve as the fieldset's `aria-label` when the helper turns labels off.
+
+**ADR:** none. ADR 0025 already decides it.
+
+## D16. An input member fills the group and a select member is as wide as its options
+
+**Chosen:** a member drawn as an input takes `flex-1` and one drawn as a select takes `w-auto`,
+in place of `w-full`. A width the developer wrote on the member is kept and the pack adds
+neither. `w-auto` is added to the class test by name.
+
+**Why:** research R6. Equal shares is what a `Row` of columns already gives.
+
+**Revisit if:** #16 or #18 rules on which layout utilities the pack may write.
+
+**ADR:** docs/adr/0031-fields-are-joined-by-a-layout-object-of-the-packs.md
+
+## D17. Help text and errors move to a template of their own
+
+**Chosen:** `daisyui/field_messages.html` draws a field's help text and error element.
+`daisyui/field_body.html` includes it, and so does the joined group, once per member.
+
+**Why:** FS-001 left them inline "until a second template needs them". The joined group is that
+template, and two copies of the ids ADR 0005 fixes would drift.
+
+**ADR:** none. ADR 0029 already makes every template public, and the README's list records it.
+
+## D18. A joined group's members are checked when drawn, and the error is `InvalidMember`
+
+**Chosen:** a new error, `InvalidMember(ValueError)`, carrying `member`: the field's name, or the
+class name of a layout object the group cannot hold.
+
+**Rejected:** reusing `InvalidChoice`. It carries a kind, a value and the names allowed, none of
+which a field that cannot be joined has.
+
+**ADR:** none of its own. It belongs in the record for the joined group.
+
+## D19. The demo's standalone pages are one per page
+
+**Chosen:** `/floating-labels/standalone/` and `/joined-groups/standalone/`.
+
+**Why:** each story then adds its own pages and no story edits another's template. FR-028 asks
+that both be shown on a page that loads only the CDN install, and does not ask for one page.
+
+**ADR:** none. Local to the demo project.
