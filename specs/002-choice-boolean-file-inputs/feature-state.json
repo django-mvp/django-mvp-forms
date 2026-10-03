@@ -192,8 +192,33 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_file_inputs.py::TestFileInput",
+              "tests/test_pack/test_file_inputs.py::TestHeldFile",
+              "tests/test_pack/test_file_inputs.py::TestRejectedFile",
+              "tests/test_pack/test_file_inputs.py::TestOwnTemplate",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputFiles",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_file_inputs.py tests/test_templatetags/test_daisyui.py -q",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build",
+              "uv run --with 'django~=5.2.0' pytest tests/test_pack tests/test_templatetags -q"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:50",
+              "mvp_forms/templatetags/daisyui.py:64",
+              "mvp_forms/templatetags/daisyui.py:72",
+              "mvp_forms/templates/daisyui/widgets/clearable_file_input.html:1"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
