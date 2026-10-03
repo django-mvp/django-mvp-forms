@@ -1,5 +1,7 @@
 """The check that keeps the README's template list and the pack's templates true."""
 
+from tests.template_surface import TemplateSurface
+
 TABLE_HEAD = "| Template | Draws | Handed | Found by |\n|---|---|---|---|\n"
 
 
@@ -234,3 +236,33 @@ class TestDisagreements:
         surface = template_surface(readme(row), self.TEMPLATES)
 
         assert surface.disagreements() == [("wrong route", "daisyui/a.html")]
+
+    def surface_with_withdrawn(self, template_surface, rows, withdrawn):
+        built = template_surface(readme(*rows), self.TEMPLATES)
+        return TemplateSurface(built.readme, built.templates_directory, withdrawn)
+
+    def test_a_withdrawn_path_the_table_does_not_list_is_reported(
+        self, template_surface
+    ):
+        gone = "daisyui/gone.html"
+        surface = self.surface_with_withdrawn(template_surface, [self.ROW], [gone])
+
+        assert surface.disagreements() == [("withdrawn not listed", gone)]
+
+    def test_a_listed_path_that_is_withdrawn_is_not_reported_as_not_distributed(
+        self, template_surface
+    ):
+        gone = ("daisyui/gone.html", "", "TEMPLATES")
+        surface = self.surface_with_withdrawn(
+            template_surface, [self.ROW, gone], [gone[0]]
+        )
+
+        assert surface.disagreements() == []
+
+    def test_a_listed_path_that_is_not_withdrawn_is_reported_as_not_distributed(
+        self, template_surface
+    ):
+        gone = ("daisyui/gone.html", "", "TEMPLATES")
+        surface = self.surface_with_withdrawn(template_surface, [self.ROW, gone], [])
+
+        assert surface.disagreements() == [("not distributed", gone[0])]

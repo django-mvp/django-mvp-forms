@@ -1,6 +1,7 @@
 """Reads the pack's templates and the README's template list, and compares them."""
 
 import re
+from collections.abc import Collection
 from pathlib import Path
 from typing import Any
 
@@ -36,11 +37,19 @@ class TemplateSurface:
         readme: The text of the README holding the list.
         templates_directory: The directory the package's templates are in. A
             template's path is its path under this directory, as Django names it.
+        withdrawn: The paths the package has moved away from. The package no
+            longer distributes them, and the list still has a row for each.
     """
 
-    def __init__(self, readme: str, templates_directory: Path) -> None:
+    def __init__(
+        self,
+        readme: str,
+        templates_directory: Path,
+        withdrawn: Collection[str] = (),
+    ) -> None:
         self.readme = readme
         self.templates_directory = templates_directory
+        self.withdrawn = set(withdrawn)
 
     def distributed(self) -> list[str]:
         """Return the path of every template under the directory.
@@ -129,12 +138,13 @@ class TemplateSurface:
         """Return every way the list and the package differ.
 
         A name the list gives a template that the template does not read is not a
-        disagreement.
+        disagreement, and a withdrawn path is listed without being distributed.
 
         Returns:
             Tuples naming the kind and the path, and the name for a name left out
             of a row: ``("not listed", path)``, ``("not distributed", path)``,
-            ``("name not listed", path, name)`` and ``("wrong route", path)``.
+            ``("withdrawn not listed", path)``, ``("name not listed", path, name)``
+            and ``("wrong route", path)``.
         """
         rows = {row["path"]: row for row in self.listed()}
         distributed = self.distributed()
@@ -142,7 +152,14 @@ class TemplateSurface:
         found: list[tuple[str, ...]] = []
         found.extend(("not listed", path) for path in distributed if path not in rows)
         found.extend(
-            ("not distributed", path) for path in rows if path not in distributed
+            ("not distributed", path)
+            for path in rows
+            if path not in distributed and path not in self.withdrawn
+        )
+        found.extend(
+            ("withdrawn not listed", path)
+            for path in sorted(self.withdrawn)
+            if path not in rows
         )
         for path in distributed:
             if path not in rows:

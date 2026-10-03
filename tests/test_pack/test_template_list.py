@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from mvp_forms.deprecation import WITHDRAWN
 from tests.conftest import PACK_TEMPLATES
 from tests.template_surface import TemplateSurface
 
@@ -9,7 +10,7 @@ README = Path(__file__).parents[2] / "README.md"
 
 
 class TestTheListMatchesThePackage:
-    surface = TemplateSurface(README.read_text(), PACK_TEMPLATES)
+    surface = TemplateSurface(README.read_text(), PACK_TEMPLATES, WITHDRAWN)
 
     def test_the_list_and_the_package_do_not_differ(self):
         assert self.surface.disagreements() == []

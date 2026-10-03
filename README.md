@@ -871,6 +871,14 @@ Each row is one template the pack distributes. `Draws` says what it draws. `Hand
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 
+#### When a listed template changes
+
+A listed path, and the names a template is handed, change only through one minor version in which the old one still works. For that version a replacement at the old path is still drawn, and it raises a `DeprecationWarning` naming the old path and what replaces it. A project with nothing at the old path sees no warning. Python shows a `DeprecationWarning` under a test runner, or when you run with `python -W default`, as it does Django's own, so run your tests to find a replacement that needs moving. A name a template is handed that is renamed or withdrawn keeps its value under the old name for that version. The CHANGELOG entry of that release says what changed and what replaces it.
+
+A path on its way out stays a row of the table for as long as it is honoured, with what replaces it said in its `Draws` cell. The paths django-crispy-forms itself chooses, such as `daisyui/field.html`, change only if django-crispy-forms changes them.
+
+The markup and the class names inside a template of the pack are not part of this promise and can change in any release. A replacement that copied the old markup keeps drawing it until its owner updates it.
+
 ## Contributing
 
 Standards for this repository live in
