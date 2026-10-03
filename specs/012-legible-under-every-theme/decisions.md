@@ -300,3 +300,36 @@ and six low ones, all applied to the plan and the tasks.
   chooser on that page.
 
 **ADR:** none. It is the record of a review.
+
+## D22. A see-through colour is composited before it is clipped to the gamut
+
+**Decision:** `Colour.over` encodes the front colour to sRGB without clipping it, composites
+on the surface, and leaves the clipping to `luminance` and `srgb`.
+
+**Why:** daisyUI's `base-content` under the `dark` theme is outside the sRGB gamut in blue
+(1.05 once encoded). Clipping first gives 170 for it at 60% on `base-100`; compositing first
+gives 178, which is what research R4's vector and the browser give.
+
+**Revisit if:** the vectors in research R4 are regenerated from a different engine.
+
+## D23. A radio's ring and dot are the text ink, and only they are `own`
+
+**Decision:** a radio's ring and dot are read in the inherited text ink, and are `own` when
+that ink was chosen by the pack. Its faded border (20% of the ink) is not `own`.
+
+**Why:** daisyUI draws a radio in the text colour it inherits, so a `label` around it at 60%
+reaches the ring, and `text-base-content` on the label repairs it. The border at 20% falls
+short whatever class the label carries, so it is a known exception and a repair cannot be asked
+of it.
+
+**Revisit if:** the pack draws a radio outside a label.
+
+## D24. A measurement names its element by an `Element`, not a string
+
+**Decision:** `Measurement.element` is an `Element` (tag, id, classes, kind) whose `str` is a
+selector for a failure message, and whose `kind` is what the README's *Seen on* column lists.
+
+**Why:** the table must say what a pairing is seen on by the kind of element, such as `input`
+or `btn`, and never by a drawn state, and the reader is the one that knows the kind.
+
+**Revisit if:** the table stops naming what a pairing is seen on.
