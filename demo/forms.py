@@ -874,6 +874,20 @@ class FloatingByNameForm(ChosenForm):
         )
 
 
+class FloatingChosenForm(ChosenForm):
+    """An input, a textarea and a select, small enough to show one choice at a time.
+
+    Give the form a prefix, so no id repeats on the page. Its choices, with the
+    floating label, are the caller's.
+    """
+
+    name = forms.CharField(label=_("Name"), required=False)
+    notes = forms.CharField(label=_("Notes"), widget=forms.Textarea, required=False)
+    country = forms.ChoiceField(
+        label=_("Country"), choices=[("de", _("Germany")), ("uk", _("United Kingdom"))]
+    )
+
+
 COUNTRY_CODES = [("+49", "+49"), ("+44", "+44"), ("+1", "+1")]
 UNITS = [("kg", "kg"), ("lb", "lb")]
 
@@ -912,6 +926,30 @@ class JoinedGroupsForm(forms.Form):
         )
         if posts:
             self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class JoinedChosenForm(ChosenForm):
+    """A country code and a number joined under one label, to show a choice on.
+
+    ``number`` is required, so a bound form that holds a code and no number
+    fails in that member alone. Give the form a prefix, so no id repeats on the
+    page.
+
+    Args:
+        *args: Passed to ``forms.Form``.
+        around: What a ``Choice`` around the group states, or None for a group
+            with no ``Choice`` around it.
+        **kwargs: Passed to ``ChosenForm``.
+    """
+
+    country_code = forms.ChoiceField(label=_("Country code"), choices=COUNTRY_CODES)
+    number = forms.CharField(label=_("Number"))
+
+    def __init__(self, *args, around=None, **kwargs):
+        """Join the two fields, inside a ``Choice`` when ``around`` is given."""
+        super().__init__(*args, **kwargs)
+        group = Join("country_code", "number", label=_("Phone"))
+        self.helper.layout = Layout(Choice(group, **around) if around else group)
 
 
 class JoinedHelpForm(ChosenForm):

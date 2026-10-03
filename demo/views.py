@@ -24,12 +24,14 @@ from demo.forms import (
     DrawingTrioForm,
     FieldWithButtonsForm,
     FloatingByNameForm,
+    FloatingChosenForm,
     FloatingLabelsForm,
     FloatingStatesForm,
     HelperButtonsForm,
     InlineChoicesForm,
     InlineFieldForm,
     InputKindsForm,
+    JoinedChosenForm,
     JoinedGroupsForm,
     JoinedHelpForm,
     JoinedSingleForm,
@@ -1079,11 +1081,34 @@ class FloatingLabelsMixin(CleanedMixin):
     floating_states_prefix = "floating-states"
     floating_by_name_prefix = "floating-by-name"
 
+    def build_floating(self, kind):
+        """Build one small floating form for each name the tables have for a kind.
+
+        Args:
+            kind: ``"size"``, ``"color"`` or ``"variant"``.
+
+        Returns:
+            A list of dicts holding each name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": FloatingChosenForm(
+                    prefix=f"floating-{kind}-{name}",
+                    choices=FormChoices(label="floating", **{kind: name}),
+                ),
+            }
+            for name in Modifiers.names(kind, None)
+        ]
+
     def get_context_data(self, **kwargs):
         """Add the form to submit, what it cleaned to, and the forms beside it."""
         form = kwargs.setdefault(
             "form", FloatingLabelsForm(prefix=self.floating_prefix)
         )
+        kwargs["sizes"] = self.build_floating("size")
+        kwargs["colors"] = self.build_floating("color")
+        kwargs["variants"] = self.build_floating("variant")
         kwargs["failing_form"] = FloatingLabelsForm(
             {}, prefix=self.floating_failing_prefix, posts=False
         )
@@ -1131,8 +1156,40 @@ class JoinedGroupsMixin(CleanedMixin):
     joined_unlabelled_prefix = "joined-unlabelled"
     joined_single_prefix = "joined-single"
 
+    def build_joined(self, kind):
+        """Build one small joined group for each name the tables have for a kind.
+
+        Args:
+            kind: ``"size"``, ``"color"`` or ``"variant"``.
+
+        Returns:
+            A list of dicts holding each name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": JoinedChosenForm(
+                    prefix=f"joined-{kind}-{name}", choices=FormChoices(**{kind: name})
+                ),
+            }
+            for name in Modifiers.names(kind, None)
+        ]
+
     def get_context_data(self, **kwargs):
         """Add the form to submit, what it cleaned to, and the groups beside it."""
+        kwargs["sizes"] = self.build_joined("size")
+        kwargs["colors"] = self.build_joined("color")
+        kwargs["variants"] = self.build_joined("variant")
+        kwargs["error_form"] = JoinedChosenForm(
+            {"joined-error-country_code": "+49"},
+            prefix="joined-error",
+            choices=FormChoices(color="primary"),
+        )
+        kwargs["choice_form"] = JoinedChosenForm(
+            prefix="joined-choice",
+            choices=FormChoices(size="sm"),
+            around={"size": "lg", "color": "accent"},
+        )
         form = kwargs.setdefault("form", JoinedGroupsForm(prefix=self.joined_prefix))
         kwargs["failing_form"] = JoinedGroupsForm(
             {f"{self.joined_failing_prefix}-country_code": "+49"},

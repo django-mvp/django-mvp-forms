@@ -69,6 +69,34 @@
           {% crispy by_name_form %}
         </div>
       </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Sizes</h2>
+          <p>A floating form states a size for the form, and every field takes it.</p>
+          {% for size in sizes %}
+            <h3 class="font-semibold">{{ size.title }}</h3>
+            {% crispy size.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Colours</h2>
+          {% for color in colors %}
+            <h3 class="font-semibold">{{ color.title }}</h3>
+            {% crispy color.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Variant</h2>
+          {% for variant in variants %}
+            <h3 class="font-semibold">{{ variant.title }}</h3>
+            {% crispy variant.form %}
+          {% endfor %}
+        </div>
+      </section>
     </main>
   </body>
 </html>

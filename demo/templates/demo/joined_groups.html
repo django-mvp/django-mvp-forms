@@ -51,6 +51,44 @@
     </c-text>
     {% crispy single_form %}
   </c-section>
+  <c-section title="Sizes" level="3">
+    <c-text>
+      A group states a size for the form, and every member takes it.
+    </c-text>
+    {% for size in sizes %}
+      <c-section :title="size.title" level="4">
+        {% crispy size.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Colours" level="3">
+    {% for color in colors %}
+      <c-section :title="color.title" level="4">
+        {% crispy color.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Variant" level="3">
+    {% for variant in variants %}
+      <c-section :title="variant.title" level="4">
+        {% crispy variant.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="A coloured group with one member in error" level="3">
+    <c-text>
+      The form states a colour. The number is missing, so it carries the error
+      modifier and none of the colour, and the code keeps the colour.
+    </c-text>
+    {% crispy error_form %}
+  </c-section>
+  <c-section title="A Choice around a group" level="3">
+    <c-text>
+      The form states a small size. A Choice around the group states a large size and
+      a colour, which win for every member.
+    </c-text>
+    {% crispy choice_form %}
+  </c-section>
   <c-text>
     <c-link href="{% url 'joined-groups-standalone' %}" text="The same page without django-mvp" />
   </c-text>

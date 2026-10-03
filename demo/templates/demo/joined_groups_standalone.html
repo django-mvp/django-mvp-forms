@@ -86,6 +86,54 @@
           {% crispy single_form %}
         </div>
       </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Sizes</h2>
+          <p>A group states a size for the form, and every member takes it.</p>
+          {% for size in sizes %}
+            <h3 class="font-semibold">{{ size.title }}</h3>
+            {% crispy size.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Colours</h2>
+          {% for color in colors %}
+            <h3 class="font-semibold">{{ color.title }}</h3>
+            {% crispy color.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Variant</h2>
+          {% for variant in variants %}
+            <h3 class="font-semibold">{{ variant.title }}</h3>
+            {% crispy variant.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">A coloured group with one member in error</h2>
+          <p>
+            The form states a colour. The number is missing, so it carries the error
+            modifier and none of the colour, and the code keeps the colour.
+          </p>
+          {% crispy error_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">A Choice around a group</h2>
+          <p>
+            The form states a small size. A Choice around the group states a large size
+            and a colour, which win for every member.
+          </p>
+          {% crispy choice_form %}
+        </div>
+      </section>
     </main>
   </body>
 </html>

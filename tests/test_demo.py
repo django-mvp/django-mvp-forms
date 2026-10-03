@@ -2681,6 +2681,14 @@ def floating_label_around(page, prefix, name):
     return field.find_parent("label", class_="floating-label")
 
 
+FLOATING_CHOSEN_COMPONENTS = {"name": "input", "notes": "textarea", "country": "select"}
+CHOSEN_KINDS = ("size", "color", "variant")
+
+
+def carried_modifiers(field, kind, component):
+    return set(field["class"]) & set(Modifiers.tables[kind][component].values())
+
+
 class FloatingLabelsPageContract:
     url_name = ""
 
@@ -2745,6 +2753,27 @@ class FloatingLabelsPageContract:
     def test_the_form_with_no_layout_floats_only_the_field_named(self, page):
         assert floating_label_around(page, FLOATING_BY_NAME_PREFIX, "title")
         assert floating_label_around(page, FLOATING_BY_NAME_PREFIX, "company") is None
+
+    @pytest.mark.parametrize("kind", CHOSEN_KINDS)
+    def test_every_name_in_the_tables_reaches_a_floating_field_of_each_kind(
+        self, page, kind
+    ):
+        for value in Modifiers.names(kind, None):
+            prefix = f"floating-{kind}-{value}"
+            for name, component in FLOATING_CHOSEN_COMPONENTS.items():
+                field = floating_field(page, prefix, name)
+                expected = Modifiers.tables[kind][component].get(value)
+
+                assert floating_label_around(page, prefix, name) is not None
+                assert carried_modifiers(field, kind, component) == (
+                    {expected} - {None}
+                )
+
+    def test_the_forms_that_state_a_choice_are_not_form_elements(self, page):
+        for kind in CHOSEN_KINDS:
+            for value in Modifiers.names(kind, None):
+                field = floating_field(page, f"floating-{kind}-{value}", "name")
+                assert field.find_parent("form") is None
 
     def test_the_form_to_submit_posts_with_a_token_and_a_button(self, page):
         form = floating_field(page, FLOATING_PREFIX, "name").find_parent("form")
@@ -2864,6 +2893,11 @@ def members_of(group):
     return [tag["name"] for tag in group.find_all(True, recursive=False)]
 
 
+JOINED_CHOSEN_COMPONENTS = {"country_code": "select", "number": "input"}
+JOINED_ERROR_PREFIX = "joined-error"
+JOINED_CHOICE_PREFIX = "joined-choice"
+
+
 class JoinedGroupsPageContract:
     url_name = ""
 
@@ -2926,6 +2960,52 @@ class JoinedGroupsPageContract:
         group = join_around(page, JOINED_SINGLE_PREFIX, "quantity")
 
         assert members_of(group) == [f"{JOINED_SINGLE_PREFIX}-quantity"]
+
+    @pytest.mark.parametrize("kind", CHOSEN_KINDS)
+    def test_every_name_in_the_tables_reaches_every_member_of_a_group(self, page, kind):
+        for value in Modifiers.names(kind, None):
+            prefix = f"joined-{kind}-{value}"
+            for name, component in JOINED_CHOSEN_COMPONENTS.items():
+                field = joined_field(page, prefix, name)
+                expected = Modifiers.tables[kind][component].get(value)
+
+                assert join_around(page, prefix, name) is not None
+                assert carried_modifiers(field, kind, component) == (
+                    {expected} - {None}
+                )
+
+    def test_in_the_coloured_group_only_the_failing_member_carries_the_error_modifier(
+        self, page
+    ):
+        number = joined_field(page, JOINED_ERROR_PREFIX, "number")
+        code = joined_field(page, JOINED_ERROR_PREFIX, "country_code")
+        colour = Modifiers.colors
+
+        assert number["aria-invalid"] == "true"
+        assert carried_modifiers(number, "color", "input") == {colour["input"]["error"]}
+        assert carried_modifiers(code, "color", "select") == {
+            colour["select"]["primary"]
+        }
+
+    def test_the_choice_around_a_group_wins_over_the_form_for_each_member(self, page):
+        for name, component in JOINED_CHOSEN_COMPONENTS.items():
+            field = joined_field(page, JOINED_CHOICE_PREFIX, name)
+
+            assert carried_modifiers(field, "size", component) == {
+                Modifiers.sizes[component]["lg"]
+            }
+            assert carried_modifiers(field, "color", component) == {
+                Modifiers.colors[component]["accent"]
+            }
+
+    def test_the_forms_that_state_a_choice_are_not_form_elements(self, page):
+        prefixes = [
+            f"joined-{kind}-{value}"
+            for kind in CHOSEN_KINDS
+            for value in Modifiers.names(kind, None)
+        ]
+        for prefix in [*prefixes, JOINED_ERROR_PREFIX, JOINED_CHOICE_PREFIX]:
+            assert joined_field(page, prefix, "number").find_parent("form") is None
 
     def test_the_form_to_submit_posts_with_a_token_and_a_button(self, page):
         form = joined_field(page, JOINED_PREFIX, "number").find_parent("form")

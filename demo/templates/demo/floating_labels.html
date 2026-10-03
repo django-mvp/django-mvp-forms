@@ -40,6 +40,30 @@
     </c-text>
     {% crispy by_name_form %}
   </c-section>
+  <c-section title="Sizes" level="3">
+    <c-text>
+      A floating form states a size for the form, and every field takes it.
+    </c-text>
+    {% for size in sizes %}
+      <c-section :title="size.title" level="4">
+        {% crispy size.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Colours" level="3">
+    {% for color in colors %}
+      <c-section :title="color.title" level="4">
+        {% crispy color.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Variant" level="3">
+    {% for variant in variants %}
+      <c-section :title="variant.title" level="4">
+        {% crispy variant.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
   <c-text>
     <c-link href="{% url 'floating-labels-standalone' %}" text="The same page without django-mvp" />
   </c-text>
