@@ -6,6 +6,7 @@ from typing import Any
 
 from django import forms, template
 from django.forms.boundfield import BoundField
+from django.forms.formsets import BaseFormSet
 from django.template import Context
 from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
@@ -340,3 +341,58 @@ def daisyui_layout_object(context: Context, layout_object: Any) -> SafeString:
                 context.get("form"), context, template_pack=context["template_pack"]
             )
         )
+
+
+class FormsetTable:
+    """Lay a formset's forms out as the rows and columns of one table.
+
+    A template cannot look a field up by name, so the columns and the cell of
+    every row are worked out here. Every form is taken to have the first form's
+    fields.
+
+    Args:
+        formset: The formset whose forms are the rows.
+    """
+
+    def __init__(self, formset: BaseFormSet) -> None:
+        self.formset = formset
+
+    @property
+    def columns(self) -> list[BoundField]:
+        """The first form's visible fields, in its own order. Empty with no forms."""
+        if not self.formset.forms:
+            return []
+        return list(self.formset.forms[0].visible_fields())
+
+    @property
+    def rows(self) -> list[dict[str, Any]]:
+        """One entry per form, in the formset's order: the form and its cells.
+
+        A cell is the form's bound field with the column's name, or None when
+        the form has no field of that name. With no columns each row has one
+        None cell, so the row's hidden fields have a cell to sit in.
+        """
+        names = [column.name for column in self.columns]
+        return [
+            {
+                "form": form,
+                "cells": [form[name] if name in form.fields else None for name in names]
+                or [None],
+            }
+            for form in self.formset.forms
+        ]
+
+
+@register.simple_tag
+def daisyui_formset_table(formset: BaseFormSet) -> FormsetTable:
+    """Return a formset's forms laid out as the rows and columns of a table.
+
+    Used as ``{% daisyui_formset_table formset as table %}``.
+
+    Args:
+        formset: The formset to lay out.
+
+    Returns:
+        The formset's table.
+    """
+    return FormsetTable(formset)
