@@ -478,7 +478,11 @@ A name daisyUI does not have is refused when the form is drawn, never written as
 
 A choice stated for the form that a kind of input has no modifier for is passed over, with no error: `variant="ghost"` leaves a checkbox, a radio group and a checkbox group as they are and the rest take it. The same choice stated on one of those fields raises, and so does any choice stated on a field whose widget the pack does not draw as an input of its own, because you asked for it by name.
 
-`helper.daisyui` must be a `FormChoices`: anything else raises `TypeError` when the form is drawn. A page variable that happens to be called `daisyui` and is not a `FormChoices` is ignored.
+A name in `FormChoices(fields=...)` that is not a field of the form raises `UnknownField`, a `KeyError` whose `names` lists them, when a field of the form is drawn.
+
+A `Choice` in a layout is checked against each field and button it holds, as a choice stated on each of them. `Choice(Row("name", "agree"), variant="ghost")` raises for a checkbox `agree`, which has no ghost, and a `Choice` holding a field and a button needs a variant both have. Size and colour apply to every kind, so a `Choice` that states only those can hold anything.
+
+The `daisyui` attribute of the helper a form carries as `form.helper` must be a `FormChoices`: anything else, `None` included, raises `TypeError` when a field of the form is drawn. Leave the attribute off to state nothing. A page variable that happens to be called `daisyui` and is not a `FormChoices` is ignored, and so is such a value on a helper handed to the tag on its own, as `{% crispy form helper %}`, where the pack cannot tell it from the page's. Keep the statement on the helper the form carries: with `{% crispy form helper %}` the inputs still read `form.helper`, and the buttons only the helper that draws them.
 
 ## Contributing
 

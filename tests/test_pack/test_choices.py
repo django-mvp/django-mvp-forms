@@ -16,15 +16,17 @@ from crispy_forms.layout import (
     Row,
     Submit,
 )
+from django import forms
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template import Context, Template
 
-from mvp_forms.choices import Choice, FormChoices, InvalidChoice
+from mvp_forms.choices import Choice, FormChoices, InvalidChoice, UnknownField
 from tests.forms import (
     ButtonedForm,
     DeveloperAttrsForm,
     EveryInputForm,
     FilesForm,
+    HeldFile,
     StructureForm,
     UncoveredWidgetsForm,
 )
@@ -301,6 +303,37 @@ class TestFormWideChoicesOnAFieldInError:
 
         assert "input-primary" in classes(text)
         assert "input-error" not in classes(text)
+
+
+class HandStyledFileForm(forms.Form):
+    doc = forms.FileField(
+        required=False,
+        initial=HeldFile("held.pdf"),
+        widget=forms.ClearableFileInput(
+            attrs={"class": "file-input-sm file-input-primary"}
+        ),
+    )
+
+
+class TestRemovalCheckboxOfAHandStyledFile:
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_form_stating_nothing_draws_it_with_the_class_it_had(self, draw, source):
+        soup = draw(source, form=HandStyledFileForm())
+
+        removal = soup.find("input", attrs={"name": "doc-clear"})
+
+        assert removal["class"] == ["checkbox"]
+
+
+class TestUnknownFieldNames:
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_name_that_is_no_field_of_the_form_is_refused(self, draw, source):
+        form = stated(EveryInputForm(), fields={"nmae": Choice(size="lg")})
+
+        with pytest.raises(UnknownField) as caught:
+            draw(source, form=form)
+
+        assert caught.value.names == ["nmae"]
 
 
 class TestRemovalCheckboxOfAFileInError:

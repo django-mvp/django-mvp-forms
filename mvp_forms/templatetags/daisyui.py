@@ -3,6 +3,7 @@
 import copy
 import re
 import secrets
+from collections.abc import Callable
 from html import unescape
 from typing import Any
 
@@ -90,6 +91,9 @@ class FieldInput:
         forms.SelectDateWidget: "daisyui/widgets/select_date.html",
         forms.ClearableFileInput: "daisyui/widgets/clearable_file_input.html",
     }
+    # The removal checkbox of a held file takes the size and the colour. A
+    # checkbox has no variant.
+    removal_kinds = ("size", "color")
     # Written out, not built from the component's name, so a host project's
     # Tailwind build finds them when it scans this module.
     error_modifiers: dict[str, str] = {
@@ -112,12 +116,22 @@ class FieldInput:
         self.field = field
         self.show_labels = show_labels
         self.show_errors = show_errors
-        self.modifiers = self.resolve_modifiers(choices or FormChoices(), placed)
+        choices = choices or FormChoices()
+        self.modifiers = self.resolve_modifiers(choices, placed, self.component)
+        self.removal_modifiers = (
+            self.resolve_modifiers(choices, placed, "checkbox", self.removal_kinds)
+            if self.component == "file-input"
+            else []
+        )
 
     def resolve_modifiers(
-        self, choices: FormChoices, placed: Choice | None
+        self,
+        choices: FormChoices,
+        placed: Choice | None,
+        component: str | None,
+        kinds: tuple[str, ...] = ("size", "color", "variant"),
     ) -> list[str]:
-        """Return the daisyUI class of each choice that applies to the input.
+        """Return the daisyUI class of each choice that applies to a component.
 
         Resolved when the input is built, so a mistake is raised from the tag
         and not from inside a template's ``{% if %}``, which would swallow it.
@@ -125,10 +139,13 @@ class FieldInput:
         Args:
             choices: The form's statement.
             placed: The ``Choice`` of a layout around the field, or None.
+            component: The component the classes are for: the field's own, or
+                the checkbox that removes a held file.
+            kinds: Which of size, colour and variant to resolve.
 
         Returns:
-            The classes for size, colour and variant, in that order, for each
-            one that resolves to a class.
+            The classes for the kinds asked for, in that order, for each one
+            that resolves to a class.
 
         Raises:
             InvalidChoice: See the class.
@@ -148,13 +165,13 @@ class FieldInput:
         resolved = (
             Modifiers.resolve(
                 kind,
-                self.component,
+                component,
                 own=getattr(own, kind),
-                form=form,
+                form=stated[kind],
                 target=self.field.name,
                 in_error=self.is_in_error,
             )
-            for kind, form in stated.items()
+            for kind in kinds
         )
         return [modifier for modifier in resolved if modifier]
 
@@ -195,7 +212,32 @@ class FieldInput:
         if self.template_name:
             widget = copy.copy(widget)
             widget.template_name = self.template_name
+            if self.removal_modifiers:
+                widget.get_context = self.removal_context(  # type: ignore[method-assign]
+                    widget.get_context
+                )
         return widget
+
+    def removal_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
+        """Wrap a widget's context so that it names the removal checkbox's classes.
+
+        Only the widget's own context reaches its template, so the classes the
+        pack resolved for the checkbox that removes a held file are added there,
+        on the copy of the widget that is drawn.
+
+        Args:
+            get_context: The copy's own ``get_context``.
+
+        Returns:
+            A function that returns the same context with ``removal_class`` set.
+        """
+
+        def with_removal_class(*args: Any, **kwargs: Any) -> dict:
+            context = get_context(*args, **kwargs)
+            context["widget"]["removal_class"] = " ".join(self.removal_modifiers)
+            return context
+
+        return with_removal_class
 
     @property
     def is_group(self) -> bool:
@@ -373,7 +415,7 @@ class DrawnButton:
 
         Returns:
             The classes for size, colour and variant, in that order, for each
-            one that resolves to a class. None for a hidden input.
+            one that resolves to a class. None of them for a hidden input.
 
         Raises:
             InvalidChoice: See the class.
@@ -423,6 +465,7 @@ class DrawnButton:
         names = self.button.field_classes.split()
         if (
             self.has_color
+            and self.default_color in names
             and self.default_color in type(self.button).field_classes.split()
         ):
             names.remove(self.default_color)
@@ -566,34 +609,6 @@ def daisyui_tab_group(panes: str) -> str:
             TAB_GROUP_PLACEHOLDER, f"{TAB_GROUP_PLACEHOLDER} checked", 1
         )
     return panes.replace(TAB_GROUP_PLACEHOLDER, f'name="tabs-{secrets.token_hex(4)}"')
-
-
-@register.filter
-def daisyui_removal_checkbox(value: str | None) -> str:
-    """Return the classes of a file field's removal checkbox.
-
-    The checkbox takes the size and the colour the file input was given, each as
-    the checkbox's own modifier. It has no variant. ``file-input-error`` is never
-    mapped: it marks a field in error, which the checkbox never is.
-
-    Args:
-        value: The file input's class string.
-
-    Returns:
-        ``checkbox`` and a modifier for each size and colour found in the string.
-    """
-    names = (value or "").split()
-    classes = ["checkbox"]
-    for kind in ("size", "color"):
-        file_modifiers = Modifiers.tables[kind]["file-input"]
-        checkbox_modifiers = Modifiers.tables[kind]["checkbox"]
-        classes.extend(
-            checkbox_modifiers[name]
-            for name, modifier in file_modifiers.items()
-            if modifier in names
-            and modifier != FieldInput.error_modifiers["file-input"]
-        )
-    return " ".join(classes)
 
 
 @register.filter

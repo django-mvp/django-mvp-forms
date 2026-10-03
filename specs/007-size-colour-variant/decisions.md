@@ -228,11 +228,14 @@ and the rest of the Python the developer writes, spells it `color`.
 
 ## D17. The removal checkbox of a file field takes the size and the colour
 
-**Chosen.** A filter turns the file input's class string into the checkbox's.
+**Chosen.** The pack resolves the checkbox's own size and colour modifiers and names them in the
+context of the copy of the widget it draws. (First built as a filter over the file input's class
+string; the code review found that it also mapped classes a developer wrote by hand, which changed
+a form that states nothing. See D24.)
 
 **Why.** SC-003 leaves no visible input at the ordinary size, and only the widget's final
-attributes reach the pack's widget template (research R7). `file-input-error` is never mapped,
-so the checkbox is not marked in error, as today, and a chosen colour of error does not reach it.
+attributes reach the pack's widget template (research R7). The checkbox is never marked in error,
+as before: a file field drawn as in error gives it the size and no colour.
 
 **ADR:** none — local to one widget template, and follows from the rule in docs/adr/0019-size-is-shared-colour-and-variant-are-held-twice.md that a choice reaches every visible input
 
@@ -305,3 +308,24 @@ follow the form's size is an open question, filed as an issue.
 added tests to them. No assertion and no test was changed.
 
 **ADR:** none — a record of a check, not a decision about the code
+
+## D24. Code review, 2026-10-03
+
+One reviewer, correctness and spec compliance: approve, with two medium and three low findings.
+All five were closed in this pull request.
+
+- COR-001 (medium): a `Submit` whose `field_classes` was replaced on the instance raised a bare
+  `ValueError` once a colour resolved. The default colour is now removed only when it is there.
+- COR-002 (medium): the removal checkbox followed a size or colour a developer had written by hand
+  on the file widget, so a form that states nothing was not drawn as before. The checkbox now
+  takes only what the pack resolved: `FieldInput` resolves the checkbox's modifiers and adds them
+  to the context of the copy of the widget it draws (ADR 0012's copy). The filter is gone.
+- COR-003 (low): a `Choice` holding several kinds is checked against each. Kept, and the README
+  now says so. A `Choice` is a statement made on each thing it holds (FR-022).
+- COR-004 (low): a name in `FormChoices(fields=...)` that is no field of the form now raises
+  `UnknownField`. A misspelt name on an outer `Choice` that an inner one overrides is still not
+  reported, because it is never resolved.
+- COR-005 (low): the README now says which helper's attribute raises `TypeError`, and that the
+  statement belongs on the helper the form carries.
+
+**ADR:** none — a record of the review

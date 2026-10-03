@@ -18,7 +18,6 @@ from mvp_forms.templatetags.daisyui import (
     daisyui_button,
     daisyui_classes,
     daisyui_field,
-    daisyui_removal_checkbox,
     daisyui_shown,
     daisyui_tab_group,
 )
@@ -734,48 +733,67 @@ class TestDaisyuiFieldChoices:
             daisyui_field(Context(), HelpedChoicesForm("sm")["name"])
 
 
-class TestDaisyuiRemovalCheckbox:
-    @pytest.mark.parametrize(
-        ("value", "expected"),
-        [
-            ("file-input file-input-sm", {"checkbox", "checkbox-sm"}),
-            ("file-input file-input-primary", {"checkbox", "checkbox-primary"}),
-            (
-                "file-input file-input-lg file-input-accent w-full",
-                {"checkbox", "checkbox-lg", "checkbox-accent"},
-            ),
-            ("file-input file-input-md", {"checkbox", "checkbox-md"}),
-        ],
+class HandStyledFileForm(forms.Form):
+    doc = forms.FileField(
+        required=False,
+        widget=forms.ClearableFileInput(
+            attrs={"class": "file-input-sm file-input-primary"}
+        ),
     )
-    def test_the_size_and_colour_of_the_file_input_become_the_checkboxes(
-        self, value, expected
-    ):
-        assert set(daisyui_removal_checkbox(value).split()) == expected
 
-    @pytest.mark.parametrize("value", ["file-input w-full", "", None])
-    def test_nothing_stated_is_a_plain_checkbox(self, value):
-        assert daisyui_removal_checkbox(value) == "checkbox"
 
-    def test_the_error_modifier_of_the_file_input_is_never_mapped(self):
-        value = "file-input w-full file-input-error"
+class TestFieldInputRemovalModifiers:
+    def test_a_file_input_resolves_the_checkboxes_size_and_colour(self):
+        choices = FormChoices(size="sm", color="accent", variant="ghost")
 
-        assert daisyui_removal_checkbox(value) == "checkbox"
+        field_input = FieldInput(FilesForm()["optional"], choices=choices)
 
-    def test_the_size_is_kept_when_the_file_input_is_in_error(self):
-        value = "file-input file-input-sm file-input-error"
+        assert field_input.removal_modifiers == ["checkbox-sm", "checkbox-accent"]
 
-        assert set(daisyui_removal_checkbox(value).split()) == {
-            "checkbox",
-            "checkbox-sm",
-        }
+    def test_nothing_stated_resolves_none(self):
+        assert FieldInput(FilesForm()["optional"]).removal_modifiers == []
 
-    def test_the_variant_and_the_developers_classes_are_not_mapped(self):
-        value = "wide file-input file-input-ghost"
+    def test_classes_written_by_hand_on_the_widget_resolve_none(self):
+        field_input = FieldInput(HandStyledFileForm()["doc"])
 
-        assert daisyui_removal_checkbox(value) == "checkbox"
+        assert field_input.removal_modifiers == []
+
+    def test_an_input_that_is_not_a_file_input_resolves_none(self):
+        choices = FormChoices(size="sm")
+
+        assert (
+            FieldInput(TextInputsForm()["text"], choices=choices).removal_modifiers
+            == []
+        )
+
+    def test_the_widget_drawn_names_them_in_its_context(self):
+        field = FilesForm()["optional"]
+        field_input = FieldInput(field, choices=FormChoices(size="lg"))
+
+        context = field_input.widget.get_context("optional", field.value(), {})
+
+        assert context["widget"]["removal_class"] == "checkbox-lg"
+
+    def test_the_forms_own_widget_is_left_as_it_was(self):
+        field = FilesForm()["optional"]
+
+        FieldInput(field, choices=FormChoices(size="lg")).render()
+
+        context = field.field.widget.get_context("optional", field.value(), {})
+        assert "removal_class" not in context["widget"]
 
 
 class TestDrawnButton:
+    def test_a_submit_recoloured_on_the_instance_keeps_its_colour_and_takes_the_forms(
+        self,
+    ):
+        submit = Submit("save", "Save")
+        submit.field_classes = "btn btn-success"
+
+        drawn = DrawnButton(submit, choices=FormChoices(button_color="neutral"))
+
+        assert set(drawn.css_class.split()) == {"btn", "btn-success", "btn-neutral"}
+
     def test_a_base_input_takes_the_forms_size_colour_and_variant_for_buttons(self):
         choices = FormChoices(
             size="sm",

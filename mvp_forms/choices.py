@@ -42,6 +42,18 @@ class InvalidChoice(ValueError):
         super().__init__(f"{value!r} is not a {kind}{where}; {options}")
 
 
+class UnknownField(KeyError):
+    """A name in ``FormChoices(fields=...)`` that is not a field of the form.
+
+    Args:
+        names: The names the form has no field for.
+    """
+
+    def __init__(self, names: list[str]) -> None:
+        self.names = names
+        super().__init__(f"the form has no field named {', '.join(names)}")
+
+
 class Modifiers:
     """The daisyUI class each choice means, for each kind of input and for buttons.
 
@@ -447,6 +459,8 @@ class FormChoices:
             TypeError: The form's helper has a ``daisyui`` attribute that is not
                 a ``FormChoices``.
             InvalidChoice: The statement holds a name daisyUI does not have.
+            UnknownField: ``fields`` names a field the form at hand does not
+                have.
         """
         found = context.get(cls.attribute)
         if not isinstance(found, cls):
@@ -459,4 +473,8 @@ class FormChoices:
                     f"helper.{cls.attribute} must be a FormChoices, not {found!r}"
                 )
         found.check()
+        known = getattr(form, "fields", found.fields)
+        unknown = [name for name in found.fields if name not in known]
+        if unknown:
+            raise UnknownField(unknown)
         return found
