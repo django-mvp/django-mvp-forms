@@ -255,6 +255,93 @@ class TestChoice:
         assert (outer.size, outer.color) == ("lg", "info")
 
 
+class TestChoiceDrawing:
+    def test_it_is_inherited_by_default(self):
+        assert Choice().drawing is INHERIT
+
+    def test_it_is_kept(self):
+        assert Choice(drawing="toggle").drawing == "toggle"
+
+    def test_none_is_kept(self):
+        assert Choice(drawing=None).drawing is None
+
+    def test_over_takes_the_inner_drawing_when_stated(self):
+        merged = Choice(drawing="toggle").over(Choice(drawing="switch"))
+
+        assert merged.drawing == "toggle"
+
+    def test_over_takes_the_outer_drawing_when_the_inner_one_is_left_out(self):
+        merged = Choice(size="sm").over(Choice(drawing="switch"))
+
+        assert merged.drawing == "switch"
+
+    def test_over_states_none_when_the_inner_drawing_is_none(self):
+        merged = Choice(drawing=None).over(Choice(drawing="switch"))
+
+        assert merged.drawing is None
+
+    def test_over_inherits_a_drawing_neither_choice_states(self):
+        merged = Choice(size="sm").over(Choice(color="info"))
+
+        assert merged.drawing is INHERIT
+
+    def test_over_changes_neither_choice(self):
+        inner = Choice(drawing="toggle")
+        outer = Choice(drawing="switch")
+
+        inner.over(outer)
+
+        assert (inner.drawing, outer.drawing) == ("toggle", "switch")
+
+
+class TestModifiersDrawings:
+    def test_each_drawing_names_the_component_it_is_drawn_with(self):
+        assert Modifiers.drawings == {
+            "checkbox": "checkbox",
+            "toggle": "toggle",
+            "switch": "toggle",
+        }
+
+
+class TestModifiersToggle:
+    def test_a_toggle_has_the_same_sizes_and_colours_as_the_other_inputs(self):
+        assert tuple(Modifiers.sizes["toggle"]) == SIZES
+        assert tuple(Modifiers.colors["toggle"]) == COLORS
+
+    def test_a_toggle_has_no_variant(self):
+        assert "toggle" not in Modifiers.variants
+
+    @pytest.mark.parametrize("name", SIZES)
+    def test_each_size_resolves_to_its_toggle_class(self, name):
+        assert Modifiers.resolve("size", "toggle", form=name) == f"toggle-{name}"
+
+    @pytest.mark.parametrize("name", COLORS)
+    def test_each_colour_resolves_to_its_toggle_class(self, name):
+        assert Modifiers.resolve("color", "toggle", own=name) == f"toggle-{name}"
+
+    def test_a_variant_the_form_states_is_passed_over(self):
+        assert Modifiers.resolve("variant", "toggle", form="ghost") is None
+
+    def test_a_variant_a_field_states_raises_with_nothing_allowed(self):
+        with pytest.raises(InvalidChoice) as caught:
+            Modifiers.resolve("variant", "toggle", own="ghost", target="notify")
+
+        assert (caught.value.kind, caught.value.value) == ("variant", "ghost")
+        assert (caught.value.allowed, caught.value.target) == ((), "notify")
+
+    def test_a_field_in_error_drops_the_colour_and_keeps_the_size(self):
+        assert Modifiers.resolve("color", "toggle", form="info", in_error=True) is None
+        assert Modifiers.resolve("size", "toggle", form="sm", in_error=True) == (
+            "toggle-sm"
+        )
+
+    def test_an_unknown_size_raises_with_the_names_allowed(self):
+        with pytest.raises(InvalidChoice) as caught:
+            Modifiers.resolve("size", "toggle", own="huge", target="notify")
+
+        assert (caught.value.allowed, caught.value.target) == (SIZES, "notify")
+
+
 class Recorder:
     def __init__(self, leaves_a_layer=False):
         self.leaves_a_layer = leaves_a_layer

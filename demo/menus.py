@@ -89,6 +89,11 @@ AppMenu.extend(
             extra_context={"label": "Size, colour and variant", "icon": "choices"},
         ),
         MenuItem(
+            name="drawings",
+            view_name="drawings",
+            extra_context={"label": "Checkbox, toggle and switch", "icon": "drawings"},
+        ),
+        MenuItem(
             name="formset-stacked",
             view_name="formset-stacked",
             extra_context={"label": "Formset, stacked", "icon": "formset-stacked"},

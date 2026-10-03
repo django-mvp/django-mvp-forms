@@ -1,6 +1,6 @@
 # ADR 0013 — Disabled and read-only are drawn from the attribute, and read-only is never imitated
 
-**Status:** accepted, amended by [ADR 0027](0027-uneditable-field-writes-disabled.md): `UneditableField` is the one case where the pack writes `disabled`
+**Status:** accepted, amended by [ADR 0028](0028-uneditable-field-writes-disabled.md): `UneditableField` is the one case where the pack writes `disabled`
 
 ## Decision
 

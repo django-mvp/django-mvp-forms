@@ -2034,3 +2034,305 @@ class TestStandaloneChoicesPage(ChoicesPageContract):
 
     def test_it_links_back_to_the_shell_page(self, page):
         assert page.find("a", href=reverse("choices")) is not None
+
+
+DRAWINGS_PREFIX = "drawings"
+DRAWINGS_FIELDS = ["remember", "notify", "publish"]
+
+
+def drawings_input(page, name):
+    return page.find(id=f"id_{DRAWINGS_PREFIX}-{name}")
+
+
+def drawings_submitted(page, on):
+    form = drawings_input(page, "remember").find_parent("form")
+    data = {}
+    for tag in form.find_all("input"):
+        name = tag.get("name")
+        if not name or tag["type"] == "submit":
+            continue
+        if tag["type"] == "checkbox":
+            if name in on:
+                data[name] = tag.get("value", "on")
+        else:
+            data[name] = tag.get("value", "")
+    return data
+
+
+class DrawingsPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    @pytest.mark.parametrize("name", DRAWINGS_FIELDS)
+    def test_every_field_is_a_checkbox_input_with_its_name(self, page, name):
+        tag = drawings_input(page, name)
+        assert (tag.name, tag["type"]) == ("input", "checkbox")
+        assert tag["name"] == f"{DRAWINGS_PREFIX}-{name}"
+
+    def test_the_first_field_is_a_checkbox(self, page):
+        tag = drawings_input(page, "remember")
+        assert "checkbox" in tag["class"]
+        assert "toggle" not in tag["class"]
+        assert not tag.has_attr("role")
+
+    def test_the_second_field_is_a_toggle(self, page):
+        tag = drawings_input(page, "notify")
+        assert "toggle" in tag["class"]
+        assert "checkbox" not in tag["class"]
+        assert not tag.has_attr("role")
+
+    def test_the_third_field_is_a_switch(self, page):
+        tag = drawings_input(page, "publish")
+        assert "toggle" in tag["class"]
+        assert tag["role"] == "switch"
+
+    def test_the_form_posts_with_a_token_and_a_button(self, page):
+        form = drawings_input(page, "remember").find_parent("form")
+        assert form["method"] == "post"
+        assert form.find("input", attrs={"name": "csrfmiddlewaretoken"}) is not None
+        assert form.find("input", attrs={"type": "submit"}) is not None
+
+    def test_nothing_is_shown_as_cleaned_before_a_post(self, page):
+        assert page.find(id=f"{DRAWINGS_PREFIX}-cleaned") is None
+
+    @pytest.mark.parametrize(
+        ("on", "expected"),
+        [
+            ({"notify"}, {"remember": "False", "notify": "True", "publish": "False"}),
+            (
+                {"remember", "publish"},
+                {"remember": "True", "notify": "False", "publish": "True"},
+            ),
+        ],
+    )
+    def test_a_post_shows_what_the_form_cleaned_to(self, open_page, on, expected):
+        sent = {f"{DRAWINGS_PREFIX}-{name}" for name in on}
+        data = drawings_submitted(open_page(self.url_name), sent)
+
+        page = open_page(self.url_name, data)
+
+        for name, value in expected.items():
+            shown = page.find(id=f"{DRAWINGS_PREFIX}-cleaned-{name}")
+            assert shown.get_text(strip=True) == value
+
+    def test_a_post_draws_each_field_checked_as_it_was_posted(self, open_page):
+        sent = {f"{DRAWINGS_PREFIX}-notify", f"{DRAWINGS_PREFIX}-publish"}
+        data = drawings_submitted(open_page(self.url_name), sent)
+
+        page = open_page(self.url_name, data)
+
+        assert not drawings_input(page, "remember").has_attr("checked")
+        assert drawings_input(page, "notify").has_attr("checked")
+        assert drawings_input(page, "publish").has_attr("checked")
+
+    def test_every_input_has_a_label_that_names_it(self, page):
+        for name in DRAWINGS_FIELDS:
+            field = drawings_input(page, name)
+            assert page.find("label", attrs={"for": field["id"]}) is not None
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestDrawingsPage(DrawingsPageContract):
+    url_name = "drawings"
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("drawings")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, page):
+        assert page.find("a", href=reverse("drawings-standalone")) is not None
+
+
+class TestStandaloneDrawingsPage(DrawingsPageContract):
+    url_name = "drawings-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, page):
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, page):
+        assert page.find("a", href=reverse("drawings")) is not None
+
+
+DRAWING_NAMES = ["checkbox", "toggle", "switch"]
+DRAWING_STATES = ["off", "on", "help", "error", "disabled"]
+DRAWING_ERROR_MODIFIERS = {
+    "checkbox": "checkbox-error",
+    "toggle": "toggle-error",
+    "switch": "toggle-error",
+}
+
+
+def drawing_state(page, drawing, state):
+    return page.find(id=f"id_{drawing}-{state}-flag")
+
+
+class DrawingStatesPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    @pytest.mark.parametrize("state", DRAWING_STATES)
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_every_drawing_is_drawn_in_every_state(self, page, drawing, state):
+        tag = drawing_state(page, drawing, state)
+        assert (tag.name, tag["type"]) == ("input", "checkbox")
+
+    @pytest.mark.parametrize("state", DRAWING_STATES)
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_each_input_is_drawn_as_its_drawing(self, page, drawing, state):
+        tag = drawing_state(page, drawing, state)
+        component = "checkbox" if drawing == "checkbox" else "toggle"
+        assert component in tag["class"]
+        assert tag.get("role") == ("switch" if drawing == "switch" else None)
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_only_the_on_state_is_checked(self, page, drawing):
+        for state in DRAWING_STATES:
+            tag = drawing_state(page, drawing, state)
+            assert tag.has_attr("checked") == (state == "on")
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_the_help_state_is_described_by_its_help_text(self, page, drawing):
+        tag = drawing_state(page, drawing, "help")
+        for name in tag["aria-describedby"].split():
+            assert page.find(id=name) is not None
+        assert drawing_state(page, drawing, "off").get("aria-describedby") is None
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_the_error_state_is_required_invalid_and_described_by_its_error(
+        self, page, drawing
+    ):
+        tag = drawing_state(page, drawing, "error")
+        label = page.find("label", attrs={"for": tag["id"]})
+        assert label.find(attrs={"aria-hidden": "true"}) is not None
+        assert tag["aria-invalid"] == "true"
+        assert DRAWING_ERROR_MODIFIERS[drawing] in tag["class"]
+        assert f"{tag['id']}_error" in tag["aria-describedby"].split()
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_only_the_error_state_is_invalid(self, page, drawing):
+        for state in DRAWING_STATES:
+            tag = drawing_state(page, drawing, state)
+            assert tag.has_attr("aria-invalid") == (state == "error")
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_only_the_disabled_state_is_disabled(self, page, drawing):
+        for state in DRAWING_STATES:
+            tag = drawing_state(page, drawing, state)
+            assert tag.has_attr("disabled") == (state == "disabled")
+
+    @pytest.mark.parametrize("state", DRAWING_STATES)
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_every_input_has_a_label_that_names_it(self, page, drawing, state):
+        tag = drawing_state(page, drawing, state)
+        assert page.find("label", attrs={"for": tag["id"]}) is not None
+
+    def test_no_form_element_surrounds_a_state(self, page):
+        assert drawing_state(page, "toggle", "off").find_parent("form") is None
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestDrawingStatesInThePage(DrawingStatesPageContract):
+    url_name = "drawings"
+
+
+class TestDrawingStatesInTheStandalonePage(DrawingStatesPageContract):
+    url_name = "drawings-standalone"
+
+
+DRAWING_OVERRIDE_PREFIX = "override"
+DRAWING_COMPONENTS = {"checkbox": "checkbox", "toggle": "toggle", "switch": "toggle"}
+
+
+def drawing_sample(page, kind, name, drawing):
+    return page.find(id=f"id_{kind}-{name}-{drawing}")
+
+
+class DrawingSizesPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_every_drawing_is_drawn_at_every_size_the_table_has(self, page, drawing):
+        component = DRAWING_COMPONENTS[drawing]
+        for name, expected in Modifiers.sizes[component].items():
+            tag = drawing_sample(page, "size", name, drawing)
+            assert (tag.name, tag["type"]) == ("input", "checkbox")
+            assert expected in tag["class"]
+
+    @pytest.mark.parametrize("drawing", DRAWING_NAMES)
+    def test_every_drawing_is_drawn_in_every_colour_the_table_has(self, page, drawing):
+        component = DRAWING_COMPONENTS[drawing]
+        for name, expected in Modifiers.colors[component].items():
+            tag = drawing_sample(page, "color", name, drawing)
+            assert (tag.name, tag["type"]) == ("input", "checkbox")
+            assert expected in tag["class"]
+
+    def test_the_sizes_and_colours_shown_are_those_of_the_toggle_table(self, page):
+        for kind, table in (("size", Modifiers.sizes), ("color", Modifiers.colors)):
+            shown = {
+                tag["id"].split("-")[1]
+                for tag in page.find_all(id=re.compile(f"^id_{kind}-.*-toggle$"))
+            }
+            assert shown == set(table["toggle"])
+
+    @pytest.mark.parametrize("drawing", ["toggle", "switch"])
+    def test_no_checkbox_modifier_is_written_on_a_toggle_or_a_switch(
+        self, page, drawing
+    ):
+        for kind in ("size", "color"):
+            for tag in page.find_all(id=re.compile(f"^id_{kind}-.*-{drawing}$")):
+                assert not [c for c in tag["class"] if c.startswith("checkbox")]
+
+    def test_a_switch_is_a_switch_at_every_size_and_in_every_colour(self, page):
+        for tag in page.find_all(id=re.compile("^id_(size|color)-.*-switch$")):
+            assert tag["role"] == "switch"
+
+    def test_the_field_that_states_nothing_takes_the_forms_size_and_colour(self, page):
+        tag = page.find(id=f"id_{DRAWING_OVERRIDE_PREFIX}-inherits")
+        assert tag["role"] == "switch"
+        assert Modifiers.sizes["toggle"]["sm"] in tag["class"]
+        assert Modifiers.colors["toggle"]["primary"] in tag["class"]
+
+    def test_the_field_that_overrides_takes_its_own_size_and_colour(self, page):
+        tag = page.find(id=f"id_{DRAWING_OVERRIDE_PREFIX}-overrides")
+        assert Modifiers.sizes["toggle"]["xl"] in tag["class"]
+        assert Modifiers.colors["toggle"]["accent"] in tag["class"]
+        assert Modifiers.sizes["toggle"]["sm"] not in tag["class"]
+        assert Modifiers.colors["toggle"]["primary"] not in tag["class"]
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestDrawingSizesInThePage(DrawingSizesPageContract):
+    url_name = "drawings"
+
+
+class TestDrawingSizesInTheStandalonePage(DrawingSizesPageContract):
+    url_name = "drawings-standalone"

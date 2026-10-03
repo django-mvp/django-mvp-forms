@@ -1,4 +1,4 @@
-# ADR 0022 — A layout object decorates a field through options on the tag, and the frame stays one
+# ADR 0023 — A layout object decorates a field through options on the tag, and the frame stays one
 
 **Status:** accepted. Amends [ADR 0006](0006-the-field-frame.md): the frame is `daisyui/frame.html`
 

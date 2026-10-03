@@ -73,16 +73,29 @@ actual colour. The keyword is spelt `color`, as daisyUI spells it.
 _Avoid_: theme, palette.
 
 **Variant**:
-One of the alternative drawings daisyUI offers for the same input or button,
-which its own documentation calls a style. Inputs have one, `ghost`. Buttons
+One of the alternatives daisyUI offers for the same input or button, which its
+own documentation calls a style. Inputs have one, `ghost`. Buttons
 have several.
 _Avoid_: style, look.
 
 **Choice**:
-A size, a colour or a variant stated in Python, for a form, for one field or for
-one button. The three are independent of each other.
+A size, a colour, a variant or a drawing stated in Python, for a form, for one
+field or for one button. The four are independent of each other. A drawing is
+stated for one boolean field at a time and never for a form.
 _Avoid_: option, setting, modifier (a modifier is the daisyUI class a choice
 means).
+
+**Drawing**:
+How a boolean field is drawn: `checkbox`, `toggle` or `switch`. A toggle and a
+switch are both daisyUI's toggle, and a switch also tells assistive technology
+it is a switch. A field that states none is drawn as a checkbox.
+_Avoid_: style, look, type (an input's type is the HTML attribute).
+
+**Boolean field**:
+A field whose widget is a Django `CheckboxInput`, or a subclass of one, such as
+a `BooleanField`. It is the only kind of field that takes a drawing. A
+null-boolean select and a checkbox group are not boolean fields.
+_Avoid_: checkbox field, switch field.
 
 ## Terms deliberately not used
 

@@ -1,4 +1,4 @@
-# ADR 0023 — The frame takes a wrapper class from the context
+# ADR 0024 — The frame takes a wrapper class from the context
 
 **Status:** accepted. Amends [ADR 0006](0006-the-field-frame.md), which said the frame takes no wrapper class from the context
 

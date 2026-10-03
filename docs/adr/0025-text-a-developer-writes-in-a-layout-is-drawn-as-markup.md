@@ -1,4 +1,4 @@
-# ADR 0024 — Text a developer writes in a layout is drawn as markup
+# ADR 0025 — Text a developer writes in a layout is drawn as markup
 
 **Status:** accepted
 

@@ -133,6 +133,7 @@ EASY_ICONS = {
             "inline-field": "bi bi-input-cursor",
             "multi-widget-field": "bi bi-calendar-event",
             "choices": "bi bi-palette",
+            "drawings": "bi bi-toggles",
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",
         },

@@ -73,7 +73,7 @@
    "at": "2026-10-03T19:52:39Z",
    "self_resolved": [
     "COR-001 high: remedied, a hidden field resolves no choices (T013)",
-    "COR-002 low: remedied in the README and ADR 0025 (T014)",
+    "COR-002 low: remedied in the README and ADR 0026 (T014)",
     "DOC-001 low: remedied in the README and CHANGELOG (T014)"
    ]
   },
@@ -170,7 +170,7 @@
       "code": [
        "README.md:383",
        "CHANGELOG.md:32",
-       "docs/adr/0025-attached-text-and-joined-buttons.md:10"
+       "docs/adr/0026-attached-text-and-joined-buttons.md:10"
       ]
      }
     }

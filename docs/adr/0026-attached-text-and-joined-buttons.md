@@ -1,4 +1,4 @@
-# ADR 0025 — Attached text and joined buttons are daisyUI's own markup, one size, and buttons are drawn once
+# ADR 0026 — Attached text and joined buttons are daisyUI's own markup, one size, and buttons are drawn once
 
 **Status:** accepted
 

@@ -12,7 +12,7 @@ from django.template import Context, Template
 from django.utils.functional import Promise
 from django.utils.safestring import SafeString, mark_safe
 
-from mvp_forms.choices import Choice, FormChoices, InvalidChoice
+from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice
 from mvp_forms.templatetags.daisyui import (
     SPLIT_DATE_TIME_PARTS,
     TAB_GROUP_PLACEHOLDER,
@@ -63,6 +63,10 @@ class ShortTextInput(forms.TextInput):
 
 
 class HostSelect(forms.Select):
+    pass
+
+
+class OwnCheckboxInput(forms.CheckboxInput):
     pass
 
 
@@ -924,6 +928,217 @@ class TestDrawnButton:
         )
 
         assert drawn.css_class.split().count("btn-sm") == 1
+
+
+class DrawingsForm(forms.Form):
+    plain = forms.BooleanField(required=False)
+    other = forms.BooleanField(required=False)
+    text = forms.CharField(required=False)
+    group = forms.MultipleChoiceField(
+        choices=[("a", "A")], widget=forms.CheckboxSelectMultiple, required=False
+    )
+    maybe = forms.NullBooleanField()
+    own = forms.BooleanField(required=False, widget=OwnCheckboxInput)
+    must = forms.BooleanField()
+
+
+def drawn(name, form=None, **kwargs):
+    return FieldInput((form or DrawingsForm())[name], **kwargs)
+
+
+class TestFieldInputDrawing:
+    @pytest.mark.parametrize(
+        ("drawing", "component"),
+        [
+            ("checkbox", "checkbox"),
+            ("toggle", "toggle"),
+            ("switch", "toggle"),
+            (None, "checkbox"),
+        ],
+    )
+    def test_a_drawing_stated_in_a_layout_gives_the_component(self, drawing, component):
+        field_input = drawn("plain", placed=Choice(drawing=drawing))
+
+        assert field_input.component == component
+
+    def test_nothing_stated_gives_the_checkbox(self):
+        assert drawn("plain").component == "checkbox"
+
+    @pytest.mark.parametrize(
+        ("drawing", "component"), [("toggle", "toggle"), ("switch", "toggle")]
+    )
+    def test_a_drawing_stated_by_name_gives_the_component(self, drawing, component):
+        choices = FormChoices(fields={"plain": Choice(drawing=drawing)})
+
+        assert drawn("plain", choices=choices).component == component
+
+    def test_the_drawing_in_a_layout_wins_over_the_one_stated_by_name(self):
+        choices = FormChoices(fields={"plain": Choice(drawing="toggle")})
+
+        field_input = drawn("plain", choices=choices, placed=Choice(drawing="checkbox"))
+
+        assert field_input.component == "checkbox"
+
+    def test_none_in_a_layout_undoes_the_drawing_stated_by_name(self):
+        choices = FormChoices(fields={"plain": Choice(drawing="switch")})
+
+        field_input = drawn("plain", choices=choices, placed=Choice(drawing=None))
+
+        assert field_input.component == "checkbox"
+
+    def test_a_drawing_stated_for_another_field_changes_nothing_here(self):
+        choices = FormChoices(fields={"other": Choice(drawing="switch")})
+
+        assert drawn("plain", choices=choices).component == "checkbox"
+
+    @pytest.mark.parametrize(
+        ("drawing", "role"),
+        [("switch", "switch"), ("toggle", None), ("checkbox", None), (None, None)],
+    )
+    def test_only_a_switch_carries_a_role(self, drawing, role):
+        attrs = drawn("plain", placed=Choice(drawing=drawing)).attrs
+
+        assert attrs.get("role") == role
+
+    @pytest.mark.parametrize("drawing", ["checkbox", "toggle", "switch"])
+    def test_each_drawing_is_a_single_checkbox_to_the_frame(self, drawing):
+        field_input = drawn("plain", placed=Choice(drawing=drawing))
+
+        assert field_input.is_single_checkbox
+
+    @pytest.mark.parametrize("drawing", ["toggle", "switch"])
+    def test_a_toggle_is_written_with_the_toggle_class(self, drawing):
+        classes = drawn("plain", placed=Choice(drawing=drawing)).css_class.split()
+
+        assert "toggle" in classes
+        assert "checkbox" not in classes
+
+    def test_a_field_in_error_drawn_as_a_toggle_carries_the_toggle_error_modifier(
+        self,
+    ):
+        form = DrawingsForm({})
+
+        field_input = drawn("must", form, placed=Choice(drawing="toggle"))
+
+        assert "toggle-error" in field_input.css_class.split()
+
+    def test_a_subclass_of_the_checkbox_widget_takes_a_drawing(self):
+        field_input = drawn("own", placed=Choice(drawing="switch"))
+
+        assert field_input.component == "toggle"
+        assert field_input.attrs["role"] == "switch"
+
+    def test_an_unknown_name_on_a_boolean_field_raises_with_the_three_names(self):
+        with pytest.raises(InvalidChoice) as caught:
+            drawn("plain", placed=Choice(drawing="slider"))
+
+        assert caught.value.kind == "drawing"
+        assert caught.value.value == "slider"
+        assert caught.value.allowed == ("checkbox", "toggle", "switch")
+        assert caught.value.target == "plain"
+
+    def test_an_unknown_name_stated_by_name_raises_naming_the_field(self):
+        choices = FormChoices(fields={"plain": Choice(drawing="slider")})
+
+        with pytest.raises(InvalidChoice) as caught:
+            drawn("plain", choices=choices)
+
+        assert caught.value.kind == "drawing"
+        assert caught.value.target == "plain"
+
+    @pytest.mark.parametrize("name", ["text", "group", "maybe"])
+    @pytest.mark.parametrize("drawing", ["checkbox", "toggle", "switch"])
+    def test_any_drawing_on_a_field_that_is_not_a_boolean_field_raises(
+        self, name, drawing
+    ):
+        with pytest.raises(InvalidChoice) as caught:
+            drawn(name, placed=Choice(drawing=drawing))
+
+        assert caught.value.kind == "drawing"
+        assert caught.value.value == drawing
+        assert caught.value.allowed == ()
+        assert caught.value.target == name
+
+    @pytest.mark.parametrize("name", ["text", "group", "maybe"])
+    def test_an_unknown_name_on_a_field_that_is_not_a_boolean_field_allows_nothing(
+        self, name
+    ):
+        with pytest.raises(InvalidChoice) as caught:
+            drawn(name, placed=Choice(drawing="slider"))
+
+        assert caught.value.allowed == ()
+
+    @pytest.mark.parametrize("name", ["plain", "text", "group", "maybe"])
+    def test_a_list_given_as_the_name_raises_invalid_choice(self, name):
+        with pytest.raises(InvalidChoice) as caught:
+            drawn(name, placed=Choice(drawing=["toggle"]))
+
+        assert caught.value.kind == "drawing"
+
+    @pytest.mark.parametrize("name", ["text", "group", "maybe"])
+    @pytest.mark.parametrize("drawing", [None, INHERIT])
+    def test_none_and_inherit_state_nothing_for_any_field(self, name, drawing):
+        field_input = drawn(name, placed=Choice(drawing=drawing))
+
+        assert field_input.component != "toggle"
+
+    def test_a_drawing_stated_by_name_for_a_text_field_raises(self):
+        choices = FormChoices(fields={"text": Choice(drawing="toggle")})
+
+        with pytest.raises(InvalidChoice) as caught:
+            drawn("text", choices=choices)
+
+        assert caught.value.target == "text"
+
+    def test_a_render_draws_a_switch_as_a_checkbox_input_with_the_role(self, parse):
+        field_input = drawn("plain", placed=Choice(drawing="switch"))
+
+        tag = parse(field_input.render()).find("input")
+
+        assert tag["type"] == "checkbox"
+        assert tag["name"] == "plain"
+        assert tag["role"] == "switch"
+        assert "toggle" in tag["class"]
+
+    def test_a_render_leaves_the_widgets_attrs_unchanged(self):
+        form = DrawingsForm()
+        before = copy.deepcopy(form.fields["plain"].widget.attrs)
+
+        drawn("plain", form, placed=Choice(drawing="switch")).render()
+
+        assert form.fields["plain"].widget.attrs == before
+
+
+class TestDrawnButtonDrawing:
+    @pytest.mark.parametrize("drawing", ["checkbox", "toggle", "switch", "slider"])
+    @pytest.mark.parametrize(
+        "button", [Submit("save", "Save"), StrictButton("More", css_id="more")]
+    )
+    def test_a_drawing_stated_around_a_button_raises(self, button, drawing):
+        with pytest.raises(InvalidChoice) as caught:
+            DrawnButton(button, placed=Choice(drawing=drawing))
+
+        assert caught.value.kind == "drawing"
+        assert caught.value.value == drawing
+        assert caught.value.allowed == ()
+        assert caught.value.target is not None
+
+    def test_the_button_is_the_target(self):
+        with pytest.raises(InvalidChoice) as caught:
+            DrawnButton(Submit("save", "Save"), placed=Choice(drawing="toggle"))
+
+        assert caught.value.target == "save"
+
+    @pytest.mark.parametrize("drawing", [None, INHERIT])
+    def test_none_and_inherit_state_nothing_for_a_button(self, drawing):
+        built = DrawnButton(Submit("save", "Save"), placed=Choice(drawing=drawing))
+
+        assert built.modifiers == []
+
+    def test_a_hidden_input_takes_no_drawing_and_raises_nothing(self):
+        built = DrawnButton(Hidden("secret", "x"), placed=Choice(drawing="toggle"))
+
+        assert built.modifiers == []
 
 
 class TestDaisyuiButton:

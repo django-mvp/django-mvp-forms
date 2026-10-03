@@ -10,6 +10,7 @@ from demo.views import (
     ChoicesView,
     ContainersStandaloneView,
     DecoratedFieldsStandaloneView,
+    DrawingsView,
     FieldWithButtonsView,
     InlineChoicesView,
     InlineFieldView,
@@ -20,6 +21,7 @@ from demo.views import (
     StackedFormsetView,
     StandaloneChoiceInputsView,
     StandaloneChoicesView,
+    StandaloneDrawingsView,
     StandaloneLayoutObjectsView,
     StandaloneStackedFormsetView,
     StandaloneTableFormsetView,
@@ -81,6 +83,12 @@ urlpatterns = [
         "choices/standalone/",
         StandaloneChoicesView.as_view(),
         name="choices-standalone",
+    ),
+    path("drawings/", DrawingsView.as_view(), name="drawings"),
+    path(
+        "drawings/standalone/",
+        StandaloneDrawingsView.as_view(),
+        name="drawings-standalone",
     ),
     path("formset-stacked/", StackedFormsetView.as_view(), name="formset-stacked"),
     path(

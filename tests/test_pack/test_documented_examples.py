@@ -445,3 +445,41 @@ class TestReadmeMultiWidgetField:
         assert "mine" in time["class"]
         assert "input" in date["class"]
         assert date["aria-label"] != time["aria-label"]
+
+
+class TestReadmeDrawings:
+    def test_the_example_stating_a_drawing_draws_each_field_as_stated(self, draw):
+        form = readme_example("Checkbox, toggle and switch")["SettingsForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        remember = soup.find(id="id_remember")
+        assert "checkbox" in remember["class"]
+        assert not remember.has_attr("role")
+        notify = soup.find(id="id_notify")
+        assert "toggle" in notify["class"]
+        assert not notify.has_attr("role")
+        publish = soup.find(id="id_publish")
+        assert "toggle" in publish["class"]
+        assert publish["role"] == "switch"
+
+    def test_the_drawing_stated_by_name_reaches_the_filter_too(self, draw):
+        form = readme_example("Checkbox, toggle and switch")["SettingsForm"]()
+
+        soup = draw("{{ form|crispy }}", form=form)
+
+        assert "toggle" in soup.find(id="id_notify")["class"]
+
+
+class TestReadmeDrawingSizeAndColour:
+    def test_the_example_gives_the_toggle_and_the_switch_the_size_and_colour(
+        self, draw
+    ):
+        form = readme_example("Checkbox, toggle and switch")["SettingsForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert "checkbox-sm" in set(soup.find(id="id_remember")["class"])
+        assert "toggle-sm" in set(soup.find(id="id_notify")["class"])
+        publish = set(soup.find(id="id_publish")["class"])
+        assert {"toggle-sm", "toggle-primary"} <= publish

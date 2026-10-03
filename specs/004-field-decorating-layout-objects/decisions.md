@@ -80,7 +80,7 @@ and every layout written from its documentation. The text is written in Python b
 in the same place they would write an `HTML` layout object, so it is on the trusted side of the
 boundary in Article V.
 
-**ADR:** docs/adr/0024-text-a-developer-writes-in-a-layout-is-drawn-as-markup.md
+**ADR:** docs/adr/0025-text-a-developer-writes-in-a-layout-is-drawn-as-markup.md
 
 ## D5. An inline field gives up its visible label and nothing else
 
@@ -178,7 +178,7 @@ error handling would drift, and ADR 0006 exists to prevent that.
 **Rejected:** template inheritance with a block for the input. A value set by a tag inside a
 block is gone when the block ends, so a child template could not say how the input is drawn.
 
-**ADR:** docs/adr/0022-a-layout-object-decorates-a-field-through-the-tag.md
+**ADR:** docs/adr/0023-a-layout-object-decorates-a-field-through-the-tag.md
 
 ## D13. Attached text is daisyUI's label inside an input, and the wrapper is a label element
 
@@ -189,7 +189,7 @@ input inside is drawn bare. The wrapper is a `<label>`, so the text is part of t
 **Rejected:** `aria-describedby` with an id per text, and `join` with a separate element.
 Reasons in research R2.
 
-**ADR:** docs/adr/0025-attached-text-and-joined-buttons.md
+**ADR:** docs/adr/0026-attached-text-and-joined-buttons.md
 
 ## D14. Buttons joined to a field are left as they were drawn
 
@@ -200,7 +200,7 @@ from the container alone.
 **Rejected:** drawing each button again from a copy with `join-item`. A second render evaluates
 already-rendered text as a template.
 
-**ADR:** docs/adr/0025-attached-text-and-joined-buttons.md
+**ADR:** docs/adr/0026-attached-text-and-joined-buttons.md
 
 ## D15. The frame takes `wrapper_class` from the context
 
@@ -210,7 +210,7 @@ element (research R5). FR-024 requires it and django-crispy-forms offers no othe
 **Rejected:** honouring it only for `PrependedText`, `AppendedText` and `PrependedAppendedText`,
 the three that always supply it. The other five that document it would ignore it without a word.
 
-**ADR:** docs/adr/0023-the-frame-takes-a-wrapper-class.md
+**ADR:** docs/adr/0024-the-frame-takes-a-wrapper-class.md
 
 ## D16. The parts of a multi-widget field are classed and named on a copy
 
@@ -221,7 +221,7 @@ field's label otherwise (research R6).
 **Rejected:** passing one class to `as_widget`. It replaces every part's own class, which is
 exactly what `MultiWidgetField` exists to set.
 
-**ADR:** docs/adr/0026-the-parts-of-a-multi-widget-field.md
+**ADR:** docs/adr/0027-the-parts-of-a-multi-widget-field.md
 
 ## D17. One standalone page for all six kinds
 
@@ -289,7 +289,7 @@ the `FieldWithButtons`, or for the form.
 
 `input_size` still does nothing. It holds another pack's class name (D8).
 
-**ADR:** docs/adr/0025-attached-text-and-joined-buttons.md
+**ADR:** docs/adr/0026-attached-text-and-joined-buttons.md
 
 ## D22. A multi-widget field states no choice of its own, and its parts state theirs
 
@@ -308,7 +308,7 @@ django-crispy-forms swaps in the field's hidden widget, which is itself a multi-
 validation then fails inside Django. The tests use another multi-widget for a hidden part, and the
 README says to hide the whole field.
 
-**ADR:** docs/adr/0026-the-parts-of-a-multi-widget-field.md
+**ADR:** docs/adr/0027-the-parts-of-a-multi-widget-field.md
 
 ## D23. UneditableField writes `disabled`
 
@@ -316,4 +316,4 @@ The plan has `UneditableField` pass `disabled` to the widget for one render (pla
 field*). ADR 0013 said the pack writes no attribute for the state. The design review asked for the
 record to be amended (DR-006).
 
-**ADR:** docs/adr/0027-uneditable-field-writes-disabled.md
+**ADR:** docs/adr/0028-uneditable-field-writes-disabled.md

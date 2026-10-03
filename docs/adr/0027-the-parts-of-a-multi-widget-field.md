@@ -1,4 +1,4 @@
-# ADR 0026 — The parts of a multi-widget field are classed and named on a copy
+# ADR 0027 — The parts of a multi-widget field are classed and named on a copy
 
 **Status:** accepted. Extends [ADR 0012](0012-widget-templates-through-a-copy-of-the-widget.md)
 

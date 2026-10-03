@@ -1,4 +1,4 @@
-# ADR 0027 — UneditableField is the one case where the pack writes disabled
+# ADR 0028 — UneditableField is the one case where the pack writes disabled
 
 **Status:** accepted. Amends [ADR 0013](0013-disabled-and-read-only-are-drawn-from-the-attribute.md), which said the pack adds no attribute for the disabled state
 
