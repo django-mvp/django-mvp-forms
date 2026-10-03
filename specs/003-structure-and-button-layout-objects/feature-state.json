@@ -252,7 +252,8 @@
             "commands": [
               "uv run pytest tests/test_pack/test_raw_content.py tests/test_pack/test_buttons.py (63 passed, exit 0)",
               "uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope (439 passed, exit 0)",
-              "uv run pre-commit run --all-files (clean)"
+              "uv run pre-commit run --all-files (clean)",
+              "forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-003-structure-and-button-layout-objects --base origin/main (conformance, docs, lint, typecheck, test, build all passed, exit 0)"
             ],
             "code": [
               "mvp_forms/templates/daisyui/layout/baseinput.html:2",
