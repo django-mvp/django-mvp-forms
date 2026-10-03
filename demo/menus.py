@@ -61,6 +61,11 @@ AppMenu.extend(
             extra_context={"label": "Inline choices", "icon": "inline-choices"},
         ),
         MenuItem(
+            name="field-with-buttons",
+            view_name="field-with-buttons",
+            extra_context={"label": "Field with buttons", "icon": "field-with-buttons"},
+        ),
+        MenuItem(
             name="choices",
             view_name="choices",
             extra_context={"label": "Size, colour and variant", "icon": "choices"},

@@ -213,8 +213,28 @@
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestFieldWithButtonsPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandaloneFieldWithButtons",
+              "tests/test_demo.py::TestDecoratedFieldsStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py tests/test_smoke.py -q -n auto --dist loadscope (exit 0, 931 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:704",
+              "demo/views.py:555",
+              "demo/views.py:585",
+              "demo/urls.py:62",
+              "demo/templates/demo/field_with_buttons.html:1"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

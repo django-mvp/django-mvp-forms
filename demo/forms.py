@@ -5,6 +5,7 @@ from crispy_forms.bootstrap import (
     AccordionGroup,
     Alert,
     AppendedText,
+    FieldWithButtons,
     FormActions,
     InlineCheckboxes,
     InlineRadios,
@@ -698,6 +699,51 @@ class InlineChoicesForm(forms.Form):
         self.helper.layout = Layout(InlineRadios("size"), InlineCheckboxes("extras"))
         if posts:
             self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class FieldWithButtonsForm(forms.Form):
+    """A form whose fields have buttons joined to their inputs.
+
+    One field has a button and the other has three. Both are required, so a bound
+    form with nothing in it comes back with an error in each frame. Its layout is
+    built for each instance, and every id and button name in it carries the form's
+    prefix, so two of these forms on one page repeat no id. The form must be given
+    a prefix.
+    """
+
+    search = forms.CharField(label=_("Search"), help_text=_("Words to look for"))
+    code = forms.CharField(label=_("Code"))
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in every id and button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            FieldWithButtons(
+                "search",
+                StrictButton(_("Go"), css_id=f"{prefix}-go"),
+                css_id=f"{prefix}-search-group",
+            ),
+            FieldWithButtons(
+                "code",
+                StrictButton(_("Apply"), css_id=f"{prefix}-apply"),
+                StrictButton(_("Clear"), css_id=f"{prefix}-clear"),
+                StrictButton(_("Help"), css_id=f"{prefix}-help"),
+                css_id=f"{prefix}-code-group",
+            ),
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{prefix}-submit", _("Submit")))
 
 
 ORDER_LINE_LIMIT = 10000

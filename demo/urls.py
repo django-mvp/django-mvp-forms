@@ -10,6 +10,7 @@ from demo.views import (
     ChoicesView,
     ContainersStandaloneView,
     DecoratedFieldsStandaloneView,
+    FieldWithButtonsView,
     InlineChoicesView,
     LayoutObjectsView,
     ModalView,
@@ -57,6 +58,9 @@ urlpatterns = [
     ),
     path("attached-text/", AttachedTextView.as_view(), name="attached-text"),
     path("inline-choices/", InlineChoicesView.as_view(), name="inline-choices"),
+    path(
+        "field-with-buttons/", FieldWithButtonsView.as_view(), name="field-with-buttons"
+    ),
     path(
         "decorated-fields/standalone/",
         DecoratedFieldsStandaloneView.as_view(),

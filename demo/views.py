@@ -18,6 +18,7 @@ from demo.forms import (
     ButtonBarForm,
     ChoiceInputsForm,
     ChosenGroupsForm,
+    FieldWithButtonsForm,
     HelperButtonsForm,
     InlineChoicesForm,
     InputKindsForm,
@@ -551,8 +552,47 @@ class InlineChoicesView(InlineChoicesMixin, MVPTemplateView):
     breadcrumbs = [{"text": "Inline choices"}]
 
 
+class FieldWithButtonsMixin:
+    """The forms the field-with-buttons page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    buttons_prefix = "buttons"
+    buttons_failing_prefix = "failing-buttons"
+    buttons_failing_data = {"failing-buttons-search": "", "failing-buttons-code": ""}
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault(
+            "buttons_form", FieldWithButtonsForm(prefix=self.buttons_prefix)
+        )
+        kwargs["failing_buttons_form"] = FieldWithButtonsForm(
+            self.buttons_failing_data, prefix=self.buttons_failing_prefix, posts=False
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = FieldWithButtonsForm(request.POST, prefix=self.buttons_prefix)
+        return self.render_to_response(self.get_context_data(buttons_form=form))
+
+
+class FieldWithButtonsView(FieldWithButtonsMixin, MVPTemplateView):
+    """A field with buttons joined to its input, inside the application shell."""
+
+    template_name = "demo/field_with_buttons.html"
+    page_title = "Field with buttons"
+    page_subtitle = "An input with one button or several joined to it"
+    breadcrumbs = [{"text": "Field with buttons"}]
+
+
 class DecoratedFieldsStandaloneView(
-    InlineChoicesMixin, AttachedTextMixin, TemplateView
+    FieldWithButtonsMixin, InlineChoicesMixin, AttachedTextMixin, TemplateView
 ):
     """The decorated-field forms for a host project without django-mvp or Cotton.
 
@@ -564,6 +604,8 @@ class DecoratedFieldsStandaloneView(
 
     def post(self, request, *args, **kwargs):
         """Bind the form whose submit button was pressed and no other."""
+        if f"{self.buttons_prefix}-submit" in request.POST:
+            return FieldWithButtonsMixin.post(self, request, *args, **kwargs)
         if f"{self.inline_prefix}-submit" in request.POST:
             return InlineChoicesMixin.post(self, request, *args, **kwargs)
         return AttachedTextMixin.post(self, request, *args, **kwargs)

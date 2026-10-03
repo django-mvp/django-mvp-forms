@@ -128,6 +128,7 @@ EASY_ICONS = {
             "alert": "bi bi-exclamation-triangle",
             "attached-text": "bi bi-currency-dollar",
             "inline-choices": "bi bi-ui-radios",
+            "field-with-buttons": "bi bi-search",
             "choices": "bi bi-palette",
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",

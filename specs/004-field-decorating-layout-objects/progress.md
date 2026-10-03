@@ -41,3 +41,10 @@ Did: FieldWithButtons is drawn as one `join` element around the input (carrying 
 Verified: red first, 24 of 26 tests in test_field_with_buttons.py failed before the template existed; `uv run pytest tests/test_pack/test_field_with_buttons.py tests/test_pack/test_attached_text.py tests/test_pack/test_independence.py tests/test_pack/test_documented_examples.py tests/test_templatetags/test_daisyui.py -q` exit 0, 503 passed; `uv run pre-commit run --all-files` exit 0; `uv run mypy` exit 0.
 Next: T006, the field-with-buttons demo page and its forms on the standalone page.
 Watch: the join element is inside the `field_class` div and wraps the input of any widget with a template, so on a radio group it holds the group and the buttons. A single checkbox gets `join-item` as the plan says.
+
+## 2026-10-03T19:10:17Z · Implementer US3 · T006
+
+Did: the field-with-buttons demo page: route `field-with-buttons`, `FieldWithButtonsForm` (a field with one button and a field with three, every id prefixed), `FieldWithButtonsMixin` and `FieldWithButtonsView`, the shell template on Cotton components, a menu item and an icon name, and both forms on `decorated-fields-standalone`. `DecoratedFieldsStandaloneView.post` binds the buttons form when its submit button is named. README demo section lists the route, CHANGELOG has an entry.
+Verified: red first, 31 failed and 12 errored before the page existed; `uv run pytest tests/test_demo.py tests/test_smoke.py -q -n auto --dist loadscope` exit 0, 931 passed; `uv run pre-commit run --all-files` exit 0; `uv run mypy` exit 0.
+Next: the full verify, then the completion report.
+Watch: the buttons in the demo are `StrictButton` of the default type `button`, so they post nothing; the form's own submit is the one the standalone view reads.
