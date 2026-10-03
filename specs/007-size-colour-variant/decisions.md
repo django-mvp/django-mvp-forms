@@ -137,8 +137,9 @@ page is a catalogue of them inside the demo project's existing page frame.
 
 **Chosen.** `helper.daisyui = FormChoices(...)`. Under the crispy tag the value reaches every
 template through the context, because django-crispy-forms passes a helper's own attributes into
-it. Under the crispy filter and `|as_crispy_field`, which never read a helper, the pack reads
-`field.form.helper`.
+it. Under the crispy filter, which never reads a helper, the pack reads `field.form.helper`. The
+statement is set on the helper instance, because django-crispy-forms passes instance attributes
+into the context and not class attributes.
 
 **Why.** A button in a layout is drawn before the form is in the context, so an attribute on the
 form cannot reach it. The helper's attributes can. One constructor refuses a keyword it does not
@@ -202,7 +203,8 @@ and the rest of the Python the developer writes, spells it `color`.
 **Chosen.** A filter turns the file input's class string into the checkbox's.
 
 **Why.** SC-003 leaves no visible input at the ordinary size, and only the widget's final
-attributes reach the pack's widget template (research R7).
+attributes reach the pack's widget template (research R7). `file-input-error` is never mapped,
+so the checkbox is not marked in error, as today, and a chosen colour of error does not reach it.
 
 ## D18. A `Choice` applies to everything inside it, and an inner one wins
 
@@ -211,3 +213,30 @@ is merged over it, each of the three kinds separately. One `color` on a `Choice`
 colour for a field inside it and the button's for a button inside it.
 
 **Why.** It falls out of placing the choice in the context, and refusing it would take code.
+
+## D19. A button given a colour drops the default `btn-primary`
+
+**Chosen.** When a colour resolves for a `Submit`, the `btn-primary` django-crispy-forms writes by
+default is left out. One the developer passed as `css_class` is kept. With no colour resolved
+nothing changes.
+
+**Why.** The same reasoning as D14: two colour modifiers on one element leave the result to the
+order of daisyUI's rules.
+
+## D20. Design review, 2026-10-03
+
+One reviewer, three lenses: approve, with four medium and three low findings and no high or
+critical one. All seven were applied to the plan and tasks before any code was written.
+
+- DR-001 (medium): the removal checkbox would have gained `checkbox-error` on a form that states
+  nothing. The filter never maps `file-input-error` (D17).
+- DR-002 (medium): comparing an empty statement with none does not prove SC-005. T002 and T004
+  now compare every state's markup before and after the task.
+- DR-003 (medium): a `Submit` given a colour would carry two colour modifiers (D19).
+- DR-004 (medium): a class attribute on a helper subclass reaches inputs and not layout buttons.
+  The statement is set on the instance, and the README says so (D11).
+- DR-005 (low): a page variable named `daisyui` is treated as absent; only the helper's own
+  attribute raises `TypeError`.
+- DR-006 (low): the `class` attribute of a `StrictButton` is matched with its leading space.
+  Watch item in T004.
+- DR-007 (low): the demo's per-size and per-colour forms hold one input and one button.

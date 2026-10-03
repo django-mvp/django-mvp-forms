@@ -2,12 +2,22 @@
   "feature": "007-size-colour-variant",
   "branch": "007-size-colour-variant",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "QUEUED",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
       "at": "2026-10-03T15:06:21Z",
       "note": "specification approved by delegated review at commit b5bc8e7e995a81c6b4107a6f0721eef4ec92b47d, on pull request #23; epic #11, stories #36 to #40"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T17:42:18Z",
+      "note": "plan.md, research.md, tasks.md: 5 stories, 6 tasks; continues on pull request #23"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T17:42:28Z",
+      "note": "one reviewer, three lenses"
     }
   ],
   "gates": {
@@ -19,12 +29,25 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-03T17:50:39Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T17:50:39Z",
+      "self_resolved": [
+        "DR-001 (medium) removal checkbox never takes file-input-error: applied to plan, research and T002 (D17)",
+        "DR-002 (medium) SC-005 checked by comparing every state's markup before and after T002 and T004: applied to plan and tasks",
+        "DR-003 (medium) a Submit given a colour drops the default btn-primary: applied to plan and T004 (D19)",
+        "DR-004 (medium) the statement is set on the helper instance, README says so: applied to plan and T002 (D11)",
+        "DR-005 (low) a page variable named daisyui is treated as absent: applied to plan and T005",
+        "DR-006 (low) StrictButton class attribute matched with its leading space: watch item in T004",
+        "DR-007 (low) demo per-size and per-colour forms hold one input and one button: applied to plan"
+      ]
     }
   },
   "stories": [
@@ -119,7 +142,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

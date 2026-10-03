@@ -59,7 +59,7 @@ Options weighed:
 **Chosen: one attribute on the form's helper, `helper.daisyui`, holding a `FormChoices`.** It is
 the only home every drawing path can read, it uses the mechanism django-crispy-forms documents,
 and it needs no helper subclass. Under the tag the value arrives in the context. Under the filter
-and `|as_crispy_field` the pack reads `field.form.helper`, the standard name the tag itself falls
+the pack reads `field.form.helper`, the standard name the tag itself falls
 back to.
 
 A plain attribute per choice (`helper.size = "sm"`) was rejected: a misspelt attribute name does
@@ -141,8 +141,9 @@ the field or button, so a test reads those and not the message's wording.
 SC-003 leaves no visible input at the ordinary size. The removal checkbox is drawn by the pack's
 template from a widget context Django builds, and nothing but the widget's final attributes
 reaches that template. **Chosen: a filter in the pack's tag library turns the file input's class
-string into the checkbox's**, mapping each size and colour modifier through the table. The
-checkbox has no variant and is not marked in error today, and neither changes.
+string into the checkbox's**, mapping each size and colour modifier through the table, except
+`file-input-error`. The checkbox has no variant and is not marked in error today, and neither
+changes.
 
 ## R8. What stays out
 

@@ -74,10 +74,15 @@ Plan, *`FieldInput`*, *The removal checkbox*; research R1, R5, R7.
   keeps its error modifier and drops the colour (FR-018); a disabled and a read-only field keep
   their attribute (FR-019); the developer's own classes are kept; every option of a group and
   every select of a date carries the modifier (FR-017); the removal checkbox takes the size and
-  the colour.
+  the colour; an optional clearable file field that holds a file and is in error, with nothing
+  stated, draws its removal checkbox with the class it has today.
 - `STATES` in `test_independence.py` gains a form with every choice stated.
+- Verification, reported and not committed: render every entry of `STATES` as it stands at the
+  task's base commit, before and after the task, and compare the outputs as strings (SC-005).
 - README: a section "Size, colour and variant" in the public surface, covering the form-wide
-  statement for inputs and the names allowed. CHANGELOG entry. `CONTEXT.md` gains the four terms
+  statement for inputs and the names allowed, and that it is set on the helper instance, with
+  the reason. The README and `CONTEXT.md` do not call a daisyUI class family a component.
+  CHANGELOG entry. `CONTEXT.md` gains the four terms
   of the spec (size, colour, variant, choice).
 
 ---
@@ -128,7 +133,12 @@ Plan, *Buttons*; research R1, R2.
   and not inputs; `color` and `variant` reach inputs and not buttons; a `Choice` around one
   button; a button added to the helper takes the form's choices; the same markup as before with
   nothing stated; a `Hidden` is unchanged; the developer's `css_class`, `css_id` and attributes
-  are kept on each kind; a page whose form is not named `form` in the context.
+  are kept on each kind, including an attribute whose name ends in `class`
+  (`data_class="x"`); a `Submit` under `button_color` carries the chosen colour and not the
+  default `btn-primary`, and one given `css_class="btn-primary"` keeps it; a page whose form is
+  not named `form` in the context.
+- Verification, reported and not committed: the same before-and-after comparison of `STATES` as
+  T002.
 - `STATES` gains a buttoned form with choices.
 - README: buttons in the "Size, colour and variant" section. CHANGELOG entry.
 
@@ -152,7 +162,8 @@ Plan, *`InvalidChoice`*, *`Modifiers`* rules 3 and 4; research R6.
   checkbox, a radio group and a checkbox group with no error; the same variant on one checkbox
   raising; a choice on a field whose widget the pack does not cover raising; the error is raised
   when the frame is the template that draws the field (not swallowed by `{% if %}`); a
-  `helper.daisyui` that is not a `FormChoices` raising `TypeError`.
+  `helper.daisyui` that is not a `FormChoices` raising `TypeError` when a form is drawn (T001
+  holds the unit case); a page variable named `daisyui` that is not a `FormChoices` is ignored.
 - Close whatever those tests find. The resolution rules were built in T001 to T004; this task is
   where each is proved through a drawn form and where `target` is proved for every way of
   stating.

@@ -89,7 +89,7 @@ mvp_forms/
   templates/daisyui/widgets/clearable_file_input.html   removal checkbox takes size and colour
 demo/
   forms.py, views.py, urls.py, menus.py             one page, in the shell and standalone
-  templates/demo/choices.html, choices_standalone.html
+  templates/demo/choices.html, choices_standalone.html, overview.html
 tests/
   test_choices.py                    mirrors mvp_forms/choices.py
   test_templatetags/test_daisyui.py  FieldInput and DrawnButton with choices
@@ -131,7 +131,8 @@ the statement was the form's). Its message is built from those four.
   4. A name the component has no modifier for is passed over when the statement was the form's,
      and raises when it was the field's or button's own, with `allowed` listing what that
      component has. A widget with no component at all is the same case with nothing allowed.
-  5. A field drawn as in error leaves the colour out.
+  5. A field drawn as in error leaves the colour out. This comes after rule 3, so a misspelt
+     colour on a field in error is still reported.
 
 **`Choice(LayoutObject)`**: `Choice(*fields, size=INHERIT, color=INHERIT, variant=INHERIT)`.
 
@@ -139,7 +140,8 @@ the statement was the form's). Its message is built from those four.
 - In a layout it renders what it holds, in order, with itself placed in the context under
   `Choice.context_name` (`"daisyui_choice"`). A `Choice` inside a `Choice` is merged over the
   outer one, each kind separately, before it is placed. `render` pushes one context layer and
-  removes that same layer afterwards by identity, because django-crispy-forms leaves layers of
+  removes that same layer afterwards by identity (an `is` comparison, since `list.remove`
+  compares by equality), because django-crispy-forms leaves layers of
   its own on top (research R3).
 - It applies to every field and button inside it, at any depth, so it may hold a `Row` or a
   `FormActions`.
@@ -151,9 +153,17 @@ button_variant=None, fields=None)`. Set as `helper.daisyui`. `size` reaches inpu
 `fields` maps a field's name to a `Choice`.
 
 - `FormChoices.attribute` is `"daisyui"`, the helper attribute and context name.
-- A classmethod finds the statement for a draw: the context's value under that name, else the
-  `daisyui` attribute of `form.helper` when a form is at hand, else nothing. A value that is not a
-  `FormChoices` raises `TypeError`.
+- A classmethod finds the statement for a draw: the context's value under that name when it is a
+  `FormChoices`, else the `daisyui` attribute of `form.helper` when a form is at hand, else
+  nothing. The context is a copy of the host page's, so a value there that is not a `FormChoices`
+  is the page's own and is treated as absent. A `form.helper.daisyui` that is not a `FormChoices`
+  raises `TypeError`. Likewise only a `Choice` is taken from `daisyui_choice`. These two names are
+  the stated exception to ADR 0006's rule on bare names, and the record written at convergence
+  says so.
+- The statement is set on the helper **instance** (`self.helper.daisyui = ...`).
+  django-crispy-forms passes a helper's instance attributes into the context and not its class
+  attributes, so a class attribute on a `FormHelper` subclass would reach the inputs and not the
+  buttons of a layout. The README says so.
 
 ### The precedence, for one field
 
@@ -181,7 +191,11 @@ placed `Choice`. It resolves the `btn` modifiers in `__init__` from `size`, `but
 `content` for a `StrictButton`.
 
 - `css_class`: for `Submit`, `Reset` and `Button`. The button's `field_classes` cleaned as
-  `daisyui_classes` cleans them today, then the modifiers, de-duplicated.
+  `daisyui_classes` cleans them today, then the modifiers, de-duplicated. When a colour resolves
+  for the button, the `btn-primary` that django-crispy-forms gives a `Submit` by default (the
+  button class's own `field_classes`) is left out, so one colour is written and the result does
+  not rest on the order of daisyUI's rules. A `btn-primary` the developer passed as `css_class`
+  is kept, and with no colour resolved the `Submit` keeps its default.
 - `flat_attrs`: for `StrictButton`. The button's own `flat_attrs` with the modifiers added inside
   its `class` attribute, and returned unchanged when there are none. The string was escaped by
   `flatatt`, so a quote can only end an attribute, and a `StrictButton` always has a `class`.
@@ -198,7 +212,9 @@ The `daisyui_classes` filter stays: `multifield.html` uses it.
 `clearable_file_input.html` writes the removal checkbox's class through a new filter,
 `daisyui_removal_checkbox`, applied to the file input's class string. It returns `checkbox` and
 the checkbox's modifier for each size and colour modifier of `file-input` found in the string
-(research R7). With nothing stated it returns `checkbox`, as today.
+(research R7), except `file-input-error`, which is never mapped: it is the mark of a field in
+error, and the removal checkbox is not marked in error today. With nothing stated it returns
+`checkbox`, as today, whether or not the field is in error.
 
 ### What does not change
 
@@ -215,8 +231,9 @@ build alone.
 
 The forms are generated from the table, so the page cannot fall behind it:
 
-- one small form per size, each with one of every kind of input and a button
+- one small form per size, each with one input and one button
 - one per colour, the same
+- one form holding every kind of input at one stated size
 - one for the input variant, and one button bar holding a button in each button variant
 - one form that states choices for the form, overrides one field with a `Choice` in its layout,
   one field by name, undoes the colour for one field, and overrides one button
@@ -229,8 +246,12 @@ The forms are generated from the table, so the page cannot fall behind it:
   are data.
 - `tests/test_templatetags/test_daisyui.py`: `FieldInput` and `DrawnButton` with choices.
 - `tests/test_pack/test_choices.py`: one class per story, each scenario of the spec drawn through
-  the filter, the tag or both as the scenario says. SC-005 is asserted by drawing the same form
-  with and without an empty `FormChoices` and comparing the markup.
+  the filter, the tag or both as the scenario says. One test draws the same form with and
+  without an empty `FormChoices` and compares the markup, which proves an empty statement equals
+  no statement.
+- SC-005 is checked, not committed as a test: every entry of `STATES` in
+  `tests/test_pack/test_independence.py` is rendered at the feature's base commit and again after
+  T002 and after T004, and the two outputs are compared as strings.
 - `tests/test_pack/test_independence.py`, by addition: every class in the table is in daisyUI's
   list (FR-016, SC-004); new entries in `STATES` for a form with every choice stated.
 - `tests/test_pack/test_documented_examples.py`: the README's example draws.
