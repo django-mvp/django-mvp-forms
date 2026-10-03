@@ -12,6 +12,7 @@ from demo.views import (
     DecoratedFieldsStandaloneView,
     FieldWithButtonsView,
     InlineChoicesView,
+    InlineFieldView,
     LayoutObjectsView,
     ModalView,
     OverviewView,
@@ -63,6 +64,7 @@ urlpatterns = [
         "field-with-buttons/", FieldWithButtonsView.as_view(), name="field-with-buttons"
     ),
     path("uneditable-field/", UneditableFieldView.as_view(), name="uneditable-field"),
+    path("inline-field/", InlineFieldView.as_view(), name="inline-field"),
     path(
         "decorated-fields/standalone/",
         DecoratedFieldsStandaloneView.as_view(),

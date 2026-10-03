@@ -130,6 +130,7 @@ EASY_ICONS = {
             "inline-choices": "bi bi-ui-radios",
             "field-with-buttons": "bi bi-search",
             "uneditable-field": "bi bi-lock",
+            "inline-field": "bi bi-input-cursor",
             "choices": "bi bi-palette",
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",

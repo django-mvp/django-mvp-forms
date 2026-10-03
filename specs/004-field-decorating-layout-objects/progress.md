@@ -62,3 +62,10 @@ Did: route `uneditable-field` (UneditableFieldView, UneditableFieldMixin, Unedit
 Verified: `uv run pytest tests/test_demo.py tests/test_pack/test_documented_examples.py -q` 1031 passed (the new demo tests failed first on the missing route). pre-commit clean.
 Next: full verify, then the report.
 Watch: the demo has no failing-form state for this page, as the task says.
+
+## 2026-10-03T19:25:14Z · Implementer US5 · T009
+
+Did: InlineField drawn by layout/inline_field.html (daisyui_field unlabelled=True); FieldInput gains unlabelled (show_labels off except single checkbox; placeholder from label on input/textarea); frame and body read drawn.show_labels. README, CHANGELOG, state in STATES, README example, docstring example.
+Verified: uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope: 1589 passed; pre-commit clean; mypy clean.
+Next: T010 demo page inline-field and its forms on the standalone page.
+Watch: table_inline_formset passes form_show_labels=False, still read by the tag.

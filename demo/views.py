@@ -21,6 +21,7 @@ from demo.forms import (
     FieldWithButtonsForm,
     HelperButtonsForm,
     InlineChoicesForm,
+    InlineFieldForm,
     InputKindsForm,
     LayoutObjectsForm,
     ModalForm,
@@ -626,7 +627,52 @@ class UneditableFieldView(UneditableFieldMixin, MVPTemplateView):
     breadcrumbs = [{"text": "Uneditable field"}]
 
 
+class InlineFieldMixin:
+    """The forms the inline-field page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    inline_field_prefix = "inline-field"
+    inline_field_failing_prefix = "failing-inline-field"
+    inline_field_failing_data = {
+        "failing-inline-field-email": "",
+        "failing-inline-field-city": "",
+    }
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault(
+            "inline_field_form", InlineFieldForm(prefix=self.inline_field_prefix)
+        )
+        kwargs["failing_inline_field_form"] = InlineFieldForm(
+            self.inline_field_failing_data,
+            prefix=self.inline_field_failing_prefix,
+            posts=False,
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = InlineFieldForm(request.POST, prefix=self.inline_field_prefix)
+        return self.render_to_response(self.get_context_data(inline_field_form=form))
+
+
+class InlineFieldView(InlineFieldMixin, MVPTemplateView):
+    """Fields with no visible label, inside the application shell."""
+
+    template_name = "demo/inline_field.html"
+    page_title = "Inline field"
+    page_subtitle = "Fields named by their placeholder and no label"
+    breadcrumbs = [{"text": "Inline field"}]
+
+
 class DecoratedFieldsStandaloneView(
+    InlineFieldMixin,
     UneditableFieldMixin,
     FieldWithButtonsMixin,
     InlineChoicesMixin,
@@ -643,6 +689,8 @@ class DecoratedFieldsStandaloneView(
 
     def post(self, request, *args, **kwargs):
         """Bind the form whose submit button was pressed and no other."""
+        if f"{self.inline_field_prefix}-submit" in request.POST:
+            return InlineFieldMixin.post(self, request, *args, **kwargs)
         if f"{self.uneditable_prefix}-submit" in request.POST:
             return UneditableFieldMixin.post(self, request, *args, **kwargs)
         if f"{self.buttons_prefix}-submit" in request.POST:

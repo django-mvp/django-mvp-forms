@@ -8,6 +8,7 @@ from crispy_forms.bootstrap import (
     FieldWithButtons,
     FormActions,
     InlineCheckboxes,
+    InlineField,
     InlineRadios,
     Modal,
     PrependedAppendedText,
@@ -779,6 +780,40 @@ class UneditableFieldForm(forms.Form):
         self.helper.attrs = {"novalidate": True}
         self.helper.layout = Layout(UneditableField("account"), "nickname")
         self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class InlineFieldForm(forms.Form):
+    """A short form of fields drawn with no visible label.
+
+    The email and the city are required, so a bound form with nothing in it
+    comes back with an error in each frame. The checkbox keeps its label. Its
+    layout is built for each instance, and every id and button name in it
+    carries the form's prefix, so two of these forms on one page repeat no id.
+    The form must be given a prefix.
+    """
+
+    email = forms.EmailField(label=_("Email"))
+    city = forms.CharField(label=_("City"))
+    remember = forms.BooleanField(label=_("Remember me"), required=False)
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Build the layout, with the prefix in the button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            InlineField("email"), InlineField("city"), InlineField("remember")
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
 
 
 ORDER_LINE_LIMIT = 10000

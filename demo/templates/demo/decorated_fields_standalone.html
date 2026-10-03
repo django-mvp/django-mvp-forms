@@ -17,6 +17,7 @@
         <a class="link" href="{% url 'inline-choices' %}">The inline choices inside the django-mvp shell</a>
         <a class="link" href="{% url 'field-with-buttons' %}">The field with buttons inside the django-mvp shell</a>
         <a class="link" href="{% url 'uneditable-field' %}">The uneditable field inside the django-mvp shell</a>
+        <a class="link" href="{% url 'inline-field' %}">The inline field inside the django-mvp shell</a>
       </p>
       <section class="card card-border bg-base-100">
         <div class="card-body">
@@ -58,6 +59,18 @@
         <div class="card-body">
           <h2 class="card-title">Uneditable field</h2>
           {% crispy uneditable_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Inline field</h2>
+          {% crispy inline_field_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Inline field in a form that already fails</h2>
+          {% crispy failing_inline_field_form %}
         </div>
       </section>
     </main>

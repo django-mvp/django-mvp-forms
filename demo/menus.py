@@ -71,6 +71,11 @@ AppMenu.extend(
             extra_context={"label": "Uneditable field", "icon": "uneditable-field"},
         ),
         MenuItem(
+            name="inline-field",
+            view_name="inline-field",
+            extra_context={"label": "Inline field", "icon": "inline-field"},
+        ),
+        MenuItem(
             name="choices",
             view_name="choices",
             extra_context={"label": "Size, colour and variant", "icon": "choices"},
