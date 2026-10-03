@@ -5,7 +5,14 @@ import tomllib
 
 import pytest
 
-from support_window import DECLARATION, ROOT, InvalidWindow, Window, relative_links
+from support_window import (
+    DECLARATION,
+    ROOT,
+    InvalidWindow,
+    Window,
+    installed_versions,
+    relative_links,
+)
 
 MAPPING = {
     "python": ["3.12", "3.13"],
@@ -45,6 +52,17 @@ def declared():
 @pytest.fixture
 def pyproject():
     with (ROOT / "pyproject.toml").open("rb") as handle:
+        return tomllib.load(handle)
+
+
+@pytest.fixture
+def readme():
+    return (ROOT / "README.md").read_text()
+
+
+@pytest.fixture
+def lock():
+    with (ROOT / "uv.lock").open("rb") as handle:
         return tomllib.load(handle)
 
 
@@ -250,3 +268,168 @@ class TestReadmeLinks:
 
     def test_a_readme_with_no_section_has_no_relative_link(self):
         assert relative_links("[a link](docs/support.md)") == []
+
+
+class TestReadme:
+    def test_the_repositorys_readme_agrees_with_its_declaration(self, declared, readme):
+        window = Window.from_mapping(declared)
+
+        assert window.readme_disagreements(readme) == []
+
+    def test_a_django_series_added_to_the_window_is_named(self, declared, readme):
+        declared["django"]["versions"].append("6.2")
+        window = Window.from_mapping(declared)
+
+        assert ("README", "django", "6.2") in found(window.readme_disagreements(readme))
+
+    def test_a_django_series_removed_from_the_window_is_named(self, declared, readme):
+        removed = declared["django"]["versions"].pop()
+        for series in declared["django-crispy-forms"]["pairs"].values():
+            series.remove(removed)
+        window = Window.from_mapping(declared)
+
+        assert ("README", "django", removed) in found(
+            window.readme_disagreements(readme)
+        )
+
+    def test_a_crispy_forms_release_added_to_the_window_is_named(
+        self, declared, readme
+    ):
+        crispy = declared["django-crispy-forms"]
+        crispy["versions"].append("2.8")
+        crispy["pairs"]["2.8"] = declared["django"]["versions"]
+        window = Window.from_mapping(declared)
+
+        assert ("README", "django-crispy-forms", "2.8") in found(
+            window.readme_disagreements(readme)
+        )
+
+    def test_a_raised_daisyui_minimum_names_both_versions_that_differ(
+        self, declared, readme
+    ):
+        declared["daisyui"]["minimum"] = "5.1"
+        window = Window.from_mapping(declared)
+
+        assert {
+            d.version
+            for d in window.readme_disagreements(readme)
+            if d.package == "daisyui"
+        } == {"5.0", "5.1"}
+
+    def test_a_lowered_daisyui_newest_names_both_versions_that_differ(
+        self, declared, readme
+    ):
+        declared["daisyui"]["newest"] = "5.6"
+        window = Window.from_mapping(declared)
+
+        assert {
+            d.version
+            for d in window.readme_disagreements(readme)
+            if d.package == "daisyui"
+        } == {"5.6", "5.7"}
+
+    def test_a_python_version_added_to_the_window_is_named(self, declared, readme):
+        declared["python"].append("3.14")
+        window = Window.from_mapping(declared)
+
+        assert ("README", "python", "3.14") in found(
+            window.readme_disagreements(readme)
+        )
+
+    def test_a_django_series_removed_from_a_pair_is_named(self, declared, readme):
+        declared["django-crispy-forms"]["pairs"]["2.7"].remove("6.1")
+        window = Window.from_mapping(declared)
+
+        assert ("README", "django", "6.1") in found(window.readme_disagreements(readme))
+
+    def test_a_pair_removed_from_the_window_is_named(self, declared, readme):
+        declared["django-crispy-forms"]["pairs"] = {}
+        window = Window.from_mapping(declared)
+
+        assert ("README", "django-crispy-forms", "2.7") in found(
+            window.readme_disagreements(readme)
+        )
+
+    def test_a_readme_with_no_marked_block_is_a_disagreement(self, declared):
+        window = Window.from_mapping(declared)
+
+        assert ("README", "django", "5.2") in found(
+            window.readme_disagreements("# a README with no statement")
+        )
+
+
+def locked(lock, package, version):
+    lock = copy.deepcopy(lock)
+    for entry in lock["package"]:
+        if entry["name"] == package:
+            entry["version"] = version
+    return lock
+
+
+class TestLockfile:
+    def test_the_repositorys_lockfile_agrees_with_its_declaration(self, declared, lock):
+        window = Window.from_mapping(declared)
+
+        assert window.lockfile_disagreements(lock) == []
+
+    def test_a_locked_django_outside_the_window_is_named(self, declared, lock):
+        window = Window.from_mapping(declared)
+
+        assert ("lockfile", "django", "7.0.1") in found(
+            window.lockfile_disagreements(locked(lock, "django", "7.0.1"))
+        )
+
+    def test_a_locked_crispy_forms_outside_the_window_is_named(self, declared, lock):
+        window = Window.from_mapping(declared)
+
+        assert ("lockfile", "django-crispy-forms", "3.0") in found(
+            window.lockfile_disagreements(locked(lock, "django-crispy-forms", "3.0"))
+        )
+
+
+class TestInstalled:
+    def test_the_versions_this_run_is_on_are_inside_the_window(self, declared):
+        window = Window.from_mapping(declared)
+
+        assert window.installed_disagreements(installed_versions(), {}) == []
+
+    def test_an_installed_django_outside_the_window_is_named(self, declared):
+        window = Window.from_mapping(declared)
+        installed = {"django": "7.0", "django-crispy-forms": "2.7"}
+
+        assert ("installed", "django", "7.0") in found(
+            window.installed_disagreements(installed, {})
+        )
+
+    def test_an_installed_django_that_is_not_the_one_asked_for_is_named(self, declared):
+        window = Window.from_mapping(declared)
+        installed = {"django": "6.1.1", "django-crispy-forms": "2.7"}
+
+        assert ("installed", "django", "6.1.1") in found(
+            window.installed_disagreements(installed, {"django": "5.2"})
+        )
+
+    def test_a_patch_release_of_the_django_asked_for_is_no_disagreement(self, declared):
+        window = Window.from_mapping(declared)
+        installed = {"django": "5.2.17", "django-crispy-forms": "2.7"}
+
+        assert window.installed_disagreements(installed, {"django": "5.2"}) == []
+
+    def test_an_installed_crispy_forms_that_is_not_the_one_asked_for_is_named(
+        self, declared
+    ):
+        window = Window.from_mapping(declared)
+        installed = {"django": "5.2.17", "django-crispy-forms": "2.8"}
+
+        assert ("installed", "django-crispy-forms", "2.8") in found(
+            window.installed_disagreements(installed, {"django-crispy-forms": "2.7"})
+        )
+
+    def test_the_crispy_forms_release_asked_for_is_no_disagreement(self, declared):
+        window = Window.from_mapping(declared)
+        installed = {"django": "5.2.17", "django-crispy-forms": "2.7"}
+
+        assert (
+            window.installed_disagreements(installed, {"django-crispy-forms": "2.7"})
+            == []
+        )

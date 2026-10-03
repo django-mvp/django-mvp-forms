@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import re
 import tomllib
+from collections.abc import Mapping
 from dataclasses import dataclass
+from importlib import metadata
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +18,11 @@ CLAUSE = re.compile(r"\s*(==|!=|~=|>=|<=|>|<)\s*([\w.*]+)\s*")
 REQUIREMENT = re.compile(r"\s*([A-Za-z0-9][A-Za-z0-9._-]*)\s*(.*)")
 DJANGO_CLASSIFIER = re.compile(r"Framework :: Django :: (\d+\.\d+)")
 PYTHON_CLASSIFIER = re.compile(r"Programming Language :: Python :: (\d+\.\d+)")
+VERSIONS = re.compile(r"\d+\.\d+")
+SUPPORT_BLOCK = re.compile(
+    r"<!-- support-window -->(.*?)<!-- /support-window -->", re.S
+)
+SEPARATOR = re.compile(r":?-+:?")
 STATEMENT = re.compile(r"<!-- support-window -->.*<!-- /dropped-versions -->", re.S)
 LINK_TARGET = re.compile(r"\]\(\s*<?([^)\s>]+)|href=[\"']([^\"']+)")
 ABSOLUTE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:")
@@ -262,6 +269,200 @@ class Window:
                 )
             )
         return found
+
+    def readme_disagreements(self, readme: str) -> list[Disagreement]:
+        """Compare the statement in the README with the window.
+
+        The statement is read between the ``support-window`` comments. A row of
+        the first table is found by the package named in its first cell, and a
+        row of the pairs table by the django-crispy-forms release in its first
+        cell.
+
+        Args:
+            readme: The text of the README.
+
+        Returns:
+            One disagreement for each version the window names and the
+            statement lacks, and for each version the statement gives and the
+            window does not name. A README with no statement lacks them all.
+        """
+        block = SUPPORT_BLOCK.search(readme)
+        rows = self.table_rows(block.group(1) if block else "")
+        found = []
+        named = {
+            "django": self.django,
+            "django-crispy-forms": self.crispy_forms,
+            "daisyui": self.daisyui,
+            "python": self.python,
+        }
+        for package, versions in named.items():
+            stated = {
+                version
+                for name, cell in rows
+                if name.lower() == package
+                for version in VERSIONS.findall(cell)
+            }
+            found += self.set_disagreements(
+                "README", package, set(versions), stated, "the statement"
+            )
+        stated_pairs = {
+            name: set(VERSIONS.findall(cell))
+            for name, cell in rows
+            if VERSION.fullmatch(name)
+        }
+        declared_pairs = {
+            release: set(series) for release, series in self.pairs.items()
+        }
+        found += self.set_disagreements(
+            "README",
+            "django-crispy-forms",
+            set(declared_pairs),
+            set(stated_pairs),
+            "the pairs table",
+        )
+        for release in sorted(declared_pairs.keys() & stated_pairs.keys()):
+            found += self.set_disagreements(
+                "README",
+                "django",
+                declared_pairs[release],
+                stated_pairs[release],
+                f"the pairs table, on the row for django-crispy-forms {release}",
+            )
+        return found
+
+    def lockfile_disagreements(self, lock: dict[str, Any]) -> list[Disagreement]:
+        """Compare the versions the lockfile holds with the window.
+
+        Args:
+            lock: The parsed ``uv.lock``.
+
+        Returns:
+            One disagreement for each locked Django or django-crispy-forms
+            whose release series the window does not name, giving the version
+            as locked.
+        """
+        named = {"django": self.django, "django-crispy-forms": self.crispy_forms}
+        return [
+            Disagreement(
+                "lockfile",
+                entry["name"],
+                entry["version"],
+                "locked at a release the window does not name",
+            )
+            for entry in lock["package"]
+            if entry["name"] in named
+            and self.series(entry["version"]) not in named[entry["name"]]
+        ]
+
+    def installed_disagreements(
+        self, installed: Mapping[str, str], asked: Mapping[str, str]
+    ) -> list[Disagreement]:
+        """Compare the installed versions with the window and with what was asked.
+
+        Args:
+            installed: The installed version of each of ``django`` and
+                ``django-crispy-forms``, as ``installed_versions`` gives them.
+            asked: The release series a run was asked to use, for the packages
+                it was asked about. A package that is absent was not asked about.
+
+        Returns:
+            One disagreement for each package installed at a version that is not
+            the series asked for, or, when none was asked for, at a series the
+            window does not name. The version is given as installed.
+        """
+        named = {"django": self.django, "django-crispy-forms": self.crispy_forms}
+        found = []
+        for package, version in installed.items():
+            if package in asked:
+                if self.series(version) != asked[package]:
+                    found.append(
+                        Disagreement(
+                            "installed",
+                            package,
+                            version,
+                            f"the run was asked for {asked[package]}",
+                        )
+                    )
+            elif self.series(version) not in named[package]:
+                found.append(
+                    Disagreement(
+                        "installed",
+                        package,
+                        version,
+                        "installed at a release the window does not name",
+                    )
+                )
+        return found
+
+    @staticmethod
+    def series(version: str) -> str:
+        """Reduce a version to its release series.
+
+        Args:
+            version: A version such as ``5.2.17``.
+
+        Returns:
+            The first two numbers, such as ``5.2``.
+        """
+        return ".".join(version.split(".")[:2])
+
+    @staticmethod
+    def table_rows(text: str) -> list[tuple[str, str]]:
+        """Read the rows of the Markdown tables in a text.
+
+        Args:
+            text: Markdown that holds tables.
+
+        Returns:
+            The first two cells of every row that is not a header separator.
+        """
+        rows = []
+        for line in text.splitlines():
+            if not line.startswith("|"):
+                continue
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if len(cells) >= 2 and not SEPARATOR.fullmatch(cells[0]):
+                rows.append((cells[0], cells[1]))
+        return rows
+
+    @staticmethod
+    def set_disagreements(
+        source: str, package: str, declared: set[str], stated: set[str], place: str
+    ) -> list[Disagreement]:
+        """Compare the versions a source gives with the versions declared.
+
+        Args:
+            source: The thing compared with the window, such as ``"README"``.
+            package: The package the versions belong to.
+            declared: The versions the window names.
+            stated: The versions the source gives.
+            place: Where in the source the versions were read, for the sentence.
+
+        Returns:
+            One disagreement for each version in one set and not the other.
+        """
+        found = [
+            Disagreement(source, package, version, f"in the window and not in {place}")
+            for version in sorted(declared - stated)
+        ]
+        found += [
+            Disagreement(source, package, version, f"in {place} and not in the window")
+            for version in sorted(stated - declared)
+        ]
+        return found
+
+
+def installed_versions() -> dict[str, str]:
+    """Read the installed versions of Django and django-crispy-forms.
+
+    Returns:
+        The version of each package as ``importlib.metadata`` reports it, keyed
+        by the package name.
+    """
+    return {
+        package: metadata.version(package)
+        for package in ("django", "django-crispy-forms")
+    }
 
 
 def relative_links(readme: str) -> list[str]:
