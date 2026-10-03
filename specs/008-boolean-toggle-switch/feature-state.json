@@ -90,8 +90,31 @@
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_drawings.py::TestDrawings",
+              "tests/test_pack/test_drawings.py::TestDrawingsInAFormset",
+              "tests/test_pack/test_drawings.py::TestDrawingMistakes",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestReadmeDrawings"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_drawings.py -q",
+              "uv run pytest tests/test_pack/test_documented_examples.py::TestReadmeDrawings -q",
+              "uv run pytest tests/test_pack tests/test_choices.py tests/test_templatetags -q -n auto --dist loadscope",
+              "uv run python /tmp/fs008/render_states.py /tmp/fs008/after.json && cmp /tmp/fs008/before.json /tmp/fs008/after.json"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:124",
+              "README.md:475",
+              "CONTEXT.md:88",
+              "tests/test_pack/test_drawings.py:52",
+              "tests/test_pack/test_independence.py:251"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T003",
