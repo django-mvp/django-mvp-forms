@@ -62,3 +62,7 @@ Watch: no page under docs/ describes the demo; AGENTS.md's demo section is outsi
 ## 2026-10-03T15:57:13Z · Forge · CONVERGE
 
 Convergence. The pages were opened in a browser on both the shell and the standalone page, before and after a submission: inputs, labels, markers, help text, field errors and the form-wide alert all drawn as daisyUI. T009 added on US3 for two corrections (entity in aria-label, switches read one way). Six decision records written, 0001 to 0006. Changelog reduced to one entry per thing a host project gets. Tamper-check on US3 had flagged one widened import line in tests/test_templatetags/test_daisyui.py; no assertion changed, accepted.
+
+## 2026-10-03T16:09:33Z · Forge · T012
+
+Walkthrough fix from the orchestrator, on the maintainer's behalf: inputs and textareas fill the width of their field (w-full), allowed by name in the class test, recorded as D24 and in ADR 0003. Four exact class-list assertions written by this feature's own stories were loosened to membership, since the list now holds a layout class.
