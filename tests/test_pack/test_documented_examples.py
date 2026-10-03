@@ -307,3 +307,27 @@ class TestReadmeButtonChoices:
         assert {"btn-sm", "btn-error", "btn-outline"} <= delete
         assert "btn-neutral" not in delete
         assert "input-sm" in set(soup.find(id="id_name")["class"])
+
+
+class TestReadmeDrawings:
+    def test_the_example_stating_a_drawing_draws_each_field_as_stated(self, draw):
+        form = readme_example("Checkbox, toggle and switch")["SettingsForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        remember = soup.find(id="id_remember")
+        assert "checkbox" in remember["class"]
+        assert not remember.has_attr("role")
+        notify = soup.find(id="id_notify")
+        assert "toggle" in notify["class"]
+        assert not notify.has_attr("role")
+        publish = soup.find(id="id_publish")
+        assert "toggle" in publish["class"]
+        assert publish["role"] == "switch"
+
+    def test_the_drawing_stated_by_name_reaches_the_filter_too(self, draw):
+        form = readme_example("Checkbox, toggle and switch")["SettingsForm"]()
+
+        soup = draw("{{ form|crispy }}", form=form)
+
+        assert "toggle" in soup.find(id="id_notify")["class"]
