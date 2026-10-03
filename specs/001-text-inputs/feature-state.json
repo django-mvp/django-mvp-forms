@@ -67,13 +67,50 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInput",
+              "tests/test_pack/test_inputs.py::TestCoveredInputs"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags tests/test_pack tests/test_demo.py",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:10",
+              "mvp_forms/templatetags/daisyui.py:66",
+              "mvp_forms/templates/daisyui/field.html:1",
+              "mvp_forms/templates/daisyui/uni_form.html:1",
+              "demo/settings.py:99"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_inputs.py::TestCrispyTag",
+              "tests/test_pack/test_inputs.py::TestBoundValues",
+              "tests/test_pack/test_inputs.py::TestSingleField",
+              "tests/test_pack/test_inputs.py::TestUncoveredWidgets",
+              "tests/test_pack/test_inputs.py::TestNoFields"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags tests/test_pack tests/test_demo.py",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/whole_uni_form.html:1",
+              "mvp_forms/templates/daisyui/display_form.html:1",
+              "mvp_forms/templates/daisyui/field.html:10"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
