@@ -129,3 +129,73 @@ is FS-007's to answer once.
 is no new page design and no flow to judge.
 
 **ADR:** none.
+
+## D10. The drawing is a fourth argument of `Choice`, and the form's statement has none
+
+**Decision:** `Choice(drawing="toggle")`, beside `size`, `color` and `variant`. It is stated in a
+layout or by name in `FormChoices(fields=...)`, and merged the way the other three are.
+`FormChoices` gains no `drawing`.
+
+**Why:** ADR 0019 already rules that a later feature needing a statement for one field adds an
+argument to `Choice`. FR-006 asks for the same place and manner as a field's size and colour, and
+FR-001 and D4 keep the drawing per field.
+
+**Revisit if:** a form-wide drawing is asked for (D4).
+
+**ADR:** none — ADR 0019 already states the rule this follows, and the missing form-wide drawing
+is a boundary of this feature that D4 records.
+
+## D11. A mistaken drawing raises `InvalidChoice` with the kind `drawing`
+
+**Decision:** an unknown name raises `InvalidChoice` with the three names as `allowed`. Any
+drawing stated on a field whose widget is not Django's single checkbox raises it with nothing
+allowed, `checkbox` included. `None` and `INHERIT` state nothing and never raise.
+
+**Why:** D6 said this would follow FS-007's rule once it existed. ADR 0020 is that rule: a choice
+stated on one field that its input cannot take is a mistake. A second error class for one more
+kind would be a second mechanism for the same thing.
+
+**Revisit if:** developers need to tell a mistaken drawing from a mistaken size without reading
+`kind`.
+
+**ADR:** none — ADR 0020 covers it; the drawing is one more kind under the same rule.
+
+## D12. A toggle is a component of its own in the tables, not a modifier of the checkbox
+
+**Decision:** a field drawn as a toggle or a switch has the component `toggle`, with its own rows
+for size and colour and its own error modifier. It is still counted as a single checkbox by the
+frame, so the label is drawn the same way.
+
+**Why:** daisyUI's toggle replaces the `checkbox` class and has modifiers of its own
+(`toggle-sm`, `toggle-primary`). Writing `checkbox toggle` or `checkbox-sm` on a toggle would
+mix two components on one input. ADR 0020 says a new kind of input adds a row.
+
+**Revisit if:** daisyUI folds the toggle into the checkbox.
+
+**ADR:** none — it applies ADR 0020's "a new kind of input adds a row" and is sealed inside
+`Modifiers` and `FieldInput`.
+
+## D13. No template in the pack changes
+
+**Decision:** the frame, the label and the widget templates are untouched. The drawing changes
+only the class and, for a switch, the role that `FieldInput` hands to the widget for one render.
+
+**Why:** everything FR-009 lists is drawn by the frame around the input and does not depend on
+the component. Keeping it there is what makes "keeps everything a checkbox has" true by
+construction, not by a second copy of the markup.
+
+**Revisit if:** a drawing needs the label arranged differently.
+
+**ADR:** none — local to this feature; it follows ADR 0004 and ADR 0006 and adds no rule.
+
+## D14. The pack adds no text for a toggle or a switch
+
+**Decision:** neither drawing adds a word to the page, so FR-015 is met with nothing to translate
+and no test is written for it.
+
+**Why:** the on and off state is announced by assistive technology from the role and the checked
+state. Visible "On" and "Off" words would be text the developer did not ask for.
+
+**Revisit if:** a drawing gains visible state text.
+
+**ADR:** none — nothing is decided that constrains later work.
