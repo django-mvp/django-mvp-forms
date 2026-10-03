@@ -860,3 +860,80 @@ class TestContainersStandaloneModal(ModalPageContract):
     def test_it_links_back_to_the_modal_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("modal")) is not None
+
+
+ALERT_PREFIX = "alert"
+ALERT_POST = {f"{ALERT_PREFIX}-submit": "Submit"}
+ALERT_DISMISSIBLE = f"{ALERT_PREFIX}-dismissible"
+ALERT_PERMANENT = f"{ALERT_PREFIX}-permanent"
+
+
+class AlertPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = ALERT_POST if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    def test_it_holds_an_alert_with_a_dismiss_control(self, page):
+        alert = page.find(id=ALERT_DISMISSIBLE)
+        assert alert["role"] == "alert"
+        assert [button["type"] for button in alert.find_all("button")] == ["button"]
+
+    def test_it_holds_an_alert_without_one(self, page):
+        alert = page.find(id=ALERT_PERMANENT)
+        assert alert["role"] == "alert"
+        assert alert.find("button") is None
+
+    def test_the_alerts_are_inside_the_posting_form(self, page):
+        alert = page.find(id=ALERT_DISMISSIBLE)
+        assert alert.find_parent("form")["method"] == "post"
+
+    @pytest.mark.parametrize("data", [None, ALERT_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestAlertPage(AlertPageContract):
+    url_name = "alert"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("alert")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("containers-standalone")) is not None
+
+
+class TestContainersStandaloneAlert(AlertPageContract):
+    url_name = "containers-standalone"
+
+    def test_it_holds_an_element_for_each_of_the_four_layout_objects(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(class_="tabs") is not None
+        assert page.find("details") is not None
+        assert page.find("dialog") is not None
+        assert page.find(attrs={"role": "alert"}) is not None
+
+    def test_a_post_of_the_alert_form_binds_only_that_form(self, open_page):
+        page = open_page(self.url_name, ALERT_POST)
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [0]
+        assert open_groups(page, ACCORDION_PREFIX) == [0]
+        assert not modal_dialog(page).has_attr("open")
+
+    def test_a_post_of_the_tabs_form_leaves_the_alerts_drawn(self, open_page):
+        page = open_page(self.url_name, {f"{TABS_SUBMIT_PREFIX}-submit": "Submit"})
+        assert page.find(id=ALERT_DISMISSIBLE) is not None
+
+    def test_it_links_back_to_the_alert_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("alert")) is not None

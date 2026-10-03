@@ -3,6 +3,7 @@
 from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
+    Alert,
     FormActions,
     Modal,
     StrictButton,
@@ -442,3 +443,41 @@ class ModalForm(forms.Form):
     def dialog_id(self):
         """The id of the modal's dialog, for the control that opens it."""
         return f"{self.prefix}-dialog"
+
+
+class AlertForm(forms.Form):
+    """A form with three alerts between its fields.
+
+    One alert can be dismissed, one is permanent and one carries a daisyUI colour
+    modifier. The field is required, so a bound form with nothing in it comes back
+    with the alerts drawn again. Its layout is built for each instance, and every
+    id and button name in it carries the form's prefix, so two of these forms on
+    one page repeat no id. The form must be given a prefix.
+    """
+
+    name = forms.CharField(label=_("Name"))
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id and button name."""
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            Alert(
+                _("A notice the reader can dismiss."),
+                css_id=f"{prefix}-dismissible",
+            ),
+            Alert(
+                _("A notice that stays."),
+                dismiss=False,
+                css_id=f"{prefix}-permanent",
+            ),
+            Alert(
+                _("A notice with a daisyUI colour."),
+                css_class="alert-success",
+                css_id=f"{prefix}-coloured",
+            ),
+            "name",
+        )
+        self.helper.add_input(Submit(f"{prefix}-submit", _("Submit")))

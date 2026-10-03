@@ -12,6 +12,7 @@ from mvp.views import MVPTemplateView
 
 from demo.forms import (
     AccordionForm,
+    AlertForm,
     ChoiceInputsForm,
     ChosenGroupsForm,
     HelperButtonsForm,
@@ -409,7 +410,41 @@ class ModalView(ModalMixin, MVPTemplateView):
     breadcrumbs = [{"text": "Modal"}]
 
 
-class ContainersStandaloneView(ModalMixin, AccordionMixin, TabsMixin, TemplateView):
+class AlertMixin:
+    """The form the alert page and the standalone page draw.
+
+    The form has a prefix, so no id repeats on a page.
+    """
+
+    alert_prefix = "alert"
+
+    def get_context_data(self, **kwargs):
+        """Add the form whose layout holds the alerts."""
+        kwargs.setdefault("alert_form", AlertForm(prefix=self.alert_prefix))
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form bound to what was posted."""
+        form = AlertForm(request.POST, prefix=self.alert_prefix)
+        return self.render_to_response(self.get_context_data(alert_form=form))
+
+
+class AlertView(AlertMixin, MVPTemplateView):
+    """Alerts between the fields of a form, inside the application shell."""
+
+    template_name = "demo/alert.html"
+    page_title = "Alert"
+    page_subtitle = "Notices placed between fields, with and without a dismiss control"
+    breadcrumbs = [{"text": "Alert"}]
+
+
+class ContainersStandaloneView(
+    AlertMixin, ModalMixin, AccordionMixin, TabsMixin, TemplateView
+):
     """The container pages for a host project that has neither django-mvp nor Cotton.
 
     A post belongs to the form whose submit button it names. One that names none
@@ -420,6 +455,8 @@ class ContainersStandaloneView(ModalMixin, AccordionMixin, TabsMixin, TemplateVi
 
     def post(self, request, *args, **kwargs):
         """Bind the form whose submit button was pressed and no other."""
+        if f"{self.alert_prefix}-submit" in request.POST:
+            return AlertMixin.post(self, request, *args, **kwargs)
         if f"{self.modal_prefix}-submit" in request.POST:
             return ModalMixin.post(self, request, *args, **kwargs)
         if f"{self.accordion_prefix}-submit" in request.POST:

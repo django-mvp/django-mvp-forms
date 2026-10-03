@@ -45,5 +45,10 @@ AppMenu.extend(
             view_name="modal",
             extra_context={"label": "Modal", "icon": "modal"},
         ),
+        MenuItem(
+            name="alert",
+            view_name="alert",
+            extra_context={"label": "Alert", "icon": "alert"},
+        ),
     ]
 )

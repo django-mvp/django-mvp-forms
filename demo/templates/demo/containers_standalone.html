@@ -16,6 +16,7 @@
         <a class="link" href="{% url 'tabs' %}">The tabs inside the django-mvp shell</a>
         <a class="link" href="{% url 'accordion' %}">The accordion inside the django-mvp shell</a>
         <a class="link" href="{% url 'modal' %}">The modal inside the django-mvp shell</a>
+        <a class="link" href="{% url 'alert' %}">The alert inside the django-mvp shell</a>
       </p>
       <section class="card card-border bg-base-100">
         <div class="card-body">
@@ -46,6 +47,12 @@
           <h2 class="card-title">Modal</h2>
           <button type="button" class="btn btn-primary" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()">Edit the address</button>
           {% crispy modal_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Alert</h2>
+          {% crispy alert_form %}
         </div>
       </section>
     </main>

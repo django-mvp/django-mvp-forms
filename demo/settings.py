@@ -125,6 +125,7 @@ EASY_ICONS = {
             "tabs": "bi bi-segmented-nav",
             "accordion": "bi bi-chevron-bar-expand",
             "modal": "bi bi-window-stack",
+            "alert": "bi bi-exclamation-triangle",
         },
     },
 }

@@ -1,0 +1,15 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="alert">
+    <c-text>
+      Three alerts sit between the fields. The first can be dismissed, the second
+      cannot and the third has a daisyUI colour. Dismiss one, then submit the form
+      empty to see all three drawn again.
+    </c-text>
+    {% crispy alert_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'containers-standalone' %}" text="The same form without django-mvp" />
+  </c-text>
+{% endblock page.content %}
