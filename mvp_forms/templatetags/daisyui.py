@@ -158,9 +158,11 @@ class FieldInput:
         self.inline = inline
         self.join = join
         self.disabled = disabled
+        # A hidden field is drawn as it is, and a multi-widget's parts state
+        # their own choices, so neither resolves any for the field.
         self.modifiers = (
             []
-            if self.is_multi_widget
+            if field.is_hidden or self.is_multi_widget
             else self.resolve_modifiers(self.choices, self.placed, self.component)
         )
         self.removal_modifiers = (

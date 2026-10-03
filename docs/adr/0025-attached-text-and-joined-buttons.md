@@ -8,6 +8,8 @@
 class (`input` or `select`), the size, colour and variant, the width and the error modifier.
 Each text is a `<span class="label">` inside it, and the input inside is drawn with no class of
 the pack's. Because the wrapper is a label, the text is part of the input's accessible name.
+That holds while the form draws labels. With labels off the input is named by an `aria-label`
+holding the field's label, which takes the place of every label, the wrapper included.
 
 **A field with buttons** is daisyUI's `join`: one element carrying `join` around the input,
 which carries `join-item`, and the buttons.

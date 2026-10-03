@@ -29,6 +29,7 @@ from tests.forms import (
     HeldFile,
     OrderedLineFormSet,
     StructureForm,
+    StructureHiddenForm,
     UncoveredWidgetsForm,
 )
 
@@ -1072,3 +1073,29 @@ class TestFormsetChoices:
 
         for tag in soup.find_all("input", type="hidden"):
             assert not tag.get("class")
+
+
+class TestHiddenFieldChoices:
+    def test_a_choice_around_a_hidden_field_leaves_it_as_it_was(self, draw):
+        plain = StructureHiddenForm(layout=("first", "token"))
+        chosen = StructureHiddenForm(layout=(Choice("first", "token", size="lg"),))
+
+        soup = draw("{% crispy form %}", form=chosen)
+
+        hidden = soup.find("input", attrs={"name": "token"})
+        drawn_plain = draw("{% crispy form %}", form=plain)
+        assert str(hidden) == str(drawn_plain.find("input", attrs={"name": "token"}))
+        assert "input-lg" in soup.find(id="id_first")["class"]
+
+    def test_a_choice_stated_for_a_hidden_field_by_name_leaves_it_as_it_was(
+        self, draw
+    ):
+        plain = StructureHiddenForm(layout=("first", "token"))
+        chosen = StructureHiddenForm(layout=("first", "token"))
+        chosen.helper.daisyui = FormChoices(fields={"token": Choice(size="lg")})
+
+        soup = draw("{% crispy form %}", form=chosen)
+
+        hidden = soup.find("input", attrs={"name": "token"})
+        drawn_plain = draw("{% crispy form %}", form=plain)
+        assert str(hidden) == str(drawn_plain.find("input", attrs={"name": "token"}))
