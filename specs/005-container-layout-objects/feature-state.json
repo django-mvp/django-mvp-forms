@@ -127,8 +127,24 @@
       "tasks": [
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_accordion.py",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope (exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/accordion.html:1",
+              "mvp_forms/templates/daisyui/accordion-group.html:1"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T004",

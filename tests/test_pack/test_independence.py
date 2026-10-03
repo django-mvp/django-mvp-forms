@@ -5,7 +5,14 @@ import re
 from pathlib import Path
 
 import pytest
-from crispy_forms.bootstrap import FormActions, StrictButton, Tab, TabHolder
+from crispy_forms.bootstrap import (
+    Accordion,
+    AccordionGroup,
+    FormActions,
+    StrictButton,
+    Tab,
+    TabHolder,
+)
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
     HTML,
@@ -162,6 +169,20 @@ def tabbed(data=None):
     )
 
 
+def accordioned(data=None):
+    return StructureForm(
+        data,
+        layout=(
+            Accordion(
+                AccordionGroup("One", "first", css_class="mine"),
+                AccordionGroup("Two", Row("second"), Fieldset("Group", "third")),
+                AccordionGroup("Three", "fourth", active=True),
+                css_class="mine",
+            ),
+        ),
+    )
+
+
 def helper_buttons():
     return ButtonedForm(
         buttons=(
@@ -291,6 +312,10 @@ STATES = [
     ),
     pytest.param("{% crispy form %}", tabbed, MINE, id="tabs"),
     pytest.param("{% crispy form %}", lambda: tabbed({}), MINE, id="tabs, invalid"),
+    pytest.param("{% crispy form %}", accordioned, MINE, id="accordion"),
+    pytest.param(
+        "{% crispy form %}", lambda: accordioned({}), MINE, id="accordion, invalid"
+    ),
     pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
     pytest.param(
         "{% crispy form %}",

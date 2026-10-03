@@ -1,7 +1,14 @@
 """The examples in django-crispy-forms' own docstrings, drawn as written."""
 
 import pytest
-from crispy_forms.bootstrap import FormActions, StrictButton, Tab, TabHolder
+from crispy_forms.bootstrap import (
+    Accordion,
+    AccordionGroup,
+    FormActions,
+    StrictButton,
+    Tab,
+    TabHolder,
+)
 from crispy_forms.layout import (
     HTML,
     Button,
@@ -160,6 +167,19 @@ EXAMPLES = {
         lambda: TabHolder(Tab("form_field_1", "form_field_2"), Tab("form_field_3")),
         ["form_field_2"],
         ("div", {"class": "tabs"}),
+    ),
+    "AccordionGroup": (
+        lambda: AccordionGroup("group name", "form_field_1", "form_field_2"),
+        BOTH,
+        ("details", {"class": "collapse"}),
+    ),
+    "Accordion": (
+        lambda: Accordion(
+            AccordionGroup("group name", "form_field_1", "form_field_2"),
+            AccordionGroup("another group name", "form_field"),
+        ),
+        [*BOTH, "form_field"],
+        ("details", {"open": True}),
     ),
     "StrictButton with a context-aware content": (
         lambda: StrictButton("Button for {{ user.username }}"),
