@@ -37,7 +37,9 @@ from crispy_forms.layout import (
     Submit,
 )
 
-from tests.forms import DocumentedExamplesForm
+from tests.conftest import PACK_TEMPLATES
+from tests.forms import DocumentedExamplesForm, HelpedForm
+from tests.template_surface import TemplateSurface
 
 BOTH = ["form_field_1", "form_field_2"]
 NESTED = ["form_field", "form_field_2"]
@@ -483,3 +485,44 @@ class TestReadmeDrawingSizeAndColour:
         assert "toggle-sm" in set(soup.find(id="id_notify")["class"])
         publish = set(soup.find(id="id_publish")["class"])
         assert {"toggle-sm", "toggle-primary"} <= publish
+
+
+def readme_template(heading):
+    section = README.read_text().split(f"#### {heading}\n", 1)[1]
+    return re.search(r"```django\n(.*?)```", section, re.DOTALL).group(1)
+
+
+REPLACEMENT_HEADING = "A required marker of your own"
+
+
+class TestReadmeReplacement:
+    def test_the_example_marks_a_required_field_and_not_an_optional_one(
+        self, replace, draw
+    ):
+        source = readme_template(REPLACEMENT_HEADING)
+
+        with replace({"daisyui/required_marker.html": source}):
+            soup = draw("{% crispy form %}", form=HelpedForm())
+
+        required = soup.find("label", attrs={"for": "id_bare"})
+        optional = soup.find("label", attrs={"for": "id_optional"})
+        assert required.find("abbr") is not None
+        assert optional.find("abbr") is None
+
+    def test_the_marker_the_pack_draws_is_not_drawn(self, replace, draw):
+        source = readme_template(REPLACEMENT_HEADING)
+
+        with replace({"daisyui/required_marker.html": source}):
+            soup = draw("{% crispy form %}", form=HelpedForm())
+
+        assert soup.find(attrs={"aria-hidden": "true"}) is None
+
+    def test_the_example_reads_only_what_the_list_hands_its_template(self):
+        surface = TemplateSurface(README.read_text(), PACK_TEMPLATES)
+        handed = {row["path"]: row["handed"] for row in surface.listed()}[
+            "daisyui/required_marker.html"
+        ]
+
+        read = surface.names_read(readme_template(REPLACEMENT_HEADING))
+
+        assert read <= handed

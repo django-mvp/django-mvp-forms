@@ -108,7 +108,7 @@ Draw it in a template of a page that loads daisyUI:
 
 Selected with the two settings above. Every field is drawn inside a daisyUI `fieldset`. A field of one input has a label and its input, except a single checkbox, whose label holds the checkbox and is tied to it by `for`. A field of several inputs that share one label, such as a radio group, a checkbox group or a date drawn as three selects, is drawn as a `<fieldset>` with a `<legend>`, which is described by the field's help text and errors, and which is named by an `aria-label` when the form draws no labels.
 
-The pack draws radio and checkbox groups, a date's selects and a clearable file input from templates of its own, which the form renderer has to load. Django's default renderer and `TemplatesSetting` both do. A widget subclass that names a template of its own is drawn by that template, with the daisyUI class only.
+The pack draws radio and checkbox groups, a date's selects and a clearable file input from templates of its own, which the form renderer loads, and which a host project replaces in a way of its own (see [Replacing one template](#replacing-one-template)). A widget subclass that names a template of its own is drawn by that template, with the daisyUI class only.
 
 The label is tied to the input, and a required field's label carries a marker that assistive technology skips. The input announces itself as required, as invalid when it has errors, and by its help text and error messages as its description. Label, help text and errors are escaped unless you mark them safe. Every id the pack writes is built from the form's `auto_id`, so forms with different prefixes never share one, and a form with `auto_id=False` gets none.
 
@@ -800,6 +800,86 @@ A form that has no delete field, such as an extra form of a formset with `can_de
 A form marked for deletion is left out of the formset's validation by Django, but it still holds its own field errors, and they are drawn with it when the page comes back.
 
 The pack draws a formset and nothing around it. It draws no empty form to copy, adds no script, and has no view: adding and removing rows in the browser, handling the post and saving belong to django-mvp or to your own code.
+
+### Replacing one template
+
+A host project replaces one template of the pack by putting a file at the same path where Django finds it first. The replacement stands in for that template wherever the pack draws it, in every form of the project, and every other template stays the pack's. It needs nothing but the file: no setting of the pack's, no Python and no change to a form. A replacement is a whole template, since the pack's templates have no blocks to override, and it is the host project's own: the pack adds nothing to it and does not check it. A layout object's own `template=`, a helper's `field_template` and a helper's `template` still win for the form that sets them.
+
+A replacement is found by one of two routes, and the last column of the list below says which:
+
+- The templates outside `daisyui/widgets/` are found through `TEMPLATES`. Put the replacement in a directory listed in `DIRS`, or in the `templates` directory of an app listed in `INSTALLED_APPS` before `mvp_forms`.
+- The templates under `daisyui/widgets/` are loaded by the form renderer, and Django's default renderer does not read `TEMPLATES`. It looks in Django's own form templates and then in the `templates` directory of each installed app, in order, so with the default renderer a replacement is found only in an app listed before `mvp_forms`. A project that keeps it in a `DIRS` directory sets `FORM_RENDERER = "django.forms.renderers.TemplatesSetting"` and adds `"django.forms"` to `INSTALLED_APPS`, so Django's own widget templates are still found.
+
+An app listed after `mvp_forms` is never used. Once django-crispy-forms has loaded `daisyui/field.html`, `daisyui/uni_form.html`, `daisyui/uni_formset.html`, `daisyui/whole_uni_form.html` or `daisyui/whole_uni_formset.html` it keeps it in memory, so restart the development server after you add or edit a replacement for one of those five.
+
+#### A required marker of your own
+
+The pack draws a required field's marker with `daisyui/required_marker.html`, a star that assistive technology skips. To draw an abbreviation with a translated title instead, put this file at `daisyui/required_marker.html` in a directory listed in your `TEMPLATES` setting's `DIRS`:
+
+```django
+{% load i18n %}{% if field.field.required %} <abbr title="{% translate "required" %}">*</abbr>{% endif %}
+```
+
+Every required field in the project now carries that marker, in its label, in a group's legend and in a table's column heading, and every other template is still the pack's. The template reads `field`, which is what its row in the list below says it is handed.
+
+#### The templates
+
+Each row is one template the pack distributes. `Draws` says what it draws. `Handed` lists the names the pack's own template reads from outside itself, which a replacement can read too: a value Django or django-crispy-forms supplies is listed by its name alone, and `drawn` and `table`, which the pack supplies, are listed one level down, by the part read, as `drawn.is_group`. A template that sets `drawn` or `table` itself is not handed it and lists none, and `daisyui/frame.html` and `daisyui/field_body.html` are handed `drawn` by whichever template includes them. `Found by` is the route above.
+
+The pack's own template tags also read the page's context, which no template shows. For example `daisyui_field` reads `form_show_labels`, `form_show_errors` and `wrapper_class`, and `daisyui_layout_object` reads `form` and `template_pack`. A replacement that calls a tag gets what the pack's template gets. The list covers what is written in a template and not what the tags read.
+
+| Template | Draws | Handed | Found by |
+|---|---|---|---|
+| `daisyui/whole_uni_form.html` | The whole form that `{% crispy form %}` draws: the `<form>` element when the helper asks for one, a CSRF token for a post, the fields and the helper's buttons. | `csrf_token`, `disable_csrf`, `flat_attrs`, `form`, `form_method`, `form_tag` | `TEMPLATES` |
+| `daisyui/display_form.html` | The form's media, its form-wide errors and then its fields, or the form's own `form_html` in their place when it has one. | `form`, `form_show_errors`, `include_media` | `TEMPLATES` |
+| `daisyui/uni_form.html` | The form's media, its form-wide errors and each of its fields with no `<form>` element around them, which is what the `crispy` filter asks for when it is given a form. | `field_template`, `form`, `form_show_errors`, `include_media` | `TEMPLATES` |
+| `daisyui/errors.html` | The errors of the form as a whole in one alert under the helper's error title, and nothing for a form that has none. | `form`, `form_error_title` | `TEMPLATES` |
+| `daisyui/inputs.html` | The helper's buttons and inputs, with the hidden inputs first and the rest in a row. | `inputs` | `TEMPLATES` |
+| `daisyui/field.html` | One field: the pack draws the field's widget and the frame puts it in place. | `field` | `TEMPLATES` |
+| `daisyui/frame.html` | The frame around a field's widget: a daisyUI fieldset holding the label, or the legend of a group, with the required marker, and then the field's body, and a hidden field is its input alone. | `drawn.group_description`, `drawn.is_group`, `drawn.is_single_checkbox`, `drawn.label_text`, `drawn.show_labels`, `drawn.wrapper_class`, `field`, `label_class` | `TEMPLATES` |
+| `daisyui/field_body.html` | What sits inside the frame: the widget, which may be a single checkbox in its own label, have text attached or have buttons joined to it, then the field's help text and its errors. | `buttons`, `drawn.appended`, `drawn.attached_class`, `drawn.has_attached_text`, `drawn.is_joined`, `drawn.is_single_checkbox`, `drawn.join`, `drawn.prepended`, `drawn.render`, `drawn.show_labels`, `field`, `field_class`, `form_show_errors`, `label_class` | `TEMPLATES` |
+| `daisyui/required_marker.html` | The marker a required field's label and a required column's heading carry, and nothing for an optional field. | `field` | `TEMPLATES` |
+| `daisyui/multifield.html` | A field inside a `MultiField`, drawn as any field is: it reads nothing itself and passes `field` on to `daisyui/field.html`. | `field` | `TEMPLATES` |
+| `daisyui/layout/fieldset.html` | A `Fieldset`: a daisyUI fieldset with its legend, holding its fields. | `fields`, `fieldset`, `legend` | `TEMPLATES` |
+| `daisyui/layout/div.html` | A `Div`: a `<div>` holding its fields, or the pane of a tab when it is one. | `div`, `fields` | `TEMPLATES` |
+| `daisyui/layout/row.html` | A `Row`: a `<div>` that lays its fields out along a row. | `div`, `fields` | `TEMPLATES` |
+| `daisyui/layout/column.html` | A `Column`: a `<div>` that takes an equal share of its row and holds its fields. | `div`, `fields` | `TEMPLATES` |
+| `daisyui/layout/tab.html` | A `TabHolder`: a `<div>` holding the tabs it is given, whose radio inputs share one group name. | `content`, `tabs` | `TEMPLATES` |
+| `daisyui/layout/tab-pane.html` | One `Tab`: a radio input that names and selects it, and its pane holding its fields. | `div`, `fields` | `TEMPLATES` |
+| `daisyui/layout/tab-link.html` | Nothing: django-crispy-forms renders it for every tab and hands the result to `daisyui/layout/tab.html` as `links`, which the pack's `tab.html` does not draw, so a replacement shows only beside a replacement of `tab.html` that draws `links`. |  | `TEMPLATES` |
+| `daisyui/accordion.html` | An `Accordion`: a `<div>` stacking its groups. | `accordion`, `content` | `TEMPLATES` |
+| `daisyui/accordion-group.html` | An `AccordionGroup`: a collapsible `<details>` with its name as the summary, holding its fields. | `div`, `fields` | `TEMPLATES` |
+| `daisyui/layout/modal.html` | A `Modal`: a `<dialog>` with its title, its fields and a button that closes it, open when a field in it fails. | `fields`, `modal` | `TEMPLATES` |
+| `daisyui/layout/alert.html` | An `Alert`: its content in an element with `role="alert"`, and a button that dismisses it when it can be dismissed. | `alert`, `content`, `dismiss` | `TEMPLATES` |
+| `daisyui/layout/multifield.html` | A `MultiField`: a fieldset with its label as the legend, holding its fields. | `fields_output`, `multifield` | `TEMPLATES` |
+| `daisyui/layout/buttonholder.html` | A `ButtonHolder`: a row holding its buttons. | `buttonholder`, `fields_output` | `TEMPLATES` |
+| `daisyui/layout/formactions.html` | `FormActions`: a row holding its buttons. | `fields_output`, `formactions` | `TEMPLATES` |
+| `daisyui/layout/button.html` | A `StrictButton`: a `<button>` element holding its content. | `button` | `TEMPLATES` |
+| `daisyui/layout/baseinput.html` | A `Submit`, `Button`, `Reset` or `Hidden`: one `<input>` with the type, name and value the layout object gives it. | `input` | `TEMPLATES` |
+| `daisyui/layout/prepended_appended_text.html` | A `PrependedText`, `AppendedText` or `PrependedAppendedText`: a field with text before or after its input, in the field's frame. | `crispy_appended_text`, `crispy_prepended_text`, `field` | `TEMPLATES` |
+| `daisyui/layout/field_with_buttons.html` | A `FieldWithButtons`: a field's input joined to its buttons, in the field's frame. | `div`, `field` | `TEMPLATES` |
+| `daisyui/layout/inline_field.html` | An `InlineField`: a field with no visible label, named by an `aria-label`, in the field's frame. | `field` | `TEMPLATES` |
+| `daisyui/layout/uneditable_input.html` | An `UneditableField`: a field's input disabled and showing the field's value, in the field's frame. | `field` | `TEMPLATES` |
+| `daisyui/layout/radioselect_inline.html` | An `InlineRadios`: a radio group with its options along a line, in the field's frame. | `field` | `TEMPLATES` |
+| `daisyui/layout/checkboxselectmultiple_inline.html` | An `InlineCheckboxes`: a checkbox group with its options along a line, in the field's frame. | `field` | `TEMPLATES` |
+| `daisyui/whole_uni_formset.html` | The whole formset that `{% crispy formset %}` draws: the `<form>` element when the helper asks for one, a CSRF token for a post, the forms and the helper's buttons. | `csrf_token`, `disable_csrf`, `flat_attrs`, `formset`, `formset_method`, `formset_tag` | `TEMPLATES` |
+| `daisyui/uni_formset.html` | The formset's media, its management form, its formset-wide errors and its forms one after another with a divider between them, which is what the `crispy` filter asks for when it is given a formset. | `form_show_errors`, `formset`, `include_media` | `TEMPLATES` |
+| `daisyui/errors_formset.html` | The errors of the formset as a whole in one alert under the helper's formset error title, and nothing for a formset that has none. | `formset`, `formset_error_title` | `TEMPLATES` |
+| `daisyui/table_inline_formset.html` | A formset as one table with a row for each form and a column for each visible field, chosen by setting the helper's `template`. | `csrf_token`, `disable_csrf`, `field_template`, `flat_attrs`, `form_show_errors`, `formset`, `formset_method`, `formset_tag`, `include_media` | `TEMPLATES` |
+| `daisyui/widgets/group.html` | A radio group or a checkbox group with its options one under another. | `widget` | `FORM_RENDERER` |
+| `daisyui/widgets/inline_group.html` | A radio group or a checkbox group with its options along a line, wrapping onto the next line. | `widget` | `FORM_RENDERER` |
+| `daisyui/widgets/group_options.html` | The options of a radio group or a checkbox group, each an input in a label of its own, under a nested fieldset where the choices have group names, which the two group templates include. | `widget` | `FORM_RENDERER` |
+| `daisyui/widgets/select_date.html` | A date drawn by `SelectDateWidget`: a select for each part of the date, side by side. | `widget` | `FORM_RENDERER` |
+| `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
+| `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
+
+#### When a listed template changes
+
+A listed path, and the names a template is handed, change only through one minor version in which the old one still works. For that version a replacement at the old path is still drawn, and it raises a `DeprecationWarning` naming the old path and what replaces it. A project with nothing at the old path sees no warning. Python shows a `DeprecationWarning` under a test runner, or when you run with `python -W default`, as it does Django's own, so run your tests to find a replacement that needs moving. A name a template is handed that is renamed or withdrawn keeps its value under the old name for that version. The CHANGELOG entry of that release says what changed and what replaces it. The pack records the paths it has moved away from in `mvp_forms.deprecation.WITHDRAWN` and asks `mvp_forms.deprecation.host_template` whether your project has a template at one, so you call neither.
+
+A path on its way out stays a row of the table for as long as it is honoured, with what replaces it said in its `Draws` cell. The paths django-crispy-forms itself chooses, such as `daisyui/field.html`, change only if django-crispy-forms changes them.
+
+The markup and the class names inside a template of the pack are not part of this promise and can change in any release. A replacement that copied the old markup keeps drawing it until its owner updates it.
 
 ### Themes
 
