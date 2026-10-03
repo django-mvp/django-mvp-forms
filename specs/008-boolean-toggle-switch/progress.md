@@ -45,3 +45,10 @@ Did: Wrote TestDrawingKeepsWhatACheckboxHas (label tie, help text, error with th
 Verified: uv run pytest tests/test_pack/test_drawings.py tests/test_demo.py -k Drawing: 261 passed. pre-commit --all-files and mypy pass.
 Next: T005, size and colour rows for toggle.
 Watch: c-section supports levels 1 to 4 only, so a state is level 4 under a level 3 heading.
+
+## 2026-10-03T19:21:43Z · Implementer US3 · T005
+
+Did: Wrote TestModifiersToggle, TestDrawingSizeAndColour and TestReadmeDrawingSizeAndColour first; they failed because Modifiers had no toggle row. Added the toggle rows of sizes and colors (literals, none in variants). STATES gained a toggle and a switch with a size and a colour, plain and in error; a toggle-xxl probe failed both the STATES entry and TestModifierTables. A probe removing the in-error colour drop failed 5 of the new tests. Demo: DrawingTrioForm and DrawingOverrideForm, build_sizes/build_colors from Modifiers.names(kind, "toggle"), a Sizes, Colours and Overriding section in both pages, with DrawingSizesPageContract. README bullet and the example now show a size and a colour on a toggle and a switch; the CHANGELOG entry no longer says a toggle takes no size or colour.
+Verified: new tests red before the rows, green after. Adding the toggle row made the FS-007 choices-page test test_every_kind_of_input_is_drawn_at_a_stated_size[toggle] fail, because it walks every row of Modifiers.sizes; I did not edit it. I added a toggle field to the demo's InputKindsForm so that page draws a toggle at a stated size, and the test passes unchanged. tests/test_demo.py: 968 passed.
+Next: the full verify, then the report.
+Watch: InputKindsForm.__init__ states the toggle's drawing into the choices it is given, so the choices page now shows one more field in each of its input-kind forms.

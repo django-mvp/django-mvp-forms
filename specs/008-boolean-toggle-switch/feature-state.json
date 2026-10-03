@@ -186,8 +186,32 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_choices.py::TestModifiersToggle",
+              "tests/test_pack/test_drawings.py::TestDrawingSizeAndColour",
+              "tests/test_pack/test_documented_examples.py::TestReadmeDrawingSizeAndColour",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_independence.py::TestModifierTables",
+              "tests/test_demo.py::TestDrawingSizesInThePage",
+              "tests/test_demo.py::TestDrawingSizesInTheStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py::TestModifiersToggle tests/test_pack/test_drawings.py::TestDrawingSizeAndColour -q",
+              "uv run pytest tests/test_pack/test_independence.py tests/test_pack/test_documented_examples.py -q",
+              "uv run pytest tests/test_demo.py -q -n auto --dist loadscope"
+            ],
+            "code": [
+              "mvp_forms/choices.py:105",
+              "mvp_forms/choices.py:178",
+              "demo/forms.py:681",
+              "demo/forms.py:712",
+              "demo/views.py:604"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }
