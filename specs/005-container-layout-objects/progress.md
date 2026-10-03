@@ -16,3 +16,10 @@ Did: the tabs page on the shell (route tabs, template demo/tabs.html on Cotton c
 Verified: `uv run pytest tests/test_demo.py -n auto --dist loadscope` 587 passed (20 of them new, red first on NoReverseMatch); `uv run pre-commit run --all-files` clean.
 Next: report US1 after the full verify.
 Watch: README's Demo section lists the demo pages and does not name the two new routes; it is not in T002's file list, so it is left for Forge to decide (see concerns in the report).
+
+## 2026-10-03T17:44:59Z · Implementer US2 · T003
+
+Did: Accordion and AccordionGroup drawn by daisyui/accordion.html and accordion-group.html (beside field.html): a div holding one details.collapse per group, each with a summary.collapse-title and a collapse-content element, open following div.active only, no name attribute. Tests: tests/test_pack/test_accordion.py (22), an accordion state (unbound, invalid) in test_independence.py, the Accordion and AccordionGroup docstring examples in test_documented_examples.py. README gains an accordion section; CHANGELOG entry. UPSTREAM_ONLY_CLASSES is unchanged: the group templates do not use daisyui_classes, so ADR 0010 needed no edit.
+Verified: `uv run pytest tests/test_pack tests/test_templatetags -n auto --dist loadscope` 767 passed; `uv run pre-commit run --all-files` clean. Red observed first (TemplateDoesNotExist for accordion-group.html). Probes: dropping the open clause fails 8, `|safe` on the name fails the escaping test, a name on the details fails the name test.
+Next: T004, the accordion demo page.
+Watch: AccordionGroup has css_class "" so crispy writes no active class on it; nothing to drop.
