@@ -75,7 +75,7 @@
       "at": "2026-10-03T16:04:34Z",
       "self_resolved": [
         "CR-001 (medium) error modifiers written out as literals; README says to scan the whole package: fixed, T010",
-        "CR-002 (medium) standalone page loads Tailwind's browser build: declined, it is daisyUI's documented CDN install and the maintainer's ruling (D9)",
+        "CR-002 (medium) standalone page loads Tailwind's browser build: resolved by amending the specification to daisyUI's documented CDN install (D25)",
         "CR-003 (low) a label not marked safe is named as written: fixed, T010",
         "CR-004 (low) a falsy switch reads as off in the tag as in the templates: fixed, T010",
         "CR-005 (low) demo tests no longer pin a styling class or a script, test class docstring removed: fixed, T011",

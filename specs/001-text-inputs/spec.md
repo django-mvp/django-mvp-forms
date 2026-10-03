@@ -106,17 +106,17 @@ A developer lets django-crispy-forms draw the whole form, element and all. A use
 
 ### User Story 4 - The pack works in any daisyUI project (Priority: P2)
 
-A developer whose project is not built on django-mvp, and whose pages load daisyUI from its CDN build with no build step of their own, installs the package and selects the pack. The forms draw correctly. Nothing asks for django-mvp, django-cotton or daisy-cotton, and no class in the output is missing from the stylesheet the page loaded.
+A developer whose project is not built on django-mvp, and whose pages load daisyUI through its documented CDN install with no build step of their own, installs the package and selects the pack. The forms draw correctly. Nothing asks for django-mvp, django-cotton or daisy-cotton, and no class in the output is one that install cannot style.
 
 **Why this priority**: G6 is an Expected goal, and the limit it places on the markup has to be set in the base, because every later feature copies what the base does. It ranks below the first two stories because it constrains how they are met and adds no behaviour of its own.
 
-**Independent Test**: Install the package into a project that has neither django-mvp nor django-cotton, draw the form from User Story 1, and compare every class in the output against the classes daisyUI's CDN build defines.
+**Independent Test**: Install the package into a project that has neither django-mvp nor django-cotton, draw the form from User Story 1, and compare every class in the output against the classes daisyUI's CDN stylesheet defines and the short list of layout utilities the pack is allowed.
 
 **Acceptance Scenarios**:
 
 1. **Given** a project with django-crispy-forms and this package installed and neither django-mvp, django-cotton nor daisy-cotton present, **When** a form is drawn with the pack, **Then** it draws without error.
-2. **Given** a form drawn with the pack in any of its states, **When** the classes the pack put in the output are collected, **Then** every one of them is defined by daisyUI's full CDN build.
-3. **Given** a page that loads daisyUI's full CDN build and nothing else for styling, **When** a form is drawn on it with the pack, **Then** every part of each field is styled without a build step in the host project.
+2. **Given** a form drawn with the pack in any of its states, **When** the classes the pack put in the output are collected, **Then** every one of them is either a class daisyUI's CDN stylesheet defines or a Tailwind layout utility the pack names as allowed.
+3. **Given** a page that loads daisyUI's documented CDN install and nothing else for styling, **When** a form is drawn on it with the pack, **Then** every part of each field is styled without a build step in the host project.
 4. **Given** the package as distributed, **When** its templates are inspected, **Then** none of them uses a django-cotton or daisy-cotton tag, include or parent template, and no module imports from django-mvp.
 
 ---
@@ -134,7 +134,7 @@ A developer deciding whether to use the pack opens the README and finds how to i
 1. **Given** the demo project is running, **When** the text inputs page is opened, **Then** it shows every input kind this feature covers, each in these states: empty, holding a value, required, with help text, and with an error.
 2. **Given** the demo project is running, **When** the same page is submitted, **Then** it comes back with real validation errors on its fields and a form-wide error, drawn by the pack.
 3. **Given** the demo project's sidebar, **When** it is drawn, **Then** it holds an entry that leads to the text inputs page.
-4. **Given** the demo project is running, **When** the standalone variant of the page is opened, **Then** the same form is drawn on a page that takes its styling from daisyUI's CDN build alone.
+4. **Given** the demo project is running, **When** the standalone variant of the page is opened, **Then** the same form is drawn on a page that takes its styling from daisyUI's documented CDN install alone, with no build step.
 5. **Given** the README, **When** a developer follows its installation and quickstart sections in a project that loads daisyUI, **Then** the steps as written produce a form drawn by the pack.
 6. **Given** the README's public surface section, **When** it is read, **Then** it names the pack, the settings that select it and the input kinds it draws.
 
@@ -196,7 +196,7 @@ A developer deciding whether to use the pack opens the README and finds how to i
 
 #### Any daisyUI project
 
-- **FR-026**: Every class the pack emits MUST be one that daisyUI's full CDN build defines. The pack MUST NOT rely on a class that only a Tailwind build in the host project would produce.
+- **FR-026**: Every component the pack draws MUST be built from classes daisyUI's CDN stylesheet defines. A Tailwind utility MAY be used for layout only, where daisyUI has no component or modifier for the job, and each one MUST be named in a list the tests hold. The pack MUST NOT rely on a class that only a build step in the host project would produce.
 - **FR-027**: The pack MUST ship no stylesheet and no script, and MUST define no class of its own.
 - **FR-028**: Every template the package distributes MUST be a plain Django template. None may use django-cotton or daisy-cotton by tag, include or inheritance.
 - **FR-029**: The package MUST NOT import from django-mvp or require it at runtime.
@@ -206,7 +206,7 @@ A developer deciding whether to use the pack opens the README and finds how to i
 
 - **FR-031**: The demo project MUST use the pack for its own forms and MUST have a page, reachable from its sidebar, that shows every covered input kind in each of these states: empty, holding a value, required, with help text, and with an error.
 - **FR-032**: That page MUST be submittable, and MUST come back showing field errors and a form-wide error.
-- **FR-033**: The demo project MUST offer the same form on a page that takes its styling from daisyUI's full CDN build alone.
+- **FR-033**: The demo project MUST offer the same form on a page that takes its styling from daisyUI's documented CDN install alone, with no build step.
 - **FR-034**: The README MUST carry installation and quickstart sections that lead from a clean project to a drawn form, and a public surface entry naming the pack, the settings that select it and the input kinds it draws. The CHANGELOG MUST record the addition.
 
 ### Requirement to story map
@@ -234,7 +234,7 @@ A developer deciding whether to use the pack opens the README and finds how to i
 - **SC-002**: Every one of the nine covered input kinds (text, email, URL, number, password, date, time, date-time, textarea) is drawn as its daisyUI counterpart.
 - **SC-003**: For every covered input kind, the label, the required state, the help text and each error are announced with the field by assistive technology. An automated accessibility check of the demo page reports no missing label, no missing description and no duplicate id.
 - **SC-004**: A form that fails for a form-wide reason always shows that reason. No invalid submission comes back with nothing drawn to explain it.
-- **SC-005**: Every class the pack emits is found in daisyUI's full CDN build, so a page that loads that build and has no build step shows the form fully styled.
+- **SC-005**: Every class the pack emits is one daisyUI's documented CDN install styles, so a page that loads that install and has no build step shows the form fully styled.
 - **SC-006**: The package installs and draws a form in a project where django-mvp, django-cotton and daisy-cotton are absent.
 - **SC-007**: The demo page shows every covered input kind in all five states, and a developer following only the README reaches a drawn form.
 - **SC-008**: The features that depend on this one ([#6](https://github.com/django-mvp/django-mvp-forms/issues/6) and [#7](https://github.com/django-mvp/django-mvp-forms/issues/7)) can draw their own inputs inside the field frame without redefining the label, marker, help text or error handling.
@@ -248,11 +248,12 @@ A developer deciding whether to use the pack opens the README and finds how to i
 - Q: Django draws a date field as a plain text input by default. Does the pack turn it into a date picker? → A: No. The pack draws the widget it is handed with the input type that widget declares. Changing the type would change what the browser submits and how the field parses it, which is the form's business. (Edge cases, FR-007)
 - Q: Which django-crispy-forms helper settings does a form with no layout have to honour? → A: Those that govern the form element, the CSRF token, labels, errors, and the label and field classes. The settings that place help text and errors inline are a matter of appearance and change nothing. A horizontal form is left as an open question in [#14](https://github.com/django-mvp/django-mvp-forms/issues/14). (FR-022 to FR-025, Edge cases)
 - Q: What happens to a field whose widget belongs to a later feature? → A: It is still drawn with the same frame, in place, and nothing raises. A form never loses a field because the pack is incomplete. (FR-009)
+- Q: Does "daisyUI's CDN build" mean the stylesheet alone? → A: No. It means daisyUI's documented CDN install: the stylesheet together with Tailwind's browser build. Components use daisyUI's classes, and a Tailwind utility is allowed for layout only where daisyUI has none. (User Story 4, FR-026, FR-033, SC-005)
 
 ## Assumptions
 
 - The host project already loads daisyUI. The package ships markup only.
-- "daisyUI's full CDN build" means the single stylesheet daisyUI publishes for use without a build step. This is stricter than the wording of Article XIV of the constitution, which also allows Tailwind utilities. Bringing the article into line is tracked in [#16](https://github.com/django-mvp/django-mvp-forms/issues/16). A host project with its own Tailwind build is responsible for making that build produce the classes the pack emits. The package documents that this is needed and does not do it for them.
+- "daisyUI's documented CDN install" means the stylesheet daisyUI publishes together with Tailwind's browser build, which is how daisyUI says to use it without a build step. Components come from the stylesheet. The browser build supplies the few layout utilities the pack is allowed, such as the one that makes an input fill its field. This matches Article XIV of the constitution, whose wording is tracked in [#16](https://github.com/django-mvp/django-mvp-forms/issues/16). A host project with its own Tailwind build is responsible for making that build produce the classes the pack emits. The package documents that this is needed and does not do it for them.
 - The supported versions are those the repository already declares: Django 5.2, 6.0 and 6.1, with django-crispy-forms 2.7 or later. The accessibility links follow what those Django versions emit.
 - "Date and time" in the request means the date, time and date-time inputs Django ships as single inputs.
 - Disabled and read-only states are drawn by [#6](https://github.com/django-mvp/django-mvp-forms/issues/6), as that request says. This feature only keeps the attributes Django emits.

@@ -272,9 +272,9 @@ findings were fixed anyway, because each was small.
   component's name at run time, so a host project's own Tailwind build would never find them.
   They are now written out in `FieldInput.error_modifiers`, and the README tells such a project
   to scan the whole package and not only its templates.
-- **CR-002, declined.** The standalone demo page loads Tailwind's browser build beside daisyUI's
-  stylesheet. That is daisyUI's documented CDN install and the maintainer's ruling in D9. The
-  pack itself writes only classes the stylesheet defines, which a test holds.
+- **CR-002, resolved by amending the specification (D25).** The standalone demo page loads
+  Tailwind's browser build beside daisyUI's stylesheet, and the specification said "the CDN
+  build alone". The page was right and the wording was behind the ruling in D9.
 - **CR-003, fixed.** With labels off, only a label marked safe has its tags stripped and its
   entities read as characters. Any other label is named exactly as written.
 - **CR-004, fixed.** The tag reads the helper's switches with the same comparison the templates
@@ -301,3 +301,18 @@ developer put on the widget replaces the pack's; a width for one breakpoint sits
 **Revisit if:** daisyUI gains a full-width modifier.
 
 **ADR:** docs/adr/0007-inputs-fill-their-container.md
+
+## D25. The specification says "daisyUI's documented CDN install"
+
+**Decision:** User Story 4, User Story 5 scenario 4, FR-026, FR-033, SC-005 and the matching
+assumption now say that a page is styled by daisyUI's documented CDN install, which is its
+stylesheet together with Tailwind's browser build, with no build step in the host project.
+
+**Why:** the specification was written to the stricter reading in D4, the stylesheet alone. The
+maintainer's ruling in D9 replaced that reading, ADR 0003 records it, and inputs now carry
+`w-full` (ADR 0007), which only the browser build styles. The review found the standalone page
+and the specification disagreeing, and the specification was the one out of date.
+
+**Revisit if:** daisyUI changes what its CDN install consists of.
+
+**ADR:** none — it brings the specification into line with ADR 0003, which carries the rule.
