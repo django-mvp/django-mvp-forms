@@ -15,6 +15,7 @@ from crispy_forms.layout import (
     Div,
     Fieldset,
     Hidden,
+    MultiField,
     Reset,
     Row,
     Submit,
@@ -118,6 +119,28 @@ def buttoned(data=None):
     )
 
 
+def everything(data=None):
+    return StructureForm(
+        data,
+        layout=(
+            Fieldset(
+                "Account",
+                Div(Row(Column("first"), Column("second")), css_id="box"),
+                HTML("<p>Written for {{ who }}</p>"),
+            ),
+            MultiField("Contact", "third", css_id="contact"),
+            Hidden("step", "two"),
+            FormActions(
+                Submit("save", "Save"),
+                Reset("clear", "Clear"),
+                Button("help", "Help"),
+                StrictButton("More", css_id="more"),
+            ),
+            ButtonHolder(Submit("again", "Again")),
+        ),
+    )
+
+
 def helper_buttons():
     return ButtonedForm(
         buttons=(
@@ -196,6 +219,13 @@ STATES = [
         lambda: structured({}),
         NOTHING,
         id="structural layout objects, invalid",
+    ),
+    pytest.param("{% crispy form %}", everything, NOTHING, id="all thirteen objects"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: everything({}),
+        NOTHING,
+        id="all thirteen objects, invalid",
     ),
     pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
     pytest.param(

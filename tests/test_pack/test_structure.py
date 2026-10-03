@@ -1,6 +1,7 @@
 """The layout objects that group fields: containers, rows, columns and fieldsets."""
 
-from crispy_forms.layout import Column, Div, Fieldset, Row
+import pytest
+from crispy_forms.layout import Column, Div, Fieldset, MultiField, Row
 
 DEVELOPER_CLASSES = ["mine", "other"]
 DEVELOPER_ATTRS = {"data-role": "group", "title": "Group"}
@@ -275,3 +276,119 @@ class TestNesting:
 
         described = soup.find(id="id_first")["aria-describedby"].split()
         assert "id_first_error" in described
+
+
+class TestMultiField:
+    def test_it_holds_its_fields_in_one_fieldset_in_layout_order(self, draw_layout):
+        soup = draw_layout(MultiField(LEGEND, "second", "first", css_id="group"))
+
+        fieldsets = soup.find_all("fieldset", id="group")
+        assert len(fieldsets) == 1
+        assert field_ids(fieldsets[0]) == ["id_second", "id_first"]
+
+    def test_its_legend_is_the_label_it_was_given(self, draw_layout):
+        soup = draw_layout(MultiField(LEGEND, "first", css_id="group"))
+
+        legend = soup.find("fieldset", id="group").find("legend")
+        assert legend.get_text(strip=True) == LEGEND
+
+    def test_it_is_a_daisyui_fieldset_with_a_daisyui_legend(self, draw_layout):
+        soup = draw_layout(MultiField(LEGEND, "first", css_id="group"))
+
+        fieldset = soup.find("fieldset", id="group")
+        assert "fieldset" in fieldset["class"]
+        assert "fieldset-legend" in fieldset.find("legend")["class"]
+
+    def test_an_empty_label_draws_no_legend_element(self, draw_layout):
+        soup = draw_layout(MultiField("", "first", css_id="group"))
+
+        fieldset = soup.find("fieldset", id="group")
+        assert fieldset.find("legend") is None
+        assert field_ids(fieldset) == ["id_first"]
+
+    def test_markup_in_the_label_is_kept(self, draw_layout):
+        soup = draw_layout(
+            MultiField("Name <em>and</em> mail", "first", css_id="group")
+        )
+
+        assert soup.find("fieldset", id="group").find("legend").find("em") is not None
+
+    def test_each_field_is_in_its_own_frame_with_its_own_label(self, draw_layout):
+        soup = draw_layout(MultiField(LEGEND, "first", "second", css_id="group"))
+
+        group = soup.find("fieldset", id="group")
+        for name in ["first", "second"]:
+            frame = group.find(id=f"div_id_{name}")
+            assert frame.find(id=f"id_{name}") is not None
+            assert frame.find("label", attrs={"for": f"id_{name}"}) is not None
+
+    def test_an_invalid_field_has_its_error_in_its_own_frame(self, draw_layout):
+        soup = draw_layout(MultiField(LEGEND, "first", css_id="group"), bound=True)
+
+        error = soup.find(id="id_first_error")
+        frame = soup.find(id="div_id_first")
+        assert error.find_parent(id="div_id_first") is frame
+        assert frame.find_parent("fieldset", id="group") is not None
+
+    def test_the_input_of_an_invalid_field_names_its_error(self, draw_layout):
+        soup = draw_layout(MultiField(LEGEND, "first", css_id="group"), bound=True)
+
+        described = soup.find(id="id_first")["aria-describedby"].split()
+        assert "id_first_error" in described
+
+    def test_it_carries_the_id_the_classes_and_the_attributes_it_was_given(
+        self, draw_layout
+    ):
+        fieldset = draw_layout(
+            MultiField(
+                LEGEND,
+                "first",
+                css_id="group",
+                css_class=" ".join(DEVELOPER_CLASSES),
+                **DEVELOPER_ATTRS,
+            )
+        ).find("fieldset", id="group")
+
+        assert set(DEVELOPER_CLASSES) <= set(fieldset["class"])
+        assert "fieldset" in fieldset["class"]
+        assert fieldset["data-role"] == DEVELOPER_ATTRS["data-role"]
+        assert fieldset["title"] == DEVELOPER_ATTRS["title"]
+
+    def test_it_writes_no_id_when_it_was_given_none(self, draw_layout):
+        soup = draw_layout(MultiField(LEGEND, "first", css_class="mine"))
+
+        assert not soup.find("fieldset", class_="mine").has_attr("id")
+
+    @pytest.mark.parametrize("bound", [False, True])
+    @pytest.mark.parametrize(
+        "options",
+        [{}, {"css_class": "mine", "label_class": "other"}],
+        ids=["defaults", "developer's"],
+    )
+    def test_no_class_written_for_other_packs_is_drawn(
+        self, draw_layout, bound, options
+    ):
+        soup = draw_layout(
+            MultiField(LEGEND, "first", css_id="group", **options), bound=bound
+        )
+
+        classes = {name for tag in soup.find_all(class_=True) for name in tag["class"]}
+        assert not classes & {"ctrlHolder", "blockLabel", "error"}
+
+    def test_drawing_the_same_layout_twice_changes_nothing(self, draw_layout):
+        layout = MultiField(LEGEND, "first", css_id="group")
+
+        first = draw_layout(layout, bound=True)
+        second = draw_layout(layout, bound=True)
+
+        assert str(first) == str(second)
+
+    def test_one_given_its_own_template_is_drawn_with_that_template(self, draw_layout):
+        soup = draw_layout(
+            MultiField(
+                LEGEND, "first", css_id="group", template="tests/own_container.html"
+            )
+        )
+
+        assert soup.find("section", id="own-container") is not None
+        assert soup.find("fieldset", id="group") is None

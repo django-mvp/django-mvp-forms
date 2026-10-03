@@ -262,6 +262,19 @@ class LayoutObjectsPageContract:
         assert not hidden.has_attr("class")
         assert not hidden.has_attr("id")
 
+    @pytest.mark.parametrize("name", ["email", "phone"])
+    def test_the_multi_field_holds_each_of_its_fields_by_id(self, page, name):
+        group = page.find("fieldset", id=f"{LAYOUT_SUBMIT_PREFIX}-contact")
+        assert group.find("legend") is not None
+        assert group.find("input", id=layout_field_id(LAYOUT_SUBMIT_PREFIX, name))
+
+    def test_an_error_inside_the_multi_field_is_in_its_field_frame(self, open_page):
+        page = open_page(self.url_name)
+        group = page.find("fieldset", id=f"{LAYOUT_FAILING_PREFIX}-contact")
+        error_id = layout_field_id(LAYOUT_FAILING_PREFIX, "email") + "_error"
+        frame = group.find(id="div_" + layout_field_id(LAYOUT_FAILING_PREFIX, "email"))
+        assert frame.find(id=error_id) is not None
+
     def test_the_form_that_fails_is_drawn_without_a_form_element(self, page):
         field = page.find(id=layout_field_id(LAYOUT_FAILING_PREFIX, "first_name"))
         assert field.find_parent("form") is None

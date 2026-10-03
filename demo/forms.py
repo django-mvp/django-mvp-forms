@@ -11,6 +11,7 @@ from crispy_forms.layout import (
     Fieldset,
     Hidden,
     Layout,
+    MultiField,
     Reset,
     Row,
     Submit,
@@ -88,6 +89,7 @@ class LayoutObjectsForm(forms.Form):
     first_name = forms.CharField(label=_("First name"))
     last_name = forms.CharField(label=_("Last name"))
     email = forms.EmailField(label=_("Email"))
+    phone = forms.CharField(label=_("Phone"))
     note = forms.CharField(label=_("Note"))
 
     def __init__(self, *args, form_tag=True, **kwargs):
@@ -113,7 +115,13 @@ class LayoutObjectsForm(forms.Form):
                     css_id=f"{prefix}-row",
                 ),
                 HTML(f'<p id="{prefix}-aside">Prepared for {{{{ owner }}}}.</p>'),
-                Div("email", "note", css_id=f"{prefix}-more"),
+                MultiField(
+                    _("How to reach you"),
+                    "email",
+                    "phone",
+                    css_id=f"{prefix}-contact",
+                ),
+                Div("note", css_id=f"{prefix}-more"),
                 css_id=f"{prefix}-details",
             ),
             Hidden(f"{prefix}-step", "details"),
