@@ -695,3 +695,87 @@ class TestContainersStandalonePage(ContainersPageContract):
     def test_it_links_back_to_the_tabs_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("tabs")) is not None
+
+
+ACCORDION_PREFIX = "accordion"
+CHOSEN_PREFIX = "chosen-accordion"
+ACCORDION_POST = {f"{ACCORDION_PREFIX}-submit": "Submit"}
+
+
+def accordion_groups(page, prefix):
+    return page.find(id=f"{prefix}-groups").find_all("details")
+
+
+def open_groups(page, prefix):
+    groups = accordion_groups(page, prefix)
+    return [index for index, group in enumerate(groups) if group.has_attr("open")]
+
+
+class AccordionPageContract:
+    url_name = ""
+
+    def test_a_get_opens_the_first_group_of_the_posting_form(self, open_page):
+        page = open_page(self.url_name)
+        assert open_groups(page, ACCORDION_PREFIX) == [0]
+
+    def test_a_post_of_the_empty_form_opens_the_third_group(self, open_page):
+        page = open_page(self.url_name, ACCORDION_POST)
+        assert open_groups(page, ACCORDION_PREFIX) == [2]
+
+    def test_the_error_comes_back_inside_the_third_group(self, open_page):
+        page = open_page(self.url_name, ACCORDION_POST)
+        group = accordion_groups(page, ACCORDION_PREFIX)[2]
+        error_id = layout_field_id(ACCORDION_PREFIX, "note") + "_error"
+        assert group.find(id=error_id) is not None
+
+    def test_the_second_form_has_the_developers_open_group_open(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("details", id=f"{CHOSEN_PREFIX}-open").has_attr("open")
+
+    def test_the_second_form_has_the_developers_closed_group_closed(self, open_page):
+        page = open_page(self.url_name)
+        assert not page.find("details", id=f"{CHOSEN_PREFIX}-closed").has_attr("open")
+
+    def test_the_second_form_has_no_form_element(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(id=f"{CHOSEN_PREFIX}-groups").find_parent("form") is None
+
+    @pytest.mark.parametrize("data", [None, ACCORDION_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestAccordionPage(AccordionPageContract):
+    url_name = "accordion"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("accordion")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("containers-standalone")) is not None
+
+
+class TestContainersStandaloneAccordion(AccordionPageContract):
+    url_name = "containers-standalone"
+
+    def test_a_post_of_the_accordion_form_binds_only_that_form(self, open_page):
+        page = open_page(self.url_name, ACCORDION_POST)
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [0]
+
+    def test_a_post_of_the_tabs_form_binds_only_that_form(self, open_page):
+        page = open_page(self.url_name, {f"{TABS_SUBMIT_PREFIX}-submit": "Submit"})
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [1]
+        assert open_groups(page, ACCORDION_PREFIX) == [0]
+
+    def test_it_links_back_to_the_accordion_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("accordion")) is not None

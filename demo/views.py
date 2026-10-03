@@ -11,7 +11,9 @@ from django.views.generic import TemplateView
 from mvp.views import MVPTemplateView
 
 from demo.forms import (
+    AccordionForm,
     ChoiceInputsForm,
+    ChosenGroupsForm,
     HelperButtonsForm,
     LayoutObjectsForm,
     RowButtonsForm,
@@ -340,7 +342,51 @@ class TabsView(TabsMixin, MVPTemplateView):
     breadcrumbs = [{"text": "Tabs"}]
 
 
-class ContainersStandaloneView(TabsMixin, TemplateView):
-    """The container pages for a host project that has neither django-mvp nor Cotton."""
+class AccordionMixin:
+    """The forms the accordion page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    accordion_prefix = "accordion"
+    chosen_prefix = "chosen-accordion"
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one whose groups the developer chose."""
+        kwargs.setdefault("accordion_form", AccordionForm(prefix=self.accordion_prefix))
+        kwargs["chosen_form"] = ChosenGroupsForm(prefix=self.chosen_prefix)
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = AccordionForm(request.POST, prefix=self.accordion_prefix)
+        return self.render_to_response(self.get_context_data(accordion_form=form))
+
+
+class AccordionView(AccordionMixin, MVPTemplateView):
+    """Fields in accordion groups, inside the application shell."""
+
+    template_name = "demo/accordion.html"
+    page_title = "Accordion"
+    page_subtitle = "Fields grouped in an accordion, opening on the first error"
+    breadcrumbs = [{"text": "Accordion"}]
+
+
+class ContainersStandaloneView(AccordionMixin, TabsMixin, TemplateView):
+    """The container pages for a host project that has neither django-mvp nor Cotton.
+
+    A post belongs to the form whose submit button it names. One that names none
+    binds the tabs form.
+    """
 
     template_name = "demo/containers_standalone.html"
+
+    def post(self, request, *args, **kwargs):
+        """Bind the form whose submit button was pressed and no other."""
+        if f"{self.accordion_prefix}-submit" in request.POST:
+            return AccordionMixin.post(self, request, *args, **kwargs)
+        return TabsMixin.post(self, request, *args, **kwargs)

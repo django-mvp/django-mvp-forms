@@ -123,6 +123,7 @@ EASY_ICONS = {
             "choice-inputs": "bi bi-ui-checks",
             "layout-objects": "bi bi-layout-three-columns",
             "tabs": "bi bi-segmented-nav",
+            "accordion": "bi bi-chevron-bar-expand",
         },
     },
 }

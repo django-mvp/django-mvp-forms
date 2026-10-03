@@ -3,6 +3,7 @@
 from django.urls import include, path
 
 from demo.views import (
+    AccordionView,
     ChoiceInputsView,
     ContainersStandaloneView,
     LayoutObjectsView,
@@ -35,6 +36,7 @@ urlpatterns = [
         name="layout-objects-standalone",
     ),
     path("tabs/", TabsView.as_view(), name="tabs"),
+    path("accordion/", AccordionView.as_view(), name="accordion"),
     path(
         "containers/standalone/",
         ContainersStandaloneView.as_view(),

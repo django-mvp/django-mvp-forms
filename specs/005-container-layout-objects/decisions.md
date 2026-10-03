@@ -198,3 +198,18 @@ One reviewer, three lenses, on the plan before any code. No critical or high fin
 Watch items for the build: `Tab.render` strips the substring `active` from an inactive tab's
 classes, so a test must not use a developer class containing it; a developer's own `active`
 class is dropped from buttons and a `MultiField` as well, and the README says so.
+
+## D16. Which form a standalone post belongs to (US2)
+
+**Decision**: `ContainersStandaloneView.post` binds the accordion form when the post names the
+accordion's submit button (`<prefix>-submit`) and otherwise binds the tabs form, as before. Each
+shell page binds its own form on any post.
+
+**Why**: the standalone page now holds two forms to post, and a browser sends the name of the
+submit button that was pressed, so that name says which form was posted. The tests US1 wrote post
+an empty body to the standalone page and expect the tabs form bound, so a body that names no
+button keeps binding the tabs form rather than binding nothing. No registry or dispatcher: one
+`if` for two forms.
+
+**Revisit if**: US3 and US4 each add a posting form to the page, which makes three `if`s and is
+the point to look again.
