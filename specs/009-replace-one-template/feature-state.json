@@ -2,7 +2,7 @@
   "feature": "009-replace-one-template",
   "branch": "009-replace-one-template",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-03T22:46:16Z",
       "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T22:56:45Z",
+      "note": "review recorded, nothing open; no walkthrough needed"
     }
   ],
   "gates": {
@@ -360,6 +365,6 @@
   },
   "pr": {
     "number": 93,
-    "draft": true
+    "draft": false
   }
 }

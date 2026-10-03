@@ -74,3 +74,13 @@ Verified: full verify green at the tip.
 Next: code review.
 
 Watch: sibling features add templates; each has to add its row to the README's table once this is on main.
+
+## 2026-10-03T22:56:45Z · Forge · merge gate
+
+Did: the code review approved with one medium finding and four low, all fixed as T007 to T012 (D22). The outcome is recorded on the pull request with nothing open. No walkthrough: nothing a person sees changes.
+
+Verified: full verify green at the tip, 3360 tests.
+
+Next: the merge gate.
+
+Watch: when main moves, bring the branch up to date, check the decision record's number and that every template a sibling added has its row in the README table.
