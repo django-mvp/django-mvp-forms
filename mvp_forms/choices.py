@@ -403,9 +403,34 @@ class FormChoices:
         self.button_variant = button_variant
         self.fields = dict(fields or {})
 
+    def check(self) -> None:
+        """Raise when the statement holds a name daisyUI does not have.
+
+        The names for the form are checked wherever the statement is found, so a
+        mistake in the buttons' choices is reported when the form is drawn
+        without a button, as ``{{ form|crispy }}`` draws it. A field's or a
+        button's own choice is checked when it is resolved.
+
+        Raises:
+            InvalidChoice: A size, a colour or a variant is not one daisyUI has
+                for the inputs, or a button's colour or variant is not one it
+                has for buttons.
+        """
+        stated = (
+            ("size", self.size, None),
+            ("color", self.color, None),
+            ("variant", self.variant, None),
+            ("color", self.button_color, Modifiers.button),
+            ("variant", self.button_variant, Modifiers.button),
+        )
+        for kind, value, component in stated:
+            allowed = Modifiers.names(kind, component)
+            if value is not None and value not in allowed:
+                raise InvalidChoice(kind, value, allowed)
+
     @classmethod
     def lookup(cls, context: Context, form: Any = None) -> "FormChoices | None":
-        """Find the statement for one draw.
+        """Find the statement for one draw, and check it.
 
         The context's value is used when it is a ``FormChoices``. A value there
         that is not one is the host page's own and is treated as absent. Failing
@@ -421,16 +446,17 @@ class FormChoices:
         Raises:
             TypeError: The form's helper has a ``daisyui`` attribute that is not
                 a ``FormChoices``.
+            InvalidChoice: The statement holds a name daisyUI does not have.
         """
         found = context.get(cls.attribute)
-        if isinstance(found, cls):
-            return found
-        helper = getattr(form, "helper", None)
-        if helper is None or not hasattr(helper, cls.attribute):
-            return None
-        found = getattr(helper, cls.attribute)
         if not isinstance(found, cls):
-            raise TypeError(
-                f"helper.{cls.attribute} must be a FormChoices, not {found!r}"
-            )
+            helper = getattr(form, "helper", None)
+            if helper is None or not hasattr(helper, cls.attribute):
+                return None
+            found = getattr(helper, cls.attribute)
+            if not isinstance(found, cls):
+                raise TypeError(
+                    f"helper.{cls.attribute} must be a FormChoices, not {found!r}"
+                )
+        found.check()
         return found

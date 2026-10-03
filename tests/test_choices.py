@@ -437,3 +437,47 @@ class TestFormChoices:
     def test_a_helper_attribute_that_is_not_a_statement_raises(self, value):
         with pytest.raises(TypeError):
             FormChoices.lookup(Context(), HelpedForm(value))
+
+
+class TestFormChoicesCheck:
+    @pytest.mark.parametrize(
+        ("keyword", "kind", "allowed"),
+        [
+            ("size", "size", SIZES),
+            ("color", "color", COLORS),
+            ("variant", "variant", INPUT_VARIANTS),
+            ("button_color", "color", COLORS),
+            ("button_variant", "variant", BUTTON_VARIANTS),
+        ],
+    )
+    def test_a_name_daisyui_lacks_raises_for_its_kind_and_family(
+        self, keyword, kind, allowed
+    ):
+        with pytest.raises(InvalidChoice) as caught:
+            FormChoices(**{keyword: "nonesuch"}).check()
+
+        error = caught.value
+        assert (error.kind, error.value, error.target) == (kind, "nonesuch", None)
+        assert error.allowed == allowed
+
+    def test_a_variant_only_buttons_have_is_refused_for_the_inputs(self):
+        with pytest.raises(InvalidChoice) as caught:
+            FormChoices(variant="outline").check()
+
+        assert "outline" not in caught.value.allowed
+
+    def test_a_variant_inputs_and_buttons_share_is_accepted_for_both(self):
+        FormChoices(variant="ghost", button_variant="ghost").check()
+
+    def test_a_statement_of_nothing_is_accepted(self):
+        FormChoices().check()
+
+    def test_lookup_checks_the_statement_it_finds_in_the_context(self):
+        with pytest.raises(InvalidChoice):
+            FormChoices.lookup(Context({"daisyui": FormChoices(button_color="x")}))
+
+    def test_lookup_checks_the_statement_it_finds_on_the_helper(self):
+        with pytest.raises(InvalidChoice):
+            FormChoices.lookup(
+                Context(), HelpedForm(FormChoices(button_variant="glow"))
+            )

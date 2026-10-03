@@ -19,13 +19,14 @@ from crispy_forms.layout import (
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template import Context, Template
 
-from mvp_forms.choices import Choice, FormChoices
+from mvp_forms.choices import Choice, FormChoices, InvalidChoice
 from tests.forms import (
     ButtonedForm,
     DeveloperAttrsForm,
     EveryInputForm,
     FilesForm,
     StructureForm,
+    UncoveredWidgetsForm,
 )
 
 SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
@@ -727,3 +728,266 @@ class TestButtonChoices:
         soup = draw("{% crispy form %}", form=form, **{"daisyui": "the page's own"})
 
         assert "btn-lg" in button_of(soup)
+
+
+SIZES = {"xs", "sm", "md", "lg", "xl"}
+COLORS = {
+    "neutral",
+    "primary",
+    "secondary",
+    "accent",
+    "info",
+    "success",
+    "warning",
+    "error",
+}
+INPUT_NAMES = {"size": SIZES, "color": COLORS, "variant": {"ghost"}}
+BUTTON_NAMES = {
+    "size": SIZES,
+    "color": COLORS,
+    "variant": {"outline", "dash", "soft", "ghost", "link"},
+}
+MISTAKES = [
+    pytest.param("size", "huge", id="size"),
+    pytest.param("color", "purple", id="colour"),
+    pytest.param("variant", "glow", id="variant"),
+    pytest.param("variant", "outline", id="a button's variant stated for inputs"),
+]
+BUTTON_MISTAKES = [
+    pytest.param("size", "huge", "size", id="size"),
+    pytest.param("color", "purple", "button_color", id="colour"),
+    pytest.param("variant", "glow", "button_variant", id="variant"),
+]
+BUTTON_TARGETS = ["act", "act", "act", "Go"]
+NAMED_BUTTONS = [
+    pytest.param(*button.values, target, id=button.id)
+    for button, target in zip(BUTTONS, BUTTON_TARGETS, strict=True)
+]
+TAG = "{% crispy form %}"
+EVERY_FIELD = [name for name, _, _ in INPUTS]
+
+
+def refused(draw, source, form):
+    with pytest.raises(InvalidChoice) as caught:
+        draw(source, form=form)
+    return caught.value
+
+
+class TestMistakes:
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize(("kind", "bad"), MISTAKES)
+    def test_a_name_daisyui_lacks_for_the_forms_inputs_is_refused(
+        self, draw, source, kind, bad
+    ):
+        error = refused(draw, source, stated(StructureForm(), **{kind: bad}))
+
+        assert (error.kind, error.value, error.target) == (kind, bad, None)
+        assert set(error.allowed) == INPUT_NAMES[kind]
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize(("kind", "bad", "keyword"), BUTTON_MISTAKES)
+    def test_a_name_daisyui_lacks_for_the_forms_buttons_is_refused_without_a_button(
+        self, draw, source, kind, bad, keyword
+    ):
+        form = stated(StructureForm(), **{keyword: bad})
+
+        error = refused(draw, source, form)
+
+        assert (error.kind, error.value, error.target) == (kind, bad, None)
+        assert set(error.allowed) == BUTTON_NAMES[kind]
+
+    @pytest.mark.parametrize(("kind", "bad", "keyword"), BUTTON_MISTAKES)
+    def test_a_name_daisyui_lacks_for_the_forms_buttons_is_refused(
+        self, draw, kind, bad, keyword
+    ):
+        form = structured(Submit("act", "Go"), **{keyword: bad})
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.target) == (kind, bad, None)
+        assert set(error.allowed) == BUTTON_NAMES[kind]
+
+    @pytest.mark.parametrize(("kind", "bad", "keyword"), BUTTON_MISTAKES)
+    def test_a_name_daisyui_lacks_for_a_button_added_to_the_helper_is_refused(
+        self, draw, kind, bad, keyword
+    ):
+        form = ButtonedForm(buttons=(Submit("act", "Go"),))
+        form.helper.daisyui = FormChoices(**{keyword: bad})
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.target) == (kind, bad, None)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize(("kind", "bad"), MISTAKES)
+    def test_a_name_daisyui_lacks_for_one_field_by_name_is_refused_naming_it(
+        self, draw, source, kind, bad
+    ):
+        form = StructureForm()
+        form.helper.daisyui = FormChoices(fields={"second": Choice(**{kind: bad})})
+
+        error = refused(draw, source, form)
+
+        assert (error.kind, error.value, error.target) == (kind, bad, "second")
+        assert set(error.allowed) == INPUT_NAMES[kind]
+
+    @pytest.mark.parametrize(("kind", "bad"), MISTAKES)
+    def test_a_name_daisyui_lacks_for_one_field_in_a_layout_is_refused_naming_it(
+        self, draw, kind, bad
+    ):
+        form = structured("first", Choice("second", **{kind: bad}))
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.target) == (kind, bad, "second")
+        assert set(error.allowed) == INPUT_NAMES[kind]
+
+    @pytest.mark.parametrize(("kind", "bad"), MISTAKES)
+    def test_a_name_daisyui_lacks_for_a_field_deep_in_a_choice_names_the_field(
+        self, draw, kind, bad
+    ):
+        form = structured("first", Choice(Row(Column("second")), **{kind: bad}))
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.target) == (kind, bad, "second")
+
+    @pytest.mark.parametrize(("kind", "bad"), MISTAKES[:3])
+    @pytest.mark.parametrize(("make", "target"), NAMED_BUTTONS)
+    def test_a_name_daisyui_lacks_for_one_button_is_refused_naming_it(
+        self, draw, make, target, kind, bad
+    ):
+        form = structured(Choice(make(), **{kind: bad}))
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.target) == (kind, bad, target)
+        assert set(error.allowed) == BUTTON_NAMES[kind]
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("name", EVERY_FIELD)
+    def test_a_mistake_on_a_field_is_raised_whatever_frame_draws_the_field(
+        self, draw, source, name
+    ):
+        form = EveryInputForm()
+        form.helper.daisyui = FormChoices(fields={name: Choice(size="huge")})
+
+        error = refused(draw, source, form)
+
+        assert (error.kind, error.value, error.target) == ("size", "huge", name)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_misspelt_colour_on_a_field_in_error_is_still_reported(
+        self, draw, source
+    ):
+        form = StructureForm({})
+        form.helper.daisyui = FormChoices(fields={"first": Choice(color="purple")})
+
+        error = refused(draw, source, form)
+
+        assert (error.kind, error.value, error.target) == ("color", "purple", "first")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_misspelt_colour_for_the_form_is_reported_with_a_field_in_error(
+        self, draw, source
+    ):
+        error = refused(draw, source, stated(StructureForm({}), color="purple"))
+
+        assert (error.kind, error.value, error.target) == ("color", "purple", None)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_variant_for_the_form_is_passed_over_for_the_inputs_without_it(
+        self, draw, source
+    ):
+        soup = draw(source, form=stated(EveryInputForm(), variant="ghost"))
+
+        for name, component, count in WITH_VARIANT:
+            found = inputs_of(soup, name)
+            assert len(found) == count
+            assert all(f"{component}-ghost" in classes(tag) for tag in found)
+        for name, component, count in WITHOUT_VARIANT:
+            found = inputs_of(soup, name)
+            assert len(found) == count
+            assert not any(f"{component}-ghost" in classes(tag) for tag in found)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("name", ["agree", "radios", "boxes"])
+    def test_a_variant_stated_for_one_checkbox_or_radio_group_is_refused(
+        self, draw, source, name
+    ):
+        form = EveryInputForm()
+        form.helper.daisyui = FormChoices(fields={name: Choice(variant="ghost")})
+
+        error = refused(draw, source, form)
+
+        assert (error.kind, error.value, error.target) == ("variant", "ghost", name)
+        assert error.allowed == ()
+
+    def test_a_variant_stated_in_a_layout_for_one_checkbox_is_refused(self, draw):
+        form = EveryInputForm(layout=[Choice("agree", variant="ghost")])
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.target) == ("variant", "ghost", "agree")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize(("kind", "name"), [("size", "lg"), ("color", "accent")])
+    def test_a_choice_for_a_field_whose_widget_the_pack_does_not_cover_is_refused(
+        self, draw, source, kind, name
+    ):
+        form = UncoveredWidgetsForm()
+        form.helper = FormHelper(form)
+        form.helper.daisyui = FormChoices(fields={"choice": Choice(**{kind: name})})
+
+        error = refused(draw, source, form)
+
+        assert (error.kind, error.value, error.target) == (kind, name, "choice")
+        assert error.allowed == ()
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_choice_for_the_form_is_passed_over_for_a_widget_not_covered(
+        self, draw, source
+    ):
+        form = UncoveredWidgetsForm()
+        form.helper = FormHelper(form)
+        form.helper.daisyui = FormChoices(size="lg", color="accent", variant="ghost")
+
+        soup = draw(source, form=form)
+
+        assert "input-lg" in classes(soup.find(id="id_first"))
+        assert not {"input-lg", "input-accent"} & classes(soup.find(id="id_choice"))
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("value", ["sm", {"size": "sm"}, None])
+    def test_a_helper_statement_that_is_not_a_form_choices_raises(
+        self, draw, source, value
+    ):
+        form = StructureForm()
+        form.helper.daisyui = value
+
+        with pytest.raises(TypeError):
+            draw(source, form=form)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_page_variable_named_daisyui_that_is_not_a_statement_is_ignored(
+        self, draw, source
+    ):
+        plain = draw(source, form=structured("first", Submit("act", "Go")))
+
+        with_variable = draw(
+            source,
+            form=structured("first", Submit("act", "Go")),
+            daisyui="the page's own",
+        )
+
+        assert str(with_variable) == str(plain)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_page_variable_named_daisyui_does_not_hide_the_forms_statement(
+        self, draw, source
+    ):
+        form = structured("first", size="lg")
+
+        soup = draw(source, form=form, daisyui=["the page's own"])
+
+        assert "input-lg" in named(soup, "first")

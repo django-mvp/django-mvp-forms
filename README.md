@@ -334,6 +334,14 @@ Here every button is small and outlined, `Delete` is in the error colour and the
 - Your `css_class`, `css_id` and attributes are kept on every button, and a `Hidden` is never changed.
 - The statement reaches a button as the context name `daisyui`, which django-crispy-forms copies from the helper, so it works under whatever name the page gives its form, and with `{% crispy form %}`. Buttons are drawn only by the tag: `{{ form|crispy }}` draws no layout and no helper.
 
+### What is refused and what is passed over
+
+A name daisyUI does not have is refused when the form is drawn, never written as a class that does nothing. It raises `InvalidChoice`, a `ValueError` carrying `kind` (`"size"`, `"color"` or `"variant"`), the `value` you stated and the names `allowed`. It is raised for a choice stated for the form's inputs, for its buttons (`button_color` and `button_variant`), on one field by name, on one field with a `Choice` in a layout, and on one button. When it was stated on a field or a button, `target` names it: the field's name, or a button's name, or the content of a `StrictButton`. For a choice stated for the form, `target` is `None`. What is stated for the form is checked whenever a form is drawn, so `{{ form|crispy }}`, which draws no button, still reports a mistake in `button_color`.
+
+A choice stated for the form that a kind of input has no modifier for is passed over, with no error: `variant="ghost"` leaves a checkbox, a radio group and a checkbox group as they are and the rest take it. The same choice stated on one of those fields raises, and so does any choice stated on a field whose widget the pack does not draw as an input of its own, because you asked for it by name.
+
+`helper.daisyui` must be a `FormChoices`: anything else raises `TypeError` when the form is drawn. A page variable that happens to be called `daisyui` and is not a `FormChoices` is ignored.
+
 ## Contributing
 
 Standards for this repository live in
