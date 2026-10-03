@@ -301,3 +301,27 @@ which a field that cannot be joined has.
 that both be shown on a page that loads only the CDN install, and does not ask for one page.
 
 **ADR:** none. Local to the demo project.
+
+## D20. The design review's findings, and what was done with each
+
+One reviewer, three lenses, verdict approve. Nothing was critical or high.
+
+- **DR-001 (medium):** the templates of the joined group were added one task before a state drew
+  them, which the replacement check refuses. The state moves to the task that adds the
+  templates.
+- **DR-002 (medium):** a name the form lacks would have raised out of the joined group where
+  django-crispy-forms only logs it. The plan leaves such a name to django-crispy-forms and a
+  test covers it.
+- **DR-003 (low):** the research said daisyUI sizes a floating label's text for inputs only. It
+  sizes it for selects and textareas too, so the README says nothing about a limit.
+- **DR-004 (low):** the demo shows a read-only member as well as a disabled and a hidden one.
+- **DR-005 (low):** the demo shows a joined group at every colour and in the variant.
+- **DR-006 (low):** a field disabled only by a disabled fieldset around it is not detected. The
+  tag cannot see the layout around a field. The README says to undo the floating label there.
+
+Watch items carried into the briefs: a textarea inside `PrependedText` has no attached text and
+so floats; the README's example of a joined group matches the one the test draws; the docstrings
+say which `join` and which `label` they mean; the report pastes the command and result of the
+comparison for SC-003.
+
+**ADR:** none. It records a review, and each remedy is in the plan or the tasks.

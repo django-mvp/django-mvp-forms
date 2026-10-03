@@ -73,10 +73,8 @@ Read from `https://cdn.jsdelivr.net/npm/daisyui@5.7.47/daisyui.css`.
 - `.floating-label:has(:disabled,[disabled])>span{opacity:0}`. A disabled input's floating label
   is never shown, whatever its value. This is the rule FR-007 answers.
 - `.floating-label:has(.input-xs)` to `.floating-label:has(.input-xl)` set the span's font size
-  and position. There is no such rule for `textarea-*` or `select-*`. A floating label's text
-  therefore follows the size of an input, and keeps daisyUI's default on a textarea and a select
-  of another size. The pack cannot change that without a class of its own (Article XIV). The
-  README says so.
+  and position, and the same rules exist for `select-*` and `textarea-*`. The label's text
+  therefore follows the size of all three.
 
 daisyUI's documented markup is a `<label class="floating-label">` holding a `<span>` and the
 input, in that order. A label that contains its input names it, and the pack also writes `for`,

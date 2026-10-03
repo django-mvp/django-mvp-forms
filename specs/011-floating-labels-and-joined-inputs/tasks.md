@@ -108,8 +108,9 @@ Plan, *The floating label › The templates*, *Documentation*.
 - Verification, reported and not committed: render every entry of `STATES` as it stands at the
   base commit before T001 and after this task, and compare (SC-003).
 - README: the section "Floating labels" with an example that `test_documented_examples.py`
-  draws; what takes one, what the form's statement passes over, the disabled fallback, the
-  placeholder rule, and that the label's text follows the size of an input only (research R1);
+  draws; what takes one, what the form's statement passes over, the disabled fallback, that a
+  field disabled only by a disabled fieldset around it is not detected and has its floating
+  label undone with `Choice(label=None)`, and the placeholder rule;
   "What is refused and what is passed over" names the `label` kind; the rows of
   `daisyui/frame.html` and `daisyui/field_body.html` in the template list gain
   `drawn.is_floating`. CHANGELOG, under Added. CONTEXT: **Floating label**; **Choice** names
@@ -157,7 +158,9 @@ Plan, *The joined group*; research R2, R5, R6.
   `join-item`, `member_widths`, and `can_float` false.
 - The three templates, and `field_body.html` including `daisyui/field_messages.html` for the
   help text and errors it drew inline.
-- `LAYOUT_UTILITIES` gains `w-auto`.
+- `LAYOUT_UTILITIES` gains `w-auto`. `STATES` in `test_independence.py` gains a joined form,
+  plain and in error, in this task: the replacement check fails for a distributed template
+  that no state draws.
 - The README's template list gains the three rows, and `field_body.html`'s row loses nothing it
   still reads. The list test fails until it does, so it lands in this task.
 - Tests, `tests/test_layout.py`: `TestJoinMembers` — names, a `Field` holding one and several
@@ -165,7 +168,8 @@ Plan, *The joined group*; research R2, R5, R6.
   `Choice` merged, the order kept; a `Div`, a `PrependedText`, an `InlineField` and a button
   each raise `InvalidMember` with the class name as `member`. `TestJoinRender` — a group that
   holds nothing draws nothing; a group of hidden members draws their inputs and no fieldset;
-  each member is recorded in `form.rendered_fields`.
+  each member is recorded in `form.rendered_fields`; a name the form lacks draws nothing for that
+  member and raises nothing with django-crispy-forms' default, and the other members are drawn.
 - Tests, `tests/test_templatetags/test_daisyui.py`, a `TestFieldInputMember` class: an input and
   a select are accepted; a textarea, a checkbox, a radio group, a file input, a multi-widget
   field, a date drawn as three selects and a widget the pack has no component for each raise
@@ -200,7 +204,6 @@ Plan, *The joined group*; research R2, R5, R6.
   input; a `Choice` around a member reaches that member; a layout object other than those raises
   `InvalidMember` when the form is drawn; a formset drawn as a table draws no join and raises
   nothing; the group's label holding markup is escaped.
-- `STATES` in `test_independence.py` gains a joined form, plain and in error.
 - Verification, reported and not committed: `STATES` as they stood before T004 are unchanged
   (SC-003).
 - README: the section "Joined groups" with an example that `test_documented_examples.py` draws;
@@ -220,7 +223,7 @@ Plan, *The joined group*; research R2, R5, R6.
 - `/joined-groups/` in the shell, with its sidebar entry and icon, and
   `/joined-groups/standalone/` on daisyUI's CDN install alone. Both hold: a country code and a
   number under one label, to submit; a group that already fails in one member; a group with help
-  text on a member; a group with a disabled member and a hidden member; a group with no label; a
+  text on a member; a group with a disabled member, a read-only member and a hidden member; a group with no label; a
   group of one. No size or colour is stated; T007 adds those.
 - Tests: as T003's, for these pages, with a post that fails in one member and one that is valid.
 - README's page list and the CHANGELOG name the two pages.
@@ -252,7 +255,7 @@ Issue: #114. Delivers FR-022, FR-023, FR-024, FR-028; SC-007.
 - Any change this needs under `mvp_forms/` is a defect in US1 or US2 and is fixed here,
   test-first, and named in the report.
 - Demo: the floating-labels pages gain a form at each size, a form at each colour and one in the
-  variant; the joined-groups pages gain a group at each size, a coloured group with one member
-  in error, and a `Choice` around a group.
+  variant; the joined-groups pages gain a group at each size, a group at each colour, one in
+  the variant, a coloured group with one member in error, and a `Choice` around a group.
 - README: each of the two sections says size, colour and variant apply as on any field, and in
   which order for a member. CHANGELOG, in the entries of the two features.

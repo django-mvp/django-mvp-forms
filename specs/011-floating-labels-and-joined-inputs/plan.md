@@ -194,7 +194,9 @@ Join(*fields, label=None, css_id=None, css_class=None, **attrs)
      field as rendered, applies the attributes and reports a name the form lacks, and
      `Choice.render` places the choice over any `Choice` around the group.
   2. After a member is drawn, `form[name].is_hidden` says whether its markup goes inside the
-     join or beside it (research R2).
+     join or beside it (research R2). A name the form lacks is left to django-crispy-forms,
+     which logs it, or raises when `CRISPY_FAIL_SILENTLY` is False, and is neither a visible
+     nor a hidden member.
   3. A group with no members returns an empty string. A group whose members are all hidden
      returns their hidden inputs alone.
   4. Otherwise it renders its template with the flattened context plus: `join` (itself),
@@ -300,9 +302,9 @@ story and comparing. It is reported and not committed.
   variant.
 - `/joined-groups/` and `/joined-groups/standalone/`: a country code and a number under one
   label, to submit; a group that already fails in one member; a group with help text on a
-  member; a group with a disabled member and a hidden member; a group with no label; a group of
-  one. US3 adds a group at each size, a coloured group with one member in error, and a `Choice`
-  around a group.
+  member; a group with a disabled member, a read-only member and a hidden member; a group with no label; a group of
+  one. US3 adds a group at each size, a group at each colour, one in the variant, a coloured group
+  with one member in error, and a `Choice` around a group.
 - Each shell page has a `MenuItem` and an icon, as every page has. Shell pages use the shell's
   Cotton components and no `{% include %}` partial. Standalone pages load daisyUI's documented
   CDN install and nothing else.
@@ -324,9 +326,10 @@ story and comparing. It is reported and not committed.
 Two are expected, numbered from what `origin/main` holds at that moment:
 
 1. A floating label is a kind of choice, with what takes it, what it is passed over for, and the
-   ordinary label on a disabled field (decisions D2 to D5).
+   ordinary label on a disabled field (decisions D2 to D5, D11, D12).
 2. `Join` is a second layout object the package defines; the group has one label and each member
-   keeps its own name, help text and errors; how the width is shared (D6, D7, research R6). It
+   keeps its own name, help text and errors; how the width is shared (D6, D7, D13 to D16, D18,
+   research R6). It
    amends ADR 0019's sentence that no second layout object is added.
 
 ## Cost estimate

@@ -2,7 +2,7 @@
   "feature": "011-floating-labels-and-joined-inputs",
   "branch": "011-floating-labels-and-joined-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-10-03T23:10:38Z",
       "note": "research, plan and tasks written"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T23:11:02Z",
+      "note": "plan to design review"
     }
   ],
   "gates": {
@@ -109,7 +114,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {
