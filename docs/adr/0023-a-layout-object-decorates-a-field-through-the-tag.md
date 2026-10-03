@@ -23,8 +23,7 @@ The frame reads `drawn`, which the including template sets on the line before, s
 page's variable. It asks `drawn.show_labels` whether to draw a label, which lets one field go
 without a label while its neighbours keep theirs.
 
-A host project that overrode `daisyui/field.html` to change the frame overrides
-`daisyui/frame.html`.
+A host project that changes the frame overrides `daisyui/frame.html`.
 
 ## Why
 

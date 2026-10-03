@@ -386,7 +386,7 @@ class PriceForm(forms.Form):
 - On a checkbox, a radio group, a date drawn as three selects, a textarea or a file input there is nowhere to attach the text, so the field is drawn exactly as it is without the layout object. A hidden field is drawn as its hidden input alone.
 - `css_class` and extra attributes go to the input, as they do for `Field`. `template=` draws your own template. `input_size` and `active` are accepted and do nothing.
 - The wrapper takes the size of the field. With a size stated for the form, or with a `Choice` around the layout object, the size class (`input-lg`, or `select-lg` on a select) is on the wrapper and the input inside carries none, so the text and the input read as one control.
-- `wrapper_class` now works on any field, not only on these three: it is added to the class of the frame's outer element, whether that is a `<div>` or a `<fieldset>`. `Field("name", wrapper_class="wide")` draws `class="fieldset wide"`. The one place it does not reach is a `Field` given as the first item of `FieldWithButtons`, because django-crispy-forms passes on only that `Field`'s attributes.
+- `wrapper_class` works on any field, not only on these three: it is added to the class of the frame's outer element, whether that is a `<div>` or a `<fieldset>`. `Field("name", wrapper_class="wide")` draws `class="fieldset wide"`. The one place it does not reach is a `Field` given as the first item of `FieldWithButtons`, because django-crispy-forms passes on only that `Field`'s attributes.
 
 #### Choices in a line
 

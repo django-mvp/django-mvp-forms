@@ -292,8 +292,6 @@ submitting returns the same data.
 - The form is drawn with the crispy filter, not the crispy tag. django-crispy-forms draws a
   helper's layout only through the tag, so the filter draws the fields without their layout
   objects, as it does for every layout object. The pack changes nothing about that.
-  (**Refined** 2026-10-03: this bullet said both draw these layout objects the same way, which
-  django-crispy-forms 2.7 does not allow. See decisions.md D19.)
 
 ## Requirements *(mandatory)*
 
