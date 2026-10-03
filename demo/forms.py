@@ -573,7 +573,8 @@ class InputKindsForm(ChosenForm):
     """One field of every kind of input that has a size, a colour or a variant.
 
     Args:
-        choices: What the form states for its inputs, or None. A toggle is added.
+        choices: What the form states for its inputs, or None. A toggle, a rating
+            and a range are drawn as such beside it.
     """
 
     text = forms.CharField(label=_("Text"), required=False)
@@ -598,11 +599,19 @@ class InputKindsForm(ChosenForm):
         choices=[("a", "A"), ("b", "B")],
         widget=forms.CheckboxSelectMultiple,
     )
+    rating = forms.ChoiceField(
+        label=_("Rating"), required=False, choices=[("1", "1"), ("2", "2"), ("3", "3")]
+    )
+    slider = forms.IntegerField(
+        label=_("Range"), required=False, min_value=0, max_value=10
+    )
 
     def __init__(self, *args, choices=None, **kwargs):
-        """Draw ``toggle`` as a toggle, beside whatever the form states."""
+        """Draw the toggle, the rating and the range, beside whatever is stated."""
         choices = choices or FormChoices()
         choices.fields.setdefault("toggle", Choice(drawing="toggle"))
+        choices.fields.setdefault("rating", Choice(drawing="rating"))
+        choices.fields.setdefault("slider", Choice(drawing="range"))
         super().__init__(*args, choices=choices, **kwargs)
 
 
