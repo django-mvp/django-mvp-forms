@@ -58,3 +58,7 @@ Did: demo/forms.py (TextInputsForm, required and with_help switches, a clean tha
 Verified: red first (NoReverseMatch for text-inputs), then `uv run pytest tests/test_demo.py` 149 passed. Probes: with required and help text removed from the form, the CDN link and csrf_token removed from the standalone page, 7 tests failed, restored. The README quickstart as now written was run in a scratch project against this tree: a GET answers 200, a post with a bad email draws error classes. `uv run pre-commit run --all-files` and `uv run mypy` clean.
 Next: nothing in US5; the full verify is the last act before the report.
 Watch: no page under docs/ describes the demo; AGENTS.md's demo section is outside T008's files and still lists four things for a page, which holds. The install line points at GitHub and has not been tried against the remote.
+
+## 2026-10-03T15:57:13Z · Forge · CONVERGE
+
+Convergence. The pages were opened in a browser on both the shell and the standalone page, before and after a submission: inputs, labels, markers, help text, field errors and the form-wide alert all drawn as daisyUI. T009 added on US3 for two corrections (entity in aria-label, switches read one way). Six decision records written, 0001 to 0006. Changelog reduced to one entry per thing a host project gets. Tamper-check on US3 had flagged one widened import line in tests/test_templatetags/test_daisyui.py; no assertion changed, accepted.

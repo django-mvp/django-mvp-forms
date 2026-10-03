@@ -237,8 +237,17 @@
         },
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputEntityLabel",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiInputSwitches"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags/test_daisyui.py"
+            ]
+          }
         }
       ]
     },
