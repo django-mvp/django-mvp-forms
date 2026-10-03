@@ -7,6 +7,7 @@ from demo.views import (
     AlertView,
     AttachedTextView,
     ChoiceInputsView,
+    ChoicesView,
     ContainersStandaloneView,
     DecoratedFieldsStandaloneView,
     LayoutObjectsView,
@@ -14,6 +15,7 @@ from demo.views import (
     OverviewView,
     StackedFormsetView,
     StandaloneChoiceInputsView,
+    StandaloneChoicesView,
     StandaloneLayoutObjectsView,
     StandaloneStackedFormsetView,
     StandaloneTableFormsetView,
@@ -57,6 +59,12 @@ urlpatterns = [
         "decorated-fields/standalone/",
         DecoratedFieldsStandaloneView.as_view(),
         name="decorated-fields-standalone",
+    ),
+    path("choices/", ChoicesView.as_view(), name="choices"),
+    path(
+        "choices/standalone/",
+        StandaloneChoicesView.as_view(),
+        name="choices-standalone",
     ),
     path("formset-stacked/", StackedFormsetView.as_view(), name="formset-stacked"),
     path(

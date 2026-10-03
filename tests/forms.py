@@ -457,6 +457,32 @@ class MarkedUpDecoratedForm(forms.Form):
         self.helper.layout = Layout(*layout)
 
 
+class EveryInputForm(forms.Form):
+    text = forms.CharField(help_text="Some help")
+    message = forms.CharField(widget=forms.Textarea)
+    choice = forms.ChoiceField(choices=FRUIT)
+    born = forms.DateField(widget=forms.SelectDateWidget(years=[2020, 2021]))
+    agree = forms.BooleanField(required=False)
+    radios = forms.ChoiceField(choices=FRUIT, widget=forms.RadioSelect)
+    boxes = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.CheckboxSelectMultiple
+    )
+    upload = forms.FileField(widget=forms.FileInput, required=False)
+    held = forms.FileField(required=False, initial=HeldFile("report.pdf"))
+    locked = forms.CharField(initial="Ada", disabled=True)
+    readonly = forms.CharField(
+        initial="Ada", widget=forms.TextInput(attrs={"readonly": True})
+    )
+    token = forms.CharField(widget=forms.HiddenInput, initial="abc")
+
+    def __init__(self, *args, layout=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        if layout is not None:
+            self.helper.layout = Layout(*layout)
+
+
 class LineForm(forms.Form):
     name = forms.CharField(help_text="What it is")
     quantity = forms.IntegerField(required=False)

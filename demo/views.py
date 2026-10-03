@@ -15,12 +15,16 @@ from demo.forms import (
     AccordionForm,
     AlertForm,
     AttachedTextForm,
+    ButtonBarForm,
     ChoiceInputsForm,
     ChosenGroupsForm,
     HelperButtonsForm,
+    InputKindsForm,
     LayoutObjectsForm,
     ModalForm,
     OrderLineFormSet,
+    OverrideForm,
+    PairForm,
     RowButtonsForm,
     StackedOrderHelper,
     TableOrderHelper,
@@ -28,6 +32,7 @@ from demo.forms import (
     TextInputsForm,
     TextStatesForm,
 )
+from mvp_forms.choices import FormChoices, Modifiers
 
 
 class OverviewView(MVPTemplateView):
@@ -512,6 +517,79 @@ class DecoratedFieldsStandaloneView(AttachedTextMixin, TemplateView):
     """The decorated-field forms for a host project without django-mvp or Cotton."""
 
     template_name = "demo/decorated_fields_standalone.html"
+
+
+class ChoicesMixin:
+    """The forms both choices pages draw, generated from the tables of Modifiers.
+
+    Each form has a prefix of its own, so no id repeats on the page. None of them
+    posts anywhere.
+    """
+
+    inputs_size = "md"
+    inputs_variant = "ghost"
+
+    def build_sizes(self):
+        """Build one small form for each size in the table.
+
+        Returns:
+            A list of dicts holding each size's name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": PairForm(prefix=f"size-{name}", choices=FormChoices(size=name)),
+            }
+            for name in Modifiers.names("size", None)
+        ]
+
+    def build_colors(self):
+        """Build one small form for each colour in the table.
+
+        Returns:
+            A list of dicts holding each colour's name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": PairForm(
+                    prefix=f"color-{name}",
+                    choices=FormChoices(color=name, button_color=name),
+                ),
+            }
+            for name in Modifiers.names("color", None)
+        ]
+
+    def get_context_data(self, **kwargs):
+        """Add the generated forms and the ones that state several choices."""
+        kwargs["sizes"] = self.build_sizes()
+        kwargs["colors"] = self.build_colors()
+        kwargs["inputs_size"] = self.inputs_size
+        kwargs["inputs_form"] = InputKindsForm(
+            prefix="inputs", choices=FormChoices(size=self.inputs_size)
+        )
+        kwargs["inputs_variant"] = self.inputs_variant
+        kwargs["variant_form"] = InputKindsForm(
+            prefix="variant", choices=FormChoices(variant=self.inputs_variant)
+        )
+        kwargs["buttons_form"] = ButtonBarForm(prefix="buttons")
+        kwargs["override_form"] = OverrideForm(prefix="override")
+        return super().get_context_data(**kwargs)
+
+
+class ChoicesView(ChoicesMixin, MVPTemplateView):
+    """A size, a colour and a variant stated in Python, inside the shell."""
+
+    template_name = "demo/choices.html"
+    page_title = "Size, colour and variant"
+    page_subtitle = "Choices stated once for a form, and overridden where needed"
+    breadcrumbs = [{"text": "Size, colour and variant"}]
+
+
+class StandaloneChoicesView(ChoicesMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/choices_standalone.html"
 
 
 class OrderFormsetMixin:

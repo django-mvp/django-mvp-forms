@@ -1,7 +1,9 @@
 """The pack's tags and filters, which draw inputs and buttons as daisyUI."""
 
 import copy
+import re
 import secrets
+from collections.abc import Callable
 from html import unescape
 from typing import Any
 
@@ -12,6 +14,8 @@ from django.template import Context
 from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
 from django.utils.translation import gettext_lazy
+
+from mvp_forms.choices import Choice, FormChoices, Modifiers
 
 register = template.Library()
 
@@ -52,9 +56,18 @@ class FieldInput:
             named by an ``aria-label``.
         show_errors: Whether the form draws errors. Without them the input has
             no error modifier and no description naming the error element.
+        choices: The form's statement of size, colour and variant, if any.
+        placed: The ``Choice`` of a layout around the field, if any. It wins
+            over the form's statement for this field, and the field's entry in
+            ``choices.fields`` stands between the two.
         wrapper_class: A class for the frame's outer element.
         prepended: Text drawn before the input, as markup.
         appended: Text drawn after the input, as markup.
+
+    Raises:
+        InvalidChoice: A size, colour or variant stated for the form or the
+            field is not one daisyUI has, or the field states one its input has
+            no modifier for.
     """
 
     components: dict[type[forms.Widget], str] = {
@@ -82,6 +95,9 @@ class FieldInput:
         forms.SelectDateWidget: "daisyui/widgets/select_date.html",
         forms.ClearableFileInput: "daisyui/widgets/clearable_file_input.html",
     }
+    # The removal checkbox of a held file takes the size and the colour. A
+    # checkbox has no variant.
+    removal_kinds = ("size", "color")
     # Written out, not built from the component's name, so a host project's
     # Tailwind build finds them when it scans this module.
     error_modifiers: dict[str, str] = {
@@ -98,6 +114,8 @@ class FieldInput:
         field: BoundField,
         show_labels: bool = True,
         show_errors: bool = True,
+        choices: FormChoices | None = None,
+        placed: Choice | None = None,
         *,
         wrapper_class: str = "",
         prepended: str | None = None,
@@ -109,6 +127,69 @@ class FieldInput:
         self.wrapper_class = wrapper_class
         self.prepended = prepended
         self.appended = appended
+        choices = choices or FormChoices()
+        self.modifiers = self.resolve_modifiers(choices, placed, self.component)
+        self.removal_modifiers = (
+            self.resolve_modifiers(choices, placed, "checkbox", self.removal_kinds)
+            if self.component == "file-input"
+            else []
+        )
+
+    def resolve_modifiers(
+        self,
+        choices: FormChoices,
+        placed: Choice | None,
+        component: str | None,
+        kinds: tuple[str, ...] = ("size", "color", "variant"),
+    ) -> list[str]:
+        """Return the daisyUI class of each choice that applies to a component.
+
+        Resolved when the input is built, so a mistake is raised from the tag
+        and not from inside a template's ``{% if %}``, which would swallow it.
+
+        Args:
+            choices: The form's statement.
+            placed: The ``Choice`` of a layout around the field, or None.
+            component: The component the classes are for: the field's own, or
+                the checkbox that removes a held file.
+            kinds: Which of size, colour and variant to resolve.
+
+        Returns:
+            The classes for the kinds asked for, in that order, for each one
+            that resolves to a class.
+
+        Raises:
+            InvalidChoice: See the class.
+        """
+        named = choices.fields.get(self.field.name)
+        if placed is None:
+            own = Choice() if named is None else named
+        elif named is None:
+            own = placed
+        else:
+            own = placed.over(named)
+        stated = {
+            "size": choices.size,
+            "color": choices.color,
+            "variant": choices.variant,
+        }
+        resolved = (
+            Modifiers.resolve(
+                kind,
+                component,
+                own=getattr(own, kind),
+                form=stated[kind],
+                target=self.field.name,
+                in_error=self.is_in_error,
+            )
+            for kind in kinds
+        )
+        return [modifier for modifier in resolved if modifier]
+
+    @property
+    def is_in_error(self) -> bool:
+        """Whether the field is drawn as in error."""
+        return self.show_errors and bool(self.field.errors)
 
     @property
     def component(self) -> str | None:
@@ -142,7 +223,32 @@ class FieldInput:
         if self.template_name:
             widget = copy.copy(widget)
             widget.template_name = self.template_name
+            if self.removal_modifiers:
+                widget.get_context = self.removal_context(  # type: ignore[method-assign]
+                    widget.get_context
+                )
         return widget
+
+    def removal_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
+        """Wrap a widget's context so that it names the removal checkbox's classes.
+
+        Only the widget's own context reaches its template, so the classes the
+        pack resolved for the checkbox that removes a held file are added there,
+        on the copy of the widget that is drawn.
+
+        Args:
+            get_context: The copy's own ``get_context``.
+
+        Returns:
+            A function that returns the same context with ``removal_class`` set.
+        """
+
+        def with_removal_class(*args: Any, **kwargs: Any) -> dict:
+            context = get_context(*args, **kwargs)
+            context["widget"]["removal_class"] = " ".join(self.removal_modifiers)
+            return context
+
+        return with_removal_class
 
     @property
     def is_group(self) -> bool:
@@ -161,21 +267,22 @@ class FieldInput:
 
     @property
     def pack_classes(self) -> list[str]:
-        """The component, a width, then the error modifier. Empty with no component."""
+        """The component, the choices, a width, the error. Empty with no component."""
         classes: list[str] = []
         if self.component:
             classes.append(self.component)
+            classes.extend(self.modifiers)
             if self.component not in self.fixed_size and not any(
                 name.startswith("w-") for name in self.own_classes
             ):
                 classes.append(self.width)
-            if self.show_errors and self.field.errors:
+            if self.is_in_error:
                 classes.append(self.error_modifiers[self.component])
         return classes
 
     @property
     def css_class(self) -> str:
-        """The widget's own classes, the component, a width, then its error modifier."""
+        """The widget's own classes, the component, the choices, a width, the error."""
         return " ".join(dict.fromkeys(self.own_classes + self.pack_classes))
 
     @property
@@ -303,6 +410,157 @@ class FieldInput:
         return self.field.as_widget(widget=self.widget, attrs=self.attrs)
 
 
+class DrawnButton:
+    """Draw one button for one render, with the choices that apply to it.
+
+    A ``Submit``, ``Reset`` or ``Button`` is an ``<input>`` whose classes are
+    ``css_class``. A ``StrictButton`` is a ``<button>`` whose attributes are
+    ``flat_attrs``. A hidden input is not a button and takes nothing.
+
+    Args:
+        button: The layout object, or the object given to ``add_input``.
+        choices: The form's statement of size, colour and variant, if any.
+        placed: The ``Choice`` of a layout around the button, if any. It wins
+            over the form's statement for this button.
+
+    Raises:
+        InvalidChoice: A size, colour or variant stated for the form or the
+            button is not one daisyUI has.
+    """
+
+    # The colour django-crispy-forms gives a Submit when none is chosen.
+    default_color = "btn-primary"
+    class_attribute = re.compile(r'( class=")([^"]*)(")')
+
+    def __init__(
+        self,
+        button: Any,
+        choices: FormChoices | None = None,
+        placed: Choice | None = None,
+    ) -> None:
+        self.button = button
+        self.modifiers = self.resolve_modifiers(choices or FormChoices(), placed)
+
+    def resolve_modifiers(
+        self, choices: FormChoices, placed: Choice | None
+    ) -> list[str]:
+        """Return the daisyUI class of each choice that applies to the button.
+
+        Resolved when the button is built, so a mistake is raised from the tag
+        and not from inside a template's ``{% if %}``, which would swallow it.
+
+        Args:
+            choices: The form's statement.
+            placed: The ``Choice`` of a layout around the button, or None.
+
+        Returns:
+            The classes for size, colour and variant, in that order, for each
+            one that resolves to a class. None of them for a hidden input.
+
+        Raises:
+            InvalidChoice: See the class.
+        """
+        if getattr(self.button, "input_type", "") == "hidden":
+            return []
+        own = Choice() if placed is None else placed
+        stated = {
+            "size": choices.size,
+            "color": choices.button_color,
+            "variant": choices.button_variant,
+        }
+        resolved = (
+            Modifiers.resolve(
+                kind,
+                Modifiers.button,
+                own=getattr(own, kind),
+                form=form,
+                target=self.target,
+            )
+            for kind, form in stated.items()
+        )
+        return [modifier for modifier in resolved if modifier]
+
+    @property
+    def target(self) -> str:
+        """What an error names: the button's name, or a ``StrictButton``'s content."""
+        name = getattr(self.button, "name", None)
+        return str(name if name is not None else self.button.content)
+
+    @property
+    def has_color(self) -> bool:
+        """Whether a colour class resolved for the button."""
+        return any(
+            modifier in Modifiers.colors[Modifiers.button].values()
+            for modifier in self.modifiers
+        )
+
+    @property
+    def css_class(self) -> str:
+        """The classes of an ``<input>`` button: its own, then the choices.
+
+        The colour a ``Submit`` is given by default is left out when a colour
+        resolved, so that one colour is written. The same class given by the
+        developer as ``css_class`` is kept.
+        """
+        names = self.button.field_classes.split()
+        if (
+            self.has_color
+            and self.default_color in names
+            and self.default_color in type(self.button).field_classes.split()
+        ):
+            names.remove(self.default_color)
+        kept = daisyui_classes(" ".join(names)).split()
+        return " ".join(dict.fromkeys([*kept, *self.modifiers]))
+
+    @property
+    def flat_attrs(self) -> str:
+        """The attributes of a ``StrictButton``, with the choices in its classes.
+
+        The string is returned as django-crispy-forms wrote it when there are
+        no choices. Otherwise they are added inside the ``class`` attribute,
+        found by its leading space so that an attribute whose name ends in
+        ``class`` is left alone.
+        """
+        attrs: str = self.button.flat_attrs
+        if not self.modifiers:
+            return attrs
+
+        def add(found: re.Match[str]) -> str:
+            names = [*found.group(2).split(), *self.modifiers]
+            return f"{found.group(1)}{' '.join(dict.fromkeys(names))}{found.group(3)}"
+
+        return SafeString(self.class_attribute.sub(add, attrs, count=1))
+
+
+@register.simple_tag(takes_context=True)
+def daisyui_button(context: Context, button: Any) -> DrawnButton:
+    """Return the pack's drawing of a button.
+
+    Used as ``{% daisyui_button input as drawn %}``. A button in a layout is
+    drawn with no form in the context, so the form's statement reaches it only
+    through the context name ``daisyui``, which django-crispy-forms copies from
+    the helper.
+
+    Args:
+        context: The template context, read for the form's statement of
+            choices and for the choice of a layout around the button.
+        button: The layout object, or the object given to ``add_input``.
+
+    Returns:
+        The button's drawing.
+
+    Raises:
+        InvalidChoice: A choice that applies to the button is not one daisyUI
+            has.
+    """
+    placed = context.get(Choice.context_name)
+    return DrawnButton(
+        button,
+        choices=FormChoices.lookup(context),
+        placed=placed if isinstance(placed, Choice) else None,
+    )
+
+
 @register.simple_tag(takes_context=True)
 def daisyui_field(context: Context, field: BoundField, **decoration: Any) -> FieldInput:
     """Return the pack's drawing of a bound field's widget.
@@ -315,17 +573,27 @@ def daisyui_field(context: Context, field: BoundField, **decoration: Any) -> Fie
     Args:
         context: The template context, read for the helper's label and error
             switches. Each is off only when it equals False, as the
-            templates read it, and on when absent.
+            templates read it, and on when absent. It is also read for the
+            form's statement of choices and for the choice of a layout around
+            the field.
         field: The bound field whose widget is drawn.
         **decoration: The keyword-only arguments of ``FieldInput``, passed on.
 
     Returns:
         The field's input.
+
+    Raises:
+        InvalidChoice: A choice that applies to the field is not one daisyUI has.
+        TypeError: The form's helper holds a ``daisyui`` attribute that is not a
+            ``FormChoices``.
     """
+    placed = context.get(Choice.context_name)
     return FieldInput(
         field,
         show_labels=context.get("form_show_labels") != False,  # noqa: E712
         show_errors=context.get("form_show_errors") != False,  # noqa: E712
+        choices=FormChoices.lookup(context, field.form),
+        placed=placed if isinstance(placed, Choice) else None,
         wrapper_class=context.get("wrapper_class") or "",
         **decoration,
     )

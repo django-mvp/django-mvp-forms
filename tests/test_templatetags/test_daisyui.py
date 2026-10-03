@@ -4,17 +4,22 @@ import copy
 
 import pytest
 from crispy_forms.bootstrap import StrictButton
-from crispy_forms.layout import Hidden, Submit
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Button, Hidden, Reset, Submit
 from django import forms
 from django.forms import formset_factory
 from django.template import Context, Template
 from django.utils.safestring import SafeString, mark_safe
 
+from mvp_forms.choices import Choice, FormChoices, InvalidChoice
 from mvp_forms.templatetags.daisyui import (
     TAB_GROUP_PLACEHOLDER,
+    DrawnButton,
     FieldInput,
     FormsetTable,
+    daisyui_button,
     daisyui_classes,
+    daisyui_field,
     daisyui_formset_table,
     daisyui_shown,
     daisyui_tab_group,
@@ -568,6 +573,382 @@ class TestDaisyuiShown:
     @pytest.mark.parametrize("value", [None, []])
     def test_nothing_given_is_an_empty_list(self, value):
         assert daisyui_shown(value) == []
+
+
+class TestFieldInputChoices:
+    def test_the_forms_statement_adds_the_modifier_of_each_choice(self):
+        choices = FormChoices(size="sm", color="primary", variant="ghost")
+
+        field_input = FieldInput(TextInputsForm()["text"], choices=choices)
+
+        assert set(field_input.css_class.split()) == {
+            "input",
+            "input-sm",
+            "input-primary",
+            "input-ghost",
+            "w-full",
+        }
+
+    def test_an_empty_statement_leaves_the_class_string_as_it_was(self):
+        field = TextInputsForm()["text"]
+
+        assert (
+            FieldInput(field, choices=FormChoices()).css_class
+            == FieldInput(field).css_class
+        )
+
+    def test_a_field_in_error_keeps_its_error_modifier_and_drops_the_colour(self):
+        choices = FormChoices(size="sm", color="primary", variant="ghost")
+
+        field_input = FieldInput(TextInputsForm({})["text"], choices=choices)
+
+        assert set(field_input.css_class.split()) == {
+            "input",
+            "input-sm",
+            "input-ghost",
+            "input-error",
+            "w-full",
+        }
+
+    def test_the_developers_classes_are_kept_beside_the_modifiers(self):
+        field_input = FieldInput(
+            DeveloperAttrsForm()["name"], choices=FormChoices(size="sm")
+        )
+
+        assert {"wide", "input", "input-sm"} <= set(field_input.css_class.split())
+
+    def test_a_choice_placed_around_the_field_wins_over_the_forms_statement(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"],
+            choices=FormChoices(size="lg", color="primary"),
+            placed=Choice(size="xs"),
+        )
+
+        classes = set(field_input.css_class.split())
+        assert {"input-xs", "input-primary"} <= classes
+        assert "input-lg" not in classes
+
+    def test_the_choice_named_for_the_field_wins_over_the_forms_statement(self):
+        choices = FormChoices(
+            size="lg", color="primary", fields={"text": Choice(color=None)}
+        )
+
+        classes = set(
+            FieldInput(TextInputsForm()["text"], choices=choices).css_class.split()
+        )
+
+        assert "input-lg" in classes
+        assert "input-primary" not in classes
+
+    def test_a_placed_choice_is_merged_over_the_one_named_for_the_field(self):
+        choices = FormChoices(fields={"text": Choice(size="sm", color="info")})
+
+        field_input = FieldInput(
+            TextInputsForm()["text"], choices=choices, placed=Choice(size="xl")
+        )
+
+        classes = set(field_input.css_class.split())
+        assert {"input-xl", "input-info"} <= classes
+        assert "input-sm" not in classes
+
+    def test_a_mistake_in_the_forms_statement_is_raised_when_the_input_is_built(self):
+        with pytest.raises(InvalidChoice) as caught:
+            FieldInput(TextInputsForm()["text"], choices=FormChoices(size="huge"))
+
+        assert caught.value.value == "huge"
+        assert caught.value.target is None
+
+    def test_a_mistake_in_a_fields_own_statement_names_the_field(self):
+        with pytest.raises(InvalidChoice) as caught:
+            FieldInput(TextInputsForm()["text"], placed=Choice(color="purple"))
+
+        assert caught.value.kind == "color"
+        assert caught.value.target == "text"
+
+    def test_a_variant_the_form_states_is_passed_over_for_a_checkbox(self):
+        field_input = FieldInput(
+            CheckboxForm()["agree"], choices=FormChoices(variant="ghost")
+        )
+
+        assert set(field_input.css_class.split()) == {"checkbox"}
+
+    def test_a_variant_a_field_states_for_a_checkbox_raises(self):
+        with pytest.raises(InvalidChoice) as caught:
+            FieldInput(CheckboxForm()["agree"], placed=Choice(variant="ghost"))
+
+        assert caught.value.target == "agree"
+
+    def test_a_widget_with_no_component_is_passed_over_for_the_form(self):
+        field_input = FieldInput(
+            UncoveredForm()["choice"], choices=FormChoices(size="sm")
+        )
+
+        assert "class" not in field_input.attrs
+
+    def test_a_widget_with_no_component_raises_for_a_choice_of_its_own(self):
+        with pytest.raises(InvalidChoice):
+            FieldInput(UncoveredForm()["choice"], placed=Choice(size="sm"))
+
+    def test_a_render_leaves_the_widgets_attrs_unchanged(self):
+        form = DeveloperAttrsForm()
+        before = {n: copy.deepcopy(f.widget.attrs) for n, f in form.fields.items()}
+
+        for name in form.fields:
+            FieldInput(form[name], choices=FormChoices(size="sm")).render()
+
+        assert {n: f.widget.attrs for n, f in form.fields.items()} == before
+
+
+class HelpedChoicesForm(forms.Form):
+    name = forms.CharField()
+
+    def __init__(self, statement):
+        super().__init__()
+        self.helper = FormHelper(self)
+        self.helper.daisyui = statement
+
+
+class TestDaisyuiFieldChoices:
+    def test_the_statement_in_the_context_is_used(self):
+        context = Context({"daisyui": FormChoices(size="sm")})
+
+        drawn = daisyui_field(context, TextInputsForm()["text"])
+
+        assert "input-sm" in drawn.css_class.split()
+
+    def test_the_statement_on_the_fields_forms_helper_is_used(self):
+        form = HelpedChoicesForm(FormChoices(size="lg"))
+
+        drawn = daisyui_field(Context(), form["name"])
+
+        assert "input-lg" in drawn.css_class.split()
+
+    def test_the_choice_a_layout_placed_in_the_context_is_used(self):
+        context = Context(
+            {"daisyui": FormChoices(size="sm"), "daisyui_choice": Choice(size="xl")}
+        )
+
+        drawn = daisyui_field(context, TextInputsForm()["text"])
+
+        classes = drawn.css_class.split()
+        assert "input-xl" in classes
+        assert "input-sm" not in classes
+
+    def test_a_context_value_that_is_not_a_choice_is_the_pages_own(self):
+        context = Context({"daisyui_choice": "the page's own"})
+
+        drawn = daisyui_field(context, TextInputsForm()["text"])
+
+        assert set(drawn.css_class.split()) == {"input", "w-full"}
+
+    def test_a_helper_attribute_that_is_not_a_statement_raises(self):
+        with pytest.raises(TypeError):
+            daisyui_field(Context(), HelpedChoicesForm("sm")["name"])
+
+
+class HandStyledFileForm(forms.Form):
+    doc = forms.FileField(
+        required=False,
+        widget=forms.ClearableFileInput(
+            attrs={"class": "file-input-sm file-input-primary"}
+        ),
+    )
+
+
+class TestFieldInputRemovalModifiers:
+    def test_a_file_input_resolves_the_checkboxes_size_and_colour(self):
+        choices = FormChoices(size="sm", color="accent", variant="ghost")
+
+        field_input = FieldInput(FilesForm()["optional"], choices=choices)
+
+        assert field_input.removal_modifiers == ["checkbox-sm", "checkbox-accent"]
+
+    def test_nothing_stated_resolves_none(self):
+        assert FieldInput(FilesForm()["optional"]).removal_modifiers == []
+
+    def test_classes_written_by_hand_on_the_widget_resolve_none(self):
+        field_input = FieldInput(HandStyledFileForm()["doc"])
+
+        assert field_input.removal_modifiers == []
+
+    def test_an_input_that_is_not_a_file_input_resolves_none(self):
+        choices = FormChoices(size="sm")
+
+        assert (
+            FieldInput(TextInputsForm()["text"], choices=choices).removal_modifiers
+            == []
+        )
+
+    def test_the_widget_drawn_names_them_in_its_context(self):
+        field = FilesForm()["optional"]
+        field_input = FieldInput(field, choices=FormChoices(size="lg"))
+
+        context = field_input.widget.get_context("optional", field.value(), {})
+
+        assert context["widget"]["removal_class"] == "checkbox-lg"
+
+    def test_the_forms_own_widget_is_left_as_it_was(self):
+        field = FilesForm()["optional"]
+
+        FieldInput(field, choices=FormChoices(size="lg")).render()
+
+        context = field.field.widget.get_context("optional", field.value(), {})
+        assert "removal_class" not in context["widget"]
+
+
+class TestDrawnButton:
+    def test_a_submit_recoloured_on_the_instance_keeps_its_colour_and_takes_the_forms(
+        self,
+    ):
+        submit = Submit("save", "Save")
+        submit.field_classes = "btn btn-success"
+
+        drawn = DrawnButton(submit, choices=FormChoices(button_color="neutral"))
+
+        assert set(drawn.css_class.split()) == {"btn", "btn-success", "btn-neutral"}
+
+    def test_a_base_input_takes_the_forms_size_colour_and_variant_for_buttons(self):
+        choices = FormChoices(
+            size="sm",
+            color="info",
+            variant="ghost",
+            button_color="accent",
+            button_variant="outline",
+        )
+
+        drawn = DrawnButton(Button("act", "Go"), choices=choices)
+
+        assert set(drawn.css_class.split()) == {
+            "btn",
+            "btn-sm",
+            "btn-accent",
+            "btn-outline",
+        }
+
+    @pytest.mark.parametrize("kind", [Submit, Reset, Button])
+    def test_stating_nothing_leaves_the_class_string_as_it_was(self, kind):
+        button = kind("act", "Go", css_class="mine")
+
+        assert DrawnButton(button, choices=FormChoices()).css_class == (
+            daisyui_classes(button.field_classes)
+        )
+
+    def test_a_reset_carries_no_class_written_for_another_pack(self):
+        drawn = DrawnButton(Reset("act", "Go"), choices=FormChoices(size="sm"))
+
+        assert "btn-inverse" not in drawn.css_class.split()
+
+    def test_a_submit_with_a_resolved_colour_loses_the_default_colour(self):
+        drawn = DrawnButton(
+            Submit("act", "Go"), choices=FormChoices(button_color="error")
+        )
+
+        assert set(drawn.css_class.split()) == {"btn", "btn-error"}
+
+    def test_a_colour_set_to_none_for_the_button_leaves_the_default_colour(self):
+        drawn = DrawnButton(
+            Submit("act", "Go"),
+            choices=FormChoices(button_color="error"),
+            placed=Choice(color=None),
+        )
+
+        assert set(drawn.css_class.split()) == {"btn", "btn-primary"}
+
+    def test_a_submit_keeps_a_colour_class_the_developer_gave_it(self):
+        drawn = DrawnButton(
+            Submit("act", "Go", css_class="btn-primary"),
+            choices=FormChoices(button_color="error"),
+        )
+
+        assert {"btn-primary", "btn-error"} <= set(drawn.css_class.split())
+
+    def test_a_choice_placed_around_the_button_wins_over_the_forms(self):
+        drawn = DrawnButton(
+            Button("act", "Go"),
+            choices=FormChoices(size="sm", button_color="accent"),
+            placed=Choice(size="xl"),
+        )
+
+        classes = drawn.css_class.split()
+        assert {"btn-xl", "btn-accent"} <= set(classes)
+        assert "btn-sm" not in classes
+
+    def test_a_strict_button_gets_the_modifiers_inside_its_class_attribute(self):
+        button = StrictButton("Go", css_class="mine", title="Act")
+
+        drawn = DrawnButton(button, choices=FormChoices(size="sm"))
+
+        assert drawn.flat_attrs != button.flat_attrs
+        assert drawn.flat_attrs.count(" class=") == 1
+        assert 'title="Act"' in drawn.flat_attrs
+        attribute = drawn.flat_attrs.split(' class="')[1].split('"')[0]
+        assert set(attribute.split()) == {"btn", "mine", "btn-sm"}
+
+    @pytest.mark.parametrize("name", ["data_class", "aria_class"])
+    def test_a_strict_button_with_an_attribute_ending_in_class_keeps_it_whole(
+        self, name
+    ):
+        button = StrictButton("Go", **{name: "y"})
+
+        drawn = DrawnButton(button, choices=FormChoices(size="sm"))
+
+        attribute = name.replace("_", "-")
+        assert f' {attribute}="y"' in drawn.flat_attrs
+        assert drawn.flat_attrs.count("btn-sm") == 1
+        assert f'{attribute}="y btn-sm"' not in drawn.flat_attrs
+
+    def test_a_strict_button_with_nothing_stated_has_its_attributes_unchanged(self):
+        button = StrictButton("Go", css_class="mine", data_class="y")
+
+        assert DrawnButton(button, choices=FormChoices()).flat_attrs == (
+            button.flat_attrs
+        )
+
+    def test_a_hidden_input_takes_no_modifier(self):
+        drawn = DrawnButton(
+            Hidden("secret", "x"), choices=FormChoices(size="sm", button_color="info")
+        )
+
+        assert drawn.modifiers == []
+
+    def test_a_modifier_the_developer_already_wrote_is_written_once(self):
+        drawn = DrawnButton(
+            Button("act", "Go", css_class="btn-sm"), choices=FormChoices(size="sm")
+        )
+
+        assert drawn.css_class.split().count("btn-sm") == 1
+
+
+class TestDaisyuiButton:
+    def test_the_statement_in_the_context_is_used(self):
+        context = Context({"daisyui": FormChoices(size="lg")})
+
+        drawn = daisyui_button(context, Button("act", "Go"))
+
+        assert "btn-lg" in drawn.css_class.split()
+
+    def test_the_choice_a_layout_placed_in_the_context_is_used(self):
+        context = Context(
+            {"daisyui": FormChoices(size="sm"), "daisyui_choice": Choice(size="xl")}
+        )
+
+        drawn = daisyui_button(context, Button("act", "Go"))
+
+        classes = drawn.css_class.split()
+        assert "btn-xl" in classes
+        assert "btn-sm" not in classes
+
+    def test_a_context_value_that_is_not_a_statement_is_the_pages_own(self):
+        context = Context({"daisyui": "the page's own", "daisyui_choice": 3})
+
+        drawn = daisyui_button(context, Button("act", "Go"))
+
+        assert drawn.css_class == "btn"
+
+    def test_a_context_with_no_statement_draws_the_button_as_it_was(self):
+        drawn = daisyui_button(Context(), Submit("act", "Go"))
+
+        assert set(drawn.css_class.split()) == {"btn", "btn-primary"}
 
 
 def tab_radio(checked=False):

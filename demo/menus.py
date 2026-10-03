@@ -56,6 +56,11 @@ AppMenu.extend(
             extra_context={"label": "Attached text", "icon": "attached-text"},
         ),
         MenuItem(
+            name="choices",
+            view_name="choices",
+            extra_context={"label": "Size, colour and variant", "icon": "choices"},
+        ),
+        MenuItem(
             name="formset-stacked",
             view_name="formset-stacked",
             extra_context={"label": "Formset, stacked", "icon": "formset-stacked"},

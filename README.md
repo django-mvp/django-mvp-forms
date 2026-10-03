@@ -386,6 +386,136 @@ class PriceForm(forms.Form):
 - `css_class` and extra attributes go to the input, as they do for `Field`. `template=` draws your own template. `input_size` and `active` are accepted and do nothing.
 - `wrapper_class` now works on any field, not only on these three: it is added to the class of the frame's outer element, whether that is a `<div>` or a `<fieldset>`. `Field("name", wrapper_class="wide")` draws `class="fieldset wide"`.
 
+### Size, colour and variant
+
+State a size, a colour and a variant once, in Python, and the pack adds daisyUI's modifier for each to every input it draws for the form. You write no class on any widget. The statement is a `FormChoices`, set as the `daisyui` attribute of the form's helper:
+
+```python
+from crispy_forms.helper import FormHelper
+from django import forms
+from mvp_forms.choices import Choice, FormChoices
+
+
+class SettingsForm(forms.Form):
+    name = forms.CharField()
+    notes = forms.CharField(widget=forms.Textarea)
+    newsletter = forms.BooleanField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(
+            size="sm",
+            color="primary",
+            variant="ghost",
+            fields={"notes": Choice(color=None)},
+        )
+```
+
+It takes effect with `{{ form|crispy }}` and with `{% crispy form %}`, whether or not the form has a layout, and wherever a field sits in one. Set it on the helper's instance, as above, and not as a class attribute of a `FormHelper` subclass: django-crispy-forms passes a helper's instance attributes on to the templates and leaves its class attributes behind, so a class attribute would not reach everything the pack draws.
+
+The names are daisyUI's own, and nothing else is accepted. For inputs:
+
+- size: `xs`, `sm`, `md`, `lg`, `xl`
+- colour: `neutral`, `primary`, `secondary`, `accent`, `info`, `success`, `warning`, `error`
+- variant: `ghost`, for text-like inputs, textareas, selects and file inputs
+
+For buttons, the same sizes and colours and these variants:
+
+- variant: `outline`, `dash`, `soft`, `ghost`, `link`
+
+The classes the names mean are written out in the tables of `Modifiers`, in `mvp_forms.choices`, one for sizes, one for colours and one for variants. The keyword is spelt `color`, as daisyUI spells it. The three are independent: changing one leaves the other two as they were. Every one is optional, and a form that states nothing is drawn exactly as it was before.
+
+- `fields` gives one field a `Choice` of its own, by the field's name. Each of the three that the `Choice` states wins over the form's for that field, and each it leaves out, which is `INHERIT` and the default, falls back to the form's. `None` is the pack's ordinary drawing, so `Choice(color=None)` undoes the form's colour for that field, as `notes` does above. `INHERIT` is the one value of the type `Inherit`.
+- Every input of a field takes the choices: each option of a radio or checkbox group, each select of a date, and the removal checkbox of a file field that holds a file, which takes the size and the colour.
+- A choice that one kind of input has no modifier for is passed over for that kind. `variant="ghost"` leaves a checkbox and a radio as they are and draws the text input beside them in ghost.
+- A name that is not in the lists above raises `InvalidChoice`, a `ValueError`, when the form is drawn. It carries the `kind`, the `value` and the names `allowed`.
+- A field in error keeps its error modifier and is drawn without the chosen colour, so the error is the only colour it shows. Its size and variant still apply.
+- Hidden inputs, labels, help text, error text and the `required`, `disabled` and `readonly` attributes are never changed, and classes you put on a widget are kept.
+- The size reaches every button too, as `btn-sm` and the like. A colour or a variant for the form's buttons is stated apart from the inputs', as `button_color` and `button_variant`, so `color` and `variant` reach no button and the two never touch. Buttons are described below.
+
+### One field's own choice
+
+One field can state a size, a colour or a variant of its own. There are two ways, and they combine.
+
+In a layout, wrap the field in a `Choice`. It draws what it holds, with its choice in force for everything inside it:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Column, Layout, Row
+from django import forms
+from mvp_forms.choices import Choice, FormChoices
+
+
+class SearchForm(forms.Form):
+    search = forms.CharField()
+    name = forms.CharField()
+    city = forms.CharField()
+    notes = forms.CharField(widget=forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(size="sm", color="primary")
+        self.helper.layout = Layout(
+            Choice("search", size="lg"),
+            Choice(Row(Column("name"), Column("city")), color=None),
+            "notes",
+        )
+```
+
+Here `search` is large and keeps the form's colour, `name` and `city` keep the form's size and lose its colour, and `notes` takes the form's choices. A `Choice` may hold a `Row`, a `Fieldset` or any other layout object, and a `Choice` inside a `Choice` is merged over the outer one, each of the three on its own, so the inner one wins for what it states. You can also wrap fields already in a layout, with `helper["search"].wrap(Choice, size="lg")`.
+
+For a form drawn without a layout, name the field in `FormChoices`, as `notes` was in the section above: `FormChoices(fields={"search": Choice(size="lg")})`. It works with `{{ form|crispy }}` and with `{% crispy form %}`, and changes no other field.
+
+When both are given for a field, the `Choice` in the layout wins over the one in `fields`, which wins over the form's, for each of the three on its own. What a `Choice` leaves out is inherited, and `None` is the pack's ordinary drawing: `Choice("notes", color=None)` undoes the form's colour for that field and keeps its size. A size, colour or variant that the field's input has no modifier for raises `InvalidChoice` when the form is drawn, because you asked for it by name. The form's own statement is passed over for such an input.
+
+### Buttons
+
+A `Submit`, `Reset`, `Button` or `StrictButton` takes the form's `size`, `button_color` and `button_variant`, in a layout and when added with `helper.add_input`. The names are the sizes and colours listed above and the variants `outline`, `dash`, `soft`, `ghost` and `link`. A choice is stated for one button by wrapping it in a `Choice`, as below, and for every button in the form by `size`, `button_color` and `button_variant` of `FormChoices`.
+
+```python
+from crispy_forms.bootstrap import StrictButton
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Reset, Submit
+from django import forms
+from mvp_forms.choices import Choice, FormChoices
+
+
+class ConfirmForm(forms.Form):
+    name = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(
+            size="sm", button_color="neutral", button_variant="outline"
+        )
+        self.helper.layout = Layout(
+            "name",
+            Submit("save", "Save"),
+            Reset("clear", "Clear"),
+            Choice(StrictButton("Delete", type="submit"), color="error"),
+        )
+```
+
+Here every button is small and outlined, `Delete` is in the error colour and the others are neutral, and the text input is small. Wrap one button in a `Choice` to give it a choice of its own: what the `Choice` states wins over the form's, what it leaves out is inherited, and `None` is the ordinary drawing. A `Choice` takes the same `color` and `variant` for a button as for a field, and the form's `button_color` and `button_variant` are the ones it is merged over.
+
+- A `Submit` is drawn `btn-primary` unless a colour is stated for it, by `button_color` or by a `Choice`. Then only the colour you stated is written. A `btn-primary` you pass as `css_class` is kept.
+- Your `css_class`, `css_id` and attributes are kept on every button, and a `Hidden` is never changed.
+- The statement reaches a button as the context name `daisyui`, which django-crispy-forms copies from the helper, so it works under whatever name the page gives its form, and with `{% crispy form %}`. Buttons are drawn only by the tag: `{{ form|crispy }}` draws no layout and no helper.
+
+### What is refused and what is passed over
+
+A name daisyUI does not have is refused when the form is drawn, never written as a class that does nothing. It raises `InvalidChoice`, a `ValueError` carrying `kind` (`"size"`, `"color"` or `"variant"`), the `value` you stated and the names `allowed`. It is raised for a choice stated for the form's inputs, for its buttons (`button_color` and `button_variant`), on one field by name, on one field with a `Choice` in a layout, and on one button. When it was stated on a field or a button, `target` names it: the field's name, or a button's name, or the content of a `StrictButton`. For a choice stated for the form, `target` is `None`. What is stated for the form is checked whenever a form is drawn, so `{{ form|crispy }}`, which draws no button, still reports a mistake in `button_color`.
+
+A choice stated for the form that a kind of input has no modifier for is passed over, with no error: `variant="ghost"` leaves a checkbox, a radio group and a checkbox group as they are and the rest take it. The same choice stated on one of those fields raises, and so does any choice stated on a field whose widget the pack does not draw as an input of its own, because you asked for it by name.
+
+A name in `FormChoices(fields=...)` that is not a field of the form raises `UnknownField`, a `KeyError` whose `names` lists them, when a field of the form is drawn.
+
+A `Choice` in a layout is checked against each field and button it holds, as a choice stated on each of them. `Choice(Row("name", "agree"), variant="ghost")` raises for a checkbox `agree`, which has no ghost, and a `Choice` holding a field and a button needs a variant both have. Size and colour apply to every kind, so a `Choice` that states only those can hold anything.
+
+The `daisyui` attribute of the helper a form carries as `form.helper` must be a `FormChoices`: anything else, `None` included, raises `TypeError` when a field of the form is drawn. Leave the attribute off to state nothing. A page variable that happens to be called `daisyui` and is not a `FormChoices` is ignored, and so is such a value on a helper handed to the tag on its own, as `{% crispy form helper %}`, where the pack cannot tell it from the page's. Keep the statement on the helper the form carries: with `{% crispy form helper %}` the inputs still read `form.helper`, and the buttons only the helper that draws them.
 ### Formsets
 
 A formset is drawn when you hand it to the pack, as a form is, and it needs no work per form. A plain formset, a model formset and an inline formset are all drawn the same way:
@@ -504,6 +634,11 @@ fails, so an error inside a fieldset, a row and a column can be seen:
 
 - `/layout-objects/` is the page inside the django-mvp shell, reached from its sidebar.
 - `/layout-objects/standalone/` is the same page styled by daisyUI's CDN build alone.
+
+One more page draws the size, colour and variant of a form's inputs and buttons. It holds a small form for each size and for each colour, each with one input and one button; a form holding every kind of input at one size; a form of inputs in the ghost variant and a button bar with one button in each variant; and a form that states choices and overrides them for one field in its layout, for one field by name, for one field that drops the colour, and for one button. The forms are built from the tables of `Modifiers`, so the page follows them, and none of them posts anywhere.
+
+- `/choices/` is the page inside the django-mvp shell, reached from its sidebar as "Size, colour and variant".
+- `/choices/standalone/` is the same page styled by daisyUI's CDN build alone.
 
 Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset, groups two fields in a `MultiField`, and carries a `Hidden` input.
 
