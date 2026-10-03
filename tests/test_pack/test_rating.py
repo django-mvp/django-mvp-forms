@@ -42,7 +42,7 @@ COLORS = (
     "warning",
     "error",
 )
-VALUES = [value for value, _ in STAR_CHOICES]
+VALUES = [choice[0] for choice in STAR_CHOICES]
 LABELS = [label for _, label in STAR_CHOICES]
 
 

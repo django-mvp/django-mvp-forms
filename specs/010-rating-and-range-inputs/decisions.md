@@ -175,7 +175,7 @@ now.
 
 **Revisit if:** a project asks for one.
 
-**ADR:** none.
+**ADR:** none — a boundary of this feature; nothing later inherits it.
 
 ## D9. No sketch before the build
 
@@ -184,14 +184,14 @@ now.
 **Why:** it places two stock daisyUI components inside the field frame the pack already draws, and
 adds one demo page of the kind every earlier feature added. Nothing in it needs a new design.
 
-**ADR:** none.
+**ADR:** none — a choice about how this feature was built, not about the code.
 
 ## D10. Nothing under `.github/` changes
 
 **Chosen:** the feature needs no workflow change. It adds no dependency and no supported version,
 and the test matrix stays as it is.
 
-**ADR:** none.
+**ADR:** none — it states that nothing changes.
 
 ## D11. Which drawings a field takes is decided by its widget, in one table
 
