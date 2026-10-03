@@ -1,4 +1,4 @@
-# ADR 0031 — A rating's colour is daisyUI's colour class on each star
+# ADR 0032 — A rating's colour is daisyUI's colour class on each star
 
 **Status:** accepted
 

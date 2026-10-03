@@ -1,6 +1,7 @@
 """Tests for the pack's field tag and the input it draws."""
 
 import copy
+import warnings
 
 import pytest
 from crispy_forms.bootstrap import FieldWithButtons, StrictButton
@@ -9,10 +10,12 @@ from crispy_forms.layout import Button, Hidden, Reset, Submit
 from django import forms
 from django.forms import formset_factory
 from django.template import Context, Template
+from django.test import override_settings
 from django.utils.functional import Promise, lazy
 from django.utils.safestring import SafeString, mark_safe
 
 from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice
+from mvp_forms.deprecation import WITHDRAWN
 from mvp_forms.templatetags.daisyui import (
     SPLIT_DATE_TIME_PARTS,
     TAB_GROUP_PLACEHOLDER,
@@ -26,6 +29,7 @@ from mvp_forms.templatetags.daisyui import (
     daisyui_shown,
     daisyui_tab_group,
 )
+from tests.conftest import clear_crispy_template_caches
 from tests.forms import (
     CheckboxForm,
     CheckboxGroupsForm,
@@ -2312,3 +2316,138 @@ class TestFieldInputRange:
         field_input = ranged("volume", choices=FormChoices(variant="ghost"))
 
         assert field_input.modifiers == []
+
+
+class WithdrawnPathWidget(forms.Widget):
+    template_name = "host_app/widgets/withdrawn.html"
+
+    def __init__(self, path):
+        super().__init__()
+        self.path = path
+
+    def get_context(self, name, value, attrs):
+        return {**super().get_context(name, value, attrs), "path": self.path}
+
+
+class TestDaisyuiHostTemplate:
+    OLD = "daisyui/old.html"
+    NEW = "daisyui/new.html"
+    OLD_DRAWN = '<i data-drawn="old"></i>'
+    NEW_DRAWN = '<i data-drawn="new"></i>'
+    SOURCE = (
+        "{% load daisyui %}"
+        '{% daisyui_host_template "daisyui/old.html" as name %}'
+        "{% if name %}{% include name %}{% endif %}"
+    )
+
+    def drawn(self, parse):
+        soup = parse(Template(self.SOURCE).render(Context()))
+        return [tag["data-drawn"] for tag in soup.find_all(attrs={"data-drawn": True})]
+
+    def test_the_host_projects_template_at_the_old_path_is_drawn_and_warned_about(
+        self, monkeypatch, replace, parse
+    ):
+        monkeypatch.setitem(WITHDRAWN, self.OLD, self.NEW)
+
+        with (
+            replace({self.OLD: self.OLD_DRAWN, self.NEW: self.NEW_DRAWN}),
+            pytest.warns(DeprecationWarning) as recorded,
+        ):
+            drawn = self.drawn(parse)
+
+        assert drawn == ["old"]
+        assert self.OLD in str(recorded[0].message)
+        assert self.NEW in str(recorded[0].message)
+
+    def test_the_replacing_template_is_drawn_when_the_host_project_has_none(
+        self, monkeypatch, replace, parse
+    ):
+        monkeypatch.setitem(WITHDRAWN, self.OLD, self.NEW)
+
+        with replace({self.NEW: self.NEW_DRAWN}), warnings.catch_warnings():
+            warnings.simplefilter("error")
+            drawn = self.drawn(parse)
+
+        assert drawn == ["new"]
+
+    def test_nothing_is_drawn_for_a_path_with_no_replacement_when_the_host_has_none(
+        self, monkeypatch, parse
+    ):
+        monkeypatch.setitem(WITHDRAWN, self.OLD, None)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            rendered = Template(self.SOURCE).render(Context())
+
+        assert rendered.strip() == ""
+        assert self.drawn(parse) == []
+
+    def test_the_host_projects_template_at_a_path_with_no_replacement_is_drawn(
+        self, monkeypatch, replace, parse
+    ):
+        monkeypatch.setitem(WITHDRAWN, self.OLD, None)
+
+        with (
+            replace({self.OLD: self.OLD_DRAWN}),
+            pytest.warns(DeprecationWarning) as recorded,
+        ):
+            drawn = self.drawn(parse)
+
+        assert drawn == ["old"]
+        assert self.OLD in str(recorded[0].message)
+
+
+class TestDaisyuiHostTemplateInAWidget:
+    OLD = "host_app/old.html"
+    NEW = "host_app/new.html"
+
+    @pytest.fixture
+    def host_app_first(self, settings):
+        apps = ["tests.host_app", *settings.INSTALLED_APPS]
+        with override_settings(INSTALLED_APPS=apps):
+            clear_crispy_template_caches()
+            yield
+        clear_crispy_template_caches()
+
+    def drawn(self, parse, path):
+        soup = parse(WithdrawnPathWidget(path).render("name", None))
+        return [tag["data-drawn"] for tag in soup.find_all(attrs={"data-drawn": True})]
+
+    def test_a_template_in_an_app_is_found_through_the_renderers_engine(
+        self, monkeypatch, host_app_first, parse
+    ):
+        monkeypatch.setitem(WITHDRAWN, self.OLD, self.NEW)
+
+        with pytest.warns(DeprecationWarning) as recorded:
+            drawn = self.drawn(parse, self.OLD)
+
+        assert drawn == ["old"]
+        assert self.OLD in str(recorded[0].message)
+        assert self.NEW in str(recorded[0].message)
+
+    def test_the_replacing_template_is_drawn_when_no_app_has_the_old_one(
+        self, monkeypatch, host_app_first, parse
+    ):
+        monkeypatch.setitem(WITHDRAWN, "host_app/absent.html", self.NEW)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            drawn = self.drawn(parse, "host_app/absent.html")
+
+        assert drawn == ["new"]
+
+    def test_a_template_in_dirs_is_not_found_by_the_default_renderer(
+        self, monkeypatch, host_app_first, parse, settings, tmp_path
+    ):
+        path = "host_app/in_dirs.html"
+        (tmp_path / "host_app").mkdir()
+        (tmp_path / path).write_text('<i data-drawn="in-dirs"></i>')
+        templates = copy.deepcopy(settings.TEMPLATES)
+        templates[0]["DIRS"] = [tmp_path, *templates[0]["DIRS"]]
+        monkeypatch.setitem(WITHDRAWN, path, self.NEW)
+
+        with override_settings(TEMPLATES=templates), warnings.catch_warnings():
+            warnings.simplefilter("error")
+            drawn = self.drawn(parse, path)
+
+        assert drawn == ["new"]

@@ -7,7 +7,7 @@ Verified: full verify green at cf71e8a before any code (lint, types, tests, buil
 
 Next: design review, then US1.
 
-Watch: FS-009, FS-011, FS-012 and FS-013 build in parallel and may move README, CHANGELOG, the demo and the tag library under this branch. Record numbers 0029 to 0031 are provisional until the merge gate.
+Watch: FS-009, FS-011, FS-012 and FS-013 build in parallel and may move README, CHANGELOG, the demo and the tag library under this branch. Record numbers are provisional until the merge gate.
 
 ## 2026-10-03T22:14:21Z · Implementer US1 · T001
 

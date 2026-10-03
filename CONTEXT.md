@@ -20,6 +20,19 @@ The set of templates django-crispy-forms selects by name through
 one, and it emits daisyUI markup. "The pack" on its own always means this one.
 _Avoid_: theme, skin, style.
 
+**Replacement**:
+A template a host project provides at the path of one of the pack's templates,
+which Django's template loading finds ahead of the pack's. It stands in for that
+one template across the whole project, and every other template stays the
+pack's. It needs no setting, no Python and no change to a form.
+_Avoid_: override, fork, theme, skin.
+
+**Template list**:
+The README's record of every template the pack distributes: its path, what it
+draws, the names it is handed and where a replacement is found. It is the
+statement of what is public, and a test fails when it and the package differ.
+_Avoid_: registry, manifest.
+
 **Layout object**:
 A django-crispy-forms Python class placed in a form's `Layout` to say how part
 of the form is arranged: `Fieldset`, `Row`, `Div`, `Submit` and the rest. Each

@@ -1,0 +1,370 @@
+{
+  "feature": "009-replace-one-template",
+  "branch": "009-replace-one-template",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T21:41:54Z",
+      "note": "specification approved on pull request #93"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T21:59:04Z",
+      "note": "research and plan written on the specification's branch"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T22:01:24Z",
+      "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T22:08:19Z",
+      "note": "plan gate open; design review applied"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T22:44:31Z",
+      "note": "all three stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T22:46:16Z",
+      "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T22:56:45Z",
+      "note": "review recorded, nothing open; no walkthrough needed"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T21:41:50Z",
+      "self_resolved": [
+        "approved at commit fbbcbe7f1a600d84cdeaee9d7538cc1d13b2f644 (forge spec-gate, pull request #93); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T22:08:12Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T22:08:12Z",
+      "self_resolved": [
+        "DR-001 (medium) the suite cleared four of django-crispy-forms' five cached templates: the fifth is added in T001",
+        "DR-002 (low) what replaces a withdrawn path is stated once, and host_template returns the path to draw: applied to plan and T005",
+        "DR-003 (low) no second table for withdrawn paths: applied to plan and T006",
+        "DR-004 (low) the helper's own tests live in tests/test_template_surface.py: applied to plan, T003, T006",
+        "DR-005 (low) the helper is one class, TemplateSurface: applied to plan and T003",
+        "DR-006 (low) csrf_token counts as read; what the pack's tags read in Python is outside the list: applied to research, plan, T003",
+        "DR-007 (low) the README says how a deprecation warning is seen: applied to T006",
+        "DR-008 (low) the renderer case of the tag's tests runs under the default renderer: applied to plan and T005",
+        "DR-009 (low) the worked example has its own reader: applied to plan and T004"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T22:55:16Z",
+      "self_resolved": [
+        "COR-001 (medium) the check passed over the arguments of a tag it did not know: fixed, T007; it now refuses such a tag",
+        "COR-002 (low) a withdrawn path still distributed was not reported: fixed, T008",
+        "COR-003 (low) a path with two rows had only the last checked: fixed, T009",
+        "COR-004 (low) a test pinned the withdrawn paths to none: removed, T010",
+        "COR-005 (low) app order was tested for a widget template only: fixed, T011",
+        "notes: the example's path, the multifield row and what the tags read: applied to the README, T012"
+      ]
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 102,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_replacements.py::TestEveryTemplate",
+              "tests/test_pack/test_replacements.py::TestTheReplaceFixture",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_replacements.py tests/test_pack/test_independence.py -q"
+            ],
+            "code": [
+              "tests/conftest.py:128",
+              "tests/conftest.py:149",
+              "tests/conftest.py:154",
+              "tests/test_pack/test_replacements.py:79",
+              "tests/test_pack/test_replacements.py:95",
+              "tests/test_pack/test_independence.py:685"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_replacements.py::TestReplacingOneTemplate",
+              "tests/test_pack/test_replacements.py::TestWhereAReplacementIsFound"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_replacements.py -q"
+            ],
+            "code": [
+              "tests/test_pack/test_replacements.py:181",
+              "tests/test_pack/test_replacements.py:347",
+              "tests/host_app/__init__.py:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_replacements.py::TestWhereAReplacementIsFound"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_replacements.py -q"
+            ],
+            "code": [
+              "tests/test_pack/test_replacements.py:370"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 103,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_template_surface.py::TestNamesRead",
+              "tests/test_pack/test_template_surface.py::TestDisagreements",
+              "tests/test_pack/test_template_list.py::TestTheListMatchesThePackage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_template_surface.py tests/test_pack/test_template_list.py -q"
+            ],
+            "code": [
+              "tests/template_surface.py:29",
+              "tests/template_surface.py:56",
+              "tests/template_surface.py:77",
+              "tests/template_surface.py:101",
+              "tests/template_surface.py:128",
+              "tests/test_pack/test_template_list.py:11",
+              "README.md:804"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_documented_examples.py::TestReadmeReplacement"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_documented_examples.py::TestReadmeReplacement -q"
+            ],
+            "code": [
+              "tests/test_pack/test_documented_examples.py:490",
+              "tests/test_pack/test_documented_examples.py:498",
+              "README.md:815",
+              "CHANGELOG.md:27",
+              "CONTEXT.md:23"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_template_surface.py::TestNamesRead::test_a_tag_it_cannot_read_is_refused"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_template_surface.py -q"
+            ],
+            "code": [
+              "tests/template_surface.py:256"
+            ]
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_template_surface.py::TestDisagreements::test_a_path_with_two_rows_is_reported"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_template_surface.py -q"
+            ],
+            "code": [
+              "tests/template_surface.py:169"
+            ]
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_template_list.py::TestTheListMatchesThePackage",
+              "tests/test_pack/test_documented_examples.py::TestReadmeReplacement"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_template_list.py tests/test_pack/test_documented_examples.py -q"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P3",
+      "issue": 104,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_deprecation.py::TestHostTemplate",
+              "tests/test_deprecation.py::TestWithdrawn",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiHostTemplate",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiHostTemplateInAWidget"
+            ],
+            "commands": [
+              "uv run pytest tests/test_deprecation.py tests/test_templatetags/test_daisyui.py tests/test_pack/test_replacements.py -q -n auto --dist loadscope",
+              "uv run mypy"
+            ],
+            "code": [
+              "mvp_forms/deprecation.py:10",
+              "mvp_forms/deprecation.py:13",
+              "mvp_forms/templatetags/daisyui.py:801",
+              "tests/test_deprecation.py:28",
+              "tests/test_templatetags/test_daisyui.py:1813",
+              "tests/test_templatetags/test_daisyui.py:1881"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_template_surface.py::TestDisagreements",
+              "tests/test_pack/test_template_list.py::TestTheListMatchesThePackage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_template_surface.py tests/test_pack/test_template_list.py tests/test_pack/test_documented_examples.py -q"
+            ],
+            "code": [
+              "tests/template_surface.py:44",
+              "tests/template_surface.py:137",
+              "tests/test_pack/test_template_surface.py:240",
+              "tests/test_pack/test_template_list.py:13",
+              "README.md:874"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_template_surface.py::TestDisagreements::test_a_withdrawn_path_the_package_still_distributes_is_reported"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_template_surface.py -q"
+            ],
+            "code": [
+              "tests/template_surface.py:170"
+            ]
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_deprecation.py::TestHostTemplate"
+            ],
+            "commands": [
+              "uv run pytest tests/test_deprecation.py -q"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 15.42,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 93,
+    "draft": false
+  }
+}

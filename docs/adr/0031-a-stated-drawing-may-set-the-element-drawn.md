@@ -1,4 +1,4 @@
-# ADR 0030 — A stated drawing may set the element drawn, and never what is submitted
+# ADR 0031 — A stated drawing may set the element drawn, and never what is submitted
 
 **Status:** accepted
 

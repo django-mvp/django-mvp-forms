@@ -49,7 +49,7 @@ one, is widened when the feature is built (FR-026).
 it works with and without a layout, and it combines with size and colour on one statement, which
 the issue asks for.
 
-**ADR:** docs/adr/0029-each-kind-of-field-has-its-own-drawings.md
+**ADR:** docs/adr/0030-each-kind-of-field-has-its-own-drawings.md
 
 It records that a drawing is no longer a boolean field's alone, and that each kind of
 field has its own set of drawings. It amends ADR 0022.
@@ -78,7 +78,7 @@ the same value for the same choice, and a number input and a slider submit the s
 developer also asked for the drawing by name, which is the opening ADR 0002 itself leaves when it
 says "unless the developer writes" otherwise.
 
-**ADR:** docs/adr/0030-a-stated-drawing-may-set-the-element-drawn.md
+**ADR:** docs/adr/0031-a-stated-drawing-may-set-the-element-drawn.md
 
 It amends ADR 0002: the pack sets a type only for a drawing the developer stated,
 and only where the submitted value is the same.
@@ -108,7 +108,7 @@ wrote them for its own colours.
 that the chosen colour is left out and that the group is marked invalid. Whether the stars also
 take the error colour is for the plan.
 
-**ADR:** docs/adr/0031-a-ratings-colour-is-a-class-on-each-star.md
+**ADR:** docs/adr/0032-a-ratings-colour-is-a-class-on-each-star.md
 
 ## D5. An empty choice clears the rating and is never a star
 
@@ -206,7 +206,7 @@ drawings over three kinds of field, one rule replaces the two checks.
 
 **Revisit if:** a drawing applies to more than one kind of field.
 
-**ADR:** docs/adr/0029-each-kind-of-field-has-its-own-drawings.md
+**ADR:** docs/adr/0030-each-kind-of-field-has-its-own-drawings.md
 
 ## D12. A rating is drawn through a radio group made for the draw
 
@@ -227,7 +227,7 @@ as a radio group. It leaves `use_required_attribute` as the select's.
 
 **Revisit if:** a project needs a select subclass's own `create_option` to reach a rating.
 
-**ADR:** docs/adr/0030-a-stated-drawing-may-set-the-element-drawn.md
+**ADR:** docs/adr/0031-a-stated-drawing-may-set-the-element-drawn.md
 
 ## D13. A rating with nothing picked needs no markup beyond daisyUI's
 
@@ -254,7 +254,7 @@ is the only colour the field shows.
 
 **Revisit if:** daisyUI gives the rating an error modifier.
 
-**ADR:** docs/adr/0031-a-ratings-colour-is-a-class-on-each-star.md
+**ADR:** docs/adr/0032-a-ratings-colour-is-a-class-on-each-star.md
 
 ## D15. A star is named by its choice's label, and the pack adds no text
 
