@@ -57,3 +57,13 @@ Did: the "Size, colour and variant" demo page in the shell (/choices/, 'choices'
 Verified: tests written first, 1 error (no route 'choices') before the code, then `uv run pytest tests/test_demo.py -k Choices` 42 passed; dropping button_color from the colour forms turned 2 button-colour tests red and was reverted. `uv run pytest tests/test_demo.py -n auto --dist loadscope` 692 passed; pre-commit run --all-files and mypy clean. `forge verify --repo . --base origin/main`: conformance, docs, lint, typecheck, test, build all passed, exit 0.
 Next: the Forge review of US5, then convergence.
 Watch: the overview page has no links of its own, so it links the page through the sidebar menu only, as for the other pages. The icon name "choices" maps to bi-palette in demo/settings.py. A modal's close button and an alert's dismiss control were left alone.
+
+## 2026-10-03T18:43:53Z · Forge · converge
+
+Did: accepted all five stories; merged main three times (FS-005, its record, FS-006) keeping both sides; wrote decision records 0019 to 0021 and amended 0006 and 0008; closed the code review's five findings (T007 to T009); laid out the walkthrough.
+
+Verified: full verify green on the merged branch; every earlier test state's markup is byte-for-byte what it was at the base commit.
+
+Next: the merge gate.
+
+Watch: decision record numbers are claimed at merge; re-check if main moves again.

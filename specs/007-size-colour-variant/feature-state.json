@@ -2,7 +2,7 @@
   "feature": "007-size-colour-variant",
   "branch": "007-size-colour-variant",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-03T18:30:28Z",
       "note": "converged on main with FS-005: ADRs 0017 to 0019, full verify green"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T18:43:53Z",
+      "note": "review approved, five findings closed; walkthrough laid out"
     }
   ],
   "gates": {
@@ -63,6 +68,22 @@
         "DR-006 (low) StrictButton class attribute matched with its leading space: watch item in T004",
         "DR-007 (low) demo per-size and per-colour forms hold one input and one button: applied to plan"
       ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T18:42:39Z",
+      "self_resolved": [
+        "COR-001 (medium) a Submit recoloured on the instance no longer raises under a button colour: fixed, T008",
+        "COR-002 (medium) the removal checkbox takes only what the pack resolved, never hand-written classes: fixed, T007",
+        "COR-003 (low) a Choice holding several kinds is checked against each: kept, README says so, T009",
+        "COR-004 (low) a name in fields that is no field of the form raises UnknownField: fixed, T009",
+        "COR-005 (low) README says which helper's attribute raises TypeError: fixed, T009"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T18:43:30Z",
+      "self_resolved": []
     }
   },
   "stories": [
@@ -326,6 +347,6 @@
   },
   "pr": {
     "number": 23,
-    "draft": true
+    "draft": false
   }
 }

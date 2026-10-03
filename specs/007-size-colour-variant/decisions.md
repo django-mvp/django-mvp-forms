@@ -297,7 +297,7 @@ never reported under it. FR-020 asks for the report whichever way the form is dr
 **Why.** The specification's buttons are the ones a developer places in a layout or adds to the
 helper. These two belong to their containers, arrived on main while this feature was being built,
 and were not in front of the maintainer when the specification was approved. Whether they should
-follow the form's size is an open question, filed as an issue.
+follow the form's size is an open question, filed as issue #77.
 
 **ADR:** none — a boundary with a sibling feature, tracked in an issue
 
