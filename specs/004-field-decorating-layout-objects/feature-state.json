@@ -248,13 +248,53 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_uneditable_field.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputDisabled",
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples",
+              "tests/test_pack/test_documented_examples.py::TestReadmeUneditableField",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_uneditable_field.py tests/test_templatetags/test_daisyui.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py -q (exit 0, 451 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:138",
+              "mvp_forms/templatetags/daisyui.py:290",
+              "mvp_forms/templatetags/daisyui.py:344",
+              "mvp_forms/templates/daisyui/layout/uneditable_input.html:2"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestUneditableFieldPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandaloneUneditableField"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py tests/test_pack/test_documented_examples.py -q (exit 0, 1031 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:750",
+              "demo/views.py:595",
+              "demo/views.py:620",
+              "demo/urls.py:65",
+              "demo/templates/demo/uneditable_field.html:1"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

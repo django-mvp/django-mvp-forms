@@ -55,3 +55,10 @@ Did: FieldInput takes the keyword-only `disabled`, which adds `disabled` to the 
 Verified: `uv run pytest tests/test_pack/test_uneditable_field.py tests/test_templatetags/test_daisyui.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py -q` 451 passed (24 failed first, for the missing template and the unknown `disabled` argument). pre-commit clean.
 Next: T008, the uneditable-field demo page and its forms on the standalone page.
 Watch: docs/adr/0013 still says the pack writes no attribute for either state; the plan says the ADR is amended at the end of the feature, and it is outside this story's files.
+
+## 2026-10-03T19:19:20Z · Implementer US4 · T008
+
+Did: route `uneditable-field` (UneditableFieldView, UneditableFieldMixin, UneditableFieldForm), menu item and icon, template demo/uneditable_field.html on Cotton components, the form added to demo/decorated_fields_standalone.html and a branch for `uneditable-submit` in DecoratedFieldsStandaloneView.post. The account is declared disabled in the form class so a post keeps its value with no error. README demo section and CHANGELOG entry.
+Verified: `uv run pytest tests/test_demo.py tests/test_pack/test_documented_examples.py -q` 1031 passed (the new demo tests failed first on the missing route). pre-commit clean.
+Next: full verify, then the report.
+Watch: the demo has no failing-form state for this page, as the task says.
