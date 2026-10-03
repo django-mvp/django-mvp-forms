@@ -77,6 +77,11 @@
         "TST-002 (low) two tests asserted a width on a range: removed, T006",
         "COR-002 (low) modifiers and css_class of a rating mix the group's size with a star's error colour, read by nothing the pack draws: kept as built, recorded in D21"
       ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T23:10:41Z",
+      "self_resolved": []
     }
   },
   "stories": [
