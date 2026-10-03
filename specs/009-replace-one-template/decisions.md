@@ -174,3 +174,80 @@ shown and tested on. The worked example is in the README, and the test suite dra
 feature asks for no workflow change, so there is no separate request for the maintainer.
 
 **ADR:** none.
+
+## D12. The pack's templates do not change, and the first story is its tests
+
+**Chosen:** no template in the pack is edited. Django's template loading already finds a file at
+a pack template's path ahead of the pack's, on both routes (research R1). The first story writes
+the tests that hold that in place for every distributed template.
+
+**Why:** the behaviour was there and nothing said so or guarded it. A draw site that named a
+template some other way, or a template drawn with a narrower context, would break a replacement
+with every existing test still green.
+
+**Revisit if:** a template is found that a replacement cannot reach.
+
+**ADR:** none — it records that nothing had to be built, and the record of the template surface
+states the rule the tests guard.
+
+## D13. "Handed" means what the pack's own template reads, and the pack's objects one level down
+
+**Chosen:** an entry's names are the ones the pack's template reads from outside itself, found by
+compiling the template and walking its nodes. A value Django or django-crispy-forms supplies is
+listed by its name. `drawn` and `table` are the pack's own objects, so each part a template reads
+is listed with its dot, as `drawn.is_group` (research R5).
+
+**Rejected:** listing every name in the context a template is drawn with. The context holds
+whatever the page put there, and most of it is not the pack's to promise.
+
+**Why:** it is D3 made checkable. The check compares what a template reads with its entry, so a
+template cannot start reading a name without the list saying so.
+
+**ADR:** docs/adr/0029-every-pack-template-is-public.md
+
+## D14. A replacement at an old path is looked for where the template is drawn
+
+**Chosen:** `mvp_forms/deprecation.py` holds the paths the pack has moved away from and one
+function that asks whether the host project has a template at one. A draw site that moves asks
+it first, draws what it finds and warns. The registry is empty in this release and no draw site
+asks.
+
+**Rejected:**
+
+- A check when the project starts. Django's system checks do not run under a production server,
+  and FR-013 asks for the warning no later than when a form is drawn.
+- A template left at the old path that forwards to the new one. The pack could not tell its own
+  forwarding template from a replacement, so it could not warn only the projects that have one.
+- Changing every `{% include %}` in the pack to go through the tag now. It would change what
+  every form costs to draw for a registry with nothing in it.
+
+**Why:** the pack no longer ships the old path, so anything found there is the host project's.
+One lookup answers both "is there a replacement" and "which template to draw".
+
+**Revisit if:** django-crispy-forms renames one of the paths it chooses, which the pack cannot
+intercept from a template.
+
+**ADR:** docs/adr/0029-every-pack-template-is-public.md
+
+## D15. The check reads the README
+
+**Chosen:** the list is one markdown table in the README and the test suite parses it. The
+helpers that read the package and the README live in `tests/template_surface.py`.
+
+**Why:** D6 puts the list in the README and keeps it out of the package. A second copy of the
+list in Python would be the thing the check exists to prevent.
+
+**ADR:** none — it follows from D6.
+
+## D16. Whether the pack's template tags are public is left open
+
+**Chosen:** the list covers paths and names. It does not say whether `daisyui_field` and the
+other tags a copied template calls are public in the same sense.
+
+**Why:** the specification promises paths and names. A renamed tag fails with
+`TemplateSyntaxError` the first time it is drawn, which is loud, so it is outside the quiet
+break the issue describes.
+
+**Open with the maintainer:** #115.
+
+**ADR:** none — nothing is decided.
