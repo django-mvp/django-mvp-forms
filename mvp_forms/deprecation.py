@@ -6,7 +6,7 @@ from collections.abc import Callable
 from django.template import TemplateDoesNotExist
 
 # A path the pack has moved away from, and the path that replaces it, or None when
-# nothing does. Empty until a release moves a template (FS-009).
+# nothing does. Empty until a release moves a template.
 WITHDRAWN: dict[str, str | None] = {}
 
 
