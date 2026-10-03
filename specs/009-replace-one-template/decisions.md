@@ -270,3 +270,20 @@ break the issue describes.
 - The worked example has a reader of its own, since it is a template and is not run.
 
 **ADR:** none — corrections to the plan, not decisions that outlive it.
+
+## D18. The every-template comparison collapses runs of whitespace, and two states are added
+
+**Chosen:** the test removes the marker and collapses each run of whitespace to one space on
+both sides before comparing the outputs as strings. Two entries are added at the end of
+`STATES`: a form with media, through the filter and through the tag.
+
+**Why:** Django's form renderer strips what a widget template draws, so a marker at the start of
+a widget template leaves a newline in the copy's output that the pack's own output has lost.
+Collapsing whitespace keeps the comparison a string comparison and ignores only what the
+renderer decides. Every template was already reached by some state, but dropping `form.media`
+from `uni_form.html` changed no output until a form with media was drawn through the filter.
+
+**Revisit if:** a template's output ever depends on the whitespace between two words, or a
+dropped name is found that no state reaches.
+
+**ADR:** none — a choice about the tests.
