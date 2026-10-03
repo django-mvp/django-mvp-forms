@@ -37,6 +37,7 @@ from crispy_forms.layout import (
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import BaseFormSet, formset_factory
+from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
 from mvp_forms.choices import Choice, FormChoices, Modifiers
@@ -1086,3 +1087,64 @@ class TableOrderHelper(StackedOrderHelper):
     """Draws the order lines as a table, with one submit button."""
 
     template = "daisyui/table_inline_formset.html"
+
+
+STARS = [(count, format_lazy(_("{count} stars"), count=count)) for count in range(1, 6)]
+STATE_STARS = [(str(count), label) for count, label in STARS]
+
+
+class RatingForm(forms.Form):
+    """A required rating and an optional one that can be cleared, which can be posted.
+
+    ``score`` is a rating by its name in ``FormChoices`` and ``comfort`` is a rating
+    in the layout, with an empty choice that clears it. Every id and the button's
+    name carry the form's prefix. The form must be given a prefix.
+    """
+
+    score = forms.ChoiceField(label=_("How would you rate this?"), choices=STARS)
+    comfort = forms.TypedChoiceField(
+        label=_("How comfortable was it?"),
+        choices=[("", _("No answer")), *STARS],
+        coerce=int,
+        empty_value=None,
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Build the helper, with the ratings stated and a submit button."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.daisyui = FormChoices(fields={"score": Choice(drawing="rating")})
+        self.helper.layout = Layout("score", Choice("comfort", drawing="rating"))
+        self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class RatingStateForm(ChosenForm):
+    """One rating, in one state.
+
+    Give the form a prefix of the state's name, so no id repeats on the page. The
+    field is ``score``.
+
+    Args:
+        state: ``"help"``, ``"error"`` or ``"disabled"``. The form for ``"error"``
+            is bound with nothing posted, so the required field fails.
+    """
+
+    score = forms.ChoiceField(label=_("How would you rate this?"), choices=STATE_STARS)
+
+    def __init__(self, *args, state, **kwargs):
+        """Put the field in its state, and state its drawing for the form."""
+        if state == "error":
+            args = args or ({},)
+        super().__init__(
+            *args,
+            choices=FormChoices(fields={"score": Choice(drawing="rating")}),
+            **kwargs,
+        )
+        score = self.fields["score"]
+        score.disabled = state == "disabled"
+        if state == "disabled":
+            self.initial["score"] = "3"
+        if state == "help":
+            score.help_text = _("Pick the star that fits best.")

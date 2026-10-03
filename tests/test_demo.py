@@ -2336,3 +2336,169 @@ class TestDrawingSizesInThePage(DrawingSizesPageContract):
 
 class TestDrawingSizesInTheStandalonePage(DrawingSizesPageContract):
     url_name = "drawings-standalone"
+
+
+RATING_PREFIX = "rating"
+RATING_FIELDS = ["score", "comfort"]
+RATING_STATES = ["help", "error", "disabled"]
+
+
+def rating_wrapper(page, name, state=None):
+    prefix = RATING_PREFIX if state is None else f"{RATING_PREFIX}-{state}"
+    return page.find(id=f"id_{prefix}-{name}")
+
+
+def rating_picked(page, **positions):
+    data = {}
+    for name, position in positions.items():
+        stars = rating_wrapper(page, name).find_all("input")
+        data[f"{RATING_PREFIX}-{name}"] = stars[position]["value"]
+    return data
+
+
+class RatingAndRangePageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class RatingFormPageContract(RatingAndRangePageContract):
+    @pytest.mark.parametrize("name", RATING_FIELDS)
+    def test_every_field_is_a_rating_of_radio_inputs_with_its_name(self, page, name):
+        wrapper = rating_wrapper(page, name)
+
+        stars = wrapper.find_all("input")
+
+        assert "rating" in wrapper["class"]
+        assert {tag["type"] for tag in stars} == {"radio"}
+        assert {tag["name"] for tag in stars} == {f"{RATING_PREFIX}-{name}"}
+
+    def test_the_optional_rating_can_be_cleared_and_the_required_one_cannot(self, page):
+        required = rating_wrapper(page, "score").find_all("input")
+        optional = rating_wrapper(page, "comfort").find_all("input")
+
+        assert all(tag["value"] != "" for tag in required)
+        assert [tag["value"] for tag in optional].count("") == 1
+
+    def test_the_form_posts_with_a_token_and_a_button(self, page):
+        form = rating_wrapper(page, "score").find_parent("form")
+
+        assert form["method"] == "post"
+        assert form.find("input", attrs={"name": "csrfmiddlewaretoken"}) is not None
+        assert form.find("input", attrs={"type": "submit"}) is not None
+
+    def test_nothing_is_shown_as_cleaned_before_a_post(self, page):
+        assert page.find(id=f"{RATING_PREFIX}-cleaned") is None
+
+    def test_a_post_with_a_star_picked_shows_the_value_the_form_cleaned_to(
+        self, open_page
+    ):
+        data = rating_picked(open_page(self.url_name), score=2, comfort=3)
+
+        page = open_page(self.url_name, data)
+
+        shown = page.find(id=f"{RATING_PREFIX}-cleaned-score")
+        assert shown.get_text(strip=True) == data[f"{RATING_PREFIX}-score"]
+        assert page.find(id=f"{RATING_PREFIX}-cleaned-comfort") is not None
+
+    def test_a_post_draws_the_star_picked_as_picked(self, open_page):
+        data = rating_picked(open_page(self.url_name), score=2)
+
+        page = open_page(self.url_name, data)
+
+        checked = [
+            tag["value"]
+            for tag in rating_wrapper(page, "score").find_all("input")
+            if tag.has_attr("checked")
+        ]
+        assert checked == [data[f"{RATING_PREFIX}-score"]]
+
+    def test_clearing_the_optional_rating_cleans_to_none(self, open_page):
+        data = rating_picked(open_page(self.url_name), score=0, comfort=0)
+
+        page = open_page(self.url_name, data)
+
+        shown = page.find(id=f"{RATING_PREFIX}-cleaned-comfort")
+        assert shown.get_text(strip=True) == "None"
+
+    def test_a_post_with_no_star_picked_for_the_required_rating_shows_an_error(
+        self, open_page
+    ):
+        page = open_page(self.url_name, {})
+
+        stars = rating_wrapper(page, "score").find_all("input")
+
+        assert all(tag.get("aria-invalid") == "true" for tag in stars)
+        assert page.find(id=f"{RATING_PREFIX}-cleaned") is None
+
+
+class RatingStatesPageContract(RatingAndRangePageContract):
+    @pytest.mark.parametrize("state", RATING_STATES)
+    def test_every_state_is_drawn_as_a_rating(self, page, state):
+        wrapper = rating_wrapper(page, "score", state)
+
+        assert "rating" in wrapper["class"]
+        assert len(wrapper.find_all("input")) > 1
+
+    def test_the_rating_with_help_text_is_described_by_it(self, page):
+        group = page.find("fieldset", id=f"div_id_{RATING_PREFIX}-help-score")
+
+        described = group["aria-describedby"].split()
+
+        assert f"id_{RATING_PREFIX}-help-score_helptext" in described
+        assert page.find(id=described[0]) is not None
+
+    def test_the_rating_in_error_is_invalid_and_draws_its_error(self, page):
+        stars = rating_wrapper(page, "score", "error").find_all("input")
+
+        assert all(tag.get("aria-invalid") == "true" for tag in stars)
+        assert page.find(id=f"id_{RATING_PREFIX}-error-score_error") is not None
+
+    def test_every_star_of_the_disabled_rating_is_disabled(self, page):
+        stars = rating_wrapper(page, "score", "disabled").find_all("input")
+
+        assert all(tag.has_attr("disabled") for tag in stars)
+
+    def test_the_disabled_rating_shows_its_value(self, page):
+        stars = rating_wrapper(page, "score", "disabled").find_all("input")
+
+        assert sum(tag.has_attr("checked") for tag in stars) == 1
+
+
+class TestRatingAndRangePage(RatingFormPageContract, RatingStatesPageContract):
+    url_name = "rating-and-range"
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("rating-and-range")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, page):
+        assert page.find("a", href=reverse("rating-and-range-standalone")) is not None
+
+
+class TestStandaloneRatingAndRangePage(
+    RatingFormPageContract, RatingStatesPageContract
+):
+    url_name = "rating-and-range-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, page):
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, page):
+        assert page.find("a", href=reverse("rating-and-range")) is not None

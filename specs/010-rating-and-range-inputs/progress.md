@@ -28,3 +28,13 @@ Verified: tests/test_pack, tests/test_templatetags and tests/test_choices.py: 21
 Next: T003, the demo page "Rating and range".
 
 Watch: the README section describes the rating only; the range joins it in US2 and size and colour in US3.
+
+## 2026-10-03T22:21:15Z · Implementer US1 · T003
+
+Did: the demo page "Rating and range" in the shell and standalone: RatingForm (a required rating by name and an optional one in the layout that posts and shows what it cleaned to) and RatingStateForm (help text, error, disabled) in demo/forms.py; RatingAndRangeMixin and the two views; routes rating-and-range and rating-and-range-standalone; the sidebar entry and its icon; the Cotton shell template and the plain standalone one; RatingAndRangePageContract in tests/test_demo.py with a shell and a standalone class; a paragraph about the page in the README's list of demo pages. No size or colour is stated.
+
+Verified: tests/test_demo.py: 1267 passed (40 of them new); pre-commit and mypy clean.
+
+Next: the full verify command once, then the completion report.
+
+Watch: the page's mixin and test contract are named for the whole page, so the range forms join the same mixin and contract in US2.

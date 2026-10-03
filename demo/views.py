@@ -33,6 +33,8 @@ from demo.forms import (
     OrderLineFormSet,
     OverrideForm,
     PairForm,
+    RatingForm,
+    RatingStateForm,
     RowButtonsForm,
     StackedOrderHelper,
     TableOrderHelper,
@@ -939,6 +941,81 @@ class StandaloneDrawingsView(DrawingsMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/drawings_standalone.html"
+
+
+class RatingAndRangeMixin:
+    """The forms both rating and range pages draw, with what the first cleaned to.
+
+    A post binds the form and draws the page again. Nothing is saved.
+    """
+
+    rating_prefix = "rating"
+    rating_states = ("help", "error", "disabled")
+
+    def build_cleaned(self, form):
+        """List what a posted form cleaned to, for the page to show.
+
+        Args:
+            form: The form to read.
+
+        Returns:
+            A list of dicts holding each field's name, label and cleaned value,
+            or an empty list when the form is not bound or does not validate.
+        """
+        if not form.is_valid():
+            return []
+        return [
+            {"name": name, "label": form.fields[name].label, "value": value}
+            for name, value in form.cleaned_data.items()
+        ]
+
+    def build_rating_states(self):
+        """Build one small form for each state a rating is shown in.
+
+        Returns:
+            A list of dicts holding each state's name and form.
+        """
+        return [
+            {
+                "title": state,
+                "form": RatingStateForm(
+                    prefix=f"{self.rating_prefix}-{state}", state=state
+                ),
+            }
+            for state in self.rating_states
+        ]
+
+    def get_context_data(self, **kwargs):
+        """Add the form, what it cleaned to when it was posted, and the states."""
+        form = kwargs.setdefault("form", RatingForm(prefix=self.rating_prefix))
+        kwargs["rating_states"] = self.build_rating_states()
+        kwargs["cleaned"] = self.build_cleaned(form)
+        kwargs["prefix"] = self.rating_prefix
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form bound to what was posted."""
+        form = RatingForm(request.POST, prefix=self.rating_prefix)
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class RatingAndRangeView(RatingAndRangeMixin, MVPTemplateView):
+    """A single-choice field drawn as a rating, in the shell."""
+
+    template_name = "demo/rating_and_range.html"
+    page_title = "Rating and range"
+    page_subtitle = "How a single-choice field is drawn as a rating, chosen in Python"
+    breadcrumbs = [{"text": "Rating and range"}]
+
+
+class StandaloneRatingAndRangeView(RatingAndRangeMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/rating_and_range_standalone.html"
 
 
 class OrderFormsetMixin:

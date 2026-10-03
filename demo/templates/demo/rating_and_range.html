@@ -1,0 +1,36 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Drawn in Python" icon="rating-and-range">
+    <c-text>
+      Two fields that each hold one choice, drawn as a rating, one star for each choice.
+      The first states its rating by its name in the form's statement and cannot be
+      cleared. The second states it in the layout and has an empty choice, which clears
+      it. Pick a star, submit the form, and the page shows what the form cleaned to.
+    </c-text>
+    {% crispy form %}
+  </c-section>
+  {% if cleaned %}
+    <c-section title="What the form cleaned to" level="3">
+      <ul id="{{ prefix }}-cleaned">
+        {% for item in cleaned %}
+          <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+        {% endfor %}
+      </ul>
+    </c-section>
+  {% endif %}
+  <c-text>
+    A rating keeps its label, its help text, its required marker, its error and its
+    disabled state. No form below posts anywhere.
+  </c-text>
+  <c-section title="A rating in every state" level="3">
+    {% for state in rating_states %}
+      <c-section :title="state.title" level="4">
+        {% crispy state.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'rating-and-range-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}

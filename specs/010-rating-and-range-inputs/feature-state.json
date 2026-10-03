@@ -120,8 +120,29 @@
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestRatingAndRangePage",
+              "tests/test_demo.py::TestStandaloneRatingAndRangePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -q -k RatingAndRange",
+              "uv run pytest tests/test_demo.py -q -n auto --dist loadscope"
+            ],
+            "code": [
+              "demo/forms.py:1096",
+              "demo/views.py:946",
+              "demo/urls.py:95",
+              "demo/menus.py:96",
+              "demo/settings.py:137",
+              "demo/templates/demo/rating_and_range.html:1",
+              "demo/templates/demo/rating_and_range_standalone.html:1",
+              "tests/test_demo.py:2359"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

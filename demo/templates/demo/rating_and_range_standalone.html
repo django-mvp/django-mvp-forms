@@ -1,0 +1,57 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rating and range</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">Rating and range</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and nothing else.
+        <a class="link" href="{% url 'rating-and-range' %}">The same page inside the django-mvp shell</a>
+      </p>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Drawn in Python</h2>
+          <p>
+            Two fields that each hold one choice, drawn as a rating, one star for each choice.
+            The first states its rating by its name in the form's statement and cannot be
+            cleared. The second states it in the layout and has an empty choice, which clears
+            it. Pick a star, submit the form, and the page shows what the form cleaned to.
+          </p>
+          {% crispy form %}
+        </div>
+      </section>
+      {% if cleaned %}
+        <section class="card card-border bg-base-100">
+          <div class="card-body">
+            <h2 class="card-title">What the form cleaned to</h2>
+            <ul id="{{ prefix }}-cleaned">
+              {% for item in cleaned %}
+                <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </section>
+      {% endif %}
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">A rating in every state</h2>
+          <p>
+            A rating keeps its label, its help text, its required marker, its error and its
+            disabled state. No form below posts anywhere.
+          </p>
+          {% for state in rating_states %}
+            <h3 class="font-semibold">{{ state.title }}</h3>
+            {% crispy state.form %}
+          {% endfor %}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
