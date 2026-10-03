@@ -48,9 +48,7 @@ the pack does not ship. Styling it to look fixed while it still accepts input mi
 Django itself has no read-only field argument, only `disabled`, and the README says stock
 behaviour wins over invention. Showing a field as uneditable from a layout is #8's.
 
-**ADR:** to be written when the feature is built — it is a convention every later input and
-widget in the pack follows, and a reader will ask why read-only does nothing on a select
-
+**ADR:** docs/adr/0010-disabled-and-read-only-are-drawn-from-the-attribute.md
 ## D3. A widget made of several inputs is split by the kind of each part
 
 **Ambiguous:** Django ships widgets built from several inputs: a date as three selects, a date

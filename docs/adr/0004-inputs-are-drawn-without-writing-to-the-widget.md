@@ -1,6 +1,6 @@
 # ADR 0004 — Inputs are drawn by the pack's own tag, without writing to the widget
 
-**Status:** accepted
+**Status:** accepted, amended by [ADR 0009](0009-widget-templates-through-a-copy-of-the-widget.md): the tag is now `{% daisyui_field %}`, and three widgets are drawn from templates of the pack's own
 
 ## Decision
 
