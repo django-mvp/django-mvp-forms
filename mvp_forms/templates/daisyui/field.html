@@ -1,0 +1,9 @@
+{% load daisyui %}
+{% if field.is_hidden %}
+  {{ field }}
+{% else %}
+  <div{% if field.auto_id %} id="div_{{ field.auto_id }}"{% endif %} class="fieldset">
+    <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %}>{{ field.label }}</label>
+    {% daisyui_input field %}
+  </div>
+{% endif %}

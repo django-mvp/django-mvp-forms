@@ -24,4 +24,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The `daisyui` template pack, which draws text, email, URL, number, password, date, time and date-time inputs and textareas as daisyUI components. Select it with `CRISPY_ALLOWED_TEMPLATE_PACKS` and `CRISPY_TEMPLATE_PACK`.
 - The package skeleton: an installable app, a demo project and the test suite. No template pack, fields or widgets yet.

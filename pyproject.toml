@@ -144,9 +144,11 @@ extend_exclude = ["tests/", "demo/", "docs/"]
 DEP002 = ["django-crispy-forms"]
 
 [tool.forge.conformance]
-# Neither has a module under mvp_forms/ to mirror: one covers the app registry,
-# the other the undistributed demo project.
+# None has a module under mvp_forms/ to mirror: the first covers the app
+# registry, the second the undistributed demo project, the third the pack's
+# templates.
 non-mirror-paths = [
   "tests/test_smoke.py",
   "tests/test_demo.py",
+  "tests/test_pack/",
 ]

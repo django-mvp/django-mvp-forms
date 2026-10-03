@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The repository holds the package skeleton. The template pack is not written yet and nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields so far, and nothing is published to PyPI.
 
 ## Why
 
@@ -48,11 +48,48 @@ The host project supplies daisyUI itself. This package ships markup, not a style
 
 ## Quickstart
 
-To follow once the template pack lands.
+Select the pack in your settings. Both settings are needed: crispy-forms refuses a pack that is not allowed.
+
+```python
+CRISPY_ALLOWED_TEMPLATE_PACKS = ["daisyui"]
+CRISPY_TEMPLATE_PACK = "daisyui"
+```
+
+Write a form as you always have:
+
+```python
+from django import forms
+
+
+class ContactForm(forms.Form):
+    name = forms.CharField()
+    email = forms.EmailField()
+    message = forms.CharField(widget=forms.Textarea)
+```
+
+Draw it in a template of a page that loads daisyUI:
+
+```django
+{% load crispy_forms_tags %}
+
+<form method="post">
+  {% csrf_token %}
+  {{ form|crispy }}
+</form>
+```
 
 ## Public surface
 
-Nothing yet. The pack's name, its layout objects, and each field and widget are listed here as they are added.
+### Template pack `daisyui`
+
+Selected with the two settings above. Every field is drawn inside a daisyUI `fieldset` with a label and its input.
+
+These inputs are drawn as daisyUI components, whichever way crispy-forms is asked to draw the form (`|crispy`, `{% crispy form %}` or `|as_crispy_field`):
+
+- text, email, URL, number, password, date, time and date-time inputs, as `input`
+- textareas, as `textarea`
+
+A class, placeholder, input type or row count you give a widget is kept. The pack never changes an input's type, so a date field is a text input unless its widget says otherwise. Fields with any other widget are still drawn in place, without a daisyUI class.
 
 ## Contributing
 
