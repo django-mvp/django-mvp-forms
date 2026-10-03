@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The repository holds the package skeleton. The template pack is not written yet and nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields so far, and nothing is published to PyPI.
 
 ## Why
 
@@ -30,8 +30,10 @@ When two reasonable designs conflict, stock daisyUI markup wins over custom styl
 
 ## Installation
 
+Nothing is published to PyPI yet, so install it from GitHub:
+
 ```bash
-pip install django-mvp-forms
+pip install git+https://github.com/django-mvp/django-mvp-forms
 ```
 
 Then add it to `INSTALLED_APPS` alongside crispy-forms:
@@ -44,15 +46,90 @@ INSTALLED_APPS = [
 ]
 ```
 
-The host project supplies daisyUI itself. This package ships markup, not a stylesheet.
+The host project supplies daisyUI itself. This package ships markup, not a stylesheet. Pages that draw these forms must load daisyUI 5. Its CDN build needs no build step, so daisyUI's own CDN install in the page's `<head>` is enough:
+
+```html
+<link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+```
+
+A host project with its own Tailwind build has to make that build produce the classes the pack writes. Tailwind only generates a class it finds in the files it scans, so point it at the whole installed `mvp_forms` package: the classes are written in its templates and in its template tags.
 
 ## Quickstart
 
-To follow once the template pack lands.
+Select the pack in your settings. Both settings are needed: crispy-forms refuses a pack that is not allowed.
+
+```python
+CRISPY_ALLOWED_TEMPLATE_PACKS = ["daisyui"]
+CRISPY_TEMPLATE_PACK = "daisyui"
+```
+
+Write a form as you always have, and a view that hands it to a template:
+
+```python
+from django import forms
+from django.shortcuts import render
+
+
+class ContactForm(forms.Form):
+    name = forms.CharField()
+    email = forms.EmailField()
+    message = forms.CharField(widget=forms.Textarea)
+
+
+def contact(request):
+    form = ContactForm(request.POST or None)
+    return render(request, "contact.html", {"form": form})
+```
+
+Draw it in a template of a page that loads daisyUI:
+
+```django
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <form method="post">
+      {% csrf_token %}
+      {{ form|crispy }}
+      <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+  </body>
+</html>
+```
 
 ## Public surface
 
-Nothing yet. The pack's name, its layout objects, and each field and widget are listed here as they are added.
+### Template pack `daisyui`
+
+Selected with the two settings above. Every field is drawn inside a daisyUI `fieldset` with a label and its input.
+
+The label is tied to the input, and a required field's label carries a marker that assistive technology skips. The input announces itself as required, as invalid when it has errors, and by its help text and error messages as its description. Label, help text and errors are escaped unless you mark them safe. Every id the pack writes is built from the form's `auto_id`, so forms with different prefixes never share one, and a form with `auto_id=False` gets none.
+
+These inputs are drawn as daisyUI components, whichever way crispy-forms is asked to draw the form (`|crispy`, `{% crispy form %}` or `|as_crispy_field`):
+
+- text, email, URL, number, password, date, time and date-time inputs, as `input`
+- textareas, as `textarea`
+
+Each of them fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`, the one utility it writes. A width class of your own on the widget, such as `w-40`, replaces it. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
+
+Errors that belong to the form as a whole are drawn once, in an element with `role="alert"` ahead of the fields. A form with none draws no such element, and `{{ form|as_crispy_errors }}` draws the same element on its own.
+
+With `{% crispy form %}` the pack follows these `FormHelper` settings:
+
+- `form_tag`, `form_method`, `form_action`, `form_id`, `form_class` and `attrs` for the `<form>` element, which is `multipart` when the form needs it, and `disable_csrf` for its CSRF token, drawn for a post form
+- `form_show_labels`: with labels off, each input is named by an `aria-label` holding the label's text, unless the widget sets its own
+- `form_show_errors`: with errors off, no field error, no form-wide error and no error styling is drawn, and an input's description names only what is on the page
+- `label_class` on each label, and `field_class` on an element wrapped around each input
+- `form_error_title` inside the form-wide error element, and `include_media` for the form's media
+
+`help_text_inline` and `error_text_inline` are ignored.
+
+A class, placeholder, input type or row count you give a widget is kept. The pack never changes an input's type, so a date field is a text input unless its widget says otherwise. Fields with any other widget are still drawn in place, without a daisyUI class.
 
 ## Contributing
 
@@ -75,6 +152,14 @@ uv run python manage.py migrate
 uv run python manage.py seed_demo
 uv run python manage.py runserver
 ```
+
+The demo has two pages that draw the same forms: every text input kind in each of
+five states (empty, holding a value, required, with help text, with an error),
+and a form to submit that comes back with a field error and a form-wide error.
+
+- `/text-inputs/` is the page inside the django-mvp shell, reached from its sidebar.
+- `/text-inputs/standalone/` is the same page as a host project with neither
+  django-mvp nor Cotton would have it, styled by daisyUI's CDN build alone.
 
 ## License
 

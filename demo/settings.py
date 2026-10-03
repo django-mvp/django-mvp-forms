@@ -34,7 +34,6 @@ INSTALLED_APPS = [
     "mvp",
     "easy_icons",
     "crispy_forms",
-    "crispy_tailwind",
     "flex_menu",
     "django_cotton",
     # Reloads the browser on a change to a template, a stylesheet or Python. It
@@ -97,8 +96,8 @@ LOGIN_URL = "account_login"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = ["tailwind"]
-CRISPY_TEMPLATE_PACK = "tailwind"
+CRISPY_ALLOWED_TEMPLATE_PACKS = ["daisyui"]
+CRISPY_TEMPLATE_PACK = "daisyui"
 
 # Which class draws the sidebar tree declared in demo/menus.py, and which draws
 # the dock shown below the sidebar breakpoint.
@@ -120,6 +119,7 @@ EASY_ICONS = {
         "packs": ["mvp.utils.BS5_ICONS"],
         "icons": {
             "overview": "bi bi-house",
+            "text-inputs": "bi bi-input-cursor-text",
         },
     },
 }

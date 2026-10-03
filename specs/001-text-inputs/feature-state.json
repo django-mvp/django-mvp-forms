@@ -1,0 +1,434 @@
+{
+  "feature": "001-text-inputs",
+  "branch": "001-text-inputs",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T15:06:57Z",
+      "note": "specification approved by delegated review at commit 137f1745a02ccb148dedef55d9b4212d6d9de45e, on pull request #25; epic #5, stories #41, #42, #43, #44, #45"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T15:17:24Z",
+      "note": "plan.md, research.md, tasks.md: 5 stories, 8 tasks; continues on pull request #25"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T15:17:46Z",
+      "note": "one reviewer, three lenses, on plan.md, tasks.md and research.md at 375882c"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T15:24:50Z",
+      "note": "plan gate open; design review applied at 793c8e6"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T15:54:45Z",
+      "note": "all five stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T15:57:52Z",
+      "note": "one reviewer, correctness and spec compliance, on the feature diff"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T16:05:08Z",
+      "note": "review closed: approve, four small findings fixed, two declined; walkthrough laid out"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T15:06:57Z",
+      "self_resolved": [
+        "approved at commit 137f1745a02ccb148dedef55d9b4212d6d9de45e (forge spec-gate, pull request #25); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T15:24:23Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: changes requested, all applied",
+      "at": "2026-10-03T15:24:23Z",
+      "self_resolved": [
+        "DR-001 (high) frame element fixed as a div, no tag or wrapper_class read from the page context: applied to plan and T001",
+        "DR-002 no ARIA attribute on a grouped widget; aria-required only when the form turns the required attribute off: applied to plan, T003, T006",
+        "DR-003 crispy's cached templates cleared around the no-django-mvp test: applied to plan, research and T007",
+        "DR-004 README does not list the pack's own tag or template paths: applied to T001 and T004",
+        "DR-005 help text and errors written inside the frame, two templates dropped: applied",
+        "DR-006 aria-label carries the label with tags stripped: applied to plan and T006",
+        "DR-007 label for written only when there is an id: applied to plan and T004",
+        "DR-008 no wrapper class around BeautifulSoup: applied"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T16:04:34Z",
+      "self_resolved": [
+        "CR-001 (medium) error modifiers written out as literals; README says to scan the whole package: fixed, T010",
+        "CR-002 (medium) standalone page loads Tailwind's browser build: resolved by amending the specification to daisyUI's documented CDN install (D25)",
+        "CR-003 (low) a label not marked safe is named as written: fixed, T010",
+        "CR-004 (low) a falsy switch reads as off in the tag as in the templates: fixed, T010",
+        "CR-005 (low) demo tests no longer pin a styling class or a script, test class docstring removed: fixed, T011",
+        "CR-006 (low) demo page strings not wrapped for translation: declined, the demo is not distributed and has no catalogue"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T16:12:25Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 41,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInput",
+              "tests/test_pack/test_inputs.py::TestCoveredInputs"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags tests/test_pack tests/test_demo.py",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:10",
+              "mvp_forms/templatetags/daisyui.py:66",
+              "mvp_forms/templates/daisyui/field.html:1",
+              "mvp_forms/templates/daisyui/uni_form.html:1",
+              "demo/settings.py:99"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_inputs.py::TestCrispyTag",
+              "tests/test_pack/test_inputs.py::TestBoundValues",
+              "tests/test_pack/test_inputs.py::TestSingleField",
+              "tests/test_pack/test_inputs.py::TestUncoveredWidgets",
+              "tests/test_pack/test_inputs.py::TestNoFields"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags tests/test_pack tests/test_demo.py",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/whole_uni_form.html:1",
+              "mvp_forms/templates/daisyui/display_form.html:1",
+              "mvp_forms/templates/daisyui/field.html:10"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
+          }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputDevelopersWidth"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 42,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_field_frame.py::TestLabel",
+              "tests/test_pack/test_field_frame.py::TestRequiredMarker",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInput"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags tests/test_demo.py",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/field.html:7",
+              "mvp_forms/templatetags/daisyui.py:52",
+              "mvp_forms/templatetags/daisyui.py:62"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_field_frame.py::TestDescription",
+              "tests/test_pack/test_field_frame.py::TestErrors",
+              "tests/test_pack/test_field_frame.py::TestEscaping",
+              "tests/test_pack/test_field_frame.py::TestPrefixes",
+              "tests/test_pack/test_field_frame.py::TestIdsTurnedOff",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInput"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags tests/test_demo.py",
+              "uv run pre-commit run --all-files",
+              "/home/sam/.openclaw/workspaces/forge/engineering-org/kit/forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-001-text-inputs --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:42",
+              "mvp_forms/templates/daisyui/field.html:13",
+              "mvp_forms/templates/daisyui/field.html:16"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 43,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_form.py::TestFormWideErrors",
+              "tests/test_pack/test_form.py::TestMedia"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_form.py",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/errors.html:2",
+              "mvp_forms/templates/daisyui/uni_form.html:2",
+              "mvp_forms/templates/daisyui/display_form.html:3"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_form.py::TestFormElement",
+              "tests/test_pack/test_form.py::TestHelperSwitches",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputLabelsOff",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputErrorsOff",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputGroupedWidget"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags tests/test_demo.py",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:57",
+              "mvp_forms/templatetags/daisyui.py:90",
+              "mvp_forms/templatetags/daisyui.py:101",
+              "mvp_forms/templatetags/daisyui.py:118",
+              "mvp_forms/templatetags/daisyui.py:146",
+              "mvp_forms/templates/daisyui/field.html:6",
+              "mvp_forms/templates/daisyui/field.html:11",
+              "mvp_forms/templates/daisyui/field.html:17"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputEntityLabel",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiInputSwitches"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags/test_daisyui.py"
+            ]
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputLiteralLabel",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiInputFalsySwitches"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 44,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_independence.py::TestWithoutDjangoMvp",
+              "tests/test_pack/test_independence.py::TestDistributedFiles"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_independence.py",
+              "uv run pytest",
+              "uv run pre-commit run --all-files",
+              "uv build",
+              "/home/sam/.openclaw/workspaces/forge/engineering-org/kit/forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-001-text-inputs --base origin/main"
+            ],
+            "code": [
+              "tests/conftest.py:37",
+              "tests/conftest.py:44",
+              "tests/conftest.py:52",
+              "tests/test_pack/test_independence.py:135",
+              "tests/test_pack/test_independence.py:153",
+              "tests/test_pack/test_independence.py:179",
+              "README.md:47"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 45,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestTextInputsPage",
+              "tests/test_demo.py::TestStandaloneTextInputsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "/home/sam/.openclaw/workspaces/forge/engineering-org/kit/forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-001-text-inputs --base origin/main"
+            ],
+            "code": [
+              "demo/forms.py:8",
+              "demo/views.py:24",
+              "demo/views.py:99",
+              "demo/views.py:108",
+              "tests/test_demo.py:64",
+              "tests/test_demo.py:150",
+              "tests/test_demo.py:167",
+              "README.md:36"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestTextInputsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 14.93,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 25,
+    "draft": true
+  }
+}
