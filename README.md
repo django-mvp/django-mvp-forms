@@ -589,7 +589,7 @@ For buttons, the same sizes and colours and these variants:
 
 The classes the names mean are written out in the tables of `Modifiers`, in `mvp_forms.choices`, one for sizes, one for colours and one for variants. The keyword is spelt `color`, as daisyUI spells it. The three are independent: changing one leaves the other two as they were. Every one is optional, and a form that states nothing is drawn exactly as it was before.
 
-- `fields` gives one field a `Choice` of its own, by the field's name. Each of size, colour and variant that the `Choice` states wins over the form's for that field, and each it leaves out, which is `INHERIT` and the default, falls back to the form's. A `Choice` also states a drawing for a boolean field, which the form has no statement of: see "Checkbox, toggle and switch" below. `None` is the pack's ordinary drawing, so `Choice(color=None)` undoes the form's colour for that field, as `notes` does above. `INHERIT` is the one value of the type `Inherit`.
+- `fields` gives one field a `Choice` of its own, by the field's name. Each of size, colour and variant that the `Choice` states wins over the form's for that field, and each it leaves out, which is `INHERIT` and the default, falls back to the form's. A `Choice` also states a drawing, which the form has no statement of: see "Checkbox, toggle and switch" and "Rating and range" below. `None` is the pack's ordinary drawing, so `Choice(color=None)` undoes the form's colour for that field, as `notes` does above. `INHERIT` is the one value of the type `Inherit`.
 - Every input of a field takes the choices: each option of a radio or checkbox group, each select of a date, and the removal checkbox of a file field that holds a file, which takes the size and the colour.
 - A choice that one kind of input has no modifier for is passed over for that kind. `variant="ghost"` leaves a checkbox, a toggle and a radio as they are and draws the text input beside them in ghost.
 - A name that is not in the lists above raises `InvalidChoice`, a `ValueError`, when the form is drawn. It carries the `kind`, the `value` and the names `allowed`.
@@ -599,7 +599,7 @@ The classes the names mean are written out in the tables of `Modifiers`, in `mvp
 
 ### One field's own choice
 
-One field can state a size, a colour or a variant of its own, and a boolean field a drawing as well. There are two ways, and they combine.
+One field can state a size, a colour or a variant of its own, and a drawing as well. There are two ways, and they combine.
 
 In a layout, wrap the field in a `Choice`. It draws what it holds, with its choice in force for everything inside it:
 
@@ -708,11 +708,61 @@ Each is still one `<input type="checkbox">` with the field's name, inside the la
 - The drawing is stated one field at a time. `FormChoices` has no `drawing` of its own, so a form cannot say that all its boolean fields are toggles. Name each one in `fields`, or wrap it in a `Choice`.
 - A `Choice` in a layout wins over the one in `fields`, and a `Choice` that leaves the drawing out takes the one around it. `None` is the ordinary drawing, so `Choice("remember", drawing=None)` undoes a drawing stated around it.
 - A field that states no drawing is drawn exactly as it was before, whatever the other fields of the form state.
-- Only a boolean field takes a drawing. A field that is a null-boolean select, a checkbox group, a text input or anything else that is not a `CheckboxInput` does not, and neither does a button.
+- A boolean field takes these three drawings. A field that holds one choice takes the rating of "Rating and range" below, a number field takes the range there, and nothing else takes a drawing: a null-boolean select, a checkbox group, a text input or anything else that is neither a `CheckboxInput` nor one of those, and neither does a button.
 - A hidden boolean field is a hidden input whatever is stated for it.
 - A toggle and a switch take the form's size and colour, and the field's own, like any input: `toggle-sm` and `toggle-primary` for a toggle or a switch, where a checkbox takes `checkbox-sm` and `checkbox-primary`. They have no variant. A variant stated for the form is passed over for them and one stated on the field itself raises `InvalidChoice`, as for a checkbox. A field in error keeps `toggle-error` and is drawn without the colour.
 
-A name that is not one of the three raises `InvalidChoice` with `kind="drawing"`, naming the field as `target`, with `checkbox`, `toggle` and `switch` as the names `allowed`. A drawing of any name, `checkbox` included, stated for a field that is not a boolean field, or around a button, raises the same error with nothing allowed. A `Choice` that holds fields states its drawing for each of them, so `Choice(Row("name", "agree"), drawing="toggle")` raises for a text input `name`. `None` and `INHERIT` state nothing and never raise. A drawing stated by name in `FormChoices(fields=...)` is checked when its field is drawn, so one for a field the layout leaves out is never looked at.
+For a boolean field, a name that is not one of the three raises `InvalidChoice` with `kind="drawing"`, naming the field as `target`, with `checkbox`, `toggle` and `switch` as the names `allowed`. One of the three, `checkbox` included, stated for a field that is not a boolean field raises the same error, and `allowed` holds the drawings that field takes: `rating` for a field that holds one choice, `range` for a number field and nothing for any other. One stated around a button raises it too, with nothing allowed. A `Choice` that holds fields states its drawing for each of them, so `Choice(Row("name", "agree"), drawing="toggle")` raises for a text input `name`. `None` and `INHERIT` state nothing and never raise. A drawing stated by name in `FormChoices(fields=...)` is checked when its field is drawn, so one for a field the layout leaves out is never looked at.
+
+### Rating and range
+
+A field that holds one choice can be drawn as daisyUI's rating, with one star for each choice, and a number field can be drawn as daisyUI's range, a slider. A rating is for a field whose widget is a `Select` or a `RadioSelect`, or a subclass of either that still uses Django's own templates, such as a `ChoiceField`, a `TypedChoiceField` or a `ModelChoiceField`. A range is for a field whose widget is a `NumberInput` or a subclass of one, which is what an `IntegerField`, a `FloatField` and a `DecimalField` have unless they are localised. State either as any drawing is stated, with `drawing="rating"` or `drawing="range"` in a `Choice`, in a layout or by the field's name:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+from mvp_forms.choices import Choice, FormChoices
+
+STARS = [(count, f"{count} stars") for count in range(1, 6)]
+
+
+class ReviewForm(forms.Form):
+    score = forms.ChoiceField(choices=STARS)
+    comfort = forms.ChoiceField(choices=[("", "No answer"), *STARS], required=False)
+    volume = forms.IntegerField(min_value=0, max_value=100, step_size=5)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(
+            size="sm", color="primary", fields={"score": Choice(drawing="rating")}
+        )
+        self.helper.layout = Layout(
+            "score",
+            Choice("comfort", drawing="rating"),
+            Choice("volume", drawing="range", color="accent"),
+        )
+```
+
+Here `score` is a rating by its name in `FormChoices`, `comfort` is a rating in the layout and `volume` is a range in the layout, from 0 to 100 in steps of 5. The form states a small size and the primary colour, so both ratings and the range are small, the ratings are primary, and `volume` states the accent colour of its own. The form posts and cleans exactly as it does with a select, because only the way the choices are drawn changes: a person picks a star and the form receives the value of that choice, and the field and its widget are not changed.
+
+- Each choice that has a value is one `<input type="radio">` with the field's name, in the field's order, inside an element with the class `rating`. daisyUI draws every child of a rating as a star, so a star has no `<label>` around it. It is named by an `aria-label` that holds its choice's label as plain text, unless the widget already gives the input one. The pack adds no text of its own.
+- A choice whose value is the empty string is not a star. It is the way to clear the rating, drawn first, whatever its place among the choices, as the input daisyUI hides with `rating-hidden`, so that an optional field can be submitted empty and cleans to its empty value. A choice whose value is `0` is a star. A field with no empty choice offers no way to clear it.
+- A bound or initial value is drawn as the star picked, and a field that holds no value is drawn with no star picked. Choices in named groups are stars in the field's order and the group names are not drawn. A field with no choices is drawn with its frame and no star. A model choice field has its empty label as the way to clear.
+- A select and a radio group with the same choices are drawn as the same inputs. A select is drawn through a radio group that is made for the draw from its attributes and choices, and a radio group is drawn through a copy of itself.
+- A rating keeps what a radio group has. The stars are one group in a `<fieldset>` named by a `<legend>` that holds the field's label and the required marker, and by an `aria-label` on the fieldset when the form draws no labels. The help text and the errors are drawn and describe the fieldset, each star of a field in error is `aria-invalid`, and every star of a disabled field is disabled. A field in error draws its stars in the error colour, `bg-error`. A class or an attribute you set on the widget is on every input of the rating, the one that clears included.
+- A rating and a range take the form's size and colour, and the field's own, like any input, and have no variant. A variant stated for the form is passed over for them and one stated on the field itself raises `InvalidChoice`. A range takes `range-sm` and `range-primary` and the like on its input. A rating's size is on the element with the class `rating`, the group of stars, as `rating-sm`, and its colour is on each star, as daisyUI's background colour class `bg-primary`, and never on the input that clears it. A field in error keeps its error modifier and is drawn without the chosen colour: a rating's stars carry `bg-error`, a range carries `range-error`, and the size still applies.
+- A rating is drawn the same through `{{ form|crispy }}` and `{% crispy form %}`, in a formset stacked or as a table, and inside a `Row`, a `Fieldset`, a `Tab` or an `AccordionGroup`. `InlineRadios` around a rating draws the rating, and a layout object that attaches text to an input leaves it as it is. A hidden field is a hidden input whatever is stated for it. The pack adds no script.
+
+A range is one `<input type="range">` with the field's name and id and the class `range`. It is drawn through a copy of the field's widget with its type changed, by Django's own input template, so what is submitted, validated and cleaned is what a number input gives, and the field and its widget are not changed.
+
+- A range's lowest value, highest value and step are the ones Django already writes on the field's widget: `min`, `max` and `step` from `min_value`, `max_value` and `step_size`, and the `step` a `FloatField` or a `DecimalField` gets when none is declared. The pack adds none and refuses nothing for a field that has no limits, so an `IntegerField` that declares none is drawn with none, and the slider takes the browser's own: 0 to 100 in steps of 1.
+- A bound or initial value is the input's `value`. A range keeps what a number input has: the label is tied to it, the help text and the errors are drawn and describe it, a field in error is `aria-invalid` and carries `range-error`, a required field carries the required marker, a disabled field is disabled, and with labels off it is named by an `aria-label`. A class or an attribute you set on the widget is kept, and a range fills its field unless a class you set holds a width.
+- A range is drawn the same through `{{ form|crispy }}` and `{% crispy form %}`, in a formset stacked or as a table, and inside a `Row`, a `Fieldset`, a `Tab` or an `AccordionGroup`. A layout object that attaches text to an input, such as `PrependedText`, draws the range with no attached text. A hidden field is a hidden input whatever is stated for it. The pack adds no script, so a person moves the slider and the value reaches the server.
+- A slider always submits a number. An optional number field drawn as a range is therefore never submitted empty, however far the person has moved it, and an extra form of a formset that holds a range is always submitted as changed, so it is validated as a filled-in form even when nobody touched it. Leave a field a person may skip as a number input.
+
+A field that cannot be drawn as a rating or a range raises `InvalidChoice` with `kind="drawing"` when the form is drawn, naming the field as `target`. For a rating that is a multiple select, a checkbox group, a null-boolean select, a text input, a number input, a boolean field, and a select or a radio group whose widget names a template of its own, because the pack cannot draw a rating through a template it does not own. For a range it is a field whose widget is not a number input, which includes a localised `IntegerField`, `FloatField` or `DecimalField`, whose widget is a text input, and a rating or one of a boolean field's drawings stated for a number field. The names `allowed` are the field's own: `rating` for a field that holds one choice, `range` for a number field, the three drawings of a boolean field for a checkbox, and none for the others.
 
 ### What is refused and what is passed over
 
@@ -869,6 +919,7 @@ The pack's own template tags also read the page's context, which no template sho
 | `daisyui/widgets/group.html` | A radio group or a checkbox group with its options one under another. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/inline_group.html` | A radio group or a checkbox group with its options along a line, wrapping onto the next line. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/group_options.html` | The options of a radio group or a checkbox group, each an input in a label of its own, under a nested fieldset where the choices have group names, which the two group templates include. | `widget` | `FORM_RENDERER` |
+| `daisyui/widgets/rating.html` | A field drawn as a rating: the element that holds the stars and one radio input for each choice, where `widget` also holds `rating_class`, the classes of that element, and `inputs`, the choices in the order they are drawn, the one that clears the rating first. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/select_date.html` | A date drawn by `SelectDateWidget`: a select for each part of the date, side by side. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
@@ -1001,6 +1052,11 @@ One more page draws a boolean field as a checkbox, a toggle and a switch. It hol
 
 - `/drawings/` is the page inside the django-mvp shell, reached from its sidebar as "Checkbox, toggle and switch".
 - `/drawings/standalone/` is the same page styled by daisyUI's CDN build alone.
+
+One more page draws a single-choice field as a rating and a number field as a range. It holds one form with two ratings and a range: a required rating stated by its name in `FormChoices`, an optional one stated in the layout, whose empty choice clears it, and a range with limits and a step. Picking stars, moving the slider and submitting the form draws the page again with each field as it was posted and the values the form cleaned to. Nothing is saved. The page also draws a rating and a range each with help text, in error and disabled.
+
+- `/rating-and-range/` is the page inside the django-mvp shell, reached from its sidebar as "Rating and range".
+- `/rating-and-range/standalone/` is the same page styled by daisyUI's CDN build alone.
 
 Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset, groups two fields in a `MultiField`, and carries a `Hidden` input.
 

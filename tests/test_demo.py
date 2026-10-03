@@ -1938,7 +1938,8 @@ class TestDecoratedFieldsStandaloneMultiWidgetField(MultiWidgetFieldPageContract
 
 
 CHOICES_OVERRIDE_PREFIX = "override"
-INPUT_ELEMENTS = ["input", "select", "textarea"]
+# A rating's size is on the element that holds its stars.
+INPUT_ELEMENTS = ["input", "select", "textarea", "div"]
 BUTTON_ELEMENTS = ["input", "button"]
 INPUT_COMPONENTS = [name for name in Modifiers.sizes if name != Modifiers.button]
 COMPONENTS_OF = {
@@ -2341,6 +2342,324 @@ class TestDrawingSizesInThePage(DrawingSizesPageContract):
 
 class TestDrawingSizesInTheStandalonePage(DrawingSizesPageContract):
     url_name = "drawings-standalone"
+
+
+RATING_PREFIX = "rating"
+RATING_FIELDS = ["score", "comfort"]
+RATING_STATES = ["help", "error", "disabled"]
+
+
+def rating_wrapper(page, name, state=None):
+    prefix = RATING_PREFIX if state is None else f"{RATING_PREFIX}-{state}"
+    return page.find(id=f"id_{prefix}-{name}")
+
+
+def rating_picked(page, **positions):
+    data = {}
+    for name, position in positions.items():
+        stars = rating_wrapper(page, name).find_all("input")
+        data[f"{RATING_PREFIX}-{name}"] = stars[position]["value"]
+    return data
+
+
+class RatingAndRangePageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class RatingFormPageContract(RatingAndRangePageContract):
+    @pytest.mark.parametrize("name", RATING_FIELDS)
+    def test_every_field_is_a_rating_of_radio_inputs_with_its_name(self, page, name):
+        wrapper = rating_wrapper(page, name)
+
+        stars = wrapper.find_all("input")
+
+        assert "rating" in wrapper["class"]
+        assert {tag["type"] for tag in stars} == {"radio"}
+        assert {tag["name"] for tag in stars} == {f"{RATING_PREFIX}-{name}"}
+
+    def test_the_optional_rating_can_be_cleared_and_the_required_one_cannot(self, page):
+        required = rating_wrapper(page, "score").find_all("input")
+        optional = rating_wrapper(page, "comfort").find_all("input")
+
+        assert all(tag["value"] != "" for tag in required)
+        assert [tag["value"] for tag in optional].count("") == 1
+
+    def test_the_form_posts_with_a_token_and_a_button(self, page):
+        form = rating_wrapper(page, "score").find_parent("form")
+
+        assert form["method"] == "post"
+        assert form.find("input", attrs={"name": "csrfmiddlewaretoken"}) is not None
+        assert form.find("input", attrs={"type": "submit"}) is not None
+
+    def test_nothing_is_shown_as_cleaned_before_a_post(self, page):
+        assert page.find(id=f"{RATING_PREFIX}-cleaned") is None
+
+    def test_a_post_with_a_star_picked_shows_the_value_the_form_cleaned_to(
+        self, open_page
+    ):
+        data = rating_picked(open_page(self.url_name), score=2, comfort=3)
+
+        page = open_page(self.url_name, data)
+
+        shown = page.find(id=f"{RATING_PREFIX}-cleaned-score")
+        assert shown.get_text(strip=True) == data[f"{RATING_PREFIX}-score"]
+        assert page.find(id=f"{RATING_PREFIX}-cleaned-comfort") is not None
+
+    def test_a_post_draws_the_star_picked_as_picked(self, open_page):
+        data = rating_picked(open_page(self.url_name), score=2)
+
+        page = open_page(self.url_name, data)
+
+        checked = [
+            tag["value"]
+            for tag in rating_wrapper(page, "score").find_all("input")
+            if tag.has_attr("checked")
+        ]
+        assert checked == [data[f"{RATING_PREFIX}-score"]]
+
+    def test_clearing_the_optional_rating_cleans_to_none(self, open_page):
+        data = rating_picked(open_page(self.url_name), score=0, comfort=0)
+
+        page = open_page(self.url_name, data)
+
+        shown = page.find(id=f"{RATING_PREFIX}-cleaned-comfort")
+        assert shown.get_text(strip=True) == "None"
+
+    def test_a_post_with_no_star_picked_for_the_required_rating_shows_an_error(
+        self, open_page
+    ):
+        page = open_page(self.url_name, {})
+
+        stars = rating_wrapper(page, "score").find_all("input")
+
+        assert all(tag.get("aria-invalid") == "true" for tag in stars)
+        assert page.find(id=f"{RATING_PREFIX}-cleaned") is None
+
+
+class RatingStatesPageContract(RatingAndRangePageContract):
+    @pytest.mark.parametrize("state", RATING_STATES)
+    def test_every_state_is_drawn_as_a_rating(self, page, state):
+        wrapper = rating_wrapper(page, "score", state)
+
+        assert "rating" in wrapper["class"]
+        assert len(wrapper.find_all("input")) > 1
+
+    def test_the_rating_with_help_text_is_described_by_it(self, page):
+        group = page.find("fieldset", id=f"div_id_{RATING_PREFIX}-help-score")
+
+        described = group["aria-describedby"].split()
+
+        assert f"id_{RATING_PREFIX}-help-score_helptext" in described
+        assert page.find(id=described[0]) is not None
+
+    def test_the_rating_in_error_is_invalid_and_draws_its_error(self, page):
+        stars = rating_wrapper(page, "score", "error").find_all("input")
+
+        assert all(tag.get("aria-invalid") == "true" for tag in stars)
+        assert page.find(id=f"id_{RATING_PREFIX}-error-score_error") is not None
+
+    def test_every_star_of_the_disabled_rating_is_disabled(self, page):
+        stars = rating_wrapper(page, "score", "disabled").find_all("input")
+
+        assert all(tag.has_attr("disabled") for tag in stars)
+
+    def test_the_disabled_rating_shows_its_value(self, page):
+        stars = rating_wrapper(page, "score", "disabled").find_all("input")
+
+        assert sum(tag.has_attr("checked") for tag in stars) == 1
+
+
+RANGE_PREFIX = "range"
+
+
+def range_input(page, state=None):
+    prefix = RATING_PREFIX if state is None else f"{RANGE_PREFIX}-{state}"
+    return page.find("input", id=f"id_{prefix}-volume")
+
+
+class RangeFormPageContract(RatingAndRangePageContract):
+    def test_the_field_is_a_range_with_its_name_and_the_limits_of_the_field(self, page):
+        tag = range_input(page)
+
+        assert tag["type"] == "range"
+        assert tag["name"] == f"{RATING_PREFIX}-volume"
+        assert (tag["min"], tag["max"], tag["step"]) == ("0", "100", "5")
+
+    def test_a_post_with_the_slider_set_shows_the_number_the_form_cleaned_to(
+        self, open_page
+    ):
+        first = open_page(self.url_name)
+        data = {**rating_picked(first, score=2), range_input(first)["name"]: "35"}
+
+        page = open_page(self.url_name, data)
+
+        shown = page.find(id=f"{RATING_PREFIX}-cleaned-volume")
+        assert shown.get_text(strip=True) == "35"
+        assert range_input(page)["value"] == "35"
+
+    def test_a_post_beyond_the_limits_shows_an_error_and_nothing_cleaned(
+        self, open_page
+    ):
+        first = open_page(self.url_name)
+        data = {**rating_picked(first, score=2), range_input(first)["name"]: "500"}
+
+        page = open_page(self.url_name, data)
+
+        tag = range_input(page)
+        assert tag["aria-invalid"] == "true"
+        assert "range-error" in tag["class"]
+        assert page.find(id=f"{RATING_PREFIX}-cleaned") is None
+
+
+class RangeStatesPageContract(RatingAndRangePageContract):
+    @pytest.mark.parametrize("state", RATING_STATES)
+    def test_every_state_is_drawn_as_a_range_with_limits_and_a_step(self, page, state):
+        tag = range_input(page, state)
+
+        assert tag["type"] == "range"
+        assert {"min", "max", "step"} <= set(tag.attrs)
+
+    def test_the_range_with_help_text_is_described_by_it(self, page):
+        tag = range_input(page, "help")
+
+        described = tag["aria-describedby"].split()
+
+        assert f"id_{RANGE_PREFIX}-help-volume_helptext" in described
+        assert page.find(id=described[0]) is not None
+
+    def test_the_range_in_error_is_invalid_and_draws_its_error(self, page):
+        tag = range_input(page, "error")
+
+        assert tag["aria-invalid"] == "true"
+        assert "range-error" in tag["class"]
+        assert page.find(id=f"id_{RANGE_PREFIX}-error-volume_error") is not None
+
+    def test_the_disabled_range_is_disabled_and_shows_its_value(self, page):
+        tag = range_input(page, "disabled")
+
+        assert tag.has_attr("disabled")
+        assert tag["value"] == "40"
+
+
+RATING_OVERRIDE_PREFIX = "override"
+
+
+def rating_sample(page, kind, name):
+    return page.find(id=f"id_{kind}-{name}-score")
+
+
+def range_sample(page, kind, name):
+    return page.find("input", id=f"id_{kind}-{name}-volume")
+
+
+def stars_of_sample(wrapper):
+    return [
+        tag for tag in wrapper.find_all("input") if "rating-hidden" not in tag["class"]
+    ]
+
+
+class RatingAndRangeSizesPageContract(RatingAndRangePageContract):
+    def test_a_rating_and_a_range_are_drawn_at_every_size_the_tables_have(self, page):
+        for name, expected in Modifiers.sizes["rating"].items():
+            assert expected in rating_sample(page, "size", name)["class"]
+        for name, expected in Modifiers.sizes["range"].items():
+            tag = range_sample(page, "size", name)
+            assert tag["type"] == "range"
+            assert expected in tag["class"]
+
+    def test_a_rating_and_a_range_are_drawn_in_every_colour_the_tables_have(self, page):
+        for name, expected in Modifiers.colors["rating"].items():
+            stars = stars_of_sample(rating_sample(page, "color", name))
+            assert stars
+            assert all(expected in tag["class"] for tag in stars)
+        for name, expected in Modifiers.colors["range"].items():
+            assert expected in range_sample(page, "color", name)["class"]
+
+    def test_the_sizes_and_colours_shown_are_those_of_the_tables(self, page):
+        for kind, table in (("size", Modifiers.sizes), ("color", Modifiers.colors)):
+            for component, field in (("rating", "score"), ("range", "volume")):
+                shown = {
+                    tag["id"].split("-")[1]
+                    for tag in page.find_all(id=re.compile(f"^id_{kind}-.*-{field}$"))
+                }
+                assert shown == set(table[component])
+
+    def test_the_fields_that_state_nothing_take_the_forms_size_and_colour(self, page):
+        wrapper = page.find(id=f"id_{RATING_OVERRIDE_PREFIX}-inherits_score")
+        tag = page.find("input", id=f"id_{RATING_OVERRIDE_PREFIX}-inherits_volume")
+
+        assert Modifiers.sizes["rating"]["sm"] in wrapper["class"]
+        assert all(
+            Modifiers.colors["rating"]["primary"] in star["class"]
+            for star in stars_of_sample(wrapper)
+        )
+        assert Modifiers.sizes["range"]["sm"] in tag["class"]
+        assert Modifiers.colors["range"]["primary"] in tag["class"]
+
+    def test_the_fields_that_override_take_their_own_size_and_colour(self, page):
+        wrapper = page.find(id=f"id_{RATING_OVERRIDE_PREFIX}-overrides_score")
+        tag = page.find("input", id=f"id_{RATING_OVERRIDE_PREFIX}-overrides_volume")
+
+        assert Modifiers.sizes["rating"]["xl"] in wrapper["class"]
+        assert Modifiers.sizes["rating"]["sm"] not in wrapper["class"]
+        for star in stars_of_sample(wrapper):
+            assert Modifiers.colors["rating"]["accent"] in star["class"]
+            assert Modifiers.colors["rating"]["primary"] not in star["class"]
+        assert Modifiers.sizes["range"]["xl"] in tag["class"]
+        assert Modifiers.colors["range"]["accent"] in tag["class"]
+        assert Modifiers.sizes["range"]["sm"] not in tag["class"]
+        assert Modifiers.colors["range"]["primary"] not in tag["class"]
+
+
+class TestRatingAndRangePage(
+    RatingFormPageContract,
+    RatingStatesPageContract,
+    RangeFormPageContract,
+    RangeStatesPageContract,
+    RatingAndRangeSizesPageContract,
+):
+    url_name = "rating-and-range"
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("rating-and-range")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, page):
+        assert page.find("a", href=reverse("rating-and-range-standalone")) is not None
+
+
+class TestStandaloneRatingAndRangePage(
+    RatingFormPageContract,
+    RatingStatesPageContract,
+    RangeFormPageContract,
+    RangeStatesPageContract,
+    RatingAndRangeSizesPageContract,
+):
+    url_name = "rating-and-range-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, page):
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, page):
+        assert page.find("a", href=reverse("rating-and-range")) is not None
 
 
 THEMES_FORMS_ID = "theme-forms"
