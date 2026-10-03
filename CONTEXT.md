@@ -92,9 +92,10 @@ have several.
 _Avoid_: style, look.
 
 **Choice**:
-A size, a colour, a variant or a drawing stated in Python, for a form, for one
-field or for one button. The four are independent of each other. A drawing is
-stated for one boolean field at a time and never for a form.
+A size, a colour, a variant, a drawing or a label stated in Python, for a form,
+for one field or for one button. The five are independent of each other. A
+drawing is stated for one boolean field at a time and never for a form. A label
+is stated for a form or for one field and never for a button.
 _Avoid_: option, setting, modifier (a modifier is the daisyUI class a choice
 means).
 
@@ -103,6 +104,13 @@ How a boolean field is drawn: `checkbox`, `toggle` or `switch`. A toggle and a
 switch are both daisyUI's toggle, and a switch also tells assistive technology
 it is a switch. A field that states none is drawn as a checkbox.
 _Avoid_: style, look, type (an input's type is the HTML attribute).
+
+**Floating label**:
+An input's label drawn as daisyUI's `floating-label`: its text is the empty
+input's placeholder and moves to the field's edge once the field is focused or
+holds a value. It is the one name of the label kind of choice, `"floating"`, and
+only a lone input, textarea or select takes one.
+_Avoid_: animated label, placeholder label.
 
 **Boolean field**:
 A field whose widget is a Django `CheckboxInput`, or a subclass of one, such as

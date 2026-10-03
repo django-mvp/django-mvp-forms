@@ -599,7 +599,7 @@ The classes the names mean are written out in the tables of `Modifiers`, in `mvp
 
 ### One field's own choice
 
-One field can state a size, a colour or a variant of its own, and a boolean field a drawing as well. There are two ways, and they combine.
+One field can state a size, a colour or a variant of its own, and a boolean field a drawing as well. A floating label is stated the same way: see "Floating labels" below. There are two ways, and they combine.
 
 In a layout, wrap the field in a `Choice`. It draws what it holds, with its choice in force for everything inside it:
 
@@ -627,7 +627,7 @@ class SearchForm(forms.Form):
         )
 ```
 
-Here `search` is large and keeps the form's colour, `name` and `city` keep the form's size and lose its colour, and `notes` takes the form's choices. A `Choice` may hold a `Row`, a `Fieldset` or any other layout object, and a `Choice` inside a `Choice` is merged over the outer one, each of its four kinds on its own, so the inner one wins for what it states. You can also wrap fields already in a layout, with `helper["search"].wrap(Choice, size="lg")`.
+Here `search` is large and keeps the form's colour, `name` and `city` keep the form's size and lose its colour, and `notes` takes the form's choices. A `Choice` may hold a `Row`, a `Fieldset` or any other layout object, and a `Choice` inside a `Choice` is merged over the outer one, each of its five kinds on its own, so the inner one wins for what it states. You can also wrap fields already in a layout, with `helper["search"].wrap(Choice, size="lg")`.
 
 For a form drawn without a layout, name the field in `FormChoices`, as `notes` was in the section above: `FormChoices(fields={"search": Choice(size="lg")})`. It works with `{{ form|crispy }}` and with `{% crispy form %}`, and changes no other field.
 
@@ -714,11 +714,51 @@ Each is still one `<input type="checkbox">` with the field's name, inside the la
 
 A name that is not one of the three raises `InvalidChoice` with `kind="drawing"`, naming the field as `target`, with `checkbox`, `toggle` and `switch` as the names `allowed`. A drawing of any name, `checkbox` included, stated for a field that is not a boolean field, or around a button, raises the same error with nothing allowed. A `Choice` that holds fields states its drawing for each of them, so `Choice(Row("name", "agree"), drawing="toggle")` raises for a text input `name`. `None` and `INHERIT` state nothing and never raise. A drawing stated by name in `FormChoices(fields=...)` is checked when its field is drawn, so one for a field the layout leaves out is never looked at.
 
+### Floating labels
+
+A floating label is daisyUI's own: the label sits inside the field and takes the place of its placeholder while the field is empty, then moves to the field's edge once it is focused or holds a value. State it once for the form, or for one field, the same two ways as a size or a colour. You write no template and no class. The statement is `label="floating"`, in `FormChoices` for the form and in `Choice` for a field:
+
+```python
+from crispy_forms.helper import FormHelper
+from django import forms
+from mvp_forms.choices import Choice, FormChoices
+
+
+class SignInForm(forms.Form):
+    email = forms.EmailField()
+    password = forms.CharField(
+        widget=forms.PasswordInput, help_text="At least eight characters"
+    )
+    country = forms.ChoiceField(choices=[("de", "Germany"), ("uk", "United Kingdom")])
+    notes = forms.CharField(widget=forms.Textarea, required=False)
+    remember = forms.BooleanField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(
+            label="floating", fields={"notes": Choice(label=None)}
+        )
+```
+
+Here `email`, `password` and `country` have a floating label, `notes` has its ordinary label, and `remember` is drawn as it is without the statement. It takes effect with `{{ form|crispy }}` and with `{% crispy form %}`, whether or not the form has a layout, and in each form of a formset drawn stacked. In a layout, wrap the field in a `Choice`: `Choice("email", label="floating")`.
+
+The label is drawn once, in a `<label class="floating-label">` that holds the input and is tied to it by `for`. The required marker is inside it. The help text and the errors are drawn as they are for any field, with the input's `aria-describedby` and `aria-invalid` unchanged, and the form posts and cleans to the same data as with ordinary labels. Size, colour and variant reach the input as they do with an ordinary label.
+
+- A floating label is for an input, a textarea or a select drawn on its own. The form's statement is passed over, with no error, for every other field: a checkbox, a toggle, a radio group, a checkbox group, a file input, a multi-widget field, a date drawn as three selects, and a field drawn with attached text on an input or a select, with buttons joined to it, or with no visible label by `InlineField`. A textarea inside a `PrependedText` has no attached text to draw, so it floats.
+- The same statement made for one of those fields, by name or in a layout, raises `InvalidChoice` with `kind="label"`, nothing allowed and the field as `target`. A name other than `floating` raises it too, with `floating` as the name allowed. `None` undoes the form's statement for a field and never raises.
+- An empty field with no placeholder of your own is given its label's text as its placeholder, which is how daisyUI shows the label in place. A select has none. A placeholder you set on the widget is kept.
+- A disabled field is drawn with its ordinary label, so a person can still see what it is, and is never an error. The field is disabled when its form field has `disabled=True`, when its widget has a `disabled` attribute, or when it is drawn with a `disabled` option. A field disabled only by a `<fieldset disabled>` around it is not detected, so give it `Choice(label=None)`. A read-only field floats.
+- With `form_show_labels` off no label is drawn, so nothing floats and the input is named by an `aria-label`. A field with no label text is drawn as any field with none is. A formset drawn as a table shows each label as its column heading, so nothing floats there and nothing raises.
+- The label is escaped as every label is. In the placeholder it is plain text.
+
 ### What is refused and what is passed over
 
-A name daisyUI does not have is refused when the form is drawn, never written as a class that does nothing. It raises `InvalidChoice`, a `ValueError` carrying `kind` (`"size"`, `"color"`, `"variant"` or `"drawing"`), the `value` you stated and the names `allowed`. It is raised for a choice stated for the form's inputs, for its buttons (`button_color` and `button_variant`), on one field by name, on one field with a `Choice` in a layout, and on one button. When it was stated on a field or a button, `target` names it: the field's name, or a button's name, or the content of a `StrictButton`. For a choice stated for the form, `target` is `None`. What is stated for the form is checked whenever a form is drawn, so `{{ form|crispy }}`, which draws no button, still reports a mistake in `button_color`.
+A name daisyUI does not have is refused when the form is drawn, never written as a class that does nothing. It raises `InvalidChoice`, a `ValueError` carrying `kind` (`"size"`, `"color"`, `"variant"`, `"drawing"` or `"label"`), the `value` you stated and the names `allowed`. It is raised for a choice stated for the form's inputs, for its buttons (`button_color` and `button_variant`), on one field by name, on one field with a `Choice` in a layout, and on one button. When it was stated on a field or a button, `target` names it: the field's name, or a button's name, or the content of a `StrictButton`. For a choice stated for the form, `target` is `None`. What is stated for the form is checked whenever a form is drawn, so `{{ form|crispy }}`, which draws no button, still reports a mistake in `button_color`.
 
 A choice stated for the form that a kind of input has no modifier for is passed over, with no error: `variant="ghost"` leaves a checkbox, a toggle, a radio group and a checkbox group as they are and the rest take it. The same choice stated on one of those fields raises, and so does any choice stated on a field whose widget the pack does not draw as an input of its own, because you asked for it by name.
+
+A floating label stated for the form is passed over for every field that cannot take one, listed under "Floating labels", with no error. Stated on one of them it raises `InvalidChoice` with `kind="label"`, the field as `target` and nothing allowed, and so does one stated around a button. A name other than `floating` raises it with `floating` allowed.
 
 A name in `FormChoices(fields=...)` that is not a field of the form raises `UnknownField`, a `KeyError` whose `names` lists them, when a field of the form is drawn.
 
@@ -836,8 +876,8 @@ The pack's own template tags also read the page's context, which no template sho
 | `daisyui/errors.html` | The errors of the form as a whole in one alert under the helper's error title, and nothing for a form that has none. | `form`, `form_error_title` | `TEMPLATES` |
 | `daisyui/inputs.html` | The helper's buttons and inputs, with the hidden inputs first and the rest in a row. | `inputs` | `TEMPLATES` |
 | `daisyui/field.html` | One field: the pack draws the field's widget and the frame puts it in place. | `field` | `TEMPLATES` |
-| `daisyui/frame.html` | The frame around a field's widget: a daisyUI fieldset holding the label, or the legend of a group, with the required marker, and then the field's body, and a hidden field is its input alone. | `drawn.group_description`, `drawn.is_group`, `drawn.is_single_checkbox`, `drawn.label_text`, `drawn.show_labels`, `drawn.wrapper_class`, `field`, `label_class` | `TEMPLATES` |
-| `daisyui/field_body.html` | What sits inside the frame: the widget, which may be a single checkbox in its own label, have text attached or have buttons joined to it, then the field's help text and its errors. | `buttons`, `drawn.appended`, `drawn.attached_class`, `drawn.has_attached_text`, `drawn.is_joined`, `drawn.is_single_checkbox`, `drawn.join`, `drawn.prepended`, `drawn.render`, `drawn.show_labels`, `field`, `field_class`, `form_show_errors`, `label_class` | `TEMPLATES` |
+| `daisyui/frame.html` | The frame around a field's widget: a daisyUI fieldset holding the label, or the legend of a group, with the required marker, and then the field's body, and a hidden field is its input alone. | `drawn.group_description`, `drawn.is_floating`, `drawn.is_group`, `drawn.is_single_checkbox`, `drawn.label_text`, `drawn.show_labels`, `drawn.wrapper_class`, `field`, `label_class` | `TEMPLATES` |
+| `daisyui/field_body.html` | What sits inside the frame: the widget, which may be a single checkbox in its own label, have text attached, have buttons joined to it or sit in a floating label, then the field's help text and its errors. | `buttons`, `drawn.appended`, `drawn.attached_class`, `drawn.has_attached_text`, `drawn.is_floating`, `drawn.is_joined`, `drawn.is_single_checkbox`, `drawn.join`, `drawn.prepended`, `drawn.render`, `drawn.show_labels`, `field`, `field_class`, `form_show_errors`, `label_class` | `TEMPLATES` |
 | `daisyui/required_marker.html` | The marker a required field's label and a required column's heading carry, and nothing for an optional field. | `field` | `TEMPLATES` |
 | `daisyui/multifield.html` | A field inside a `MultiField`, drawn as any field is: it reads nothing itself and passes `field` on to `daisyui/field.html`. | `field` | `TEMPLATES` |
 | `daisyui/layout/fieldset.html` | A `Fieldset`: a daisyUI fieldset with its legend, holding its fields. | `fields`, `fieldset`, `legend` | `TEMPLATES` |

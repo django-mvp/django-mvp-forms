@@ -752,3 +752,30 @@ class KeptBooleansForm(forms.Form):
         self.helper.form_show_labels = show_labels
         if choices is not None:
             self.helper.daisyui = choices
+
+
+class FloatingForm(forms.Form):
+    name = forms.CharField(label="Name", help_text="As on your card")
+    notes = forms.CharField(label="Notes", widget=forms.Textarea, required=False)
+    country = forms.ChoiceField(choices=FRUIT, label="Fruit")
+    agree = forms.BooleanField(label="Agree", required=False)
+    nickname = forms.CharField(
+        label="Nickname",
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Mine"}),
+    )
+    locked = forms.CharField(
+        label="Locked", required=False, disabled=True, initial="Ada"
+    )
+    markup = forms.CharField(label="<b>Marked</b> & up", required=False)
+    token = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, layout=None, choices=None, show_labels=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.form_show_labels = show_labels
+        if layout is not None:
+            self.helper.layout = Layout(*layout)
+        if choices is not None:
+            self.helper.daisyui = choices

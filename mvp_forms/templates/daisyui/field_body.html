@@ -10,6 +10,11 @@
     {{ drawn.render }}
     {% if drawn.appended %}<span class="label">{{ drawn.appended|safe }}</span>{% endif %}
   </label>
+{% elif drawn.is_floating %}
+  <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="floating-label">
+    <span>{{ field.label }}{% include "daisyui/required_marker.html" %}</span>
+    {{ drawn.render }}
+  </label>
 {% else %}
   {{ drawn.render }}
 {% endif %}

@@ -65,13 +65,54 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_choices.py::TestChoiceLabel",
+              "tests/test_choices.py::TestModifiersLabels",
+              "tests/test_choices.py::TestFormChoicesLabel",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputLabel",
+              "tests/test_templatetags/test_daisyui.py::TestDrawnButtonLabel"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py tests/test_templatetags/test_daisyui.py -q"
+            ],
+            "code": [
+              "mvp_forms/choices.py:240",
+              "mvp_forms/choices.py:366",
+              "mvp_forms/choices.py:488",
+              "mvp_forms/templatetags/daisyui.py:227",
+              "mvp_forms/templatetags/daisyui.py:307",
+              "mvp_forms/templatetags/daisyui.py:323",
+              "mvp_forms/templatetags/daisyui.py:743"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_floating_labels.py::TestFloatingLabels",
+              "tests/test_pack/test_floating_labels.py::TestFloatingLabelKeepsTheData",
+              "tests/test_pack/test_floating_labels.py::TestFloatingLabelMistakes",
+              "tests/test_pack/test_floating_labels.py::TestFloatingLabelEscaping",
+              "tests/test_pack/test_independence.py::TestModifierTables",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestReadmeFloatingLabels"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack -q -n auto --dist loadscope"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/frame.html:15",
+              "mvp_forms/templates/daisyui/field_body.html:13"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T003",

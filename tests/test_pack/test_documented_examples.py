@@ -473,6 +473,25 @@ class TestReadmeDrawings:
         assert "toggle" in soup.find(id="id_notify")["class"]
 
 
+class TestReadmeFloatingLabels:
+    @pytest.mark.parametrize("source", ["{{ form|crispy }}", "{% crispy form %}"])
+    def test_the_example_floats_the_fields_it_states_and_no_other(self, draw, source):
+        form = readme_example("Floating labels")["SignInForm"]()
+
+        soup = draw(source, form=form)
+
+        for name in ("email", "password", "country"):
+            field = soup.find(id=f"id_{name}")
+            label = field.find_parent("label", class_="floating-label")
+            assert label["for"] == f"id_{name}"
+        notes = soup.find("label", attrs={"for": "id_notes"})
+        assert "floating-label" not in notes.get("class", [])
+        assert (
+            soup.find(id="id_remember").find_parent("label", class_="floating-label")
+            is None
+        )
+
+
 class TestReadmeDrawingSizeAndColour:
     def test_the_example_gives_the_toggle_and_the_switch_the_size_and_colour(
         self, draw
