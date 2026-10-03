@@ -68,13 +68,47 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_replacements.py::TestEveryTemplate",
+              "tests/test_pack/test_replacements.py::TestTheReplaceFixture",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_replacements.py tests/test_pack/test_independence.py -q"
+            ],
+            "code": [
+              "tests/conftest.py:128",
+              "tests/conftest.py:149",
+              "tests/conftest.py:154",
+              "tests/test_pack/test_replacements.py:79",
+              "tests/test_pack/test_replacements.py:95",
+              "tests/test_pack/test_independence.py:685"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_replacements.py::TestReplacingOneTemplate",
+              "tests/test_pack/test_replacements.py::TestWhereAReplacementIsFound"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_replacements.py -q"
+            ],
+            "code": [
+              "tests/test_pack/test_replacements.py:181",
+              "tests/test_pack/test_replacements.py:347",
+              "tests/host_app/__init__.py:1"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
