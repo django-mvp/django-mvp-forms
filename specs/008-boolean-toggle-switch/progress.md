@@ -28,3 +28,13 @@ Verified: README example test was red first (IndexError, no section). The pack t
 Next: T003, the demo page.
 
 Watch: the README states that a toggle and a switch take no size or colour yet (form-wide ones passed over, a field's own raises). T005 changes that and must update the README sentence and the CHANGELOG sentence that say so. The table template does not apply a helper's layout, so a drawing in a formset's layout reaches stacked formsets only; by name on the helper it reaches both.
+
+## 2026-10-03T19:08:57Z · Implementer US1 · T003
+
+Did: one demo page in two forms, "Checkbox, toggle and switch": DrawingsForm (three boolean fields, a checkbox, a toggle by name in FormChoices and a switch in the layout, no size or colour), DrawingsMixin with DrawingsView on MVPTemplateView and StandaloneDrawingsView on TemplateView, a Cotton template for the shell and a plain one for the standalone page, routes drawings and drawings-standalone, one sidebar entry and one icon, a README paragraph and a CHANGELOG line. A post draws the form again as posted and lists what it cleaned to, each value in an element with an id.
+
+Verified: DrawingsPageContract was red first (NoReverseMatch on both names). `uv run pytest tests/test_demo.py -q -k Drawings`: 32 passed; `uv run pytest tests/test_demo.py -q -n auto --dist loadscope`: 816 passed. Probed by mutation: the demo toggle changed to a checkbox (2 fail), the cleaned list removed (2 fail). The post test builds its data from the inputs as drawn.
+
+Next: the full verify, then the report.
+
+Watch: the demo pages are not behind a sign-in (open_page reads them with an anonymous client, as for every other demo page), so "signed in" for the shell page was not needed to answer 200. US2 adds the states section to these two templates and its form; US3 adds sizes and colours.
