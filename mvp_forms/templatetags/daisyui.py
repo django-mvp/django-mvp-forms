@@ -33,6 +33,8 @@ class FieldInput:
         forms.NumberInput: "input",
         forms.PasswordInput: "input",
         forms.Textarea: "textarea",
+        forms.Select: "select",
+        forms.SelectDateWidget: "select",
     }
     # Written out, not built from the component's name, so a host project's
     # Tailwind build finds them when it scans this module.
@@ -43,6 +45,7 @@ class FieldInput:
     error_modifiers: dict[str, str] = {
         "input": "input-error",
         "textarea": "textarea-error",
+        "select": "select-error",
     }
 
     def __init__(

@@ -14,6 +14,7 @@ from tests.forms import (
     FieldAndFormWideErrorsForm,
     FormWideErrorsForm,
     HelpedForm,
+    SelectsForm,
     TextInputsForm,
     UncoveredWidgetsForm,
 )
@@ -86,6 +87,10 @@ STATES = [
         lambda: DeveloperAttrsForm({}),
         {DEVELOPER_CLASS},
         id="developer class",
+    ),
+    pytest.param("{{ form|crispy }}", SelectsForm, NOTHING, id="selects"),
+    pytest.param(
+        "{{ form|crispy }}", lambda: SelectsForm({}), NOTHING, id="invalid selects"
     ),
     pytest.param(
         "{{ form|crispy }}",

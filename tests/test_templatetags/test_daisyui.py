@@ -7,7 +7,13 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from mvp_forms.templatetags.daisyui import FieldInput
-from tests.forms import DeveloperAttrsForm, HelpedForm, TextInputsForm
+from tests.forms import (
+    DeveloperAttrsForm,
+    HelpedForm,
+    SelectsForm,
+    TextInputsForm,
+    UncoveredInput,
+)
 
 KINDS = [
     ("text", "input"),
@@ -26,6 +32,15 @@ class ShortTextInput(forms.TextInput):
     pass
 
 
+class HostSelect(forms.Select):
+    pass
+
+
+class HostSelectForm(forms.Form):
+    choice = forms.ChoiceField(choices=[("a", "A")], widget=HostSelect)
+    born = forms.DateField(widget=forms.SelectDateWidget)
+
+
 class OptionalRequiredAttributeForm(forms.Form):
     use_required_attribute = False
 
@@ -35,10 +50,10 @@ class OptionalRequiredAttributeForm(forms.Form):
 
 
 class UncoveredForm(forms.Form):
-    choice = forms.ChoiceField(choices=[("a", "A")])
+    choice = forms.ChoiceField(choices=[("a", "A")], widget=UncoveredInput)
     short = forms.CharField(widget=ShortTextInput)
     styled = forms.ChoiceField(
-        choices=[("a", "A")], widget=forms.Select(attrs={"class": "mine"})
+        choices=[("a", "A")], widget=UncoveredInput(attrs={"class": "mine"})
     )
 
 
@@ -74,6 +89,21 @@ class TestFieldInput:
     def test_a_subclass_of_a_covered_widget_is_covered(self):
         assert FieldInput(UncoveredForm()["short"]).component == "input"
 
+    @pytest.mark.parametrize("name", ["choice", "many", "maybe", "grouped"])
+    def test_each_kind_of_select_has_the_select_component(self, name):
+        assert FieldInput(SelectsForm()[name]).component == "select"
+
+    def test_a_date_drawn_as_three_selects_has_the_select_component(self):
+        assert FieldInput(HostSelectForm()["born"]).component == "select"
+
+    def test_a_host_subclass_of_select_is_covered(self):
+        assert FieldInput(HostSelectForm()["choice"]).component == "select"
+
+    def test_an_invalid_select_gets_its_error_modifier(self):
+        field_input = FieldInput(SelectsForm({"choice": "nowhere"})["choice"])
+
+        assert "select-error" in field_input.css_class.split()
+
     def test_an_uncovered_widget_gets_no_pack_class(self):
         field_input = FieldInput(UncoveredForm()["choice"])
 
@@ -83,7 +113,7 @@ class TestFieldInput:
     def test_an_uncovered_widget_keeps_its_own_class(self, parse):
         html = FieldInput(UncoveredForm()["styled"]).render()
 
-        assert parse(html).find("select")["class"] == ["mine"]
+        assert parse(html).find("input")["class"] == ["mine"]
 
     def test_the_developers_class_is_kept_beside_the_component(self):
         field_input = FieldInput(DeveloperAttrsForm()["name"])

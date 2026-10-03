@@ -114,6 +114,7 @@ These inputs are drawn as daisyUI components, whichever way crispy-forms is aske
 
 - text, email, URL, number, password, date, time and date-time inputs, as `input`
 - textareas, as `textarea`
+- selects, multiple selects, null-boolean selects and selects with named groups, as `select`, and the three selects of a date drawn by `SelectDateWidget`
 
 Each of them fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`, the one utility it writes. A width class of your own on the widget, such as `w-40`, replaces it. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
 

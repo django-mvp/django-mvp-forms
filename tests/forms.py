@@ -3,6 +3,7 @@
 from crispy_forms.helper import FormHelper
 from django import forms
 from django.core.exceptions import ValidationError
+from django.forms import widgets
 
 
 class TextInputsForm(forms.Form):
@@ -36,11 +37,17 @@ class TextInputsWithLayoutForm(TextInputsForm):
         self.helper = FormHelper(self)
 
 
+class UncoveredInput(widgets.Input):
+    input_type = "text"
+
+
 class UncoveredWidgetsForm(forms.Form):
     first = forms.CharField(help_text="First help")
-    choice = forms.ChoiceField(choices=[("a", "A")], help_text="Choice help")
-    agree = forms.BooleanField(help_text="Agree help")
-    upload = forms.FileField(help_text="Upload help")
+    choice = forms.ChoiceField(
+        choices=[("a", "A")], widget=UncoveredInput, help_text="Choice help"
+    )
+    agree = forms.BooleanField(widget=UncoveredInput, help_text="Agree help")
+    upload = forms.FileField(widget=UncoveredInput, help_text="Upload help")
     last = forms.CharField(help_text="Last help")
 
 
@@ -93,3 +100,28 @@ class DeveloperLabelledForm(forms.Form):
 class FieldAndFormWideErrorsForm(HelpedForm):
     def clean(self):
         raise ValidationError("It failed as a whole", code="whole")
+
+
+FRUIT = [("a", "Apple"), ("b", "Banana")]
+GROUPED = [("Fruit", FRUIT), ("Vegetable", [("c", "Carrot")]), ("d", "Dill")]
+
+
+class SelectsForm(forms.Form):
+    choice = forms.ChoiceField(choices=FRUIT, help_text="Pick one")
+    many = forms.MultipleChoiceField(choices=FRUIT)
+    maybe = forms.NullBooleanField()
+    grouped = forms.ChoiceField(choices=GROUPED)
+
+
+class SelectEdgesForm(forms.Form):
+    empty = forms.ChoiceField(choices=[], required=False)
+    marked = forms.ChoiceField(
+        choices=[("<b>", "<b>Bold</b>"), ("x", "Tom & Jerry")], required=False
+    )
+    marked_groups = forms.ChoiceField(
+        choices=[("<i>Group</i>", [("y", "Yes")])], required=False
+    )
+    styled = forms.ChoiceField(
+        choices=FRUIT,
+        widget=forms.Select(attrs={"class": "mine", "data-role": "picker"}),
+    )
