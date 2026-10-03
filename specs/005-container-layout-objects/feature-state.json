@@ -2,7 +2,7 @@
   "feature": "005-container-layout-objects",
   "branch": "005-container-layout-objects",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "QUEUED",
@@ -18,6 +18,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-10-03T17:22:58Z",
       "note": "one reviewer, three lenses, on plan.md, tasks.md and research.md at 73876ec"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T17:32:46Z",
+      "note": "plan gate open; design review applied at ee0ba89"
     }
   ],
   "gates": {
