@@ -18,6 +18,17 @@ def overview_page(client, db):
 
 
 @pytest.fixture
+def open_page(client, db, parse):
+    def open_url(name, data=None):
+        url = reverse(name)
+        response = client.get(url) if data is None else client.post(url, data)
+        assert response.status_code == 200
+        return parse(response.content.decode())
+
+    return open_url
+
+
+@pytest.fixture
 def parse():
     def parse_fragment(html):
         return BeautifulSoup(html, "html.parser")

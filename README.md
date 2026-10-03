@@ -30,8 +30,10 @@ When two reasonable designs conflict, stock daisyUI markup wins over custom styl
 
 ## Installation
 
+Nothing is published to PyPI yet, so install it from GitHub:
+
 ```bash
-pip install django-mvp-forms
+pip install git+https://github.com/django-mvp/django-mvp-forms
 ```
 
 Then add it to `INSTALLED_APPS` alongside crispy-forms:
@@ -44,7 +46,13 @@ INSTALLED_APPS = [
 ]
 ```
 
-The host project supplies daisyUI itself. This package ships markup, not a stylesheet. Pages that draw these forms must load daisyUI 5. Its CDN build needs no build step, so a single stylesheet link is enough. A host project with its own Tailwind build has to make that build produce the classes the pack writes: Tailwind only generates a class it finds in the files it scans, so point it at the installed package's templates.
+The host project supplies daisyUI itself. This package ships markup, not a stylesheet. Pages that draw these forms must load daisyUI 5. Its CDN build needs no build step, so a single stylesheet link in the page's `<head>` is enough:
+
+```html
+<link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+```
+
+A host project with its own Tailwind build has to make that build produce the classes the pack writes: Tailwind only generates a class it finds in the files it scans, so point it at the installed package's templates.
 
 ## Quickstart
 
@@ -55,27 +63,41 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ["daisyui"]
 CRISPY_TEMPLATE_PACK = "daisyui"
 ```
 
-Write a form as you always have:
+Write a form as you always have, and a view that hands it to a template:
 
 ```python
 from django import forms
+from django.shortcuts import render
 
 
 class ContactForm(forms.Form):
     name = forms.CharField()
     email = forms.EmailField()
     message = forms.CharField(widget=forms.Textarea)
+
+
+def contact(request):
+    form = ContactForm(request.POST or None)
+    return render(request, "contact.html", {"form": form})
 ```
 
 Draw it in a template of a page that loads daisyUI:
 
 ```django
 {% load crispy_forms_tags %}
-
-<form method="post">
-  {% csrf_token %}
-  {{ form|crispy }}
-</form>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <form method="post">
+      {% csrf_token %}
+      {{ form|crispy }}
+      <button type="submit" class="btn btn-primary">Send</button>
+    </form>
+  </body>
+</html>
 ```
 
 ## Public surface
@@ -126,6 +148,14 @@ uv run python manage.py migrate
 uv run python manage.py seed_demo
 uv run python manage.py runserver
 ```
+
+The demo has two pages that draw the same forms: every text input kind in each of
+five states (empty, holding a value, required, with help text, with an error),
+and a form to submit that comes back with a field error and a form-wide error.
+
+- `/text-inputs/` is the page inside the django-mvp shell, reached from its sidebar.
+- `/text-inputs/standalone/` is the same page as a host project with neither
+  django-mvp nor Cotton would have it, styled by daisyUI's CDN build alone.
 
 ## License
 

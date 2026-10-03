@@ -119,6 +119,7 @@ EASY_ICONS = {
         "packs": ["mvp.utils.BS5_ICONS"],
         "icons": {
             "overview": "bi bi-house",
+            "text-inputs": "bi bi-input-cursor-text",
         },
     },
 }

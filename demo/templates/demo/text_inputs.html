@@ -1,0 +1,23 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="text-inputs">
+    <c-text>
+      Every field is required here. Submit the form to see an error on a field and
+      an error on the form as a whole.
+    </c-text>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ form|crispy }}
+      <c-button type="submit" variant="primary" text="Submit" />
+    </form>
+  </c-section>
+  {% for state in states %}
+    <c-section :title="state.title" level="3">
+      {{ state.form|crispy }}
+    </c-section>
+  {% endfor %}
+  <c-text>
+    <c-link href="{% url 'text-inputs-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}

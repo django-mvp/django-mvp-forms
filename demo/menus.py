@@ -12,5 +12,10 @@ AppMenu.extend(
             view_name="overview",
             extra_context={"label": "Overview", "icon": "overview"},
         ),
+        MenuItem(
+            name="text-inputs",
+            view_name="text-inputs",
+            extra_context={"label": "Text inputs", "icon": "text-inputs"},
+        ),
     ]
 )
