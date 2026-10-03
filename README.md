@@ -44,7 +44,7 @@ INSTALLED_APPS = [
 ]
 ```
 
-The host project supplies daisyUI itself. This package ships markup, not a stylesheet.
+The host project supplies daisyUI itself. This package ships markup, not a stylesheet. Pages that draw these forms must load daisyUI 5. Its CDN build needs no build step, so a single stylesheet link is enough. A host project with its own Tailwind build has to make that build produce the classes the pack writes: Tailwind only generates a class it finds in the files it scans, so point it at the installed package's templates.
 
 ## Quickstart
 
