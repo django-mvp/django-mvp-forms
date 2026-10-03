@@ -293,3 +293,17 @@ the second comparison is removed.
 **Revisit if:** a covered widget gains a third template attribute.
 
 **ADR:** none — follows D10
+
+## D20. The clearable file input stacks its parts and drops Django's line break
+
+**Decision:** `clearable_file_input.html` wraps the link, the removal label, the "Change" words
+and the file input in `<div class="flex flex-col gap-2">`, and writes the words as a `<span>`
+rather than a second label. Django's `<br>` is not reproduced.
+
+**Why:** The stack replaces the `<br>` with the layout utilities already allowed for stacking a
+group's options (D13). A second `<label for>` on the file input would give it two accessible
+names beside the frame's label, so the words stay plain text, as Django writes them.
+
+**Revisit if:** daisyUI gains a component for a file input with an attached current file.
+
+**ADR:** none — follows D10 and D13
