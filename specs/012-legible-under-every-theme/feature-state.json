@@ -236,6 +236,22 @@
             ],
             "verified_by_ci": false
           }
+        },
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -q"
+            ],
+            "code": [
+              "demo/views.py:1136"
+            ]
+          }
         }
       ]
     }

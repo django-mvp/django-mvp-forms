@@ -208,3 +208,11 @@ Plan, *The demo project*; research R2, R9.
   demo page is. The table is already there from T003.
 - Test, in `TestPublishedExceptions`: every theme the README's table names is a shipped theme.
 - CHANGELOG, under Added: the check, the demo page and the README section.
+
+### T007 — The Themes page opens with its modal closed
+
+**Files**: `demo/views.py`
+
+Found by opening the page: the modal drawn with errors is open on arrival (ADR 0016) and covers
+the theme chooser. The page draws the modal closed only; its fields in error are the same
+pairings the other forms in error draw, so the page still shows every pairing.
