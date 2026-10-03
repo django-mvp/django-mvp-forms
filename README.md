@@ -803,7 +803,15 @@ The pack draws a formset and nothing around it. It draws no empty form to copy, 
 
 ### Themes
 
-The pack names only daisyUI's semantic colours, so a form follows whichever theme the host project chooses, and the pack sets none. The test suite draws every form state the pack has and calculates the contrast of each piece of text, and of each part of a control that shows what it is and what state it is in, against the surface directly behind it, under every theme in the daisyUI version the suite is pinned to. The standard is WCAG 2.2 level AA: 4.5 to 1 for text, and 3 to 1 for those parts of a control.
+The pack names only daisyUI's semantic colours, so a form follows whichever theme the host project chooses, and the pack sets none. Under each of the 35 themes built into daisyUI 5.7.47, light and dark, every piece of text the pack colours by its own choice can be read: labels, legends, help text, attached text, table headers, tabs and the alert that holds a form's errors. What is left is daisyUI's own drawing of a control, or a colour you chose for it.
+
+The test suite draws every form state the pack has and calculates the contrast of each piece of text, and of each part of a control that shows what it is and what state it is in, against the surface directly behind it, from the colours daisyUI publishes for each theme. The standard is [WCAG 2.2](https://www.w3.org/TR/WCAG22/) level AA: 4.5 to 1 for text, and 3 to 1 for the part of a control that shows what it is or its state. Those parts are the border of an input, a select, a textarea and a file input, the border of a checkbox or radio that is off, a toggle that is off, the mark and fill of each when on, the arrow of a select and of an accordion group, and the bar under the chosen tab. A button is held by its text alone.
+
+An error message is drawn in the text colour, not in daisyUI's error colour, which falls short against the page under many themes. An invalid input is marked by its border, which takes the error colour, and a form's errors are gathered in an alert at the top of it. The border of an invalid input is measured like any other and appears in the list below where it falls short.
+
+A disabled control is dimmed by daisyUI. Its own content, such as its text, border and mark, is measured and reported, and is never held to the standard. Its label and help text are held.
+
+A theme your project writes or alters is not measured: the suite reads the themes of the pinned daisyUI version and no others. The pack's own text is drawn in the theme's `base-content` on `base-100` and `base-200`, so a theme whose `base-content` reaches 4.5 to 1 on both reads the same. The borders, marks and buttons that take a colour of the theme, and a colour or variant you state with `FormChoices` or `Choice`, depend on that theme's own colours, and the list below shows which of daisyUI's colours fall short on `base-100` under the shipped themes.
 
 Where daisyUI's own drawing, or a colour you chose for a control, falls short under a theme, no stock daisyUI class repairs it and the pack adds no style of its own. Each such pairing is listed here with the themes it falls short under, and the test suite fails when this list and what it measures differ.
 
@@ -858,6 +866,8 @@ Where daisyUI's own drawing, or a colour you chose for a control, falls short un
 <!-- known-exceptions:end -->
 
 To see where the pack stands, run `uv run python -m tests.legibility`: it prints this table as the check would write it, then the ratio of each disabled control's dimmed parts under every theme. When the check fails, repair the markup with a stock daisyUI class that passes under every theme, or, where no such class exists, paste the report's table between the two markers above.
+
+The demo project draws every form state the check covers on one page, `/themes/`, reached from its sidebar, with a chooser of the 35 themes: check one and the page is drawn under it. `/themes/standalone/` is the same page as a host project with neither django-mvp nor Cotton would have it. Both load daisyUI's [`themes.css`](https://daisyui.com/docs/themes/) for the pinned version from a CDN, because django-mvp's prebuilt stylesheet and daisyUI's main CDN file carry only a few themes.
 
 ## Contributing
 

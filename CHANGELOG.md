@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A check that every form the pack draws can be read under each of the 35 themes built into daisyUI 5.7.47, light and dark. The test suite draws every form state the pack has, calculates the contrast of each piece of text and of each part of a control that shows what it is and its state, and holds the result to WCAG 2.2 level AA. A disabled control's own content is measured and reported, not held. The pairings that still fall short, because daisyUI draws them or you chose the colour, are listed in the README with the themes they fall short under, and the suite fails when that list and the measurements differ. A theme your project writes or alters is not measured.
+- A Themes page in the demo project, in the django-mvp shell at `/themes/` and standalone at `/themes/standalone/`. It draws every form state the check covers, with a chooser of the 35 themes that puts the whole page under the one you check.
+- A Themes section in the README: what the pack promises under a theme, the standard, what a project with a theme of its own should know, and the list of pairings that fall short.
+
 ### Changed
 
 - Text the pack colours itself is now drawn in the theme's text colour, so that it can be read under every daisyUI theme. Help text, the label of a single checkbox, the two attached texts, the label of the removal checkbox on a file field and the label around each option of a radio or checkbox group carry `text-base-content` beside `label`, where `label` alone drew them at 60% of the text colour. The header of a table layout, each tab and the alert that holds a form's or a formset's errors carry `text-base-content` too. A field's error, the error of a table row and the required marker no longer carry `text-error`, so they are drawn in the text colour; an input in error still carries its error modifier and `aria-invalid`, and its message is still tied to it. The dismiss button of an `Alert` is `btn btn-sm` and no longer `btn-ghost`. Only class attributes change: no element is added, removed or moved, and no id changes. A host project with its own rule on `text-error` or on the bare `label` inside these templates should look at it.
