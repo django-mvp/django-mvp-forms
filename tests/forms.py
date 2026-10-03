@@ -15,6 +15,7 @@ from django.forms import (
     modelformset_factory,
     widgets,
 )
+from django.utils.safestring import mark_safe
 
 
 class TextInputsForm(forms.Form):
@@ -456,6 +457,30 @@ class UneditableFieldsForm(forms.Form):
     notes = forms.CharField(widget=forms.Textarea, initial="Hello")
     locked = forms.CharField(initial="Ada", disabled=True)
     kept = forms.CharField(initial="Kept")
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+class InlineFieldsForm(forms.Form):
+    name = forms.CharField(label="Your name", help_text="As on your card")
+    own = forms.CharField(
+        label="Own", widget=forms.TextInput(attrs={"placeholder": "Mine"})
+    )
+    named = forms.CharField(
+        label="Named", widget=forms.TextInput(attrs={"aria-label": "Mine"})
+    )
+    marked = forms.CharField(label=mark_safe("<b>Marked</b> &amp; bold"))
+    note = forms.CharField(label="Note", widget=forms.Textarea)
+    country = forms.ChoiceField(choices=FRUIT, label="Fruit")
+    agree = forms.BooleanField(label="I agree")
+    pick = forms.ChoiceField(choices=FRUIT, widget=forms.RadioSelect, label="Pick")
+    plain = forms.CharField(label="Plain")
+    unlabelled = forms.CharField(label="", required=False)
+    token = forms.CharField(widget=forms.HiddenInput)
 
     def __init__(self, *args, layout=(), **kwargs):
         super().__init__(*args, **kwargs)

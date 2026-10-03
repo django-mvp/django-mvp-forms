@@ -2,8 +2,8 @@
   {{ field }}
 {% else %}
   {% if drawn.is_group %}
-    <fieldset{% if field.auto_id %} id="div_{{ field.auto_id }}"{% endif %} class="fieldset{% if drawn.wrapper_class %} {{ drawn.wrapper_class }}{% endif %}"{% if drawn.group_description %} aria-describedby="{{ drawn.group_description }}"{% endif %}{% if field.label and form_show_labels == False %} aria-label="{{ drawn.label_text }}"{% endif %}>
-      {% if field.label and form_show_labels != False %}
+    <fieldset{% if field.auto_id %} id="div_{{ field.auto_id }}"{% endif %} class="fieldset{% if drawn.wrapper_class %} {{ drawn.wrapper_class }}{% endif %}"{% if drawn.group_description %} aria-describedby="{{ drawn.group_description }}"{% endif %}{% if field.label and not drawn.show_labels %} aria-label="{{ drawn.label_text }}"{% endif %}>
+      {% if field.label and drawn.show_labels %}
         <legend class="fieldset-legend{% if label_class %} {{ label_class }}{% endif %}">
           {{ field.label }}{% include "daisyui/required_marker.html" %}
         </legend>
@@ -12,7 +12,7 @@
     </fieldset>
   {% else %}
     <div{% if field.auto_id %} id="div_{{ field.auto_id }}"{% endif %} class="fieldset{% if drawn.wrapper_class %} {{ drawn.wrapper_class }}{% endif %}">
-      {% if field.label and form_show_labels != False and not drawn.is_single_checkbox %}
+      {% if field.label and drawn.show_labels and not drawn.is_single_checkbox %}
         <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="fieldset-legend{% if label_class %} {{ label_class }}{% endif %}">
           {{ field.label }}{% include "daisyui/required_marker.html" %}
         </label>

@@ -31,6 +31,7 @@ from tests.forms import (
     DeveloperAttrsForm,
     FilesForm,
     HelpedForm,
+    InlineFieldsForm,
     LineFormSet,
     NoLinesFormSet,
     OwnTemplateDateWidget,
@@ -1379,3 +1380,93 @@ class TestFieldInputDisabled:
 
         assert field_input.own_classes == ["active", "wide"]
         assert "active" in field_input.css_class.split()
+
+
+class TestFieldInputUnlabelled:
+    def test_the_labels_are_hidden(self):
+        field_input = FieldInput(InlineFieldsForm()["name"], unlabelled=True)
+
+        assert field_input.show_labels is False
+
+    def test_the_labels_are_shown_by_default(self):
+        assert FieldInput(InlineFieldsForm()["name"]).show_labels is True
+
+    def test_a_form_that_hides_its_labels_still_does(self):
+        field_input = FieldInput(InlineFieldsForm()["name"], show_labels=False)
+
+        assert field_input.show_labels is False
+
+    def test_a_single_checkbox_keeps_its_label(self):
+        field_input = FieldInput(InlineFieldsForm()["agree"], unlabelled=True)
+
+        assert field_input.show_labels is True
+        assert "aria-label" not in field_input.attrs
+
+    @pytest.mark.parametrize("name", ["name", "note"])
+    def test_a_text_input_and_a_textarea_get_the_label_as_a_placeholder(self, name):
+        field_input = FieldInput(InlineFieldsForm()[name], unlabelled=True)
+
+        assert field_input.attrs["placeholder"] == field_input.label_text
+
+    def test_a_field_not_unlabelled_gets_no_placeholder(self):
+        assert "placeholder" not in FieldInput(InlineFieldsForm()["name"]).attrs
+
+    def test_the_input_is_named_by_an_aria_label(self):
+        field_input = FieldInput(InlineFieldsForm()["name"], unlabelled=True)
+
+        assert field_input.attrs["aria-label"] == "Your name"
+
+    def test_a_widget_that_sets_a_placeholder_keeps_it(self):
+        field_input = FieldInput(InlineFieldsForm()["own"], unlabelled=True)
+
+        assert "placeholder" not in field_input.attrs
+        assert 'placeholder="Mine"' in field_input.render()
+
+    def test_a_label_marked_safe_is_the_placeholder_as_text(self):
+        field_input = FieldInput(InlineFieldsForm()["marked"], unlabelled=True)
+
+        assert field_input.attrs["placeholder"] == "Marked & bold"
+
+    @pytest.mark.parametrize("name", ["country", "pick"])
+    def test_a_select_and_a_group_get_no_placeholder(self, name):
+        field_input = FieldInput(InlineFieldsForm()[name], unlabelled=True)
+
+        assert "placeholder" not in field_input.attrs
+
+    def test_a_field_with_no_label_gets_no_placeholder(self):
+        field_input = FieldInput(InlineFieldsForm()["unlabelled"], unlabelled=True)
+
+        assert "placeholder" not in field_input.attrs
+
+    def test_the_render_draws_the_placeholder_without_changing_the_widget(self):
+        form = InlineFieldsForm()
+
+        drawn = FieldInput(form["name"], unlabelled=True).render()
+
+        assert 'placeholder="Your name"' in drawn
+        assert "placeholder" not in form.fields["name"].widget.attrs
+
+
+class TestDaisyuiFieldUnlabelledTag:
+    def render(self, **context):
+        template = Template(
+            "{% load daisyui %}"
+            "{% daisyui_field field unlabelled=True as drawn %}"
+            "{{ drawn.show_labels }}"
+        )
+        return template.render(Context(context))
+
+    def test_the_labels_are_hidden_for_the_field(self):
+        assert self.render(field=InlineFieldsForm()["name"]) == "False"
+
+    def test_the_forms_switch_still_hides_the_labels_of_a_field_not_unlabelled(self):
+        template = Template(
+            "{% load daisyui %}{% daisyui_field field as drawn %}{{ drawn.show_labels }}"
+        )
+
+        shown = template.render(Context({"field": InlineFieldsForm()["name"]}))
+        hidden = template.render(
+            Context({"field": InlineFieldsForm()["name"], "form_show_labels": False})
+        )
+
+        assert (shown, hidden) == ("True", "False")

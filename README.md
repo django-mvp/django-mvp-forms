@@ -485,6 +485,37 @@ class ProfileForm(forms.Form):
 - `uneditable-input`, the class django-crispy-forms writes for other template packs, is never drawn. It is the only name dropped from an input's own classes, so a class of yours called `active` or `error` on an input is still drawn.
 - `css_class` and extra attributes go to the input, as they do for `Field`. `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
 
+#### An inline field
+
+`InlineField` comes from `crispy_forms.bootstrap`. It draws one field with no visible label, for a form that sits in a line such as a search bar. The input is named by an `aria-label` and the label is offered as its placeholder:
+
+```python
+from crispy_forms.bootstrap import InlineField
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+
+
+class SearchForm(forms.Form):
+    query = forms.CharField(label="Search", help_text="Names and numbers")
+    remember = forms.BooleanField(label="Remember me", required=False)
+    note = forms.CharField(label="Note", required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            InlineField("query"),
+            InlineField("remember"),
+            "note",
+        )
+```
+
+- The frame holds no `<label>` for the field. The input has an `aria-label` equal to the field's label, and on a text input or a textarea a `placeholder` equal to it as well. A placeholder or an `aria-label` that the widget sets is kept. A label marked safe reaches both as plain text.
+- The help text and the error element are still drawn, still described by the input, and a failing input has `aria-invalid` and its error modifier.
+- A single checkbox keeps its `<label>`, with the checkbox inside it. A select and a radio group get no placeholder; a select is named by an `aria-label` and a group by an `aria-label` on its fieldset, without a legend.
+- A field beside it that is not inline keeps its label. `css_class` and extra attributes go to the input, `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
+
 ### Size, colour and variant
 
 State a size, a colour and a variant once, in Python, and the pack adds daisyUI's modifier for each to every input it draws for the form. You write no class on any widget. The statement is a `FormChoices`, set as the `daisyui` attribute of the form's helper:

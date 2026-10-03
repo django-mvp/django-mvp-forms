@@ -1,6 +1,6 @@
 {% load daisyui %}{% if field_class %}<div class="{{ field_class }}">{% endif %}
 {% if drawn.is_joined %}{% with join_class=drawn.join.css_class|daisyui_classes %}<div{% if drawn.join.css_id %} id="{{ drawn.join.css_id }}"{% endif %} class="join w-full{% if join_class %} {{ join_class }}{% endif %}"{{ drawn.join.flat_attrs }}>{% endwith %}{% endif %}
-{% if drawn.is_single_checkbox and field.label and form_show_labels != False %}
+{% if drawn.is_single_checkbox and field.label and drawn.show_labels %}
   <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="label{% if label_class %} {{ label_class }}{% endif %}">
     {{ drawn.render }}{{ field.label }}{% include "daisyui/required_marker.html" %}
   </label>

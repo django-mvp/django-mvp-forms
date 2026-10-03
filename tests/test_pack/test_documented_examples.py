@@ -12,6 +12,7 @@ from crispy_forms.bootstrap import (
     FieldWithButtons,
     FormActions,
     InlineCheckboxes,
+    InlineField,
     InlineRadios,
     Modal,
     PrependedAppendedText,
@@ -248,6 +249,11 @@ EXAMPLES = {
         ["form_field"],
         ("input", {"disabled": True}),
     ),
+    "InlineField": (
+        lambda: InlineField("form_field"),
+        ["form_field"],
+        ("input", {"aria-label": "Form field"}),
+    ),
     "InlineCheckboxes": (
         lambda: InlineCheckboxes("form_field"),
         ["form_field"],
@@ -399,3 +405,19 @@ class TestReadmeUneditableField:
         assert soup.find(id="id_account").has_attr("disabled")
         assert soup.find(id="id_reference").has_attr("disabled")
         assert not soup.find(id="id_nickname").has_attr("disabled")
+
+
+class TestReadmeInlineField:
+    def test_the_example_draws_the_inline_fields_without_labels_and_the_other_with(
+        self, draw
+    ):
+        form = readme_example("An inline field")["SearchForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert soup.find(id="div_id_query").find("label") is None
+        assert soup.find(id="id_query")["aria-label"] == "Search"
+        assert soup.find(id="id_query")["placeholder"] == "Search"
+        assert soup.find("label", attrs={"for": "id_remember"}) is not None
+        assert soup.find(id="id_note").has_attr("placeholder") is False
+        assert soup.find("label", attrs={"for": "id_note"}) is not None

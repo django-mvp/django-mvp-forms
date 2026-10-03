@@ -72,6 +72,9 @@ class FieldInput:
             any. Its buttons were drawn by django-crispy-forms before the field.
         disabled: Whether the input is drawn disabled, whatever the form field
             says. The form field and its widget are not changed.
+        unlabelled: Whether the field is drawn with no visible label, named by an
+            ``aria-label`` and, on a text input or a textarea, offering the label
+            as its placeholder. A single checkbox keeps its label.
 
     Raises:
         InvalidChoice: A size, colour or variant stated for the form or the
@@ -136,9 +139,13 @@ class FieldInput:
         inline: bool = False,
         join: Any = None,
         disabled: bool = False,
+        unlabelled: bool = False,
     ) -> None:
         self.field = field
-        self.show_labels = show_labels
+        self.unlabelled = unlabelled
+        self.show_labels = show_labels and not (
+            unlabelled and not self.is_single_checkbox
+        )
         self.show_errors = show_errors
         self.wrapper_class = wrapper_class
         self.prepended = prepended
@@ -343,6 +350,8 @@ class FieldInput:
             attrs["class"] = self.css_class
         if self.disabled:
             attrs["disabled"] = True
+        if self.requires_placeholder:
+            attrs["placeholder"] = self.label_text
         if self.requires_aria_required:
             attrs["aria-required"] = "true"
         if self.requires_aria_label:
@@ -362,6 +371,17 @@ class FieldInput:
         if isinstance(label, SafeData):
             return unescape(strip_tags(str(label))).strip()
         return str(label)
+
+    @property
+    def requires_placeholder(self) -> bool:
+        """Whether the label is offered as the placeholder of an unlabelled field."""
+        return (
+            self.unlabelled
+            and self.component in {"input", "textarea"}
+            and not self.is_group
+            and "placeholder" not in self.field.field.widget.attrs
+            and bool(self.field.label)
+        )
 
     @property
     def requires_aria_required(self) -> bool:

@@ -13,6 +13,7 @@ from crispy_forms.bootstrap import (
     FieldWithButtons,
     FormActions,
     InlineCheckboxes,
+    InlineField,
     InlineRadios,
     Modal,
     PrependedAppendedText,
@@ -53,6 +54,7 @@ from tests.forms import (
     FormWideErrorsForm,
     HelpedForm,
     InlineCheckboxesForm,
+    InlineFieldsForm,
     InlineRadiosForm,
     LineFormSet,
     RadioGroupsForm,
@@ -278,6 +280,23 @@ def uneditable(data=None):
     )
 
 
+def inlined_fields(data=None):
+    return InlineFieldsForm(
+        data,
+        layout=(
+            InlineField("name"),
+            InlineField("own"),
+            InlineField("named"),
+            InlineField("marked"),
+            InlineField("note"),
+            InlineField("country"),
+            InlineField("agree"),
+            InlineField("pick"),
+            InlineField("plain", css_class="mine"),
+        ),
+    )
+
+
 def inlined_radios(data=None):
     return InlineRadiosForm(
         data,
@@ -471,6 +490,13 @@ STATES = [
         lambda: uneditable({}),
         MINE,
         id="uneditable fields, invalid",
+    ),
+    pytest.param("{% crispy form %}", inlined_fields, MINE, id="inline fields"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: inlined_fields({}),
+        MINE,
+        id="inline fields, invalid",
     ),
     pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
     pytest.param(
