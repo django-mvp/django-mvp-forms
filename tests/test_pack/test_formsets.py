@@ -5,9 +5,11 @@ from crispy_forms.layout import Submit
 
 from tests.forms import (
     ChoiceLineFormSet,
+    KeptLineFormSet,
     LineForm,
     MarkupRuledLineFormSet,
     MediaFormSet,
+    OrderedLineFormSet,
     RuledLineFormSet,
     formset_helper,
     ruled_data,
@@ -595,3 +597,132 @@ class TestFormsetErrors:
         for message in (REQUIRED, WHOLE):
             assert occurrences(soup, message) == 0
         assert soup.find(attrs={"name": True}) is None
+
+
+NAMED = [{"name": "a"}, {"name": "b"}, {"name": "c"}]
+
+
+def drawn_inputs(soup, formset, index, suffix):
+    return soup.find_all(attrs={"name": formset.forms[index].add_prefix(suffix)})
+
+
+def posted_lines(draw, posted, layout, formset, lines):
+    data = posted(draw(TAG, formset=formset, helper=layout_helper(layout)))
+    for index, line in enumerate(lines):
+        for name, value in line.items():
+            data[formset.forms[index].add_prefix(name)] = value
+    return data
+
+
+class TestDeleteAndOrder:
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_the_delete_input_is_a_checkbox_and_the_order_input_a_number_input(
+        self, draw, layout
+    ):
+        formset = OrderedLineFormSet()
+
+        soup = draw(TAG, formset=formset, helper=layout_helper(layout))
+
+        for index in range(3):
+            (delete,) = drawn_inputs(soup, formset, index, "DELETE")
+            (order,) = drawn_inputs(soup, formset, index, "ORDER")
+            assert delete["type"] == "checkbox"
+            assert "checkbox" in delete["class"]
+            assert order["type"] == "number"
+            assert "input" in order["class"]
+
+    def test_in_the_table_each_has_a_heading_and_an_aria_label(self, draw):
+        formset = OrderedLineFormSet()
+
+        soup = draw(TAG, formset=formset, helper=layout_helper("table"))
+
+        headings = soup.find("thead").find_all("th")
+        assert len(headings) == len(formset.forms[0].visible_fields())
+        for suffix in ("DELETE", "ORDER"):
+            label = str(formset.forms[0][suffix].label)
+            assert any(label in heading.get_text() for heading in headings)
+            inputs = [
+                found
+                for index in range(len(formset.forms))
+                for found in drawn_inputs(soup, formset, index, suffix)
+            ]
+            assert len(inputs) == len(formset.forms)
+            assert all(found["aria-label"] == label for found in inputs)
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_the_ticked_delete_input_reports_that_form_and_no_other(
+        self, draw, posted, layout
+    ):
+        formset = OrderedLineFormSet()
+        data = posted_lines(draw, posted, layout, formset, NAMED)
+        data[formset.forms[1].add_prefix("DELETE")] = "on"
+
+        bound = OrderedLineFormSet(data)
+
+        assert bound.is_valid(), bound.errors
+        assert bound.deleted_forms == [bound.forms[1]]
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_the_order_values_are_read_back_in_the_given_order(
+        self, draw, posted, layout
+    ):
+        formset = OrderedLineFormSet()
+        orders = ["2", "3", "1"]
+        lines = [
+            {**line, "ORDER": order} for line, order in zip(NAMED, orders, strict=True)
+        ]
+        data = posted_lines(draw, posted, layout, formset, lines)
+
+        bound = OrderedLineFormSet(data)
+
+        assert bound.is_valid(), bound.errors
+        assert bound.ordered_forms == [bound.forms[2], bound.forms[0], bound.forms[1]]
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_extra_forms_have_no_delete_input_when_extras_cannot_be_deleted(
+        self, draw, layout
+    ):
+        initial = [{"name": "a"}, {"name": "b"}]
+        formset = KeptLineFormSet(initial=initial)
+
+        soup = draw(TAG, formset=formset, helper=layout_helper(layout))
+
+        assert len(formset.forms) == 3
+        assert [len(drawn_inputs(soup, formset, i, "DELETE")) for i in range(3)] == [
+            1,
+            1,
+            0,
+        ]
+        assert [len(drawn_inputs(soup, formset, i, "ORDER")) for i in range(3)] == [
+            1,
+            1,
+            1,
+        ]
+
+    def test_every_table_row_has_as_many_cells_as_there_are_headings(self, draw):
+        formset = KeptLineFormSet(initial=[{"name": "a"}, {"name": "b"}])
+
+        soup = draw(TAG, formset=formset, helper=layout_helper("table"))
+
+        headings = soup.find("thead").find_all("th")
+        rows = soup.find("tbody").find_all("tr")
+        assert len(rows) == 3
+        assert [len(row.find_all("td")) for row in rows] == [len(headings)] * 3
+
+    @pytest.mark.parametrize("layout", LAYOUTS)
+    def test_a_form_marked_for_deletion_keeps_its_delete_input_ticked_when_drawn_again(
+        self, draw, posted, layout
+    ):
+        formset = OrderedLineFormSet()
+        lines = [{"name": "a"}, {"name": "", "quantity": "1"}, {"name": "c"}]
+        data = posted_lines(draw, posted, layout, formset, lines)
+        data[formset.forms[0].add_prefix("DELETE")] = "on"
+        failed = OrderedLineFormSet(data)
+
+        soup = draw(TAG, formset=failed, helper=layout_helper(layout))
+
+        assert not failed.is_valid()
+        (marked,) = drawn_inputs(soup, failed, 0, "DELETE")
+        (unmarked,) = drawn_inputs(soup, failed, 2, "DELETE")
+        assert marked.has_attr("checked")
+        assert not unmarked.has_attr("checked")

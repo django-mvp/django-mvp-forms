@@ -283,6 +283,12 @@ Every error is drawn once, next to what it belongs to, in both layouts:
 
 `formset_error_title` is drawn at the top of the formset-wide element when the helper sets it. A formset with no such error draws no such element, and with `form_show_errors` off none of the three kinds is drawn. `{{ formset|as_crispy_errors }}` draws the formset-wide errors on their own, through `daisyui/errors_formset.html`.
 
+#### Delete and order inputs
+
+When a formset has `can_delete` or `can_order` on, each form's delete input is drawn as the pack's checkbox and its order input as the pack's number input, the same as a boolean or an integer field in a single form. In the table each has a column of its own, with a heading and an `aria-label`. What a posted form reports in `deleted_forms` and `ordered_forms` is Django's, read from the inputs as drawn.
+
+A form that has no delete field, such as an extra form of a formset with `can_delete_extra=False`, leaves that cell empty, so every row has as many cells as there are headings. A form that was marked for deletion and is drawn again after a failed post keeps its delete input ticked.
+
 The pack draws a formset and nothing around it. It draws no empty form to copy, adds no script, and has no view: adding and removing rows in the browser, handling the post and saving belong to django-mvp or to your own code.
 
 ## Contributing

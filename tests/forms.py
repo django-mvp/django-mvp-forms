@@ -457,6 +457,10 @@ class MarkupRuledBaseFormSet(RuledBaseFormSet):
 
 
 LineFormSet = formset_factory(LineForm, extra=3)
+OrderedLineFormSet = formset_factory(LineForm, extra=3, can_delete=True, can_order=True)
+KeptLineFormSet = formset_factory(
+    LineForm, extra=1, can_delete=True, can_delete_extra=False, can_order=True
+)
 RuledLineFormSet = formset_factory(RuledLineForm, RuledBaseFormSet, extra=3)
 MarkupRuledLineFormSet = formset_factory(RuledLineForm, MarkupRuledBaseFormSet, extra=3)
 ChoiceLineFormSet = formset_factory(ChoiceLineForm, extra=2)
