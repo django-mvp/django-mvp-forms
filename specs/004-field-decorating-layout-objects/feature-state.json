@@ -368,13 +368,52 @@
       "tasks": [
         {
           "id": "T011",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_multi_widget.py",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputMultiWidget",
+              "tests/test_pack/test_documented_examples.py::TestReadmeMultiWidgetField",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_multi_widget.py -q (exit 1 first, 14 failed of 31; then exit 0, 31 passed)",
+              "uv run pytest tests/test_pack/test_multi_widget.py tests/test_templatetags/test_daisyui.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py -n auto --dist loadscope -q (exit 0, 506 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:28",
+              "mvp_forms/templatetags/daisyui.py:284",
+              "mvp_forms/templatetags/daisyui.py:380",
+              "mvp_forms/locale/en/LC_MESSAGES/django.po:42"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T012",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestMultiWidgetFieldPage",
+              "tests/test_demo.py::TestDecoratedFieldsStandaloneMultiWidgetField"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -k MultiWidget -q (exit 1 first, 28 failed and 10 errors; then exit 0, 40 passed)",
+              "uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope -q (exit 0, 2414 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "demo/forms.py:820",
+              "demo/views.py:675",
+              "demo/views.py:710",
+              "demo/urls.py:70",
+              "demo/templates/demo/multi_widget_field.html:1"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }

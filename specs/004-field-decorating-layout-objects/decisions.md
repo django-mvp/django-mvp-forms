@@ -292,3 +292,20 @@ the `FieldWithButtons`, or for the form.
 `input_size` still does nothing. It holds another pack's class name (D8).
 
 **ADR:** pending, written when the feature converges.
+
+## D22. A multi-widget field states no choice of its own, and its parts state theirs
+
+**Decision:** `FieldInput` resolves no size, colour or variant for a field whose widget is a
+`MultiWidget`, because it has no component. Each part resolves them for its own component when
+the copy is classed, from the `choices` and `placed` the input keeps.
+
+**Why:** resolving them for the field raised "this input has none" as soon as a `Choice` stated a
+size around `MultiWidgetField`. The brief asks for the choice to reach every part.
+
+**Revisit if:** a multi-widget gets a component of its own, or a part's component has no
+modifier for a choice the field states by name, which raises when the form is drawn.
+
+A part of a `SplitDateTimeField` made hidden through `MultiWidgetField` cannot be drawn:
+django-crispy-forms swaps in the field's hidden widget, which is itself a multi-widget, and
+validation then fails inside Django. The tests use another multi-widget for a hidden part, and the
+README says to hide the whole field.
