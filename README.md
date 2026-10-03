@@ -857,6 +857,8 @@ Where daisyUI's own drawing, or a colour you chose for a control, falls short un
 | placeholder, `base-content` at 50% on `base-100` | input, textarea | light, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 <!-- known-exceptions:end -->
 
+To see where the pack stands, run `uv run python -m tests.legibility`: it prints this table as the check would write it, then the ratio of each disabled control's dimmed parts under every theme. When the check fails, repair the markup with a stock daisyUI class that passes under every theme, or, where no such class exists, paste the report's table between the two markers above.
+
 ## Contributing
 
 Standards for this repository live in

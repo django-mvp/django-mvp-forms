@@ -39,6 +39,37 @@ class KnownExceptions:
         return found
 
     @classmethod
+    def failures(
+        cls,
+        measurements: Iterable[Measurement],
+        theme: Theme,
+        published: Mapping[str, set[str]],
+    ) -> str:
+        """Describe the held pairings that fall short under a theme and are not listed.
+
+        Args:
+            measurements: What the reader read.
+            theme: The theme to calculate under.
+            published: What the README lists.
+
+        Returns:
+            One line per form state and pairing, giving the state, the theme, the
+            pairing, its ratio and its figure. Empty when nothing falls short.
+        """
+        short = {
+            (m.form_state, m.pairing.name): m.pairing
+            for m in measurements
+            if m.held
+            and not m.pairing.meets(theme)
+            and theme.name not in published.get(m.pairing.name, set())
+        }
+        return "\n".join(
+            f"{state} | {theme.name} | {name} | "
+            f"{short[state, name].ratio(theme):.2f} < {short[state, name].figure}"
+            for state, name in sorted(short)
+        )
+
+    @classmethod
     def published(cls, text: str) -> dict[str, set[str]]:
         """Read the table between the two markers.
 
