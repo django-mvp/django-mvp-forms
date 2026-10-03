@@ -286,6 +286,8 @@ class Choice:
     Each argument left out is inherited from the statement it is merged over,
     and None is the pack's ordinary drawing, which undoes it.
 
+    ``context_name`` is where a layout places it while it draws what it holds.
+
     Args:
         *fields: What the choice holds. Nothing when it is a value in
             ``FormChoices(fields=...)``.
@@ -293,6 +295,8 @@ class Choice:
         color: The colour, or ``INHERIT``.
         variant: The variant, or ``INHERIT``.
     """
+
+    context_name = "daisyui_choice"
 
     def __init__(
         self,

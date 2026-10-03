@@ -11,6 +11,8 @@ from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
 from django.utils.translation import gettext_lazy
 
+from mvp_forms.choices import Choice, FormChoices, Modifiers
+
 register = template.Library()
 
 DATE_PARTS = {
@@ -37,6 +39,15 @@ class FieldInput:
             named by an ``aria-label``.
         show_errors: Whether the form draws errors. Without them the input has
             no error modifier and no description naming the error element.
+        choices: The form's statement of size, colour and variant, if any.
+        placed: The ``Choice`` of a layout around the field, if any. It wins
+            over the form's statement for this field, and the field's entry in
+            ``choices.fields`` stands between the two.
+
+    Raises:
+        InvalidChoice: A size, colour or variant stated for the form or the
+            field is not one daisyUI has, or the field states one its input has
+            no modifier for.
     """
 
     components: dict[type[forms.Widget], str] = {
@@ -76,11 +87,64 @@ class FieldInput:
     }
 
     def __init__(
-        self, field: BoundField, show_labels: bool = True, show_errors: bool = True
+        self,
+        field: BoundField,
+        show_labels: bool = True,
+        show_errors: bool = True,
+        choices: FormChoices | None = None,
+        placed: Choice | None = None,
     ) -> None:
         self.field = field
         self.show_labels = show_labels
         self.show_errors = show_errors
+        self.modifiers = self.resolve_modifiers(choices or FormChoices(), placed)
+
+    def resolve_modifiers(
+        self, choices: FormChoices, placed: Choice | None
+    ) -> list[str]:
+        """Return the daisyUI class of each choice that applies to the input.
+
+        Resolved when the input is built, so a mistake is raised from the tag
+        and not from inside a template's ``{% if %}``, which would swallow it.
+
+        Args:
+            choices: The form's statement.
+            placed: The ``Choice`` of a layout around the field, or None.
+
+        Returns:
+            The classes for size, colour and variant, in that order, for each
+            one that resolves to a class.
+
+        Raises:
+            InvalidChoice: See the class.
+        """
+        named = choices.fields.get(self.field.name)
+        if placed is not None and named is not None:
+            own = placed.over(named)
+        else:
+            own = placed or named or Choice()
+        stated = {
+            "size": choices.size,
+            "color": choices.color,
+            "variant": choices.variant,
+        }
+        resolved = (
+            Modifiers.resolve(
+                kind,
+                self.component,
+                own=getattr(own, kind),
+                form=form,
+                target=self.field.name,
+                in_error=self.is_in_error,
+            )
+            for kind, form in stated.items()
+        )
+        return [modifier for modifier in resolved if modifier]
+
+    @property
+    def is_in_error(self) -> bool:
+        """Whether the field is drawn as in error."""
+        return self.show_errors and bool(self.field.errors)
 
     @property
     def component(self) -> str | None:
@@ -128,15 +192,16 @@ class FieldInput:
 
     @property
     def css_class(self) -> str:
-        """The widget's own classes, the component, a width, then its error modifier."""
+        """The widget's own classes, the component, the choices, a width, the error."""
         classes = self.field.field.widget.attrs.get("class", "").split()
         if self.component:
             classes.append(self.component)
+            classes.extend(self.modifiers)
             if self.component not in self.fixed_size and not any(
                 name.startswith("w-") for name in classes
             ):
                 classes.append(self.width)
-            if self.show_errors and self.field.errors:
+            if self.is_in_error:
                 classes.append(self.error_modifiers[self.component])
         return " ".join(dict.fromkeys(classes))
 
@@ -256,16 +321,26 @@ def daisyui_field(context: Context, field: BoundField) -> FieldInput:
     Args:
         context: The template context, read for the helper's label and error
             switches. Each is off only when it equals False, as the
-            templates read it, and on when absent.
+            templates read it, and on when absent. It is also read for the
+            form's statement of choices and for the choice of a layout around
+            the field.
         field: The bound field whose widget is drawn.
 
     Returns:
         The field's input.
+
+    Raises:
+        InvalidChoice: A choice that applies to the field is not one daisyUI has.
+        TypeError: The form's helper holds a ``daisyui`` attribute that is not a
+            ``FormChoices``.
     """
+    placed = context.get(Choice.context_name)
     return FieldInput(
         field,
         show_labels=context.get("form_show_labels") != False,  # noqa: E712
         show_errors=context.get("form_show_errors") != False,  # noqa: E712
+        choices=FormChoices.lookup(context, field.form),
+        placed=placed if isinstance(placed, Choice) else None,
     )
 
 
@@ -302,6 +377,34 @@ def daisyui_classes(value: str | None) -> str:
         name for name in (value or "").split() if name not in UPSTREAM_ONLY_CLASSES
     )
     return " ".join(dict.fromkeys(names))
+
+
+@register.filter
+def daisyui_removal_checkbox(value: str | None) -> str:
+    """Return the classes of a file field's removal checkbox.
+
+    The checkbox takes the size and the colour the file input was given, each as
+    the checkbox's own modifier. It has no variant. ``file-input-error`` is never
+    mapped: it marks a field in error, which the checkbox never is.
+
+    Args:
+        value: The file input's class string.
+
+    Returns:
+        ``checkbox`` and a modifier for each size and colour found in the string.
+    """
+    names = (value or "").split()
+    classes = ["checkbox"]
+    for kind in ("size", "color"):
+        file_modifiers = Modifiers.tables[kind]["file-input"]
+        checkbox_modifiers = Modifiers.tables[kind]["checkbox"]
+        classes.extend(
+            checkbox_modifiers[name]
+            for name, modifier in file_modifiers.items()
+            if modifier in names
+            and modifier != FieldInput.error_modifiers["file-input"]
+        )
+    return " ".join(classes)
 
 
 @register.filter

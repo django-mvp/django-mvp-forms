@@ -42,6 +42,29 @@ A daisyUI colour scheme, chosen by the host project. The pack reads the theme's
 colours through daisyUI's classes and never sets or ships one.
 _Avoid_: using "theme" for the template pack.
 
+**Size**:
+One of the sizes daisyUI defines for inputs and buttons, written with daisyUI's
+own name for it: `xs`, `sm`, `md`, `lg` or `xl`.
+_Avoid_: scale, dimension.
+
+**Colour**:
+One of daisyUI's semantic colour names, such as `primary` or `error`. The host
+project's theme decides what each name looks like, and the pack never names an
+actual colour. The keyword is spelt `color`, as daisyUI spells it.
+_Avoid_: theme, palette.
+
+**Variant**:
+One of the alternative drawings daisyUI offers for the same input or button,
+which its own documentation calls a style. Inputs have one, `ghost`. Buttons
+have several.
+_Avoid_: style, look.
+
+**Choice**:
+A size, a colour or a variant stated in Python, for a form, for one field or for
+one button. The three are independent of each other.
+_Avoid_: option, setting, modifier (a modifier is the daisyUI class a choice
+means).
+
 ## Terms deliberately not used
 
 **Component**:

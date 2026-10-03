@@ -219,6 +219,43 @@ Layout(
 - `HTML` is drawn where you put it, between fields or inside a `Fieldset`, `Column`, `ButtonHolder` or `FormActions`. Your markup is kept as written, and a context value in it, as in the example, is filled in with any markup in the value escaped.
 - `Hidden` is an `<input type="hidden">` with the name and value you give, inside the form element. It carries no class and no id, so `css_id` and `css_class` do nothing on it. Pass `id=` or any other attribute as a keyword argument to add it.
 
+### Size, colour and variant
+
+State a size, a colour and a variant once, in Python, and the pack adds daisyUI's modifier for each to every input it draws for the form. You write no class on any widget. The statement is a `FormChoices`, set as the `daisyui` attribute of the form's helper:
+
+```python
+from crispy_forms.helper import FormHelper
+from django import forms
+from mvp_forms.choices import FormChoices
+
+
+class SettingsForm(forms.Form):
+    name = forms.CharField()
+    notes = forms.CharField(widget=forms.Textarea)
+    newsletter = forms.BooleanField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(size="sm", color="primary", variant="ghost")
+```
+
+It takes effect with `{{ form|crispy }}` and with `{% crispy form %}`, whether or not the form has a layout, and wherever a field sits in one. Set it on the helper's instance, as above, and not as a class attribute of a `FormHelper` subclass: django-crispy-forms passes a helper's instance attributes on to the templates and leaves its class attributes behind, so a class attribute would not reach everything the pack draws.
+
+The names are daisyUI's own, and nothing else is accepted:
+
+- size: `xs`, `sm`, `md`, `lg`, `xl`
+- colour: `neutral`, `primary`, `secondary`, `accent`, `info`, `success`, `warning`, `error`
+- variant: `ghost`, for text-like inputs, textareas, selects and file inputs
+
+The keyword is spelt `color`, as daisyUI spells it. The three are independent: changing one leaves the other two as they were. Every one is optional, and a form that states nothing is drawn exactly as it was before.
+
+- Every input of a field takes the choices: each option of a radio or checkbox group, each select of a date, and the removal checkbox of a file field that holds a file, which takes the size and the colour.
+- A choice that one kind of input has no modifier for is passed over for that kind. `variant="ghost"` leaves a checkbox and a radio as they are and draws the text input beside them in ghost.
+- A name that is not in the lists above raises `InvalidChoice`, a `ValueError`, when the form is drawn. It carries the `kind`, the `value` and the names `allowed`.
+- A field in error keeps its error modifier and is drawn without the chosen colour, so the error is the only colour it shows. Its size and variant still apply.
+- Hidden inputs, labels, help text, error text and the `required`, `disabled` and `readonly` attributes are never changed, and classes you put on a widget are kept.
+
 ## Contributing
 
 Standards for this repository live in

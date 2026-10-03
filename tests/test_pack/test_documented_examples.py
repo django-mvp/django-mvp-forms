@@ -1,5 +1,8 @@
 """The examples in django-crispy-forms' own docstrings, drawn as written."""
 
+import re
+from pathlib import Path
+
 import pytest
 from crispy_forms.bootstrap import FormActions, StrictButton
 from crispy_forms.layout import (
@@ -189,3 +192,32 @@ class TestDocumentedExamples:
         soup = draw("{% crispy form %}", form=form, saved=saved)
 
         assert (SAVED_TEXT in soup.get_text()) == saved
+
+
+README = Path(__file__).parents[2] / "README.md"
+
+
+def readme_example(heading):
+    section = README.read_text().split(f"### {heading}\n", 1)[1]
+    code = re.search(r"```python\n(.*?)```", section, re.DOTALL).group(1)
+    namespace = {}
+    exec(code, namespace)  # noqa: S102
+    return namespace
+
+
+class TestReadmeFormWideChoices:
+    @pytest.mark.parametrize("source", ["{{ form|crispy }}", "{% crispy form %}"])
+    def test_the_form_stating_its_choices_is_drawn_with_them(self, draw, source):
+        form = readme_example("Size, colour and variant")["SettingsForm"]()
+
+        soup = draw(source, form=form)
+
+        assert {"input-sm", "input-primary", "input-ghost"} <= set(
+            soup.find(id="id_name")["class"]
+        )
+        assert {"textarea-sm", "textarea-primary", "textarea-ghost"} <= set(
+            soup.find(id="id_notes")["class"]
+        )
+        newsletter = set(soup.find(id="id_newsletter")["class"])
+        assert {"checkbox-sm", "checkbox-primary"} <= newsletter
+        assert "checkbox-ghost" not in newsletter

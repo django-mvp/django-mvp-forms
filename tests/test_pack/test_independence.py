@@ -23,13 +23,14 @@ from crispy_forms.layout import (
 from django.apps import apps
 
 import mvp_forms
-from mvp_forms.choices import Modifiers
+from mvp_forms.choices import FormChoices, Modifiers
 from tests.forms import (
     ButtonedForm,
     CheckboxForm,
     CheckboxGroupsForm,
     DateSelectsForm,
     DeveloperAttrsForm,
+    EveryInputForm,
     FieldAndFormWideErrorsForm,
     FilesForm,
     FormWideErrorsForm,
@@ -72,6 +73,11 @@ def helped(form, **settings):
     form.helper = FormHelper()
     for name, value in settings.items():
         setattr(form.helper, name, value)
+    return form
+
+
+def stating(form, choices):
+    form.helper.daisyui = choices
     return form
 
 
@@ -160,6 +166,7 @@ def helper_buttons():
 
 
 NOTHING = frozenset()
+EVERY_CHOICE = FormChoices(size="sm", color="primary", variant="ghost")
 ERRORS_ONLY = "{{ form|as_crispy_errors }}"
 
 STATES = [
@@ -297,6 +304,18 @@ STATES = [
         lambda: helped(FieldAndFormWideErrorsForm({}), form_show_errors=False),
         NOTHING,
         id="tag without errors",
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: stating(EveryInputForm(), EVERY_CHOICE),
+        NOTHING,
+        id="every choice stated, through the filter",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: stating(EveryInputForm({}), EVERY_CHOICE),
+        NOTHING,
+        id="every choice stated, invalid, through the tag",
     ),
 ]
 
