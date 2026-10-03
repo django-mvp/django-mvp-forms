@@ -33,7 +33,7 @@ Issue: #41. Delivers FR-001 – FR-009; SC-001, SC-002.
 **Files**: `mvp_forms/templatetags/__init__.py`, `mvp_forms/templatetags/daisyui.py`,
 `mvp_forms/templates/daisyui/uni_form.html`, `mvp_forms/templates/daisyui/field.html`,
 `demo/settings.py`, `pyproject.toml` (conformance paths and the deptry note only),
-`tests/forms.py`, `tests/markup.py`, `tests/test_templatetags/`, `tests/test_pack/__init__.py`,
+`tests/forms.py`, `tests/conftest.py`, `tests/test_templatetags/`, `tests/test_pack/__init__.py`,
 `tests/test_pack/test_inputs.py`, `README.md`, `CHANGELOG.md`
 
 Plan, *`{% daisyui_input field %}` and `FieldInput`*, *The field frame contract*, *The demo
@@ -45,8 +45,10 @@ project* (settings only); research R1, R3, R4.
   `daisyui_input`. `attrs` carries the class only in this task.
 - `uni_form.html` loops the fields through `field_template`. `field.html` in this task is the
   wrapper, a plain label and the input; hidden fields print bare. US2 completes the frame.
-- `tests/forms.py` holds the forms the suite draws. `tests/markup.py` holds `Markup`, a small
-  class over BeautifulSoup that the pack tests use to find elements.
+- `tests/forms.py` holds the forms the suite draws. A fixture in `tests/conftest.py` parses a
+  rendered fragment with BeautifulSoup. No wrapper class around it.
+- The frame's element is a fixed `div`. `field.html` reads no `tag` and no `wrapper_class` from
+  the context (plan, *The field frame contract*).
 - Tests, `TestFieldInput`: the component for each of the nine kinds (parametrised); a subclass
   of a covered widget; an uncovered widget gets no pack class; the developer's class is kept and
   not repeated; the widget's `attrs` are unchanged after a render.
@@ -54,8 +56,8 @@ project* (settings only); research R1, R3, R4.
   right element with its component class (US1.1, US1.2); a developer's placeholder, class, input
   type and row count all arrive (US1.5); name, id and value are Django's (FR-008).
 - README: the quickstart (settings, a form, a template) and the first public-surface entry
-  naming the pack `daisyui`, the two settings that select it, the nine input kinds and the
-  `daisyui_input` tag. Drop the "pack is not written yet" status line. CHANGELOG: one line under
+  naming the pack `daisyui`, the two settings that select it and the nine input kinds. The
+  `daisyui_input` tag is the pack's own and is not listed. Drop the "pack is not written yet" status line. CHANGELOG: one line under
   Unreleased, Added.
 
 ### T002 — The tag, a single field, bound values and fields the pack does not cover
@@ -90,7 +92,8 @@ Issue: #42. Delivers FR-010 – FR-019; SC-003, SC-008.
 Plan, *The field frame contract*; research R2 case 2.
 
 - The label as the frame's caption, with the marker on required fields. `FieldInput.attrs`
-  gains `aria-required` when Django will not emit `required`.
+  gains `aria-required` when the field is required and the form's `use_required_attribute` is
+  off.
 - Tests: the label's `for` is the input's id (US2.1); a required field has the marker and an
   optional one has none, and the input carries `required` (US2.2); a form with
   `use_required_attribute = False` still has the marker and the input carries `aria-required`
@@ -99,14 +102,12 @@ Plan, *The field frame contract*; research R2 case 2.
 
 ### T004 — Help text and errors, tied to the input
 
-**Files**: `mvp_forms/templates/daisyui/layout/help_text.html`,
-`mvp_forms/templates/daisyui/layout/field_errors.html`,
-`mvp_forms/templates/daisyui/field.html`, `mvp_forms/templatetags/daisyui.py`,
-`tests/test_pack/test_field_frame.py`, `tests/test_templatetags/test_daisyui.py`, `README.md`
+**Files**: `mvp_forms/templates/daisyui/field.html`, `mvp_forms/templatetags/daisyui.py`,
+`tests/test_pack/test_field_frame.py`, `tests/test_templatetags/test_daisyui.py`
 
 Plan, *The field frame contract*; research R2, R6.
 
-- The two layout templates, included by the frame. The error modifier on the input.
+- Help text and errors, written inside the frame. The error modifier on the input.
 - Tests: with help text, an element with the id the input's `aria-describedby` names (US2.3);
   with errors, every message inside the one error element, `aria-invalid` on the input, the
   error element named by the description, and the error modifier on the input (US2.4, FR-013,
@@ -115,9 +116,7 @@ Plan, *The field frame contract*; research R2, R6.
   of those four cases (FR-015); a label, help text and error containing markup are escaped, and
   help text marked safe is kept (US2.7); two forms of one class with different prefixes share no
   id and every `for` and description resolves inside its own form (US2.8, FR-017); a form with
-  `auto_id=False` emits no id and no description.
-- README public surface: the template paths a host project can rely on (`daisyui/field.html`,
-  `daisyui/layout/help_text.html`, `daisyui/layout/field_errors.html`) and the ids they emit.
+  `auto_id=False` emits no id, no `for` and no description.
 
 ---
 
@@ -155,9 +154,11 @@ Plan, *The form templates*, *Errors turned off*; research R2 cases 1 and 3.
   description names nothing missing, both with and without help text (US3.8, FR-015);
   `label_class` and `field_class` are on every label and on an element holding each input
   (US3.9); `help_text_inline` and `error_text_inline` change nothing (edge case).
-- `TestFieldInput`: `aria-label` only with labels off and never over the developer's own; the
-  description with errors off, with help text and without; a widget carrying the developer's
-  `aria-describedby` keeps it.
+- `TestFieldInput`: `aria-label` only with labels off and never over the developer's own; a
+  label marked safe that holds a quoted attribute arrives in `aria-label` with its tags
+  stripped; the description with errors off, with help text and without; a widget carrying the
+  developer's `aria-describedby` keeps it; a `RadioSelect` with labels off and errors off
+  receives none of `aria-label`, `aria-required` and `aria-describedby`.
 - README public surface: the helper settings the pack honours and the two it ignores.
 
 ---
@@ -171,15 +172,18 @@ Issue: #44. Delivers FR-026 – FR-030; SC-005, SC-006.
 **Files**: `tests/data/daisyui-classes.txt`, `tests/conftest.py`,
 `tests/test_pack/test_independence.py`, `README.md`
 
-Research R5, R8, R9. The class list is already downloaded and extracted: copy
-`/tmp/fs001/daisyui-classes.txt` to `tests/data/daisyui-classes.txt` unchanged.
+Research R5, R8, R9. The class list is already downloaded and extracted: the brief names where
+to copy it from, unchanged, into `tests/data/daisyui-classes.txt`.
 
 - Tests, `TestEmittedClasses`: draw the suite's forms in every state (unbound, bound and
   invalid, with help text, with form-wide errors, through the filter and the tag), collect every
   class, remove the ones the test's own forms and helper supplied, and assert each of the rest is
   in the list (US4.2, FR-026, SC-005). Assert the collected set is not empty.
 - Tests, `TestWithoutDjangoMvp`: with `INSTALLED_APPS` reduced to `crispy_forms` and
-  `mvp_forms` and a bare template engine, a form draws (US4.1, SC-006).
+  `mvp_forms` and a bare template engine, a form draws (US4.1, SC-006). django-crispy-forms
+  caches its compiled pack templates per process, so a fixture in `tests/conftest.py` calls
+  `cache_clear()` on `uni_form_template`, `uni_formset_template`, `whole_uni_form_template` and
+  `default_field_template` on entering the override and again on leaving it.
 - Tests, `TestDistributedFiles`: no template under `mvp_forms/templates/` loads or uses Cotton
   or extends or includes a path outside `daisyui/`; no module under `mvp_forms/` imports `mvp`,
   `django_cotton` or `daisy_cotton`; the package has no `static/` directory (US4.4, FR-027 –
@@ -190,7 +194,8 @@ Research R5, R8, R9. The class list is already downloaded and extracted: copy
 
 These tests describe what US1 to US3 already built and may pass on their first run. That is
 expected here: they pin a property no earlier test covered. Prove each one can fail by breaking
-the thing it guards once, locally, and say so in the report.
+the thing it guards once, locally, with the whole suite running and not the test alone, and say
+so in the report.
 
 ---
 

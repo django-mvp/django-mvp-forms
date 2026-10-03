@@ -38,6 +38,8 @@ A host project that selects the pack gets every text-like field of a plain Djang
 
 ## D4. Only classes found in daisyUI's CDN build
 
+**Superseded by D9**, the maintainer's ruling for the build.
+
 **Ambiguous:** Article XIV allows "daisyUI's component classes and Tailwind utilities as documented", and the request asks for a form that works on a page loading only daisyUI's CDN build.
 
 **Chosen:** the stricter reading, as the maintainer ruled when the repository was set up. Every class the pack emits is one that build defines.
@@ -146,3 +148,22 @@ not to ship an empty one.
 
 **Why:** the specification names nine kinds. Whether to add these is an open question on the
 tracker.
+
+## D15. Design review, 2026-10-03
+
+One reviewer, three lenses, on the plan at `375882c`. Verdict: changes requested, one high
+finding. Each was applied to the plan and tasks before any code.
+
+- **DR-001 (high).** The frame took its element name from a context variable named `tag`, and
+  through the crispy tag the whole page context reaches the field template. The frame's element
+  is now a fixed `div` and reads neither `tag` nor `wrapper_class`.
+- **DR-002.** The pack adds no ARIA attribute to a widget drawn as a group, and adds
+  `aria-required` only when the form turns the browser's required attribute off.
+- **DR-003.** The test that draws a form without django-mvp clears django-crispy-forms' cached
+  templates going in and coming out, or it would pass on a template compiled by the full engine.
+- **DR-004.** The README does not list the pack's own tag or its template paths. A documented
+  template interface is roadmap item R6.
+- **DR-005.** Help text and errors are written inside the frame, not in templates of their own.
+- **DR-006.** A label copied into `aria-label` has its tags stripped.
+- **DR-007.** The label's `for` is written only when there is an id to point at.
+- **DR-008.** No wrapper class around BeautifulSoup in the tests.

@@ -2,12 +2,22 @@
   "feature": "001-text-inputs",
   "branch": "001-text-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "QUEUED",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
       "at": "2026-10-03T15:06:57Z",
       "note": "specification approved by delegated review at commit 137f1745a02ccb148dedef55d9b4212d6d9de45e, on pull request #25; epic #5, stories #41, #42, #43, #44, #45"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T15:17:24Z",
+      "note": "plan.md, research.md, tasks.md: 5 stories, 8 tasks; continues on pull request #25"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T15:17:46Z",
+      "note": "one reviewer, three lenses, on plan.md, tasks.md and research.md at 375882c"
     }
   ],
   "gates": {
@@ -19,12 +29,26 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-03T15:24:23Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: changes requested, all applied",
+      "at": "2026-10-03T15:24:23Z",
+      "self_resolved": [
+        "DR-001 (high) frame element fixed as a div, no tag or wrapper_class read from the page context: applied to plan and T001",
+        "DR-002 no ARIA attribute on a grouped widget; aria-required only when the form turns the required attribute off: applied to plan, T003, T006",
+        "DR-003 crispy's cached templates cleared around the no-django-mvp test: applied to plan, research and T007",
+        "DR-004 README does not list the pack's own tag or template paths: applied to T001 and T004",
+        "DR-005 help text and errors written inside the frame, two templates dropped: applied",
+        "DR-006 aria-label carries the label with tags stripped: applied to plan and T006",
+        "DR-007 label for written only when there is an id: applied to plan and T004",
+        "DR-008 no wrapper class around BeautifulSoup: applied"
+      ]
     }
   },
   "stories": [
@@ -129,7 +153,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

@@ -1,6 +1,6 @@
 # Research: text inputs drawn as daisyUI
 
-Written 2026-10-03 against `origin/main` at `4851c2e`. Paths under `site-packages/` are the
+Written 2026-10-03 on the feature branch, whose base is `origin/main` at `4851c2e`. Paths under `site-packages/` are the
 packages this repository's lockfile resolves: Django 6.1.1, django-crispy-forms 2.7,
 django-mvp 0.25.2, crispy-tailwind 1.0.3. Django 5.2.17 and 6.0.8 were read from clean
 installs of each.
@@ -64,17 +64,17 @@ All in `site-packages/crispy_forms/`.
 | `{{ form\|crispy }}` | `<pack>/uni_form.html` | `form`, `field_template` (`<pack>/field.html`), `form_show_errors=True`, `form_show_labels=True`, `label_class`, `field_class` | `templatetags/crispy_forms_filters.py:27-61` |
 | `{{ form\|as_crispy_errors }}` | `<pack>/errors.html` | `form` only | `crispy_forms_filters.py:64-83` |
 | `{{ form.field\|as_crispy_field }}` | the helper's `field_template`, else `<pack>/field.html` | `field`, `form_show_errors`, `form_show_labels`, `label_class`, `field_class`, plus the helper's attributes when the form has one | `crispy_forms_filters.py:86-118` |
-| `{% crispy form %}` | `<pack>/whole_uni_form.html` | everything in `get_response_dict`: `form_tag`, `form_method`, `flat_attrs`, `disable_csrf`, `form_show_errors`, `form_show_labels`, `label_class`, `field_class`, `field_template`, `form_error_title`, `help_text_inline`, `error_text_inline`, `include_media`, `inputs`, `csrf_token` | `templatetags/crispy_forms_tags.py:164-212, 225-239` |
+| `{% crispy form %}` | `<pack>/whole_uni_form.html` | everything in `get_response_dict`: `form_tag`, `form_method`, `flat_attrs`, `disable_csrf`, `form_show_errors`, `form_show_labels`, `label_class`, `field_class`, `field_template`, `form_error_title`, `help_text_inline`, `error_text_inline`, `include_media`, `inputs`, `csrf_token` | `templatetags/crispy_forms_tags.py:137-185, 198-212` |
 
 Two paths reach the field template from the tag. A form with no `helper` attribute gets a bare
 `FormHelper()` with no layout, so `whole_uni_form.html` has to loop over the fields itself
-(`crispy_forms_tags.py:123`, `:143`). A form whose helper was built as `FormHelper(form)` has a
+(`crispy_forms_tags.py:96`, `:116`). A form whose helper was built as `FormHelper(form)` has a
 default layout, and each field arrives through `render_field`, which renders
 `<pack>/field.html` with the node's context plus `field`, `labelclass` and `flat_attrs`
 (`utils.py:29-139`). Both paths have to produce the same markup (FR-003).
 
 The pack name is checked only by the tag, against `CRISPY_ALLOWED_TEMPLATE_PACKS`
-(`crispy_forms_tags.py:258-266`). The pack adds nothing to that check.
+(`crispy_forms_tags.py:261-269`). The pack adds nothing to that check.
 
 The formset templates (`uni_formset.html`, `whole_uni_formset.html`, `errors_formset.html`) and
 `inputs.html` for a helper's buttons belong to later features and are not written here.
@@ -90,7 +90,8 @@ The formset templates (`uni_formset.html`, `whole_uni_formset.html`, `errors_for
 - `aria-invalid="true"` when the field has errors and is not hidden.
 - `aria-describedby`, unless the caller or the widget already set one: `<auto_id>_helptext` when
   the field has help text, then `<auto_id>_error` when it has errors. Nothing when the form has
-  no `auto_id`.
+  no `auto_id`, and nothing for a widget that is drawn as a group (`use_fieldset`), because a
+  group's attributes are copied onto each of its options.
 
 So the ids are fixed: one element with id `<auto_id>_helptext`, and **one** element with id
 `<auto_id>_error` that holds every error message. Django's own error list uses the same id
@@ -183,7 +184,8 @@ only where the author marked it safe (FR-016, Article V).
 
 - **Drawing without django-mvp:** a test overrides `INSTALLED_APPS` to `crispy_forms` and
   `mvp_forms` with a bare template engine and draws a form. Django rebuilds its template engines
-  when either setting changes.
+  when either setting changes. django-crispy-forms does not: its four template loaders are
+  cached per process on the pack name, so the test clears them going in and coming out.
 - **Templates:** a test walks `mvp_forms/templates/` and fails on `{% load cotton`, a `<c-` tag,
   or an `extends`/`include` of a path outside `daisyui/`.
 - **Imports:** a test parses every module under `mvp_forms/` and fails on an import of `mvp`,
