@@ -160,3 +160,11 @@ One reviewer read the plan before any code, as a check on fit with the specifica
 **Why:** The buttons that belong inside the helper's form element arrive in the next story. Until then the page needs a submit button, and the only place for one is the page. One class with a prefix keeps every id apart and repeats no layout.
 
 **Revisit if:** The buttons story moves the submit button into the layout, at which point the submittable form draws its own `<form>`.
+
+## D17. The class test's list and states grow with each story
+
+**Decision:** Each story adds parametrised states and layout utility names to `tests/test_pack/test_independence.py`, a test file that existed before this feature. The check that guards existing tests flags those edits, and they are accepted.
+
+**Why:** ADR 0003 says a feature that needs a layout utility adds it to that test by name. The edits add cases and names. No existing assertion is changed or removed.
+
+**ADR:** none — a note on how one test file is maintained, already covered by ADR 0003
