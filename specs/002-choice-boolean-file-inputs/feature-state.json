@@ -2,7 +2,7 @@
   "feature": "002-choice-boolean-file-inputs",
   "branch": "002-choice-boolean-file-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "CONVERGE",
+  "state": "REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -38,6 +38,11 @@
       "state": "CONVERGE",
       "at": "2026-10-03T17:14:40Z",
       "note": "moved to REVIEW before the S5 gate was green: main gained FS-003 and its records took 0008 to 0010. Merged main, renumbered to 0011 to 0013, re-verifying"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T17:15:29Z",
+      "note": "converged on main with FS-003: ADRs 0011 to 0013, full verify green, S5 gate green"
     }
   ],
   "gates": {
@@ -342,7 +347,7 @@
       "max": 2
     },
     "review_cycles": {
-      "used": 1,
+      "used": 2,
       "max": 1
     },
     "design_review_cycles": {
