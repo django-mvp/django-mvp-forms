@@ -1,0 +1,4 @@
+{% load daisyui %}
+<div{% if tabs.css_id %} id="{{ tabs.css_id }}"{% endif %} class="tabs tabs-border{% if tabs.css_class %} {{ tabs.css_class }}{% endif %}"{{ tabs.flat_attrs }}>
+  {{ content|daisyui_tab_group }}
+</div>

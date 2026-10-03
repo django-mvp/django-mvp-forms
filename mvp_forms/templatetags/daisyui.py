@@ -1,6 +1,7 @@
 """The pack's tags and filters, which draw inputs and buttons as daisyUI."""
 
 import copy
+import secrets
 from html import unescape
 from typing import Any
 
@@ -20,7 +21,12 @@ DATE_PARTS = {
 }
 # Class names django-crispy-forms writes for other template packs. daisyUI does
 # not define them, so a button or a group is drawn without them.
-UPSTREAM_ONLY_CLASSES = frozenset({"btn-inverse", "ctrlHolder", "blockLabel", "error"})
+UPSTREAM_ONLY_CLASSES = frozenset(
+    {"btn-inverse", "ctrlHolder", "blockLabel", "error", "tab-pane", "active"}
+)
+# Written by layout/tab-pane.html in place of a group name; daisyui_tab_group
+# swaps it for the name one tab holder's radios share.
+TAB_GROUP_PLACEHOLDER = 'name="daisyui-tab-group"'
 
 
 class FieldInput:
@@ -302,6 +308,28 @@ def daisyui_classes(value: str | None) -> str:
         name for name in (value or "").split() if name not in UPSTREAM_ONLY_CLASSES
     )
     return " ".join(dict.fromkeys(names))
+
+
+@register.filter(is_safe=True)
+def daisyui_tab_group(panes: str) -> str:
+    """Give the radios of one tab holder a group name no other holder has.
+
+    When no radio is checked, which is so when the first tab was given
+    ``active``, the first radio is checked, so one tab is always open. An inner
+    holder has been through this filter before the outer one, so each holder
+    gets a name and a check of its own.
+
+    Args:
+        panes: The drawn tabs of one holder, each a radio followed by its content.
+
+    Returns:
+        The panes with the placeholder name replaced by one name for the holder.
+    """
+    if f"{TAB_GROUP_PLACEHOLDER} checked" not in panes:
+        panes = panes.replace(
+            TAB_GROUP_PLACEHOLDER, f"{TAB_GROUP_PLACEHOLDER} checked", 1
+        )
+    return panes.replace(TAB_GROUP_PLACEHOLDER, f'name="tabs-{secrets.token_hex(4)}"')
 
 
 @register.filter

@@ -1,7 +1,7 @@
 """The examples in django-crispy-forms' own docstrings, drawn as written."""
 
 import pytest
-from crispy_forms.bootstrap import FormActions, StrictButton
+from crispy_forms.bootstrap import FormActions, StrictButton, Tab, TabHolder
 from crispy_forms.layout import (
     HTML,
     Button,
@@ -150,6 +150,16 @@ EXAMPLES = {
         lambda: StrictButton("button content", css_class="extra"),
         [],
         ("button", {"type": "button"}),
+    ),
+    "Tab": (
+        lambda: Tab("tab_name", "form_field_1", "form_field_2", "form_field_3"),
+        [*BOTH, "form_field_3"],
+        ("input", {"type": "radio", "aria-label": "tab_name"}),
+    ),
+    "TabHolder": (
+        lambda: TabHolder(Tab("form_field_1", "form_field_2"), Tab("form_field_3")),
+        ["form_field_2"],
+        ("div", {"class": "tabs"}),
     ),
     "StrictButton with a context-aware content": (
         lambda: StrictButton("Button for {{ user.username }}"),

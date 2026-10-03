@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 import pytest
-from crispy_forms.bootstrap import FormActions, StrictButton
+from crispy_forms.bootstrap import FormActions, StrictButton, Tab, TabHolder
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
     HTML,
@@ -148,6 +148,20 @@ def everything(data=None):
     )
 
 
+def tabbed(data=None):
+    return StructureForm(
+        data,
+        layout=(
+            TabHolder(
+                Tab("One", "first", css_class="mine"),
+                Tab("Two", Row("second"), Fieldset("Group", "third")),
+                Tab("Three", TabHolder(Tab("Inner", "fourth"))),
+                css_class="mine",
+            ),
+        ),
+    )
+
+
 def helper_buttons():
     return ButtonedForm(
         buttons=(
@@ -275,6 +289,8 @@ STATES = [
         NOTHING,
         id="all thirteen objects, invalid",
     ),
+    pytest.param("{% crispy form %}", tabbed, MINE, id="tabs"),
+    pytest.param("{% crispy form %}", lambda: tabbed({}), MINE, id="tabs, invalid"),
     pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
     pytest.param(
         "{% crispy form %}",
