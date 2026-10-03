@@ -16,6 +16,7 @@ from demo.forms import (
     ChosenGroupsForm,
     HelperButtonsForm,
     LayoutObjectsForm,
+    ModalForm,
     RowButtonsForm,
     TabsForm,
     TextInputsForm,
@@ -376,7 +377,39 @@ class AccordionView(AccordionMixin, MVPTemplateView):
     breadcrumbs = [{"text": "Accordion"}]
 
 
-class ContainersStandaloneView(AccordionMixin, TabsMixin, TemplateView):
+class ModalMixin:
+    """The form the modal page and the standalone page draw.
+
+    The form has a prefix, so no id repeats on a page.
+    """
+
+    modal_prefix = "modal"
+
+    def get_context_data(self, **kwargs):
+        """Add the form whose address fields sit in a modal."""
+        kwargs.setdefault("modal_form", ModalForm(prefix=self.modal_prefix))
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form bound to what was posted."""
+        form = ModalForm(request.POST, prefix=self.modal_prefix)
+        return self.render_to_response(self.get_context_data(modal_form=form))
+
+
+class ModalView(ModalMixin, MVPTemplateView):
+    """Fields in a modal, inside the application shell."""
+
+    template_name = "demo/modal.html"
+    page_title = "Modal"
+    page_subtitle = "Fields in a modal that a button opens, open on the first error"
+    breadcrumbs = [{"text": "Modal"}]
+
+
+class ContainersStandaloneView(ModalMixin, AccordionMixin, TabsMixin, TemplateView):
     """The container pages for a host project that has neither django-mvp nor Cotton.
 
     A post belongs to the form whose submit button it names. One that names none
@@ -387,6 +420,8 @@ class ContainersStandaloneView(AccordionMixin, TabsMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Bind the form whose submit button was pressed and no other."""
+        if f"{self.modal_prefix}-submit" in request.POST:
+            return ModalMixin.post(self, request, *args, **kwargs)
         if f"{self.accordion_prefix}-submit" in request.POST:
             return AccordionMixin.post(self, request, *args, **kwargs)
         return TabsMixin.post(self, request, *args, **kwargs)

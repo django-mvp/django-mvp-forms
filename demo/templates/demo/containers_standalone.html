@@ -15,6 +15,7 @@
         A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and nothing else.
         <a class="link" href="{% url 'tabs' %}">The tabs inside the django-mvp shell</a>
         <a class="link" href="{% url 'accordion' %}">The accordion inside the django-mvp shell</a>
+        <a class="link" href="{% url 'modal' %}">The modal inside the django-mvp shell</a>
       </p>
       <section class="card card-border bg-base-100">
         <div class="card-body">
@@ -38,6 +39,13 @@
         <div class="card-body">
           <h2 class="card-title">Groups the developer opened and closed</h2>
           {% crispy chosen_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Modal</h2>
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()">Edit the address</button>
+          {% crispy modal_form %}
         </div>
       </section>
     </main>

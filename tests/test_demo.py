@@ -779,3 +779,84 @@ class TestContainersStandaloneAccordion(AccordionPageContract):
     def test_it_links_back_to_the_accordion_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("accordion")) is not None
+
+
+MODAL_PREFIX = "modal"
+MODAL_ID = f"{MODAL_PREFIX}-dialog"
+MODAL_POST = {f"{MODAL_PREFIX}-submit": "Submit"}
+
+
+def modal_dialog(page):
+    return page.find("dialog", id=MODAL_ID)
+
+
+class ModalPageContract:
+    url_name = ""
+
+    def test_a_get_draws_the_dialog_closed(self, open_page):
+        page = open_page(self.url_name)
+        assert not modal_dialog(page).has_attr("open")
+
+    def test_a_post_of_the_empty_form_comes_back_with_the_dialog_open(self, open_page):
+        page = open_page(self.url_name, MODAL_POST)
+        assert modal_dialog(page).has_attr("open")
+
+    def test_the_error_comes_back_inside_the_dialog(self, open_page):
+        page = open_page(self.url_name, MODAL_POST)
+        error_id = layout_field_id(MODAL_PREFIX, "street") + "_error"
+        assert modal_dialog(page).find(id=error_id) is not None
+
+    def test_a_control_outside_the_dialog_names_its_id(self, open_page):
+        page = open_page(self.url_name)
+        openers = [
+            button
+            for button in page.find_all("button", attrs={"type": "button"})
+            if MODAL_ID in button.get("onclick", "")
+        ]
+        assert openers
+        for button in openers:
+            assert button.find_parent("dialog") is None
+
+    def test_the_dialog_is_inside_the_posting_form(self, open_page):
+        page = open_page(self.url_name)
+        assert modal_dialog(page).find_parent("form")["method"] == "post"
+
+    @pytest.mark.parametrize("data", [None, MODAL_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestModalPage(ModalPageContract):
+    url_name = "modal"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("modal")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("containers-standalone")) is not None
+
+
+class TestContainersStandaloneModal(ModalPageContract):
+    url_name = "containers-standalone"
+
+    def test_a_post_of_the_modal_form_binds_only_that_form(self, open_page):
+        page = open_page(self.url_name, MODAL_POST)
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [0]
+        assert open_groups(page, ACCORDION_PREFIX) == [0]
+
+    def test_a_post_of_the_tabs_form_leaves_the_dialog_closed(self, open_page):
+        page = open_page(self.url_name, {f"{TABS_SUBMIT_PREFIX}-submit": "Submit"})
+        assert not modal_dialog(page).has_attr("open")
+
+    def test_it_links_back_to_the_modal_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("modal")) is not None

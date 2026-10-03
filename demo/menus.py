@@ -40,5 +40,10 @@ AppMenu.extend(
             view_name="accordion",
             extra_context={"label": "Accordion", "icon": "accordion"},
         ),
+        MenuItem(
+            name="modal",
+            view_name="modal",
+            extra_context={"label": "Modal", "icon": "modal"},
+        ),
     ]
 )

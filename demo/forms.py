@@ -4,6 +4,7 @@ from crispy_forms.bootstrap import (
     Accordion,
     AccordionGroup,
     FormActions,
+    Modal,
     StrictButton,
     Tab,
     TabHolder,
@@ -403,3 +404,41 @@ class ChosenGroupsForm(forms.Form):
                 css_id=f"{prefix}-groups",
             ),
         )
+
+
+class ModalForm(forms.Form):
+    """A form whose address fields sit in a modal.
+
+    The name is outside the modal and the street and the city, both required, are
+    inside it, so a bound form with nothing in it comes back with the modal open.
+    The pack draws nothing that opens the modal: the page does, by ``dialog_id``.
+    Its layout is built for each instance, and every id and button name in it
+    carries the form's prefix, so two of these forms on one page repeat no id. The
+    form must be given a prefix.
+    """
+
+    name = forms.CharField(label=_("Name"), required=False)
+    street = forms.CharField(label=_("Street"))
+    city = forms.CharField(label=_("City"))
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id and button name."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            "name",
+            Modal(
+                "street",
+                "city",
+                css_id=self.dialog_id,
+                title=_("Address"),
+                title_id=f"{self.prefix}-title",
+            ),
+        )
+        self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+    @property
+    def dialog_id(self):
+        """The id of the modal's dialog, for the control that opens it."""
+        return f"{self.prefix}-dialog"

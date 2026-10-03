@@ -365,11 +365,12 @@ fails, so an error inside a fieldset, a row and a column can be seen:
 
 Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset, groups two fields in a `MultiField`, and carries a `Hidden` input.
 
-Three more pages draw the containers django-crispy-forms keeps in `crispy_forms.bootstrap`. Each holds a form to submit whose required field sits in a tab or a group that is not open, so submitting it empty comes back with the tab or group that holds the error open, and a second form:
+Four more pages draw the containers django-crispy-forms keeps in `crispy_forms.bootstrap`. Each of the first three holds a form to submit whose required field sits in a tab, a group or a modal that is not open, so submitting it empty comes back with the tab, group or modal that holds the error open:
 
 - `/tabs/` is inside the django-mvp shell, reached from its sidebar. Its second form is already bound and fails in its third tab.
 - `/accordion/` is inside the shell too. Its second form has one group the developer opened and one the developer closed.
-- `/containers/standalone/` draws the forms of both pages as a host project with neither django-mvp nor Cotton would have them, styled by daisyUI's CDN build alone. A post is bound to the form whose submit button it names.
+- `/modal/` is inside the shell too. Its form holds the street and the city, both required, in a modal that a button on the page opens by the modal's id. Submitting the form empty comes back with the modal open and the errors inside it.
+- `/containers/standalone/` draws the forms of all three pages as a host project with neither django-mvp nor Cotton would have them, styled by daisyUI's CDN build alone. A post is bound to the form whose submit button it names.
 
 ## License
 

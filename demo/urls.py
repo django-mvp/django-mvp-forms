@@ -7,6 +7,7 @@ from demo.views import (
     ChoiceInputsView,
     ContainersStandaloneView,
     LayoutObjectsView,
+    ModalView,
     OverviewView,
     StandaloneChoiceInputsView,
     StandaloneLayoutObjectsView,
@@ -37,6 +38,7 @@ urlpatterns = [
     ),
     path("tabs/", TabsView.as_view(), name="tabs"),
     path("accordion/", AccordionView.as_view(), name="accordion"),
+    path("modal/", ModalView.as_view(), name="modal"),
     path(
         "containers/standalone/",
         ContainersStandaloneView.as_view(),
