@@ -609,3 +609,331 @@ class TestStandaloneLayoutObjectsPage(LayoutObjectsPageContract):
     def test_it_links_back_to_the_shell_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("layout-objects")) is not None
+
+
+TABS_SUBMIT_PREFIX = "tabs"
+TABS_FAILING_PREFIX = "failing-tabs"
+
+
+def tab_radios(page, prefix):
+    return page.find(id=f"{prefix}-tabs").find_all("input", class_="tab")
+
+
+def checked_tabs(page, prefix):
+    radios = tab_radios(page, prefix)
+    return [index for index, radio in enumerate(radios) if radio.has_attr("checked")]
+
+
+class ContainersPageContract:
+    url_name = ""
+
+    def test_a_get_checks_the_first_tab_of_the_posting_form(self, open_page):
+        page = open_page(self.url_name)
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [0]
+
+    def test_a_post_of_the_empty_form_checks_the_second_tab(self, open_page):
+        page = open_page(self.url_name, {})
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [1]
+
+    def test_the_error_comes_back_inside_the_second_tabs_content(self, open_page):
+        page = open_page(self.url_name, {})
+        content = tab_radios(page, TABS_SUBMIT_PREFIX)[1].find_next_sibling()
+        error_id = layout_field_id(TABS_SUBMIT_PREFIX, "street") + "_error"
+        assert content.find(id=error_id) is not None
+
+    def test_the_form_that_already_fails_has_its_third_tab_checked(self, open_page):
+        page = open_page(self.url_name)
+        assert checked_tabs(page, TABS_FAILING_PREFIX) == [2]
+
+    def test_the_posting_form_has_a_form_element_and_the_failing_one_has_none(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+        posting = page.find(id=f"{TABS_SUBMIT_PREFIX}-tabs")
+        failing = page.find(id=f"{TABS_FAILING_PREFIX}-tabs")
+        assert posting.find_parent("form")["method"] == "post"
+        assert failing.find_parent("form") is None
+
+    @pytest.mark.parametrize("data", [None, {}], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestTabsPage(ContainersPageContract):
+    url_name = "tabs"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("tabs")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("containers-standalone")) is not None
+
+
+class TestContainersStandalonePage(ContainersPageContract):
+    url_name = "containers-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, open_page):
+        page = open_page(self.url_name)
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_tabs_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("tabs")) is not None
+
+
+ACCORDION_PREFIX = "accordion"
+CHOSEN_PREFIX = "chosen-accordion"
+ACCORDION_POST = {f"{ACCORDION_PREFIX}-submit": "Submit"}
+
+
+def accordion_groups(page, prefix):
+    return page.find(id=f"{prefix}-groups").find_all("details")
+
+
+def open_groups(page, prefix):
+    groups = accordion_groups(page, prefix)
+    return [index for index, group in enumerate(groups) if group.has_attr("open")]
+
+
+class AccordionPageContract:
+    url_name = ""
+
+    def test_a_get_opens_the_first_group_of_the_posting_form(self, open_page):
+        page = open_page(self.url_name)
+        assert open_groups(page, ACCORDION_PREFIX) == [0]
+
+    def test_a_post_of_the_empty_form_opens_the_third_group(self, open_page):
+        page = open_page(self.url_name, ACCORDION_POST)
+        assert open_groups(page, ACCORDION_PREFIX) == [2]
+
+    def test_the_error_comes_back_inside_the_third_group(self, open_page):
+        page = open_page(self.url_name, ACCORDION_POST)
+        group = accordion_groups(page, ACCORDION_PREFIX)[2]
+        error_id = layout_field_id(ACCORDION_PREFIX, "note") + "_error"
+        assert group.find(id=error_id) is not None
+
+    def test_the_second_form_has_the_developers_open_group_open(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("details", id=f"{CHOSEN_PREFIX}-open").has_attr("open")
+
+    def test_the_second_form_has_the_developers_closed_group_closed(self, open_page):
+        page = open_page(self.url_name)
+        assert not page.find("details", id=f"{CHOSEN_PREFIX}-closed").has_attr("open")
+
+    def test_the_second_form_has_no_form_element(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(id=f"{CHOSEN_PREFIX}-groups").find_parent("form") is None
+
+    @pytest.mark.parametrize("data", [None, ACCORDION_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestAccordionPage(AccordionPageContract):
+    url_name = "accordion"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("accordion")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("containers-standalone")) is not None
+
+
+class TestContainersStandaloneAccordion(AccordionPageContract):
+    url_name = "containers-standalone"
+
+    def test_a_post_of_the_accordion_form_binds_only_that_form(self, open_page):
+        page = open_page(self.url_name, ACCORDION_POST)
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [0]
+
+    def test_a_post_of_the_tabs_form_binds_only_that_form(self, open_page):
+        page = open_page(self.url_name, {f"{TABS_SUBMIT_PREFIX}-submit": "Submit"})
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [1]
+        assert open_groups(page, ACCORDION_PREFIX) == [0]
+
+    def test_it_links_back_to_the_accordion_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("accordion")) is not None
+
+
+MODAL_PREFIX = "modal"
+MODAL_ID = f"{MODAL_PREFIX}-dialog"
+MODAL_POST = {f"{MODAL_PREFIX}-submit": "Submit"}
+
+
+def modal_dialog(page):
+    return page.find("dialog", id=MODAL_ID)
+
+
+class ModalPageContract:
+    url_name = ""
+
+    def test_a_get_draws_the_dialog_closed(self, open_page):
+        page = open_page(self.url_name)
+        assert not modal_dialog(page).has_attr("open")
+
+    def test_a_post_of_the_empty_form_comes_back_with_the_dialog_open(self, open_page):
+        page = open_page(self.url_name, MODAL_POST)
+        assert modal_dialog(page).has_attr("open")
+
+    def test_the_error_comes_back_inside_the_dialog(self, open_page):
+        page = open_page(self.url_name, MODAL_POST)
+        error_id = layout_field_id(MODAL_PREFIX, "street") + "_error"
+        assert modal_dialog(page).find(id=error_id) is not None
+
+    def test_a_control_outside_the_dialog_names_its_id(self, open_page):
+        page = open_page(self.url_name)
+        openers = [
+            button
+            for button in page.find_all("button", attrs={"type": "button"})
+            if MODAL_ID in button.get("onclick", "")
+        ]
+        assert openers
+        for button in openers:
+            assert button.find_parent("dialog") is None
+
+    def test_the_dialog_is_inside_the_posting_form(self, open_page):
+        page = open_page(self.url_name)
+        assert modal_dialog(page).find_parent("form")["method"] == "post"
+
+    @pytest.mark.parametrize("data", [None, MODAL_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestModalPage(ModalPageContract):
+    url_name = "modal"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("modal")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("containers-standalone")) is not None
+
+
+class TestContainersStandaloneModal(ModalPageContract):
+    url_name = "containers-standalone"
+
+    def test_a_post_of_the_modal_form_binds_only_that_form(self, open_page):
+        page = open_page(self.url_name, MODAL_POST)
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [0]
+        assert open_groups(page, ACCORDION_PREFIX) == [0]
+
+    def test_a_post_of_the_tabs_form_leaves_the_dialog_closed(self, open_page):
+        page = open_page(self.url_name, {f"{TABS_SUBMIT_PREFIX}-submit": "Submit"})
+        assert not modal_dialog(page).has_attr("open")
+
+    def test_it_links_back_to_the_modal_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("modal")) is not None
+
+
+ALERT_PREFIX = "alert"
+ALERT_POST = {f"{ALERT_PREFIX}-submit": "Submit"}
+ALERT_DISMISSIBLE = f"{ALERT_PREFIX}-dismissible"
+ALERT_PERMANENT = f"{ALERT_PREFIX}-permanent"
+
+
+class AlertPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = ALERT_POST if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    def test_it_holds_an_alert_with_a_dismiss_control(self, page):
+        alert = page.find(id=ALERT_DISMISSIBLE)
+        assert alert["role"] == "alert"
+        assert [button["type"] for button in alert.find_all("button")] == ["button"]
+
+    def test_it_holds_an_alert_without_one(self, page):
+        alert = page.find(id=ALERT_PERMANENT)
+        assert alert["role"] == "alert"
+        assert alert.find("button") is None
+
+    def test_the_alerts_are_inside_the_posting_form(self, page):
+        alert = page.find(id=ALERT_DISMISSIBLE)
+        assert alert.find_parent("form")["method"] == "post"
+
+    @pytest.mark.parametrize("data", [None, ALERT_POST], ids=["get", "post"])
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestAlertPage(AlertPageContract):
+    url_name = "alert"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("alert")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("containers-standalone")) is not None
+
+
+class TestContainersStandaloneAlert(AlertPageContract):
+    url_name = "containers-standalone"
+
+    def test_it_holds_an_element_for_each_of_the_four_layout_objects(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(class_="tabs") is not None
+        assert page.find("details") is not None
+        assert page.find("dialog") is not None
+        assert page.find(attrs={"role": "alert"}) is not None
+
+    def test_a_post_of_the_alert_form_binds_only_that_form(self, open_page):
+        page = open_page(self.url_name, ALERT_POST)
+        assert checked_tabs(page, TABS_SUBMIT_PREFIX) == [0]
+        assert open_groups(page, ACCORDION_PREFIX) == [0]
+        assert not modal_dialog(page).has_attr("open")
+
+    def test_a_post_of_the_tabs_form_leaves_the_alerts_drawn(self, open_page):
+        page = open_page(self.url_name, {f"{TABS_SUBMIT_PREFIX}-submit": "Submit"})
+        assert page.find(id=ALERT_DISMISSIBLE) is not None
+
+    def test_it_links_back_to_the_alert_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("alert")) is not None

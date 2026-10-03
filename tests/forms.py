@@ -382,6 +382,15 @@ class StructureForm(forms.Form):
         self.helper.layout = Layout(*layout)
 
 
+class StructureWideErrorForm(StructureForm):
+    def clean(self):
+        raise ValidationError("It failed as a whole", code="whole")
+
+
+class StructureHiddenForm(StructureForm):
+    token = forms.CharField(widget=forms.HiddenInput)
+
+
 class ButtonedForm(forms.Form):
     first = forms.CharField()
     second = forms.CharField()
@@ -397,6 +406,7 @@ class DocumentedExamplesForm(forms.Form):
     form_field = forms.CharField()
     form_field_1 = forms.CharField()
     form_field_2 = forms.CharField()
+    form_field_3 = forms.CharField()
 
     def __init__(self, *args, layout=(), **kwargs):
         super().__init__(*args, **kwargs)

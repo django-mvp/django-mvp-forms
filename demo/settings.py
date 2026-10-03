@@ -122,6 +122,10 @@ EASY_ICONS = {
             "text-inputs": "bi bi-input-cursor-text",
             "choice-inputs": "bi bi-ui-checks",
             "layout-objects": "bi bi-layout-three-columns",
+            "tabs": "bi bi-segmented-nav",
+            "accordion": "bi bi-chevron-bar-expand",
+            "modal": "bi bi-window-stack",
+            "alert": "bi bi-exclamation-triangle",
         },
     },
 }

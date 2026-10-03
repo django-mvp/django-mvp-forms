@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, and the structural and button layout objects, and nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, and the layout objects, with `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert` all supported. Nothing is published to PyPI.
 
 ## Why
 
@@ -148,7 +148,7 @@ Read-only is the browser's and exists only on text inputs and textareas. Set `re
 
 ### Layout objects
 
-The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import them from django-crispy-forms as its documentation says. This package adds no layout classes of its own:
+The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import them from django-crispy-forms as its documentation says. This package adds no layout classes of its own. `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, all from `crispy_forms.bootstrap`, are supported along with the structural and button objects below:
 
 ```python
 from crispy_forms.helper import FormHelper
@@ -180,9 +180,143 @@ Build the layout in the form's `__init__`, as above, so each form has its own. d
 - `Div` is a plain `<div>` around its fields.
 - `Row` is a `<div>` that sets its columns side by side on a wide page and stacks them on a narrow one. It uses Tailwind layout utilities, because daisyUI has no component for a row.
 - `Column` is a `<div>` that takes an equal share of its row. Outside a `Row` it carries the same two layout classes, which do nothing unless its parent is a flex container. A `Row` that holds fields directly draws them in order, without columns.
-- `MultiField` is a daisyUI `fieldset` whose `<legend>` is the label you give it, holding its fields in order. Each field is still drawn in its own frame, with its own label, help text and errors, so an error sits beside the field it belongs to and not at the top of the group. The label is drawn as you write it, markup included. Unlike a `Fieldset` legend it is not rendered as a template, so it cannot read the page's context. `css_id`, `css_class`, `label_class` and attributes are kept on the group, and the names `ctrlHolder`, `blockLabel` and `error`, which django-crispy-forms writes for other template packs, are not drawn.
+- `MultiField` is a daisyUI `fieldset` whose `<legend>` is the label you give it, holding its fields in order. Each field is still drawn in its own frame, with its own label, help text and errors, so an error sits beside the field it belongs to and not at the top of the group. The label is drawn as you write it, markup included. Unlike a `Fieldset` legend it is not rendered as a template, so it cannot read the page's context. `css_id`, `css_class`, `label_class` and attributes are kept on the group, and the class names django-crispy-forms writes for other template packs, listed under the buttons below, are not drawn.
 
 Each of the five holds its fields and further layout objects in the order the layout gives, and can be nested to any depth. The `css_id`, `css_class` and attributes you give one are kept on its element, and your classes come after the pack's. Every field inside is still drawn with its own label, help text and errors. An empty container is drawn, and `template=` draws a container with a template of your own.
+
+Tabs are daisyUI's `tabs`. `TabHolder` and `Tab` come from `crispy_forms.bootstrap`, where django-crispy-forms keeps them:
+
+```python
+from crispy_forms.bootstrap import Tab, TabHolder
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+
+
+class AccountForm(forms.Form):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+    email = forms.EmailField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            TabHolder(
+                Tab("Name", "first_name", "last_name"),
+                Tab("Contact", "email"),
+            )
+        )
+```
+
+- Each `Tab` is one daisyUI `tab` radio, named for assistive technology by the tab's name, followed by its `tab-content` element holding the tab's fields. The radios of one `TabHolder` form one group, so the Tab key reaches the tabs and the arrow keys move between them. No script is involved.
+- Exactly one tab is open. It is the first tab that holds a field with an error, including a hidden field, and with no error it is the first tab, also when you gave the first `Tab` `active=True` or `active=False`. A form-wide error alone opens the first tab.
+- A tab's radio carries `form=""`, so it belongs to no form and is never submitted: the browser submits only the form's own fields.
+- Each holder has a group name of its own, so two holders in one form, a holder in each of two forms on a page and a holder inside a tab do not open each other's tabs. A `Tab` is drawn only inside a `TabHolder`: on its own it has no group and no tab is open.
+- The `css_id`, `css_class` and attributes you give a `TabHolder` are kept on its element, and those you give a `Tab` on its `tab-content` element. A `Tab` takes its id from its name unless you give one. The name is escaped. `active` and `tab-pane`, which django-crispy-forms writes for other template packs, are not drawn.
+- A browser will not submit a form whose empty required input is in a tab that is not open. Set `self.helper.attrs = {"novalidate": True}` to let the server answer and open the tab that holds the error.
+
+An accordion is a stack of daisyUI `collapse` elements. `Accordion` and `AccordionGroup` come from `crispy_forms.bootstrap` too:
+
+```python
+from crispy_forms.bootstrap import Accordion, AccordionGroup
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+
+
+class ProfileForm(forms.Form):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+    email = forms.EmailField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Accordion(
+                AccordionGroup("Name", "first_name", "last_name"),
+                AccordionGroup("Contact", "email", active=True),
+            )
+        )
+```
+
+- Each `AccordionGroup` is a `<details class="collapse">` holding a `<summary class="collapse-title">` with the group's name and a `collapse-content` element with the group's fields. `<details>` and `<summary>` are the browser's own disclosure, so the keyboard and assistive technology work with no script and the accordion draws no input or button of its own.
+- Each group opens and closes on its own: opening one does not close another, and no group is given a `name`.
+- Which groups are open is decided by django-crispy-forms. Unbound, the first group is open, unless you gave it `active=False`, and a later group you gave `active=True` is open as well. With an error, the first group that holds a field with an error, including a hidden field, is open. A form-wide error alone leaves the first group open.
+- An `Accordion` inside a `Tab` that holds a field with an error opens the tab and the group.
+- The `css_id`, `css_class` and attributes you give an `Accordion` are kept on its element, and those you give an `AccordionGroup` on its `<details>`. The group's name is escaped. An `Accordion` you give no id gets one from django-crispy-forms.
+- A browser will not submit a form whose empty required input is in a group that is closed. Set `self.helper.attrs = {"novalidate": True}` to let the server answer and open the group that holds the error.
+
+A modal is a daisyUI `modal`, drawn as a `<dialog>`. `Modal` comes from `crispy_forms.bootstrap` too:
+
+```python
+from crispy_forms.bootstrap import Modal
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+
+
+class ProfileForm(forms.Form):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+    email = forms.EmailField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            "email",
+            Modal(
+                "first_name",
+                "last_name",
+                css_id="name-modal",
+                title="Your name",
+                title_id="name-modal-title",
+            ),
+        )
+```
+
+- The modal is a `<dialog class="modal">` with the `css_id` you give, holding a `modal-box` with the title, the fields and one close button. The dialog is where the layout puts it, inside the form element, so its fields are submitted with the rest of the form. Give two modals two ids and two `title_id` values: the title's id is built from `title_id`, so two modals left on the default share one title id and the second is named by the first one's title.
+- The pack draws nothing that opens the modal. Your page does, by the modal's id. A button outside the dialog that calls `showModal()` on it is enough: `<button type="button" onclick="document.getElementById('name-modal').showModal()">Edit name</button>`. A `<dialog>` opened this way is shown above the page, can be closed with the Escape key and returns focus to the button.
+- The close button is a `<button type="button">`, so it never submits the form, and closing the modal leaves what was typed in its fields as it was. The modal holds no submit button: submit with a button of the form.
+- The title is an `<h3>` with the id `<title_id>-label`, and the dialog's `aria-labelledby` names it, so it is the dialog's accessible name. The title is escaped. `title_class` is added to the title, which the pack gives no class of its own, and `title_id` defaults to `modal_title_id`.
+- The modal is drawn open when a field inside it has an error, including inside a `Tab` or an `AccordionGroup` in the modal, and then the tab and the group that hold the error are open too. It opens even when the helper's `form_show_errors` is off. A modal that holds only an `HTML` object never opens, and an error in a field outside it does not open it. A modal drawn open this way takes the keyboard focus when the page arrives and is closed with its close button. It was not opened with `showModal()`, so the Escape key does not close it and the page behind it can still be reached with the Tab key.
+- The `css_class` and attributes you give a `Modal` are kept on its `<dialog>`. A `Modal` you give no id gets `modal_id` from django-crispy-forms, so give each its own.
+- A browser will not submit a form whose empty required input is in a closed modal. Set `self.helper.attrs = {"novalidate": True}` to let the server answer and open the modal that holds the error.
+
+An alert is a daisyUI `alert`. `Alert` comes from `crispy_forms.bootstrap` too:
+
+```python
+from crispy_forms.bootstrap import Alert
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+
+
+class ProfileForm(forms.Form):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            "first_name",
+            Alert(
+                "<strong>Check the spelling.</strong> Names are printed as written.",
+                css_class="alert-warning",
+                css_id="name-note",
+            ),
+            "last_name",
+        )
+```
+
+- The alert is a `<div role="alert" class="alert">` where the layout puts it, holding its content in a `<span>`. It is drawn again when the form is bound, and two alerts in one form are each drawn.
+- Colour it with a daisyUI modifier in `css_class`, as above: `alert-info`, `alert-success`, `alert-warning`, `alert-error`, `alert-soft`, `alert-outline` or `alert-dash`. The `css_id` and attributes you give are kept on the alert, and your classes come after the pack's.
+- A dismiss button is drawn by default: a `<button type="button">` named by an `aria-label`, which removes the alert from the page. It never submits the form. A dismissal is not remembered, so the alert is back the next time the page is drawn. Pass `dismiss=False` to draw the alert with no button.
+- `block=True` is accepted and changes nothing, because daisyUI has no counterpart to the Bootstrap class it adds. `alert-block` is never drawn.
+- The content is trusted. It is written into the page as markup, as django-crispy-forms documents, so a tag in it is a tag in the page, and a context value in it is not filled in. Anything a person typed must be escaped before it is put there, for example with `django.utils.html.escape` or `format_html`.
 
 Buttons are drawn as daisyUI buttons. `FormActions` and `StrictButton` come from `crispy_forms.bootstrap`, where django-crispy-forms keeps them:
 
@@ -198,7 +332,7 @@ FormActions(
 )
 ```
 
-- `Submit`, `Reset` and `Button` are `<input>` elements of type `submit`, `reset` and `button`, each carrying `btn` (a `Submit` also `btn-primary`). Their value can read the page's context, as in `Submit("save", "Save {{ user.username }}")`. Pass `disabled=True` to draw one disabled. Four class names that django-crispy-forms writes for other template packs are never drawn on these buttons or on a `MultiField`, even when you give them yourself: `btn-inverse`, `ctrlHolder`, `blockLabel` and `error`.
+- `Submit`, `Reset` and `Button` are `<input>` elements of type `submit`, `reset` and `button`, each carrying `btn` (a `Submit` also `btn-primary`). Their value can read the page's context, as in `Submit("save", "Save {{ user.username }}")`. Pass `disabled=True` to draw one disabled. Seven class names are never drawn, even when you give them yourself, because django-crispy-forms writes them for other template packs: `btn-inverse`, `ctrlHolder`, `blockLabel`, `error`, `tab-pane`, `active` and `alert-block`. Every one of them is dropped from the `css_class` of these buttons, of a `MultiField` (and its `label_class`), of a `Tab` and of an `Alert`, so a class of your own called `active` on any of them is not drawn either.
 - `StrictButton` is a `<button>` of type `button` unless you give another `type=`. Its content may hold markup and context values; the values are escaped.
 - `ButtonHolder` and `FormActions` hold buttons side by side in one container, wrapping on a narrow page. `ButtonHolder` accepts an id and classes; `FormActions` also keeps any other attributes.
 - A button added to the form helper with `self.helper.add_input(Submit("save", "Save"))` is drawn after the fields, inside the form element, in a container of its own. It is the same element as the same button in a layout, with two limits that are django-crispy-forms' own: the value of a `Submit`, `Reset` or `Button` added this way is drawn as written and is not rendered as a template, and `template=` applies to a button in a layout only. A `StrictButton` added to the helper is drawn as it is in a layout. A `Hidden` added to the helper is drawn inside the form, outside the container of the buttons. With `form_tag` off, the buttons of a layout are still drawn.
@@ -263,6 +397,14 @@ fails, so an error inside a fieldset, a row and a column can be seen:
 - `/layout-objects/standalone/` is the same page styled by daisyUI's CDN build alone.
 
 Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset, groups two fields in a `MultiField`, and carries a `Hidden` input.
+
+Five more pages draw the containers and the notice django-crispy-forms keeps in `crispy_forms.bootstrap`. Each of the first three holds a form to submit whose required field sits in a tab, a group or a modal that is not open, so submitting it empty comes back with the tab, group or modal that holds the error open:
+
+- `/tabs/` is inside the django-mvp shell, reached from its sidebar. Its second form is already bound and fails in its third tab.
+- `/accordion/` is inside the shell too. Its second form has one group the developer opened and one the developer closed.
+- `/modal/` is inside the shell too. Its form holds the street and the city, both required, in a modal that a button on the page opens by the modal's id. Submitting the form empty comes back with the modal open and the errors inside it.
+- `/alert/` is inside the shell too. Its form has three alerts ahead of its field: one with a dismiss control, one without, and one with a daisyUI colour. Submitting the form empty draws all three again.
+- `/containers/standalone/` draws the forms of all four pages as a host project with neither django-mvp nor Cotton would have them, styled by daisyUI's CDN build alone. A post is bound to the form whose submit button it names.
 
 ## License
 

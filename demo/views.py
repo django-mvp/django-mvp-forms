@@ -11,10 +11,15 @@ from django.views.generic import TemplateView
 from mvp.views import MVPTemplateView
 
 from demo.forms import (
+    AccordionForm,
+    AlertForm,
     ChoiceInputsForm,
+    ChosenGroupsForm,
     HelperButtonsForm,
     LayoutObjectsForm,
+    ModalForm,
     RowButtonsForm,
+    TabsForm,
     TextInputsForm,
     TextStatesForm,
 )
@@ -296,3 +301,164 @@ class StandaloneLayoutObjectsView(LayoutObjectsMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/layout_objects_standalone.html"
+
+
+class TabsMixin:
+    """The forms the tabs page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    tabs_prefix = "tabs"
+    tabs_failing_prefix = "failing-tabs"
+    failing_data = {
+        "failing-tabs-name": "Ada",
+        "failing-tabs-street": "12 Example Street",
+        "failing-tabs-city": "London",
+    }
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one that already fails."""
+        kwargs.setdefault("tabs_form", TabsForm(prefix=self.tabs_prefix))
+        kwargs["failing_tabs_form"] = TabsForm(
+            self.failing_data, prefix=self.tabs_failing_prefix, posts=False
+        )
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = TabsForm(request.POST, prefix=self.tabs_prefix)
+        return self.render_to_response(self.get_context_data(tabs_form=form))
+
+
+class TabsView(TabsMixin, MVPTemplateView):
+    """Fields behind tabs, inside the application shell."""
+
+    template_name = "demo/tabs.html"
+    page_title = "Tabs"
+    page_subtitle = "Fields grouped behind tabs, opening on the first error"
+    breadcrumbs = [{"text": "Tabs"}]
+
+
+class AccordionMixin:
+    """The forms the accordion page and the standalone page draw.
+
+    Each form has a prefix of its own, so no id repeats on a page.
+    """
+
+    accordion_prefix = "accordion"
+    chosen_prefix = "chosen-accordion"
+
+    def get_context_data(self, **kwargs):
+        """Add the form to post and the one whose groups the developer chose."""
+        kwargs.setdefault("accordion_form", AccordionForm(prefix=self.accordion_prefix))
+        kwargs["chosen_form"] = ChosenGroupsForm(prefix=self.chosen_prefix)
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to post unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to post bound to what was posted."""
+        form = AccordionForm(request.POST, prefix=self.accordion_prefix)
+        return self.render_to_response(self.get_context_data(accordion_form=form))
+
+
+class AccordionView(AccordionMixin, MVPTemplateView):
+    """Fields in accordion groups, inside the application shell."""
+
+    template_name = "demo/accordion.html"
+    page_title = "Accordion"
+    page_subtitle = "Fields grouped in an accordion, opening on the first error"
+    breadcrumbs = [{"text": "Accordion"}]
+
+
+class ModalMixin:
+    """The form the modal page and the standalone page draw.
+
+    The form has a prefix, so no id repeats on a page.
+    """
+
+    modal_prefix = "modal"
+
+    def get_context_data(self, **kwargs):
+        """Add the form whose address fields sit in a modal."""
+        kwargs.setdefault("modal_form", ModalForm(prefix=self.modal_prefix))
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form bound to what was posted."""
+        form = ModalForm(request.POST, prefix=self.modal_prefix)
+        return self.render_to_response(self.get_context_data(modal_form=form))
+
+
+class ModalView(ModalMixin, MVPTemplateView):
+    """Fields in a modal, inside the application shell."""
+
+    template_name = "demo/modal.html"
+    page_title = "Modal"
+    page_subtitle = "Fields in a modal that a button opens, open on the first error"
+    breadcrumbs = [{"text": "Modal"}]
+
+
+class AlertMixin:
+    """The form the alert page and the standalone page draw.
+
+    The form has a prefix, so no id repeats on a page.
+    """
+
+    alert_prefix = "alert"
+
+    def get_context_data(self, **kwargs):
+        """Add the form whose layout holds the alerts."""
+        kwargs.setdefault("alert_form", AlertForm(prefix=self.alert_prefix))
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form bound to what was posted."""
+        form = AlertForm(request.POST, prefix=self.alert_prefix)
+        return self.render_to_response(self.get_context_data(alert_form=form))
+
+
+class AlertView(AlertMixin, MVPTemplateView):
+    """Alerts between the fields of a form, inside the application shell."""
+
+    template_name = "demo/alert.html"
+    page_title = "Alert"
+    page_subtitle = "Notices placed between fields, with and without a dismiss control"
+    breadcrumbs = [{"text": "Alert"}]
+
+
+class ContainersStandaloneView(
+    AlertMixin, ModalMixin, AccordionMixin, TabsMixin, TemplateView
+):
+    """The container pages for a host project that has neither django-mvp nor Cotton.
+
+    A post belongs to the form whose submit button it names. One that names none
+    binds the tabs form.
+    """
+
+    template_name = "demo/containers_standalone.html"
+
+    def post(self, request, *args, **kwargs):
+        """Bind the form whose submit button was pressed and no other."""
+        if f"{self.alert_prefix}-submit" in request.POST:
+            return AlertMixin.post(self, request, *args, **kwargs)
+        if f"{self.modal_prefix}-submit" in request.POST:
+            return ModalMixin.post(self, request, *args, **kwargs)
+        if f"{self.accordion_prefix}-submit" in request.POST:
+            return AccordionMixin.post(self, request, *args, **kwargs)
+        return TabsMixin.post(self, request, *args, **kwargs)

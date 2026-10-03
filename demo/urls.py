@@ -3,12 +3,17 @@
 from django.urls import include, path
 
 from demo.views import (
+    AccordionView,
+    AlertView,
     ChoiceInputsView,
+    ContainersStandaloneView,
     LayoutObjectsView,
+    ModalView,
     OverviewView,
     StandaloneChoiceInputsView,
     StandaloneLayoutObjectsView,
     StandaloneTextInputsView,
+    TabsView,
     TextInputsView,
 )
 
@@ -31,6 +36,15 @@ urlpatterns = [
         "layout-objects/standalone/",
         StandaloneLayoutObjectsView.as_view(),
         name="layout-objects-standalone",
+    ),
+    path("tabs/", TabsView.as_view(), name="tabs"),
+    path("accordion/", AccordionView.as_view(), name="accordion"),
+    path("modal/", ModalView.as_view(), name="modal"),
+    path("alert/", AlertView.as_view(), name="alert"),
+    path(
+        "containers/standalone/",
+        ContainersStandaloneView.as_view(),
+        name="containers-standalone",
     ),
     # django-mvp's Account Center, with a development sign-in and sign-out
     # until an account app such as allauth is installed.
