@@ -23,6 +23,7 @@ from crispy_forms.layout import (
 from django.apps import apps
 
 import mvp_forms
+from mvp_forms.choices import Modifiers
 from tests.forms import (
     ButtonedForm,
     CheckboxForm,
@@ -316,6 +317,21 @@ class TestEmittedClasses:
         soup = draw("{% crispy form %}", form=supplying_classes(DeveloperAttrsForm({})))
 
         assert {DEVELOPER_CLASS} | HELPER_CLASSES <= classes_in(soup)
+
+
+class TestModifierTables:
+    @pytest.mark.parametrize("kind", ["size", "color", "variant"])
+    def test_every_class_in_the_table_is_one_daisyui_defines(
+        self, daisyui_classes, kind
+    ):
+        written = {
+            name
+            for modifiers in Modifiers.tables[kind].values()
+            for name in modifiers.values()
+        }
+
+        assert written
+        assert written <= daisyui_classes, written - daisyui_classes
 
 
 class TestWithoutDjangoMvp:
