@@ -161,8 +161,31 @@
       "tasks": [
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestButtonChoices",
+              "tests/test_templatetags/test_daisyui.py::TestDrawnButton",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiButton",
+              "tests/test_pack/test_documented_examples.py::TestReadmeButtonChoices",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags tests/test_choices.py -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              ".venv/bin/python /tmp/fs007_render.py /tmp/fs007-states-after-T004.txt && diff /tmp/fs007-states-base.txt /tmp/fs007-states-after-T004.txt",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:317",
+              "mvp_forms/templatetags/daisyui.py:402",
+              "mvp_forms/templatetags/daisyui.py:419",
+              "mvp_forms/templatetags/daisyui.py:439"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
@@ -176,8 +199,25 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestMistakes",
+              "tests/test_choices.py::TestFormChoicesCheck"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py tests/test_pack/test_choices.py tests/test_pack/test_documented_examples.py -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/choices.py:406",
+              "mvp_forms/choices.py:432"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
