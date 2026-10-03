@@ -3,11 +3,13 @@
 from crispy_forms.bootstrap import FormActions, StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
+    HTML,
     Button,
     ButtonHolder,
     Column,
     Div,
     Fieldset,
+    Hidden,
     Layout,
     Reset,
     Row,
@@ -110,9 +112,11 @@ class LayoutObjectsForm(forms.Form):
                     Column("last_name", css_id=f"{prefix}-last"),
                     css_id=f"{prefix}-row",
                 ),
+                HTML(f'<p id="{prefix}-aside">Prepared for {{{{ owner }}}}.</p>'),
                 Div("email", "note", css_id=f"{prefix}-more"),
                 css_id=f"{prefix}-details",
             ),
+            Hidden(f"{prefix}-step", "details"),
             FormActions(
                 Submit(f"{prefix}-submit", _("Submit")),
                 Reset(f"{prefix}-reset", _("Reset")),

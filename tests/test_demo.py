@@ -247,6 +247,21 @@ class LayoutObjectsPageContract:
         assert form.find("input", attrs={"name": "csrfmiddlewaretoken"}) is not None
         assert form.find(id=layout_field_id(LAYOUT_SUBMIT_PREFIX, "first_name"))
 
+    def test_the_raw_html_sits_inside_the_fieldset_with_its_context_filled_in(
+        self, page
+    ):
+        fieldset = page.find("fieldset", id=f"{LAYOUT_SUBMIT_PREFIX}-details")
+        aside = fieldset.find(id=f"{LAYOUT_SUBMIT_PREFIX}-aside")
+        assert aside is not None
+        assert "{{" not in aside.get_text()
+
+    def test_the_hidden_input_is_inside_the_form_with_no_class_or_id(self, page):
+        hidden = page.find("input", attrs={"name": f"{LAYOUT_SUBMIT_PREFIX}-step"})
+        assert hidden["type"] == "hidden"
+        assert hidden.find_parent("form") is not None
+        assert not hidden.has_attr("class")
+        assert not hidden.has_attr("id")
+
     def test_the_form_that_fails_is_drawn_without_a_form_element(self, page):
         field = page.find(id=layout_field_id(LAYOUT_FAILING_PREFIX, "first_name"))
         assert field.find_parent("form") is None

@@ -187,6 +187,22 @@ FormActions(
 - `ButtonHolder` and `FormActions` hold buttons side by side in one container, wrapping on a narrow page. `ButtonHolder` accepts an id and classes; `FormActions` also keeps any other attributes.
 - A button added to the form helper with `self.helper.add_input(Submit("save", "Save"))` is drawn after the fields, inside the form element, in a container of its own. It is the same element as the same button in a layout. With `form_tag` off, the buttons of a layout are still drawn.
 
+Raw markup and hidden values go in a layout as they do in django-crispy-forms:
+
+```python
+from crispy_forms.layout import HTML, Hidden
+
+Layout(
+    "first_name",
+    HTML("<p>Prepared for {{ user.username }}.</p>"),
+    "last_name",
+    Hidden("step", "details"),
+)
+```
+
+- `HTML` is drawn where you put it, between fields or inside a `Fieldset`, `Column`, `ButtonHolder` or `FormActions`. Your markup is kept as written, and a context value in it, as in the example, is filled in with any markup in the value escaped.
+- `Hidden` is an `<input type="hidden">` with the name and value you give, inside the form element. It carries no class and no generated id. Pass `id=` or any other attribute as a keyword argument to add it.
+
 ## Contributing
 
 Standards for this repository live in
@@ -223,7 +239,7 @@ fails, so an error inside a fieldset, a row and a column can be seen:
 - `/layout-objects/` is the page inside the django-mvp shell, reached from its sidebar.
 - `/layout-objects/standalone/` is the same page styled by daisyUI's CDN build alone.
 
-Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`.
+Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset and carries a `Hidden` input.
 
 ## License
 
