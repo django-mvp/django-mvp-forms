@@ -64,8 +64,29 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_choices.py::TestChoiceDrawing",
+              "tests/test_choices.py::TestModifiersDrawings",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputDrawing",
+              "tests/test_templatetags/test_daisyui.py::TestDrawnButtonDrawing"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py tests/test_templatetags/test_daisyui.py -q",
+              "uv run pytest tests/test_pack/test_checkbox.py tests/test_pack/test_choices.py tests/test_pack/test_independence.py -q"
+            ],
+            "code": [
+              "mvp_forms/choices.py:215",
+              "mvp_forms/choices.py:334",
+              "mvp_forms/choices.py:342",
+              "mvp_forms/templatetags/daisyui.py:132",
+              "mvp_forms/templatetags/daisyui.py:148",
+              "mvp_forms/templatetags/daisyui.py:478"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
