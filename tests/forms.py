@@ -418,7 +418,17 @@ class LineForm(forms.Form):
     ref = forms.CharField(required=False, widget=forms.HiddenInput)
 
 
+class ChoiceLineForm(forms.Form):
+    fruit = forms.ChoiceField(
+        choices=FRUIT, widget=forms.RadioSelect, help_text="Pick one"
+    )
+    extras = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.CheckboxSelectMultiple, required=False
+    )
+
+
 LineFormSet = formset_factory(LineForm, extra=3)
+ChoiceLineFormSet = formset_factory(ChoiceLineForm, extra=2)
 NoLinesFormSet = formset_factory(LineForm, extra=0)
 MediaFormSet = formset_factory(MediaForm, extra=2)
 GroupFormSet = modelformset_factory(Group, fields=["name"], extra=1)

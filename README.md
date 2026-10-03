@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, the structural and button layout objects, and formsets drawn stacked, and nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, the structural and button layout objects, and formsets drawn stacked or as a table, and nothing is published to PyPI.
 
 ## Why
 
@@ -252,6 +252,26 @@ helper.add_input(Submit("save", "Save"))
 ```
 
 The two templates are `daisyui/whole_uni_formset.html`, which `{% crispy formset %}` asks for, and `daisyui/uni_formset.html`, which `{{ formset|crispy }}` asks for and the first includes.
+
+#### As a table
+
+To draw the same formset as a table, set the helper's template. Nothing else changes, and `{% crispy formset helper %}` stays as it is:
+
+```python
+helper = FormHelper()
+helper.template = "daisyui/table_inline_formset.html"
+```
+
+What is drawn:
+
+- one daisyUI `table`, with a row for each form and a column for each visible field, in the form's own order, inside an element with Tailwind's `overflow-x-auto` so a wide table scrolls instead of widening the page
+- a heading for each visible field, holding its label and, for a required field, the required marker
+- each input named by an `aria-label` equal to its label, and described by its help text when it has any. A radio or checkbox group keeps its `<fieldset>`, which carries the `aria-label`
+- every hidden field in the first cell of its form's row, with no heading and no cell of its own
+- the management form, the `<form>` element, the CSRF token, the media and the helper's buttons as in the stacked layout
+- no table at all for a formset with no forms, though the management form is still drawn so the formset can be posted back
+
+A helper's layout is not applied in a table: every visible field of the form gets a column. The columns are the first form's visible fields and every form is taken to have the same ones. A form that lacks one of them has an empty cell there.
 
 The pack draws a formset and nothing around it. It draws no empty form to copy, adds no script, and has no view: adding and removing rows in the browser, handling the post and saving belong to django-mvp or to your own code.
 

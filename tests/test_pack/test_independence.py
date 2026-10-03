@@ -65,6 +65,7 @@ LAYOUT_UTILITIES = {
     "flex-wrap",
     "gap-2",
     "mt-4",
+    "overflow-x-auto",
 }
 
 
@@ -299,6 +300,12 @@ STATES = [
         id="tag without errors",
     ),
     pytest.param("{% crispy form %}", LineFormSet, NOTHING, id="stacked formset"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: helped(LineFormSet(), template="daisyui/table_inline_formset.html"),
+        NOTHING,
+        id="table formset",
+    ),
 ]
 
 

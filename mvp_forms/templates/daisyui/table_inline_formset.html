@@ -1,0 +1,33 @@
+{% load daisyui %}
+{% if formset_tag %}<form {{ flat_attrs }} method="{{ formset_method }}"{% if formset.is_multipart %} enctype="multipart/form-data"{% endif %}>{% endif %}
+  {% if formset_method|lower == "post" and not disable_csrf %}{% csrf_token %}{% endif %}
+  {% if include_media %}{{ formset.media }}{% endif %}
+  {% for field in formset.management_form %}{{ field }}{% endfor %}
+  {% daisyui_formset_table formset as table %}
+  {% if table.rows %}
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            {% for column in table.columns %}
+              <th scope="col">{{ column.label }}{% with field=column %}{% include "daisyui/required_marker.html" %}{% endwith %}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in table.rows %}
+            <tr>
+              {% for field in row.cells %}
+                <td>
+                  {% if forloop.first %}{% for hidden in row.form.hidden_fields %}{{ hidden }}{% endfor %}{% endif %}
+                  {% if field %}{% include field_template with form_show_labels=False %}{% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+  {% include "daisyui/inputs.html" %}
+{% if formset_tag %}</form>{% endif %}

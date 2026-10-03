@@ -4,6 +4,7 @@ import pytest
 from crispy_forms.layout import Submit
 
 from tests.forms import (
+    ChoiceLineFormSet,
     LineForm,
     MediaFormSet,
     formset_helper,
@@ -12,6 +13,8 @@ from tests.forms import (
 SOURCES = ["{% crispy formset %}", "{{ formset|crispy }}"]
 MANAGEMENT = ["TOTAL_FORMS", "INITIAL_FORMS", "MIN_NUM_FORMS", "MAX_NUM_FORMS"]
 KINDS = ["plain_formset", "model_formset", "inline_formset"]
+TABLE = "daisyui/table_inline_formset.html"
+TAG = "{% crispy formset helper %}"
 
 
 def names_in(tag):
@@ -190,3 +193,215 @@ class TestStackedFormset:
         )
 
         assert soup.find("script") is None
+
+
+def inputs_in(tag):
+    return [
+        found
+        for found in tag.find_all(["input", "select", "textarea"])
+        if found.get("type") != "hidden"
+    ]
+
+
+def table_helper(*layout, **settings):
+    return formset_helper(*layout, template=TABLE, **settings)
+
+
+@pytest.mark.django_db
+class TestTableFormset:
+    def test_one_table_has_a_row_per_form_in_order(self, draw, plain_formset):
+        formset = plain_formset()
+
+        soup = draw(TAG, formset=formset, helper=table_helper())
+
+        tables = soup.find_all("table")
+        assert len(tables) == 1
+        assert "table" in tables[0]["class"]
+        rows = tables[0].find("tbody").find_all("tr")
+        assert [names_in(row) for row in rows] == [
+            names_of(form) for form in formset.forms
+        ]
+        drawn = [found["name"] for found in tables[0].find_all(attrs={"name": True})]
+        assert [name for name in drawn if name.endswith("-name")] == [
+            form.add_prefix("name") for form in formset.forms
+        ]
+
+    def test_there_is_a_heading_per_visible_field_holding_its_label(
+        self, draw, plain_formset
+    ):
+        formset = plain_formset()
+
+        soup = draw(TAG, formset=formset, helper=table_helper())
+
+        headings = soup.find("thead").find_all("th")
+        visible = formset.forms[0].visible_fields()
+        assert len(headings) == len(visible)
+        for heading, field in zip(headings, visible, strict=True):
+            assert heading["scope"] == "col"
+            assert field.label in heading.get_text()
+
+    def test_a_required_field_s_heading_holds_the_marker_and_an_optional_one_not(
+        self, draw, plain_formset
+    ):
+        formset = plain_formset()
+
+        soup = draw(TAG, formset=formset, helper=table_helper())
+
+        required, optional = soup.find("thead").find_all("th")
+        assert required.find(attrs={"aria-hidden": "true"}) is not None
+        assert optional.find(attrs={"aria-hidden": "true"}) is None
+
+    def test_every_input_is_named_by_an_aria_label_equal_to_its_label(
+        self, draw, plain_formset
+    ):
+        formset = plain_formset()
+
+        soup = draw(TAG, formset=formset, helper=table_helper())
+
+        for row, form in zip(
+            soup.find("tbody").find_all("tr"), formset.forms, strict=True
+        ):
+            for field in form.visible_fields():
+                (found,) = row.find_all(attrs={"name": field.html_name})
+                assert found["aria-label"] == field.label
+                assert not row.find_all("label")
+
+    def test_an_input_is_described_by_its_help_text_in_the_same_cell(
+        self, draw, plain_formset
+    ):
+        formset = plain_formset()
+
+        soup = draw(TAG, formset=formset, helper=table_helper())
+
+        for row, form in zip(
+            soup.find("tbody").find_all("tr"), formset.forms, strict=True
+        ):
+            helped = row.find(attrs={"name": form.add_prefix("name")})
+            unhelped = row.find(attrs={"name": form.add_prefix("quantity")})
+            cell = helped.find_parent("td")
+            assert cell.find(id=helped["aria-describedby"]) is not None
+            assert not unhelped.has_attr("aria-describedby")
+
+    def test_a_group_keeps_its_fieldset_and_the_fieldset_carries_the_label(self, draw):
+        formset = ChoiceLineFormSet()
+
+        soup = draw(TAG, formset=formset, helper=table_helper())
+
+        for row, form in zip(
+            soup.find("tbody").find_all("tr"), formset.forms, strict=True
+        ):
+            for field in form.visible_fields():
+                fieldset = row.find(id="div_" + field.auto_id)
+                assert fieldset.name == "fieldset"
+                assert fieldset["aria-label"] == field.label
+                assert fieldset.find(attrs={"name": field.html_name}) is not None
+                assert not any(
+                    option.has_attr("aria-label") for option in inputs_in(fieldset)
+                )
+
+    @pytest.mark.parametrize("kind", KINDS)
+    def test_every_hidden_field_is_in_its_row_and_adds_no_heading_or_cell(
+        self, draw, request, kind
+    ):
+        formset = request.getfixturevalue(kind)()
+
+        soup = draw(TAG, formset=formset, helper=table_helper())
+
+        visible = formset.forms[0].visible_fields()
+        assert len(soup.find("thead").find_all("th")) == len(visible)
+        rows = soup.find("tbody").find_all("tr")
+        for row, form in zip(rows, formset.forms, strict=True):
+            hidden = {field.html_name for field in form.hidden_fields()}
+            assert hidden
+            assert hidden <= names_in(row.find("td"))
+            assert len(row.find_all("td")) == len(visible)
+            assert all(
+                found.find_parent("td") is not None
+                for field in form.hidden_fields()
+                for found in row.find_all(attrs={"name": field.html_name})
+            )
+
+    @pytest.mark.parametrize("kind", [*KINDS, "no_forms_formset"])
+    def test_the_management_form_is_drawn_once(self, draw, request, kind):
+        formset = request.getfixturevalue(kind)()
+
+        soup = draw(TAG, formset=formset, helper=table_helper())
+
+        for name in MANAGEMENT:
+            inputs = soup.find_all(attrs={"name": formset.add_prefix(name)})
+            assert len(inputs) == 1
+            assert inputs[0]["type"] == "hidden"
+
+    @pytest.mark.parametrize("kind", [*KINDS, "no_forms_formset"])
+    def test_a_drawn_formset_binds_to_the_same_number_of_forms_and_is_valid(
+        self, draw, posted, request, kind
+    ):
+        build = request.getfixturevalue(kind)
+        unbound = build()
+
+        soup = draw(TAG, formset=unbound, helper=table_helper())
+        bound = build(posted(soup))
+
+        assert bound.is_valid(), bound.errors
+        assert len(bound.forms) == len(unbound.forms)
+
+    def test_one_form_element_wraps_the_table(self, draw, plain_formset):
+        soup = draw(TAG, formset=plain_formset(), helper=table_helper())
+
+        wrapper = soup.find_all("form")
+        assert len(wrapper) == 1
+        assert wrapper[0].find("table") is not None
+
+    def test_no_form_element_is_drawn_when_the_helper_asks_for_none(
+        self, draw, plain_formset
+    ):
+        soup = draw(TAG, formset=plain_formset(), helper=table_helper(form_tag=False))
+
+        assert soup.find("form") is None
+        assert soup.find("table") is not None
+
+    def test_no_forms_draws_no_table(self, draw, no_forms_formset):
+        formset = no_forms_formset()
+
+        soup = draw(TAG, formset=formset, helper=table_helper())
+
+        assert soup.find("table") is None
+        assert soup.find(attrs={"name": formset.add_prefix("TOTAL_FORMS")})
+
+    def test_the_template_is_the_only_change_between_the_layouts(
+        self, draw, plain_formset
+    ):
+        formset = plain_formset()
+
+        stacked = draw(TAG, formset=formset, helper=formset_helper(form_tag=False))
+        tabled = draw(TAG, formset=formset, helper=table_helper(form_tag=False))
+
+        assert stacked.find("table") is None
+        assert tabled.find("table") is not None
+        assert names_in(stacked) == names_in(tabled)
+
+    def test_a_helper_layout_is_not_applied(self, draw, plain_formset):
+        formset = plain_formset()
+
+        soup = draw(TAG, formset=formset, helper=table_helper("name", form_tag=False))
+
+        rows = soup.find("tbody").find_all("tr")
+        assert [names_in(row) for row in rows] == [
+            names_of(form) for form in formset.forms
+        ]
+        assert len(soup.find("thead").find_all("th")) == 2
+
+    def test_the_formset_s_media_is_drawn_once(self, draw):
+        soup = draw(TAG, formset=MediaFormSet(), helper=table_helper())
+
+        scripts = soup.find_all("script", src=lambda src: src.endswith("media.js"))
+        assert len(scripts) == 1
+
+    def test_a_button_added_to_the_helper_is_drawn_once(self, draw, plain_formset):
+        soup = draw(
+            TAG,
+            formset=plain_formset(),
+            helper=table_helper(buttons=[Submit("save", "Save")]),
+        )
+
+        assert len(soup.find_all(attrs={"name": "save"})) == 1
