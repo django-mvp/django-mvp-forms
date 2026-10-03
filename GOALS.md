@@ -25,7 +25,7 @@ Importance is a tag on each goal, not a ranking:
 | G7 | The package keeps pace with current Django, django-crispy-forms and daisyUI releases | Expected | | |
 | G8 | A host project can replace one template without forking the pack | Expected | | |
 | G9 | daisyUI's other form components, such as rating, range, floating label and joined inputs, are reachable from a layout | Expected | | |
-| G10 | A project moving from another crispy pack keeps its layout code, within reason | Expected | | |
+| G10 | A project moving from another crispy pack keeps its layout code, within reason | Expected | rejected | The pack supports what its own projects need. Someone moving from another pack adapts their layouts from the documentation. |
 | G11 | The package offers its own fields and widgets, for needs no third-party package meets, where the maintainers judge one worth sharing across projects, and each looks native beside the pack's own inputs | Aspirational | | |
 | G12 | Fields and widgets from popular third-party Django packages draw well in the pack, where the maintainers judge the package worth supporting | Aspirational | | |
 
