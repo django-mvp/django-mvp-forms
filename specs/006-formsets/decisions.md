@@ -25,9 +25,7 @@ So the pack adds no setting, no template tag argument and no helper subclass. St
 default because it is what crispy-forms draws when nothing is chosen, and it is the only layout
 available when a formset is drawn without a helper.
 
-**ADR:** none at this stage. It qualifies: it fixes a public interface and a later reader would ask
-why there is no setting. Record it under `docs/adr/` when the feature is built, since a number is
-claimed only when the file lands on the main branch.
+**ADR:** docs/adr/0014-a-formsets-layout-is-chosen-with-the-helpers-template.md
 
 ## D3: In the table, labels are column headings and every input is still named
 
@@ -111,6 +109,9 @@ element with `aria-describedby`. The form's hidden fields sit in the same cell.
 **Why**: FR-005 and FR-011 together. **Revisit if**: the walkthrough finds the first cell too
 narrow to read an error in.
 
+**ADR:** docs/adr/0015-in-a-table-every-form-is-exactly-one-row.md
+
+
 ## D11: A formset with no forms draws no table
 
 The specification leaves whether an empty table shows its headings to the build. Headings with no
@@ -121,6 +122,9 @@ are still drawn, so the page submits as a valid empty formset.
 **Why**: the simplest thing that meets US1.6 in the table. **Revisit if**: django-mvp's row
 adding needs the headings on the page before the first row exists (#13).
 
+**ADR:** docs/adr/0015-in-a-table-every-form-is-exactly-one-row.md
+
+
 ## D12: A formset's media is drawn once
 
 The single-form template draws `form.media` when the helper asks for it. Included per form that
@@ -129,6 +133,9 @@ would repeat every script and stylesheet for every form, so the formset template
 
 **Why**: the same assets, once. **Revisit if**: never expected.
 
+**ADR:** none — a detail of two templates that nothing downstream inherits.
+
+
 ## D13: A stacked form's container is a bare element
 
 Each stacked form is drawn in a `<div>` of its own with no class, id or attribute, and a daisyUI
@@ -136,6 +143,9 @@ Each stacked form is drawn in a `<div>` of its own with no class, id or attribut
 is the open question in #13, and nothing is promised ahead of its answer.
 
 **Why**: D6. **Revisit if**: #13 settles on a hook.
+
+**ADR:** none — deliberately promises nothing until issue #13 is answered.
+
 
 ## D14: A helper layout decides whether a delete or order input is drawn
 
@@ -147,6 +157,9 @@ write.
 
 **Why**: matching django-crispy-forms. **Revisit if**: a developer reports the omission as a
 surprise.
+
+**ADR:** none — django-crispy-forms' own behaviour, stated in the README.
+
 
 ## D15: Design review, applied
 
@@ -187,3 +200,12 @@ from repeating an id.
 **Revisit if:** the pack gives a formset's container an id of its own.
 
 **ADR:** none — demo wiring, not a decision about the pack.
+
+## D18: The CSRF token is drawn whether or not the form element is
+
+With `form_tag` off on a post formset, the token input is still drawn, outside any form the pack
+draws. The single-form template has always done this, and so do the packs written for
+django-crispy-forms: a developer who turns the form element off writes their own around the
+output, and the token has to be inside it.
+
+**ADR:** none — the single form's existing behaviour, kept the same for a formset.
