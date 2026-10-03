@@ -13,9 +13,12 @@ from django.template import Context, Template
 
 from mvp_forms.choices import Choice, FormChoices, Modifiers
 from tests.forms import (
+    STAR_CHOICES,
     ButtonedForm,
     DisabledInputsForm,
     EveryInputForm,
+    RangesForm,
+    RatingsForm,
     ReadOnlyInputsForm,
     StructureForm,
 )
@@ -47,6 +50,26 @@ class DisabledBooleansForm(forms.Form):
             fields={
                 "notify": Choice(drawing="toggle"),
                 "publish": Choice(drawing="switch"),
+            }
+        )
+
+
+class DisabledRatingAndRangeForm(forms.Form):
+    """A rating and a range, both disabled."""
+
+    score = forms.ChoiceField(choices=STAR_CHOICES, required=False, disabled=True)
+    volume = forms.IntegerField(
+        required=False, min_value=0, max_value=100, initial=20, disabled=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.daisyui = FormChoices(
+            fields={
+                "score": Choice(drawing="rating"),
+                "volume": Choice(drawing="range"),
             }
         )
 
@@ -106,7 +129,12 @@ class Catalogue:
         ]
         swept = [
             DrawnState(name, cls.draw(TAG, form), frozenset())
-            for name, form in (*cls.inputs(), *cls.buttons(), *cls.alerts())
+            for name, form in (
+                *cls.inputs(),
+                *cls.sweeps(),
+                *cls.buttons(),
+                *cls.alerts(),
+            )
         ]
         return tuple(listed + extra + swept)
 
@@ -121,6 +149,7 @@ class Catalogue:
         yield "read-only inputs", FILTER, ReadOnlyInputsForm()
         yield "disabled file input", FILTER, DisabledFileForm()
         yield "disabled toggle and switch", TAG, DisabledBooleansForm()
+        yield "disabled rating and range", TAG, DisabledRatingAndRangeForm()
 
     @classmethod
     def inputs(cls) -> Iterator[tuple[str, forms.BaseForm]]:
@@ -141,6 +170,25 @@ class Catalogue:
                     **{kind: name}, fields={"agree": Choice(drawing="toggle")}
                 )
                 yield f"inputs, {kind} {name}", form
+
+    @classmethod
+    def sweeps(cls) -> Iterator[tuple[str, forms.BaseForm]]:
+        """Describe a rating and a range, each drawn once per colour and size.
+
+        Returns:
+            The name and the form of each.
+        """
+        drawn = (
+            ("rating", RatingsForm, ("score", "again")),
+            ("range", RangesForm, ("volume", "ratio")),
+        )
+        tables = (("color", Modifiers.colors), ("size", Modifiers.sizes))
+        for drawing, form_class, names in drawn:
+            for kind, table in tables:
+                for name in table[drawing]:
+                    fields = {field: Choice(drawing=drawing) for field in names}
+                    choices = FormChoices(**{kind: name}, fields=fields)
+                    yield f"{drawing}s, {kind} {name}", form_class(choices=choices)
 
     @classmethod
     def buttons(cls) -> Iterator[tuple[str, forms.BaseForm]]:

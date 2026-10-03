@@ -361,6 +361,137 @@ class TestReaderChoiceInputs:
         assert ("mark", Ink("success"), BASE_100) in found
 
 
+STAR = '<input type="radio" class="mask mask-star-2{extra}"{attrs}>'
+
+
+def rating(extra="", attrs="", wrapper="rating"):
+    star = STAR.format(extra=extra, attrs=attrs)
+    return (
+        f'<div class="{wrapper}"><input type="radio" class="rating-hidden">{star}</div>'
+    )
+
+
+class TestReaderRatings:
+    def test_a_star_is_read_lit_and_unlit(self):
+        assert pairs(rating()) == {
+            ("mark", CONTENT, BASE_100),
+            ("border", CONTENT.faded(0.2), BASE_100),
+        }
+
+    def test_a_star_is_read_both_ways_whatever_the_markup_says(self):
+        assert pairs(rating(attrs=" checked")) == pairs(rating())
+
+    def test_a_coloured_star_is_drawn_in_the_colour(self):
+        assert pairs(rating(" bg-success")) == {
+            ("mark", Ink("success"), BASE_100),
+            ("border", Ink("success").faded(0.2), BASE_100),
+        }
+
+    def test_the_error_colour_wins_over_the_chosen_one(self):
+        assert pairs(rating(" bg-primary bg-error")) == {
+            ("mark", ERROR, BASE_100),
+            ("border", ERROR.faded(0.2), BASE_100),
+        }
+
+    def test_a_star_is_daisyuis_drawing_and_not_the_packs_to_repair(self):
+        found = read(rating(" bg-accent"))
+
+        assert found
+        assert all(m.held and not m.own for m in found)
+
+    def test_a_star_stands_on_the_surface_around_the_rating(self):
+        html = f'<div class="bg-base-200">{rating()}</div>'
+
+        assert pairs(html) == {
+            ("mark", CONTENT, BASE_200),
+            ("border", CONTENT.faded(0.2), BASE_200),
+        }
+
+    def test_the_clearing_choice_is_nothing_to_make_out(self):
+        html = '<div class="rating"><input type="radio" class="rating-hidden"></div>'
+
+        assert read(html) == []
+
+    @pytest.mark.parametrize("size", ["xs", "sm", "md", "lg", "xl"])
+    def test_a_size_paints_nothing(self, size):
+        assert pairs(rating(wrapper=f"rating rating-{size}")) == pairs(rating())
+
+    def test_a_disabled_rating_is_drawn_as_an_enabled_one_and_not_held(self):
+        found = read(rating(attrs=" disabled"))
+
+        assert {(m.pairing.part, m.pairing.ink) for m in found} == {
+            ("mark", CONTENT),
+            ("border", CONTENT.faded(0.2)),
+        }
+        assert not any(m.held for m in found)
+
+    def test_a_measurement_names_the_rating_it_came_from(self):
+        found = read(rating())[0]
+
+        assert found.element.kind == "rating"
+
+    def test_a_colour_the_reader_has_no_row_for_raises_uncovered(self):
+        with pytest.raises(Uncovered):
+            read(rating(" bg-pink"))
+
+
+class TestReaderRanges:
+    def test_a_range_is_its_ink_on_the_surface_and_a_tenth_of_it_for_the_track(self):
+        assert pairs('<input type="range" class="range">') == {
+            ("mark", CONTENT, BASE_100),
+            ("border", CONTENT.faded(0.1), BASE_100),
+        }
+
+    def test_a_coloured_range_is_drawn_in_the_colour(self):
+        assert pairs('<input type="range" class="range range-info">') == {
+            ("mark", Ink("info"), BASE_100),
+            ("border", Ink("info").faded(0.1), BASE_100),
+        }
+
+    def test_the_error_colour_wins_over_the_chosen_one(self):
+        html = '<input type="range" class="range range-primary range-error">'
+
+        assert ("mark", ERROR, BASE_100) in pairs(html)
+
+    def test_a_range_with_no_colour_takes_the_text_ink_it_inherits(self):
+        html = '<label class="label"><input type="range" class="range"></label>'
+
+        found = of(html, "mark", CONTENT.faded(0.6), BASE_100)
+
+        assert found.held
+        assert found.own
+
+    def test_the_empty_track_is_not_the_packs_to_repair(self):
+        html = '<label class="label"><input type="range" class="range"></label>'
+
+        assert not of(html, "border", CONTENT.faded(0.06), BASE_100).own
+
+    def test_a_coloured_range_is_not_the_packs_to_repair(self):
+        found = read('<input type="range" class="range range-accent">')
+
+        assert not any(m.own for m in found)
+
+    @pytest.mark.parametrize("size", ["xs", "sm", "md", "lg", "xl"])
+    def test_a_size_paints_nothing(self, size):
+        html = f'<input type="range" class="range range-{size}">'
+
+        assert pairs(html) == pairs('<input type="range" class="range">')
+
+    def test_a_disabled_range_is_dimmed_to_thirty_percent_and_not_held(self):
+        found = read('<input type="range" class="range" disabled>')
+
+        assert {(m.pairing.part, m.pairing.ink) for m in found} == {
+            ("mark", CONTENT.faded(0.3)),
+            ("border", CONTENT.faded(0.1).faded(0.3)),
+        }
+        assert not any(m.held for m in found)
+
+    def test_a_measurement_names_the_range_it_came_from(self):
+        found = read('<input type="range" class="range" id="id_volume">')[0]
+
+        assert found.element.kind == "range"
+
+
 class TestReaderButtons:
     def test_a_button_with_no_colour_is_base_content_on_base_200(self):
         found = of('<button class="btn">Go</button>', "button text", CONTENT, BASE_200)

@@ -20,7 +20,7 @@ COLOURS = (
 SIZES = ("xs", "sm", "md", "lg", "xl")
 FIELDS = ("input", "textarea", "select", "file-input")
 CHOICES = ("checkbox", "radio", "toggle")
-CONTROLS = (*FIELDS, *CHOICES, "btn")
+CONTROLS = (*FIELDS, *CHOICES, "range", "btn")
 BUTTON_VARIANTS = ("outline", "dash", "soft", "ghost", "link")
 NOT_TEXT_INPUTS = {
     "hidden",
@@ -136,6 +136,7 @@ class Reader:
         "collapse-arrow": Paint(control="arrow"),
         "tabs-border": Paint(variant="border"),
         "tab": Paint(control="tab"),
+        "mask-star-2": Paint(control="rating"),
         "alert": Paint(control="alert"),
         "alert-soft": Paint(variant="soft"),
         **{control: Paint(control=control) for control in CONTROLS},
@@ -144,6 +145,7 @@ class Reader:
             for control in (*CONTROLS, "alert")
             for colour in COLOURS
         },
+        **{f"bg-{colour}": Paint(colour=colour) for colour in COLOURS},
         **{f"{control}-ghost": Paint(variant="ghost") for control in FIELDS},
         **{f"btn-{variant}": Paint(variant=variant) for variant in BUTTON_VARIANTS},
     }
@@ -160,6 +162,9 @@ class Reader:
             "collapse-content",
             "modal",
             "modal-action",
+            "mask",
+            "rating",
+            "rating-hidden",
             "link",
             "divider",
             "w-full",
@@ -173,7 +178,11 @@ class Reader:
             "gap-2",
             "mt-4",
             "overflow-x-auto",
-            *(f"{control}-{size}" for control in CONTROLS for size in SIZES),
+            *(
+                f"{control}-{size}"
+                for control in (*CONTROLS, "rating")
+                for size in SIZES
+            ),
         }
     )
 
@@ -226,6 +235,10 @@ class Reader:
             below = self.read_field(tag, control, paints, here, element, found)
         elif control in CHOICES:
             self.read_choice(tag, control, paints, here, element, found)
+        elif control == "range":
+            self.read_range(tag, paints, here, element, found)
+        elif control == "rating":
+            self.read_star(tag, paints, here, element, found)
         elif control == "btn":
             below = self.read_button(tag, paints, here, element, found)
         elif control == "tab":
@@ -503,6 +516,61 @@ class Reader:
             if disabled:
                 ink, surface = self.dimmed(ink, surface, outer, opacity)
             self.measure(found, element, part, ink, surface, not disabled, own)
+
+    def read_range(
+        self,
+        tag: Tag,
+        paints: list[Paint],
+        here: Inherited,
+        element: Element,
+        found: list[Measurement],
+    ) -> None:
+        """Read a range: the filled track and the thumb's ring, and the empty track.
+
+        Args:
+            tag: The element.
+            paints: The paints of the element's classes.
+            here: The state at the element.
+            element: The element, for the measurement.
+            found: The measurements so far, added to.
+        """
+        colour, _ = self.modifiers(paints)
+        outer = here.surface
+        ink = Ink(colour) if colour else here.ink
+        chosen = here.own and not colour
+        rows = [("mark", ink, chosen), ("border", ink.faded(0.1), False)]
+        disabled = tag.has_attr("disabled")
+        for part, shown, own in rows:
+            if disabled:
+                shown, _ = self.dimmed(shown, outer, outer, 0.3)
+            self.measure(found, element, part, shown, outer, not disabled, own)
+
+    def read_star(
+        self,
+        tag: Tag,
+        paints: list[Paint],
+        here: Inherited,
+        element: Element,
+        found: list[Measurement],
+    ) -> None:
+        """Read a star of a rating, lit and unlit.
+
+        A lit star is the colour at full strength and an unlit one is a fifth of it,
+        whatever the markup says is chosen. daisyUI dims no disabled rating, so a
+        disabled star is read as an enabled one and is not held.
+
+        Args:
+            tag: The element.
+            paints: The paints of the element's classes.
+            here: The state at the element.
+            element: The element, for the measurement.
+            found: The measurements so far, added to.
+        """
+        colour, _ = self.modifiers(paints)
+        ink = Ink(colour) if colour else CONTENT
+        held = not tag.has_attr("disabled")
+        self.measure(found, element, "mark", ink, here.surface, held)
+        self.measure(found, element, "border", ink.faded(0.2), here.surface, held)
 
     def dimmed(
         self, ink: Ink, surface: Ink, outer: Ink, opacity: float

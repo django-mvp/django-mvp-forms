@@ -368,3 +368,32 @@ empty that list.
 **Revisit if:** the catalogue gains a state the page does not draw; the test says which.
 
 **ADR:** none. Local to the demo project, which is not distributed
+
+## D27. A rating and a range are read from what daisyUI paints, star by star
+
+**Decision:** the reader holds a rating by its stars. Each star, whatever the markup says is
+chosen, is read lit, as a `mark` of the star's ink on the surface around the rating, and unlit,
+as a `border` of that ink at 20% on the same surface. The ink is `base-content`, or the colour
+the star carries as `bg-{colour}`, with the error colour winning over a chosen one. The
+clearing choice, `rating-hidden`, is transparent and yields nothing, and `mask`, `mask-star-2`
+and the sizes paint nothing. A range is read as a `mark` of its ink on the surface, for the
+filled track and the ring of the thumb, and as a `border` of that ink at 10% on the surface,
+for the empty track. Its ink is the colour it states or the text ink it inherits, and the mark
+is `own` only when that ink was chosen by the pack and no colour was stated, as a radio's ring
+is (D23). Neither is `own` otherwise: it is daisyUI's drawing or the developer's colour. A
+disabled range is dimmed to 30% and not held. daisyUI has no disabled rule for a rating, so a
+disabled star is read as an enabled one and is not held, because a disabled control's own
+content is never held.
+
+**Why:** the stylesheet paints a star in `base-content` at 20% opacity, at full opacity once it
+is checked or comes before the checked one, and in a colour class's colour in place of
+`base-content`. A range draws its track at 10% of `currentColor` and its progress and thumb
+ring in `currentColor`. Reading both ways whatever the markup says follows what is done for a
+checkbox, a radio and a toggle, and means the check holds every state a person can put the
+control in. The empty track and the unlit star fall short under every shipped theme, so they
+are published, never patched.
+
+**Revisit if:** daisyUI paints a disabled rating, a half star or the thumb's own fill in a
+way that a person has to make out.
+
+**ADR:** docs/adr/0033-legibility-is-calculated-from-the-themes-published-colours.md

@@ -82,6 +82,20 @@ class TestCatalogue:
     def test_a_disabled_toggle_is_drawn_as_a_switch_too(self):
         assert tags(Catalogue.states(), "[class~=toggle][role=switch][disabled]")
 
+    def test_a_rating_is_drawn_plain_in_error_and_disabled(self):
+        states = Catalogue.states()
+
+        assert tags(states, ".rating input[class='mask mask-star-2']")
+        assert tags(states, ".rating input.bg-error")
+        assert tags(states, ".rating input.mask[disabled]")
+
+    def test_a_range_is_drawn_plain_in_error_and_disabled(self):
+        states = Catalogue.states()
+
+        assert tags(states, "input[type=range][class='range w-full']")
+        assert tags(states, "input[type=range].range-error")
+        assert tags(states, "input[type=range].range[disabled]")
+
     def test_a_read_only_input_is_drawn(self):
         assert tags(Catalogue.states(), "[class~=input][readonly]")
 

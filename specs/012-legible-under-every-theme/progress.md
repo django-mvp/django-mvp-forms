@@ -41,3 +41,10 @@ Did: README Themes section completed: the promise under a theme, the standard an
 Verified: the test the task asks for, every theme the table names is a shipped theme, already exists as TestPublishedExceptions.test_every_theme_the_list_names_is_a_shipped_theme (US1). Probed it: a table row naming "bogus" failed it and the staleness test; restored, 3 passed. No new test written.
 Next: full verify, then the report.
 Watch: README and CHANGELOG already used the word component in earlier entries; none was added.
+
+## 2026-10-03T23:33:49Z · Implementer FIX-1 · T008
+
+Did: Reader reads a rating by its stars (lit mark, unlit border at 20%, in base-content or the bg-{colour} class) and a range (mark of its ink, border at 10%, dimmed to 30% when disabled, not held). Catalogue draws a rating and a range in every colour and size, and disabled. README table pasted from the report, Themes prose and CHANGELOG extended. D27 written.
+Verified: uv run pytest tests/test_legibility tests/test_pack/test_legibility.py tests/test_demo.py -n auto --dist loadscope: 1577 passed. pre-commit run --all-files: all passed.
+Next: T009, the review's findings (a) to (j).
+Watch: a range's empty track and an unlit star fall short under every shipped theme and are published, as the brief asks.
