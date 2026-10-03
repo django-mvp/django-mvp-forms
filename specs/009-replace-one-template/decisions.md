@@ -287,3 +287,19 @@ from `uni_form.html` changed no output until a form with media was drawn through
 dropped name is found that no state reaches.
 
 **ADR:** none — a choice about the tests.
+
+## D19. The helper's own tests are in `tests/test_pack/`
+
+**Chosen:** the tests of `tests/template_surface.py` are in `tests/test_pack/test_template_surface.py`,
+not `tests/test_template_surface.py`.
+
+**Why:** the conformance step accepts a test module with no source module to mirror only as
+`test_factories.py`, `test_smoke.py` or under a path `[tool.forge.conformance]
+non-mirror-paths` declares. `tests/test_pack/` is declared; a top-level `test_template_surface.py`
+is not, and it failed the step. Declaring it would change `pyproject.toml`, which this story
+may not touch.
+
+**Revisit if:** the repository declares `tests/test_template_surface.py` as a non-mirror path,
+when the file can move back beside the helper.
+
+**ADR:** none — a choice about where tests live.
