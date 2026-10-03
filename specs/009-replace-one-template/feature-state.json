@@ -65,6 +65,18 @@
         "DR-008 (low) the renderer case of the tag's tests runs under the default renderer: applied to plan and T005",
         "DR-009 (low) the worked example has its own reader: applied to plan and T004"
       ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T22:55:16Z",
+      "self_resolved": [
+        "COR-001 (medium) the check passed over the arguments of a tag it did not know: fixed, T007; it now refuses such a tag",
+        "COR-002 (low) a withdrawn path still distributed was not reported: fixed, T008",
+        "COR-003 (low) a path with two rows had only the last checked: fixed, T009",
+        "COR-004 (low) a test pinned the withdrawn paths to none: removed, T010",
+        "COR-005 (low) app order was tested for a widget template only: fixed, T011",
+        "notes: the example's path, the multifield row and what the tags read: applied to the README, T012"
+      ]
     }
   },
   "stories": [
