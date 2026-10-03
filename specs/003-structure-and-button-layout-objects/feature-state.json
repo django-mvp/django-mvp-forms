@@ -65,18 +65,79 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_structure.py::TestDiv",
+              "tests/test_pack/test_structure.py::TestFieldset"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_structure.py -q (16 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/div.html:1",
+              "mvp_forms/templates/daisyui/layout/fieldset.html:1",
+              "tests/forms.py:98",
+              "tests/test_pack/test_structure.py:14",
+              "tests/test_pack/test_structure.py:68"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_structure.py::TestRowAndColumn",
+              "tests/test_pack/test_structure.py::TestNesting",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_structure.py tests/test_pack/test_independence.py -q (63 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/row.html:1",
+              "mvp_forms/templates/daisyui/layout/column.html:1",
+              "tests/test_pack/test_structure.py:150",
+              "tests/test_pack/test_structure.py:224",
+              "tests/test_pack/test_independence.py:35"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestLayoutObjectsPage",
+              "tests/test_demo.py::TestStandaloneLayoutObjectsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -q (180 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)"
+            ],
+            "code": [
+              "demo/forms.py:67",
+              "demo/views.py:114",
+              "demo/views.py:141",
+              "demo/views.py:150",
+              "demo/urls.py:21",
+              "demo/menus.py:20",
+              "demo/settings.py:123",
+              "demo/templates/demo/layout_objects.html:1",
+              "demo/templates/demo/layout_objects_standalone.html:1",
+              "README.md:134",
+              "CHANGELOG.md:32"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
