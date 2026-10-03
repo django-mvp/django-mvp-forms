@@ -38,3 +38,10 @@ Verified: DrawingsPageContract was red first (NoReverseMatch on both names). `uv
 Next: the full verify, then the report.
 
 Watch: the demo pages are not behind a sign-in (open_page reads them with an anonymous client, as for every other demo page), so "signed in" for the shell page was not needed to answer 200. US2 adds the states section to these two templates and its form; US3 adds sizes and colours.
+
+## 2026-10-03T19:16:52Z · Implementer US2 · T004
+
+Did: Wrote TestDrawingKeepsWhatACheckboxHas (label tie, help text, error with the drawing's own modifier, required marker, disabled, aria-label with labels off; each for checkbox, toggle and switch, by both the filter and the tag) and KeptBooleansForm. They passed on arrival. Probed each: nine mutations of FieldInput and the frame templates (label for removed, toggle not a single checkbox, help id removed, toggle-error renamed, error id removed, never in error, marker removed, widget drawn without Django's attrs, aria-label never added), each failed the test it guards; all restored, nothing committed. Nothing was missing from FieldInput. Added DrawingStateForm, build_drawing_states and a state section to both demo pages, with DrawingStatesPageContract (finds each by input id, class and attribute); four probes of DrawingStateForm each failed. README: one sentence on what a toggle and a switch keep. FR-015: the pack adds no text for either drawing, so no test.
+Verified: uv run pytest tests/test_pack/test_drawings.py tests/test_demo.py -k Drawing: 261 passed. pre-commit --all-files and mypy pass.
+Next: T005, size and colour rows for toggle.
+Watch: c-section supports levels 1 to 4 only, so a state is level 4 under a level 3 heading.

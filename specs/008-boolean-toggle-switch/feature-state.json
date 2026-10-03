@@ -154,8 +154,25 @@
       "tasks": [
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_drawings.py::TestDrawingKeepsWhatACheckboxHas",
+              "tests/test_demo.py::TestDrawingStatesInThePage",
+              "tests/test_demo.py::TestDrawingStatesInTheStandalonePage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_drawings.py::TestDrawingKeepsWhatACheckboxHas -q",
+              "uv run pytest tests/test_demo.py -k Drawing -q"
+            ],
+            "code": [
+              "demo/forms.py:637",
+              "demo/views.py:578",
+              "tests/forms.py:587"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
