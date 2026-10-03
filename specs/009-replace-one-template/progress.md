@@ -29,3 +29,10 @@ Did: tests/template_surface.py (TemplateSurface: distributed, names_read, render
 Verified: uv run pytest tests/test_template_surface.py tests/test_pack/test_template_list.py -q, 29 passed. Probes, not committed: a name added to layout/row.html and a new template added to the pack each made the real check fail with the kind, path and name. pre-commit run --all-files passed.
 Next: T004, the worked example, readme_template, TestReadmeReplacement, CHANGELOG and CONTEXT.md.
 Watch: a Draws cell cannot hold a pipe, so two sentences name the crispy filter in words.
+
+## 2026-10-03T22:30:29Z · Implementer US2 · T004
+
+Did: the worked example under "#### A required marker of your own" in the README, readme_template and TestReadmeReplacement in tests/test_pack/test_documented_examples.py, the CHANGELOG entry under Unreleased/Added, and Replacement and Template list in CONTEXT.md.
+Verified: uv run pytest tests/test_pack/test_documented_examples.py tests/test_pack/test_template_list.py tests/test_template_surface.py -q, 116 passed. Probes, not committed: a condition the example never meets (field.field.requiredx) failed the required-field test; an aria-hidden attribute added to the example failed the pack-marker test. pre-commit run --all-files passed.
+Next: the full forge verify, then the report and the ledger.
+Watch: docs/ holds ADRs, contributing standards and the roadmap only, so no page under docs/ describes what this story touched.
