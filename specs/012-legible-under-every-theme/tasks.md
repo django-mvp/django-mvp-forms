@@ -216,3 +216,34 @@ Plan, *The demo project*; research R2, R9.
 Found by opening the page: the modal drawn with errors is open on arrival (ADR 0016) and covers
 the theme chooser. The page draws the modal closed only; its fields in error are the same
 pairings the other forms in error draw, so the page still shows every pairing.
+
+### T008 — A rating and a range come under the check
+
+**Files**: `tests/legibility/reader.py`, `tests/legibility/catalogue.py`,
+`tests/test_legibility/test_reader.py`, `tests/test_legibility/test_catalogue.py`,
+`demo/views.py`, `README.md`, `CHANGELOG.md`
+
+Rating and range inputs arrived on main while this feature was built, so their form states
+come under the check here (FR-016, spec *Assumptions*).
+
+- `Reader.paints` gains `rating`, `range`, their sizes and colours, and the `bg-{colour}` class
+  a rating's star carries. A star is read lit and unlit; a range is read as its filled track and
+  thumb and as its empty track; each disabled is dimmed and not held.
+- The catalogue draws a rating and a range plain, in error, disabled, and in every colour and
+  size.
+- The Themes page draws them, the README's table is pasted again from the report, and the
+  CHANGELOG's entry names them.
+
+### T009 — The review's findings
+
+**Files**: `tests/test_demo.py`, `demo/views.py`, `demo/forms.py`, `tests/legibility/`,
+`tests/test_legibility/`, `tests/test_pack/test_legibility.py`, `README.md`, `CHANGELOG.md`,
+`docs/adr/0035-text-the-pack-writes-is-drawn-in-the-themes-content-colour.md`
+
+- The Themes page test compares the kind of element with the pairing, and the page draws what
+  that names as missing.
+- A disabled ghost field is read on `base-200` with its border.
+- The README says a ghost field has no border to measure, that only errors of the form as a
+  whole are gathered in an alert, and that the alert's text stands on its tinted fill.
+- No test matches the wording of an error message. The Themes page's headings are translatable.
+- Rows and methods nothing reaches are removed.

@@ -149,6 +149,11 @@
             ],
             "verified_by_ci": false
           }
+        },
+        {
+          "id": "T008",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
@@ -257,6 +262,11 @@
               "demo/views.py:1136"
             ]
           }
+        },
+        {
+          "id": "T009",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     }
