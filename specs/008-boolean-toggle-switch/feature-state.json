@@ -151,6 +151,11 @@
             ],
             "verified_by_ci": false
           }
+        },
+        {
+          "id": "T006",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },

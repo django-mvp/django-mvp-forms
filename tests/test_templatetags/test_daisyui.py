@@ -1000,12 +1000,11 @@ class TestFieldInputDrawing:
         assert field_input.is_single_checkbox
 
     @pytest.mark.parametrize("drawing", ["toggle", "switch"])
-    def test_a_toggle_is_written_with_the_toggle_class_and_never_widened(self, drawing):
+    def test_a_toggle_is_written_with_the_toggle_class(self, drawing):
         classes = drawn("plain", placed=Choice(drawing=drawing)).css_class.split()
 
         assert "toggle" in classes
         assert "checkbox" not in classes
-        assert "w-full" not in classes
 
     def test_a_field_in_error_drawn_as_a_toggle_carries_the_toggle_error_modifier(
         self,

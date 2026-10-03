@@ -258,3 +258,17 @@ draw a switch that is not announced as one.
 
 **ADR:** none — a detail of one attribute, covered by ADR 0022's statement that a switch carries
 the role.
+
+## D19. A drawing stated by name is checked when its field is drawn
+
+**Decision:** a drawing in `FormChoices(fields=...)` for a field the layout leaves out is not
+checked. The README says so.
+
+**Why:** the code review raised it as a reading of FR-012. Nothing is drawn some other way,
+because the field is not drawn at all, and a size or a colour stated by name has behaved the
+same way since FS-007. Checking it early would need the form's statement to know each field's
+widget before any field is drawn, which is a second mechanism for no one's benefit.
+
+**Revisit if:** a mistake of this kind costs someone time in a real project.
+
+**ADR:** none — ADR 0020 already says a field's own choice is checked when it is resolved.

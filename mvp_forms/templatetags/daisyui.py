@@ -85,7 +85,7 @@ class FieldInput:
     # Makes an input fill its field, unless the developer's own class holds a
     # width. See docs/adr/0007-inputs-fill-their-container.md.
     width = "w-full"
-    # A checkbox and a radio are fixed-size and never widened.
+    # A checkbox, a radio and a toggle are fixed-size and never widened.
     fixed_size: set[str] = {"checkbox", "radio", "toggle"}
     templates: dict[type[forms.Widget], str] = {
         forms.CheckboxSelectMultiple: "daisyui/widgets/group.html",

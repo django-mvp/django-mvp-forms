@@ -505,7 +505,7 @@ Here `remember` is a checkbox, `notify` is a toggle and `publish` is a switch in
 
 - `"checkbox"`, daisyUI's checkbox. It is what a boolean field is drawn as when no drawing is stated, and stating it changes nothing.
 - `"toggle"`, daisyUI's toggle: the same checkbox input with the class `toggle` in place of `checkbox`.
-- `"switch"`, daisyUI's toggle again, with `role="switch"` on the input, so assistive technology announces a switch and not a checkbox. daisyUI has no separate switch, so a toggle and a switch look the same.
+- `"switch"`, daisyUI's toggle again, with `role="switch"` on the input, so assistive technology announces a switch and not a checkbox. daisyUI has no separate switch, so a toggle and a switch look the same. The role replaces a `role` written on the widget's own attributes.
 
 Each is still one `<input type="checkbox">` with the field's name, inside the label a checkbox sits in, so a form posts and cleans to `True` and `False` exactly as it does with checkboxes. The pack adds no script. A bound or initial `True` is drawn checked in every drawing, and a field in error keeps an error modifier of its own, `toggle-error`, as a checkbox keeps `checkbox-error`. A toggle and a switch are never widened. A toggle and a switch keep what a checkbox has: the label is tied to the input, the help text and the errors describe it, a required field carries the required marker, and a disabled field is disabled.
 
@@ -516,7 +516,7 @@ Each is still one `<input type="checkbox">` with the field's name, inside the la
 - A hidden boolean field is a hidden input whatever is stated for it.
 - A toggle and a switch take the form's size and colour, and the field's own, like any input: `toggle-sm` and `toggle-primary` for a toggle or a switch, where a checkbox takes `checkbox-sm` and `checkbox-primary`. They have no variant. A variant stated for the form is passed over for them and one stated on the field itself raises `InvalidChoice`, as for a checkbox. A field in error keeps `toggle-error` and is drawn without the colour.
 
-A name that is not one of the three raises `InvalidChoice` with `kind="drawing"`, naming the field as `target`, with `checkbox`, `toggle` and `switch` as the names `allowed`. A drawing of any name, `checkbox` included, stated for a field that is not a boolean field, or around a button, raises the same error with nothing allowed. A `Choice` that holds fields states its drawing for each of them, so `Choice(Row("name", "agree"), drawing="toggle")` raises for a text input `name`. `None` and `INHERIT` state nothing and never raise.
+A name that is not one of the three raises `InvalidChoice` with `kind="drawing"`, naming the field as `target`, with `checkbox`, `toggle` and `switch` as the names `allowed`. A drawing of any name, `checkbox` included, stated for a field that is not a boolean field, or around a button, raises the same error with nothing allowed. A `Choice` that holds fields states its drawing for each of them, so `Choice(Row("name", "agree"), drawing="toggle")` raises for a text input `name`. `None` and `INHERIT` state nothing and never raise. A drawing stated by name in `FormChoices(fields=...)` is checked when its field is drawn, so one for a field the layout leaves out is never looked at.
 
 ### What is refused and what is passed over
 
