@@ -416,6 +416,7 @@ class DocumentedExamplesForm(forms.Form):
     form_field_1 = forms.CharField()
     form_field_2 = forms.CharField()
     form_field_3 = forms.CharField()
+    form_field_split = forms.SplitDateTimeField()
 
     def __init__(self, *args, layout=(), **kwargs):
         super().__init__(*args, **kwargs)
@@ -487,6 +488,50 @@ class InlineFieldsForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(*layout)
+
+
+class PhoneWidget(forms.MultiWidget):
+    def __init__(self, attrs=None):
+        parts = (forms.TextInput, forms.TextInput, forms.TextInput)
+        super().__init__(parts, attrs)
+
+    def decompress(self, value):
+        return value.split("-") if value else [None, None, None]
+
+
+class PhoneField(forms.MultiValueField):
+    widget = PhoneWidget
+
+    def __init__(self, **kwargs):
+        parts = (forms.CharField(), forms.CharField(), forms.CharField())
+        super().__init__(parts, **kwargs)
+
+    def compress(self, data_list):
+        return "-".join(data_list)
+
+
+def refuse_moment(value):
+    raise ValidationError("Not that moment", code="moment")
+
+
+class MultiWidgetsForm(forms.Form):
+    moment = forms.SplitDateTimeField(label="Starts", help_text="Local time")
+    ends = forms.SplitDateTimeField(label="Ends", required=False)
+    phone = PhoneField(label="Phone")
+    name = forms.CharField(label="Name")
+    token = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
+
+
+class RefusedMomentForm(MultiWidgetsForm):
+    moment = forms.SplitDateTimeField(
+        label="Starts", help_text="Local time", validators=[refuse_moment]
+    )
 
 
 class InlineRadiosForm(RadioGroupsForm):

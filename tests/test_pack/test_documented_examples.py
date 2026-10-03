@@ -31,6 +31,7 @@ from crispy_forms.layout import (
     Field,
     Fieldset,
     Hidden,
+    MultiWidgetField,
     Reset,
     Row,
     Submit,
@@ -254,6 +255,14 @@ EXAMPLES = {
         ["form_field"],
         ("input", {"aria-label": "Form field"}),
     ),
+    "MultiWidgetField": (
+        lambda: MultiWidgetField(
+            "form_field_split",
+            attrs=({"style": "width: 30px;"}, {"class": "second_widget_class"}),
+        ),
+        ["form_field_split_0", "form_field_split_1"],
+        ("input", {"style": "width: 30px;"}),
+    ),
     "InlineCheckboxes": (
         lambda: InlineCheckboxes("form_field"),
         ["form_field"],
@@ -421,3 +430,18 @@ class TestReadmeInlineField:
         assert soup.find("label", attrs={"for": "id_remember"}) is not None
         assert soup.find(id="id_note").has_attr("placeholder") is False
         assert soup.find("label", attrs={"for": "id_note"}) is not None
+
+
+class TestReadmeMultiWidgetField:
+    def test_the_example_puts_each_attribute_on_its_own_part(self, draw):
+        form = readme_example("A multi-widget field")["EventForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        date = soup.find(attrs={"name": "starts_0"})
+        time = soup.find(attrs={"name": "starts_1"})
+        assert date["placeholder"] == "2026-10-03"
+        assert not time.has_attr("placeholder")
+        assert "mine" in time["class"]
+        assert "input" in date["class"]
+        assert date["aria-label"] != time["aria-label"]

@@ -9,10 +9,12 @@ from crispy_forms.layout import Button, Hidden, Reset, Submit
 from django import forms
 from django.forms import formset_factory
 from django.template import Context, Template
+from django.utils.functional import Promise
 from django.utils.safestring import SafeString, mark_safe
 
 from mvp_forms.choices import Choice, FormChoices, InvalidChoice
 from mvp_forms.templatetags.daisyui import (
+    SPLIT_DATE_TIME_PARTS,
     TAB_GROUP_PLACEHOLDER,
     DrawnButton,
     FieldInput,
@@ -33,6 +35,7 @@ from tests.forms import (
     HelpedForm,
     InlineFieldsForm,
     LineFormSet,
+    MultiWidgetsForm,
     NoLinesFormSet,
     OwnTemplateDateWidget,
     RadioGroupsForm,
@@ -1470,3 +1473,108 @@ class TestDaisyuiFieldUnlabelledTag:
         )
 
         assert (shown, hidden) == ("True", "False")
+
+
+class TestFieldInputMultiWidget:
+    def parts_of(self, field_input):
+        return field_input.widget.widgets
+
+    def test_the_copys_parts_each_carry_the_component_and_a_width(self):
+        field_input = FieldInput(MultiWidgetsForm()["moment"])
+
+        classes = [part.attrs["class"].split() for part in self.parts_of(field_input)]
+
+        assert classes == [["input", "w-full"], ["input", "w-full"]]
+
+    def test_the_copys_parts_keep_their_own_classes_before_the_packs(self):
+        form = MultiWidgetsForm()
+        form.fields["moment"].widget.widgets[0].attrs["class"] = "mine"
+
+        field_input = FieldInput(form["moment"])
+
+        assert self.parts_of(field_input)[0].attrs["class"].split()[0] == "mine"
+
+    def test_the_form_widget_and_its_parts_are_left_untouched(self):
+        form = MultiWidgetsForm({})
+        widget = form.fields["moment"].widget
+
+        field_input = FieldInput(form["moment"])
+        field_input.render()
+
+        assert field_input.widget is not widget
+        assert [part.attrs for part in widget.widgets] == [{}, {}]
+
+    def test_the_component_of_the_field_stays_none(self):
+        assert FieldInput(MultiWidgetsForm()["moment"]).component is None
+        assert "class" not in FieldInput(MultiWidgetsForm()["moment"]).attrs
+
+    def test_the_parts_of_a_split_date_and_time_are_named_date_then_time(self):
+        field_input = FieldInput(MultiWidgetsForm()["moment"])
+
+        names = [part.attrs["aria-label"] for part in self.parts_of(field_input)]
+
+        assert names == ["Date", "Time"]
+
+    def test_the_names_of_a_split_date_and_time_are_lazy_so_they_translate(self):
+        assert len(SPLIT_DATE_TIME_PARTS) == 2
+        assert all(isinstance(name, Promise) for name in SPLIT_DATE_TIME_PARTS)
+
+    def test_the_parts_of_another_multi_widget_are_named_by_the_fields_label(self):
+        field_input = FieldInput(MultiWidgetsForm()["phone"])
+
+        names = {part.attrs["aria-label"] for part in self.parts_of(field_input)}
+
+        assert names == {"Phone"}
+
+    def test_a_part_with_a_name_of_its_own_keeps_it(self):
+        form = MultiWidgetsForm()
+        form.fields["moment"].widget.widgets[1].attrs["aria-label"] = "Hour"
+
+        field_input = FieldInput(form["moment"])
+
+        assert self.parts_of(field_input)[1].attrs["aria-label"] == "Hour"
+
+    def test_a_hidden_part_gets_neither_a_class_nor_a_name(self):
+        form = MultiWidgetsForm()
+        form.fields["phone"].widget.widgets[1] = forms.HiddenInput()
+
+        field_input = FieldInput(form["phone"])
+
+        assert self.parts_of(field_input)[1].attrs == {}
+        assert "class" in self.parts_of(field_input)[0].attrs
+
+    def test_the_parts_take_the_choices_of_their_own_component(self):
+        field_input = FieldInput(
+            MultiWidgetsForm()["moment"],
+            choices=FormChoices(size="lg", color="primary"),
+            placed=Choice(size="sm"),
+        )
+
+        classes = self.parts_of(field_input)[0].attrs["class"].split()
+
+        assert "input-sm" in classes
+        assert "input-primary" in classes
+        assert "input-lg" not in classes
+
+    def test_a_failing_field_has_the_error_modifier_and_not_the_colour(self):
+        field_input = FieldInput(
+            MultiWidgetsForm({})["moment"], choices=FormChoices(color="primary")
+        )
+
+        classes = self.parts_of(field_input)[0].attrs["class"].split()
+
+        assert "input-error" in classes
+        assert "input-primary" not in classes
+
+    def test_a_form_with_no_choices_draws_the_parts_with_no_modifier(self):
+        field_input = FieldInput(MultiWidgetsForm()["moment"])
+
+        assert field_input.modifiers == []
+        assert self.parts_of(field_input)[0].attrs["class"].split() == [
+            "input",
+            "w-full",
+        ]
+
+    def test_a_field_with_one_widget_is_not_a_multi_widget(self):
+        assert not FieldInput(MultiWidgetsForm()["name"]).is_multi_widget
+        assert FieldInput(MultiWidgetsForm()["moment"]).is_multi_widget

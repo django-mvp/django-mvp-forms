@@ -24,6 +24,8 @@ DATE_PARTS = {
     "_month": gettext_lazy("Month"),
     "_day": gettext_lazy("Day"),
 }
+# What names the two inputs of a split date and time, in the order they are drawn.
+SPLIT_DATE_TIME_PARTS = (gettext_lazy("Date"), gettext_lazy("Time"))
 # The class UneditableField writes onto the widget it wraps.
 UNEDITABLE_CLASS = "uneditable-input"
 # Class names django-crispy-forms writes for other template packs. daisyUI does
@@ -51,7 +53,8 @@ class FieldInput:
     The pack's class is passed to ``BoundField.as_widget``, which merges it over
     the widget's own attributes for that render only, so the widget is never
     changed. A widget the pack has a template for is drawn from a copy of it with
-    that template, for the same reason.
+    that template, for the same reason. The parts of a multi-widget are classed
+    and named on a deep copy of it, each by its own kind.
 
     Args:
         field: The bound field whose widget is drawn.
@@ -147,16 +150,23 @@ class FieldInput:
             unlabelled and not self.is_single_checkbox
         )
         self.show_errors = show_errors
+        self.choices = choices or FormChoices()
+        self.placed = placed
         self.wrapper_class = wrapper_class
         self.prepended = prepended
         self.appended = appended
         self.inline = inline
         self.join = join
         self.disabled = disabled
-        choices = choices or FormChoices()
-        self.modifiers = self.resolve_modifiers(choices, placed, self.component)
+        self.modifiers = (
+            []
+            if self.is_multi_widget
+            else self.resolve_modifiers(self.choices, self.placed, self.component)
+        )
         self.removal_modifiers = (
-            self.resolve_modifiers(choices, placed, "checkbox", self.removal_kinds)
+            self.resolve_modifiers(
+                self.choices, self.placed, "checkbox", self.removal_kinds
+            )
             if self.component == "file-input"
             else []
         )
@@ -220,8 +230,19 @@ class FieldInput:
     @property
     def component(self) -> str | None:
         """The daisyUI class for the field's widget, or None when it has none."""
+        return self.component_of(self.field.field.widget)
+
+    def component_of(self, widget: forms.Widget) -> str | None:
+        """Return the daisyUI class for a widget, or None when it has none.
+
+        Args:
+            widget: The field's widget, or one part of a multi-widget.
+
+        Returns:
+            The component the widget is drawn as.
+        """
         for widget_class, component in self.components.items():
-            if isinstance(self.field.field.widget, widget_class):
+            if isinstance(widget, widget_class):
                 return component
         return None
 
@@ -254,7 +275,39 @@ class FieldInput:
                 widget.get_context = self.removal_context(  # type: ignore[method-assign]
                     widget.get_context
                 )
+        elif isinstance(widget, forms.MultiWidget):
+            widget = copy.deepcopy(widget)
+            for index, part in enumerate(widget.widgets):
+                self.decorate_part(widget, index, part)
         return widget
+
+    def decorate_part(
+        self, widget: forms.MultiWidget, index: int, part: forms.Widget
+    ) -> None:
+        """Class and name one part of a copy of a multi-widget, for this render.
+
+        A hidden part is left as it is. Any class or name the part already has
+        is kept.
+
+        Args:
+            widget: The copy of the multi-widget that holds the part.
+            index: The part's place in the widget.
+            part: The part, which is changed.
+        """
+        if part.is_hidden:
+            return
+        component = self.component_of(part)
+        if component:
+            own = self.own_names(part)
+            modifiers = self.resolve_modifiers(self.choices, self.placed, component)
+            classes = self.classes_for(component, own, modifiers)
+            part.attrs["class"] = " ".join(dict.fromkeys(own + classes))
+        if isinstance(widget, forms.SplitDateTimeWidget):
+            name = str(SPLIT_DATE_TIME_PARTS[index])
+        else:
+            name = self.label_text if self.field.label else ""
+        if name and "aria-label" not in part.attrs:
+            part.attrs["aria-label"] = name
 
     def removal_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
         """Wrap a widget's context so that it names the removal checkbox's classes.
@@ -283,6 +336,11 @@ class FieldInput:
         return self.field.use_fieldset
 
     @property
+    def is_multi_widget(self) -> bool:
+        """Whether the field's widget is several widgets, each drawn on its own."""
+        return isinstance(self.field.field.widget, forms.MultiWidget)
+
+    @property
     def is_single_checkbox(self) -> bool:
         """Whether the field is one checkbox, which sits inside its own label."""
         return self.component == "checkbox" and not self.is_group
@@ -291,9 +349,22 @@ class FieldInput:
     def own_classes(self) -> list[str]:
         """The class names the widget already carries, but one daisyUI lacks.
 
-        Only the class ``UneditableField`` writes onto the widget is dropped. Any other name is the developer's and is kept.
+        Only the class ``UneditableField`` writes onto the widget is dropped. Any
+        other name is the developer's and is kept.
         """
-        names = str(self.field.field.widget.attrs.get("class", "")).split()
+        return self.own_names(self.field.field.widget)
+
+    def own_names(self, widget: forms.Widget) -> list[str]:
+        """Return the class names a widget already carries, but one daisyUI lacks.
+
+        Args:
+            widget: The field's widget, or one part of a multi-widget.
+
+        Returns:
+            The names in its ``class`` attribute, in order, without the class
+            ``UneditableField`` writes.
+        """
+        names = str(widget.attrs.get("class", "")).split()
         return [name for name in names if name != UNEDITABLE_CLASS]
 
     @property
@@ -304,18 +375,36 @@ class FieldInput:
     @property
     def pack_classes(self) -> list[str]:
         """The component, the choices, a width, the error. Empty with no component."""
+        return self.classes_for(self.component, self.own_classes, self.modifiers)
+
+    def classes_for(
+        self, component: str | None, own: list[str], modifiers: list[str]
+    ) -> list[str]:
+        """Return the pack's classes for one input: the field's or one part's.
+
+        Args:
+            component: The component the input is drawn as.
+            own: The class names the input already carries.
+            modifiers: The classes of the choices that apply to the component.
+
+        Returns:
+            The component, the choices, ``join-item`` when the field is joined
+            and is not a group, a width unless the component is fixed-size or an
+            own class is a width, and the error modifier. Empty with no
+            component.
+        """
         classes: list[str] = []
-        if self.component:
-            classes.append(self.component)
-            classes.extend(self.modifiers)
+        if component:
+            classes.append(component)
+            classes.extend(modifiers)
             if self.is_joined and not self.is_group:
                 classes.append("join-item")
-            if self.component not in self.fixed_size and not any(
-                name.startswith("w-") for name in self.own_classes
+            if component not in self.fixed_size and not any(
+                name.startswith("w-") for name in own
             ):
                 classes.append(self.width)
             if self.is_in_error:
-                classes.append(self.error_modifiers[self.component])
+                classes.append(self.error_modifiers[component])
         return classes
 
     @property

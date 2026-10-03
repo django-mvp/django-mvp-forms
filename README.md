@@ -121,6 +121,7 @@ These inputs are drawn as daisyUI components, whichever way crispy-forms is aske
 - `RadioSelect`, as a group of `radio` inputs, and `CheckboxSelectMultiple`, as a group of `checkbox` inputs: each option is an input inside a label of its own, tied to it by `for`, with `radio-error` or `checkbox-error` when invalid. Choices with named groups sit under their name in a nested `<fieldset>`, and an attribute a widget sets on one option stays on that option. A required checkbox group does not mark its options `required`, since that would demand all of them
 - `FileInput` and `ClearableFileInput`, as `file-input`, with `file-input-error` when invalid. A `ClearableFileInput` whose field holds a file shows a link to it, and, when the field is optional, a removal checkbox in a label of its own; a required field offers no removal and its input is not `required`, so it can be submitted without choosing another file. A widget that allows several files keeps `multiple`
 - `HiddenInput` and `MultipleHiddenInput`, as `<input type="hidden">` and nothing around it, which is described below
+- the parts of a `MultiWidget`, each as the component of its own kind, so a `SplitDateTimeField` is two `input` elements. A part that is hidden has no class
 
 Each of them but the checkbox, the radio and the hidden input fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`. A width class of your own on the widget, such as `w-40`, replaces it. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
 
@@ -138,7 +139,7 @@ With `{% crispy form %}` the pack follows these `FormHelper` settings:
 
 `help_text_inline` and `error_text_inline` are ignored.
 
-A class, placeholder, input type or row count you give a widget is kept. The pack never changes an input's type, so a date field is a text input unless its widget says otherwise. Fields with any other widget are still drawn in place, without a daisyUI class.
+A class, placeholder, input type or row count you give a widget is kept. The pack never changes an input's type, so a date field is a text input unless its widget says otherwise. Fields with any other widget are still drawn in place, without a daisyUI class, except that the parts of a multi-widget are drawn as the inputs they are (see [A multi-widget field](#a-multi-widget-field)).
 
 ### Disabled and read-only fields
 
@@ -515,6 +516,37 @@ class SearchForm(forms.Form):
 - The help text and the error element are still drawn, still described by the input, and a failing input has `aria-invalid` and its error modifier.
 - A single checkbox keeps its `<label>`, with the checkbox inside it. A select and a radio group get no placeholder; a select is named by an `aria-label` and a group by an `aria-label` on its fieldset, without a legend.
 - A field beside it that is not inline keeps its label. `css_class` and extra attributes go to the input, `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
+
+#### A multi-widget field
+
+`MultiWidgetField` comes from `crispy_forms.layout`, not `crispy_forms.bootstrap`. It draws a field whose widget is several widgets, such as a `SplitDateTimeField`, and lets you give each part attributes of its own:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, MultiWidgetField
+from django import forms
+
+
+class EventForm(forms.Form):
+    starts = forms.SplitDateTimeField(label="Starts", help_text="Local time")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            MultiWidgetField(
+                "starts",
+                attrs=({"placeholder": "2026-10-03"}, {"class": "mine"}),
+            ),
+        )
+```
+
+- `attrs` is a sequence with one set of attributes for each part, in order, or one set that goes on every part. A sequence shorter than the parts leaves the last parts with none, and raises nothing. A part given `{"type": "hidden"}` is drawn as a hidden input.
+- Each part is drawn as the daisyUI component of its kind: the two parts of a split date and time are `input`, with `input-error` when the field fails, and a class of your own on a part is kept beside it. A size, a colour and a variant stated for the form, or with a `Choice` around the layout object, reach every part as they reach any input, and a failing field's parts have the error modifier and not the colour.
+- The frame is one `<fieldset>` with one `<legend>`, one help text and one error element, and the fieldset is described by the help text and the error. Each part has an `aria-label`: Date and Time for a split date and time, and the field's label for the parts of any other multi-widget. An `aria-label` you give a part is kept.
+- A `SplitDateTimeField` with no layout object is drawn the same way. A split field whose widget is hidden is drawn as hidden inputs and nothing around them. On a field with one widget, `MultiWidgetField` draws the field with the attributes.
+- The form's own widget and its parts are not changed: the classes and names are written on a copy for each render, so drawing a form twice gives the same markup. `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
+- Do not make a part of a `SplitDateTimeField` hidden: the hidden widget of that field is itself a multi-widget, and validating the form then fails. To hide the whole field, give it `widget=forms.SplitHiddenDateTimeWidget`.
 
 ### Size, colour and variant
 

@@ -33,6 +33,7 @@ from crispy_forms.layout import (
     Fieldset,
     Hidden,
     MultiField,
+    MultiWidgetField,
     Reset,
     Row,
     Submit,
@@ -57,6 +58,7 @@ from tests.forms import (
     InlineFieldsForm,
     InlineRadiosForm,
     LineFormSet,
+    MultiWidgetsForm,
     RadioGroupsForm,
     RuledLineFormSet,
     SelectsForm,
@@ -319,6 +321,20 @@ def inlined_checkboxes(data=None):
     )
 
 
+def multi_widget(data=None):
+    return MultiWidgetsForm(
+        data,
+        layout=(
+            MultiWidgetField(
+                "moment", attrs=({"class": "mine"}, {"placeholder": "12:30"})
+            ),
+            MultiWidgetField("phone", attrs={"data-part": "phone"}),
+            "ends",
+            "name",
+        ),
+    )
+
+
 def helper_buttons():
     return ButtonedForm(
         buttons=(
@@ -497,6 +513,22 @@ STATES = [
         lambda: inlined_fields({}),
         MINE,
         id="inline fields, invalid",
+    ),
+    pytest.param("{% crispy form %}", multi_widget, MINE, id="multi-widget fields"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: multi_widget({}),
+        MINE,
+        id="multi-widget fields, invalid",
+    ),
+    pytest.param(
+        "{{ form|crispy }}", MultiWidgetsForm, NOTHING, id="split date and time"
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: MultiWidgetsForm({}),
+        NOTHING,
+        id="split date and time, invalid",
     ),
     pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
     pytest.param(
