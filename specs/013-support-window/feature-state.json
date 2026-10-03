@@ -2,7 +2,7 @@
   "feature": "013-support-window",
   "branch": "013-support-window",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-10-03T23:28:42Z",
       "note": "plan.md, research.md, tasks.md: 4 stories, 7 tasks; continues on pull request #97"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T23:28:54Z",
+      "note": "one reviewer, three lenses"
     }
   ],
   "gates": {
@@ -24,12 +29,24 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-03T23:34:54Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: changes requested, all findings applied",
+      "at": "2026-10-03T23:34:54Z",
+      "self_resolved": [
+        "ARC-001 (high) eight functions took the window first: made methods of Window, Article X row added to the plan, tasks renamed",
+        "SPC-001 (medium) a test of the versions declared today is a change detector: TestWindow builds its windows from supplied mappings and files",
+        "ARC-002 (medium) the two urlopen calls trip a lint rule: exemption on the line with its reason, no change to pyproject.toml, applied to plan and T004",
+        "SPC-002 (low) the asked-for mismatch was tested for Django only: two django-crispy-forms cases added to T003",
+        "SPC-003 (low) the period is not a version: dropped from the declaration, the README check and the releases report",
+        "SPC-004 (low) three pieces of work with no requirement behind them: dropped from T005 and T007"
+      ]
     }
   },
   "stories": [
@@ -119,7 +136,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

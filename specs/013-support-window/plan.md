@@ -39,7 +39,7 @@ function given in the test.
 names; line length 88; no compatibility aliases; no test of wording.
 
 **Scale/Scope**: one declaration file, one module of about 400 lines, one test module, two class
-lists, one README section and three additions to its contributing section.
+lists, one README section and one addition to its contributing section.
 
 ## Constitution Check
 
@@ -53,6 +53,7 @@ lists, one README section and three additions to its contributing section.
 | VI Documentation | README, CHANGELOG and CONTEXT change in the story that introduces what they describe. README links are absolute |
 | VII Dependencies | none added, runtime or development |
 | VIII Internationalization | nothing a person using a host project sees is added |
+| X Cohesion | everything that is asked of the window is a method of `Window`: the comparisons, the suite on one pair and the releases it is missing. `relative_links`, `django_series_from`, `final_releases`, `class_names`, `class_list`, `write_class_list` and the two fetch functions stay functions, because none of them takes a window and they share no subject |
 | XI Compatibility | no public API changes. Dropping a version is not a removal under this article (decisions D5), and the record of that decision is written at convergence |
 | XII Scope, XIII Plain templates, XIV Stock daisyUI | no template, class or import is added to the package |
 
@@ -63,9 +64,6 @@ lists, one README section and three additions to its contributing section.
 # package states it works with. The README, the package metadata and the test
 # suite are checked against this file. To change it, follow "Changing the support
 # window" in the README.
-
-# Days from a final release within which the package supports it.
-period-days = 30
 
 # The Python versions the suite runs on.
 python = ["3.12", "3.13"]
@@ -110,13 +108,13 @@ One module at the repository root. Every name is public. Full Google-style docst
 - `InvalidWindow(ValueError)`, carrying `package` and `version`: raised when the declaration
   cannot be read as a window.
 - `Dropped`: a frozen dataclass of `package`, `version`, `last_release`.
-- `Window`: a frozen dataclass of `period_days`, `python`, `django`, `django_first`,
+- `Window`: a frozen dataclass of `python`, `django`, `django_first`,
   `crispy_forms`, `crispy_forms_first`, `pairs`, `daisyui_first`, `daisyui_minimum`,
   `daisyui_newest`, `dropped`. `Window.read(path)` reads the file; `Window.from_mapping(data)`
   builds one from a parsed mapping, which is what the tests of a changed window use.
-  - A Django or django-crispy-forms version must be two numbers, `5.2` or `2.7`. A daisyUI
-    version must be two numbers. Anything else, such as `5.2.17`, raises `InvalidWindow` naming
-    the package and the version (the edge case of a version written at another level of detail).
+  - Every version of the three must be two numbers, `5.2` or `2.7`. Anything else, such as
+    `5.2.17`, raises `InvalidWindow` naming the package and the version (the edge case of a
+    version written at another level of detail).
   - Every key of `pairs` is a named django-crispy-forms release, and every Django it lists is a
     named Django series; otherwise `InvalidWindow`.
   - `Window.daisyui` returns the two versions the suite checks, minimum then newest (one when
@@ -125,10 +123,12 @@ One module at the repository root. Every name is public. Full Google-style docst
 
 ### Comparing
 
+Each comparison is a method of `Window`.
+
 - `Disagreement`: a frozen dataclass of `source` (`"README"`, `"metadata"`, `"lockfile"`,
   `"dropped"`, `"changelog"`, `"installed"`), `package`, `version` and `problem`. A test asserts
   the first three. `problem` is a sentence for the person reading the failure.
-- `metadata_disagreements(window, pyproject)`, given the parsed `pyproject.toml`:
+- `Window.metadata_disagreements(pyproject)`, given the parsed `pyproject.toml`:
   - the Django and django-crispy-forms requirements are `>=` the oldest named version and
     nothing else: an upper limit, a pin or a different minimum is a disagreement naming the
     version found;
@@ -136,30 +136,29 @@ One module at the repository root. Every name is public. Full Google-style docst
     `Programming Language :: Python :: 3.N` classifiers exactly the declared Python versions,
     each difference naming its version;
   - every dropped Django or django-crispy-forms version is below the required minimum (FR-017).
-- `readme_disagreements(window, readme)`, given the README's text. It reads the block between
+- `Window.readme_disagreements(readme)`, given the README's text. It reads the block between
   `<!-- support-window -->` and `<!-- /support-window -->`:
   - the row whose first cell holds `Django`, `django-crispy-forms`, `daisyUI` or `Python`, and
     the versions in its second cell, compared with the declaration. For daisyUI the two versions
     are the minimum and the newest;
   - the rows of the pairs table, compared with `pairs`;
-  - the period, written in digits, compared with `period_days`;
   - and the block between `<!-- dropped-versions -->` and `<!-- /dropped-versions -->`, whose
     rows are compared with `dropped`: package, version and last release.
   A version in one and not the other is a disagreement naming it. A block that is missing is a
   disagreement.
 - `relative_links(readme)`: the link targets from the first comment of the section to the last
   that are not absolute. The suite asserts there are none (US-1, scenario 4).
-- `dropped_disagreements(window, changelog)`:
+- `Window.dropped_disagreements(changelog)`:
   - a version both named and dropped;
   - a version from `first` up to the newest named that is neither. `django_series_from(first,
     newest)` walks `A.0`, `A.1`, `A.2`, `(A+1).0`; django-crispy-forms and daisyUI count the
     second number up. For daisyUI the versions below `minimum` are the ones that must be dropped;
   - a dropped version whose `last_release` is not a release heading in the changelog
     (`## [v0.1.0]`, with or without the `v`).
-- `lockfile_disagreements(window, lock)`, given the parsed `uv.lock`: the locked Django series
+- `Window.lockfile_disagreements(lock)`, given the parsed `uv.lock`: the locked Django series
   and django-crispy-forms release are named ones (FR-010).
 - `installed_versions()`: Django and django-crispy-forms as `importlib.metadata` reports them.
-  `installed_disagreements(window, installed, asked)`: the installed versions are named ones,
+  `Window.installed_disagreements(installed, asked)`: the installed versions are named ones,
   and where `asked` names a version, the installed one is that version (FR-012, US-2 scenarios 6
   and 7).
 - `class_list(version)`: the set of class names in `tests/data/daisyui-classes-<version>.txt`.
@@ -167,7 +166,7 @@ One module at the repository root. Every name is public. Full Google-style docst
 
 ### `test`: the suite on one named pair
 
-`run_suite(window, django, crispy_forms, extra, run=subprocess.run)`:
+`Window.run_suite(django, crispy_forms, extra, run=subprocess.run)`:
 
 1. A pair the declaration does not offer returns a failing status and runs nothing: either
    version is not named, or `pairs` does not hold the pair.
@@ -188,26 +187,25 @@ One module at the repository root. Every name is public. Full Google-style docst
 ### `releases`: a release the window does not name
 
 - `final_releases(payload, source)`: version to date of its first publication, for a payload of
-  the package index or of the npm registry. Pre-releases are left out, and a release of the
-  package index whose every file is yanked.
-- `Outstanding`: a frozen dataclass of `package`, `version`, `released` and `due` (`released`
-  plus the period), and `new_major`, true for a new major version of django-crispy-forms or
+  the package index or of the npm registry. Pre-releases are left out.
+- `Outstanding`: a frozen dataclass of `package`, `version`, `released` and `new_major`, true for a new major version of django-crispy-forms or
   daisyUI.
-- `outstanding(window, django, crispy_forms, daisyui)`, given the three mappings of
+- `Window.outstanding(django, crispy_forms, daisyui)`, given the three mappings of
   `final_releases`:
   - Django: every release series newer than the newest named;
   - django-crispy-forms: every feature release of the current major series newer than the newest
     named, and the first release of each later major series with `new_major` set;
   - daisyUI: every minor release of the current major version newer than `newest`, and each
     later major version with `new_major` set.
-- `report_releases(window, fetch=fetch_json, out=print)`: fetches the three, prints one line for
+- `Window.report_releases(fetch=fetch_json, out=print)`: fetches the three, prints one line for
   each outstanding release and one for each new major version, and returns the status:
   - `0` nothing outstanding;
   - `1` at least one release under the period is missing. A new major version alone is `0`;
   - `2` a source could not be reached or its answer could not be read. The line names the
     package, and nothing says the window is current.
-- `fetch_json(url)`: `urllib.request.urlopen` with a timeout, for the three addresses in
-  `SOURCES` only.
+- `fetch_json(url)`: `urllib.request.urlopen` with a timeout. It is given the three addresses
+  in `SOURCES`. `fetch_text(url)` is the same for the one stylesheet address, which
+  `write_class_list` builds.
 
 ### `classes`: a class list for a daisyUI version
 
@@ -227,7 +225,10 @@ ends with `sys.exit(main())`.
 
 - **R-S1.** The module fetches three fixed HTTPS addresses and one address built from a daisyUI
   version. The version is matched against two or three numbers before it is put in an address or
-  a file name. Nothing a person types reaches a shell: `subprocess.run` takes a list.
+  a file name. Nothing a person types reaches a shell: `subprocess.run` takes a list and is only
+  ever called through the `run` parameter. Each `urlopen` call carries `# noqa: S310` with its
+  reason on the line: the address is one of `SOURCES`, or is built from a version already
+  matched as numbers. `pyproject.toml` gains no lint exemption.
 - **R-S2.** What comes back from the network is read as JSON or as a stylesheet and is never
   executed or written anywhere but the one class list.
 - **R-S3.** None of this is distributed, so a host project never runs it.
@@ -236,7 +237,8 @@ ends with `sys.exit(main())`.
 
 `tests/data/daisyui-classes.txt` is replaced by `tests/data/daisyui-classes-5.0.txt` (from
 5.0.55) and `tests/data/daisyui-classes-5.7.txt` (from 5.7.47), both written by
-`python support_window.py classes`.
+`python support_window.py classes`. ADR 0003 names the old path, and is changed to name the two
+lists.
 
 The `daisyui_classes` fixture in `tests/conftest.py` is given one parameter for each version
 `Window.daisyui` returns, so every test that uses it runs once for each named version and its id
@@ -254,11 +256,11 @@ A new section, `## Supported versions`, after "Installation". Between the first 
 | daisyUI | 5.0 to 5.7 |
 | Python | 3.12, 3.13 |
 
-then the pairs table, one row for each django-crispy-forms release, and the period in digits.
-Around them, prose a reader judges and no test reads: that the newest patch release of each is
+then the pairs table, one row for each django-crispy-forms release. Around them, prose a reader judges and no test reads: that the newest patch release of each is
 meant (FR-002); which kinds of release the period covers, and what the statement says when one
 cannot be supported in time (FR-006); that a new major version of django-crispy-forms or daisyUI
-has no period (FR-007); that daisyUI is checked at the two ends of its range (FR-005); what a
+has no period (FR-007); that daisyUI is checked at the two ends of its range (FR-005), and that
+a daisyUI version below the minimum is outside the window; what a
 host page loading `daisyui@5` from the CDN can expect between a daisyUI release and its naming;
 that a newer Django or django-crispy-forms installs and is simply not vouched for (FR-008); that
 Python versions carry no period; the rule by which each leaves (FR-015); that a drop ships in a
@@ -277,7 +279,7 @@ by side.
 
 | Story | Adds |
 |---|---|
-| US1 | the declaration, `Window`, `InvalidWindow`, `Disagreement`, `metadata_disagreements`, `relative_links`, the README section, CONTEXT terms, CHANGELOG |
+| US1 | the declaration, `Window`, `InvalidWindow`, `Disagreement`, `metadata_disagreements`, `relative_links`, the README section, CONTEXT terms, CHANGELOG, the `AGENTS.md` stack line |
 | US2 | `readme_disagreements` for the statement, `lockfile_disagreements`, `installed_versions`, `installed_disagreements`, `class_list`, `class_names`, `write_class_list`, the two class lists, the fixture, `run_suite`, the two hooks, `main`, the contributing text |
 | US3 | `Dropped`, `dropped_disagreements`, the dropped part of `metadata_disagreements` and `readme_disagreements`, the contributing text on taking a version out |
 | US4 | `final_releases`, `Outstanding`, `outstanding`, `report_releases`, `fetch_json`, the contributing text |

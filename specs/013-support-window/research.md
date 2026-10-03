@@ -66,9 +66,9 @@ release checked is **5.7**, at 5.7.47. FR-002 says the newest patch release of a
 the one meant, which is why the minimum is checked at 5.0.55 and not at 5.0.0.
 
 The list in the repository today was made by a method that is not recorded. It leaves out the
-names that carry a responsive prefix (`2xl:alert`) and holds one stray name, `32`, cut from the
+names that carry the `2xl:` prefix and holds one stray name, `32`, cut from the
 escaped selector `.\32 xl\:…`. Reading the selectors with escapes undone gives 4,036 names for
-5.7.47: every name the present list holds except `32`, and 543 more. A larger list of names the
+5.7.47: every name the present list holds except `32`, and 544 more. A larger list of names the
 stylesheet really defines cannot hide a class it does not define, so both lists are made the same
 way by one command kept in the repository, and the method is no longer a comment at the top of a
 file.
@@ -142,8 +142,9 @@ comments, `<!-- support-window -->` … `<!-- /support-window -->` and `<!-- dro
 … `<!-- /dropped-versions -->`. A comment is drawn neither on GitHub nor on the package index.
 
 Inside the first pair are the facts a check can decide: one table row for each of Django,
-django-crispy-forms, daisyUI and Python, found by the package's name in its first cell; the table
-of pairs; and the period as a number. Everything else in the section is prose that only a reader
+django-crispy-forms, daisyUI and Python, found by the package's name in its first cell, and the
+table of pairs. The period is prose: it is not a version, and no requirement asks for it to be
+compared. Everything else in the section is prose that only a reader
 judges, and no test reads it.
 
 ## R8. What cannot be read from this repository

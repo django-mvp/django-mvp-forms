@@ -43,11 +43,15 @@ Plan, *The declaration*, *Reading the declaration*, *Comparing* (`Disagreement`,
 `metadata_disagreements`); research R1, R2, R6.
 
 - `support-window.toml` as the plan gives it, without the `first` keys and the `dropped` comment,
-  which arrive with US3.
+  which arrive with US3, and without the sentence of its opening comment that points at the
+  README, which arrives with T005.
 - `InvalidWindow`, `Window` with `read` and `from_mapping`, `ROOT`, `DECLARATION`,
-  `Disagreement`, `metadata_disagreements` without its dropped part.
-- Tests, `TestWindow`: the repository's declaration reads as Django 5.2, 6.0 and 6.1,
-  django-crispy-forms 2.7, daisyUI 5.0 to 5.7 and a period of 30; a Django version, a
+  `Disagreement`, `Window.metadata_disagreements` without its dropped part. Every comparison in
+  this feature is a method of `Window` (plan, *Constitution Check*, Article X).
+- Tests, `TestWindow`: a window built from a mapping the test supplies has the versions the
+  mapping gave; a file the test writes under `tmp_path` reads as the same window; the
+  repository's declaration reads without error. No test asserts the versions the repository
+  declares today. A Django version, a
   django-crispy-forms version and a daisyUI version each written with a patch number raise
   `InvalidWindow` carrying the package and the version; a pair naming a release or a Django
   series the window does not name raises it too.
@@ -65,7 +69,7 @@ Plan, *The declaration*, *Reading the declaration*, *Comparing* (`Disagreement`,
 Plan, *The README*, *Comparing* (`relative_links`); research R7.
 
 - `## Supported versions` after "Installation", as the plan lays it out: the marked block with
-  the table, the pairs table and the period; the prose for FR-002, FR-005, FR-006, FR-007,
+  the table and the pairs table; the prose for FR-002, FR-005, FR-006, FR-007,
   FR-008, FR-015, FR-016 and FR-018 and the edge cases the plan lists; the second marked block,
   empty, with its sentence. The status note at the top of the README and the sentence "Pages
   that draw these forms must load daisyUI 5" point at the section where they touch on versions.
@@ -95,24 +99,29 @@ Plan, *Comparing* (`readme_disagreements` for the statement, `lockfile_disagreem
 - Tests, `TestReadme`: the repository's README has no disagreement; a window with a Django
   series added, one with a series removed, one with a django-crispy-forms release added, one
   with the daisyUI minimum raised, one with the daisyUI newest lowered, one with a Python
-  version added, one with a pair removed and one with another period each give a README
-  disagreement naming the version (the period names the number); a README with no marked block
+  version added and one with a pair removed each give a README
+  disagreement naming the version; a README with no marked block
   is a disagreement.
 - Tests, `TestLockfile`: the repository's `uv.lock` has no disagreement; a lock holding Django
   7.0.1, and one holding django-crispy-forms 3.0, each name that version.
 - Tests, `TestInstalled`: the versions this run is on are inside the window; installed Django
   7.0 with nothing asked names it; Django 6.1.1 installed when 5.2 was asked names 6.1.1;
-  Django 5.2.17 installed when 5.2 was asked is no disagreement.
+  Django 5.2.17 installed when 5.2 was asked is no disagreement; django-crispy-forms 2.8
+  installed when 2.7 was asked names 2.8; 2.7 installed when 2.7 was asked is no disagreement.
 
 ### T004 — A class list for every named daisyUI version
 
 **Files**: `support_window.py`, `tests/test_support_window.py`, `tests/conftest.py`,
 `tests/data/daisyui-classes-5.0.txt` (new), `tests/data/daisyui-classes-5.7.txt` (new),
-`tests/data/daisyui-classes.txt` (removed)
+`tests/data/daisyui-classes.txt` (removed), `docs/adr/0003-daisyui-classes-and-tailwind-for-layout-only.md`
 
 Plan, *The class lists*, *`classes`*, *Comparing* (`class_list`); research R3.
 
-- `class_names`, `write_class_list`, `class_list`, `MissingClassList`, and `fetch_text`.
+- `class_names`, `write_class_list`, `class_list`, `MissingClassList`, `fetch_json` and
+  `fetch_text`. Each `urlopen` call carries `# noqa: S310` with its reason on the line (plan,
+  *Security*, R-S1). `pyproject.toml` gains no lint exemption.
+- ADR 0003 names the old list's path. Change that path to name the two lists, and nothing
+  else in the record.
 - The two lists, written by `write_class_list` (this is the one step of the feature that uses
   the network, and it is run by hand, never by a test). The old list is removed.
 - The `daisyui_classes` fixture takes one parameter for each version `Window.daisyui` returns,
@@ -131,24 +140,23 @@ Plan, *The class lists*, *`classes`*, *Comparing* (`class_list`); research R3.
 ### T005 — The suite on one named pair
 
 **Files**: `support_window.py`, `tests/test_support_window.py`, `tests/conftest.py`,
-`README.md`, `CHANGELOG.md`, `AGENTS.md`
+`README.md`, `AGENTS.md`, `support-window.toml`
 
 Plan, *`test`*, *`main`*; research R4.
 
-- `run_suite`, the two hooks in `tests/conftest.py`, `main` with `test` and `classes`.
+- `Window.run_suite` (`subprocess.run` is only ever called through its `run` parameter), the
+  opening comment of `support-window.toml` pointing at the README section, the two hooks in `tests/conftest.py`, `main` with `test` and `classes`.
 - README, contributing, "Changing the support window": the `test` command and what it reports;
   how to add a version (the declaration, the README table, the metadata, a class list for a
   daisyUI version, and running the pair) so the four change together (FR-013); that the test
   workflow runs every named Django and Python version and the one named django-crispy-forms
-  release, and that a second named release needs #92 (FR-014). CHANGELOG and AGENTS.md name the
-  command.
+  release, and that a second named release needs #92 (FR-014). AGENTS.md names the command.
 - Tests, `TestRunSuite`, with a `run` function given by the test that records what it was
   called with: a named pair runs one command that pins both versions and carries both
   environment variables, and returns that command's status; a Django series the window does not
   name runs nothing and returns a failing status; so does a django-crispy-forms release it does
   not name, and a pair `pairs` does not hold.
-- Tests, `TestMain`: `test 5.2 2.7` reaches `run_suite` with those versions; an unknown
-  subcommand ends with a usage error.
+- Tests, `TestMain`: `test 5.2 2.7` reaches `run_suite` with those versions.
 - By hand, recorded in the report with its output: `uv run python support_window.py test 5.2
   2.7` passes and its header names Django 5.2; `SUPPORT_WINDOW_DJANGO=5.2 uv run pytest
   tests/test_smoke.py` stops with a usage error and runs no test.
@@ -192,22 +200,19 @@ Issue: #111. Delivers FR-019 to FR-021, FR-023, FR-024; SC-006.
 
 ### T007 — The `releases` command
 
-**Files**: `support_window.py`, `tests/test_support_window.py`, `README.md`, `CHANGELOG.md`,
-`AGENTS.md`
+**Files**: `support_window.py`, `tests/test_support_window.py`, `README.md`, `AGENTS.md`
 
 Plan, *`releases`*, *`main`*; research R5.
 
-- `SOURCES`, `fetch_json`, `final_releases`, `Outstanding`, `outstanding`, `report_releases`,
+- `SOURCES`, `final_releases`, `Outstanding`, `Window.outstanding`, `Window.report_releases`,
   and `releases` in `main`.
 - README, contributing: the command, its three statuses, and that it is run by hand because
-  running it on a schedule needs a workflow (#92). CHANGELOG and AGENTS.md name it.
+  running it on a schedule needs a workflow (#92). AGENTS.md names it.
 - Tests, `TestFinalReleases`: a package-index payload gives each final version the date of its
-  first file; a pre-release (`6.2a1`, `6.2rc1`) is left out; a release whose every file is
-  yanked is left out; an npm payload leaves out `5.6.0-beta.0` and the `created` and `modified`
+  first file; a pre-release (`6.2a1`, `6.2rc1`) is left out; an npm payload leaves out `5.6.0-beta.0` and the `created` and `modified`
   entries of `time`.
 - Tests, `TestOutstanding`: a window naming the newest of each has nothing outstanding; a
-  Django 6.2 the window does not name is outstanding with its release date and a due date 30
-  days later; a django-crispy-forms 2.8 and a daisyUI 5.8 likewise; a django-crispy-forms 3.0
+  Django 6.2 the window does not name is outstanding with its release date; a django-crispy-forms 2.8 and a daisyUI 5.8 likewise; a django-crispy-forms 3.0
   and a daisyUI 6.0 are each returned with `new_major` set; a newer patch release of a named
   version (Django 6.1.2, daisyUI 5.7.48) is not outstanding.
 - Tests, `TestReportReleases`, with a `fetch` function given by the test: nothing outstanding

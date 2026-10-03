@@ -239,9 +239,9 @@ test D7 set.
 is written again by it, and the list for 5.0 is new.
 
 **Why:** the list in the repository was made by a method nobody recorded. It leaves out names
-with a responsive prefix and holds one stray name cut from an escaped selector. Two lists made
+with the `2xl:` prefix and holds one stray name cut from an escaped selector. Two lists made
 two ways would differ for reasons that have nothing to do with daisyUI. The new list for 5.7.47
-holds every name the old one did but the stray one, and 543 more that the stylesheet does
+holds every name the old one did but the stray one, and 544 more that the stylesheet does
 define, so no check gets weaker.
 
 **ADR:** none. It applies ADR 0003 and changes nothing it decided.
@@ -294,3 +294,25 @@ django-crispy-forms or daisyUI is printed and does not change the outcome.
 A third outcome keeps "I could not look" apart from both of the others.
 
 **ADR:** none.
+
+## D18. What the design review asked for
+
+One review of the plan, before any code. Each finding and what was done:
+
+- **Everything asked of the window is a method of `Window`** (high). The plan had eight functions
+  that each took the window first, which Article X says belong on a class. Applied to the plan
+  and to every task. The functions that take no window stay functions.
+- **No test asserts the versions the repository declares today** (medium). Such a test fails
+  only when someone changes the window on purpose. `TestWindow` builds its windows from
+  mappings and files the test supplies.
+- **The two calls that open an address carry their lint exemption on the line, with the
+  reason** (medium). `pyproject.toml` gains no exemption, and `subprocess.run` is only ever
+  called through a parameter.
+- **A django-crispy-forms version that is not the one asked for is tested too** (low). Applied
+  to T003.
+- **The period is prose** (low). It is not a version and no requirement asks for it to be
+  compared, so it is not declared, not read out of the README and not turned into a due date.
+- **Three pieces of work with no requirement behind them are dropped** (low): a test of an
+  unknown subcommand, the commands named in the CHANGELOG, and leaving out yanked releases.
+
+**ADR:** none. The record of one review.
