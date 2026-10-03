@@ -2,7 +2,7 @@
   "feature": "008-boolean-toggle-switch",
   "branch": "008-boolean-toggle-switch",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "QUEUED",
@@ -23,6 +23,11 @@
       "state": "IMPLEMENT",
       "at": "2026-10-03T18:58:29Z",
       "note": "plan gate open; design review applied"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T19:24:45Z",
+      "note": "three stories done; converge"
     }
   ],
   "gates": {
@@ -218,7 +223,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {
