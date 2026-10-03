@@ -22,8 +22,7 @@ reading. Article XI already names "the template paths a host project can overrid
 public API, so the feature is the work of saying which paths those are and keeping the promise.
 Each gap the reading fills is its own decision below.
 
-**ADR:** none. This is the record of how the specification was written, not a constraint on the
-code.
+**ADR:** none — the record of how the specification was written, not a constraint on the code.
 
 ## D2. Every template the pack distributes is replaceable and listed
 
@@ -40,7 +39,7 @@ the outcome the issue asks to end. The roadmap item also says "any single templa
 it is the one the roadmap states. Its cost is that the pack can no longer split or merge a
 template freely. D5 is how it still can.
 
-**ADR:** expected. One record for the template surface, covering D2, D3 and D5.
+**ADR:** docs/adr/0029-every-pack-template-is-public.md
 
 ## D3. The promise covers what a template is handed as well as its path
 
@@ -66,7 +65,7 @@ same sense as the paths. A later feature that changes one goes through the depre
 maintainer may prefer a narrower promise. If so, FR-005, FR-009, FR-011, FR-012 and FR-014 narrow
 with it and the first story is unaffected.
 
-**ADR:** expected, with D2.
+**ADR:** docs/adr/0029-every-pack-template-is-public.md
 
 ## D4. A replacement is found by Django's own template loading
 
@@ -84,8 +83,7 @@ first. Article II asks for the simplest design that meets the requirement.
 ADR 0023 already tells a host project to change the frame. The one part that is not obvious, the
 form renderer, is the part the feature documents and tests.
 
-**ADR:** none of its own. ADR 0012 already records that widget templates go through the form
-renderer. The record in D2 names the two routes.
+**ADR:** docs/adr/0029-every-pack-template-is-public.md
 
 ## D5. A change to a listed template goes through one minor version of deprecation
 
@@ -111,7 +109,7 @@ minor version. In both cases the CHANGELOG says what replaces it and the list ma
 minor version with a warning before it is removed, and the CHANGELOG says what replaces it". The
 only reading added is what a warning means for a template path.
 
-**ADR:** expected, with D2.
+**ADR:** docs/adr/0029-every-pack-template-is-public.md
 
 ## D6. The list lives in the README and a check keeps it true
 
@@ -122,7 +120,7 @@ when the list and the package disagree (FR-009, FR-011).
 read. Article VI puts the public API in the README, and nothing in the issue needs the list at
 run time.
 
-**ADR:** none. It follows from Article VI.
+**ADR:** none — it follows from Article VI, which already puts the public API in the README.
 
 ## D7. Changing part of a template is left out
 
@@ -135,7 +133,7 @@ the block, which limits where they could go. Whether they are wanted is the main
 
 **Open with the maintainer:** #91.
 
-**ADR:** none.
+**ADR:** none — nothing is decided: whether the pack offers blocks is asked in #91.
 
 ## D8. A replacement is the host project's own
 
@@ -146,7 +144,7 @@ about markup and accessibility (FR-006).
 The pack cannot tell an omission from a decision, and a project that replaces the frame may well
 be moving the errors somewhere else.
 
-**ADR:** none.
+**ADR:** none — it states what the pack does not do, and the record of the template surface says a replacement is the host project's.
 
 ## D9. The per-form ways to name a template are left alone
 
@@ -155,7 +153,7 @@ are django-crispy-forms' own, are documented by FS-003 to FS-006, and keep takin
 the form that uses them (FR-008). This feature is about replacing a pack template for the whole
 project.
 
-**ADR:** none.
+**ADR:** none — the behaviour is django-crispy-forms' own and this feature leaves it alone.
 
 ## D10. No demo page and no sketch
 
@@ -166,14 +164,14 @@ This one changes nothing in a project that replaces nothing. A replacement place
 project would apply to every page of it, so it would change the pages the earlier features are
 shown and tested on. The worked example is in the README, and the test suite draws it.
 
-**ADR:** none.
+**ADR:** none — local to this feature: it adds no page.
 
 ## D11. Nothing under `.github/` changes
 
 **Chosen:** the check in FR-011 runs in the existing test suite, on the existing test matrix. The
 feature asks for no workflow change, so there is no separate request for the maintainer.
 
-**ADR:** none.
+**ADR:** none — local to this feature: it needed no workflow change.
 
 ## D12. The pack's templates do not change, and the first story is its tests
 
@@ -203,7 +201,7 @@ whatever the page put there, and most of it is not the pack's to promise.
 **Why:** it is D3 made checkable. The check compares what a template reads with its entry, so a
 template cannot start reading a name without the list saying so.
 
-**ADR:** expected, with D2.
+**ADR:** docs/adr/0029-every-pack-template-is-public.md
 
 ## D14. A replacement at an old path is looked for where the template is drawn
 
@@ -229,7 +227,7 @@ One lookup answers both "is there a replacement" and "which template to draw".
 **Revisit if:** django-crispy-forms renames one of the paths it chooses, which the pack cannot
 intercept from a template.
 
-**ADR:** expected, with D2.
+**ADR:** docs/adr/0029-every-pack-template-is-public.md
 
 ## D15. The check reads the README
 

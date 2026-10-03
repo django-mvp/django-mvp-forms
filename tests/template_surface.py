@@ -268,8 +268,10 @@ class TemplateSurface:
             names: The set the names read are added to.
         """
         variables = [expression.var]
-        for _function, arguments in expression.filters:
-            variables.extend(value for looked_up, value in arguments if looked_up)
+        for applied in expression.filters:
+            # Each is the filter and its arguments, an argument a pair saying
+            # whether it is looked up and what it is.
+            variables.extend(value for looked_up, value in applied[1] if looked_up)
         for variable in variables:
             if not isinstance(variable, Variable) or variable.lookups is None:
                 continue

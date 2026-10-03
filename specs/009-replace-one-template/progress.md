@@ -64,3 +64,13 @@ Did: the docs step of forge verify failed on the new public name host_template, 
 Verified: forge verify --base origin/main, exit 0: conformance, docs, lint, typecheck, test and build all passed.
 Next: the report.
 Watch: the sentence is the one the brief allowed if the docs step demanded it.
+
+## 2026-10-03T22:45:14Z · Forge · converge
+
+Did: all three stories accepted. Wrote docs/adr/0029-every-pack-template-is-public.md from D2, D3, D5, D13 and D14 and gave every decision its verdict. Cleanup: one feature number out of a comment, one underscore name out of the check's helper. origin/main has not moved since the branch was cut.
+
+Verified: full verify green at the tip.
+
+Next: code review.
+
+Watch: sibling features add templates; each has to add its row to the README's table once this is on main.
