@@ -36,3 +36,10 @@ Did: the worked example under "#### A required marker of your own" in the README
 Verified: uv run pytest tests/test_pack/test_documented_examples.py tests/test_pack/test_template_list.py tests/test_template_surface.py -q, 116 passed. Probes, not committed: a condition the example never meets (field.field.requiredx) failed the required-field test; an aria-hidden attribute added to the example failed the pack-marker test. pre-commit run --all-files passed.
 Next: the full forge verify, then the report and the ledger.
 Watch: docs/ holds ADRs, contributing standards and the roadmap only, so no page under docs/ describes what this story touched.
+
+## 2026-10-03T22:32:13Z · Implementer US2 · T003
+
+Did: moved the helper tests to tests/test_pack/test_template_surface.py, because conformance failed a top-level test module with no source module to mirror (decisions.md D19). Earlier T003 entries name the old path.
+Verified: uv run pytest tests/test_pack/test_template_surface.py -q, 27 passed.
+Next: the full forge verify, then the report.
+Watch: Forge may prefer the module beside the helper, which needs tests/test_template_surface.py declared in non-mirror-paths.
