@@ -61,6 +61,14 @@
         "DR-004 (low) CONTEXT's Choice and Variant entries amended with the new term: applied to T002",
         "DR-005 (low) the widget is checked before the name, and the name against a tuple: applied to plan and T001"
       ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T19:45:11Z",
+      "self_resolved": [
+        "COR-001 (low) three tests asserted where the label sits and the absence of a width class: fixed, T006",
+        "COR-002 (low) a drawing stated by name for a field the layout leaves out is never checked: the reading is recorded (D19) and the README says so, T006"
+      ]
     }
   },
   "stories": [
@@ -154,8 +162,17 @@
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_drawings.py::TestDrawingKeepsWhatACheckboxHas",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputDrawing"
+            ],
+            "commands": [
+              "forge verify --repo . --base origin/main"
+            ]
+          }
         }
       ]
     },
