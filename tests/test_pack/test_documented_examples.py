@@ -504,3 +504,27 @@ class TestReadmeRating:
 
         assert "rating" in soup.find(id="id_score")["class"]
         assert soup.find("select", id="id_comfort") is not None
+
+
+class TestReadmeRange:
+    def test_the_example_stating_a_range_draws_the_field_as_a_slider_with_its_limits(
+        self, draw
+    ):
+        form = readme_example("Rating and range")["ReviewForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        tag = soup.find("input", id="id_volume")
+        assert tag["type"] == "range"
+        assert "range" in tag["class"]
+        assert (tag["min"], tag["max"], tag["step"]) == ("0", "100", "5")
+
+    def test_the_example_form_cleans_the_slid_value_to_a_number(self, draw):
+        namespace = readme_example("Rating and range")
+        soup = draw("{% crispy form %}", form=namespace["ReviewForm"]())
+        name = soup.find("input", id="id_volume")["name"]
+
+        form = namespace["ReviewForm"]({"score": "3", name: "35"})
+
+        assert form.is_valid()
+        assert form.cleaned_data["volume"] == 35

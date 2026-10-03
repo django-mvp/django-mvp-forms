@@ -61,6 +61,7 @@ from tests.forms import (
     LineFormSet,
     MultiWidgetsForm,
     RadioGroupsForm,
+    RangesForm,
     RatingsForm,
     RequiredDrawnBooleanForm,
     RuledLineFormSet,
@@ -384,6 +385,9 @@ TOGGLE_AND_SWITCH_SIZED_IN_ERROR = FormChoices(
 RATINGS = FormChoices(
     fields={name: Choice(drawing="rating") for name in ("score", "again", "kind")}
 )
+RANGES = FormChoices(
+    fields={name: Choice(drawing="range") for name in ("volume", "ratio", "price")}
+)
 EVERY_CHOICE = FormChoices(size="sm", color="primary", variant="ghost")
 EVERY_BUTTON_CHOICE = FormChoices(
     size="lg", color="accent", button_color="neutral", button_variant="outline"
@@ -696,6 +700,18 @@ STATES = [
         lambda: RatingsForm({"again": "2"}, choices=RATINGS),
         NOTHING,
         id="ratings in error, through the tag",
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: RangesForm(choices=RANGES),
+        NOTHING,
+        id="ranges, through the filter",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: RangesForm({"volume": "500", "ratio": "2"}, choices=RANGES),
+        NOTHING,
+        id="ranges in error, through the tag",
     ),
 ]
 

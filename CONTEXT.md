@@ -88,10 +88,11 @@ means).
 **Drawing**:
 How a field is drawn when its widget allows more than one way. A boolean field
 takes `checkbox`, `toggle` or `switch`, and a single-choice field takes
-`rating`. A toggle and a switch are both daisyUI's toggle, and a switch also
-tells assistive technology it is a switch. A field that states none is drawn as
-its widget is: a boolean field as a checkbox, a single-choice field as a select
-or a radio group. Any other field takes none.
+`rating`, and a number field takes `range`. A toggle and a switch are both
+daisyUI's toggle, and a switch also tells assistive technology it is a switch.
+A field that states none is drawn as its widget is: a boolean field as a
+checkbox, a single-choice field as a select or a radio group, a number field as
+a number input. Any other field takes none.
 _Avoid_: style, look, type (an input's type is the HTML attribute).
 
 **Boolean field**:
@@ -115,6 +116,20 @@ choice whose value is the empty string is not a star but the way to clear the
 rating. A rating is a group, framed by a fieldset and a legend as a radio group
 is.
 _Avoid_: stars, star field.
+
+**Number field**:
+A field whose widget is a Django `NumberInput`, or a subclass of one, such as an
+`IntegerField`, a `FloatField` or a `DecimalField`. It takes the drawing
+`range`. A localised number field has a text input, so it is not a number field.
+_Avoid_: numeric field, slider field.
+
+**Range**:
+The drawing of a number field as daisyUI's range: one input of type `range`,
+drawn through a copy of the field's widget by Django's own input template. Its
+lowest value, highest value and step are the ones Django already writes on the
+widget. A range always submits a number, so an optional number field drawn as a
+range is never submitted empty.
+_Avoid_: slider field.
 
 ## Terms deliberately not used
 
