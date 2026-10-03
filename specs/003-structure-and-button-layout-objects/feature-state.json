@@ -239,8 +239,23 @@
         },
         {
           "id": "T010",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_buttons.py::TestHelperButtons",
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiShown"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:213",
+              "mvp_forms/templates/daisyui/inputs.html:1"
+            ]
+          }
         }
       ]
     },
@@ -355,8 +370,20 @@
         },
         {
           "id": "T011",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_documented_examples.py::TestDocumentedExamples"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "tests/test_pack/test_documented_examples.py:150",
+              "demo/forms.py:111"
+            ]
+          }
         }
       ]
     }
