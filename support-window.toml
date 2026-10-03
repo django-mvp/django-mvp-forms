@@ -1,0 +1,20 @@
+# The support window: the versions of Django, django-crispy-forms and daisyUI this
+# package states it works with. The README, the package metadata and the test
+# suite are checked against this file.
+
+# The Python versions the suite runs on.
+python = ["3.12", "3.13"]
+
+[django]
+versions = ["5.2", "6.0", "6.1"]
+
+[django-crispy-forms]
+versions = ["2.7"]
+
+# The Django release series each named release supports.
+[django-crispy-forms.pairs]
+"2.7" = ["5.2", "6.0", "6.1"]
+
+[daisyui]
+minimum = "5.0"
+newest = "5.7"
