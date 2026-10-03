@@ -1,0 +1,42 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Formset, as a table</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">Formset, as a table</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and nothing else.
+        <a class="link" href="{% url 'formset-table' %}">The same page inside the django-mvp shell</a>
+      </p>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Try it</h2>
+          <p>
+            Every line is required here. Enter a quantity of zero to see an error on a
+            field, a quantity and unit price that together pass {{ limit }} to see an
+            error on a line as a whole, and the same item on two lines to see an error on
+            the formset as a whole.
+          </p>
+          <div id="{{ formset.prefix }}-formset">
+            {% crispy formset helper %}
+          </div>
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Errors of all three kinds</h2>
+          <div id="{{ failing_formset.prefix }}-formset">
+            {% crispy failing_formset failing_helper %}
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,327 @@
+{
+  "feature": "006-formsets",
+  "branch": "006-formsets",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T15:06:02Z",
+      "note": "specification approved by delegated review at commit 1e8a67cb7fb8d71bd0627c2f375992c2a013dd2b, on pull request #20; epic #10, stories #31, #32, #33, #34, #35"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T17:40:03Z",
+      "note": "plan.md, research.md, tasks.md: 5 stories, 7 tasks; continues on pull request #20"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T17:40:25Z",
+      "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T17:46:09Z",
+      "note": "plan gate open; design review applied"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T18:15:21Z",
+      "note": "all five stories done"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-03T18:17:01Z",
+      "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T18:28:21Z",
+      "note": "review approved, five low findings fixed in T008; merged origin/main at 23b5933; ADRs renumbered 0017 and 0018"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T15:06:02Z",
+      "self_resolved": [
+        "approved at commit 1e8a67cb7fb8d71bd0627c2f375992c2a013dd2b (forge spec-gate, pull request #20); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T17:45:06Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
+      "at": "2026-10-03T17:45:06Z",
+      "self_resolved": [
+        "DR-001 (medium) the table gets the form-element test: applied to plan and T004",
+        "DR-002 (medium) the table's hidden fields and round trip run on model and inline formsets: applied to plan and T004",
+        "DR-003 (low) the management form is drawn field by field: applied to plan and research R4, carried into T001 and T004",
+        "DR-004 (low) the comparison form is built with use_required_attribute off: applied to plan",
+        "DR-005 (low) FormsetTable written once, in T003: applied to tasks"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T18:28:21Z",
+      "self_resolved": [
+        "CR-001 (low) a layout naming DELETE on a formset whose extra forms have none raises under DEBUG: README says so, T008",
+        "CR-002 (low) a form marked for deletion still shows its own field errors: README says so, T008",
+        "CR-003 (low) damaged management data had no test: test added, T008",
+        "CR-004 (low) escaping of a row's own error and a column heading had no test: test added, T008",
+        "CR-005 (low) no test that no spare empty form is drawn: test added, T008"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T18:28:35Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 31,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_formsets.py::TestStackedFormset",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_formsets.py -q",
+              "uv run pytest tests/test_pack/test_independence.py -q",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/whole_uni_formset.html:1",
+              "mvp_forms/templates/daisyui/uni_formset.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [],
+            "commands": [
+              "uv run pre-commit run --all-files",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "CONTEXT.md:30",
+              "README.md:222",
+              "CHANGELOG.md:27"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 32,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFormsetTable"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags/test_daisyui.py::TestFormsetTable -x",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:346",
+              "mvp_forms/templatetags/daisyui.py:387"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_formsets.py::TestTableFormset",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_formsets.py::TestTableFormset -q",
+              "uv run pytest tests/test_pack/test_independence.py -q",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/table_inline_formset.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 33,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_formsets.py::TestFormsetErrors",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_formsets.py::TestFormsetErrors -q",
+              "uv run pytest tests/test_pack/test_independence.py -q",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/errors_formset.html:1",
+              "mvp_forms/templates/daisyui/uni_formset.html:3",
+              "mvp_forms/templates/daisyui/table_inline_formset.html:6",
+              "mvp_forms/templates/daisyui/table_inline_formset.html:21"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_formsets.py::TestFormsetErrors"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_formsets.py -q (91 passed, exit 0)",
+              "forge verify (all steps passed)"
+            ],
+            "code": [
+              "tests/test_pack/test_formsets.py:557",
+              "README.md:375"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P3",
+      "issue": 34,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_formsets.py::TestDeleteAndOrder"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_formsets.py::TestDeleteAndOrder -q",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/table_inline_formset.html:32"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 35,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestStackedFormsetPage",
+              "tests/test_demo.py::TestStandaloneStackedFormsetPage",
+              "tests/test_demo.py::TestTableFormsetPage",
+              "tests/test_demo.py::TestStandaloneTableFormsetPage",
+              "tests/test_demo.py::TestFormsetPagesInTheSidebar"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -k Formset -q",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "demo/forms.py:309",
+              "demo/views.py:305",
+              "demo/urls.py:39",
+              "demo/menus.py:33",
+              "demo/templates/demo/formset_stacked.html:1",
+              "demo/templates/demo/formset_table.html:1",
+              "README.md:339",
+              "CHANGELOG.md:27"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 12.17,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 20,
+    "draft": true
+  }
+}
