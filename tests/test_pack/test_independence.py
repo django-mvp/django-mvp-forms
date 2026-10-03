@@ -10,6 +10,7 @@ from django.apps import apps
 
 import mvp_forms
 from tests.forms import (
+    DateSelectsForm,
     DeveloperAttrsForm,
     FieldAndFormWideErrorsForm,
     FormWideErrorsForm,
@@ -31,7 +32,7 @@ FORM_CLASS = "supplied-by-form-class"
 HELPER_CLASSES = {LABEL_CLASS, FIELD_CLASS, FORM_CLASS}
 # Tailwind utilities the pack writes where daisyUI has no class for the job.
 # Each is named here so that adding one is a reviewed change.
-LAYOUT_UTILITIES = {"w-full"}
+LAYOUT_UTILITIES = {"w-full", "flex", "gap-2"}
 
 
 def helped(form, **settings):
@@ -91,6 +92,16 @@ STATES = [
     pytest.param("{{ form|crispy }}", SelectsForm, NOTHING, id="selects"),
     pytest.param(
         "{{ form|crispy }}", lambda: SelectsForm({}), NOTHING, id="invalid selects"
+    ),
+    pytest.param("{{ form|crispy }}", DateSelectsForm, NOTHING, id="dates"),
+    pytest.param(
+        "{{ form|crispy }}", lambda: DateSelectsForm({}), NOTHING, id="invalid dates"
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: helped(DateSelectsForm({}), form_show_labels=False),
+        NOTHING,
+        id="dates without labels",
     ),
     pytest.param(
         "{{ form|crispy }}",

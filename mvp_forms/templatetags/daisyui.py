@@ -1,5 +1,6 @@
-"""The pack's input tag, which draws a widget as a daisyUI component."""
+"""The pack's field tag and filter, which draw a widget as a daisyUI component."""
 
+import copy
 from html import unescape
 
 from django import forms, template
@@ -7,8 +8,15 @@ from django.forms.boundfield import BoundField
 from django.template import Context
 from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
+from django.utils.translation import gettext_lazy
 
 register = template.Library()
+
+DATE_PARTS = {
+    "_year": gettext_lazy("Year"),
+    "_month": gettext_lazy("Month"),
+    "_day": gettext_lazy("Day"),
+}
 
 
 class FieldInput:
@@ -16,7 +24,8 @@ class FieldInput:
 
     The pack's class is passed to ``BoundField.as_widget``, which merges it over
     the widget's own attributes for that render only, so the widget is never
-    changed.
+    changed. A widget the pack has a template for is drawn from a copy of it with
+    that template, for the same reason.
 
     Args:
         field: The bound field whose widget is drawn.
@@ -42,6 +51,9 @@ class FieldInput:
     # the one Tailwind utility the pack writes makes the input fill its field.
     # A width utility the developer put on the widget replaces it.
     width = "w-full"
+    templates: dict[type[forms.Widget], str] = {
+        forms.SelectDateWidget: "daisyui/widgets/select_date.html",
+    }
     error_modifiers: dict[str, str] = {
         "input": "input-error",
         "textarea": "textarea-error",
@@ -62,6 +74,36 @@ class FieldInput:
             if isinstance(self.field.field.widget, widget_class):
                 return component
         return None
+
+    @property
+    def template_name(self) -> str | None:
+        """The pack's template for the field's widget, or None when it has none.
+
+        A widget that names a template of its own is drawn by that template, so
+        the pack's applies only while the widget has its class's template.
+        """
+        widget = self.field.field.widget
+        for widget_class, name in self.templates.items():
+            if (
+                isinstance(widget, widget_class)
+                and widget.template_name == widget_class.template_name
+            ):
+                return name
+        return None
+
+    @property
+    def widget(self) -> forms.Widget:
+        """The widget to draw: the field's own, or a copy with the pack's template."""
+        widget: forms.Widget = self.field.field.widget
+        if self.template_name:
+            widget = copy.copy(widget)
+            widget.template_name = self.template_name
+        return widget
+
+    @property
+    def is_group(self) -> bool:
+        """Whether the field is several inputs that share one label."""
+        return self.field.use_fieldset
 
     @property
     def css_class(self) -> str:
@@ -143,6 +185,17 @@ class FieldInput:
             return f"{self.field.auto_id}_helptext"
         return ""
 
+    @property
+    def group_description(self) -> str:
+        """The ids a group's fieldset is described by, or an empty string.
+
+        Names the help text, then the error element, for whichever is drawn.
+        """
+        ids = [self.description] if self.description else []
+        if self.show_errors and self.field.errors and self.field.auto_id:
+            ids.append(f"{self.field.auto_id}_error")
+        return " ".join(ids)
+
     def render(self) -> SafeString:
         """Return the widget drawn with the pack's attributes.
 
@@ -154,7 +207,7 @@ class FieldInput:
             The widget's markup.
         """
         if self.hides_error_element and not self.description:
-            widget = self.field.field.widget
+            widget = self.widget
             attrs = self.field.build_widget_attrs(self.attrs, widget)
             attrs.pop("aria-describedby", None)
             if self.field.auto_id and "id" not in widget.attrs:
@@ -167,12 +220,15 @@ class FieldInput:
                     renderer=self.field.form.renderer,
                 )
             )
-        return self.field.as_widget(attrs=self.attrs)
+        return self.field.as_widget(widget=self.widget, attrs=self.attrs)
 
 
 @register.simple_tag(takes_context=True)
-def daisyui_input(context: Context, field: BoundField) -> SafeString:
-    """Draw a bound field's widget as a daisyUI component.
+def daisyui_field(context: Context, field: BoundField) -> FieldInput:
+    """Return the pack's drawing of a bound field's widget.
+
+    Used as ``{% daisyui_field field as drawn %}``: the frame asks the result
+    which shape to draw, then draws it with ``drawn.render``.
 
     Args:
         context: The template context, read for the helper's label and error
@@ -181,10 +237,27 @@ def daisyui_input(context: Context, field: BoundField) -> SafeString:
         field: The bound field whose widget is drawn.
 
     Returns:
-        The widget's markup.
+        The field's input.
     """
     return FieldInput(
         field,
         show_labels=context.get("form_show_labels") != False,  # noqa: E712
         show_errors=context.get("form_show_errors") != False,  # noqa: E712
-    ).render()
+    )
+
+
+@register.filter
+def daisyui_date_part(name: str) -> str:
+    """Name the part of a date that a select draws, from the end of its name.
+
+    Args:
+        name: The select's name, such as ``born_year``.
+
+    Returns:
+        The translated name of the part, or an empty string for a name that
+        ends in none of year, month or day.
+    """
+    for suffix, part in DATE_PARTS.items():
+        if name.endswith(suffix):
+            return str(part)
+    return ""

@@ -1,0 +1,14 @@
+{% load daisyui %}
+<div class="flex gap-2">
+  {% for select in widget.subwidgets %}
+    {% with part=select.name|daisyui_date_part %}
+      <select name="{{ select.name }}"{% include "daisyui/widgets/attrs.html" with widget=select %}{% if part %} aria-label="{{ part }}"{% endif %}>
+        {% for group_name, options, group_index in select.optgroups %}
+          {% for option in options %}
+            <option value="{{ option.value|stringformat:'s' }}"{% include "daisyui/widgets/attrs.html" with widget=option %}>{{ option.label }}</option>
+          {% endfor %}
+        {% endfor %}
+      </select>
+    {% endwith %}
+  {% endfor %}
+</div>

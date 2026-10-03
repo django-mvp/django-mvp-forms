@@ -3,8 +3,9 @@
 import copy
 
 import pytest
+from crispy_forms.helper import FormHelper
 
-from tests.forms import SelectEdgesForm, SelectsForm
+from tests.forms import DateSelectsForm, SelectEdgesForm, SelectsForm
 
 SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
 SELECTS = ["choice", "many", "maybe", "grouped"]
@@ -146,3 +147,99 @@ class TestSelect:
         draw(source, form=form)
 
         assert {n: f.widget.attrs for n, f in form.fields.items()} == before
+
+
+class TestSelectDate:
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_three_selects_each_have_the_component_and_a_name_of_their_own(
+        self, draw, source
+    ):
+        soup = draw(source, form=DateSelectsForm())
+
+        selects = soup.find(id="div_id_born").find_all("select")
+
+        assert {select["name"] for select in selects} == {
+            "born_month",
+            "born_day",
+            "born_year",
+        }
+        assert all("select" in select["class"] for select in selects)
+        names = [select["aria-label"] for select in selects]
+        assert all(names)
+        assert len(set(names)) == 3
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_field_has_one_legend_one_help_text_and_one_error_element(
+        self, draw, source
+    ):
+        soup = draw(source, form=DateSelectsForm({}))
+
+        frame = soup.find(id="div_id_born")
+
+        assert frame.name == "fieldset"
+        assert len(frame.find_all("legend")) == 1
+        assert frame.find("label") is None
+        assert len(frame.find_all(id="id_born_helptext")) == 1
+        assert len(frame.find_all(id="id_born_error")) == 1
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_fieldset_is_described_by_ids_that_exist(self, draw, source):
+        soup = draw(source, form=DateSelectsForm({}))
+
+        frame = soup.find(id="div_id_born")
+        described = frame["aria-describedby"].split()
+
+        assert described == ["id_born_helptext", "id_born_error"]
+        assert all(soup.find(id=name) is not None for name in described)
+        assert not any(
+            select.has_attr("aria-describedby") for select in frame.find_all("select")
+        )
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_field_with_neither_help_nor_errors_is_not_described(self, draw, source):
+        soup = draw(source, form=DateSelectsForm())
+
+        assert not soup.find(id="div_id_plain").has_attr("aria-describedby")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_an_invalid_date_marks_every_select(self, draw, source):
+        soup = draw(source, form=DateSelectsForm({}))
+
+        selects = soup.find(id="div_id_born").find_all("select")
+
+        assert all(select["aria-invalid"] == "true" for select in selects)
+        assert all("select-error" in select["class"] for select in selects)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_held_date_selects_its_three_parts(self, draw, source):
+        form = DateSelectsForm(
+            {"born_year": "2021", "born_month": "3", "born_day": "9"}
+        )
+
+        soup = draw(source, form=form)
+
+        assert selected_values(soup.find(id="id_born_year")) == ["2021"]
+        assert selected_values(soup.find(id="id_born_month")) == ["3"]
+        assert selected_values(soup.find(id="id_born_day")) == ["9"]
+
+    def test_with_labels_off_the_fieldset_is_named_by_aria_label(self, draw):
+        form = DateSelectsForm()
+        form.helper = FormHelper()
+        form.helper.form_show_labels = False
+
+        soup = draw("{% crispy form %}", form=form)
+
+        frame = soup.find(id="div_id_born")
+        assert frame["aria-label"] == form["born"].label
+        assert frame.find("legend") is None
+
+    def test_a_subclass_naming_its_own_template_is_drawn_by_it(self, draw):
+        soup = draw("{{ form|crispy }}", form=DateSelectsForm())
+
+        own = soup.find(id="div_id_own").find_all("select")
+        pack = soup.find(id="div_id_plain").find_all("select")
+
+        assert len(own) == 3
+        assert all("select" in select["class"] for select in own)
+        assert not any(select.has_attr("aria-label") for select in own)
+        assert all(select.has_attr("aria-label") for select in pack)

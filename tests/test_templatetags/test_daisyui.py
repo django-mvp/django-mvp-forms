@@ -1,4 +1,4 @@
-"""Tests for the pack's input tag."""
+"""Tests for the pack's field tag and the input it draws."""
 
 import copy
 
@@ -8,8 +8,10 @@ from django.utils.safestring import mark_safe
 
 from mvp_forms.templatetags.daisyui import FieldInput
 from tests.forms import (
+    DateSelectsForm,
     DeveloperAttrsForm,
     HelpedForm,
+    OwnTemplateDateWidget,
     SelectsForm,
     TextInputsForm,
     UncoveredInput,
@@ -33,6 +35,10 @@ class ShortTextInput(forms.TextInput):
 
 
 class HostSelect(forms.Select):
+    pass
+
+
+class SubclassedDateWidget(forms.SelectDateWidget):
     pass
 
 
@@ -174,6 +180,84 @@ class TestFieldInput:
         field_input = FieldInput(UncoveredForm({})["choice"])
 
         assert "class" not in field_input.attrs
+
+
+class TestFieldInputTemplate:
+    def test_the_stock_date_widget_has_the_packs_template(self):
+        field_input = FieldInput(DateSelectsForm()["born"])
+
+        assert field_input.template_name == "daisyui/widgets/select_date.html"
+
+    def test_a_subclass_naming_its_own_template_has_none(self):
+        assert FieldInput(DateSelectsForm()["own"]).template_name is None
+
+    def test_a_widget_with_no_packs_template_has_none(self):
+        assert FieldInput(TextInputsForm()["text"]).template_name is None
+
+    def test_a_subclass_keeping_its_parents_template_has_the_packs(self):
+        class Form(forms.Form):
+            born = forms.DateField(widget=SubclassedDateWidget)
+
+        assert FieldInput(Form()["born"]).template_name == (
+            "daisyui/widgets/select_date.html"
+        )
+
+    def test_the_fields_widget_keeps_its_own_template_after_a_draw(self):
+        form = DateSelectsForm()
+        widget = form.fields["born"].widget
+        before = widget.template_name
+
+        FieldInput(form["born"]).render()
+
+        assert form.fields["born"].widget is widget
+        assert widget.template_name == before
+
+    def test_a_widget_with_its_own_template_is_never_copied(self):
+        form = DateSelectsForm()
+
+        FieldInput(form["own"]).render()
+
+        assert form.fields["own"].widget.template_name == (
+            OwnTemplateDateWidget.template_name
+        )
+
+    def test_a_date_is_a_group(self):
+        assert FieldInput(DateSelectsForm()["born"]).is_group
+
+    def test_a_single_input_is_not_a_group(self):
+        assert not FieldInput(TextInputsForm()["text"]).is_group
+
+
+class TestFieldInputGroupDescription:
+    def test_help_text_alone_is_named(self):
+        field_input = FieldInput(DateSelectsForm()["born"])
+
+        assert field_input.group_description == "id_born_helptext"
+
+    def test_errors_alone_are_named(self):
+        form = DateSelectsForm(
+            {"plain_year": "2020", "plain_month": "2", "plain_day": "31"}
+        )
+
+        assert FieldInput(form["plain"]).group_description == "id_plain_error"
+
+    def test_help_text_and_errors_are_both_named_help_text_first(self):
+        field_input = FieldInput(DateSelectsForm({})["born"])
+
+        assert field_input.group_description == "id_born_helptext id_born_error"
+
+    def test_neither_help_text_nor_errors_names_nothing(self):
+        assert FieldInput(DateSelectsForm()["plain"]).group_description == ""
+
+    def test_with_errors_off_only_the_help_text_is_named(self):
+        field_input = FieldInput(DateSelectsForm({})["born"], show_errors=False)
+
+        assert field_input.group_description == "id_born_helptext"
+
+    def test_a_form_without_ids_names_nothing(self):
+        form = DateSelectsForm({}, auto_id=False)
+
+        assert FieldInput(form["born"]).group_description == ""
 
 
 class TestFieldInputLabelsOff:

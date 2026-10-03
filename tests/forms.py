@@ -125,3 +125,19 @@ class SelectEdgesForm(forms.Form):
         choices=FRUIT,
         widget=forms.Select(attrs={"class": "mine", "data-role": "picker"}),
     )
+
+
+class OwnTemplateDateWidget(forms.SelectDateWidget):
+    template_name = "django/forms/widgets/multiwidget.html"
+
+
+class DateSelectsForm(forms.Form):
+    born = forms.DateField(
+        widget=forms.SelectDateWidget(years=[2020, 2021]), help_text="Date of birth"
+    )
+    plain = forms.DateField(
+        widget=forms.SelectDateWidget(years=[2020, 2021]), required=False
+    )
+    own = forms.DateField(
+        widget=OwnTemplateDateWidget(years=[2020, 2021]), required=False
+    )
