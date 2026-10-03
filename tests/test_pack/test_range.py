@@ -18,6 +18,17 @@ from tests.forms import (
 SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
 TAG = "{% crispy form %}"
 TABLE = "daisyui/table_inline_formset.html"
+SIZES = ("xs", "sm", "md", "lg", "xl")
+COLORS = (
+    "neutral",
+    "primary",
+    "secondary",
+    "accent",
+    "info",
+    "success",
+    "warning",
+    "error",
+)
 
 
 def stating(*names):
@@ -34,6 +45,10 @@ def submitted(soup, **slid):
     for name, value in slid.items():
         data[input_of(soup, name)["name"]] = str(value)
     return data
+
+
+def classes_of(soup, name):
+    return set(input_of(soup, name)["class"])
 
 
 def codes_of(form):
@@ -343,6 +358,21 @@ class TestRangeMistakes:
         assert (error.kind, error.value, error.target) == ("drawing", drawing, "volume")
         assert error.allowed == ("range",)
 
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_name_that_is_not_a_drawing_names_the_field_and_the_range(
+        self, draw, source
+    ):
+        choices = FormChoices(fields={"volume": Choice(drawing="slider")})
+
+        error = refused(draw, source, RangesForm(choices=choices))
+
+        assert (error.kind, error.value, error.target) == (
+            "drawing",
+            "slider",
+            "volume",
+        )
+        assert error.allowed == ("range",)
+
     def test_a_range_stated_in_a_layout_for_a_text_field_is_refused(self, draw):
         form = RangesForm(layout=[Choice("title", drawing="range")])
 
@@ -357,3 +387,124 @@ class TestRangeMistakes:
         tag = soup.find("input", attrs={"name": "secret"})
 
         assert tag["type"] == "hidden"
+
+
+class TestRangeSizeAndColour:
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_forms_size_is_a_class_of_the_input(self, draw, source):
+        choices = FormChoices(size="sm", fields={"volume": Choice(drawing="range")})
+
+        soup = draw(source, form=RangesForm(choices=choices))
+
+        assert "range-sm" in classes_of(soup, "volume")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_forms_colour_is_a_class_of_the_input(self, draw, source):
+        choices = FormChoices(
+            color="primary", fields={"volume": Choice(drawing="range")}
+        )
+
+        soup = draw(source, form=RangesForm(choices=choices))
+
+        assert "range-primary" in classes_of(soup, "volume")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_fields_own_size_and_colour_win_when_stated_by_name(self, draw, source):
+        choices = FormChoices(
+            size="sm",
+            color="primary",
+            fields={"volume": Choice(drawing="range", size="lg", color="accent")},
+        )
+
+        classes = classes_of(draw(source, form=RangesForm(choices=choices)), "volume")
+
+        assert {"range-lg", "range-accent"} <= classes
+        assert not {"range-sm", "range-primary"} & classes
+
+    def test_the_fields_own_size_and_colour_win_when_stated_in_a_layout(self, draw):
+        form = RangesForm(
+            layout=[
+                Choice("volume", drawing="range", size="xl", color="error"),
+                Choice("ratio", drawing="range"),
+            ],
+            choices=FormChoices(size="sm", color="primary"),
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert {"range-xl", "range-error"} <= classes_of(soup, "volume")
+        assert {"range-sm", "range-primary"} <= classes_of(soup, "ratio")
+
+    def test_a_drawing_a_size_and_a_colour_stated_together_all_take_effect(self, draw):
+        form = RangesForm(
+            layout=[Choice("volume", drawing="range", size="xs", color="success")]
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert {"range", "range-xs", "range-success"} <= classes_of(soup, "volume")
+        assert input_of(soup, "volume")["type"] == "range"
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_with_nothing_stated_no_size_or_colour_is_written(self, draw, source):
+        soup = draw(source, form=RangesForm(choices=stating("volume")))
+
+        classes = classes_of(soup, "volume")
+
+        assert "range" in classes
+        assert not {name for name in classes if name.startswith("range-")}
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_variant_the_form_states_is_passed_over(self, draw, source):
+        choices = FormChoices(
+            variant="ghost", fields={"volume": Choice(drawing="range")}
+        )
+
+        classes = classes_of(draw(source, form=RangesForm(choices=choices)), "volume")
+
+        assert "range" in classes
+        assert not {name for name in classes if name.startswith("range-")}
+
+    def test_a_variant_stated_on_the_field_raises_naming_it(self, draw):
+        form = RangesForm(layout=[Choice("volume", drawing="range", variant="ghost")])
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.allowed) == ("variant", "ghost", ())
+        assert error.target == "volume"
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_field_in_error_drops_the_colour_keeps_the_size_and_carries_the_error(
+        self, draw, source
+    ):
+        choices = FormChoices(
+            size="sm",
+            color="primary",
+            fields={
+                "volume": Choice(drawing="range"),
+                "ratio": Choice(drawing="range"),
+            },
+        )
+        form = RangesForm({"volume": "500", "ratio": "0.5"}, choices=choices)
+
+        soup = draw(source, form=form)
+
+        assert {"range-error", "range-sm"} <= classes_of(soup, "volume")
+        assert "range-primary" not in classes_of(soup, "volume")
+        assert "range-primary" in classes_of(soup, "ratio")
+
+    @pytest.mark.parametrize("size", SIZES)
+    def test_every_size_is_written_as_its_range_class(self, draw, size):
+        choices = FormChoices(size=size, fields={"volume": Choice(drawing="range")})
+
+        soup = draw(TAG, form=RangesForm(choices=choices))
+
+        assert f"range-{size}" in classes_of(soup, "volume")
+
+    @pytest.mark.parametrize("color", COLORS)
+    def test_every_colour_is_written_as_its_range_class(self, draw, color):
+        choices = FormChoices(color=color, fields={"volume": Choice(drawing="range")})
+
+        soup = draw(TAG, form=RangesForm(choices=choices))
+
+        assert f"range-{color}" in classes_of(soup, "volume")

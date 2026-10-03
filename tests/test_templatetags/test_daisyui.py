@@ -2115,15 +2115,25 @@ class TestFieldInputRating:
         assert "bg-error" not in soup.find("input", value="")["class"]
         assert "bg-error" in soup.find("input", value="1")["class"]
 
-    def test_a_size_stated_on_the_field_itself_raises_until_a_rating_has_sizes(self):
-        with pytest.raises(InvalidChoice) as caught:
-            rated("pick", placed=Choice(drawing="rating", size="lg"))
+    def test_a_size_stated_on_the_field_itself_is_the_ratings_size(self):
+        field_input = rated("pick", placed=Choice(drawing="rating", size="lg"))
 
-        assert caught.value.allowed == ()
+        assert field_input.modifiers == ["rating-lg"]
+
+    def test_a_size_the_form_states_is_the_ratings_size(self):
+        field_input = rated("pick", choices=FormChoices(size="lg"))
+
+        assert field_input.modifiers == ["rating-lg"]
+
+    def test_a_variant_stated_on_the_field_itself_raises_naming_it(self):
+        with pytest.raises(InvalidChoice) as caught:
+            rated("pick", placed=Choice(drawing="rating", variant="ghost"))
+
+        assert (caught.value.kind, caught.value.allowed) == ("variant", ())
         assert caught.value.target == "pick"
 
-    def test_a_size_the_form_states_is_passed_over(self):
-        field_input = rated("pick", choices=FormChoices(size="lg"))
+    def test_a_variant_the_form_states_is_passed_over(self):
+        field_input = rated("pick", choices=FormChoices(variant="ghost"))
 
         assert field_input.modifiers == []
 
@@ -2279,3 +2289,22 @@ class TestFieldInputRange:
         field_input = ranged("volume", prepended="$")
 
         assert not field_input.has_attached_text
+
+    def test_the_forms_size_and_colour_are_classes_of_the_input(self):
+        choices = FormChoices(size="sm", color="primary")
+
+        classes = ranged("volume", choices=choices).css_class.split()
+
+        assert {"range-sm", "range-primary"} <= set(classes)
+
+    def test_a_variant_stated_on_the_field_itself_raises_naming_it(self):
+        with pytest.raises(InvalidChoice) as caught:
+            ranged("volume", placed=Choice(drawing="range", variant="ghost"))
+
+        assert (caught.value.kind, caught.value.allowed) == ("variant", ())
+        assert caught.value.target == "volume"
+
+    def test_a_variant_the_form_states_is_passed_over(self):
+        field_input = ranged("volume", choices=FormChoices(variant="ghost"))
+
+        assert field_input.modifiers == []
