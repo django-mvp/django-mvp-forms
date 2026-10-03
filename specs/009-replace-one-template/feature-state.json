@@ -122,13 +122,49 @@
       "tasks": [
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_template_surface.py::TestNamesRead",
+              "tests/test_template_surface.py::TestDisagreements",
+              "tests/test_pack/test_template_list.py::TestTheListMatchesThePackage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_template_surface.py tests/test_pack/test_template_list.py -q"
+            ],
+            "code": [
+              "tests/template_surface.py:29",
+              "tests/template_surface.py:56",
+              "tests/template_surface.py:77",
+              "tests/template_surface.py:101",
+              "tests/template_surface.py:128",
+              "tests/test_pack/test_template_list.py:11",
+              "README.md:804"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_documented_examples.py::TestReadmeReplacement"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_documented_examples.py::TestReadmeReplacement -q"
+            ],
+            "code": [
+              "tests/test_pack/test_documented_examples.py:490",
+              "tests/test_pack/test_documented_examples.py:498",
+              "README.md:815",
+              "CHANGELOG.md:27",
+              "CONTEXT.md:23"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
