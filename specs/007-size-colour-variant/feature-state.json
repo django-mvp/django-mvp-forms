@@ -129,8 +129,25 @@
       "tasks": [
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choices.py::TestFieldChoices",
+              "tests/test_choices.py::TestChoiceRender",
+              "tests/test_pack/test_documented_examples.py::TestReadmeFieldChoices"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py tests/test_pack/test_choices.py tests/test_pack/test_documented_examples.py",
+              "forge verify --repo . --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/choices.py:285",
+              "mvp_forms/choices.py:333",
+              "mvp_forms/templatetags/daisyui.py:102"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
