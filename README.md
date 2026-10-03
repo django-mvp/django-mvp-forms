@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, and the structural and button layout objects, and nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, the structural and button layout objects, and formsets drawn stacked, and nothing is published to PyPI.
 
 ## Why
 
@@ -218,6 +218,42 @@ Layout(
 
 - `HTML` is drawn where you put it, between fields or inside a `Fieldset`, `Column`, `ButtonHolder` or `FormActions`. Your markup is kept as written, and a context value in it, as in the example, is filled in with any markup in the value escaped.
 - `Hidden` is an `<input type="hidden">` with the name and value you give, inside the form element. It carries no class and no id, so `css_id` and `css_class` do nothing on it. Pass `id=` or any other attribute as a keyword argument to add it.
+
+### Formsets
+
+A formset is drawn when you hand it to the pack, as a form is, and it needs no work per form. A plain formset, a model formset and an inline formset are all drawn the same way:
+
+```django
+{% load crispy_forms_tags %}
+
+{% crispy formset %}
+```
+
+`{% crispy formset %}` follows the formset's helper, which is the `FormHelper` you give `{% crispy formset helper %}` or the one on the formset. `{{ formset|crispy }}` draws the forms and the management form with no `<form>` element around them and no helper. With no choice made, the formset is drawn stacked: every form one after another.
+
+What is drawn:
+
+- the management form, once, as its four hidden inputs, ahead of the forms
+- each form in a `<div>` of its own that holds that form's fields and no other form's, with a daisyUI `divider` between one form and the next
+- every hidden field of every form, such as a model formset's primary key or an inline formset's foreign key, inside its form's `<div>`
+- each form's fields as the pack draws them in a single form, with the same label, required marker, help text, errors and input
+- one `<form>` element around the whole formset, never one per form, unless the helper's `form_tag` is off, and the CSRF token once for a post form
+- the formset's media once, unless `include_media` is off, and the helper's buttons once, after the last form
+
+A helper's layout is applied to each form. A form drawn through a layout shows the fields the layout names and its hidden fields, so the `DELETE` and `ORDER` fields that Django adds to a formset are drawn only when the layout names them.
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Submit
+
+helper = FormHelper()
+helper.layout = Layout("name", "quantity", "DELETE")
+helper.add_input(Submit("save", "Save"))
+```
+
+The two templates are `daisyui/whole_uni_formset.html`, which `{% crispy formset %}` asks for, and `daisyui/uni_formset.html`, which `{{ formset|crispy }}` asks for and the first includes.
+
+The pack draws a formset and nothing around it. It draws no empty form to copy, adds no script, and has no view: adding and removing rows in the browser, handling the post and saving belong to django-mvp or to your own code.
 
 ## Contributing
 
