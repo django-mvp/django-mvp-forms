@@ -177,15 +177,38 @@
               "mvp_forms/templates/daisyui/layout/join.html:1",
               "mvp_forms/templates/daisyui/layout/join_member.html:1",
               "mvp_forms/templates/daisyui/field_messages.html:1",
-              "mvp_forms/templates/daisyui/field_body.html:23"
+              "mvp_forms/templates/daisyui/field_body.html:22"
             ],
             "verified_by_ci": false
           }
         },
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_joined_groups.py::TestJoinedGroups",
+              "tests/test_pack/test_joined_groups.py::TestJoinedGroupEdges",
+              "tests/test_pack/test_documented_examples.py::TestReadmeJoinedGroups",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_replacements.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_joined_groups.py -q",
+              "uv run pytest tests/test_layout.py tests/test_pack tests/test_templatetags -n auto --dist loadscope -q"
+            ],
+            "code": [
+              "mvp_forms/layout.py:172",
+              "mvp_forms/layout.py:135",
+              "mvp_forms/templates/daisyui/layout/join.html:1",
+              "mvp_forms/templates/daisyui/field_body.html:22",
+              "README.md:552",
+              "CHANGELOG.md:30",
+              "CONTEXT.md:119"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T006",

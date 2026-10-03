@@ -149,7 +149,7 @@ Read-only is the browser's and exists only on text inputs and textareas. Set `re
 
 ### Layout objects
 
-The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import them from django-crispy-forms as its documentation says. This package adds no layout classes of its own. `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, all from `crispy_forms.bootstrap`, are supported along with the structural and button objects below:
+The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import them from django-crispy-forms as its documentation says. This package adds two of its own, `Choice` (see "One field's own choice") and `Join` (see "Joined groups"). `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, all from `crispy_forms.bootstrap`, are supported along with the structural and button objects below:
 
 ```python
 from crispy_forms.helper import FormHelper
@@ -549,6 +549,41 @@ class EventForm(forms.Form):
 - The form's own widget and its parts are not changed: the classes and names are written on a copy for each render, so drawing a form twice gives the same markup. `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
 - Do not make a part of a `SplitDateTimeField` hidden: the hidden widget of that field is itself a multi-widget, and validating the form then fails. To hide the whole field, give it `widget=forms.SplitHiddenDateTimeWidget`.
 
+#### Joined groups
+
+`Join` comes from `mvp_forms.layout`, and is the package's own, not django-crispy-forms'. It draws several fields as one daisyUI join under one label, such as a country code and a phone number:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Field, Layout
+from django import forms
+from mvp_forms.layout import Join
+
+
+class ContactForm(forms.Form):
+    name = forms.CharField()
+    country_code = forms.ChoiceField(choices=[("+49", "+49"), ("+44", "+44")])
+    number = forms.CharField(help_text="Digits only")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            "name",
+            Join("country_code", Field("number", autocomplete="tel"), label="Phone"),
+        )
+```
+
+- A group holds field names, `Field` objects and `Choice` objects, in the order they are drawn. A `Field` gives its attributes and its `css_class` to the input of each name it holds, and a `Choice` states its size, colour and variant for the names it holds. `Field("number", wrapper_class="wide")` and a `Field`'s `template` are not used in a group, because a member has no frame of its own. Anything else in a group raises `InvalidMember` when the form is drawn, with the class name as `member`: a `Div`, a `PrependedText`, an `InlineField`, a button, another `Join`, and a subclass of `Field` such as `MultiWidgetField`.
+- A member is an input or a select drawn on its own. A checkbox, a toggle, a radio group, a checkbox group, a textarea, a file input, a multi-widget field, a date drawn as three selects, a rating, a range and a field whose widget the pack does not draw as an input raise `InvalidMember` with the field's name as `member`. A hidden field is accepted.
+- The group is one `<fieldset>`. Its `label` is the `<legend>`, as escaped text, with the required marker when any member is required, and a group with no label has no legend. A member draws no label of its own: its input is named by an `aria-label` that is its own field's label, and an `aria-label` you wrote on the widget or on the `Field` is kept. With the helper's `form_show_labels` off the legend is not drawn and the fieldset takes the group's label as its `aria-label`.
+- Each member keeps its own help text and errors. They are drawn after the join, inside the fieldset, once for each member, with the ids Django gives them, `<id>_helptext` and `<id>_error`. A member's input is described by its own help text and errors only, and only the member that failed is `aria-invalid`.
+- The inputs are the direct children of the one element that carries `join`, in the order the group holds them. A hidden member is drawn as its hidden input after that element, inside the fieldset, because daisyUI squares the first and last child of a join whatever they are. A disabled member stays in its place disabled, and a read-only member keeps its attribute.
+- The `css_id`, `css_class` and attributes you give `Join` are on the element that carries `join`, so `Join("width", "height", css_class="join-vertical")` stacks the inputs. A class written for another template pack is dropped. A name the form lacks is left to django-crispy-forms: it logs it, or raises when `CRISPY_FAIL_SILENTLY` is `False`, and draws nothing for it.
+- The join fills its width. An input takes the room the others leave and a select takes its own width. A width class of your own on a widget or a `Field`, such as `w-24`, is kept and the pack adds none.
+- A floating label never applies to a member. The form's `label="floating"` passes it over, and the same statement on a member raises `InvalidChoice` with `kind="label"`.
+- A form with no `Join` is drawn as before, and the form posts and cleans to the same data joined and not joined. In a formset drawn stacked every form draws the group. A formset drawn as a table shows each field as a column, so it draws no join and raises nothing.
+
 ### Size, colour and variant
 
 State a size, a colour and a variant once, in Python, and the pack adds daisyUI's modifier for each to every input it draws for the form. You write no class on any widget. The statement is a `FormChoices`, set as the `daisyui` attribute of the form's helper:
@@ -795,7 +830,7 @@ Here `email`, `password` and `country` have a floating label, `notes` has its or
 
 The label is drawn once, in a `<label class="floating-label">` that holds the input and is tied to it by `for`. The required marker is inside it. The help text and the errors are drawn as they are for any field, with the input's `aria-describedby` and `aria-invalid` unchanged, and the form posts and cleans to the same data as with ordinary labels. Size, colour and variant reach the input as they do with an ordinary label.
 
-- A floating label is for an input, a textarea or a select drawn on its own. The form's statement is passed over, with no error, for every other field: a checkbox, a toggle, a radio group, a checkbox group, a file input, a rating, a range, a multi-widget field, a date drawn as three selects, and a field drawn with attached text on an input or a select, with buttons joined to it, or with no visible label by `InlineField`. A textarea inside a `PrependedText` has no attached text to draw, so it floats.
+- A floating label is for an input, a textarea or a select drawn on its own. The form's statement is passed over, with no error, for every other field: a checkbox, a toggle, a radio group, a checkbox group, a file input, a rating, a range, a multi-widget field, a date drawn as three selects, and a field drawn with attached text on an input or a select, with buttons joined to it, or with no visible label by `InlineField`, and a member of a joined group. A textarea inside a `PrependedText` has no attached text to draw, so it floats.
 - The same statement made for one of those fields, by name or in a layout, raises `InvalidChoice` with `kind="label"`, nothing allowed and the field as `target`. A name other than `floating` raises it too, with `floating` as the name allowed. `None` undoes the form's statement for a field and never raises.
 - An empty field with no placeholder of your own is given its label's text as its placeholder, which is how daisyUI shows the label in place. A select has none. A placeholder you set on the widget is kept.
 - A disabled field is drawn with its ordinary label, so a person can still see what it is, and is never an error. The field is disabled when its form field has `disabled=True`, when its widget has a `disabled` attribute, or when it is drawn with a `disabled` option. A field disabled only by a `<fieldset disabled>` around it is not detected, so give it `Choice(label=None)`. A read-only field floats.
@@ -809,6 +844,8 @@ A name daisyUI does not have is refused when the form is drawn, never written as
 A choice stated for the form that a kind of input has no modifier for is passed over, with no error: `variant="ghost"` leaves a checkbox, a toggle, a radio group and a checkbox group as they are and the rest take it. The same choice stated on one of those fields raises, and so does any choice stated on a field whose widget the pack does not draw as an input of its own, because you asked for it by name.
 
 A floating label stated for the form is passed over for every field that cannot take one, listed under "Floating labels", with no error. Stated on one of them it raises `InvalidChoice` with `kind="label"`, the field as `target` and nothing allowed, and so does one stated around a button. A name other than `floating` raises it with `floating` allowed.
+
+A `Join` that holds a layout object it cannot join, or a field it cannot draw as an input or a select, raises `InvalidMember` when the form is drawn, a `ValueError` carrying `member`: the layout object's class name, or the field's name. Nothing is passed over, because a field is named in the group on purpose. See "Joined groups".
 
 A name in `FormChoices(fields=...)` that is not a field of the form raises `UnknownField`, a `KeyError` whose `names` lists them, when a field of the form is drawn.
 

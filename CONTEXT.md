@@ -116,6 +116,20 @@ holds a value. It is the one name of the label kind of choice, `"floating"`, and
 only a lone input, textarea or select takes one.
 _Avoid_: animated label, placeholder label.
 
+**Joined group**:
+Several fields a developer names in a layout with `Join`, drawn as one daisyUI
+join under one label. It is the package's own layout object. Its inputs sit side
+by side as the direct children of one element, in one fieldset whose legend is
+the group's label, and only an input or a select can be one.
+_Avoid_: input group (that is Bootstrap's name), compound field, field group.
+
+**Member**:
+One field of a joined group. It has no label of its own and is named by an
+`aria-label` that is its field's label, and it keeps its own help text, errors
+and place in the cleaned data. A hidden field named in a group is drawn beside
+the join and is not a member.
+_Avoid_: item, child, part (a part is one widget of a multi-widget field).
+
 **Boolean field**:
 A field whose widget is a Django `CheckboxInput`, or a subclass of one, such as
 a `BooleanField`. It takes the drawings `checkbox`, `toggle` and `switch`. A

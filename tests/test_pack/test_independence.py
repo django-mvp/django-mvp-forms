@@ -42,6 +42,7 @@ from django.apps import apps
 
 import mvp_forms
 from mvp_forms.choices import Choice, FormChoices, Modifiers
+from mvp_forms.layout import Join
 from tests.forms import (
     ButtonedForm,
     CheckboxForm,
@@ -59,6 +60,7 @@ from tests.forms import (
     InlineCheckboxesForm,
     InlineFieldsForm,
     InlineRadiosForm,
+    JoinedEdgesForm,
     JoinedForm,
     LineFormSet,
     MediaForm,
@@ -782,6 +784,21 @@ STATES = [
         lambda: JoinedForm({"country_code": "+99"}),
         NOTHING,
         id="joined group, invalid",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: JoinedForm(show_labels=False),
+        NOTHING,
+        id="joined group without labels",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: JoinedEdgesForm(
+            {"country_code": "+99"},
+            layout=[Join("country_code", "locked", "fixed", "token", css_class="mine")],
+        ),
+        MINE,
+        id="joined group with a disabled, a read-only and a hidden member, invalid",
     ),
 ]
 

@@ -1008,3 +1008,23 @@ class JoinedForm(forms.Form):
         )
         if choices is not None:
             self.helper.daisyui = choices
+
+
+class JoinedEdgesForm(forms.Form):
+    country_code = forms.ChoiceField(choices=CODES, label="Country code")
+    locked = forms.CharField(label="Locked", required=False, disabled=True)
+    fixed = forms.CharField(
+        label="Fixed",
+        required=False,
+        initial="Ada",
+        widget=forms.TextInput(attrs={"readonly": True}),
+    )
+    bio = forms.CharField(label="Bio", required=False, widget=forms.Textarea)
+    agree = forms.BooleanField(label="Agree", required=False)
+    token = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)
