@@ -66,6 +66,20 @@
         "DR-009 (low) the published table is compared by pairing and themes only: applied to plan",
         "DR-010 (low) the demo test reads the element holding the forms; radios override the shell's chooser: applied to plan, T005"
       ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer: approve, every finding remedied",
+      "at": "2026-10-03T23:41:07Z",
+      "self_resolved": [
+        "COR-001 (medium) the Themes page test compares element kind with pairing; the page draws what it named: remedied in T009",
+        "COR-002 (low) README says a ghost field has no border to measure: remedied in T009",
+        "COR-003 (low) a disabled ghost field is read on base-200 with its border: remedied in T009",
+        "COR-004 (low) README and ADR 0035 say only form-wide errors are gathered in an alert: remedied in T009",
+        "COR-005 (low) FR-007 and Key Entities name the pairing, what it is seen on and the theme: remedied in spec.md, D28",
+        "COR-006 (low) no test matches an error's wording: remedied in T009",
+        "COR-007 (low) the Themes page's headings are translatable: remedied in T009",
+        "COR-008 (low) unreached rows and members removed; a disabled button is drawn: remedied in T009"
+      ]
     }
   },
   "stories": [

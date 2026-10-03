@@ -397,3 +397,28 @@ are published, never patched.
 way that a person has to make out.
 
 **ADR:** docs/adr/0033-legibility-is-calculated-from-the-themes-published-colours.md
+
+## D28. The code review's findings
+
+One review of the whole change: approve, nothing critical or high. One medium finding and seven
+low ones. Every one was closed by a change.
+
+- The Themes page's test compared pairings by name alone, so one label stood for the tabs, the
+  table header and the modal title. It now compares the kind of element with the pairing, and
+  the page draws what that named as missing: a solid button in each colour, a disabled button,
+  the link to a held file and a textarea with a placeholder. A modal draws nothing that another
+  form on the page does not, so taking the modal off the page still passes; the reader has no
+  kind for a modal.
+- A disabled ghost field is read on `base-200` with its border, as daisyUI paints it. A multiple
+  select yields no arrow.
+- The README says a ghost field has no border to measure, and that only the errors of the form
+  as a whole are gathered in an alert. The decision record on text colour says the same.
+- FR-007 and the entity it defines said a known exception names the form state. The published
+  table names the pairing, what it is seen on and the theme (D16, D24), and the specification now
+  says so.
+- No test matches the wording of an error. The Themes page's headings are translatable.
+- The reader's row for `text-error`, which the pack no longer writes, and two members of
+  `Element` that nothing read, are removed. A disabled button is drawn, so its row is reached.
+
+**ADR:** none. It is the record of a review.
+

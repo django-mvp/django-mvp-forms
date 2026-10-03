@@ -301,8 +301,8 @@ check holds is listed there, and nothing is listed that the check does not hold.
   write that class. A colour or a variant is the developer's to state (FS-007), and the pack
   never writes one as a repair.
 - **FR-007**: Where a pairing falls short and no stock daisyUI class or modifier brings it up to
-  the standard, it MUST be recorded as a known exception naming the form state, the pairing and
-  the theme. The pack MUST NOT add a stylesheet, a class of its own or an inline style to repair
+  the standard, it MUST be recorded as a known exception naming the pairing, what it is seen on
+  and the theme. The pack MUST NOT add a stylesheet, a class of its own or an inline style to repair
   it.
 - **FR-008**: A pairing that falls short and is not a recorded known exception MUST fail the
   check.
@@ -369,8 +369,9 @@ check holds is listed there, and nothing is listed that the check does not hold.
 - **Shipped theme**: a theme built into the pinned daisyUI version. Light or dark.
 - **Pairing**: something a person has to make out and the surface directly behind it. It belongs
   to a form state and is measured once per shipped theme.
-- **Known exception**: a form state, a pairing and a shipped theme under which the pairing falls
-  short and no stock daisyUI class would pass. Published in the README and held by the check.
+- **Known exception**: a pairing, what it is seen on and a shipped theme under which the pairing
+  falls short and no stock daisyUI class would pass. Published in the README and held by the
+  check.
 
 ## Success Criteria *(mandatory)*
 
