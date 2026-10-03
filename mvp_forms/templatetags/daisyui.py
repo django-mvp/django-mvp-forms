@@ -426,15 +426,16 @@ class FieldInput:
             context = get_context(*args, **kwargs)
             widget = context["widget"]
             options = [
-                option for _, group, _ in widget["optgroups"] for option in group
+                option for optgroup in widget["optgroups"] for option in optgroup[1]
             ]
             clearing = [option for option in options if option["value"] == ""]
             stars = [option for option in options if option["value"] != ""]
+            star_classes = [*self.star_classes, *self.star_modifiers]
             for option in clearing:
                 self.name_input(option, [self.clearing_class])
             for option in stars:
-                self.name_input(option, [*self.star_classes, *self.star_modifiers])
-            widget["rating_class"] = self.component
+                self.name_input(option, star_classes)
+            widget["rating_class"] = self.rating_class
             widget["inputs"] = clearing + stars
             return context
 
@@ -452,9 +453,25 @@ class FieldInput:
         attrs.setdefault("aria-label", self.plain_text(option["label"]))
 
     @property
+    def rating_class(self) -> str:
+        """The classes of the element that is the rating: the component and the size."""
+        sizes = self.resolve_modifiers(
+            self.choices, self.own, self.component, ("size",)
+        )
+        return " ".join([str(self.component), *sizes])
+
+    @property
     def star_modifiers(self) -> list[str]:
-        """The classes a star takes besides its shape: the error colour, if any."""
-        return [self.error_modifiers["rating"]] if self.is_in_error else []
+        """The classes a star takes besides its shape: the colour, or the error's.
+
+        A field in error takes the error colour and not the chosen one.
+        """
+        colors = self.resolve_modifiers(
+            self.choices, self.own, self.component, ("color",)
+        )
+        if self.is_in_error:
+            colors.append(self.error_modifiers["rating"])
+        return colors
 
     def decorate_part(
         self, widget: forms.MultiWidget, index: int, part: forms.Widget

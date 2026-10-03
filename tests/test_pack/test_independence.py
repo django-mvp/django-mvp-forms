@@ -388,6 +388,24 @@ RATINGS = FormChoices(
 RANGES = FormChoices(
     fields={name: Choice(drawing="range") for name in ("volume", "ratio", "price")}
 )
+RATINGS_SIZED = FormChoices(
+    size="sm",
+    color="primary",
+    fields={
+        "score": Choice(drawing="rating"),
+        "again": Choice(drawing="rating", size="xl", color="success"),
+        "kind": Choice(drawing="rating", color="accent"),
+    },
+)
+RANGES_SIZED = FormChoices(
+    size="sm",
+    color="primary",
+    fields={
+        "volume": Choice(drawing="range"),
+        "ratio": Choice(drawing="range", size="xl", color="success"),
+        "price": Choice(drawing="range", color="accent"),
+    },
+)
 EVERY_CHOICE = FormChoices(size="sm", color="primary", variant="ghost")
 EVERY_BUTTON_CHOICE = FormChoices(
     size="lg", color="accent", button_color="neutral", button_variant="outline"
@@ -712,6 +730,30 @@ STATES = [
         lambda: RangesForm({"volume": "500", "ratio": "2"}, choices=RANGES),
         NOTHING,
         id="ranges in error, through the tag",
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: RatingsForm(choices=RATINGS_SIZED),
+        NOTHING,
+        id="ratings with a size and a colour, through the filter",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: RatingsForm({"again": "9", "score": "3"}, choices=RATINGS_SIZED),
+        NOTHING,
+        id="ratings with a size and a colour, in error, through the tag",
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: RangesForm(choices=RANGES_SIZED),
+        NOTHING,
+        id="ranges with a size and a colour, through the filter",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: RangesForm({"volume": "500", "ratio": "2"}, choices=RANGES_SIZED),
+        NOTHING,
+        id="ranges with a size and a colour, in error, through the tag",
     ),
 ]
 

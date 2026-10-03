@@ -20,6 +20,7 @@ from tests.forms import (
     EdgeChoicesForm,
     KeptRatingsForm,
     ModelRatingForm,
+    OwnTemplateRatingsForm,
     RadioRatingsForm,
     RatedLineFormSet,
     RatingsForm,
@@ -30,6 +31,17 @@ from tests.forms import (
 SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
 TAG = "{% crispy form %}"
 TABLE = "daisyui/table_inline_formset.html"
+SIZES = ("xs", "sm", "md", "lg", "xl")
+COLORS = (
+    "neutral",
+    "primary",
+    "secondary",
+    "accent",
+    "info",
+    "success",
+    "warning",
+    "error",
+)
 VALUES = [value for value, _ in STAR_CHOICES]
 LABELS = [label for _, label in STAR_CHOICES]
 
@@ -65,6 +77,22 @@ def refused(draw, source, form):
     with pytest.raises(InvalidChoice) as caught:
         draw(source, form=form)
     return caught.value
+
+
+def wrapper_classes(soup, name):
+    return set(soup.find(id=f"id_{name}")["class"])
+
+
+def star_classes(soup, name):
+    return [set(tag["class"]) for tag in stars_of(soup, name)]
+
+
+def clearing_classes(soup, name):
+    return [
+        set(tag["class"])
+        for tag in inputs_of(soup, name)
+        if "rating-hidden" in tag["class"]
+    ]
 
 
 def signature(tags):
@@ -481,6 +509,16 @@ class TestRatingMistakes:
         assert (error.kind, error.value, error.target) == ("drawing", drawing, name)
         assert error.allowed == ("rating",)
 
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("name", ["own_select", "own_group"])
+    def test_a_rating_stated_for_a_widget_with_a_template_of_its_own_is_refused(
+        self, draw, source, name
+    ):
+        error = refused(draw, source, OwnTemplateRatingsForm(choices=stating(name)))
+
+        assert (error.kind, error.value, error.target) == ("drawing", "rating", name)
+        assert error.allowed == ()
+
     def test_a_rating_stated_in_a_layout_for_a_text_field_is_refused(self, draw):
         form = RatingsForm(layout=[Choice("title", drawing="rating")])
 
@@ -495,3 +533,149 @@ class TestRatingMistakes:
         tag = soup.find("input", attrs={"name": "secret"})
 
         assert tag["type"] == "hidden"
+
+
+class TestRatingSizeAndColour:
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("name", ["score", "kind"])
+    def test_the_forms_size_is_on_the_element_that_is_the_rating(
+        self, draw, source, name
+    ):
+        choices = FormChoices(size="sm", fields={name: Choice(drawing="rating")})
+
+        soup = draw(source, form=RatingsForm(choices=choices))
+
+        assert "rating-sm" in wrapper_classes(soup, name)
+        assert all("rating-sm" not in classes for classes in star_classes(soup, name))
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("name", ["score", "kind", "again"])
+    def test_the_forms_colour_is_on_every_star_and_never_on_the_clearing_input(
+        self, draw, source, name
+    ):
+        choices = FormChoices(color="primary", fields={name: Choice(drawing="rating")})
+
+        soup = draw(source, form=RatingsForm(choices=choices))
+
+        assert all("bg-primary" in classes for classes in star_classes(soup, name))
+        assert "bg-primary" not in wrapper_classes(soup, name)
+        assert all(
+            "bg-primary" not in classes for classes in clearing_classes(soup, name)
+        )
+        assert bool(clearing_classes(soup, name)) == (name == "again")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_fields_own_size_and_colour_win_when_stated_by_name(self, draw, source):
+        choices = FormChoices(
+            size="sm",
+            color="primary",
+            fields={"score": Choice(drawing="rating", size="lg", color="accent")},
+        )
+
+        soup = draw(source, form=RatingsForm(choices=choices))
+
+        assert {"rating-lg"} <= wrapper_classes(soup, "score")
+        assert "rating-sm" not in wrapper_classes(soup, "score")
+        for classes in star_classes(soup, "score"):
+            assert "bg-accent" in classes
+            assert "bg-primary" not in classes
+
+    def test_the_fields_own_size_and_colour_win_when_stated_in_a_layout(self, draw):
+        form = RatingsForm(
+            layout=[
+                Choice("score", drawing="rating", size="xl", color="error"),
+                Choice("again", drawing="rating"),
+            ],
+            choices=FormChoices(size="sm", color="primary"),
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert "rating-xl" in wrapper_classes(soup, "score")
+        assert all("bg-error" in classes for classes in star_classes(soup, "score"))
+        assert "rating-sm" in wrapper_classes(soup, "again")
+        assert all("bg-primary" in classes for classes in star_classes(soup, "again"))
+
+    def test_a_drawing_a_size_and_a_colour_stated_together_all_take_effect(self, draw):
+        form = RatingsForm(
+            layout=[Choice("score", drawing="rating", size="xs", color="success")]
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert {"rating", "rating-xs"} <= wrapper_classes(soup, "score")
+        for classes in star_classes(soup, "score"):
+            assert {"mask", "mask-star-2", "bg-success"} <= classes
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_with_nothing_stated_no_size_or_colour_is_written(self, draw, source):
+        soup = draw(source, form=RatingsForm(choices=stating("score", "again")))
+
+        for name in ("score", "again"):
+            assert "rating" in wrapper_classes(soup, name)
+            assert not {
+                value
+                for value in wrapper_classes(soup, name)
+                if value.startswith("rating-")
+            }
+            for classes in star_classes(soup, name):
+                assert not {value for value in classes if value.startswith("bg-")}
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_variant_the_form_states_is_passed_over(self, draw, source):
+        choices = FormChoices(
+            variant="ghost", fields={"score": Choice(drawing="rating")}
+        )
+
+        soup = draw(source, form=RatingsForm(choices=choices))
+
+        assert "rating" in wrapper_classes(soup, "score")
+
+    def test_a_variant_stated_on_the_field_raises_naming_it(self, draw):
+        form = RatingsForm(layout=[Choice("score", drawing="rating", variant="ghost")])
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.allowed) == ("variant", "ghost", ())
+        assert error.target == "score"
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_field_in_error_drops_the_colour_keeps_the_size_and_carries_bg_error(
+        self, draw, source
+    ):
+        choices = FormChoices(
+            size="sm",
+            color="primary",
+            fields={
+                "again": Choice(drawing="rating"),
+                "score": Choice(drawing="rating"),
+            },
+        )
+        form = RatingsForm({"again": "9", "score": "3"}, choices=choices)
+
+        soup = draw(source, form=form)
+
+        assert "rating-sm" in wrapper_classes(soup, "again")
+        for classes in star_classes(soup, "again"):
+            assert "bg-error" in classes
+            assert "bg-primary" not in classes
+        assert all(
+            "bg-error" not in classes for classes in clearing_classes(soup, "again")
+        )
+        assert all("bg-primary" in classes for classes in star_classes(soup, "score"))
+
+    @pytest.mark.parametrize("size", SIZES)
+    def test_every_size_is_written_as_its_rating_class(self, draw, size):
+        choices = FormChoices(size=size, fields={"score": Choice(drawing="rating")})
+
+        soup = draw(TAG, form=RatingsForm(choices=choices))
+
+        assert f"rating-{size}" in wrapper_classes(soup, "score")
+
+    @pytest.mark.parametrize("color", COLORS)
+    def test_every_colour_is_written_as_its_background_class(self, draw, color):
+        choices = FormChoices(color=color, fields={"score": Choice(drawing="rating")})
+
+        soup = draw(TAG, form=RatingsForm(choices=choices))
+
+        assert all(f"bg-{color}" in classes for classes in star_classes(soup, "score"))

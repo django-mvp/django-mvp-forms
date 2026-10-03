@@ -855,6 +855,23 @@ class RefusedRatingsForm(RatingsForm):
     secret = forms.ChoiceField(choices=STAR_CHOICES, widget=forms.HiddenInput)
 
 
+class OwnTemplateSelect(forms.Select):
+    template_name = "django/forms/widgets/radio.html"
+
+
+class OwnOptionTemplateRadios(forms.RadioSelect):
+    option_template_name = "django/forms/widgets/select_option.html"
+
+
+class OwnTemplateRatingsForm(RatingsForm):
+    own_select = forms.ChoiceField(
+        choices=STAR_CHOICES, required=False, widget=OwnTemplateSelect
+    )
+    own_group = forms.ChoiceField(
+        choices=STAR_CHOICES, required=False, widget=OwnOptionTemplateRadios
+    )
+
+
 class RatedLineForm(forms.Form):
     name = forms.CharField(required=False)
     score = forms.ChoiceField(choices=STAR_CHOICES, required=False)
