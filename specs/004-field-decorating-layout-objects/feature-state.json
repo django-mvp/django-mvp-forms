@@ -2,7 +2,7 @@
  "feature": "004-field-decorating-layout-objects",
  "branch": "004-field-decorating-layout-objects",
  "repo": "django-mvp/django-mvp-forms",
- "state": "REVIEW",
+ "state": "PR_READY",
  "state_history": [
   {
    "state": "QUEUED",
@@ -33,6 +33,11 @@
    "state": "REVIEW",
    "at": "2026-10-03T19:41:12Z",
    "note": "one reviewer, correctness and spec lens, on the feature diff at 8f7da47"
+  },
+  {
+   "state": "PR_READY",
+   "at": "2026-10-03T19:54:01Z",
+   "note": "review closed, walkthrough laid out, pull request open for review"
   }
  ],
  "gates": {
@@ -71,6 +76,11 @@
     "COR-002 low: remedied in the README and ADR 0025 (T014)",
     "DOC-001 low: remedied in the README and CHANGELOG (T014)"
    ]
+  },
+  "walkthrough": {
+   "approved_by": null,
+   "at": "2026-10-03T19:54:00Z",
+   "self_resolved": []
   }
  },
  "stories": [
@@ -489,6 +499,6 @@
  },
  "pr": {
   "number": 27,
-  "draft": true
+  "draft": false
  }
 }
