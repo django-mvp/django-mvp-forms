@@ -328,3 +328,20 @@ class TestDaisyuiInputFalsySwitches:
 
         assert page.find("label") is None
         assert page.find(id="id_bare").has_attr("aria-label")
+
+
+class OwnWidthForm(forms.Form):
+    name = forms.CharField(widget=forms.TextInput(attrs={"class": "w-40"}))
+    responsive = forms.CharField(widget=forms.TextInput(attrs={"class": "md:w-40"}))
+
+
+class TestFieldInputDevelopersWidth:
+    def test_a_width_the_developer_set_is_the_only_width_class(self):
+        classes = FieldInput(OwnWidthForm()["name"]).css_class.split()
+
+        assert [name for name in classes if name.startswith("w-")] == ["w-40"]
+
+    def test_a_width_for_one_breakpoint_keeps_the_packs_width_beside_it(self):
+        classes = FieldInput(OwnWidthForm()["responsive"]).css_class.split()
+
+        assert {"md:w-40", FieldInput.width} <= set(classes)

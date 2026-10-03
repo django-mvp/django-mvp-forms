@@ -115,7 +115,7 @@ These inputs are drawn as daisyUI components, whichever way crispy-forms is aske
 - text, email, URL, number, password, date, time and date-time inputs, as `input`
 - textareas, as `textarea`
 
-Each of them fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`, the one utility it writes. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
+Each of them fills the width of its field. daisyUI gives inputs a fixed width and has no modifier for a full-width one, so the pack adds Tailwind's `w-full`, the one utility it writes. A width class of your own on the widget, such as `w-40`, replaces it. On a page with no Tailwind at all the class does nothing and the inputs keep daisyUI's width.
 
 Errors that belong to the form as a whole are drawn once, in an element with `role="alert"` ahead of the fields. A form with none draws no such element, and `{{ form|as_crispy_errors }}` draws the same element on its own.
 

@@ -83,8 +83,8 @@
       ]
     },
     "walkthrough": {
-      "approved_by": null,
-      "at": "2026-10-03T16:04:52Z",
+      "approved_by": "delegated review",
+      "at": "2026-10-03T16:12:25Z",
       "self_resolved": []
     }
   },
@@ -156,6 +156,11 @@
               "uv run pytest -n auto --dist loadscope"
             ]
           }
+        },
+        {
+          "id": "T013",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },

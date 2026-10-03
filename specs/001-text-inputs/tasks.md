@@ -87,6 +87,14 @@ Plan, *The form templates*; research R1.
 Asked for at the walkthrough. Every text-like input and textarea carries `w-full`, which the
 class test allows by name. The width itself gets no test.
 
+### T013 — A developer's own width wins
+
+**Files**: `mvp_forms/templatetags/daisyui.py`, `tests/test_templatetags/test_daisyui.py`,
+`docs/adr/0007-inputs-fill-their-container.md`, `README.md`
+
+The pack leaves `w-full` out when the widget's class already holds an unprefixed width utility.
+Recorded as ADR 0007.
+
 ---
 
 ## US2 — Label, required marker, help text and errors belong to their input (P1)
