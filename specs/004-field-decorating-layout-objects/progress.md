@@ -90,3 +90,7 @@ Did: route `multi-widget-field` (MultiWidgetFieldForm, MultiWidgetFieldMixin, Mu
 Verified: `uv run pytest tests/test_demo.py -k MultiWidget` failed first (28 failed, 10 errors, no route), then `uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope` 2414 passed; pre-commit and mypy clean.
 Next: full verify, ledger evidence, report.
 Watch: the standalone page's no-django-mvp, no-Cotton check is the one the attached-text class already runs on it.
+
+## 2026-10-03T19:40:10Z · Forge · converge
+
+Converged: no gap between the specification and what was built. Six decision records written (0022 to 0027), three earlier ones marked as amended, README status line brought up to date. Main merged in after each story. Next: code review.

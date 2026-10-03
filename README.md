@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, the layout objects, with `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert` all supported, and formsets drawn stacked or as a table. Nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table. Nothing is published to PyPI.
 
 ## Why
 
