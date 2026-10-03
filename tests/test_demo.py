@@ -9,6 +9,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.shortcuts import resolve_url
 from django.urls import reverse
 
+from mvp_forms.choices import Modifiers
+
 # The address a page guarded by LoginRequiredMixin sends an anonymous visitor to.
 SIGN_IN_URL = resolve_url(settings.LOGIN_URL)
 
@@ -937,3 +939,107 @@ class TestContainersStandaloneAlert(AlertPageContract):
     def test_it_links_back_to_the_alert_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("alert")) is not None
+
+
+CHOICES_OVERRIDE_PREFIX = "override"
+INPUT_ELEMENTS = ["input", "select", "textarea"]
+BUTTON_ELEMENTS = ["input", "button"]
+INPUT_COMPONENTS = [name for name in Modifiers.sizes if name != Modifiers.button]
+COMPONENTS_OF = {
+    "size": INPUT_COMPONENTS,
+    "color": INPUT_COMPONENTS,
+    "variant": [name for name in Modifiers.variants if name != Modifiers.button],
+}
+
+
+def carriers(page, elements, classes):
+    return [
+        element
+        for element in page.find_all(elements, class_=True)
+        if classes & set(element["class"])
+    ]
+
+
+def modifier_classes(kind, name, components):
+    return {Modifiers.tables[kind][component][name] for component in components}
+
+
+class ChoicesPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    @pytest.mark.parametrize("kind", ["size", "color", "variant"])
+    def test_every_name_in_the_tables_is_on_an_input(self, page, kind):
+        for name in Modifiers.names(kind, None):
+            classes = modifier_classes(kind, name, COMPONENTS_OF[kind])
+            assert carriers(page, INPUT_ELEMENTS, classes), name
+
+    @pytest.mark.parametrize("kind", ["size", "color", "variant"])
+    def test_every_name_in_the_tables_is_on_a_button(self, page, kind):
+        for name in Modifiers.names(kind, Modifiers.button):
+            classes = modifier_classes(kind, name, [Modifiers.button])
+            assert carriers(page, BUTTON_ELEMENTS, classes), name
+
+    @pytest.mark.parametrize("component", INPUT_COMPONENTS)
+    def test_every_kind_of_input_is_drawn_at_a_stated_size(self, page, component):
+        classes = set(Modifiers.sizes[component].values())
+        assert carriers(page, INPUT_ELEMENTS, classes)
+
+    def test_the_overriding_field_differs_from_the_form(self, page):
+        field = page.find(id=f"id_{CHOICES_OVERRIDE_PREFIX}-search")
+        large = Modifiers.sizes["input"]["xl"]
+        small = Modifiers.sizes["input"]["sm"]
+        assert large in field["class"]
+        assert small not in field["class"]
+
+    def test_the_overriding_button_differs_from_the_form(self, page):
+        button = page.find(attrs={"name": f"{CHOICES_OVERRIDE_PREFIX}-delete"})
+        assert Modifiers.colors["btn"]["error"] in button["class"]
+        assert Modifiers.colors["btn"]["neutral"] not in button["class"]
+
+    def test_the_field_that_undoes_the_colour_is_drawn_without_it(self, page):
+        field = page.find(id=f"id_{CHOICES_OVERRIDE_PREFIX}-notes")
+        assert Modifiers.colors["textarea"]["primary"] not in field["class"]
+        assert Modifiers.sizes["textarea"]["sm"] in field["class"]
+
+    def test_no_form_element_surrounds_a_form(self, page):
+        field = page.find(id=f"id_{CHOICES_OVERRIDE_PREFIX}-search")
+        assert field.find_parent("form") is None
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+        assert len(ids) == len(set(ids))
+
+
+class TestChoicesPage(ChoicesPageContract):
+    url_name = "choices"
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("choices")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, page):
+        assert page.find("a", href=reverse("choices-standalone")) is not None
+
+
+class TestStandaloneChoicesPage(ChoicesPageContract):
+    url_name = "choices-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, page):
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, page):
+        assert page.find("a", href=reverse("choices")) is not None

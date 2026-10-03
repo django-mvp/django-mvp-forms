@@ -381,11 +381,15 @@ class SettingsForm(forms.Form):
 
 It takes effect with `{{ form|crispy }}` and with `{% crispy form %}`, whether or not the form has a layout, and wherever a field sits in one. Set it on the helper's instance, as above, and not as a class attribute of a `FormHelper` subclass: django-crispy-forms passes a helper's instance attributes on to the templates and leaves its class attributes behind, so a class attribute would not reach everything the pack draws.
 
-The names are daisyUI's own, and nothing else is accepted:
+The names are daisyUI's own, and nothing else is accepted. For inputs:
 
 - size: `xs`, `sm`, `md`, `lg`, `xl`
 - colour: `neutral`, `primary`, `secondary`, `accent`, `info`, `success`, `warning`, `error`
 - variant: `ghost`, for text-like inputs, textareas, selects and file inputs
+
+For buttons, the same sizes and colours and these variants:
+
+- variant: `outline`, `dash`, `soft`, `ghost`, `link`
 
 The classes the names mean are written out in the tables of `Modifiers`, in `mvp_forms.choices`, one for sizes, one for colours and one for variants. The keyword is spelt `color`, as daisyUI spells it. The three are independent: changing one leaves the other two as they were. Every one is optional, and a form that states nothing is drawn exactly as it was before.
 
@@ -435,7 +439,7 @@ When both are given for a field, the `Choice` in the layout wins over the one in
 
 ### Buttons
 
-A `Submit`, `Reset`, `Button` or `StrictButton` takes the form's `size`, `button_color` and `button_variant`, in a layout and when added with `helper.add_input`. The names are the lists above, with these variants for a button: `outline`, `dash`, `soft`, `ghost` and `link`.
+A `Submit`, `Reset`, `Button` or `StrictButton` takes the form's `size`, `button_color` and `button_variant`, in a layout and when added with `helper.add_input`. The names are the sizes and colours listed above and the variants `outline`, `dash`, `soft`, `ghost` and `link`. A choice is stated for one button by wrapping it in a `Choice`, as below, and for every button in the form by `size`, `button_color` and `button_variant` of `FormChoices`.
 
 ```python
 from crispy_forms.bootstrap import StrictButton
@@ -518,6 +522,11 @@ fails, so an error inside a fieldset, a row and a column can be seen:
 
 - `/layout-objects/` is the page inside the django-mvp shell, reached from its sidebar.
 - `/layout-objects/standalone/` is the same page styled by daisyUI's CDN build alone.
+
+One more page draws the size, colour and variant of a form's inputs and buttons. It holds a small form for each size and for each colour, each with one input and one button; a form holding every kind of input at one size; a form of inputs in the ghost variant and a button bar with one button in each variant; and a form that states choices and overrides them for one field in its layout, for one field by name, for one field that drops the colour, and for one button. The forms are built from the tables of `Modifiers`, so the page follows them, and none of them posts anywhere.
+
+- `/choices/` is the page inside the django-mvp shell, reached from its sidebar as "Size, colour and variant".
+- `/choices/standalone/` is the same page styled by daisyUI's CDN build alone.
 
 Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset, groups two fields in a `MultiField`, and carries a `Hidden` input.
 

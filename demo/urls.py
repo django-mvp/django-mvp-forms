@@ -6,11 +6,13 @@ from demo.views import (
     AccordionView,
     AlertView,
     ChoiceInputsView,
+    ChoicesView,
     ContainersStandaloneView,
     LayoutObjectsView,
     ModalView,
     OverviewView,
     StandaloneChoiceInputsView,
+    StandaloneChoicesView,
     StandaloneLayoutObjectsView,
     StandaloneTextInputsView,
     TabsView,
@@ -45,6 +47,12 @@ urlpatterns = [
         "containers/standalone/",
         ContainersStandaloneView.as_view(),
         name="containers-standalone",
+    ),
+    path("choices/", ChoicesView.as_view(), name="choices"),
+    path(
+        "choices/standalone/",
+        StandaloneChoicesView.as_view(),
+        name="choices-standalone",
     ),
     # django-mvp's Account Center, with a development sign-in and sign-out
     # until an account app such as allauth is installed.

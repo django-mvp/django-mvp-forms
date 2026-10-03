@@ -29,6 +29,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from mvp_forms.choices import Choice, FormChoices, Modifiers
+
 
 class TextInputsForm(forms.Form):
     """One field of each text input kind the pack draws.
@@ -481,3 +483,125 @@ class AlertForm(forms.Form):
             "name",
         )
         self.helper.add_input(Submit(f"{prefix}-submit", _("Submit")))
+
+
+class ChosenForm(forms.Form):
+    """A form that states choices for the form and draws no form element.
+
+    None of the forms on the choices page posts anywhere. Every one must be given
+    a prefix of its own, so no id repeats on the page.
+
+    Args:
+        choices: What the form states for its inputs and buttons, or None.
+    """
+
+    def __init__(self, *args, choices=None, **kwargs):
+        """Set the helper, with the form's choices when there are any."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.disable_csrf = True
+        if choices is not None:
+            self.helper.daisyui = choices
+
+
+class PairForm(ChosenForm):
+    """One input and one button, small enough to show one choice at a time."""
+
+    name = forms.CharField(label=_("Name"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Add the button, named by the prefix."""
+        super().__init__(*args, **kwargs)
+        self.helper.add_input(Submit(f"{self.prefix}-submit", _("Save")))
+
+
+class InputKindsForm(ChosenForm):
+    """One field of every kind of input that has a size, a colour or a variant."""
+
+    text = forms.CharField(label=_("Text"), required=False)
+    textarea = forms.CharField(
+        label=_("Textarea"), required=False, widget=forms.Textarea(attrs={"rows": 2})
+    )
+    select = forms.ChoiceField(
+        label=_("Select"), required=False, choices=[("a", "A"), ("b", "B")]
+    )
+    file = forms.FileField(label=_("File"), required=False, widget=forms.FileInput)
+    checkbox = forms.BooleanField(label=_("Checkbox"), required=False)
+    radio = forms.ChoiceField(
+        label=_("Radio group"),
+        required=False,
+        choices=[("a", "A"), ("b", "B")],
+        widget=forms.RadioSelect,
+    )
+    checkbox_group = forms.MultipleChoiceField(
+        label=_("Checkbox group"),
+        required=False,
+        choices=[("a", "A"), ("b", "B")],
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+
+class ButtonBarForm(ChosenForm):
+    """A bar holding one button in each variant daisyUI has for a button."""
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with a button for every variant in the table."""
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(
+            FormActions(
+                *[
+                    Choice(
+                        Button(f"{self.prefix}-{variant}", variant.capitalize()),
+                        variant=variant,
+                    )
+                    for variant in Modifiers.variants[Modifiers.button]
+                ]
+            )
+        )
+
+
+class OverrideForm(ChosenForm):
+    """A form that states choices and then overrides them in each way there is.
+
+    ``search`` takes a ``Choice`` in the layout, ``city`` one by name, ``notes``
+    undoes the colour, and the delete button takes a ``Choice`` of its own. The
+    form must be given a prefix.
+    """
+
+    name = forms.CharField(label=_("Name"), required=False)
+    search = forms.CharField(label=_("Search"), required=False)
+    city = forms.CharField(label=_("City"), required=False)
+    notes = forms.CharField(
+        label=_("Notes"), required=False, widget=forms.Textarea(attrs={"rows": 2})
+    )
+
+    def __init__(self, *args, **kwargs):
+        """State the form's choices and build the layout."""
+        kwargs["choices"] = FormChoices(
+            size="sm",
+            color="primary",
+            variant="ghost",
+            button_color="neutral",
+            button_variant="outline",
+            fields={
+                "city": Choice(size="lg", color="accent"),
+                "notes": Choice(color=None),
+            },
+        )
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper.layout = Layout(
+            "name",
+            Choice("search", size="xl"),
+            "city",
+            "notes",
+            FormActions(
+                Submit(f"{prefix}-save", _("Save")),
+                Choice(
+                    Button(f"{prefix}-delete", _("Delete")),
+                    color="error",
+                    variant="soft",
+                ),
+            ),
+        )

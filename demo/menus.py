@@ -50,5 +50,10 @@ AppMenu.extend(
             view_name="alert",
             extra_context={"label": "Alert", "icon": "alert"},
         ),
+        MenuItem(
+            name="choices",
+            view_name="choices",
+            extra_context={"label": "Size, colour and variant", "icon": "choices"},
+        ),
     ]
 )

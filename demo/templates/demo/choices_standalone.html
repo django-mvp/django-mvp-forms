@@ -1,0 +1,66 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Size, colour and variant</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">Size, colour and variant</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and nothing else.
+        <a class="link" href="{% url 'choices' %}">The same page inside the django-mvp shell</a>
+      </p>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Sizes</h2>
+          {% for size in sizes %}
+            <h3 class="font-semibold">{{ size.title }}</h3>
+            {% crispy size.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Colours</h2>
+          {% for color in colors %}
+            <h3 class="font-semibold">{{ color.title }}</h3>
+            {% crispy color.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Every kind of input at one size</h2>
+          <p>The size stated for the form is {{ inputs_size }}.</p>
+          {% crispy inputs_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Variants</h2>
+          <p>
+            The inputs take {{ inputs_variant }}, where daisyUI has it for them. A button bar
+            holds one button in each variant of a button.
+          </p>
+          {% crispy variant_form %}
+          {% crispy buttons_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Overriding what the form states</h2>
+          <p>
+            The form states a size, a colour and a variant. One field overrides them in its
+            layout, one by name, one undoes the colour, and one button states its own.
+          </p>
+          {% crispy override_form %}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
