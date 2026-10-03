@@ -151,18 +151,81 @@
       "tasks": [
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestDaisyuiClasses",
+              "tests/test_pack/test_buttons.py::TestBaseInputs"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags/test_daisyui.py::TestDaisyuiClasses tests/test_pack/test_buttons.py -q (29 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:15",
+              "mvp_forms/templatetags/daisyui.py:195",
+              "mvp_forms/templates/daisyui/layout/baseinput.html:1",
+              "tests/test_pack/test_buttons.py:18"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_buttons.py::TestStrictButton",
+              "tests/test_pack/test_buttons.py::TestHolders",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack -q (176 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/button.html:1",
+              "mvp_forms/templates/daisyui/layout/buttonholder.html:1",
+              "mvp_forms/templates/daisyui/layout/formactions.html:1",
+              "tests/test_pack/test_buttons.py:83",
+              "tests/test_pack/test_buttons.py:143",
+              "tests/test_pack/test_independence.py:46"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_buttons.py::TestHelperButtons",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_demo.py::TestLayoutObjectsPage",
+              "tests/test_demo.py::TestStandaloneLayoutObjectsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_buttons.py tests/test_demo.py tests/test_templatetags/test_daisyui.py -q (340 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)",
+              "forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-003-structure-and-button-layout-objects --base origin/main (conformance, docs, lint, typecheck, test, build all passed, exit 0)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/inputs.html:1",
+              "mvp_forms/templates/daisyui/whole_uni_form.html:4",
+              "demo/forms.py:126",
+              "demo/forms.py:144",
+              "demo/views.py:131",
+              "demo/templates/demo/layout_objects.html:1",
+              "demo/templates/demo/layout_objects_standalone.html:1",
+              "tests/test_pack/test_buttons.py:204",
+              "README.md:171",
+              "CHANGELOG.md:33"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
