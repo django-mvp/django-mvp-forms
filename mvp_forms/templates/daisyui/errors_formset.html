@@ -1,0 +1,10 @@
+{% with errors=formset.non_form_errors %}
+  {% if errors %}
+    <div role="alert" class="alert alert-error alert-soft">
+      <div>
+        {% if formset_error_title %}<p>{{ formset_error_title }}</p>{% endif %}
+        {% for error in errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% endwith %}

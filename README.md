@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, and the layout objects, with `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert` all supported. Nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, the layout objects, with `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert` all supported, and formsets drawn stacked or as a table. Nothing is published to PyPI.
 
 ## Why
 
@@ -353,6 +353,82 @@ Layout(
 - `HTML` is drawn where you put it, between fields or inside a `Fieldset`, `Column`, `ButtonHolder` or `FormActions`. Your markup is kept as written, and a context value in it, as in the example, is filled in with any markup in the value escaped.
 - `Hidden` is an `<input type="hidden">` with the name and value you give, inside the form element. It carries no class and no id, so `css_id` and `css_class` do nothing on it. Pass `id=` or any other attribute as a keyword argument to add it.
 
+### Formsets
+
+A formset is drawn when you hand it to the pack, as a form is, and it needs no work per form. A plain formset, a model formset and an inline formset are all drawn the same way:
+
+```django
+{% load crispy_forms_tags %}
+
+{% crispy formset %}
+```
+
+`{% crispy formset %}` follows the formset's helper, which is the `FormHelper` you give `{% crispy formset helper %}` or the one on the formset. `{{ formset|crispy }}` draws the forms and the management form with no `<form>` element around them and no helper. With no choice made, the formset is drawn stacked: every form one after another.
+
+What is drawn:
+
+- the management form, once, as its four hidden inputs, ahead of the forms
+- each form in a `<div>` of its own that holds that form's fields and no other form's, with a daisyUI `divider` between one form and the next
+- every hidden field of every form, such as a model formset's primary key or an inline formset's foreign key, inside its form's `<div>`
+- each form's fields as the pack draws them in a single form, with the same label, required marker, help text, errors and input
+- one `<form>` element around the whole formset, never one per form, unless the helper's `form_tag` is off, and the CSRF token once for a post form
+- through `{% crispy formset %}`, the formset's media once, unless `include_media` is off, and the helper's buttons once, after the last form. `{{ formset|crispy }}` draws neither, as for a single form
+
+A helper's layout is applied to each form. A form drawn through a layout shows the fields the layout names and its hidden fields, so the `DELETE` and `ORDER` fields that Django adds to a formset are drawn only when the layout names them.
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Submit
+
+helper = FormHelper()
+helper.layout = Layout("name", "quantity", "DELETE")
+helper.add_input(Submit("save", "Save"))
+```
+
+A layout that names `DELETE` or `ORDER` needs every form to have that field. With `can_delete_extra=False` the extra forms have no `DELETE` field, and django-crispy-forms raises for a field a form does not have while `DEBUG` is on. Leave `DELETE` out of the layout for such a formset, or draw it as a table.
+
+The two templates are `daisyui/whole_uni_formset.html`, which `{% crispy formset %}` asks for, and `daisyui/uni_formset.html`, which `{{ formset|crispy }}` asks for and the first includes.
+
+#### As a table
+
+To draw the same formset as a table, set the helper's template. Nothing else changes, and `{% crispy formset helper %}` stays as it is:
+
+```python
+helper = FormHelper()
+helper.template = "daisyui/table_inline_formset.html"
+```
+
+What is drawn:
+
+- one daisyUI `table`, with a row for each form and a column for each visible field, in the form's own order, inside an element with Tailwind's `overflow-x-auto` so a wide table scrolls instead of widening the page
+- a heading for each visible field, holding its label and, for a required field, the required marker
+- each input named by an `aria-label` equal to its label, and described by its help text when it has any. A radio or checkbox group keeps its `<fieldset>`, which carries the `aria-label`
+- every hidden field in the first cell of its form's row, with no heading and no cell of its own
+- the management form, the `<form>` element, the CSRF token, the media and the helper's buttons as in the stacked layout
+- no table at all for a formset with no forms, though the management form is still drawn so the formset can be posted back
+
+A helper's layout is not applied in a table: every visible field of the form gets a column. The columns are the first form's visible fields and every form is taken to have the same ones. A form that lacks one of them has an empty cell there.
+
+#### Errors
+
+Every error is drawn once, next to what it belongs to, in both layouts:
+
+- a field's error under its input, which the input's `aria-describedby` names
+- a form's own errors, its form-wide errors and those of its hidden fields, in the form's own container when stacked, and in the first cell of the form's row in a table. The row's `aria-describedby` names them, and a row with none carries no `aria-describedby`
+- errors that belong to the formset as a whole, such as a minimum or maximum number of forms, once in an element with `role="alert"` ahead of the forms, outside every form's container and above the table
+
+`formset_error_title` is drawn at the top of the formset-wide element when the helper sets it. A formset with no such error draws no such element, and with `form_show_errors` off none of the three kinds is drawn. `{{ formset|as_crispy_errors }}` draws the formset-wide errors on their own, through `daisyui/errors_formset.html`.
+
+#### Delete and order inputs
+
+When a formset has `can_delete` or `can_order` on, each form's delete input is drawn as the pack's checkbox and its order input as the pack's number input, the same as a boolean or an integer field in a single form. In the table each has a column of its own, with a heading and an `aria-label`. What a posted form reports in `deleted_forms` and `ordered_forms` is Django's, read from the inputs as drawn.
+
+A form that has no delete field, such as an extra form of a formset with `can_delete_extra=False`, leaves that cell empty, so every row has as many cells as there are headings. A form that was marked for deletion and is drawn again after a failed post keeps its delete input ticked.
+
+A form marked for deletion is left out of the formset's validation by Django, but it still holds its own field errors, and they are drawn with it when the page comes back.
+
+The pack draws a formset and nothing around it. It draws no empty form to copy, adds no script, and has no view: adding and removing rows in the browser, handling the post and saving belong to django-mvp or to your own code.
+
 ## Contributing
 
 Standards for this repository live in
@@ -405,6 +481,11 @@ Five more pages draw the containers and the notice django-crispy-forms keeps in 
 - `/modal/` is inside the shell too. Its form holds the street and the city, both required, in a modal that a button on the page opens by the modal's id. Submitting the form empty comes back with the modal open and the errors inside it.
 - `/alert/` is inside the shell too. Its form has three alerts ahead of its field: one with a dismiss control, one without, and one with a daisyUI colour. Submitting the form empty draws all three again.
 - `/containers/standalone/` draws the forms of all four pages as a host project with neither django-mvp nor Cotton would have them, styled by daisyUI's CDN build alone. A post is bound to the form whose submit button it names.
+
+Four more pages draw a formset of order lines, each with a delete input and an order input, and each drawn twice: a formset to submit and a formset that already fails, so all three kinds of error can be seen. A line with a quantity below one is a field error, a line whose total passes a limit is a form-wide error, and the same item on two lines is a formset-wide error. Posting the formset to submit with lines like those comes back with all three. Nothing is saved.
+
+- `/formset-stacked/` and `/formset-table/` draw the formset stacked and as a table, inside the django-mvp shell, and are reached from its sidebar.
+- `/formset-stacked/standalone/` and `/formset-table/standalone/` are the same pages styled by daisyUI's CDN build alone.
 
 ## License
 
