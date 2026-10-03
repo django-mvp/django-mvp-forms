@@ -2,7 +2,7 @@
   "feature": "003-structure-and-button-layout-objects",
   "branch": "003-structure-and-button-layout-objects",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "QUEUED",
@@ -38,6 +38,11 @@
       "state": "PR_READY",
       "at": "2026-10-03T17:08:33Z",
       "note": "review approved, six findings fixed; walkthrough laid out"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-10-03T17:11:43Z",
+      "note": "PR #24 merged; approved by forge-aeo-reviewer"
     }
   ],
   "gates": {
@@ -53,8 +58,8 @@
       "at": "2026-10-03T16:33:27Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "forge-aeo-reviewer",
+      "at": "2026-10-03T17:11:39Z"
     },
     "design_review": {
       "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
@@ -81,8 +86,8 @@
       ]
     },
     "walkthrough": {
-      "approved_by": null,
-      "at": "2026-10-03T17:09:32Z",
+      "approved_by": "delegated review",
+      "at": "2026-10-03T17:11:32Z",
       "self_resolved": []
     }
   },
@@ -424,12 +429,12 @@
       "max": 1
     },
     "tokens": {
-      "used": 11.64,
+      "used": 17.76,
       "max": 120
     }
   },
   "pr": {
     "number": 24,
-    "draft": true
+    "draft": false
   }
 }
