@@ -82,7 +82,7 @@ A developer who writes a `Layout` can group parts of a form behind tabs or an ac
 
 **Chosen:** one page each for tabs, accordion, modal and alert. Three of them can be submitted with invalid data to show the error case. No prototype stage: the markup is stock daisyUI and its structure is the documented one, so there is no new design to judge by eye.
 
-**ADR:** none.
+**ADR:** none — a choice about the demo project and the order of work, which nothing downstream inherits.
 
 ## Notes for planning
 
