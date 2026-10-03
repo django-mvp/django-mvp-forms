@@ -161,6 +161,14 @@ Plan, *The form templates*, *Errors turned off*; research R2 cases 1 and 3.
   receives none of `aria-label`, `aria-required` and `aria-describedby`.
 - README public surface: the helper settings the pack honours and the two it ignores.
 
+### T009 — Two corrections found once every story was in
+
+**Files**: `mvp_forms/templatetags/daisyui.py`, `tests/test_templatetags/test_daisyui.py`
+
+Added at convergence. A label marked safe that holds an HTML entity is named in `aria-label` by
+the character. The tag reads `form_show_labels` and `form_show_errors` as the templates do: off
+only when `False`.
+
 ---
 
 ## US4 — The pack works in any daisyUI project (P2)
