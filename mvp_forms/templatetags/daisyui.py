@@ -1,5 +1,7 @@
 """The pack's input tag, which draws a widget as a daisyUI component."""
 
+from html import unescape
+
 from django import forms, template
 from django.forms.boundfield import BoundField
 from django.template import Context
@@ -67,8 +69,9 @@ class FieldInput:
         if self.requires_aria_required:
             attrs["aria-required"] = "true"
         if self.requires_aria_label:
-            # strip() returns a plain str; strip_tags keeps a safe label safe.
-            attrs["aria-label"] = strip_tags(str(self.field.label)).strip()
+            # A plain str, so the attribute is escaped once however the label
+            # was marked.
+            attrs["aria-label"] = unescape(strip_tags(str(self.field.label))).strip()
         if self.hides_error_element and self.description:
             attrs["aria-describedby"] = self.description
         return attrs
@@ -156,6 +159,6 @@ def daisyui_input(context: Context, field: BoundField) -> SafeString:
     """
     return FieldInput(
         field,
-        show_labels=bool(context.get("form_show_labels", True)),
-        show_errors=bool(context.get("form_show_errors", True)),
+        show_labels=context.get("form_show_labels") is not False,
+        show_errors=context.get("form_show_errors") is not False,
     ).render()

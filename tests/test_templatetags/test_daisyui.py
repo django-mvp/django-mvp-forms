@@ -278,3 +278,28 @@ class TestFieldInputGroupedWidget:
                 "aria-required",
                 "aria-describedby",
             }
+
+
+class EntityLabelForm(forms.Form):
+    name = forms.CharField(label=mark_safe("Fish &amp; chips"))
+
+
+class TestFieldInputEntityLabel:
+    def test_an_entity_in_a_safe_label_is_named_as_its_character(self):
+        field_input = FieldInput(EntityLabelForm()["name"], show_labels=False)
+
+        assert field_input.attrs["aria-label"] == "Fish & chips"
+
+
+class TestDaisyuiInputSwitches:
+    def test_a_switch_that_is_not_false_is_on_for_the_input_and_the_frame(self, draw):
+        form = HelpedForm({"bare": ""})
+
+        page = draw(
+            '{% include "daisyui/field.html" %}',
+            field=form["bare"],
+            form_show_errors=None,
+        )
+
+        assert page.find(id="id_bare_error") is not None
+        assert "input-error" in page.find(id="id_bare")["class"]
