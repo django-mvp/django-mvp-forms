@@ -188,13 +188,13 @@ class would add nothing.
 
 ## D12. A hidden field's error uses Django's own message
 
-**Decision:** The form-wide alert lists each hidden field's errors as Django's
-`"(Hidden field %(name)s) %(error)s"`, through `gettext` with the same msgid.
+**Decision:** The form-wide alert draws the list Django's own `Form.get_context` builds: the
+form-wide errors, then each hidden field's errors as "(Hidden field name) error".
 
-**Why:** It is what Django's own form rendering shows, and reusing the msgid gets every
-translation Django ships with no catalogue in this package.
+**Why:** It is what Django's own form rendering shows, it is already translated by Django, and
+reading Django's list means the pack writes no code and no wording for it.
 
-**Revisit if:** the package gains a catalogue of its own and wants other wording.
+**Revisit if:** a supported Django version stops returning that list from `get_context`.
 
 **ADR:** none — matches Django's own behaviour, and is local to one template
 
@@ -225,11 +225,56 @@ no width to fill.
 ## D15. A split date and time stays uncovered
 
 **Decision:** `SplitDateTimeWidget` is not given a component here. FS-001's tests that needed "a
-widget the pack does not cover" are re-pointed at it, since the select, checkbox and file input
-they used are now covered.
+widget the pack does not cover" are re-pointed at a widget defined in the tests, since the select,
+checkbox and file input they used are now covered and a split date and time is a group.
 
 **Why:** FS-001's specification gives a field split across text inputs to #8.
 
 **Revisit if:** #8 draws it.
 
 **ADR:** none — a sibling boundary
+
+## D16. One tag, `daisyui_field`, replaces `daisyui_input`
+
+**Decision:** The frame gets the field's `FieldInput` from `{% daisyui_field field as drawn %}`
+and `{% daisyui_input %}` is deleted.
+
+**Why:** The frame now has to ask which shape to draw before it draws the input, and it was the
+only caller of the old tag. Keeping both would leave a tag nothing uses, which is an alias the
+repository's standards rule out. The old tag was never listed in the README's public surface.
+
+**Revisit if:** a layout object needs the input drawn without the frame.
+
+**ADR:** docs/adr/0009-widget-templates-through-a-copy-of-the-widget.md
+
+## D17. The pack ships a base English catalogue
+
+**Decision:** The three date-part names are the pack's first text of its own, so
+`mvp_forms/locale/en/LC_MESSAGES/django.po` is added with them.
+
+**Why:** Article VIII requires a catalogue from a package with user-facing strings, and Django's
+catalogues hold none of the three.
+
+**Revisit if:** never; later strings join the same catalogue.
+
+**ADR:** none — required by the constitution, nothing to decide
+
+## D18. Design review, 2026-10-03
+
+One reviewer, three lenses, verdict: changes requested. Each finding and what was done:
+
+- DR-001 (high): the uncovered-widget tests could not move to a split date and time without
+  changing their assertions. Applied: they move to a test-local widget (plan *Tests*, T001).
+- DR-002 (high): three strings of the pack's own and no catalogue. Applied: D17, T002.
+- DR-003 (medium): two tags building the same object. Applied: D16, T002.
+- DR-004 (low): the alert can read Django's own error list. Applied: D12, T006, one tag fewer.
+- DR-005 (low): Django's Jinja2 form renderer cannot find the pack's widget templates. Applied
+  as a README sentence in T002.
+- DR-006 (low): a group subclass that overrides only its option template. Carried into T004.
+- DR-007 (low): the demo's post has to bind uploaded files and discard them. Carried into T008.
+- DR-008 (low): no test drew the split hidden date and time. Carried into T006.
+- Noted and left: `ColorInput`, `SearchInput` and `TelInput` subclass `Input` directly and are in
+  no entry of `FieldInput.components`. They are text-like, so the gap is FS-001's. Filed as an
+  issue and listed at the merge gate.
+
+**ADR:** none — a record of the review, each decision above carries its own verdict

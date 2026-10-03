@@ -2,7 +2,7 @@
   "feature": "002-choice-boolean-file-inputs",
   "branch": "002-choice-boolean-file-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-10-03T16:27:33Z",
       "note": "plan.md, research.md, tasks.md: 7 stories, 8 tasks; continues on pull request #22"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T16:28:11Z",
+      "note": "one reviewer, three lenses"
     }
   ],
   "gates": {
@@ -24,12 +29,26 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-03T16:34:58Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: changes requested, all applied",
+      "at": "2026-10-03T16:34:58Z",
+      "self_resolved": [
+        "DR-001 (high) uncovered-widget tests move to a test-local widget, not a split date and time: applied to plan and T001",
+        "DR-002 (high) base English catalogue for the three date-part names: applied to plan and T002 (D17)",
+        "DR-003 (medium) daisyui_field replaces daisyui_input, no alias: applied to plan and T002 (D16)",
+        "DR-004 (low) the alert reads Django's own error list, no tag: applied to plan and T006 (D12)",
+        "DR-005 (low) README names the form renderers the pack's widget templates need: applied to T002",
+        "DR-006 (low) a group subclass overriding only its option template keeps it: watch item in T004",
+        "DR-007 (low) the demo's post binds uploaded files and discards them: watch item in T008",
+        "DR-008 (low) a split hidden date and time gets a test: watch item in T006"
+      ]
     }
   },
   "stories": [
@@ -154,7 +173,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

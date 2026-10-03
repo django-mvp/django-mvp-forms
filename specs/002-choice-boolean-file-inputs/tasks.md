@@ -22,6 +22,11 @@ touched.
 
 Where FR-003 applies, a test draws through both `{{ form|crispy }}` and `{% crispy form %}`.
 
+## Decision records
+
+The three decision records named in `decisions.md` (D9, D10, D11) are written at convergence,
+after the last story, with numbers read from `origin/main` at that moment. No task writes them.
+
 ## Order
 
 **US1 → US2 → US3 → US4 → US5 → US6 → US7, sequential, in the feature worktree** (plan, *Story
@@ -47,8 +52,10 @@ Plan, *`FieldInput`*; research R1, R2, R8.
 - `components` gains `Select` and `SelectDateWidget` as `select`; `error_modifiers` gains
   `select-error` as a literal. `w-full` applies to a select.
 - Re-point the FS-001 tests that use a select, a checkbox or a file input as their uncovered
-  example at `SplitDateTimeWidget` (`UncoveredWidgetsForm`, `UncoveredForm`,
-  `TestUncoveredWidgets`). Change the example widget only, never an assertion's meaning.
+  example (`UncoveredWidgetsForm`, `UncoveredForm`, `TestUncoveredWidgets`) at a widget defined
+  in the tests that subclasses `forms.Input` directly, as `ShortTextInput` is already defined in
+  `test_daisyui.py`. Change the example widget only. The one assertion edit allowed is
+  `find("select")` becoming `find("input")` at `tests/test_templatetags/test_daisyui.py:84`.
 - Tests, `TestFieldInput`: the component for `Select`, `NullBooleanSelect`, `SelectMultiple` and
   `SelectDateWidget`; a host subclass of `Select`.
 - Tests, `test_choice_inputs.py` `TestSelect`: each is a `<select>` with the component class,
@@ -67,7 +74,8 @@ Plan, *`FieldInput`*; research R1, R2, R8.
 
 **Files**: `mvp_forms/templatetags/daisyui.py`, `mvp_forms/templates/daisyui/field.html`,
 `mvp_forms/templates/daisyui/widgets/attrs.html`,
-`mvp_forms/templates/daisyui/widgets/select_date.html`, `tests/forms.py`,
+`mvp_forms/templates/daisyui/widgets/select_date.html`,
+`mvp_forms/locale/en/LC_MESSAGES/django.po`, `tests/forms.py`,
 `tests/test_templatetags/test_daisyui.py`, `tests/test_pack/test_choice_inputs.py`,
 `tests/test_pack/test_field_frame.py`, `tests/test_pack/test_independence.py`, `README.md`,
 `CHANGELOG.md`
@@ -75,7 +83,15 @@ Plan, *`FieldInput`*; research R1, R2, R8.
 Plan, *`FieldInput`*, *The tags*, *The field frame*, *The widget templates*; research R3, R4.
 
 - `FieldInput.templates`, `template_name`, the widget copy in `render()`, `is_group`,
-  `group_description`. The tag `daisyui_field`. The filter `daisyui_date_part`.
+  `group_description`. The filter `daisyui_date_part`.
+- The tag `daisyui_field` replaces `daisyui_input`, which is deleted with its registration. No
+  alias. A pre-existing test that loads the old tag loads the new one and asserts the same thing.
+- The base English catalogue `mvp_forms/locale/en/LC_MESSAGES/django.po` holding the three
+  date-part msgids (Article VIII), generated with `makemessages` where gettext is installed and
+  written by hand otherwise. No compiled file is committed unless the repository already tracks
+  one.
+- README: the pack's own widget templates need a form renderer that loads Django templates, which
+  the default renderer and `TemplatesSetting` both do.
 - The frame draws a group as `<fieldset>` with `<legend>`, described by its help text and errors,
   and named by `aria-label` when labels are off.
 - `attrs.html` and `select_date.html`.
@@ -144,7 +160,8 @@ Plan, *`FieldInput`*, *The widget templates* (`group.html`); research R2, R4.
   each sit in an element with the group's name (US3.7); an attribute a widget sets on one option
   (a `disabled` option from a `create_option` override) is on that option only; no choices draws
   no option; markup in an option's label and a group's name is escaped; no id repeats; a
-  subclass naming its own template is drawn by it.
+  subclass naming its own template, or its own option template, is drawn by it (the rule in
+  `template_name` also requires `option_template_name` unchanged for a group).
 - README, CHANGELOG: radio and checkbox groups.
 
 ---
@@ -183,20 +200,20 @@ Issue: #56. Delivers FR-002, FR-013; SC-005.
 
 ### T006 — Show a hidden field's errors with the form-wide errors
 
-**Files**: `mvp_forms/templatetags/daisyui.py`, `mvp_forms/templates/daisyui/errors.html`,
-`tests/forms.py`, `tests/test_templatetags/test_daisyui.py`,
+**Files**: `mvp_forms/templates/daisyui/errors.html`, `tests/forms.py`,
 `tests/test_pack/test_hidden_inputs.py`, `README.md`, `CHANGELOG.md`
 
-Plan, *The tags* (`daisyui_form_errors`), *The form-wide alert*; research R7.
+Plan, *The form-wide alert*; research R7.
 
-- The tag `daisyui_form_errors`; `errors.html` draws from it.
+- `errors.html` draws from `form.get_context.errors`. No tag.
 - Tests: a hidden field is an `<input type="hidden">` with its value, and the page has no frame,
   label, help text or error element for it (US5.1); a `MultipleHiddenInput` draws one input per
   value (US5.2); a hidden field with an invalid value puts one message in the alert, through the
   filter, the tag and `|as_crispy_errors`, and the alert is drawn even when the form has no
-  other form-wide error (US5.3, SC-005); the message carries the field's name and the error, as
-  data chosen by a condition; markup in a hidden field's error is escaped; a form whose only
-  fields are hidden draws no frame; a disabled hidden field is drawn as Django draws it; errors
+  other form-wide error (US5.3, SC-005); the alert's text contains the field's name and the
+  error string the test form supplied, never the pack's or Django's wording; markup in a hidden field's error is escaped; a form whose only
+  fields are hidden draws no frame; a disabled hidden field is drawn as Django draws it; a `SplitHiddenDateTimeWidget` field is
+  two hidden inputs and no frame (FR-005); errors
   off draws no alert.
 - README, CHANGELOG: hidden inputs and their errors.
 
@@ -249,7 +266,9 @@ Issue: #58. Delivers FR-021, FR-022; SC-003, SC-004, SC-006.
 
 Plan, *The demo project*; research R10.
 
-- The form, the shared mixin, the two views, routes, menu entry and icon.
+- The form, the shared mixin, the two views, routes, menu entry and icon. The mixin's `post`
+  binds `request.FILES` as well as `request.POST`; an upload is validated and discarded, never
+  written to storage.
 - Tests in `test_demo.py`, for both pages: it responds; every input kind is present in each of
   the six states and in the submittable form; the disabled state's inputs are disabled; the
   held-value state's clearable file field links its file; the error state's alert is present; a

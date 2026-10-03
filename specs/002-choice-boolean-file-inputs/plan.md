@@ -49,7 +49,7 @@ added, two demo pages
 | V Security | Choice labels, group names, file names and the hidden-field message go through autoescaping. No `\|safe`, no `mark_safe` on data. |
 | VI Documentation | README and CHANGELOG change in the story that draws each widget. |
 | VII Dependencies | None added. |
-| VIII i18n | The pack's own text (three date-part names, the hidden-field message) is marked for translation; the message reuses Django's msgid so Django's catalogues translate it. |
+| VIII i18n | The pack's own text is three date-part names, marked for translation and shipped in a base English catalogue at `mvp_forms/locale/en/LC_MESSAGES/django.po`. The hidden-field message is Django's own, already translated by Django. |
 | XI Compatibility | The frame's ids, the template paths and `FieldInput.components` stay as FS-001 published them. The frame's outer element changes for a group only (ADR to record). |
 | XIII Plain templates | Checked by the existing tests, which read every template under `mvp_forms/templates/`. |
 | XIV Stock daisyUI | Every component is daisyUI's. Three layout utilities are added by name (research R8). |
@@ -68,7 +68,8 @@ mvp_forms/
 │       ├── group.html                # a radio group or a checkbox group
 │       ├── select_date.html          # a date as three named selects
 │       └── clearable_file_input.html # a file input, with the file it holds
-└── templatetags/daisyui.py           # FieldInput, {% daisyui_input %}, {% daisyui_field %}, {% daisyui_form_errors %}
+├── templatetags/daisyui.py           # FieldInput, {% daisyui_field %}, the daisyui_date_part filter
+└── locale/en/LC_MESSAGES/django.po   # the pack's three strings
 
 demo/                                 # one new form, one mixin shared by both page pairs, two templates
 
@@ -131,13 +132,13 @@ when neither is drawn or the form has no `auto_id`.
 
 ### The tags
 
-- `{% daisyui_input field %}`: unchanged.
 - `{% daisyui_field field as drawn %}`: returns the `FieldInput` for the field, built with the
-  same two switches. The frame asks it which shape to draw and calls `drawn.render`.
-- `{% daisyui_form_errors form as errors %}`: the form-wide errors as a list of strings: every
-  `form.non_field_errors()` message, then for each hidden field each of its errors as
-  `gettext("(Hidden field %(name)s) %(error)s")`, Django's own msgid (research R7). The strings
-  are plain, so the template escapes them.
+  two switches read from the context. The frame asks it which shape to draw and calls
+  `drawn.render`. It replaces `{% daisyui_input %}`, which the frame was the only caller of and
+  which is deleted in the same task. No alias is kept.
+- The filter `daisyui_date_part`, used by `select_date.html` only.
+
+The form-wide alert needs no tag: see *The form-wide alert*.
 
 ### The field frame
 
@@ -202,8 +203,12 @@ Django's own widget builds.
 
 ### The form-wide alert
 
-`daisyui/errors.html` draws from `{% daisyui_form_errors form as errors %}`: the alert appears
-when the list is not empty and holds each message once. Everything else about it is unchanged.
+`daisyui/errors.html` draws from Django's own list, `form.get_context.errors`, read once with
+`{% with %}`. `Form.get_context` already returns the form-wide errors followed by each hidden
+field's errors, worded and translated by Django (research R7). The alert appears when that list is
+not empty and holds each message once, autoescaped. Everything else about it is unchanged. If
+this cannot work when built, the fallback is a tag that builds the same list, and the report says
+why.
 
 ### Disabled and read-only
 
@@ -239,8 +244,12 @@ Elements are found by id, `for`, role, name and type, never by wording. A class 
 where it is the daisyUI component or its error modifier.
 
 FS-001 tests that use a select, a checkbox or a file input as "a widget the pack does not cover"
-are re-pointed at `SplitDateTimeWidget`, which stays uncovered (research R1). Their assertions do
-not change. This is the one sanctioned edit to tests this feature did not write.
+are re-pointed at a widget defined in the tests that subclasses `forms.Input` directly: one
+input, a label `for` that is its id, not a group, and in no entry of `FieldInput.components`.
+Every frame assertion then holds unedited. The sanctioned edits to tests this feature did not
+write are exactly these: the example widget in those three places; `find("select")` becoming
+`find("input")` at `tests/test_templatetags/test_daisyui.py:84`; and any test that loads
+`{% daisyui_input %}` loading `{% daisyui_field %}` instead, asserting the same thing.
 
 Each new pack module draws through both `{{ form|crispy }}` and `{% crispy form %}` where FR-003
 applies, by parametrising the source.

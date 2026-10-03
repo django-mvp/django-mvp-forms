@@ -27,8 +27,10 @@ settled.
   pack does not cover": `tests/forms.py` `UncoveredWidgetsForm`,
   `tests/test_templatetags/test_daisyui.py` `UncoveredForm` (lines 37 to 41, 77 to 84, 143) and
   `tests/test_pack/test_inputs.py` `TestUncoveredWidgets` (line 135). Those widgets become covered
-  here, so those tests need another example. `SplitDateTimeWidget` stays uncovered: FS-001's
-  specification gives a field split across text inputs to #8.
+  here, so those tests need another example. `SplitDateTimeWidget` stays uncovered (FS-001's
+  specification gives a field split across text inputs to #8), but it is a group with no label
+  `for`, so it cannot stand in for them without changing what they assert. A widget defined in
+  the tests that subclasses `forms.Input` directly can.
 
 ## R2. Which Django widgets need what
 
@@ -76,7 +78,10 @@ value as it does today.
 The copy is rendered by the form's renderer. Django's default renderer and `TemplatesSetting` both
 load templates from installed apps, so `daisyui/widgets/...` under `mvp_forms/templates/` is
 found. Django's `Jinja2` form renderer does not load Django templates. django-crispy-forms itself
-only works with Django templates, so this is not a new limit.
+only works with Django templates, but it loads its own through the project's template engine,
+so a host project that sets Django's `Jinja2` form renderer draws FS-001's inputs today and
+would fail on these three. The README says the pack needs a form renderer that loads Django
+templates.
 
 FR-004 says a subclass draws as its parent does unless it names a template of its own. The rule
 that follows: the pack's template is used only when the widget's `template_name` is still the one
@@ -144,8 +149,10 @@ itself and the three corrections of ADR 0005 apply unchanged.
 `Form.get_context` (`forms.py:239`) adds each hidden field's errors to the form's top errors as
 `_("(Hidden field %(name)s) %(error)s")`. That message is in Django's own catalogues, so using
 the same msgid through `gettext` gets every translation Django ships. `form.non_field_errors()`
-does not include them, which is why they are lost today. The pack's `errors.html` is what
-`|crispy`, `{% crispy %}` and `|as_crispy_errors` all draw, so one change there covers FR-013.
+does not include them, which is why they are lost today. `form.get_context` takes no argument,
+so a template can read `form.get_context.errors` and get the whole list, already worded and
+translated by Django. The pack's `errors.html` is what `|crispy`, `{% crispy %}` and
+`|as_crispy_errors` all draw, so one change there covers FR-013.
 
 ## R8. Classes
 
@@ -162,8 +169,11 @@ ADR 0003 those are layout utilities, named in `LAYOUT_UTILITIES`: `flex`, `flex-
 
 ## R9. Text the pack adds
 
-- The hidden-field message, through Django's msgid (R7).
-- The names of a date's three selects: "Year", "Month", "Day", marked for translation.
+- The names of a date's three selects: "Year", "Month", "Day". Django's catalogues hold none of
+  them, so Article VIII's base English catalogue is added under `mvp_forms/locale/`, which the
+  wheel already packages.
+
+The hidden-field message is Django's, not the pack's (R7).
 
 Everything else on the page is Django's or the developer's.
 
