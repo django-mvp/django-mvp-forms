@@ -6,7 +6,7 @@ import pytest
 from django import forms
 from django.utils.safestring import mark_safe
 
-from mvp_forms.templatetags.daisyui import FieldInput
+from mvp_forms.templatetags.daisyui import FieldInput, daisyui_classes
 from tests.forms import DeveloperAttrsForm, HelpedForm, TextInputsForm
 
 KINDS = [
@@ -345,3 +345,21 @@ class TestFieldInputDevelopersWidth:
         classes = FieldInput(OwnWidthForm()["responsive"]).css_class.split()
 
         assert {"md:w-40", FieldInput.width} <= set(classes)
+
+
+class TestDaisyuiClasses:
+    @pytest.mark.parametrize(
+        "name", ["btn-inverse", "ctrlHolder", "blockLabel", "error"]
+    )
+    def test_a_name_written_for_another_pack_is_dropped(self, name):
+        assert daisyui_classes(f"btn {name} mine") == "btn mine"
+
+    def test_a_repeated_name_is_dropped(self):
+        assert daisyui_classes("btn mine btn mine") == "btn mine"
+
+    def test_the_order_is_kept(self):
+        assert daisyui_classes("zeta alpha mid") == "zeta alpha mid"
+
+    @pytest.mark.parametrize("value", [None, "", "   ", "btn-inverse error"])
+    def test_nothing_left_gives_an_empty_string(self, value):
+        assert daisyui_classes(value) == ""

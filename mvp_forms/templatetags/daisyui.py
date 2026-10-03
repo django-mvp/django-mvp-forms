@@ -1,4 +1,4 @@
-"""The pack's input tag, which draws a widget as a daisyUI component."""
+"""The pack's input tag and class filter, which draw as daisyUI components."""
 
 from html import unescape
 
@@ -9,6 +9,10 @@ from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
 
 register = template.Library()
+
+# Class names django-crispy-forms writes for other template packs. daisyUI does
+# not define them, so a button or a group is drawn without them.
+UPSTREAM_ONLY_CLASSES = frozenset({"btn-inverse", "ctrlHolder", "blockLabel", "error"})
 
 
 class FieldInput:
@@ -185,3 +189,21 @@ def daisyui_input(context: Context, field: BoundField) -> SafeString:
         show_labels=context.get("form_show_labels") != False,  # noqa: E712
         show_errors=context.get("form_show_errors") != False,  # noqa: E712
     ).render()
+
+
+@register.filter
+def daisyui_classes(value: str | None) -> str:
+    """Return a class string without the names written for other template packs.
+
+    Repeated names are dropped and the order of the rest is kept.
+
+    Args:
+        value: The class string django-crispy-forms wrote, or None.
+
+    Returns:
+        The class string, empty when nothing is left.
+    """
+    names = (
+        name for name in (value or "").split() if name not in UPSTREAM_ONLY_CLASSES
+    )
+    return " ".join(dict.fromkeys(names))
