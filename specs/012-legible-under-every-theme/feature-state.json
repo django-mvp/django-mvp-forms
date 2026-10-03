@@ -2,7 +2,7 @@
   "feature": "012-legible-under-every-theme",
   "branch": "012-legible-under-every-theme",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "QUEUED",
@@ -18,6 +18,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-10-03T22:06:42Z",
       "note": "one reviewer, three lenses, on plan.md, research.md and tasks.md"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T22:16:55Z",
+      "note": "plan gate open; design review applied"
     }
   ],
   "gates": {
