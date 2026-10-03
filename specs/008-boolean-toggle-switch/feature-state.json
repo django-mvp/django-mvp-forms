@@ -2,7 +2,7 @@
   "feature": "008-boolean-toggle-switch",
   "branch": "008-boolean-toggle-switch",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-03T19:26:03Z",
       "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-03T19:48:02Z",
+      "note": "review recorded, walkthrough laid out, ready for review"
     }
   ],
   "gates": {
@@ -69,6 +74,11 @@
         "COR-001 (low) three tests asserted where the label sits and the absence of a width class: fixed, T006",
         "COR-002 (low) a drawing stated by name for a field the layout leaves out is never checked: the reading is recorded (D19) and the README says so, T006"
       ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-03T19:47:50Z",
+      "self_resolved": []
     }
   },
   "stories": [
@@ -268,6 +278,6 @@
   },
   "pr": {
     "number": 19,
-    "draft": true
+    "draft": false
   }
 }
