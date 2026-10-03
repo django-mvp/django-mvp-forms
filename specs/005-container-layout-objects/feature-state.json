@@ -2,7 +2,7 @@
   "feature": "005-container-layout-objects",
   "branch": "005-container-layout-objects",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "QUEUED",
@@ -38,6 +38,11 @@
       "state": "PR_READY",
       "at": "2026-10-03T18:17:53Z",
       "note": "review approved, three findings fixed; walkthrough laid out"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-10-03T18:20:57Z",
+      "note": "PR #65 merged; approved by forge-aeo-reviewer"
     }
   ],
   "gates": {
@@ -53,8 +58,8 @@
       "at": "2026-10-03T17:32:39Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "forge-aeo-reviewer",
+      "at": "2026-10-03T18:20:53Z"
     },
     "design_review": {
       "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
@@ -80,8 +85,8 @@
       ]
     },
     "walkthrough": {
-      "approved_by": null,
-      "at": "2026-10-03T18:17:53Z",
+      "approved_by": "delegated review",
+      "at": "2026-10-03T18:20:54Z",
       "self_resolved": []
     }
   },
@@ -359,12 +364,12 @@
       "max": 1
     },
     "tokens": {
-      "used": 14.98,
+      "used": 22.54,
       "max": 120
     }
   },
   "pr": {
     "number": 65,
-    "draft": true
+    "draft": false
   }
 }
