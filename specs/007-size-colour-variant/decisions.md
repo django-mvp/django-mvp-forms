@@ -130,3 +130,84 @@ here would be specifying a sibling's behaviour.
 
 **Why.** It adds no page design of its own. The inputs and buttons are stock daisyUI, and the demo
 page is a catalogue of them inside the demo project's existing page frame.
+
+## D11. The form's choices are one attribute on its helper, `helper.daisyui`
+
+**What was open.** D5 left where the form-wide statement is written to planning.
+
+**Chosen.** `helper.daisyui = FormChoices(...)`. Under the crispy tag the value reaches every
+template through the context, because django-crispy-forms passes a helper's own attributes into
+it. Under the crispy filter and `|as_crispy_field`, which never read a helper, the pack reads
+`field.form.helper`.
+
+**Why.** A button in a layout is drawn before the form is in the context, so an attribute on the
+form cannot reach it. The helper's attributes can. One constructor refuses a keyword it does not
+know, where a plain attribute per choice (`helper.size`) would let a misspelt name do nothing.
+Research R2 has the options weighed.
+
+**Revisit if.** django-crispy-forms stops passing a helper's own attributes into the context.
+
+## D12. One layout object, `Choice`, states a choice for what it holds
+
+**What was open.** How one field or one button states its own choice. ADR 0008 says the package
+defines no layout classes and names this feature as the reason to look again.
+
+**Chosen.** `Choice("search", size="lg")` and `Choice(Submit("save", "Save"), color="accent")`.
+It places itself in the context while it renders what it holds. Holding nothing, the same class
+is the value in `FormChoices(fields={"search": Choice(size="lg")})`, which is how a form drawn
+without a layout singles out one field.
+
+**Why.** `Field` and the button classes turn every keyword argument into an HTML attribute, so
+they cannot carry it. Subclassing each would add five names that shadow upstream ones, which is
+what ADR 0008 ruled out. One wrapper adds one name and leaves every upstream object as documented.
+
+**Revisit if.** django-crispy-forms gives layout objects a way to carry arguments a template
+pack can read.
+
+## D13. `None` on a field means the pack's ordinary drawing
+
+**Chosen.** An argument of `Choice` that is left out inherits. `None` asks for no modifier
+(FR-011). The default is a module constant, `INHERIT`, that a developer never has to write.
+
+**Why.** `color=None` reads as "no colour", and Python needs some default that is not `None` to
+tell the two apart.
+
+## D14. A field drawn as in error does not get the chosen colour
+
+**Chosen.** The error modifier is written and the colour modifier is not. Size and variant still
+apply. With errors off the field takes its colour.
+
+**Why.** Both classes set the same property, and which wins depends on the order of the rules in
+daisyUI's stylesheet. FR-018 should not rest on that (research R5).
+
+## D15. A mistake is reported when the form is drawn, as `InvalidChoice`
+
+**Chosen.** Names are checked where they are resolved, which is the one place that knows the
+field or the button. The error is `InvalidChoice`, a `ValueError` carrying `kind`, `value`,
+`allowed` and `target`. `FieldInput` and `DrawnButton` resolve in `__init__`.
+
+**Why.** A `Choice` in the by-name mapping is built before it knows its field, so a constructor
+cannot name it (FR-020). Django's `{% if %}` swallows an exception raised inside `and`, `or` and
+`not`, so the check must not wait for a property the frame reads (research R6).
+
+## D16. The keyword is `color`
+
+**Chosen.** `color`, `button_color`. The prose of the documentation says colour.
+
+**Why.** FR-005 has the developer write daisyUI's names, and daisyUI's documentation, like CSS
+and the rest of the Python the developer writes, spells it `color`.
+
+## D17. The removal checkbox of a file field takes the size and the colour
+
+**Chosen.** A filter turns the file input's class string into the checkbox's.
+
+**Why.** SC-003 leaves no visible input at the ordinary size, and only the widget's final
+attributes reach the pack's widget template (research R7).
+
+## D18. A `Choice` applies to everything inside it, and an inner one wins
+
+**Chosen.** A `Choice` may hold several fields, buttons or containers. A `Choice` inside another
+is merged over it, each of the three kinds separately. One `color` on a `Choice` is the input's
+colour for a field inside it and the button's for a button inside it.
+
+**Why.** It falls out of placing the choice in the context, and refusing it would take code.
