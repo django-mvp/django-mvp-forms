@@ -67,13 +67,45 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choice_inputs.py::TestSelect",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInput"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_choice_inputs.py tests/test_templatetags tests/test_pack/test_independence.py tests/test_pack/test_inputs.py -q"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:45",
+              "mvp_forms/templatetags/daisyui.py:60"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choice_inputs.py::TestSelectDate",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputTemplate",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputGroupDescription",
+              "tests/test_pack/test_field_frame.py::TestFrameShape"
+            ],
+            "commands": [
+              "uv run pytest tests -q"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:79",
+              "mvp_forms/templatetags/daisyui.py:189",
+              "mvp_forms/templatetags/daisyui.py:227",
+              "mvp_forms/templatetags/daisyui.py:250"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
