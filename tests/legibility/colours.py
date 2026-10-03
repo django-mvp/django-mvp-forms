@@ -190,7 +190,7 @@ class Colour:
         )
 
     def faded(self, share: float) -> "Colour":
-        """Set the colour at a share of its opacity, which mixing with `transparent` does.
+        """Keep a share of the opacity, which is what mixing with `transparent` does.
 
         Args:
             share: The share of the opacity to keep, 0 to 1.
