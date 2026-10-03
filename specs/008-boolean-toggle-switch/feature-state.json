@@ -2,7 +2,7 @@
   "feature": "008-boolean-toggle-switch",
   "branch": "008-boolean-toggle-switch",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-10-03T18:52:34Z",
       "note": "plan.md, research.md, tasks.md: 3 stories, 5 tasks; continues on pull request #19"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T18:52:54Z",
+      "note": "one reviewer, three lenses"
     }
   ],
   "gates": {
@@ -24,12 +29,23 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-03T18:57:49Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T18:57:49Z",
+      "self_resolved": [
+        "DR-001 (medium) size and colour reach a toggle only in US3; the README example and demo form state a drawing only until then: applied to plan, T002, T003",
+        "DR-002 (low) the submission test builds its posted data from the drawn inputs: applied to T002",
+        "DR-003 (low) a drawing stated around a button is refused: applied to plan, research and T001 (D15)",
+        "DR-004 (low) CONTEXT's Choice and Variant entries amended with the new term: applied to T002",
+        "DR-005 (low) the widget is checked before the name, and the name against a tuple: applied to plan and T001"
+      ]
     }
   },
   "stories": [
@@ -99,7 +115,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

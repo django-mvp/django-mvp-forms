@@ -98,7 +98,9 @@ Both of FR-012's cases fit it without a new error:
 - an unknown drawing name: `kind="drawing"`, `allowed` the three names;
 - a drawing on a field that is not a boolean field: `kind="drawing"`, `allowed` empty.
 
-A drawing is only ever a field's own statement, so `target` is always the field's name.
+A drawing is only ever stated on a field by name or by a `Choice` in a layout, never for the
+form, so `target` is never None. A `Choice` in a layout may hold a button, which has no drawing,
+so a drawing stated around one raises the same error with the button as `target`.
 
 `checkbox` stated on a field that is not a boolean field raises as well. It cannot be honoured
 there, and the README already says that any choice stated on a field by name raises when the

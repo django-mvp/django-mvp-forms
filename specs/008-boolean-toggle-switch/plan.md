@@ -36,7 +36,8 @@ class SettingsForm(forms.Form):
 ```
 
 `remember` is a checkbox, `notify` a toggle and `publish` a switch in the primary colour, all
-small. A toggle and a switch are daisyUI's toggle: the same checkbox input with the class
+small. The size and the colour reach a toggle and a switch from the third story on; until then
+the README's example and the demo page state a drawing only. A toggle and a switch are daisyUI's toggle: the same checkbox input with the class
 `toggle`. A switch also carries `role="switch"`.
 
 ## Technical Context
@@ -116,19 +117,28 @@ README.md, CHANGELOG.md, CONTEXT.md
   it. It returns the drawing's name, or None when none is stated. It raises `InvalidChoice` with
   `kind="drawing"` and the field's name: with the three names as `allowed` for a name outside
   the table, and with nothing allowed for any drawing stated on a field whose widget is not a
-  `forms.CheckboxInput`.
+  `forms.CheckboxInput`, `checkbox` included. The widget is checked first, so an unknown name on
+  such a field has nothing allowed. The name is tested against `tuple(Modifiers.drawings)`, as
+  `Modifiers.resolve` tests a name, so a value that cannot be hashed raises `InvalidChoice` too.
 - `component` returns `Modifiers.drawings[drawing]` when a drawing is stated, and the widget's
   component otherwise. With `checkbox` stated, that is the component it had anyway.
 - `is_single_checkbox` is true for the component `toggle` too, so the frame draws the same label
   around it. `fixed_size` gains `toggle`. `error_modifiers` gains `"toggle": "toggle-error"`.
 - `attrs` adds `role="switch"` when the drawing is `switch`.
 
+### Buttons
+
+A button has no drawing. `DrawnButton.resolve_modifiers` raises `InvalidChoice` with
+`kind="drawing"`, nothing allowed and the button as `target` when the `Choice` around it states
+one, so `Choice(Row("agree", Submit("save", "Save")), drawing="toggle")` is reported and not
+passed over (SC-006). A hidden input takes nothing and raises nothing, as today.
+
 Raised from `__init__`, a mistake surfaces from the tag and not from inside a template's
 `{% if %}`, which is the rule `resolve_modifiers` already follows.
 
 ### What does not change
 
-No template under `mvp_forms/templates/`. `FormChoices`, `DrawnButton`, the removal checkbox of a
+No template under `mvp_forms/templates/`. `FormChoices`, the removal checkbox of a
 held file, checkbox groups and the null-boolean select. A hidden boolean field, which the frame
 draws before the tag is reached.
 

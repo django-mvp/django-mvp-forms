@@ -199,3 +199,34 @@ state. Visible "On" and "Off" words would be text the developer did not ask for.
 **Revisit if:** a drawing gains visible state text.
 
 **ADR:** none — nothing is decided that constrains later work.
+
+## D15. A drawing stated around a button is refused
+
+**Decision:** a `Choice` in a layout that states a drawing and holds a button raises
+`InvalidChoice` with the kind `drawing`, nothing allowed and the button as `target`.
+
+**Why:** the design review found that the plan passed it over in silence. SC-006 says every
+choice the pack cannot honour is reported, and ADR 0020 already refuses a choice stated on one
+thing that cannot take it.
+
+**Revisit if:** wrapping a whole button bar and its fields in one `Choice` with a drawing turns
+out to be something forms want.
+
+**ADR:** none — ADR 0020's rule applied to one more kind.
+
+## D16. What the design review found, and what was done
+
+**Decision:** one reviewer read the plan through three lenses and approved it with one medium and
+four low findings. All five were applied to the plan and the tasks before any code.
+
+- DR-001 (medium): size and colour reach a toggle only in the third story, so the README example
+  and the demo form state a drawing only until then. Applied to plan and T002, T003.
+- DR-002 (low): the submission test builds its posted data from the drawn inputs. Applied to T002.
+- DR-003 (low): a drawing around a button. Decided as D15, applied to plan, research and T001.
+- DR-004 (low): CONTEXT's Choice and Variant entries are amended with the new term. Applied to T002.
+- DR-005 (low): the widget is checked before the name, and the name against a tuple. Applied to
+  plan and T001.
+
+**Why:** each costs a sentence now and a rework later.
+
+**ADR:** none — a record of the review, not a constraint on the code.

@@ -43,6 +43,7 @@ SC-002, SC-003, SC-006.
 Plan, *`mvp_forms/choices.py`*, *`FieldInput`*; research R2, R3, R4, R5.
 
 - `Choice(drawing=...)` and its merge in `over`. `Modifiers.drawings`.
+- `DrawnButton.resolve_modifiers` refuses a drawing (plan, *Buttons*).
 - `FieldInput.own_choice`, `resolve_drawing`, `component`, `is_single_checkbox`, `fixed_size`,
   `error_modifiers` and `attrs` as the plan describes them.
 - Tests, `tests/test_choices.py`: a `Choice` holds a drawing; an inner drawing wins over an outer
@@ -51,8 +52,15 @@ Plan, *`mvp_forms/choices.py`*, *`FieldInput`*; research R2, R3, R4, R5.
   component for each drawing, stated in a layout and by name, and with the layout's winning; the
   role of a switch and no role on a toggle or a checkbox; an unknown name raises `InvalidChoice`
   with `kind`, `value`, `allowed` and `target`; any drawing on a text field, a checkbox group and
-  a null-boolean field raises with nothing allowed; a subclass of `CheckboxInput` takes a
+  a null-boolean field raises with nothing allowed, `checkbox` included; an unknown name on a
+  text field raises with nothing allowed; a list given as the name raises `InvalidChoice` and
+  not `TypeError`; a subclass of `CheckboxInput` takes a
   drawing; a field in error drawn as a toggle does not raise.
+- Tests, in `TestDrawnButton`'s file beside it, a `TestDrawnButtonDrawing` class: a drawing
+  stated around a button raises `InvalidChoice` with `kind="drawing"`, nothing allowed and the
+  button as `target`; `None` and `INHERIT` do not; a hidden input does not.
+- The docstrings of `FieldInput`, `daisyui_field`, `DrawnButton` and `Choice` that list size,
+  colour and variant name the drawing where it now applies.
 
 ### T002 — Forms drawn through the pack, and the public surface
 
@@ -62,8 +70,10 @@ Plan, *`mvp_forms/choices.py`*, *`FieldInput`*; research R2, R3, R4, R5.
 
 - Tests, `TestDrawings` in `tests/test_pack/test_drawings.py`, one per acceptance scenario of
   US1: no drawing stated is the checkbox FS-002 draws (1); a toggle has the toggle component and
-  no role (2); a switch has it and the switch role (3); a posted form with a toggle on and a
-  switch off cleans to `True` and `False`, the same as checkboxes (4, SC-002); a bound `True` is
+  no role (2); a switch has it and the switch role (3); a form posted with a toggle on and a
+  switch off cleans to `True` and `False`, the same as checkboxes, with the posted data built
+  from the drawn inputs (each one's `name`, and its `value` attribute when it has one) and not
+  from a dict written by hand (4, SC-002); a bound `True` is
   drawn checked in each drawing (5, FR-010); the input is a checkbox input with the field's name
   and no script is drawn with it (6, FR-008); only the field stated changes (7); every row of a
   formset draws the field as stated on the helper (8). Each through `{{ form|crispy }}` and
@@ -75,9 +85,12 @@ Plan, *`mvp_forms/choices.py`*, *`FieldInput`*; research R2, R3, R4, R5.
 - Verification, reported and not committed: render every entry of `STATES` as it stands at the
   base commit before T001 and after this task, and compare (SC-003).
 - README: a section under the public surface naming the three drawings and how one is chosen,
-  with an example that `test_documented_examples.py` draws; the kinds `InvalidChoice` carries in
-  *What is refused and what is passed over*. CHANGELOG, under Added. CONTEXT: the term
-  **Drawing**.
+  with an example that `test_documented_examples.py` draws; the example states a drawing only,
+  with no size or colour on a toggle or a switch, which T005 adds; the sentence in *One field's
+  own choice* that counts three kinds; the kinds `InvalidChoice` carries in
+  *What is refused and what is passed over*. CHANGELOG, under Added. CONTEXT: add
+  **Drawing** and **Boolean field**; amend **Choice** to name the drawing as a fourth kind;
+  reword **Variant** so that it is not defined with the word drawing.
 
 ### T003 — The demo page
 
@@ -88,7 +101,8 @@ Plan, *`mvp_forms/choices.py`*, *`FieldInput`*; research R2, R3, R4, R5.
 Plan, *The demo project*.
 
 - The page in the shell and standalone, with the sidebar entry and its icon, holding the US1
-  form: three boolean fields drawn three ways, which posts and shows what it cleaned to.
+  form: three boolean fields drawn three ways, which posts and shows what it cleaned to. No size
+  or colour is stated on it; T005 adds those sections.
 - Tests, a `DrawingsPageContract` with a class for each form of the page: it answers, the shell
   page is in the sidebar, the three drawings are each drawn, and a post with fields on and off
   shows the cleaned values.
@@ -141,7 +155,7 @@ Plan, *`mvp_forms/choices.py`*; research R6.
 - Tests, `TestDrawingSizeAndColour`, one per acceptance scenario of US3, for a toggle and a
   switch: the form's size (1); the form's colour (2); the field's own wins (3); a drawing, a size
   and a colour stated together on one field (4); nothing stated writes no modifier (5); every
-  size and colour, each class checked against daisyUI's list by `STATES` (6); a field in error
+  size and colour, each class checked against daisyUI's list by `TestModifierTables` (6); a field in error
   keeps the error modifier and drops the colour.
 - `STATES` gains a toggle and a switch with a size and a colour.
 - The demo page gains each drawing at every size and in every colour, generated from
