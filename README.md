@@ -168,6 +168,25 @@ Build the layout in the form's `__init__`, as above, so each form has its own. d
 
 Each of them holds its fields and further layout objects in the order the layout gives, and can be nested to any depth. The `css_id`, `css_class` and attributes you give one are kept on its element, and your classes come after the pack's. Every field inside is still drawn with its own label, help text and errors. An empty container is drawn, and `template=` draws a container with a template of your own.
 
+Buttons are drawn as daisyUI buttons. `FormActions` and `StrictButton` come from `crispy_forms.bootstrap`, where django-crispy-forms keeps them:
+
+```python
+from crispy_forms.bootstrap import FormActions, StrictButton
+from crispy_forms.layout import Button, ButtonHolder, Reset, Submit
+
+FormActions(
+    Submit("save", "Save"),
+    Reset("clear", "Clear"),
+    Button("help", "Help"),
+    StrictButton("Save for {{ user.username }}", type="submit", css_class="btn-accent"),
+)
+```
+
+- `Submit`, `Reset` and `Button` are `<input>` elements of type `submit`, `reset` and `button`, each carrying `btn` (a `Submit` also `btn-primary`). Their value can read the page's context, as in `Submit("save", "Save {{ user.username }}")`. Pass `disabled=True` to draw one disabled.
+- `StrictButton` is a `<button>` of type `button` unless you give another `type=`. Its content may hold markup and context values; the values are escaped.
+- `ButtonHolder` and `FormActions` hold buttons side by side in one container, wrapping on a narrow page. `ButtonHolder` accepts an id and classes; `FormActions` also keeps any other attributes.
+- A button added to the form helper with `self.helper.add_input(Submit("save", "Save"))` is drawn after the fields, inside the form element, in a container of its own. It is the same element as the same button in a layout. With `form_tag` off, the buttons of a layout are still drawn.
+
 ## Contributing
 
 Standards for this repository live in
@@ -203,6 +222,8 @@ fails, so an error inside a fieldset, a row and a column can be seen:
 
 - `/layout-objects/` is the page inside the django-mvp shell, reached from its sidebar.
 - `/layout-objects/standalone/` is the same page styled by daisyUI's CDN build alone.
+
+Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`.
 
 ## License
 

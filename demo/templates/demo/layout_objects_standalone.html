@@ -18,17 +18,25 @@
       <section class="card card-border bg-base-100">
         <div class="card-body">
           <h2 class="card-title">Try it</h2>
-          <form method="post" novalidate>
-            {% csrf_token %}
-            {% crispy form %}
-            <button type="submit" class="btn btn-primary">Submit</button>
-          </form>
+          {% crispy form %}
         </div>
       </section>
       <section class="card card-border bg-base-100">
         <div class="card-body">
           <h2 class="card-title">Errors inside the containers</h2>
           {% crispy failing_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Buttons added to the form helper</h2>
+          {% crispy helper_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Fields straight in a row, and a button holder</h2>
+          {% crispy small_form %}
         </div>
       </section>
     </main>

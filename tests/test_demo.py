@@ -189,6 +189,9 @@ class TestStandaloneTextInputsPage(TextInputsPageContract):
 LAYOUT_SUBMIT_PREFIX = "layout"
 LAYOUT_FAILING_PREFIX = "failing"
 LAYOUT_ROW_FIELDS = ["first_name", "last_name"]
+LAYOUT_INPUT_BUTTONS = ["submit", "reset", "button"]
+HELPER_PREFIX = "helper"
+SMALL_PREFIX = "small"
 
 
 def layout_field_id(prefix, name):
@@ -227,6 +230,48 @@ class LayoutObjectsPageContract:
         page = open_page(self.url_name, {})
         error_id = layout_field_id(LAYOUT_SUBMIT_PREFIX, "first_name") + "_error"
         assert page.find(id=error_id) is not None
+
+    @pytest.mark.parametrize("name", LAYOUT_INPUT_BUTTONS)
+    def test_the_actions_hold_each_input_button_by_name(self, page, name):
+        actions = page.find(id=f"{LAYOUT_SUBMIT_PREFIX}-actions")
+        assert actions.find("input", attrs={"name": f"{LAYOUT_SUBMIT_PREFIX}-{name}"})
+
+    def test_the_actions_hold_the_strict_button_by_id(self, page):
+        actions = page.find(id=f"{LAYOUT_SUBMIT_PREFIX}-actions")
+        assert actions.find("button", id=f"{LAYOUT_SUBMIT_PREFIX}-strict")
+
+    def test_the_submittable_form_is_drawn_with_its_own_form_element(self, page):
+        button = page.find("input", attrs={"name": f"{LAYOUT_SUBMIT_PREFIX}-submit"})
+        form = button.find_parent("form")
+        assert form["method"] == "post"
+        assert form.find("input", attrs={"name": "csrfmiddlewaretoken"}) is not None
+        assert form.find(id=layout_field_id(LAYOUT_SUBMIT_PREFIX, "first_name"))
+
+    def test_the_form_that_fails_is_drawn_without_a_form_element(self, page):
+        field = page.find(id=layout_field_id(LAYOUT_FAILING_PREFIX, "first_name"))
+        assert field.find_parent("form") is None
+
+    def test_the_form_that_fails_still_draws_its_buttons(self, page):
+        actions = page.find(id=f"{LAYOUT_FAILING_PREFIX}-actions")
+        assert actions.find("input", attrs={"type": "submit"}) is not None
+
+    @pytest.mark.parametrize("name", ["submit", "reset"])
+    def test_the_helper_buttons_are_inside_the_form_after_its_fields(self, page, name):
+        field = page.find(id=layout_field_id(HELPER_PREFIX, "first_name"))
+        button = page.find("input", attrs={"name": f"{HELPER_PREFIX}-{name}"})
+        form = field.find_parent("form")
+        assert button.find_parent("form") is form
+        assert field in button.find_all_previous("input")
+
+    def test_the_small_layout_row_holds_its_fields_with_no_column(self, page):
+        row = page.find(id=f"{SMALL_PREFIX}-row")
+        for name in LAYOUT_ROW_FIELDS:
+            assert row.find("input", id=layout_field_id(SMALL_PREFIX, name))
+        assert row.find("div", id=f"{SMALL_PREFIX}-column") is None
+
+    def test_the_small_layout_ends_in_a_button_holder_with_a_button(self, page):
+        holder = page.find(id=f"{SMALL_PREFIX}-actions")
+        assert holder.find("input", attrs={"name": f"{SMALL_PREFIX}-submit"})
 
     def test_every_described_id_exists(self, page):
         described = page.find_all(attrs={"aria-describedby": True})

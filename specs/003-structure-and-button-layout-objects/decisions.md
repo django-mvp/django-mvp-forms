@@ -168,3 +168,13 @@ One reviewer read the plan before any code, as a check on fit with the specifica
 **Why:** ADR 0003 says a feature that needs a layout utility adds it to that test by name. The edits add cases and names. No existing assertion is changed or removed.
 
 **ADR:** none — a note on how one test file is maintained, already covered by ADR 0003
+
+## D18. The submittable form draws its own form element, and the extra demo forms are GET forms
+
+**Decision:** `LayoutObjectsForm` keeps `form_tag` on for the form to submit, which now ends in a `FormActions`, and the page no longer writes a `<form>` or a submit button of its own. The form that already fails is built with `form_tag=False`, so its buttons are drawn with no form element. The helper-buttons form and the small `Row` layout use `form_method = "get"`, so submitting one only reloads the page and the view's `post` is not reached by them.
+
+**Why:** D16 left the page writing the form until the buttons arrived. Two further submittable POST forms would need the view to tell which one was posted, which this story does not need. `novalidate` moves to `helper.attrs`, so an empty submit still comes back from the server with field errors.
+
+**Revisit if:** A story needs the extra forms to post to the view.
+
+**ADR:** none — a demo arrangement

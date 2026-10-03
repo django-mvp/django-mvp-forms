@@ -6,14 +6,16 @@
       Every field is required here. Submit the form empty to see an error on a
       field inside a fieldset, a row and a column.
     </c-text>
-    <form method="post" novalidate>
-      {% csrf_token %}
-      {% crispy form %}
-      <c-button type="submit" variant="primary" text="Submit" />
-    </form>
+    {% crispy form %}
   </c-section>
   <c-section title="Errors inside the containers" level="3">
     {% crispy failing_form %}
+  </c-section>
+  <c-section title="Buttons added to the form helper" level="3">
+    {% crispy helper_form %}
+  </c-section>
+  <c-section title="Fields straight in a row, and a button holder" level="3">
+    {% crispy small_form %}
   </c-section>
   <c-text>
     <c-link href="{% url 'layout-objects-standalone' %}" text="The same page without django-mvp" />

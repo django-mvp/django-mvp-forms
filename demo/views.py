@@ -9,7 +9,12 @@ from django.views.generic import TemplateView
 # breadcrumbs the application shell draws around the content.
 from mvp.views import MVPTemplateView
 
-from demo.forms import LayoutObjectsForm, TextInputsForm
+from demo.forms import (
+    HelperButtonsForm,
+    LayoutObjectsForm,
+    RowButtonsForm,
+    TextInputsForm,
+)
 
 
 class OverviewView(MVPTemplateView):
@@ -119,12 +124,18 @@ class LayoutObjectsMixin:
 
     submit_prefix = "layout"
     failing_prefix = "failing"
+    helper_prefix = "helper"
+    small_prefix = "small"
     owner = "Ada Lovelace"
 
     def get_context_data(self, **kwargs):
-        """Add the submittable form, the form that already fails and the owner."""
+        """Add the four forms the page draws and the owner."""
         kwargs.setdefault("form", LayoutObjectsForm(prefix=self.submit_prefix))
-        kwargs["failing_form"] = LayoutObjectsForm({}, prefix=self.failing_prefix)
+        kwargs["failing_form"] = LayoutObjectsForm(
+            {}, prefix=self.failing_prefix, form_tag=False
+        )
+        kwargs["helper_form"] = HelperButtonsForm(prefix=self.helper_prefix)
+        kwargs["small_form"] = RowButtonsForm(prefix=self.small_prefix)
         kwargs["owner"] = self.owner
         return super().get_context_data(**kwargs)
 
@@ -143,7 +154,7 @@ class LayoutObjectsView(LayoutObjectsMixin, MVPTemplateView):
 
     template_name = "demo/layout_objects.html"
     page_title = "Layout objects"
-    page_subtitle = "Fields arranged in groups, rows and columns"
+    page_subtitle = "Fields arranged in groups, rows and columns, and buttons"
     breadcrumbs = [{"text": "Layout objects"}]
 
 

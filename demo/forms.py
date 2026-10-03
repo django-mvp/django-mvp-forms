@@ -1,7 +1,18 @@
 """The forms the demo project draws."""
 
+from crispy_forms.bootstrap import FormActions, StrictButton
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Column, Div, Fieldset, Layout, Row
+from crispy_forms.layout import (
+    Button,
+    ButtonHolder,
+    Column,
+    Div,
+    Fieldset,
+    Layout,
+    Reset,
+    Row,
+    Submit,
+)
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -67,9 +78,9 @@ class TextInputsForm(forms.Form):
 class LayoutObjectsForm(forms.Form):
     """A form whose layout uses every layout object the pack draws so far.
 
-    Its layout is built for each instance, and every id in it carries the
-    form's prefix, so two of these forms on one page repeat no id. The form
-    must be given a prefix.
+    Its layout is built for each instance, and every id and button name in it
+    carries the form's prefix, so two of these forms on one page repeat no id.
+    The form must be given a prefix.
     """
 
     first_name = forms.CharField(label=_("First name"))
@@ -77,12 +88,20 @@ class LayoutObjectsForm(forms.Form):
     email = forms.EmailField(label=_("Email"))
     note = forms.CharField(label=_("Note"))
 
-    def __init__(self, *args, **kwargs):
-        """Build the layout, with the prefix in every id."""
+    def __init__(self, *args, form_tag=True, **kwargs):
+        """Build the layout, with the prefix in every id and button name.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            form_tag: Whether the helper draws the form element. The form that
+                already fails has none, so its buttons are drawn on their own.
+            **kwargs: Passed to ``forms.Form``.
+        """
         super().__init__(*args, **kwargs)
         prefix = self.prefix
         self.helper = FormHelper(self)
-        self.helper.form_tag = False
+        self.helper.form_tag = form_tag
+        self.helper.attrs = {"novalidate": True}
         self.helper.layout = Layout(
             Fieldset(
                 "Details for {{ owner }}",
@@ -93,5 +112,53 @@ class LayoutObjectsForm(forms.Form):
                 ),
                 Div("email", "note", css_id=f"{prefix}-more"),
                 css_id=f"{prefix}-details",
-            )
+            ),
+            FormActions(
+                Submit(f"{prefix}-submit", _("Submit")),
+                Reset(f"{prefix}-reset", _("Reset")),
+                Button(f"{prefix}-button", _("Button")),
+                StrictButton(_("Strict button"), css_id=f"{prefix}-strict"),
+                css_id=f"{prefix}-actions",
+            ),
+        )
+
+
+class HelperButtonsForm(forms.Form):
+    """A form with no layout whose buttons were added to its helper.
+
+    It is a GET form, so submitting it only reloads the page.
+    """
+
+    first_name = forms.CharField(label=_("First name"), required=False)
+    last_name = forms.CharField(label=_("Last name"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Add a submit and a reset button to the helper, named by the prefix."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_method = "get"
+        self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+        self.helper.add_input(Reset(f"{self.prefix}-reset", _("Reset")))
+
+
+class RowButtonsForm(forms.Form):
+    """A small layout with two fields straight in a row and a button holder.
+
+    It is a GET form, so submitting it only reloads the page.
+    """
+
+    first_name = forms.CharField(label=_("First name"), required=False)
+    last_name = forms.CharField(label=_("Last name"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id and button name."""
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper = FormHelper(self)
+        self.helper.form_method = "get"
+        self.helper.layout = Layout(
+            Row("first_name", "last_name", css_id=f"{prefix}-row"),
+            ButtonHolder(
+                Submit(f"{prefix}-submit", _("Submit")), css_id=f"{prefix}-actions"
+            ),
         )
