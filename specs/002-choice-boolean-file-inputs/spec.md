@@ -29,7 +29,11 @@ This feature draws the rest. A select, a multiple select, a radio group, a singl
 checkbox group and a file input each come out as daisyUI's own input for the job. A hidden input
 is carried in the form without taking up any room. Each visible field gets the same label,
 required marker, help text and errors as a text input, tied to its input so a screen reader
-announces them. A field the developer marked as disabled is drawn as unavailable.
+announces them.
+
+It also draws the disabled and read-only states, and it does so for every input the pack draws,
+the text inputs of #5 included. A field the developer marked as disabled is drawn as unavailable,
+and a text input marked read-only shows its value and cannot be edited.
 
 With #5 and this feature together, a developer can hand any form built from Django's own widgets
 to the pack and get a complete daisyUI form back, without writing a layout and without touching a
@@ -37,8 +41,8 @@ single field.
 
 The feature draws inputs and nothing else. Other work stays with its own issue:
 
-- text, email, number, password, URL, date, time and textarea inputs, and the label, required
-  marker, help text and errors themselves
+- text, email, number, password, URL, date, time and textarea inputs in their ordinary states, and
+  the label, required marker, help text and errors themselves
   ([#5](https://github.com/django-mvp/django-mvp-forms/issues/5))
 - checkboxes and radios set in a line, uneditable fields and multi-widget fields placed from a
   layout ([#8](https://github.com/django-mvp/django-mvp-forms/issues/8))
@@ -68,20 +72,24 @@ A person filling in a form meets these inputs:
 Each visible input appears in these states: untouched, holding a value, required, with help text,
 with an error after a failed submission, and disabled.
 
+The text inputs #5 draws appear in two further states that this feature supplies: disabled and
+read-only.
+
 A developer looking at the demo project sees one page that shows every one of these inputs in
-every one of these states.
+every one of these states, and a text input disabled and read-only.
 
 ## Clarifications
 
 ### Session 2026-10-03
 
 - Q: Do the disabled and read-only states in this feature also cover the text inputs
-  [#5](https://github.com/django-mvp/django-mvp-forms/issues/5) draws? → A: No. This feature
-  covers the states of the inputs it draws. See FR-015 and the assumptions.
+  [#5](https://github.com/django-mvp/django-mvp-forms/issues/5) draws? → A: Yes. #5 keeps the
+  attributes Django emits and leaves the drawing of both states to this feature, so this feature
+  draws them for every input the pack draws. See FR-015 and story 6.
 - Q: A select, a checkbox, a radio button and a file input have no read-only state in HTML. What
   does read-only mean for them? → A: The pack does not invent one. A read-only attribute the
   developer sets reaches the input unchanged, and a field that must not be edited is marked
-  disabled. See FR-016.
+  disabled. Text inputs do have the state, and it is drawn for them. See FR-016 and FR-023.
 - Q: Django ships widgets made of several inputs, such as a date picked from three selects. Which
   feature draws them? → A: Each part is drawn by whichever feature draws that kind of input, so
   the three selects are drawn here and the text inputs of a split date and time are #5's. See
@@ -250,18 +258,21 @@ hidden value produces a visible error.
 
 ---
 
-### User Story 6 - A disabled field is drawn as unavailable (Priority: P2)
+### User Story 6 - A disabled or read-only field is drawn as one (Priority: P2)
 
 A developer marks a field as disabled because the person may see its value and may not change
 it. Drawn by the pack, every input belonging to that field is unavailable, in daisyUI's disabled
-state, and still shows the field's value.
+state, and still shows the field's value. This holds for every input the pack draws, including
+the text inputs of #5. A text input the developer marked read-only shows its value, cannot be
+edited, and still sends its value with the form.
 
-**Why this priority**: The state applies to every input in this feature, so it follows them. It
-matters most in a group, where disabling the field has to reach every option.
+**Why this priority**: The states apply to every input the pack draws, so they follow the inputs.
+Disabling matters most in a group, where it has to reach every option.
 
-**Independent Test**: Draw a form in which a select, a radio group, a checkbox, a checkbox group
-and a file field are each disabled, and check that no input of any of them can be changed and
-that each still shows its value.
+**Independent Test**: Draw a form in which a text input, a textarea, a select, a radio group, a
+checkbox, a checkbox group and a file field are each disabled, and a text input and a textarea
+are read-only. Check that no disabled input can be changed, that each still shows its value, and
+that the read-only inputs cannot be edited and are submitted.
 
 **Acceptance Scenarios**:
 
@@ -275,6 +286,14 @@ that each still shows its value.
    **Then** the removal checkbox is unavailable too.
 5. **Given** a widget on which the developer has set a read-only attribute, **When** the form is
    drawn, **Then** the attribute is on the input exactly as the developer set it.
+6. **Given** a disabled text input, number input, date input or textarea, **When** the form is
+   drawn, **Then** the input is in daisyUI's disabled state, is announced as unavailable, and
+   still shows its value.
+7. **Given** a text input or textarea on which the developer has set a read-only attribute,
+   **When** the form is drawn, **Then** the input shows its value, cannot be edited, and is
+   announced as read-only by assistive technology.
+8. **Given** a form with a read-only text input and a disabled text input, **When** the form is
+   submitted, **Then** the read-only input's value is sent and the disabled input's is not.
 
 ---
 
@@ -296,7 +315,8 @@ person sees".
 1. **Given** the demo project is running, **When** a developer follows its menu, **Then** they
    reach a page showing every input this feature draws.
 2. **Given** that page, **When** it is drawn, **Then** each input appears untouched, holding a
-   value, required, with help text, with an error and disabled.
+   value, required, with help text, with an error and disabled, and a text input appears disabled
+   and read-only.
 3. **Given** the README, **When** a developer reads its public surface, **Then** every widget
    this feature draws is listed there.
 
@@ -317,6 +337,8 @@ person sees".
   of the field stays usable.
 - A form whose only fields are hidden draws no visible fields and still submits its values.
 - A hidden field that is also disabled is drawn as Django draws it, with nothing shown.
+- A text input that is both disabled and read-only is drawn as disabled.
+- A password input that is disabled or read-only still shows no value, as Django draws it.
 - A third-party package's widget is not covered by this feature, even where it looks like one of
   Django's.
 
@@ -375,15 +397,19 @@ Values
 States
 
 - **FR-014**: A field marked as disabled MUST have every one of its inputs drawn in daisyUI's
-  disabled state and announced as unavailable: the select, the checkbox, the file input, every
-  option of a group, and the removal checkbox of a file field. The field's value MUST still be
-  shown. (Story 6)
-- **FR-015**: The disabled and read-only behaviour in this feature MUST cover every input this
-  feature draws. It does not define those states for the inputs
-  [#5](https://github.com/django-mvp/django-mvp-forms/issues/5) draws. (Story 6)
+  disabled state and announced as unavailable: the text input or textarea, the select, the
+  checkbox, the file input, every option of a group, and the removal checkbox of a file field.
+  The field's value MUST still be shown. (Story 6)
+- **FR-015**: The disabled and read-only states MUST be drawn for every input the pack draws: the
+  inputs of this feature and the text inputs
+  [#5](https://github.com/django-mvp/django-mvp-forms/issues/5) delivers. #5 keeps the attributes
+  Django emits and this feature draws the states. (Story 6)
 - **FR-016**: A read-only attribute a developer sets on a widget MUST reach the input unchanged.
   The pack MUST NOT imitate a read-only state on an input that HTML gives none: a select, a
   checkbox, a radio button or a file input. (Story 6)
+- **FR-023**: A text input or textarea carrying a read-only attribute MUST show its value, MUST
+  NOT be editable, MUST be announced as read-only by assistive technology, and MUST still send
+  its value with the form. It MUST be drawn with daisyUI's standard classes only. (Story 6)
 
 Whatever the input
 
@@ -403,7 +429,8 @@ Demo and documentation
 
 - **FR-021**: The demo project MUST have a page, reachable from its menu, showing every input
   this feature draws in each of these states: untouched, holding a value, required, with help
-  text, with an error, and disabled. (Story 7)
+  text, with an error, and disabled. The page MUST also show a text input disabled and
+  read-only. (Story 7)
 - **FR-022**: The README's public surface MUST list the widgets this feature draws, and the
   CHANGELOG MUST record them, in the same pull request as the code. (Story 7)
 
@@ -431,11 +458,12 @@ Demo and documentation
 
 - [#5](https://github.com/django-mvp/django-mvp-forms/issues/5) lands first. This feature reuses
   its label, required marker, help text, field errors and form-wide errors as they are and
-  specifies none of them. Whatever #5 decides for a widget the pack does not recognise applies
+  specifies none of them. It adds the disabled and read-only drawing of #5's text inputs and
+  changes nothing else about them. Whatever #5 decides for a widget the pack does not recognise applies
   here too.
 - "Disabled" means Django's own `disabled` field argument. "Read-only" means an attribute a
-  developer puts on a widget. The text inputs of #5 are the only inputs with a read-only state in
-  HTML, and how they look in it belongs to that feature. A layout object that shows a field as
+  developer puts on a widget. Text inputs and textareas are the only inputs with a read-only
+  state in HTML, so they are the only ones drawn in it. A layout object that shows a field as
   uneditable is [#8](https://github.com/django-mvp/django-mvp-forms/issues/8).
 - The widgets covered are those in Django's own `django.forms`. Widgets from `django.contrib`
   packages, such as the admin's, and from third-party packages are out of scope.

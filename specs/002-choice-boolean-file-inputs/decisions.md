@@ -10,23 +10,25 @@ The pack already draws text-like fields (#5). This feature draws every other wid
 `django.forms`: select and multiple select, radio groups, single checkboxes, checkbox groups and
 file inputs as daisyUI's own inputs, and hidden inputs with nothing shown. Each visible field
 reuses the label, required marker, help text and errors #5 delivers, tied to its input for
-assistive technology. A disabled field is drawn as unavailable. With #5 and this together, a form
+assistive technology. A disabled field is drawn as unavailable, and so is a disabled or read-only text input from #5,
+which leaves both states to this feature. With #5 and this together, a form
 built from Django's own widgets draws completely with no layout and no per-field work. It serves
 G1 and G3. Inline groups, uneditable fields, toggles, sizes and colours, and the inputs of a set
 of forms stay with #8, #12, #11 and #10.
 
-## D1. Disabled and read-only cover this feature's inputs only
+## D1. Disabled and read-only are drawn here for every input the pack draws
 
 **Ambiguous:** The roadmap lists "disabled and read-only states" as one deliverable of R1, and it
 appears in this issue and not in #5. It could mean the states of every input the pack draws, or
 only of the inputs drawn here.
 
-**Chosen:** Only the inputs this feature draws (FR-015).
+**Chosen:** Every input the pack draws, the text inputs of #5 included (FR-015, FR-023).
 
-**Why:** The issue's sentence reads "the remaining widgets ... with disabled and read-only
-states", so the states belong to those widgets. Specifying the states of #5's text inputs here
-would define a sibling's behaviour. If #5 leaves them out, that gap is tracked in its own issue
-and does not widen this one.
+**Why:** The specification for #5 keeps the attributes Django emits and hands the drawing of both
+states to this feature by name. Limiting them to this feature's inputs would leave text inputs
+with no owner, and text inputs are the only ones HTML gives a read-only state, so the roadmap's
+read-only deliverable would be delivered by nothing. The question was raised as #26 and settled
+this way.
 
 **ADR:** none — a reading of this feature's boundary
 
@@ -35,8 +37,9 @@ and does not widen this one.
 **Ambiguous:** The issue asks for read-only states, but a select, a checkbox, a radio button and a
 file input have no read-only state in HTML. The attribute is ignored on all of them.
 
-**Chosen:** A read-only attribute set by the developer reaches the input unchanged, and the pack
-adds nothing to imitate the state. A field that must not be edited is marked disabled, which
+**Chosen:** On these inputs, a read-only attribute set by the developer reaches the input
+unchanged, and the pack adds nothing to imitate the state. Text inputs and textareas have the
+state and are drawn in it (FR-023). A field that must not be edited is marked disabled, which
 Django enforces on the server as well (FR-016).
 
 **Why:** Every imitation has a cost. Disabling the input behind the developer's back stops its
