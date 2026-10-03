@@ -124,13 +124,51 @@
       "tasks": [
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_field_frame.py::TestLabel",
+              "tests/test_pack/test_field_frame.py::TestRequiredMarker",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInput"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags tests/test_demo.py",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/field.html:7",
+              "mvp_forms/templatetags/daisyui.py:52",
+              "mvp_forms/templatetags/daisyui.py:62"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_field_frame.py::TestDescription",
+              "tests/test_pack/test_field_frame.py::TestErrors",
+              "tests/test_pack/test_field_frame.py::TestEscaping",
+              "tests/test_pack/test_field_frame.py::TestPrefixes",
+              "tests/test_pack/test_field_frame.py::TestIdsTurnedOff",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInput"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack tests/test_templatetags tests/test_demo.py",
+              "uv run pre-commit run --all-files",
+              "/home/sam/.openclaw/workspaces/forge/engineering-org/kit/forge verify --repo /home/sam/projects/django-mvp/worktrees/forms-001-text-inputs --base origin/main"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:42",
+              "mvp_forms/templates/daisyui/field.html:13",
+              "mvp_forms/templates/daisyui/field.html:16"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
