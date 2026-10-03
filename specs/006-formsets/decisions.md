@@ -147,3 +147,19 @@ write.
 
 **Why**: matching django-crispy-forms. **Revisit if**: a developer reports the omission as a
 surprise.
+
+## D15: Design review, applied
+
+One reviewer read the plan through three lenses and approved it with two medium and three low
+findings. None forced a re-plan. Each was applied as an edit to the plan or the tasks:
+
+- The table gets the same form-element test the stacked layout has (FR-016).
+- The table's hidden fields and round trip are tested on a model and an inline formset too
+  (SC-001).
+- The management form is drawn field by field, so damaged management data shows the formset-wide
+  error and not Django's own list beside it.
+- The single form a formset's field is compared with is built the way Django builds a formset's
+  forms, without the `required` attribute.
+- The table's rows-and-columns class is written once, in one task.
+
+**ADR:** none — a record of review edits, each already in the plan.

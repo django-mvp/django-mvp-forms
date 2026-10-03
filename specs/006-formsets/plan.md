@@ -37,7 +37,7 @@ look a field up by name. The package gains no setting, no dependency, no script 
 | VII, dependencies | None added. |
 | VIII, i18n | The pack adds no text. |
 | X, cohesion | The one class sits beside `FieldInput` in the tag module, which already holds the pack's drawing logic. |
-| XI, compatibility | The template paths become public surface and are named in the README. Three are the names django-crispy-forms defines, the fourth is the name its own packs use. |
+| XI, compatibility | The template paths become public surface and are named in the README. Three are the names django-crispy-forms defines, the fourth is the name packs written for it use. |
 | XII, scope | No view, URL, script or empty form. The demo's views are the demo's. |
 | XIII, plain templates | No Cotton in `mvp_forms/`. The existing test over every distributed template covers the new files. |
 | XIV, stock daisyUI | `table`, `divider`, `alert` and `text-error` are daisyUI's. One Tailwind layout utility, `overflow-x-auto`, where daisyUI has no component (research R10). |
@@ -83,7 +83,7 @@ CONTEXT.md, README.md, CHANGELOG.md      # glossary, public surface, change reco
 | Template | Reached by | Draws |
 |---|---|---|
 | `whole_uni_formset.html` | `{% crispy formset %}` with no `helper.template` | The form element when `formset_tag` is on, with `flat_attrs`, `formset_method` and `multipart` when the formset needs it; the CSRF token for a post form unless `disable_csrf`; `uni_formset.html`; then `inputs.html`, once, for buttons added to the helper. |
-| `uni_formset.html` | the include above, and `{{ formset\|crispy }}` | `formset.media` once when `include_media` is on; the management form; `errors_formset.html` unless errors are off; then each form in its own `<div>`, drawn by `display_form.html` with `include_media` off. A daisyUI `divider` sits at the head of every form's container but the first. |
+| `uni_formset.html` | the include above, and `{{ formset\|crispy }}` | `formset.media` once when `include_media` is on; the management form's fields, each drawn as its hidden input; `errors_formset.html` unless errors are off; then each form in its own `<div>`, drawn by `display_form.html` with `include_media` off. A daisyUI `divider` sits at the head of every form's container but the first. |
 | `errors_formset.html` | the two layouts, and `{{ formset\|as_crispy_errors }}` | `formset.non_form_errors`, once, in the same `role="alert"` element `errors.html` uses, with `formset_error_title` when set. Nothing when there are none. |
 | `table_inline_formset.html` | `helper.template = "daisyui/table_inline_formset.html"` | The same form element, token, media, management form and formset-wide errors, then the table, then `inputs.html`. |
 
@@ -116,7 +116,10 @@ hidden-field errors. Nothing in it changes.
   `<div id="<form.prefix>_errors" role="alert" class="text-error">` with one `<p>` per error, and
   only when there are any and errors are on. The `<tr>` then carries
   `aria-describedby="<form.prefix>_errors"`.
-- A formset with no forms draws no table.
+- A formset with no rows draws no table.
+- The management form is drawn field by field, never printed whole. Printed whole, a bound
+  formset with damaged management data would also draw Django's own unstyled error list beside
+  the formset-wide error the pack draws.
 - The table never reads `form.form_html`, so a helper layout is not applied.
 
 ### `FormsetTable` and the `daisyui_formset_table` tag
@@ -190,8 +193,9 @@ and binds a new formset from it, so "Django can read it back" is tested on what 
   fields and no other form's; the management form's inputs each present once; a drawn formset of
   three and of none binds to the same count and is valid; a model formset's and an inline
   formset's hidden fields are in the output inside their form's container; a field is drawn as
-  the same field in a single form is, compared element by element after the prefix is accounted
-  for; one form element with `formset_tag` on and none with it off, never one per form; no helper
+  the same field in a single form is, compared element by element with the single form built
+  under the formset form's own prefix and with `use_required_attribute=False`, which is how
+  Django builds a formset's forms; one form element with `formset_tag` on and none with it off, never one per form; no helper
   draws stacked; `{{ formset|crispy }}` draws the forms and the management form; a helper layout
   is applied to each form; a helper button is drawn once; media is drawn once.
 - **`TestTableFormset`** (US2): one `table` with one body row per form in order and one heading
@@ -199,14 +203,17 @@ and binds a new formset from it, so "Django can read it back" is tested on what 
   the marker element; every input in a row has an `aria-label` equal to its label's text and an
   `aria-describedby` naming an element in the same cell when the field has help text, and none
   when it has not; a group keeps its `<fieldset>` and that is what is named; hidden fields are in
-  their row and add no heading and no cell; the management form once; the round trip; switching
+  their row and add no heading and no cell, checked on a plain, a model and an inline formset;
+  the management form once; the round trip, on the same three; one form element with
+  `formset_tag` on and none with it off; switching
   `helper.template` is the only change between the two layouts; no forms draws no table and still
   round-trips; a helper layout is not applied.
 - **`TestFormsetErrors`** (US3), parametrised over the two layouts: a field error in the second
   form is inside that form's unit, the input's `aria-describedby` names it, and no other unit
   holds it; a form-wide error in the third form is inside that unit, and in the table the row's
   `aria-describedby` names its element; a formset-wide error appears once, outside every unit; a
-  formset holding all three draws each message exactly once; an unbound and a valid formset draw
+  formset holding all three draws each message exactly once, on fixtures with no form marked for deletion, since Django
+  leaves a deleted form's errors out of the formset's; an unbound and a valid formset draw
   no `role="alert"` element and no row `aria-describedby`; a message holding markup is escaped;
   errors off draws none; `formset_error_title` is drawn when set; a hidden field's error is with
   its form; `{{ formset|as_crispy_errors }}` draws the formset-wide errors alone.
@@ -249,7 +256,7 @@ delete and order behaviour with US4, the demo pages with US5.
 
 ## Decisions to record
 
-Graduate to `docs/adr/` when the build converges, numbered from the next number free on
+The run that builds the feature writes these to `docs/adr/` when the build converges, numbered from the next number free on
 `origin/main` at that point:
 
 - A formset's layout is chosen with `helper.template`, and the pack's template names are the ones

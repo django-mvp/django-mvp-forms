@@ -1,144 +1,160 @@
 {
-  "feature": "006-formsets",
-  "branch": "006-formsets",
-  "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
-  "state_history": [
-    {
-      "state": "QUEUED",
-      "at": "2026-10-03T15:06:02Z",
-      "note": "specification approved by delegated review at commit 1e8a67cb7fb8d71bd0627c2f375992c2a013dd2b, on pull request #20; epic #10, stories #31, #32, #33, #34, #35"
-    },
-    {
-      "state": "PLAN",
-      "at": "2026-10-03T17:40:03Z",
-      "note": "plan.md, research.md, tasks.md: 5 stories, 7 tasks; continues on pull request #20"
-    }
-  ],
-  "gates": {
-    "spec": {
-      "approved_by": "delegated review",
-      "at": "2026-10-03T15:06:02Z",
-      "self_resolved": [
-        "approved at commit 1e8a67cb7fb8d71bd0627c2f375992c2a013dd2b (forge spec-gate, pull request #20); spec gate opened by Sam, 2026-10-03: all gates are open"
-      ]
-    },
-    "plan": {
-      "approved_by": null,
-      "at": null
-    },
-    "merge": {
-      "approved_by": null,
-      "at": null
-    }
+ "feature": "006-formsets",
+ "branch": "006-formsets",
+ "repo": "django-mvp/django-mvp-forms",
+ "state": "DESIGN_REVIEW",
+ "state_history": [
+  {
+   "state": "QUEUED",
+   "at": "2026-10-03T15:06:02Z",
+   "note": "specification approved by delegated review at commit 1e8a67cb7fb8d71bd0627c2f375992c2a013dd2b, on pull request #20; epic #10, stories #31, #32, #33, #34, #35"
   },
-  "stories": [
-    {
-      "id": "US1",
-      "priority": "P1",
-      "issue": 31,
-      "worktree": null,
-      "status": "todo",
-      "replans": 0,
-      "tasks": [
-        {
-          "id": "T001",
-          "status": "todo",
-          "attempts": 0
-        },
-        {
-          "id": "T002",
-          "status": "todo",
-          "attempts": 0
-        }
-      ]
-    },
-    {
-      "id": "US2",
-      "priority": "P1",
-      "issue": 32,
-      "worktree": null,
-      "status": "todo",
-      "replans": 0,
-      "tasks": [
-        {
-          "id": "T003",
-          "status": "todo",
-          "attempts": 0
-        },
-        {
-          "id": "T004",
-          "status": "todo",
-          "attempts": 0
-        }
-      ]
-    },
-    {
-      "id": "US3",
-      "priority": "P2",
-      "issue": 33,
-      "worktree": null,
-      "status": "todo",
-      "replans": 0,
-      "tasks": [
-        {
-          "id": "T005",
-          "status": "todo",
-          "attempts": 0
-        }
-      ]
-    },
-    {
-      "id": "US4",
-      "priority": "P3",
-      "issue": 34,
-      "worktree": null,
-      "status": "todo",
-      "replans": 0,
-      "tasks": [
-        {
-          "id": "T006",
-          "status": "todo",
-          "attempts": 0
-        }
-      ]
-    },
-    {
-      "id": "US5",
-      "priority": "P3",
-      "issue": 35,
-      "worktree": null,
-      "status": "todo",
-      "replans": 0,
-      "tasks": [
-        {
-          "id": "T007",
-          "status": "todo",
-          "attempts": 0
-        }
-      ]
-    }
-  ],
-  "budgets": {
-    "converge_cycles": {
-      "used": 0,
-      "max": 2
-    },
-    "review_cycles": {
-      "used": 0,
-      "max": 1
-    },
-    "design_review_cycles": {
-      "used": 0,
-      "max": 1
-    },
-    "tokens": {
-      "used": 0,
-      "max": 120
-    }
+  {
+   "state": "PLAN",
+   "at": "2026-10-03T17:40:03Z",
+   "note": "plan.md, research.md, tasks.md: 5 stories, 7 tasks; continues on pull request #20"
   },
-  "pr": {
-    "number": 20,
-    "draft": true
+  {
+   "state": "DESIGN_REVIEW",
+   "at": "2026-10-03T17:40:25Z",
+   "note": "one reviewer, three lenses"
   }
+ ],
+ "gates": {
+  "spec": {
+   "approved_by": "delegated review",
+   "at": "2026-10-03T15:06:02Z",
+   "self_resolved": [
+    "approved at commit 1e8a67cb7fb8d71bd0627c2f375992c2a013dd2b (forge spec-gate, pull request #20); spec gate opened by Sam, 2026-10-03: all gates are open"
+   ]
+  },
+  "plan": {
+   "approved_by": "open",
+   "at": "2026-10-03T17:45:06Z"
+  },
+  "merge": {
+   "approved_by": null,
+   "at": null
+  },
+  "design_review": {
+   "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
+   "at": "2026-10-03T17:45:06Z",
+   "self_resolved": [
+    "DR-001 (medium) the table gets the form-element test: applied to plan and T004",
+    "DR-002 (medium) the table's hidden fields and round trip run on model and inline formsets: applied to plan and T004",
+    "DR-003 (low) the management form is drawn field by field: applied to plan and research R4, carried into T001 and T004",
+    "DR-004 (low) the comparison form is built with use_required_attribute off: applied to plan",
+    "DR-005 (low) FormsetTable written once, in T003: applied to tasks"
+   ]
+  }
+ },
+ "stories": [
+  {
+   "id": "US1",
+   "priority": "P1",
+   "issue": 31,
+   "worktree": null,
+   "status": "todo",
+   "replans": 0,
+   "tasks": [
+    {
+     "id": "T001",
+     "status": "todo",
+     "attempts": 0
+    },
+    {
+     "id": "T002",
+     "status": "todo",
+     "attempts": 0
+    }
+   ]
+  },
+  {
+   "id": "US2",
+   "priority": "P1",
+   "issue": 32,
+   "worktree": null,
+   "status": "todo",
+   "replans": 0,
+   "tasks": [
+    {
+     "id": "T003",
+     "status": "todo",
+     "attempts": 0
+    },
+    {
+     "id": "T004",
+     "status": "todo",
+     "attempts": 0
+    }
+   ]
+  },
+  {
+   "id": "US3",
+   "priority": "P2",
+   "issue": 33,
+   "worktree": null,
+   "status": "todo",
+   "replans": 0,
+   "tasks": [
+    {
+     "id": "T005",
+     "status": "todo",
+     "attempts": 0
+    }
+   ]
+  },
+  {
+   "id": "US4",
+   "priority": "P3",
+   "issue": 34,
+   "worktree": null,
+   "status": "todo",
+   "replans": 0,
+   "tasks": [
+    {
+     "id": "T006",
+     "status": "todo",
+     "attempts": 0
+    }
+   ]
+  },
+  {
+   "id": "US5",
+   "priority": "P3",
+   "issue": 35,
+   "worktree": null,
+   "status": "todo",
+   "replans": 0,
+   "tasks": [
+    {
+     "id": "T007",
+     "status": "todo",
+     "attempts": 0
+    }
+   ]
+  }
+ ],
+ "budgets": {
+  "converge_cycles": {
+   "used": 0,
+   "max": 2
+  },
+  "review_cycles": {
+   "used": 0,
+   "max": 1
+  },
+  "design_review_cycles": {
+   "used": 1,
+   "max": 1
+  },
+  "tokens": {
+   "used": 0,
+   "max": 120
+  }
+ },
+ "pr": {
+  "number": 20,
+  "draft": true
+ }
 }

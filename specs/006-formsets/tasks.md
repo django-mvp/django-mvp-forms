@@ -26,8 +26,9 @@ Every `ValidationError` is raised with a `code`. Nothing under `.github/` is tou
 
 ## US1 — A formset draws stacked with no per-form work (P1)
 
-Issue: #31. Delivers FR-001, FR-002, FR-004, FR-005, FR-006, FR-009, FR-016, FR-017, FR-018,
-FR-021; SC-001, SC-003, SC-008.
+Issue: #31. Delivers FR-001, FR-002, FR-004, FR-005, FR-006, FR-009, FR-016, FR-017, FR-018;
+SC-001, SC-003, SC-008. Also carries FR-021, which the specification lists under US5, because
+the glossary changes in the story that first uses the word.
 
 ### T001 — The stacked layout
 
@@ -69,8 +70,8 @@ Plan, *The templates*, *Tests*; research R1, R3, R4, R8.
 
 ## US2 — The same formset draws as a table (P1)
 
-Issue: #32. Delivers FR-002, FR-003, FR-004, FR-005, FR-007, FR-008, FR-009, FR-017; SC-002,
-SC-003.
+Issue: #32. Delivers FR-002, FR-003, FR-004, FR-005, FR-007, FR-008, FR-009, FR-016, FR-017;
+SC-001, SC-002, SC-003.
 
 ### T003 — `FormsetTable` and its tag
 
@@ -78,11 +79,13 @@ SC-003.
 
 Plan, *`FormsetTable` and the `daisyui_formset_table` tag*; research R6.
 
-- The class and the tag, for a formset whose forms all have the same fields. A form that lacks a
-  column's field is US4's.
+- The class and the tag as the plan has them, including `None` for a column whose field a form
+  does not have.
 - Tests, `TestFormsetTable`: columns are the first form's visible fields in order, with hidden
-  fields left out; one row per form in order; each cell is that form's own bound field; no forms
-  gives no columns and no rows; a form with only hidden fields gives each row one empty cell.
+  fields left out; one row per form in order; each cell is that form's own bound field; a form
+  missing a column's field has `None` in that cell and as many cells as there are columns; no
+  forms gives no columns and no rows; a form with only hidden fields gives each row one empty
+  cell.
 
 ### T004 — The table layout
 
@@ -93,7 +96,8 @@ Plan, *`FormsetTable` and the `daisyui_formset_table` tag*; research R6.
 Plan, *The templates*, *Tests*; research R2, R5, R6.
 
 - The template as the plan has it, without the formset-wide and row errors, which US3 adds.
-- Tests, `TestTableFormset`, as the plan lists them (US2.1 – US2.6).
+- Tests, `TestTableFormset`, as the plan lists them (US2.1 – US2.6, FR-016, and the hidden
+  fields and round trip on a plain, a model and an inline formset).
 - `test_independence.py`: a table formset state, unbound. `LAYOUT_UTILITIES` gains
   `overflow-x-auto`.
 - README: the table is chosen with `helper.template = "daisyui/table_inline_formset.html"`; what
@@ -123,7 +127,9 @@ Plan, *The templates*, *Tests*; research R7.
   on the row naming it.
 - `tests/forms.py` gains a form with a form-wide rule and a formset with a formset-wide rule,
   each raised with a `code`.
-- Tests, `TestFormsetErrors`, as the plan lists them (US3.1 – US3.6).
+- Tests, `TestFormsetErrors`, as the plan lists them (US3.1 – US3.6). In the stacked layout a
+  field's error and a form-wide error are already drawn after T001, so those cases pass on their
+  first run. The red step is the formset-wide error and the table row's.
 - `test_independence.py`: each layout's state with all three kinds of error.
 - README: where each kind of error is drawn in each layout, `formset_error_title`, and
   `{{ formset|as_crispy_errors }}` with the path `daisyui/errors_formset.html`. CHANGELOG: one
@@ -137,17 +143,12 @@ Issue: #34. Delivers FR-014, FR-015; SC-006.
 
 ### T006 — Delete and order inputs, and rows that line up
 
-**Files**: `mvp_forms/templatetags/daisyui.py`,
-`mvp_forms/templates/daisyui/table_inline_formset.html`,
-`tests/test_templatetags/test_daisyui.py`, `tests/test_pack/test_formsets.py`, `tests/forms.py`,
-`README.md`, `CHANGELOG.md`
+**Files**: `mvp_forms/templates/daisyui/table_inline_formset.html`,
+`tests/test_pack/test_formsets.py`, `tests/forms.py`, `README.md`, `CHANGELOG.md`
 
 Plan, *`FormsetTable`*, *Tests*; research R6, R9.
 
-- `FormsetTable.rows` gives `None` for a column whose field the form does not have, and the
-  template draws an empty cell for it.
-- Tests, `TestFormsetTable`: a form missing a column's field has `None` in that cell and as many
-  cells as there are columns.
+- The table template draws an empty cell where a row's cell is `None`.
 - Tests, `TestDeleteAndOrder`, as the plan lists them (US4.1 – US4.5 and the edge case of a
   deleted form drawn again).
 - README: the delete and order inputs are drawn as the pack's checkbox and number input, each

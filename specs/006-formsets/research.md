@@ -37,9 +37,11 @@ So the pack owes django-crispy-forms three templates by name: `whole_uni_formset
 
 ## R2. Choosing the layout
 
-`FormHelper.template` (`crispy_forms/helper.py:200`) is the setting the specification means: it
-is documented as the template a form or formset is drawn with, and django-crispy-forms' own packs
-publish `<pack>/table_inline_formset.html` to be named there. The pack follows the same name, so a
+`FormHelper.template` is the setting the specification means. `CrispyFormNode.render`
+(`crispy_forms/templatetags/crispy_forms_tags.py:203`) draws the template it names in place of
+the pack's default, and packs written for django-crispy-forms publish
+`<pack>/table_inline_formset.html` to be named there (the resolved crispy-tailwind 1.0.3 has
+`crispy_tailwind/templates/tailwind/table_inline_formset.html`). The pack follows the same name, so a
 developer moving from another pack changes the prefix and nothing else:
 
 ```python
@@ -68,9 +70,11 @@ Two consequences, both django-crispy-forms' documented behaviour:
 
 ## R4. The management form and hidden fields
 
-`{{ formset.management_form }}` draws four hidden inputs and nothing else (checked by drawing one:
-`TOTAL_FORMS`, `INITIAL_FORMS`, `MIN_NUM_FORMS`, `MAX_NUM_FORMS`). It is drawn once, ahead of the
-forms, in both layouts.
+The management form holds four hidden fields: `TOTAL_FORMS`, `INITIAL_FORMS`, `MIN_NUM_FORMS`
+and `MAX_NUM_FORMS`. Printed whole on a bound formset whose management data is missing, it also
+draws Django's own error list, unstyled, beside the formset-wide error Django reports for the
+same fault. So the pack loops over its fields and draws each as its input alone, once, ahead of
+the forms, in both layouts.
 
 A form's hidden fields are drawn by `field.html`, which draws a hidden field as its input alone.
 In the stacked layout they come out of the form's own field loop. In the table they have no
