@@ -139,6 +139,7 @@ EASY_ICONS = {
             "joined-groups": "bi bi-distribute-horizontal",
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",
+            "themes": "bi bi-brush",
         },
     },
 }

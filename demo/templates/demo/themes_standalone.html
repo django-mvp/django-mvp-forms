@@ -1,0 +1,54 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Themes</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@{{ version }}/themes.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">Themes</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and nothing else.
+        <a class="link" href="{% url 'themes' %}">The same page inside the django-mvp shell</a>
+      </p>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Pick a theme</h2>
+          <p>
+            Every form below is drawn by the pack, and none posts anywhere. Check a theme and
+            the whole page is drawn under it.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            {% for name in themes %}
+              <input type="radio" name="theme" class="btn btn-sm theme-controller" aria-label="{{ name }}" value="{{ name }}">
+            {% endfor %}
+          </div>
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('{{ modal_dialog_id }}').showModal()">Open the modal</button>
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">The forms</h2>
+          <div id="theme-forms">
+            {% for group in groups %}
+              <h3>{{ group.title }}</h3>
+              {% for item in group.items %}
+                <h4>{{ item.title }}</h4>
+                {% if item.formset %}
+                  {% crispy item.formset item.helper %}
+                {% else %}
+                  {% crispy item.form %}
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

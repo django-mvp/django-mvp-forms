@@ -32,9 +32,11 @@ from demo.views import (
     StandaloneStackedFormsetView,
     StandaloneTableFormsetView,
     StandaloneTextInputsView,
+    StandaloneThemesView,
     TableFormsetView,
     TabsView,
     TextInputsView,
+    ThemesView,
     UneditableFieldView,
 )
 
@@ -125,6 +127,12 @@ urlpatterns = [
         "formset-table/standalone/",
         StandaloneTableFormsetView.as_view(),
         name="formset-table-standalone",
+    ),
+    path("themes/", ThemesView.as_view(), name="themes"),
+    path(
+        "themes/standalone/",
+        StandaloneThemesView.as_view(),
+        name="themes-standalone",
     ),
     # django-mvp's Account Center, with a development sign-in and sign-out
     # until an account app such as allauth is installed.

@@ -4,7 +4,7 @@
       <legend class="fieldset-legend">{{ group_name }}</legend>
   {% endif %}
   {% for option in options %}
-    <label class="label"{% if option.attrs.id %} for="{{ option.attrs.id }}"{% endif %}>
+    <label class="label text-base-content"{% if option.attrs.id %} for="{{ option.attrs.id }}"{% endif %}>
       <input type="{{ option.type }}" name="{{ option.name }}"{% if option.value != None %} value="{{ option.value|stringformat:'s' }}"{% endif %}{% include "daisyui/widgets/attrs.html" with widget=option %}>
       {{ option.label }}
     </label>

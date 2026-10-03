@@ -1,14 +1,14 @@
 {% load daisyui %}{% if field_class %}<div class="{{ field_class }}">{% endif %}
 {% if drawn.is_joined %}{% with join_class=drawn.join.css_class|daisyui_classes %}<div{% if drawn.join.css_id %} id="{{ drawn.join.css_id }}"{% endif %} class="join w-full{% if join_class %} {{ join_class }}{% endif %}"{{ drawn.join.flat_attrs }}>{% endwith %}{% endif %}
 {% if drawn.is_single_checkbox and field.label and drawn.show_labels %}
-  <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="label{% if label_class %} {{ label_class }}{% endif %}">
+  <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="label text-base-content{% if label_class %} {{ label_class }}{% endif %}">
     {{ drawn.render }}{{ field.label }}{% include "daisyui/required_marker.html" %}
   </label>
 {% elif drawn.has_attached_text %}
   <label class="{{ drawn.attached_class }}">
-    {% if drawn.prepended %}<span class="label">{{ drawn.prepended|safe }}</span>{% endif %}
+    {% if drawn.prepended %}<span class="label text-base-content">{{ drawn.prepended|safe }}</span>{% endif %}
     {{ drawn.render }}
-    {% if drawn.appended %}<span class="label">{{ drawn.appended|safe }}</span>{% endif %}
+    {% if drawn.appended %}<span class="label text-base-content">{{ drawn.appended|safe }}</span>{% endif %}
   </label>
 {% elif drawn.is_floating %}
   <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="floating-label">

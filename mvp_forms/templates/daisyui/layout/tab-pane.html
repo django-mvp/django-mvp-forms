@@ -1,6 +1,6 @@
 {% load daisyui %}
 {% with pane_class=div.css_class|daisyui_classes %}
-<input type="radio" name="daisyui-tab-group"{% if div.active %} checked{% endif %} form="" class="tab" aria-label="{{ div.name }}">
+<input type="radio" name="daisyui-tab-group"{% if div.active %} checked{% endif %} form="" class="tab text-base-content" aria-label="{{ div.name }}">
 <div{% if div.css_id %} id="{{ div.css_id }}"{% endif %} class="tab-content mt-4{% if pane_class %} {{ pane_class }}{% endif %}"{{ div.flat_attrs }}>
   {{ fields }}
 </div>
