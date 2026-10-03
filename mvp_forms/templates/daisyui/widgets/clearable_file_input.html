@@ -2,7 +2,7 @@
   {% if widget.is_initial %}
     <p>{{ widget.initial_text }}: <a class="link" href="{{ widget.value.url }}">{{ widget.value }}</a></p>
     {% if not widget.required %}
-      <label class="label" for="{{ widget.checkbox_id }}">
+      <label class="label text-base-content" for="{{ widget.checkbox_id }}">
         <input type="checkbox" class="checkbox{% if widget.removal_class %} {{ widget.removal_class }}{% endif %}" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}"{% if widget.attrs.disabled %} disabled{% endif %}{% if widget.attrs.checked %} checked{% endif %}>
         {{ widget.clear_checkbox_label }}
       </label>

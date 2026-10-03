@@ -801,6 +801,62 @@ A form marked for deletion is left out of the formset's validation by Django, bu
 
 The pack draws a formset and nothing around it. It draws no empty form to copy, adds no script, and has no view: adding and removing rows in the browser, handling the post and saving belong to django-mvp or to your own code.
 
+### Themes
+
+The pack names only daisyUI's semantic colours, so a form follows whichever theme the host project chooses, and the pack sets none. The test suite draws every form state the pack has and calculates the contrast of each piece of text, and of each part of a control that shows what it is and what state it is in, against the surface directly behind it, under every theme in the daisyUI version the suite is pinned to. The standard is WCAG 2.2 level AA: 4.5 to 1 for text, and 3 to 1 for those parts of a control.
+
+Where daisyUI's own drawing, or a colour you chose for a control, falls short under a theme, no stock daisyUI class repairs it and the pack adds no style of its own. Each such pairing is listed here with the themes it falls short under, and the test suite fails when this list and what it measures differ.
+
+<!-- known-exceptions:start -->
+| Pairing | Seen on | Themes |
+| --- | --- | --- |
+| border, `accent` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | light, cupcake, emerald, retro, cyberpunk, valentine, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, acid, lemonade, coffee, nord, abyss |
+| border, `base-content` at 20% on `base-100` | checkbox, file-input, input, radio, select, textarea | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
+| border, `base-content` at 20% on `base-200` | input | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
+| border, `base-content` at 50% on `base-100` | toggle | emerald, retro, valentine, luxury, coffee, winter, nord, caramellatte, silk |
+| border, `error` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | light, bumblebee, corporate, retro, cyberpunk, garden, lofi, pastel, business, lemonade, winter, caramellatte, silk |
+| border, `error` on `base-200` | input | light, bumblebee, emerald, corporate, retro, cyberpunk, garden, lofi, pastel, fantasy, business, lemonade, winter, caramellatte, silk |
+| border, `info` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | light, cupcake, bumblebee, emerald, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, black, cmyk, autumn, lemonade, winter, nord, silk |
+| border, `neutral` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | dark, synthwave, halloween, forest, aqua, wireframe, black, luxury, dracula, business, night, coffee, dim, sunset, abyss |
+| border, `primary` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | cupcake, bumblebee, emerald, retro, cyberpunk, pastel, wireframe, black, cmyk, business, acid |
+| border, `secondary` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | cupcake, bumblebee, retro, cyberpunk, halloween, aqua, pastel, wireframe, black, luxury, acid, lemonade, coffee, nord |
+| border, `success` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | light, cupcake, bumblebee, cyberpunk, valentine, garden, lofi, pastel, acid, lemonade, winter, nord, silk |
+| border, `warning` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk |
+| button text, `accent-content` on `accent` | btn, file-input | corporate, retro, garden, pastel |
+| button text, `accent` on 8% `accent` in `base-100` | btn | light, cupcake, emerald, corporate, retro, cyberpunk, valentine, garden, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, acid, lemonade, coffee, winter, nord, abyss |
+| button text, `accent` on `base-100` | btn | light, cupcake, emerald, corporate, retro, cyberpunk, valentine, garden, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, acid, lemonade, coffee, winter, nord, abyss |
+| button text, `error-content` on `error` | btn, file-input | cupcake, bumblebee, retro, valentine, pastel, autumn, business, caramellatte, abyss, silk |
+| button text, `error` on 8% `error` in `base-100` | btn | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, dracula, cmyk, autumn, business, acid, lemonade, winter, nord, caramellatte, silk |
+| button text, `error` on `base-100` | btn | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, cmyk, business, acid, lemonade, winter, nord, caramellatte, silk |
+| button text, `info-content` on `info` | btn, file-input | bumblebee, corporate, retro, halloween, aqua, pastel |
+| button text, `info` on 8% `info` in `base-100` | btn | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, halloween, garden, aqua, lofi, pastel, fantasy, black, cmyk, autumn, business, acid, lemonade, winter, nord, silk |
+| button text, `info` on `base-100` | btn | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, halloween, garden, aqua, lofi, pastel, fantasy, black, cmyk, autumn, acid, lemonade, winter, nord, silk |
+| button text, `neutral-content` on `neutral` | btn, file-input | pastel, autumn |
+| button text, `neutral` on 9% `neutral` in `neutral-content` at 88% over `base-100` | btn | synthwave, pastel, autumn, sunset, caramellatte |
+| button text, `neutral` on `base-100` | btn | dark, synthwave, halloween, forest, aqua, wireframe, black, luxury, dracula, autumn, business, night, coffee, dim, sunset, abyss |
+| button text, `primary-content` on `primary` | btn, file-input | dark, corporate, valentine, garden, winter |
+| button text, `primary` on 8% `primary` in `base-100` | btn | dark, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, pastel, wireframe, black, cmyk, business, acid, lemonade, winter, nord |
+| button text, `primary` on `base-100` | btn | dark, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, pastel, wireframe, black, cmyk, business, acid, lemonade, nord |
+| button text, `secondary-content` on `secondary` | btn, file-input | light, dark, bumblebee, emerald, valentine, aqua, pastel, fantasy |
+| button text, `secondary` on 8% `secondary` in `base-100` | btn | light, dark, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, halloween, aqua, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, business, acid, lemonade, coffee, nord |
+| button text, `secondary` on `base-100` | btn | light, dark, cupcake, bumblebee, emerald, retro, cyberpunk, valentine, halloween, aqua, pastel, wireframe, black, luxury, cmyk, autumn, acid, lemonade, coffee, nord |
+| button text, `success-content` on `success` | btn, file-input | corporate, pastel, black |
+| button text, `success` on 8% `success` in `base-100` | btn | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, black, autumn, acid, lemonade, winter, nord, silk |
+| button text, `success` on `base-100` | btn | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, black, autumn, acid, lemonade, winter, nord, silk |
+| button text, `warning-content` on `warning` | btn, file-input | retro, pastel |
+| button text, `warning` on 8% `warning` in `base-100` | btn | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk |
+| button text, `warning` on `base-100` | btn | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk |
+| mark, `accent` on `base-100` | radio, toggle | light, cupcake, emerald, retro, cyberpunk, valentine, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, acid, lemonade, coffee, nord, abyss |
+| mark, `error` on `base-100` | radio, toggle | light, bumblebee, corporate, retro, cyberpunk, garden, lofi, pastel, business, lemonade, winter, caramellatte, silk |
+| mark, `info` on `base-100` | radio, toggle | light, cupcake, bumblebee, emerald, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, black, cmyk, autumn, lemonade, winter, nord, silk |
+| mark, `neutral` on `base-100` | radio, toggle | dark, synthwave, halloween, forest, aqua, wireframe, black, luxury, dracula, business, night, coffee, dim, sunset, abyss |
+| mark, `primary` on `base-100` | radio, toggle | cupcake, bumblebee, emerald, retro, cyberpunk, pastel, wireframe, black, cmyk, business, acid |
+| mark, `secondary` on `base-100` | radio, toggle | cupcake, bumblebee, retro, cyberpunk, halloween, aqua, pastel, wireframe, black, luxury, acid, lemonade, coffee, nord |
+| mark, `success` on `base-100` | radio, toggle | light, cupcake, bumblebee, cyberpunk, valentine, garden, lofi, pastel, acid, lemonade, winter, nord, silk |
+| mark, `warning` on `base-100` | radio, toggle | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk |
+| placeholder, `base-content` at 50% on `base-100` | input, textarea | light, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
+<!-- known-exceptions:end -->
+
 ## Contributing
 
 Standards for this repository live in

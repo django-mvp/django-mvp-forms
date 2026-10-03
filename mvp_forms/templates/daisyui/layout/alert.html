@@ -1,5 +1,5 @@
 {% load daisyui i18n %}
 <div{% if alert.css_id %} id="{{ alert.css_id }}"{% endif %} role="alert" class="{{ alert.css_class|daisyui_classes }}"{{ alert.flat_attrs }}>
   <span>{{ content|safe }}</span>
-  {% if dismiss %}<button type="button" class="btn btn-sm btn-ghost" aria-label="{% translate "Dismiss" %}" onclick="this.parentElement.remove()">✕</button>{% endif %}
+  {% if dismiss %}<button type="button" class="btn btn-sm" aria-label="{% translate "Dismiss" %}" onclick="this.parentElement.remove()">✕</button>{% endif %}
 </div>

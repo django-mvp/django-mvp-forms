@@ -780,3 +780,12 @@ class TestDistributedFiles:
 
     def test_the_package_has_no_static_directory(self):
         assert not [path for path in PACKAGE.rglob("static") if path.is_dir()]
+
+    def test_no_template_or_module_writes_a_theme(self):
+        written = [
+            path.name
+            for path in [*TEMPLATES, *PACKAGE.rglob("*.py")]
+            if re.search(r"data-theme|theme-controller", path.read_text())
+        ]
+
+        assert not written

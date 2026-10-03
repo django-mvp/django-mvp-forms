@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Text the pack colours itself is now drawn in the theme's text colour, so that it can be read under every daisyUI theme. Help text, the label of a single checkbox, the two attached texts, the label of the removal checkbox on a file field and the label around each option of a radio or checkbox group carry `text-base-content` beside `label`, where `label` alone drew them at 60% of the text colour. The header of a table layout, each tab and the alert that holds a form's or a formset's errors carry `text-base-content` too. A field's error, the error of a table row and the required marker no longer carry `text-error`, so they are drawn in the text colour; an input in error still carries its error modifier and `aria-invalid`, and its message is still tied to it. The dismiss button of an `Alert` is `btn btn-sm` and no longer `btn-ghost`. Only class attributes change: no element is added, removed or moved, and no id changes. A host project with its own rule on `text-error` or on the bare `label` inside these templates should look at it.
+
 ## [v0.1.0] - 2026-10-03
 
 ### Added
