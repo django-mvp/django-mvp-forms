@@ -188,3 +188,95 @@ adds one demo page of the kind every earlier feature added. Nothing in it needs 
 and the test matrix stays as it is.
 
 **ADR:** none.
+
+## D11. Which drawings a field takes is decided by its widget, in one table
+
+**Decision:** `FieldInput` holds the drawings each kind of widget takes: the three of a boolean
+field for a `CheckboxInput`, `rating` for a select or a radio group that holds one value, `range`
+for a `NumberInput`, and none for anything else. A drawing stated for a field has to be among its
+own, and the error carries them as the names allowed.
+
+**Why:** FR-021 asks the error to say which drawings the field can take. Before this feature the
+answer was all three or none, so the widget was checked first and the name second. With five
+drawings over three kinds of field, one rule replaces the two checks.
+
+**Revisit if:** a drawing applies to more than one kind of field.
+
+**ADR:** docs/adr/0029-each-kind-of-field-has-its-own-drawings.md
+
+## D12. A rating is drawn through a radio group made for the draw
+
+**Decision:** a radio group stated as a rating is drawn through a shallow copy of its widget
+that names the pack's rating template. A select stated as a rating is drawn through a
+`RadioSelect` built for that draw from the select's attributes and choices. A number input stated
+as a range is drawn through a shallow copy whose input type is `range`. The form's own widget is
+never written to.
+
+**Why:** a rating is radio inputs, and Django's `RadioSelect` already gives each option the
+widget's attributes, an id of its own and `checked`. A `Select` gives its options none of them
+and withholds `required` when its first choice has a value. Building a radio group from the
+select reuses Django's behaviour in place of re-creating it on a copy of the select. Passing
+`type` as an attribute to a number input would write the attribute twice.
+
+**Rejected:** copying the select and overwriting the four class attributes that make it behave
+as a radio group. It leaves `use_required_attribute` as the select's.
+
+**Revisit if:** a project needs a select subclass's own `create_option` to reach a rating.
+
+**ADR:** docs/adr/0030-a-stated-drawing-may-set-the-element-drawn.md
+
+## D13. A rating with nothing picked needs no markup beyond daisyUI's
+
+**Decision:** the pack writes daisyUI's ordinary rating markup and nothing more for a field with
+no value. This settles the point D5 left for the build.
+
+**Why:** in daisyUI 5 every star starts dimmed, and only a checked input and the ones before it
+are raised (research R2). An unchecked group therefore shows no star as picked. The concern in D5
+came from daisyUI 4, which dimmed the stars after the checked one.
+
+**Revisit if:** daisyUI changes which stars it dims.
+
+**ADR:** none — it is how stock daisyUI behaves, and the pack decides nothing.
+
+## D14. A rating in error draws its stars in the error colour
+
+**Decision:** a rating in error leaves the chosen colour out and writes `bg-error` on each star.
+A range in error takes `range-error`. This settles the point D4 left for the plan.
+
+**Why:** every other input the pack draws carries an error modifier of its component, and a
+radio takes `radio-error`. A rating has no modifier of its own for a colour, so the error colour
+is written the way its chosen colour is (D4). FR-020 then holds as it does elsewhere: the error
+is the only colour the field shows.
+
+**Revisit if:** daisyUI gives the rating an error modifier.
+
+**ADR:** docs/adr/0031-a-ratings-colour-is-a-class-on-each-star.md
+
+## D15. A star is named by its choice's label, and the pack adds no text
+
+**Decision:** each star's `aria-label` is the label of its choice, and the clearing input's is
+the label of the empty choice. The pack adds no word of its own for either drawing, so FR-024 is
+met with nothing to translate.
+
+**Why:** FR-011 asks for the choice's label. A word such as "Clear" for the empty choice would be
+text the developer did not write, in place of the empty label they did.
+
+**Revisit if:** the maintainer wants the clearing input named by the pack when the empty label is
+Django's row of dashes.
+
+**ADR:** none — local to this feature's one template.
+
+## D16. A select drawn as a rating is described once, by its fieldset
+
+**Decision:** the stars of a select drawn as a rating do not carry the `aria-describedby` Django
+adds to a widget that is not a fieldset. The fieldset names the help text and the errors, as it
+does for a radio group. One the developer set on the widget is kept.
+
+**Why:** Django decides it from the form's own widget, which is still a select. Left alone, a
+screen reader would read the help text on every star, and a select and a radio group stated as
+the same rating would be drawn differently.
+
+**Revisit if:** Django lets a caller say for one render whether the widget is a fieldset.
+
+**ADR:** none — it follows ADR 0011, which frames a group as a fieldset that carries the
+description.
