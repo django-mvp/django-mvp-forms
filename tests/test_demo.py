@@ -285,6 +285,15 @@ class ChoiceInputsPageContract:
         assert select["aria-invalid"] == "true"
         assert named(page, "empty", "select")[0].get("aria-invalid") is None
 
+    @pytest.mark.parametrize(
+        "name", [name for name, tag, kind in CHOICE_KINDS if kind not in {"hidden"}]
+    )
+    def test_every_visible_kind_is_invalid_in_the_error_state(self, open_page, name):
+        page = open_page(self.url_name)
+        inputs = named(page, "error", name)
+        assert inputs
+        assert all(element["aria-invalid"] == "true" for element in inputs)
+
     def test_the_error_state_shows_the_alert_a_hidden_field_leads_to(self, open_page):
         page = open_page(self.url_name)
         assert page.find(attrs={"role": "alert"}) is not None

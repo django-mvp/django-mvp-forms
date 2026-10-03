@@ -153,6 +153,23 @@ class ChoiceInputsForm(forms.Form):
             field.disabled = disabled
             field.help_text = self.help_texts[name] if with_help else ""
 
+    def clean_null_boolean(self):
+        """Refuse "unknown" when the field is required.
+
+        Django's own field accepts all three answers, so without this the error
+        state would show the select with no error.
+
+        Returns:
+            The answer given.
+
+        Raises:
+            ValidationError: When the field is required and the answer is unknown.
+        """
+        value = self.cleaned_data["null_boolean"]
+        if value is None and self.fields["null_boolean"].required:
+            raise ValidationError(_("Choose yes or no."), code="required")
+        return value
+
 
 class TextStatesForm(forms.Form):
     """A text input and a textarea, drawn once disabled and once read-only."""

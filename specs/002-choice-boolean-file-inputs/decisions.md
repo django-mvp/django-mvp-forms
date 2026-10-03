@@ -321,3 +321,23 @@ submission.
 **Revisit if:** a third page pair needs a different set of states.
 
 **ADR:** none — local to the demo project, which is not distributed and which nothing inherits from
+
+## D22. Code review, 2026-10-03
+
+One reviewer, correctness and spec compliance, verdict: approve. Four findings, all low, all
+fixed. The fixes were made directly and not dispatched, because each is a few lines with no
+design in it.
+
+- COR-001: a date widget carrying the developer's own `aria-label` drew two on each select.
+  Fixed: the pack's part name is written only when the select has none (T009).
+- COR-002: a date widget subclass that renames its parts gets no part names. Fixed in the
+  README, which now says where the names come from (T009).
+- COR-003: the demo's error state showed the three-way boolean select with no error, and the
+  test read one kind only. Fixed: the demo form refuses "unknown" when required, and the test
+  reads every visible kind (T010).
+- COR-004: a six-line comment above `FieldInput.width`. Fixed: split onto the attributes it
+  describes (T009).
+- Notes swept: the README no longer calls `w-full` the only utility the pack writes, and no
+  longer implies more widget templates than exist.
+
+**ADR:** none — a record of the review

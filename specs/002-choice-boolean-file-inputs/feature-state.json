@@ -74,6 +74,16 @@
         "DR-007 (low) the demo's post binds uploaded files and discards them: watch item in T008",
         "DR-008 (low) a split hidden date and time gets a test: watch item in T006"
       ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-03T17:27:43Z",
+      "self_resolved": [
+        "COR-001 (low) a developer's own aria-label on a date widget is the only one written: fixed, T009",
+        "COR-002 (low) README says the date part names come from the end of each select's name: fixed, T009",
+        "COR-003 (low) demo error state shows an error on every visible kind, and the test reads each: fixed, T010",
+        "COR-004 (low) comment above FieldInput.width split onto the attributes it describes: fixed, T009"
+      ]
     }
   },
   "stories": [
@@ -125,6 +135,24 @@
               "mvp_forms/templatetags/daisyui.py:250"
             ],
             "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_choice_inputs.py::TestSelectDate::test_a_developers_own_name_on_a_select_is_the_only_one_written"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/widgets/select_date.html:5",
+              "mvp_forms/templatetags/daisyui.py:56"
+            ]
           }
         }
       ]
@@ -337,6 +365,22 @@
             ],
             "verified_by_ci": false
           }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::ChoiceInputsPageContract::test_every_visible_kind_is_invalid_in_the_error_state"
+            ],
+            "commands": [
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "demo/forms.py:173"
+            ]
+          }
         }
       ]
     }
@@ -347,7 +391,7 @@
       "max": 2
     },
     "review_cycles": {
-      "used": 2,
+      "used": 1,
       "max": 1
     },
     "design_review_cycles": {

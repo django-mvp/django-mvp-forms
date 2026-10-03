@@ -281,3 +281,18 @@ Plan, *The demo project*; research R10.
 - The existing text-inputs tests stay green and unedited.
 - README: the public-surface list is complete for every widget in FR-001 and FR-002, and the
   demo section names the new pages. CHANGELOG: the demo page.
+
+---
+
+## Fixes from the code review
+
+### T009 — A date's selects keep a developer's own name (US1)
+
+`select_date.html` writes the part's name only when the select carries no `aria-label`. The
+README says the names come from the end of each select's name. The comment above
+`FieldInput.width` is split onto the attributes it describes.
+
+### T010 — Every visible input has an error in the demo's error state (US7)
+
+The demo form refuses "unknown" on its three-way boolean when the field is required. The demo
+test reads `aria-invalid` on every visible kind in the error state.

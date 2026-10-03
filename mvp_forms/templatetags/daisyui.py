@@ -53,13 +53,10 @@ class FieldInput:
         forms.SelectDateWidget: "select",
         forms.FileInput: "file-input",
     }
-    # Written out, not built from the component's name, so a host project's
-    # Tailwind build finds them when it scans this module.
-    # daisyUI gives an input a fixed width and has no modifier to change it, so
-    # the one Tailwind utility the pack writes makes the input fill its field.
-    # A width utility the developer put on the widget replaces it. A checkbox and a
-    # radio are fixed-size and never widened.
+    # Makes an input fill its field, unless the developer's own class holds a
+    # width. See docs/adr/0007-inputs-fill-their-container.md.
     width = "w-full"
+    # A checkbox and a radio are fixed-size and never widened.
     fixed_size: set[str] = {"checkbox", "radio"}
     templates: dict[type[forms.Widget], str] = {
         forms.CheckboxSelectMultiple: "daisyui/widgets/group.html",
@@ -67,6 +64,8 @@ class FieldInput:
         forms.SelectDateWidget: "daisyui/widgets/select_date.html",
         forms.ClearableFileInput: "daisyui/widgets/clearable_file_input.html",
     }
+    # Written out, not built from the component's name, so a host project's
+    # Tailwind build finds them when it scans this module.
     error_modifiers: dict[str, str] = {
         "input": "input-error",
         "textarea": "textarea-error",

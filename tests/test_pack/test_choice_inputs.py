@@ -5,10 +5,12 @@ from typing import NamedTuple
 
 import pytest
 from crispy_forms.helper import FormHelper
+from django.template import Context, Template
 
 from tests.forms import (
     CheckboxGroupsForm,
     DateSelectsForm,
+    LabelledDateForm,
     RadioGroupsForm,
     SelectEdgesForm,
     SelectsForm,
@@ -174,6 +176,13 @@ class TestSelectDate:
         names = [select["aria-label"] for select in selects]
         assert all(names)
         assert len(set(names)) == 3
+
+    def test_a_developers_own_name_on_a_select_is_the_only_one_written(self):
+        template = Template("{% load crispy_forms_tags %}{{ form|crispy }}")
+
+        html = template.render(Context({"form": LabelledDateForm()}))
+
+        assert html.count("aria-label=") == 3
 
     @pytest.mark.parametrize("source", SOURCES)
     def test_the_field_has_one_legend_one_help_text_and_one_error_element(

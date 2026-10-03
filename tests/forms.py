@@ -146,6 +146,12 @@ class DateSelectsForm(forms.Form):
     )
 
 
+class LabelledDateForm(forms.Form):
+    born = forms.DateField(
+        widget=forms.SelectDateWidget(years=[2020, 2021], attrs={"aria-label": "Mine"})
+    )
+
+
 class CheckboxForm(forms.Form):
     agree = forms.BooleanField(help_text="Read the terms first")
     news = forms.BooleanField(required=False)
