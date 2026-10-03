@@ -269,10 +269,10 @@
               "uv run pre-commit run --all-files (exit 0)"
             ],
             "code": [
-              "demo/forms.py:444",
-              "demo/views.py:422",
+              "demo/forms.py:448",
+              "demo/views.py:413",
               "demo/urls.py:43",
-              "demo/menus.py:48",
+              "demo/menus.py:49",
               "demo/templates/demo/alert.html:1",
               "demo/templates/demo/containers_standalone.html:1"
             ],
