@@ -40,3 +40,10 @@ Did: test_joined_groups.py (TestJoinedGroups for scenarios 1 to 11, TestJoinedGr
 Verified: uv run pytest tests/test_layout.py tests/test_pack tests/test_templatetags -n auto --dist loadscope -q, 2615 passed. The tests were written after T004's code, so they passed first; probed by mutation: dropping the required marker, putting hidden inputs in the join, dropping the messages loop, join-item, the label escape, the Field's attributes, the Choice and the class filter each failed at least one. SC-003: rendering all 85 entries of STATES as they stood before T004 (/tmp script, not committed) and again now gives the same markup after collapsing whitespace; byte for byte only the blank lines around each field's help text and errors move.
 Next: T006, the demo pages.
 Watch: an empty Join alone in a layout draws nothing, so display_form falls back to every field; the tests give the layout another field. The README section says nothing of size, colour and variant on a group; T007 adds it.
+
+## 2026-10-03T23:46:53Z · Implementer US2 · T006
+
+Did: demo pages /joined-groups/ in the shell and /joined-groups/standalone/ on daisyUI's CDN install, with the sidebar entry and its icon; JoinedGroupsForm (to submit, and bound to fail in one member), JoinedHelpForm, JoinedStatesForm, JoinedUnlabelledForm and JoinedSingleForm; JoinedGroupsMixin and its two views; tests for both pages; the README's page list and the CHANGELOG name the two pages.
+Verified: uv run pytest tests/test_demo.py -q -k JoinedGroups, 34 passed; they failed first on the missing route.
+Next: the full verify, then the report.
+Watch: the shell page uses the shell's Cotton components and no include; nothing states a size or a colour, which T007 adds. The page's Submit has the form's prefix in its name.

@@ -30,6 +30,11 @@ from demo.forms import (
     InlineChoicesForm,
     InlineFieldForm,
     InputKindsForm,
+    JoinedGroupsForm,
+    JoinedHelpForm,
+    JoinedSingleForm,
+    JoinedStatesForm,
+    JoinedUnlabelledForm,
     LayoutObjectsForm,
     ModalForm,
     MultiWidgetFieldForm,
@@ -1111,6 +1116,62 @@ class StandaloneFloatingLabelsView(FloatingLabelsMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/floating_labels_standalone.html"
+
+
+class JoinedGroupsMixin(CleanedMixin):
+    """The forms both joined-group pages draw, with what the first cleaned to.
+
+    A post binds the form to submit and draws the page again. Nothing is saved.
+    """
+
+    joined_prefix = "joined"
+    joined_failing_prefix = "failing-joined"
+    joined_help_prefix = "joined-help"
+    joined_states_prefix = "joined-states"
+    joined_unlabelled_prefix = "joined-unlabelled"
+    joined_single_prefix = "joined-single"
+
+    def get_context_data(self, **kwargs):
+        """Add the form to submit, what it cleaned to, and the groups beside it."""
+        form = kwargs.setdefault("form", JoinedGroupsForm(prefix=self.joined_prefix))
+        kwargs["failing_form"] = JoinedGroupsForm(
+            {f"{self.joined_failing_prefix}-country_code": "+49"},
+            prefix=self.joined_failing_prefix,
+            posts=False,
+        )
+        kwargs["help_form"] = JoinedHelpForm(prefix=self.joined_help_prefix)
+        kwargs["states_form"] = JoinedStatesForm(prefix=self.joined_states_prefix)
+        kwargs["unlabelled_form"] = JoinedUnlabelledForm(
+            prefix=self.joined_unlabelled_prefix
+        )
+        kwargs["single_form"] = JoinedSingleForm(prefix=self.joined_single_prefix)
+        kwargs["cleaned"] = self.build_cleaned(form)
+        kwargs["prefix"] = self.joined_prefix
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to submit unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to submit bound to what was posted."""
+        form = JoinedGroupsForm(request.POST, prefix=self.joined_prefix)
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class JoinedGroupsView(JoinedGroupsMixin, MVPTemplateView):
+    """Several fields drawn as one join under one label, inside the shell."""
+
+    template_name = "demo/joined_groups.html"
+    page_title = "Joined groups"
+    page_subtitle = "Several fields in one join under one label, chosen in Python"
+    breadcrumbs = [{"text": "Joined groups"}]
+
+
+class StandaloneJoinedGroupsView(JoinedGroupsMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/joined_groups_standalone.html"
 
 
 class OrderFormsetMixin:

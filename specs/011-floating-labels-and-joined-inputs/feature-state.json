@@ -212,8 +212,27 @@
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestJoinedGroupsPage",
+              "tests/test_demo.py::TestStandaloneJoinedGroupsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -q -k JoinedGroups"
+            ],
+            "code": [
+              "demo/forms.py:881",
+              "demo/views.py:1121",
+              "demo/urls.py:111",
+              "demo/menus.py:106",
+              "demo/settings.py:139",
+              "demo/templates/demo/joined_groups.html:1",
+              "demo/templates/demo/joined_groups_standalone.html:1"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },

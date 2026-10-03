@@ -15,6 +15,7 @@ from demo.views import (
     FloatingLabelsView,
     InlineChoicesView,
     InlineFieldView,
+    JoinedGroupsView,
     LayoutObjectsView,
     ModalView,
     MultiWidgetFieldView,
@@ -25,6 +26,7 @@ from demo.views import (
     StandaloneChoicesView,
     StandaloneDrawingsView,
     StandaloneFloatingLabelsView,
+    StandaloneJoinedGroupsView,
     StandaloneLayoutObjectsView,
     StandaloneRatingAndRangeView,
     StandaloneStackedFormsetView,
@@ -105,6 +107,12 @@ urlpatterns = [
         "floating-labels/standalone/",
         StandaloneFloatingLabelsView.as_view(),
         name="floating-labels-standalone",
+    ),
+    path("joined-groups/", JoinedGroupsView.as_view(), name="joined-groups"),
+    path(
+        "joined-groups/standalone/",
+        StandaloneJoinedGroupsView.as_view(),
+        name="joined-groups-standalone",
     ),
     path("formset-stacked/", StackedFormsetView.as_view(), name="formset-stacked"),
     path(

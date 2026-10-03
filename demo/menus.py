@@ -104,6 +104,11 @@ AppMenu.extend(
             extra_context={"label": "Floating labels", "icon": "floating-labels"},
         ),
         MenuItem(
+            name="joined-groups",
+            view_name="joined-groups",
+            extra_context={"label": "Joined groups", "icon": "joined-groups"},
+        ),
+        MenuItem(
             name="formset-stacked",
             view_name="formset-stacked",
             extra_context={"label": "Formset, stacked", "icon": "formset-stacked"},

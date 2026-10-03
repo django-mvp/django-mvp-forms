@@ -1,0 +1,91 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Joined groups</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">Joined groups</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and nothing else.
+        <a class="link" href="{% url 'joined-groups' %}">The same page inside the django-mvp shell</a>
+      </p>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Try it</h2>
+          <p>
+            The country code and the number are two fields joined under one label. Each input
+            is named by its own label. Submit the form with no number to see its error, or with
+            one to see what the form cleaned to.
+          </p>
+          {% crispy form %}
+        </div>
+      </section>
+      {% if cleaned %}
+        <section class="card card-border bg-base-100">
+          <div class="card-body">
+            <h2 class="card-title">What the form cleaned to</h2>
+            <ul id="{{ prefix }}-cleaned">
+              {% for item in cleaned %}
+                <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </section>
+      {% endif %}
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">A group that already fails</h2>
+          <p>
+            The code is chosen and the number is missing. Only the number is marked invalid,
+            and its error is drawn once, under the group.
+          </p>
+          {% crispy failing_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Help text on a member</h2>
+          <p>
+            The amount has help text, drawn once under the group and tied to the amount alone.
+          </p>
+          {% crispy help_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Disabled, read-only and hidden</h2>
+          <p>
+            A disabled member stays in its place disabled and a read-only member keeps its
+            attribute. The hidden member is a hidden input beside the join, not in it.
+          </p>
+          {% crispy states_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">A group with no label</h2>
+          <p>
+            With no label the group has no legend, and each input is still named by its own
+            label.
+          </p>
+          {% crispy unlabelled_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">A group of one</h2>
+          <p>
+            A group that holds one field is drawn as a group of one.
+          </p>
+          {% crispy single_form %}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

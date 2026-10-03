@@ -25,6 +25,7 @@ from crispy_forms.layout import (
     ButtonHolder,
     Column,
     Div,
+    Field,
     Fieldset,
     Hidden,
     Layout,
@@ -41,6 +42,7 @@ from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
 from mvp_forms.choices import Choice, FormChoices, Modifiers
+from mvp_forms.layout import Join
 
 
 class TextInputsForm(forms.Form):
@@ -870,6 +872,117 @@ class FloatingByNameForm(ChosenForm):
             choices=FormChoices(fields={"title": Choice(label="floating")}),
             **kwargs,
         )
+
+
+COUNTRY_CODES = [("+49", "+49"), ("+44", "+44"), ("+1", "+1")]
+UNITS = [("kg", "kg"), ("lb", "lb")]
+
+
+class JoinedGroupsForm(forms.Form):
+    """A country code and a number joined under one label, which can be posted.
+
+    ``number`` is required and has help text, so a bound form that holds a code and
+    no number comes back with the error of that member alone. Every id and the
+    button's name carry the form's prefix, so two of these forms on one page repeat
+    no id. The form must be given a prefix.
+    """
+
+    country_code = forms.ChoiceField(label=_("Country code"), choices=COUNTRY_CODES)
+    number = forms.CharField(label=_("Number"), help_text=_("Digits only"))
+
+    def __init__(self, *args, posts=True, **kwargs):
+        """Join the two fields, and add a submit button when the form posts.
+
+        Args:
+            *args: Passed to ``forms.Form``.
+            posts: Whether the form is drawn with its form element and a submit
+                button. The form that already fails is not, so it has neither.
+            **kwargs: Passed to ``forms.Form``.
+        """
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = posts
+        self.helper.attrs = {"novalidate": True}
+        self.helper.layout = Layout(
+            Join(
+                "country_code",
+                Field("number", autocomplete="tel"),
+                label=_("Phone"),
+            )
+        )
+        if posts:
+            self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class JoinedHelpForm(ChosenForm):
+    """An amount with help text joined to its unit.
+
+    Give the form a prefix, so no id repeats on the page.
+    """
+
+    amount = forms.IntegerField(
+        label=_("Amount"), min_value=0, help_text=_("Whole numbers only")
+    )
+    unit = forms.ChoiceField(label=_("Unit"), choices=UNITS)
+
+    def __init__(self, *args, **kwargs):
+        """Join the two fields under one label."""
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(Join("amount", "unit", label=_("Weight")))
+
+
+class JoinedStatesForm(ChosenForm):
+    """A group with a disabled member, a read-only member and a hidden member.
+
+    The hidden member is drawn beside the join, not in it. Give the form a prefix,
+    so no id repeats on the page.
+    """
+
+    country_code = forms.ChoiceField(label=_("Country code"), choices=COUNTRY_CODES)
+    locked = forms.CharField(label=_("Account"), initial="AC-1001", disabled=True)
+    reference = forms.CharField(
+        label=_("Reference"),
+        initial="REF-2026",
+        widget=forms.TextInput(attrs={"readonly": True}),
+    )
+    token = forms.CharField(widget=forms.HiddenInput, initial="demo", required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Join the four fields under one label."""
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(
+            Join("country_code", "locked", "reference", "token", label=_("Account"))
+        )
+
+
+class JoinedUnlabelledForm(ChosenForm):
+    """An amount joined to its unit, with no label for the group.
+
+    Each input is still named by its own field's label. Give the form a prefix, so
+    no id repeats on the page.
+    """
+
+    amount = forms.IntegerField(label=_("Amount"), min_value=0, required=False)
+    unit = forms.ChoiceField(label=_("Unit"), choices=UNITS)
+
+    def __init__(self, *args, **kwargs):
+        """Join the two fields under no label."""
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(Join("amount", "unit"))
+
+
+class JoinedSingleForm(ChosenForm):
+    """A group that holds one field.
+
+    Give the form a prefix, so no id repeats on the page.
+    """
+
+    quantity = forms.IntegerField(label=_("Quantity"), min_value=0, required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Join the one field under a label."""
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(Join("quantity", label=_("Order size")))
 
 
 class InlineChoicesForm(forms.Form):

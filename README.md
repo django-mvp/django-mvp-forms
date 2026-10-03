@@ -1077,6 +1077,11 @@ One more page draws fields with a floating label. It holds a form to submit with
 - `/floating-labels/` is the page inside the django-mvp shell, reached from its sidebar as "Floating labels".
 - `/floating-labels/standalone/` is the same page styled by daisyUI's CDN build alone.
 
+One more page draws fields joined into one group. It holds a form to submit with a country code and a number under one label. Submitting it with no number comes back with the number's error, and submitting it with one shows the values the form cleaned to. Nothing is saved. The page also draws a group that already fails in one member, a group with help text on a member, a group with a disabled member, a read-only member and a hidden member, a group with no label, and a group of one.
+
+- `/joined-groups/` is the page inside the django-mvp shell, reached from its sidebar as "Joined groups".
+- `/joined-groups/standalone/` is the same page styled by daisyUI's CDN build alone.
+
 Five more pages draw the containers and the notice django-crispy-forms keeps in `crispy_forms.bootstrap`. Each of the first three holds a form to submit whose required field sits in a tab, a group or a modal that is not open, so submitting it empty comes back with the tab, group or modal that holds the error open:
 
 - `/tabs/` is inside the django-mvp shell, reached from its sidebar. Its second form is already bound and fails in its third tab.
