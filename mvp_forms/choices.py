@@ -1,4 +1,4 @@
-"""The size, colour and variant a form states, and the daisyUI classes they mean."""
+"""The size, colour, variant and drawing a form states, and the classes they mean."""
 
 from enum import Enum
 from typing import Any, ClassVar
@@ -19,13 +19,15 @@ INHERIT = Inherit.INHERIT
 
 
 class InvalidChoice(ValueError):
-    """A size, colour or variant that cannot be drawn.
+    """A size, colour, variant or drawing that cannot be drawn.
 
     Args:
-        kind: What was stated: ``"size"``, ``"color"`` or ``"variant"``.
+        kind: What was stated: ``"size"``, ``"color"``, ``"variant"`` or
+            ``"drawing"``.
         value: The value that was stated.
         allowed: The names allowed, in daisyUI's order. Empty when the input
-            drawn has no modifier of this kind at all.
+            drawn has no modifier of this kind at all, or when a drawing was
+            stated for something that is not a boolean field.
         target: The field's name, or the button's name or content, when the
             statement was made for one of them. None when the form made it.
     """
@@ -209,6 +211,13 @@ class Modifiers:
         },
     }
 
+    # A toggle and a switch are both daisyUI's toggle.
+    drawings: ClassVar[dict[str, str]] = {
+        "checkbox": "checkbox",
+        "toggle": "toggle",
+        "switch": "toggle",
+    }
+
     tables: ClassVar[dict[str, dict[str, dict[str, str]]]] = {
         "size": sizes,
         "color": colors,
@@ -295,7 +304,7 @@ class Modifiers:
 
 
 class Choice(LayoutObject):
-    """A size, a colour and a variant stated for one field or one button.
+    """A size, a colour, a variant and a drawing stated for one field or button.
 
     Each argument left out is inherited from the statement it is merged over,
     and None is the pack's ordinary drawing, which undoes it.
@@ -310,6 +319,8 @@ class Choice(LayoutObject):
         size: The size, or ``INHERIT``.
         color: The colour, or ``INHERIT``.
         variant: The variant, or ``INHERIT``.
+        drawing: How a boolean field is drawn: ``"checkbox"``, ``"toggle"`` or
+            ``"switch"``, or ``INHERIT``. Only a boolean field takes one.
     """
 
     context_name = "daisyui_choice"
@@ -320,11 +331,13 @@ class Choice(LayoutObject):
         size: str | Inherit | None = INHERIT,
         color: str | Inherit | None = INHERIT,
         variant: str | Inherit | None = INHERIT,
+        drawing: str | Inherit | None = INHERIT,
     ) -> None:
         self.fields = list(fields)
         self.size = size
         self.color = color
         self.variant = variant
+        self.drawing = drawing
 
     def over(self, outer: "Choice") -> "Choice":
         """Return this choice merged over an outer one, each kind separately.
@@ -340,6 +353,7 @@ class Choice(LayoutObject):
             size=outer.size if self.size is INHERIT else self.size,
             color=outer.color if self.color is INHERIT else self.color,
             variant=outer.variant if self.variant is INHERIT else self.variant,
+            drawing=outer.drawing if self.drawing is INHERIT else self.drawing,
         )
 
     def render(

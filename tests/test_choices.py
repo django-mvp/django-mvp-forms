@@ -255,6 +255,54 @@ class TestChoice:
         assert (outer.size, outer.color) == ("lg", "info")
 
 
+class TestChoiceDrawing:
+    def test_it_is_inherited_by_default(self):
+        assert Choice().drawing is INHERIT
+
+    def test_it_is_kept(self):
+        assert Choice(drawing="toggle").drawing == "toggle"
+
+    def test_none_is_kept(self):
+        assert Choice(drawing=None).drawing is None
+
+    def test_over_takes_the_inner_drawing_when_stated(self):
+        merged = Choice(drawing="toggle").over(Choice(drawing="switch"))
+
+        assert merged.drawing == "toggle"
+
+    def test_over_takes_the_outer_drawing_when_the_inner_one_is_left_out(self):
+        merged = Choice(size="sm").over(Choice(drawing="switch"))
+
+        assert merged.drawing == "switch"
+
+    def test_over_states_none_when_the_inner_drawing_is_none(self):
+        merged = Choice(drawing=None).over(Choice(drawing="switch"))
+
+        assert merged.drawing is None
+
+    def test_over_inherits_a_drawing_neither_choice_states(self):
+        merged = Choice(size="sm").over(Choice(color="info"))
+
+        assert merged.drawing is INHERIT
+
+    def test_over_changes_neither_choice(self):
+        inner = Choice(drawing="toggle")
+        outer = Choice(drawing="switch")
+
+        inner.over(outer)
+
+        assert (inner.drawing, outer.drawing) == ("toggle", "switch")
+
+
+class TestModifiersDrawings:
+    def test_each_drawing_names_the_component_it_is_drawn_with(self):
+        assert Modifiers.drawings == {
+            "checkbox": "checkbox",
+            "toggle": "toggle",
+            "switch": "toggle",
+        }
+
+
 class Recorder:
     def __init__(self, leaves_a_layer=False):
         self.leaves_a_layer = leaves_a_layer
