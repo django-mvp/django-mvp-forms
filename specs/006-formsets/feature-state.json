@@ -2,7 +2,7 @@
   "feature": "006-formsets",
   "branch": "006-formsets",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "QUEUED",
@@ -38,6 +38,11 @@
       "state": "PR_READY",
       "at": "2026-10-03T18:28:21Z",
       "note": "review approved, five low findings fixed in T008; merged origin/main at 23b5933; ADRs renumbered 0017 and 0018"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-10-03T18:34:52Z",
+      "note": "PR #20 merged; approved by forge-aeo-reviewer"
     }
   ],
   "gates": {
@@ -53,8 +58,8 @@
       "at": "2026-10-03T17:45:06Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "forge-aeo-reviewer",
+      "at": "2026-10-03T18:34:47Z"
     },
     "design_review": {
       "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
@@ -79,8 +84,8 @@
       ]
     },
     "walkthrough": {
-      "approved_by": null,
-      "at": "2026-10-03T18:28:35Z",
+      "approved_by": "delegated review",
+      "at": "2026-10-03T18:34:48Z",
       "self_resolved": []
     }
   },
@@ -316,12 +321,12 @@
       "max": 1
     },
     "tokens": {
-      "used": 12.17,
+      "used": 19.16,
       "max": 120
     }
   },
   "pr": {
     "number": 20,
-    "draft": true
+    "draft": false
   }
 }
