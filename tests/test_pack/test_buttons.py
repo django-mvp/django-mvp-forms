@@ -1,7 +1,8 @@
 """The layout objects that draw buttons: inputs, buttons, holders and helper buttons."""
 
 import pytest
-from crispy_forms.layout import Button, Reset, Submit
+from crispy_forms.bootstrap import FormActions, StrictButton
+from crispy_forms.layout import Button, ButtonHolder, Reset, Submit
 
 DEVELOPER_CLASSES = ["mine", "other"]
 DEVELOPER_ATTRS = {"data-role": "action", "title": "Act"}
@@ -75,3 +76,124 @@ class TestBaseInputs:
         soup = draw_layout(kind("act", "Go, {{ who }}"), who="Ada")
 
         assert soup.find("input", attrs={"name": "act"})["value"] == "Go, Ada"
+
+
+class TestStrictButton:
+    def test_it_is_a_button_element_holding_the_markup_it_was_given(self, draw_layout):
+        soup = draw_layout(StrictButton("<em>Save</em> it", css_id="save"))
+
+        button = soup.find("button", id="save")
+        assert button.find("em").get_text() == "Save"
+
+    def test_a_context_value_in_its_content_is_filled_in(self, draw_layout):
+        soup = draw_layout(StrictButton("Save {{ who }}", css_id="save"), who="Ada")
+
+        assert soup.find("button", id="save").get_text() == "Save Ada"
+
+    def test_markup_in_a_context_value_is_escaped(self, draw_layout):
+        soup = draw_layout(
+            StrictButton("Save {{ who }}", css_id="save"), who="<script>x</script>"
+        )
+
+        button = soup.find("button", id="save")
+        assert button.find("script") is None
+        assert "<script>x</script>" in button.get_text()
+
+    def test_its_type_is_button_unless_another_was_chosen(self, draw_layout):
+        soup = draw_layout(
+            StrictButton("Plain", css_id="plain"),
+            StrictButton("Send", css_id="send", type="submit"),
+        )
+
+        assert soup.find("button", id="plain")["type"] == "button"
+        assert soup.find("button", id="send")["type"] == "submit"
+
+    def test_it_is_a_daisyui_button(self, draw_layout):
+        soup = draw_layout(StrictButton("Save", css_id="save"))
+
+        assert "btn" in soup.find("button", id="save")["class"]
+
+    def test_it_carries_the_id_the_classes_and_the_attributes_it_was_given(
+        self, draw_layout
+    ):
+        soup = draw_layout(
+            StrictButton(
+                "Save",
+                css_id="save",
+                css_class=" ".join(DEVELOPER_CLASSES),
+                **DEVELOPER_ATTRS,
+            )
+        )
+
+        button = soup.find("button", id="save")
+        assert set(DEVELOPER_CLASSES) <= set(button["class"])
+        assert "btn" in button["class"]
+        assert button["data-role"] == DEVELOPER_ATTRS["data-role"]
+        assert button["title"] == DEVELOPER_ATTRS["title"]
+
+
+HOLDERS = [
+    pytest.param(ButtonHolder, id="button holder"),
+    pytest.param(FormActions, id="form actions"),
+]
+
+
+class TestHolders:
+    @pytest.mark.parametrize("holder", HOLDERS)
+    def test_the_buttons_are_inside_one_container_in_the_order_given(
+        self, draw_layout, holder
+    ):
+        soup = draw_layout(
+            holder(
+                Submit("save", "Save"),
+                Reset("clear", "Clear"),
+                Button("help", "Help"),
+                StrictButton("More", css_id="more"),
+                css_id="actions",
+            )
+        )
+
+        container = soup.find(id="actions")
+        controls = container.find_all(["input", "button"])
+        assert [control.get("name") or control["id"] for control in controls] == [
+            "save",
+            "clear",
+            "help",
+            "more",
+        ]
+
+    @pytest.mark.parametrize("holder", HOLDERS)
+    def test_it_carries_the_id_and_the_classes_it_was_given(self, draw_layout, holder):
+        soup = draw_layout(
+            holder(
+                Submit("save", "Save"),
+                css_id="actions",
+                css_class=" ".join(DEVELOPER_CLASSES),
+            )
+        )
+
+        assert soup.find(id="actions")["class"][-2:] == DEVELOPER_CLASSES
+
+    @pytest.mark.parametrize("holder", HOLDERS)
+    def test_it_writes_no_id_when_it_was_given_none(self, draw_layout, holder):
+        soup = draw_layout(holder(Submit("save", "Save"), css_class="mine"))
+
+        container = soup.find("input", attrs={"name": "save"}).parent
+        assert not container.has_attr("id")
+
+    @pytest.mark.parametrize("holder", HOLDERS)
+    def test_an_empty_one_is_drawn(self, draw_layout, holder):
+        soup = draw_layout(holder(css_id="actions"))
+
+        container = soup.find(id="actions")
+        assert container is not None
+        assert container.find(["input", "button"]) is None
+
+    def test_form_actions_carries_the_attributes_it_was_given(self, draw_layout):
+        soup = draw_layout(
+            FormActions(Submit("save", "Save"), css_id="actions", **DEVELOPER_ATTRS)
+        )
+
+        container = soup.find(id="actions")
+        assert container["data-role"] == DEVELOPER_ATTRS["data-role"]
+        assert container["title"] == DEVELOPER_ATTRS["title"]

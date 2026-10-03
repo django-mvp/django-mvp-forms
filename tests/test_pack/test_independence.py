@@ -5,8 +5,18 @@ import re
 from pathlib import Path
 
 import pytest
+from crispy_forms.bootstrap import FormActions, StrictButton
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Column, Div, Fieldset, Row
+from crispy_forms.layout import (
+    Button,
+    ButtonHolder,
+    Column,
+    Div,
+    Fieldset,
+    Reset,
+    Row,
+    Submit,
+)
 from django.apps import apps
 
 import mvp_forms
@@ -40,6 +50,9 @@ LAYOUT_UTILITIES = {
     "md:flex-row",
     "flex-1",
     "min-w-0",
+    "flex-wrap",
+    "gap-2",
+    "mt-4",
 }
 
 
@@ -80,6 +93,22 @@ def structured(data=None):
                 "third",
             ),
             "fourth",
+        ),
+    )
+
+
+def buttoned(data=None):
+    return StructureForm(
+        data,
+        layout=(
+            "first",
+            FormActions(
+                Submit("save", "Save"),
+                Reset("clear", "Clear"),
+                Button("help", "Help"),
+                StrictButton("More", css_id="more"),
+            ),
+            ButtonHolder(Submit("again", "Again")),
         ),
     )
 
@@ -152,6 +181,13 @@ STATES = [
         lambda: structured({}),
         NOTHING,
         id="structural layout objects, invalid",
+    ),
+    pytest.param("{% crispy form %}", buttoned, NOTHING, id="buttons in a layout"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: buttoned({}),
+        NOTHING,
+        id="buttons in a layout, invalid",
     ),
     pytest.param(
         "{% crispy form %}",
