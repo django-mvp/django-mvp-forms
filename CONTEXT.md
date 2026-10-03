@@ -144,6 +144,29 @@ widget. A range always submits a number, so an optional number field drawn as a
 range is never submitted empty.
 _Avoid_: slider field.
 
+**Support window**:
+The versions of Django, django-crispy-forms and daisyUI this package states it
+works with and checks itself against, with the rule by which a version enters
+and the rule by which one leaves. It is declared once, in `support-window.toml`,
+and stated in the README's "Supported versions".
+_Avoid_: compatibility matrix, supported range.
+
+**Named version**:
+One version inside the support window, written at the level a host project
+chooses it: Django 5.2 is a named version and Django 5.2.17 is a patch release
+of it.
+_Avoid_: pinned version, tested version.
+
+**Period**:
+The time from a new release's final publication within which the package
+supports it or says that it does not yet. It is thirty days.
+_Avoid_: grace period, SLA, deadline.
+
+**Dropped version**:
+A version that has left the support window, kept on record with the last
+release of this package that supported it.
+_Avoid_: deprecated version, end-of-life version, removed version.
+
 ## Terms deliberately not used
 
 **Component**:

@@ -5,7 +5,7 @@ import tomllib
 
 import pytest
 
-from support_window import DECLARATION, ROOT, InvalidWindow, Window
+from support_window import DECLARATION, ROOT, InvalidWindow, Window, relative_links
 
 MAPPING = {
     "python": ["3.12", "3.13"],
@@ -216,3 +216,37 @@ class TestMetadata:
         assert ("metadata", "python", "3.14") in found(
             window.metadata_disagreements(pyproject)
         )
+
+
+def section(*links):
+    body = "\n".join(f"[a link]({link})" for link in links)
+    return (
+        "[before](docs/before.md)\n\n<!-- support-window -->\n"
+        f"| | Supported |\n<!-- /support-window -->\n{body}\n"
+        "<!-- dropped-versions -->\n<!-- /dropped-versions -->\n"
+        "\n[after](docs/after.md)\n"
+    )
+
+
+class TestReadmeLinks:
+    def test_the_section_of_the_repositorys_readme_holds_no_relative_link(self):
+        readme = (ROOT / "README.md").read_text()
+
+        assert relative_links(readme) == []
+
+    def test_a_relative_link_in_the_section_is_returned(self):
+        assert relative_links(section("docs/support.md")) == ["docs/support.md"]
+
+    def test_an_anchor_in_the_section_is_returned(self):
+        assert relative_links(section("#installation")) == ["#installation"]
+
+    def test_an_absolute_link_in_the_section_is_not_returned(self):
+        links = section("https://github.com/django-mvp/django-mvp-forms/issues/1")
+
+        assert relative_links(links) == []
+
+    def test_a_relative_link_outside_the_section_is_not_returned(self):
+        assert relative_links(section()) == []
+
+    def test_a_readme_with_no_section_has_no_relative_link(self):
+        assert relative_links("[a link](docs/support.md)") == []

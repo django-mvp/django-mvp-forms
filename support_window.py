@@ -16,6 +16,9 @@ CLAUSE = re.compile(r"\s*(==|!=|~=|>=|<=|>|<)\s*([\w.*]+)\s*")
 REQUIREMENT = re.compile(r"\s*([A-Za-z0-9][A-Za-z0-9._-]*)\s*(.*)")
 DJANGO_CLASSIFIER = re.compile(r"Framework :: Django :: (\d+\.\d+)")
 PYTHON_CLASSIFIER = re.compile(r"Programming Language :: Python :: (\d+\.\d+)")
+STATEMENT = re.compile(r"<!-- support-window -->.*<!-- /dropped-versions -->", re.S)
+LINK_TARGET = re.compile(r"\]\(\s*<?([^)\s>]+)|href=[\"']([^\"']+)")
+ABSOLUTE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:")
 
 
 class InvalidWindow(ValueError):
@@ -259,3 +262,24 @@ class Window:
                 )
             )
         return found
+
+
+def relative_links(readme: str) -> list[str]:
+    """List the links in the README's statement that are not absolute.
+
+    The statement runs from the ``support-window`` comment to the end of the
+    ``dropped-versions`` comment. A link that is not absolute breaks on the
+    package index, where the README is shown away from the repository.
+
+    Args:
+        readme: The text of the README.
+
+    Returns:
+        The targets of the links that have no scheme, in the order they appear.
+        Empty when the README has no statement.
+    """
+    statement = STATEMENT.search(readme)
+    if statement is None:
+        return []
+    targets = (a or b for a, b in LINK_TARGET.findall(statement.group()))
+    return [target for target in targets if not ABSOLUTE.match(target)]
