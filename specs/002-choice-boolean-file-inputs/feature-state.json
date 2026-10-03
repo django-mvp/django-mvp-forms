@@ -296,8 +296,27 @@
       "tasks": [
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestChoiceInputsPage",
+              "tests/test_demo.py::TestStandaloneChoiceInputsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build"
+            ],
+            "code": [
+              "demo/views.py:25",
+              "demo/forms.py:65",
+              "tests/test_demo.py:215"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }

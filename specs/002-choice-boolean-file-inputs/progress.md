@@ -57,3 +57,10 @@ Did: Added tests/test_pack/test_states.py (62 cases, both |crispy and {% crispy 
 Verified (scratch edits, each reverted): attrs.html drops disabled -> 6 fail (group options, file input); clearable template drops removal disabled -> 2 fail; fixtures lose disabled=True -> 24 fail; pack adds a class for readonly -> 10 fail; pack drops readonly in FieldInput.attrs -> 12 fail; PasswordInput(render_value=True) -> 2 fail; initial removed -> 4 fail. One probe was ineffective: forcing attrs["disabled"]=False in FieldInput.attrs leaves 62 green because Django's build_widget_attrs writes disabled after the merge, so the pack cannot remove it. Focused: uv run pytest tests/test_pack/test_states.py tests/test_pack/test_independence.py -> 113 passed. pre-commit run --all-files passed.
 Next: full verify, ledger, report.
 Watch: the readonly tests use widget attrs, so a future FieldInput that stops merging developer attrs would fail them, which is intended.
+
+## 2026-10-03T17:09:27Z · Implementer US7 · T008
+
+Did: ChoiceInputsForm and TextStatesForm; StatesMixin shared by the text and choice page pairs (post binds FILES; the upload is validated and dropped); choice-inputs and standalone views, routes, menu item, icon; two templates (Cotton on the shell, none standalone); tests for both pages; README status, public-surface list by widget class, demo section; CHANGELOG entry; decision D21.
+Verified: uv run pytest tests/test_demo.py (397 passed); probes with FILES unbound, enctype removed and disabled switched off each failed tests; uv run pytest -n auto --dist loadscope (904 passed, exit 0); uv run pre-commit run --all-files (all passed); uv run mypy (no issues); uv build (built).
+Next: none for US7; Forge verifies and accepts.
+Watch: tests/test_demo.py renders a page per parametrised case, about 50s serially for the file; text-inputs tests were not edited.

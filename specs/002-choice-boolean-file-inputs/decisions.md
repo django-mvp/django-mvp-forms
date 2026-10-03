@@ -307,3 +307,19 @@ names beside the frame's label, so the words stay plain text, as Django writes t
 **Revisit if:** daisyUI gains a component for a file input with an attached current file.
 
 **ADR:** none — follows D10 and D13
+
+## D21. The demo's per-state logic is one mixin, parametrised by the form
+
+**Decision:** `StatesMixin` in `demo/views.py` holds the forms-per-state, the submittable form
+and the post (which binds `request.FILES` as well as `request.POST`). `TextInputsMixin` and
+`ChoiceInputsMixin` only name the form, the held values and the refused values. The choice page
+adds a sixth state and its text input states by extending `build_states` and `get_context_data`.
+The submittable form's hidden field starts at a value, so a visitor can get past it.
+
+**Why:** Two page pairs need the same shape and the plan says the logic is shared, not copied.
+A hidden input has no control to fill in, so a required one with no value would refuse every
+submission.
+
+**Revisit if:** a third page pair needs a different set of states.
+
+**ADR:** none — demo code
