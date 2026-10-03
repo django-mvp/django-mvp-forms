@@ -97,3 +97,45 @@ A developer who writes a `Layout` can arrange fields with django-crispy-forms' s
 The spec number, directory and branch were fixed in advance because several specifications were being written at the same time, so the files were written from the specification template by hand and no script chose a number.
 
 The clarification scan was run against the draft and answered from the repository's own documents. Its six questions and answers are in `spec.md` under Clarifications. Categories with nothing to resolve: data model (the feature has none), performance and scale, observability, and compliance.
+
+## Decisions taken while planning the build
+
+## D10. Buttons added to the form helper are placed by this feature
+
+**Decision:** The form wrapper gains one include, `daisyui/inputs.html`, after the fields and inside the form element. It draws each button the helper holds with the same template a button in a layout uses.
+
+**Why:** D5 expected FS-001's form wrapper to place these buttons and said the placement would need an owner if it did not. FS-001 was delivered without it, and its own decisions say buttons belong to this feature. The second story's seventh scenario cannot pass unless something draws them, so the owner is this feature.
+
+**Revisit if:** A later feature needs the helper's buttons somewhere other than after the fields.
+
+## D11. A field inside a `MultiField` keeps its own errors
+
+**Decision:** Each field in a `MultiField` is drawn by the field frame, with its own label, help text and errors. The group does not collect its fields' errors at the top.
+
+**Why:** The Bootstrap packs gather the errors above the group and drop each field's own. FR-008 and the fourth story's second scenario require an error to stay tied to its field, and ADR 0006 puts every input inside the one frame.
+
+**Revisit if:** A host project needs the gathered form. It can pass `field_template` to the `MultiField`.
+
+## D12. A hidden input has no class and no id
+
+**Decision:** `Hidden` is drawn as an input with its type, name, value and any attributes passed as keyword arguments. The `hidden` class and the generated id django-crispy-forms gives it are not written.
+
+**Why:** `hidden` is not a daisyUI class and does nothing on an input that is already hidden. The Bootstrap packs leave both out, and Article XIV says the pack matches documented behaviour. A developer who needs an id passes `id=` as a keyword.
+
+**Revisit if:** Never, short of django-crispy-forms changing it.
+
+## D13. Class names written for other packs are dropped by name
+
+**Decision:** A filter in the pack's template library, `daisyui_classes`, removes `btn-inverse`, `ctrlHolder`, `blockLabel` and `error` from a class string, and removes repeats. Button and `MultiField` templates pass django-crispy-forms' class strings through it. The buttons keep `btn` and `btn-primary`, which django-crispy-forms writes itself and daisyUI defines.
+
+**Why:** django-crispy-forms joins its own default classes and the developer's into one string, so a template cannot tell them apart. Its defaults were written for Bootstrap and uni-form. Three of the four buttons already come out as daisyUI buttons. Subclassing the layout objects to change the defaults is ruled out by D1.
+
+**Revisit if:** django-crispy-forms changes the classes it writes. The class test fails when it does.
+
+## D14. A row is a flex container and a column takes an equal share
+
+**Decision:** `Row` is drawn with `flex flex-col gap-4 md:flex-row` and `Column` with `flex-1 min-w-0`. `ButtonHolder`, `FormActions` and the helper's buttons are drawn with `flex flex-wrap gap-2 mt-4`. The developer's classes are added after these.
+
+**Why:** daisyUI has no component for either job, and ADR 0003 allows a Tailwind utility for layout in that case. Flex gives equal columns for any number of them without counting, and every one of these utilities is in django-mvp's packaged stylesheet as well as in Tailwind's browser build. A grid with automatic columns would have stacked on a django-mvp page. This is the working answer to issue #18.
+
+**Revisit if:** The maintainer picks another option on issue #18, or daisyUI gains a layout component.
