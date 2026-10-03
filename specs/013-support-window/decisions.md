@@ -200,3 +200,97 @@ README section, the package metadata and the test suite. Every form is drawn exa
 (FR-022).
 
 **ADR:** none.
+
+## D11. The daisyUI minimum is 5.0
+
+**Chosen:** the window names daisyUI from 5.0 to 5.7. The suite checks 5.0 at its newest patch
+release, 5.0.55, and 5.7 at 5.7.47.
+
+**Why:** the specification leaves the minimum to the build. Every one of the 177 daisyUI classes
+the pack writes is defined by the CDN stylesheet of 5.0.0 and of 5.0.55 (research R3), so no
+later minor release is needed.
+
+**Revisit if:** the pack starts writing a class a later minor release introduced. The check for
+5.0 then fails, and the minimum is raised by the rule the statement gives.
+
+**ADR:** none. It is a measurement, held in the declaration, and it moves whenever the pack does.
+
+## D12. The declaration is a file at the repository root, read by a module beside it
+
+**Chosen:** `support-window.toml` holds the window and `support_window.py` reads it, compares it
+and is the commands. Both sit at the repository root, outside the package.
+
+**Rejected:**
+
+- A table in `pyproject.toml`. That file is the one the release workflow watches, and the window
+  would sit two hundred lines into a build file.
+- A module under `tests/`. Two of its three jobs are commands a maintainer runs.
+- A management command of the demo project. The demo is for looking at forms.
+
+**Why:** nothing outside `mvp_forms/` is distributed, so the wheel and the source distribution
+are untouched with no build setting changed (FR-023).
+
+**ADR:** none. A file at the root named for what it holds is where a reader looks, which is the
+test D7 set.
+
+## D13. Both class lists are written by one command, with CSS escapes undone
+
+**Chosen:** `python support_window.py classes <version>` writes a class list. The list for 5.7
+is written again by it, and the list for 5.0 is new.
+
+**Why:** the list in the repository was made by a method nobody recorded. It leaves out names
+with a responsive prefix and holds one stray name cut from an escaped selector. Two lists made
+two ways would differ for reasons that have nothing to do with daisyUI. The new list for 5.7.47
+holds every name the old one did but the stray one, and 543 more that the stylesheet does
+define, so no check gets weaker.
+
+**ADR:** none. It applies ADR 0003 and changes nothing it decided.
+
+## D14. `first` makes a version that is in neither list something a check can find
+
+**Chosen:** the declaration records, for each of the three, the oldest version any release of
+this package supported. Every version from there to the newest named must be in the window or
+in the list of dropped versions, and never both. Django's series are walked as `A.0`, `A.1`,
+`A.2`, `(A+1).0`.
+
+**Rejected:** comparing only the window and the dropped list with each other. A version taken
+out of the window and never recorded as dropped would be in neither, and nothing would notice,
+which is the case scenario 5 of the third story names.
+
+**Revisit if:** Django changes how it numbers a release series.
+
+**ADR:** none. It is how one check is made.
+
+## D15. The README's facts are read between marked comments
+
+**Chosen:** the statement's tables and the period sit between `<!-- support-window -->` and
+`<!-- /support-window -->`, and the dropped versions between a second pair. A row is found by
+the package name in its first cell.
+
+**Rejected:** finding the section by its heading. A heading is wording, and renaming it would
+break a check that has nothing to do with the heading.
+
+**ADR:** none. Local to one check.
+
+## D16. One pair is run through `uv run --isolated --with`
+
+**Chosen:** `python support_window.py test <django> <crispy>` runs the suite with the two
+versions laid over the project's environment for that one command. The run says what it ran on
+in its header and stops before any test when that is not what was asked for.
+
+**Rejected:** tox and nox. Either is a new development dependency, and Article VII says the
+tooling comes from the shared bundle. Installing into the development environment, as the test
+workflow does into its own, would leave a contributor on the wrong Django afterwards.
+
+**ADR:** none. A contributor's command, not something a host project inherits.
+
+## D17. The `releases` command has three outcomes
+
+**Chosen:** it ends with 0 when nothing is outstanding, 1 when a release under the period is
+missing from the window, and 2 when it could not find out. A new major version of
+django-crispy-forms or daisyUI is printed and does not change the outcome.
+
+**Why:** FR-020 says a source that does not answer must never read as "the window is current".
+A third outcome keeps "I could not look" apart from both of the others.
+
+**ADR:** none.
