@@ -152,8 +152,8 @@ SC-001, SC-002, SC-004.
 
 Plan, *Modal*; research R1, R7, R8.
 
-- The template as the plan has it. The base English catalogue, made with `makemessages` for the
-  `en` locale from inside `mvp_forms/`, holding the close control's name.
+- The template as the plan has it. The English catalogue, made again with `makemessages` for
+  the `en` locale from inside `mvp_forms/`, so it holds the close control's name.
 - Tests, `tests/test_pack/test_modal.py`:
   - a `dialog` with daisyUI's `modal` class and the developer's id, holding its fields inside a
     `modal-box`, with no `open` attribute (US3.1);

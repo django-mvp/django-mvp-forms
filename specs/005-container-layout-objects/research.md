@@ -1,6 +1,7 @@
 # Research — 005 Tabs, accordion, modal and alert in a layout
 
-Done on 2026-10-03 against `origin/main` at `e0e92c0` (FS-001 and FS-003 merged). Every claim
+Done on 2026-10-03 against `origin/main` at `e0e92c0` (FS-001 and FS-003 merged), and read again
+when FS-002 merged at `23d5139`: nothing below changed except R12. Every claim
 about django-crispy-forms or Django cites the installed package, `django-crispy-forms 2.7` and
 `Django 6.1.1`, under `.venv/lib/python3.13/site-packages/`. Claims about daisyUI cite the
 stylesheet its CDN serves at `https://cdn.jsdelivr.net/npm/daisyui@5`, fetched the same day.
@@ -205,12 +206,12 @@ carries `alert-block`. None is a daisyUI class. All three join `UPSTREAM_ONLY_CL
 - README, *Layout objects*: the six objects, how a host project opens a modal, and the note that
   alert content is trusted (FR-016, FR-025).
 
-### R12. The first translatable strings
+### R12. Two translatable strings
 
-The close and dismiss controls carry the package's first translatable template strings. Article
-VIII asks a package with user-facing strings for a base English catalogue and a `locale/`
-directory, so `mvp_forms/locale/en/LC_MESSAGES/django.po` arrives with the modal and gains the
-alert's string after it. `pyproject.toml` already packages everything under `mvp_forms/`.
+The close and dismiss controls carry translatable names. Article VIII asks a package with
+user-facing strings for a base English catalogue. The feature for choice, boolean and file inputs
+merged while this one was being planned and brought `mvp_forms/locale/en/LC_MESSAGES/django.po`
+with it, so the modal and the alert each add their string to that file.
 
 ### R13. No new dependency, no new term
 

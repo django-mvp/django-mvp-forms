@@ -184,7 +184,8 @@ One reviewer, three lenses, on the plan before any code. No critical or high fin
 
 - DR-001 (medium): no tab open when the first `Tab` is given `active=`. Applied: D14.
 - DR-002 (medium): the first translatable strings need the base English catalogue Article VIII
-  asks for. Applied: `mvp_forms/locale/en/LC_MESSAGES/django.po` is in T005 and T007.
+  asks for. Applied: `mvp_forms/locale/en/LC_MESSAGES/django.po` is in T005 and T007. (The
+  catalogue itself arrived on main with FS-002 before the build began, so the two tasks add to it.)
 - DR-003 (low): `daisyui_invalid` had one caller. Applied: the modal template tests with `in`
   and the filter is dropped.
 - DR-004 (low): `daisyui_tab_group` must not mark its input safe. Applied: `is_safe=True`.

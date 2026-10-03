@@ -19,7 +19,7 @@ dependency, no script file and no stylesheet.
 **Target Platform**: any Django project that loads daisyUI 5 as its CDN install documents
 **Project Type**: a published Django package with an undistributed demo project
 **Constraints**: plain Django templates only; daisyUI classes for every component; a Tailwind utility only for layout and named in the class test; no import from django-mvp; no script file
-**Scale/Scope**: seven new templates, one changed template, one filter, three more names in one constant, a base English catalogue, five demo pages
+**Scale/Scope**: seven new templates, one changed template, one filter, three more names in one constant, two entries in the English catalogue, five demo pages
 
 ## Constitution Check
 
@@ -32,7 +32,7 @@ dependency, no script file and no stylesheet.
 | V, security | Names, titles and field values are escaped by the template layer. Alert content is drawn as written, which django-crispy-forms documents, and the README says it is trusted. The one string the pack swaps in Python is a literal it wrote itself, replaced by a random token (research R4), and the filter that does it marks nothing safe that was not safe already. |
 | VI, documentation | README public surface and CHANGELOG are updated in the task that adds each object. |
 | VII, dependencies | None added. |
-| VIII, i18n | The two names the pack supplies, for the close and dismiss controls, are translatable. They are the package's first translatable strings, so the base English catalogue arrives with them, at `mvp_forms/locale/en/LC_MESSAGES/django.po`. |
+| VIII, i18n | The two names the pack supplies, for the close and dismiss controls, are translatable. They join the base English catalogue at `mvp_forms/locale/en/LC_MESSAGES/django.po`. |
 | X, cohesion | The filter is a decorator-registered template filter, which the article exempts. |
 | XI, compatibility | The template paths are the ones django-crispy-forms defines, so they are the override points a host project already expects. `layout/tab-pane.html` is the pack's own path and becomes one more. |
 | XIII, plain templates | No Cotton in `mvp_forms/`. The existing test over every distributed template covers the new files. |
@@ -45,7 +45,7 @@ No violation to justify.
 ```text
 mvp_forms/
 ├── templatetags/daisyui.py          # gains one filter and three class names
-├── locale/en/LC_MESSAGES/django.po  # new: the base English catalogue
+├── locale/en/LC_MESSAGES/django.po  # gains the two names
 └── templates/daisyui/
     ├── accordion.html               # new: Accordion
     ├── accordion-group.html         # new: AccordionGroup
