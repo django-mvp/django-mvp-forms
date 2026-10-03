@@ -178,3 +178,13 @@ One reviewer read the plan before any code, as a check on fit with the specifica
 **Revisit if:** A story needs the extra forms to post to the view.
 
 **ADR:** none — a demo arrangement
+
+## D19. A hidden input is drawn from `flat_attrs` alone, with no id of any kind
+
+**Decision:** In `layout/baseinput.html` the `class` and `id` attributes are written only when the input type is not `hidden`. A `Hidden` is drawn with type, name, value and `flat_attrs`. An id the developer wants arrives as `id=` in the keyword arguments. A `css_id` or `css_class` given to a `Hidden` is not drawn, because django-crispy-forms stores the generated id in the same attribute as a given one, so the template cannot tell them apart.
+
+**Why:** django-crispy-forms writes `hidden` as the class and `hidden-id-<name>` as the id. The first is no daisyUI class and the second repeats on a page that draws two forms with the same hidden name.
+
+**Revisit if:** A host project needs `css_id` honoured on a hidden input.
+
+**ADR:** none — decided at D12

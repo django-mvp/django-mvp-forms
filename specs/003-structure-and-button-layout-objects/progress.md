@@ -44,3 +44,10 @@ Did: inputs.html (loop over helper inputs through baseinput.html) included by wh
 Verified: uv run pytest tests/test_pack/test_buttons.py tests/test_demo.py tests/test_templatetags/test_daisyui.py -q (340 passed). Red first: 9 of 11 TestHelperButtons failed with no button drawn; 40 demo tests failed before the page changed. pre-commit clean. README example drawn against the branch.
 Next: full verify, ledger rows, report.
 Watch: the page's own submit button is gone and no existing test relied on it.
+
+## 2026-10-03T16:52:03Z · Implementer US3 · T007
+
+Did: wrote TestHTML and TestHidden in tests/test_pack/test_raw_content.py, watched the three Hidden tests fail (class "hidden", id "hidden-id-step"), then made the hidden branch of layout/baseinput.html write no class and no id (D19). Added an HTML and a Hidden to the two layout states in test_independence.py (probed: with the old template the two button states fail on the class `hidden`). Demo: LayoutObjectsForm gains an HTML note inside its fieldset and a Hidden, ids and names prefixed; two tests in test_demo.py (probed red against the old demo/forms.py). README and CHANGELOG gain both.
+Verified: uv run pytest tests/test_pack/test_raw_content.py tests/test_pack/test_buttons.py (63 passed); uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope (439 passed); uv run pre-commit run --all-files clean.
+Next: full verify, then the report.
+Watch: a css_id or css_class on a Hidden is not drawn (D19). The demo page templates needed no edit, the objects live in the form; demo/views.py and tests/forms.py were not touched.

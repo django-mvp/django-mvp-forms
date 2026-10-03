@@ -239,8 +239,35 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_raw_content.py::TestHTML",
+              "tests/test_pack/test_raw_content.py::TestHidden",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_demo.py::TestLayoutObjectsPage",
+              "tests/test_demo.py::TestStandaloneLayoutObjectsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_raw_content.py tests/test_pack/test_buttons.py (63 passed, exit 0)",
+              "uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope (439 passed, exit 0)",
+              "uv run pre-commit run --all-files (clean)"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/layout/baseinput.html:2",
+              "tests/test_pack/test_raw_content.py:20",
+              "tests/test_pack/test_raw_content.py:63",
+              "tests/test_pack/test_independence.py:96",
+              "tests/test_pack/test_independence.py:109",
+              "demo/forms.py:115",
+              "demo/forms.py:119",
+              "tests/test_demo.py:250",
+              "README.md:190",
+              "CHANGELOG.md:34"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
