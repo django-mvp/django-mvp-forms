@@ -48,3 +48,10 @@ Did: the field-with-buttons demo page: route `field-with-buttons`, `FieldWithBut
 Verified: red first, 31 failed and 12 errored before the page existed; `uv run pytest tests/test_demo.py tests/test_smoke.py -q -n auto --dist loadscope` exit 0, 931 passed; `uv run pre-commit run --all-files` exit 0; `uv run mypy` exit 0.
 Next: the full verify, then the completion report.
 Watch: the buttons in the demo are `StrictButton` of the default type `button`, so they post nothing; the form's own submit is the one the standalone view reads.
+
+## 2026-10-03T19:16:02Z · Implementer US4 · T007
+
+Did: FieldInput takes the keyword-only `disabled`, which adds `disabled` to the attrs given to as_widget (the form's field and widget are untouched). `uneditable-input` joins UPSTREAM_ONLY_CLASSES through the constant UNEDITABLE_CLASS and own_classes drops that one name only. New two-line template layout/uneditable_input.html. README section "An uneditable field" and the corrected sentence under "Disabled and read-only fields"; CHANGELOG entry.
+Verified: `uv run pytest tests/test_pack/test_uneditable_field.py tests/test_templatetags/test_daisyui.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py -q` 451 passed (24 failed first, for the missing template and the unknown `disabled` argument). pre-commit clean.
+Next: T008, the uneditable-field demo page and its forms on the standalone page.
+Watch: docs/adr/0013 still says the pack writes no attribute for either state; the plan says the ADR is amended at the end of the feature, and it is outside this story's files.
