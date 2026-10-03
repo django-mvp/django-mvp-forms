@@ -76,3 +76,10 @@ Did: demo route inline-field (InlineFieldForm, InlineFieldMixin, InlineFieldView
 Verified: uv run pytest tests/test_demo.py tests/test_pack -n auto --dist loadscope: 2336 passed; pre-commit clean; mypy clean.
 Next: full verify, ledger evidence, report.
 Watch: standalone post dispatch picks the form by submit name; inline-field prefix does not collide with inline.
+
+## 2026-10-03T19:34:44Z · Implementer US6 · T011
+
+Did: FieldInput deep-copies a MultiWidget and classes and names each part (decorate_part): own class names, then the pack's for the part's component (resolve_modifiers per part, so size, colour and variant reach each one, the error modifier replaces the colour), and an aria-label unless the part has one or is hidden (Date and Time from the new SPLIT_DATE_TIME_PARTS for a split date and time, the field's label otherwise). FieldInput keeps `choices` and `placed`; classes_for, own_names and component_of take the part of own_classes, pack_classes and component. The field-level modifiers are empty for a multi-widget. Date and Time in the catalogue; README section "A multi-widget field" and the widgets sentence; CHANGELOG entry; MultiWidgetsForm in tests/forms.py.
+Verified: `uv run pytest tests/test_pack/test_multi_widget.py` 14 failed of 31 first (parts had no class or name), then 31 passed; `uv run pytest tests/test_pack/test_multi_widget.py tests/test_templatetags/test_daisyui.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py -n auto --dist loadscope` 506 passed; pre-commit and mypy clean.
+Next: T012, the multi-widget-field demo page and its forms on the standalone page.
+Watch: a part of a SplitDateTimeField made hidden through MultiWidgetField crashes validation in Django and crispy (its hidden widget is a multi-widget), so that case is tested on another multi-widget and the README says not to.
