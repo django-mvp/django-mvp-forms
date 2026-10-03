@@ -861,3 +861,73 @@ class RatedLineForm(forms.Form):
 
 
 RatedLineFormSet = formset_factory(RatedLineForm, extra=3)
+
+
+class RangesForm(forms.Form):
+    volume = forms.IntegerField(
+        label="Volume", min_value=0, max_value=100, step_size=5, initial=20
+    )
+    bare = forms.IntegerField(required=False)
+    ratio = forms.FloatField(required=False, min_value=0, max_value=1)
+    price = forms.DecimalField(
+        required=False, min_value=0, max_value=99, max_digits=4, decimal_places=2
+    )
+    title = forms.CharField(required=False)
+
+    def __init__(self, *args, layout=None, choices=None, show_labels=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.form_show_labels = show_labels
+        if layout is not None:
+            self.helper.layout = Layout(*layout)
+        if choices is not None:
+            self.helper.daisyui = choices
+
+
+class KeptRangesForm(RangesForm):
+    volume = forms.IntegerField(
+        label="Volume",
+        min_value=0,
+        max_value=100,
+        step_size=5,
+        help_text="Between 0 and 100",
+    )
+    locked = forms.IntegerField(label="Locked", required=False, disabled=True)
+
+
+class DevelopersRangeForm(RangesForm):
+    volume = forms.IntegerField(
+        min_value=0,
+        max_value=100,
+        widget=forms.NumberInput(attrs={"class": "mine", "data-own": "yes"}),
+    )
+    wide = forms.IntegerField(
+        required=False,
+        widget=forms.NumberInput(attrs={"class": "mine w-24", "data-own": "yes"}),
+    )
+
+
+class OwnNumberWidget(forms.NumberInput):
+    pass
+
+
+class OwnNumberRangeForm(RangesForm):
+    volume = forms.IntegerField(min_value=0, max_value=10, widget=OwnNumberWidget)
+
+
+class RefusedRangesForm(RangesForm):
+    many = forms.MultipleChoiceField(choices=STAR_CHOICES, required=False)
+    pick = forms.ChoiceField(choices=STAR_CHOICES, required=False)
+    flag = forms.BooleanField(required=False)
+    local_count = forms.IntegerField(required=False, localize=True)
+    local_price = forms.DecimalField(required=False, localize=True)
+    secret = forms.IntegerField(widget=forms.HiddenInput, required=False)
+
+
+class RangedLineForm(forms.Form):
+    name = forms.CharField(required=False)
+    level = forms.IntegerField(min_value=0, max_value=10, required=False)
+
+
+RangedLineFormSet = formset_factory(RangedLineForm, extra=3)
