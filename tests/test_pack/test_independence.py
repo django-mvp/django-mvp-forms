@@ -59,6 +59,7 @@ from tests.forms import (
     InlineFieldsForm,
     InlineRadiosForm,
     LineFormSet,
+    MediaForm,
     MultiWidgetsForm,
     RadioGroupsForm,
     RequiredDrawnBooleanForm,
@@ -681,6 +682,10 @@ STATES = [
         NOTHING,
         id="a toggle and a switch with a size and a colour in error, through the tag",
     ),
+    pytest.param(
+        "{{ form|crispy }}", MediaForm, NOTHING, id="media, through the filter"
+    ),
+    pytest.param("{% crispy form %}", MediaForm, NOTHING, id="media, through the tag"),
 ]
 
 

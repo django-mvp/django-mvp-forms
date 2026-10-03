@@ -5,17 +5,18 @@ import re
 import secrets
 from collections.abc import Callable
 from html import unescape
-from typing import Any
+from typing import Any, cast
 
 from django import forms, template
 from django.forms.boundfield import BoundField
 from django.forms.formsets import BaseFormSet
-from django.template import Context
+from django.template import Context, Template
 from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
 from django.utils.translation import gettext_lazy
 
 from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice, Modifiers
+from mvp_forms.deprecation import host_template
 
 register = template.Library()
 
@@ -794,6 +795,34 @@ def daisyui_field(context: Context, field: BoundField, **decoration: Any) -> Fie
         wrapper_class=context.get("wrapper_class") or "",
         **decoration,
     )
+
+
+@register.simple_tag(takes_context=True)
+def daisyui_host_template(context: Context, path: str) -> str:
+    """Return the path to draw where the pack used to draw a template it has moved.
+
+    Used as ``{% daisyui_host_template "daisyui/old.html" as name %}`` followed by
+    ``{% if name %}{% include name %}{% endif %}``. The question is asked of the
+    engine drawing the template: the page's own in a page template, and the form
+    renderer's in a widget template.
+
+    Args:
+        context: The template context, read for the engine that draws the
+            template.
+        path: The path the pack moved away from, as ``mvp_forms.deprecation``
+            records it.
+
+    Returns:
+        ``path`` when the host project has a template there, which also raises a
+        ``DeprecationWarning``, otherwise the path that replaces it, or an empty
+        string when nothing does.
+
+    Raises:
+        KeyError: ``path`` is not one the pack has moved away from.
+    """
+    # A tag runs only while a template renders, so the context is bound to it.
+    engine = cast(Template, context.template).engine
+    return host_template(path, engine.get_template)
 
 
 @register.filter

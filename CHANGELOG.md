@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A host project can replace any one template of the `daisyui` pack with a file at the same path, found by Django's own template loading, with no setting, no Python and no change to a form. The README's new section, "Replacing one template", lists every template the pack distributes with what it draws, the names it is handed and where a replacement is found: through `TEMPLATES` for the templates outside `daisyui/widgets/`, and through the form renderer for the ones under it, which the default renderer finds only in an app listed before `mvp_forms`. It gives a worked example, and says the development server has to be restarted after a replacement for one of the five templates django-crispy-forms keeps in memory. From this release the listed paths and the names each template is handed are part of the public API. When a listed template changes, the old path or name keeps working for one minor version: a replacement at an old path is still drawn and raises a `DeprecationWarning` naming the old path and what replaces it, and a project with nothing there sees no warning. The CHANGELOG of that release says what changed and what replaces it. The markup and the class names inside a template are not part of that promise. No template changes in this release.
+
 ## [v0.1.0] - 2026-10-03
 
 ### Added
