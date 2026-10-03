@@ -26,6 +26,6 @@ Watch: a form-wide colour of error writes file-input-error, which the removal-ch
 ## 2026-10-03T18:04:59Z · Implementer US1 · T002
 
 Did: the first full gate failed its docs step (Choice, Inherit, Modifiers, Stated had no page quoting them), so I dropped the Stated alias, documented Choice, Modifiers, Inherit and the per-field `fields` mapping in the README, and drew that README example through the filter and the tag in test_documented_examples.py. Filled in the ledger rows for T001 and T002.
-Verified: `forge verify --repo . --base origin/main --steps all` second run: conformance, docs, lint, typecheck, test, build all passed, exit 0. SC-005: `uv run python /tmp/fs007_sc005.py <out>` over the 35 STATES entries of the base test_independence.py, compared with `cmp` against the render at bd11a24, before and after T002 and again at the end: identical each time.
+Verified: `forge verify --repo . --base origin/main` second run: conformance, docs, lint, typecheck, test, build all passed, exit 0. SC-005: `uv run python /tmp/fs007_sc005.py <out>` over the 35 STATES entries of the base test_independence.py, compared with `cmp` against the render at bd11a24, before and after T002 and again at the end: identical each time.
 Next: the Forge review of US1; US2 gives Choice its layout drawing.
 Watch: Choice is a plain class here and becomes a LayoutObject in T003; the README's by-name `fields` paragraph is true today and T003 extends it.
