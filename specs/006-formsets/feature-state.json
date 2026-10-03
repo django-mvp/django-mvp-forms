@@ -223,8 +223,32 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestStackedFormsetPage",
+              "tests/test_demo.py::TestStandaloneStackedFormsetPage",
+              "tests/test_demo.py::TestTableFormsetPage",
+              "tests/test_demo.py::TestStandaloneTableFormsetPage",
+              "tests/test_demo.py::TestFormsetPagesInTheSidebar"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -k Formset -q",
+              "uv run pre-commit run --all-files && uv run mypy && uv run pytest -n auto --dist loadscope && uv build"
+            ],
+            "code": [
+              "demo/forms.py:309",
+              "demo/views.py:305",
+              "demo/urls.py:39",
+              "demo/menus.py:33",
+              "demo/templates/demo/formset_stacked.html:1",
+              "demo/templates/demo/formset_table.html:1",
+              "README.md:339",
+              "CHANGELOG.md:27"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }

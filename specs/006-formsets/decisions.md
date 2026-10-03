@@ -171,3 +171,19 @@ after each story. Every change there is an addition the tasks name: new fixtures
 states in the list of forms whose classes are checked. No existing test or assertion was altered.
 
 **ADR:** none — a record of a check's outcome for this feature.
+
+## D17: The demo pages mark each formset's region with an id
+
+**Decision:** each demo page wraps each of its two formsets in a `<div id="<prefix>-formset">`,
+and the helper for a layout takes the formset's prefix to name its Submit button.
+
+**Why:** the page tests need to scope "the formset that fails" and "the formset to submit"
+without reading wording, and the pack gives a stacked formset's form-wide and formset-wide
+errors the same `role="alert"` element. A region with an id says which formset an element is in;
+a unit is then found as the smallest element holding one form's inputs and no other form's, so
+the same test reads both layouts. A Submit named by the prefix keeps two helpers on one page
+from repeating an id.
+
+**Revisit if:** the pack gives a formset's container an id of its own.
+
+**ADR:** none — demo wiring, not a decision about the pack.

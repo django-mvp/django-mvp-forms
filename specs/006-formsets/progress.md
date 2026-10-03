@@ -47,3 +47,10 @@ Did: added OrderedLineFormSet and KeptLineFormSet (can_delete_extra off) to test
 Verified: uv run pytest tests/test_pack/test_formsets.py::TestDeleteAndOrder: 12 passed. The tests passed on their first run, so each claim was probed: drawing no td for a None cell failed the cell-count test, and drawing the table's inputs with labels on failed the aria-label test. pre-commit run --all-files passed.
 Next: full verify, then the report.
 Watch: the delete and order checks rest on the pack's existing checkbox and number input; nothing new is drawn for them.
+
+## 2026-10-03T18:13:41Z · Implementer US5 · T007
+
+Did: added OrderLineForm (quantity below one is a field error; a line total past ORDER_LINE_LIMIT is a form-wide error with code over_limit), BaseOrderLineFormSet (the same item twice is a formset-wide error with code duplicate_item), OrderLineFormSet with can_delete and can_order, and StackedOrderHelper and TableOrderHelper to demo/forms.py; four views, four routes, two menu entries and two icon names; four templates (shell pages on Cotton components, standalone twins on daisyUI's CDN build); contract classes for the four pages in tests/test_demo.py (92 tests); a README paragraph naming the four pages; one CHANGELOG line. Read the README's Formsets part against the finished pack and found it true, so changed nothing there. No page under docs/ describes the demo or the formset pack.
+Verified: red first, NoReverseMatch for the new route names. uv run pytest tests/test_demo.py -k Formset: 92 passed. Probes: dropping can_order failed 12, removing the duplicate-item check failed 8, giving both formsets one prefix failed 24. Full verify (pre-commit, mypy, pytest -n auto --dist loadscope, uv build): exit 0, 1452 passed.
+Next: the story's report.
+Watch: the failing formset is drawn with form_tag off yet still carries a csrfmiddlewaretoken input, because the pack draws the token outside its form_tag guard as crispy's own whole_uni_form does; a template in mvp_forms/ is outside this task.
