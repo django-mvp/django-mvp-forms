@@ -1,364 +1,374 @@
 {
- "feature": "011-floating-labels-and-joined-inputs",
- "branch": "011-floating-labels-and-joined-inputs",
- "repo": "django-mvp/django-mvp-forms",
- "state": "REVIEW",
- "state_history": [
-  {
-   "state": "QUEUED",
-   "at": "2026-10-03T21:43:26Z",
-   "note": "specification approved on pull request #98"
-  },
-  {
-   "state": "PLAN",
-   "at": "2026-10-03T23:10:38Z",
-   "note": "research, plan and tasks written"
-  },
-  {
-   "state": "DESIGN_REVIEW",
-   "at": "2026-10-03T23:11:02Z",
-   "note": "plan to design review"
-  },
-  {
-   "state": "IMPLEMENT",
-   "at": "2026-10-03T23:17:43Z",
-   "note": "plan gate open; build starts"
-  },
-  {
-   "state": "CONVERGE",
-   "at": "2026-10-03T23:58:22Z",
-   "note": "all stories done"
-  },
-  {
-   "state": "REVIEW",
-   "at": "2026-10-04T00:04:43Z",
-   "note": "converged; code review"
-  }
- ],
- "gates": {
-  "spec": {
-   "approved_by": "delegated review",
-   "at": "2026-10-03T21:43:21Z",
-   "self_resolved": [
-    "approved at commit 59fefb702f3201a3204cfabf1c5c802ae0a8553b (forge spec-gate, pull request #98); spec gate opened by Sam, 2026-10-03: all gates are open"
-   ]
-  },
-  "plan": {
-   "approved_by": "open",
-   "at": "2026-10-03T23:17:37Z"
-  },
-  "merge": {
-   "approved_by": null,
-   "at": null
-  },
-  "design_review": {
-   "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
-   "at": "2026-10-03T23:17:37Z",
-   "self_resolved": [
-    "DR-001 (medium) the joined group's test state moves to the task that adds its templates: applied to T004 and T005",
-    "DR-002 (medium) a name the form lacks is left to django-crispy-forms inside a group: applied to plan and T004",
-    "DR-003 (low) daisyUI sizes a floating label on selects and textareas too: research corrected, README claim dropped from T002",
-    "DR-004 (low) the demo shows a read-only member: applied to plan and T006",
-    "DR-005 (low) the demo shows a group at every colour and in the variant: applied to plan and T007",
-    "DR-006 (low) a field disabled only by a fieldset around it is not detected: README says to undo the label, T002"
-   ]
-  },
-  "review": {
-   "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
-   "at": "2026-10-04T00:34:28Z",
-   "self_resolved": [
-    "RV-001 (low) a group's label marked safe reached the fieldset's aria-label unescaped with labels off: fixed, T009",
-    "RV-002 (low) a widget attribute disabled='' was not seen as disabling the field: fixed, T008",
-    "RV-003 (low) no test held the legend's marker to any member: test added, T009",
-    "RV-004 (low) the README named the wrong target for a label around a field with buttons: fixed, T008",
-    "RV-005 (low) a Field's wrapper_class and template were dropped in a group without notice: now raises InvalidMember, T009",
-    "RV-006 (low) the group copied a Choice's kinds by hand: now uses Choice.over, T009"
-   ]
-  }
- },
- "stories": [
-  {
-   "id": "US1",
-   "priority": "P1",
-   "issue": 112,
-   "worktree": null,
-   "status": "done",
-   "replans": 0,
-   "tasks": [
+  "feature": "011-floating-labels-and-joined-inputs",
+  "branch": "011-floating-labels-and-joined-inputs",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
     {
-     "id": "T001",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_choices.py::TestChoiceLabel",
-       "tests/test_choices.py::TestModifiersLabels",
-       "tests/test_choices.py::TestFormChoicesLabel",
-       "tests/test_templatetags/test_daisyui.py::TestFieldInputLabel",
-       "tests/test_templatetags/test_daisyui.py::TestDrawnButtonLabel"
-      ],
-      "commands": [
-       "uv run pytest tests/test_choices.py tests/test_templatetags/test_daisyui.py -q"
-      ],
-      "code": [
-       "mvp_forms/choices.py:240",
-       "mvp_forms/choices.py:366",
-       "mvp_forms/choices.py:488",
-       "mvp_forms/templatetags/daisyui.py:227",
-       "mvp_forms/templatetags/daisyui.py:307",
-       "mvp_forms/templatetags/daisyui.py:323",
-       "mvp_forms/templatetags/daisyui.py:743"
-      ],
-      "verified_by_ci": false
-     }
+      "state": "QUEUED",
+      "at": "2026-10-03T21:43:26Z",
+      "note": "specification approved on pull request #98"
     },
     {
-     "id": "T002",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_pack/test_floating_labels.py::TestFloatingLabels",
-       "tests/test_pack/test_floating_labels.py::TestFloatingLabelKeepsTheData",
-       "tests/test_pack/test_floating_labels.py::TestFloatingLabelMistakes",
-       "tests/test_pack/test_floating_labels.py::TestFloatingLabelEscaping",
-       "tests/test_pack/test_independence.py::TestModifierTables",
-       "tests/test_pack/test_independence.py::TestEmittedClasses",
-       "tests/test_pack/test_documented_examples.py::TestReadmeFloatingLabels"
-      ],
-      "commands": [
-       "uv run pytest tests/test_pack -q -n auto --dist loadscope"
-      ],
-      "code": [
-       "mvp_forms/templates/daisyui/frame.html:15",
-       "mvp_forms/templates/daisyui/field_body.html:13"
-      ],
-      "verified_by_ci": false
-     }
+      "state": "PLAN",
+      "at": "2026-10-03T23:10:38Z",
+      "note": "research, plan and tasks written"
     },
     {
-     "id": "T003",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_demo.py::TestFloatingLabelsPage",
-       "tests/test_demo.py::TestStandaloneFloatingLabelsPage"
-      ],
-      "commands": [
-       "uv run pytest tests/test_demo.py -q -k FloatingLabels"
-      ],
-      "code": [
-       "demo/forms.py:790",
-       "demo/views.py:950",
-       "demo/urls.py:95",
-       "demo/menus.py:97",
-       "demo/settings.py:137",
-       "demo/templates/demo/floating_labels.html:1",
-       "demo/templates/demo/floating_labels_standalone.html:1"
-      ],
-      "verified_by_ci": false
-     }
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T23:11:02Z",
+      "note": "plan to design review"
     },
     {
-     "id": "T008",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_templatetags/test_daisyui.py::TestFieldInputLabel",
-       "tests/test_pack/test_legibility.py"
-      ],
-      "commands": [
-       "uv run pytest tests/test_templatetags/test_daisyui.py tests/test_pack/test_legibility.py -q"
-      ],
-      "code": [
-       "mvp_forms/templatetags/daisyui.py:428"
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T23:17:43Z",
+      "note": "plan gate open; build starts"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-03T23:58:22Z",
+      "note": "all stories done"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-04T00:04:43Z",
+      "note": "converged; code review"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-04T00:35:24Z",
+      "note": "review closed, walkthrough laid out"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T21:43:21Z",
+      "self_resolved": [
+        "approved at commit 59fefb702f3201a3204cfabf1c5c802ae0a8553b (forge spec-gate, pull request #98); spec gate opened by Sam, 2026-10-03: all gates are open"
       ]
-     }
-    }
-   ]
-  },
-  {
-   "id": "US2",
-   "priority": "P2",
-   "issue": 113,
-   "worktree": null,
-   "status": "done",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T004",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_layout.py::TestJoinMembers",
-       "tests/test_layout.py::TestJoinRender",
-       "tests/test_templatetags/test_daisyui.py::TestFieldInputMember",
-       "tests/test_templatetags/test_daisyui.py::TestFieldInputLabelDrawings",
-       "tests/test_pack/test_template_list.py::TestTheListMatchesThePackage",
-       "tests/test_pack/test_replacements.py",
-       "tests/test_pack/test_independence.py::TestEmittedClasses"
-      ],
-      "commands": [
-       "uv run pytest tests/test_layout.py tests/test_templatetags tests/test_pack/test_template_list.py tests/test_pack/test_independence.py tests/test_pack/test_documented_examples.py -q"
-      ],
-      "code": [
-       "mvp_forms/layout.py:15",
-       "mvp_forms/layout.py:49",
-       "mvp_forms/layout.py:92",
-       "mvp_forms/layout.py:172",
-       "mvp_forms/templatetags/daisyui.py:126",
-       "mvp_forms/templatetags/daisyui.py:194",
-       "mvp_forms/templatetags/daisyui.py:389",
-       "mvp_forms/templatetags/daisyui.py:398",
-       "mvp_forms/templates/daisyui/layout/join.html:1",
-       "mvp_forms/templates/daisyui/layout/join_member.html:1",
-       "mvp_forms/templates/daisyui/field_messages.html:1",
-       "mvp_forms/templates/daisyui/field_body.html:22"
-      ],
-      "verified_by_ci": false
-     }
     },
-    {
-     "id": "T005",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_pack/test_joined_groups.py::TestJoinedGroups",
-       "tests/test_pack/test_joined_groups.py::TestJoinedGroupEdges",
-       "tests/test_pack/test_documented_examples.py::TestReadmeJoinedGroups",
-       "tests/test_pack/test_independence.py::TestEmittedClasses",
-       "tests/test_pack/test_replacements.py"
-      ],
-      "commands": [
-       "uv run pytest tests/test_pack/test_joined_groups.py -q",
-       "uv run pytest tests/test_layout.py tests/test_pack tests/test_templatetags -n auto --dist loadscope -q"
-      ],
-      "code": [
-       "mvp_forms/layout.py:172",
-       "mvp_forms/layout.py:135",
-       "mvp_forms/templates/daisyui/layout/join.html:1",
-       "mvp_forms/templates/daisyui/field_body.html:22",
-       "README.md:552",
-       "CHANGELOG.md:30",
-       "CONTEXT.md:119"
-      ],
-      "verified_by_ci": false
-     }
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T23:17:37Z"
     },
-    {
-     "id": "T006",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_demo.py::TestJoinedGroupsPage",
-       "tests/test_demo.py::TestStandaloneJoinedGroupsPage"
-      ],
-      "commands": [
-       "uv run pytest tests/test_demo.py -q -k JoinedGroups"
-      ],
-      "code": [
-       "demo/forms.py:881",
-       "demo/views.py:1121",
-       "demo/urls.py:111",
-       "demo/menus.py:106",
-       "demo/settings.py:139",
-       "demo/templates/demo/joined_groups.html:1",
-       "demo/templates/demo/joined_groups_standalone.html:1"
-      ],
-      "verified_by_ci": false
-     }
+    "merge": {
+      "approved_by": null,
+      "at": null
     },
-    {
-     "id": "T009",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_layout.py::TestJoinLabelText",
-       "tests/test_layout.py::TestJoinMembers",
-       "tests/test_pack/test_joined_groups.py::TestJoinedGroupEdges"
-      ],
-      "commands": [
-       "uv run pytest tests/test_layout.py tests/test_pack/test_joined_groups.py -q"
-      ],
-      "code": [
-       "mvp_forms/layout.py:95"
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
+      "at": "2026-10-03T23:17:37Z",
+      "self_resolved": [
+        "DR-001 (medium) the joined group's test state moves to the task that adds its templates: applied to T004 and T005",
+        "DR-002 (medium) a name the form lacks is left to django-crispy-forms inside a group: applied to plan and T004",
+        "DR-003 (low) daisyUI sizes a floating label on selects and textareas too: research corrected, README claim dropped from T002",
+        "DR-004 (low) the demo shows a read-only member: applied to plan and T006",
+        "DR-005 (low) the demo shows a group at every colour and in the variant: applied to plan and T007",
+        "DR-006 (low) a field disabled only by a fieldset around it is not detected: README says to undo the label, T002"
       ]
-     }
+    },
+    "review": {
+      "approved_by": "code review, one reviewer, correctness and spec compliance: approve",
+      "at": "2026-10-04T00:34:28Z",
+      "self_resolved": [
+        "RV-001 (low) a group's label marked safe reached the fieldset's aria-label unescaped with labels off: fixed, T009",
+        "RV-002 (low) a widget attribute disabled='' was not seen as disabling the field: fixed, T008",
+        "RV-003 (low) no test held the legend's marker to any member: test added, T009",
+        "RV-004 (low) the README named the wrong target for a label around a field with buttons: fixed, T008",
+        "RV-005 (low) a Field's wrapper_class and template were dropped in a group without notice: now raises InvalidMember, T009",
+        "RV-006 (low) the group copied a Choice's kinds by hand: now uses Choice.over, T009"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-04T00:34:55Z",
+      "self_resolved": []
     }
-   ]
   },
-  {
-   "id": "US3",
-   "priority": "P3",
-   "issue": 114,
-   "worktree": null,
-   "status": "done",
-   "replans": 0,
-   "tasks": [
+  "stories": [
     {
-     "id": "T007",
-     "status": "done",
-     "attempts": 1,
-     "evidence": {
-      "tests": [
-       "tests/test_pack/test_floating_labels.py::TestFloatingLabelChoices",
-       "tests/test_pack/test_joined_groups.py::TestJoinedGroupChoices",
-       "tests/test_pack/test_independence.py::TestEmittedClasses",
-       "tests/test_demo.py::TestFloatingLabelsPage",
-       "tests/test_demo.py::TestStandaloneFloatingLabelsPage",
-       "tests/test_demo.py::TestJoinedGroupsPage",
-       "tests/test_demo.py::TestStandaloneJoinedGroupsPage"
-      ],
-      "commands": [
-       "uv run pytest tests/test_pack/test_floating_labels.py tests/test_pack/test_joined_groups.py -q",
-       "uv run pytest tests/test_pack/test_independence.py -q -k TestEmittedClasses",
-       "uv run pytest tests/test_demo.py -q -k 'Floating or Joined'",
-       "uv run pytest -n auto --dist loadscope",
-       "uv run pre-commit run --all-files",
-       "uv run mypy",
-       "uv build"
-      ],
-      "code": [
-       "tests/test_pack/test_floating_labels.py:215",
-       "tests/test_pack/test_joined_groups.py:315",
-       "tests/test_pack/test_independence.py:421",
-       "demo/forms.py:877",
-       "demo/forms.py:931",
-       "demo/views.py:1084",
-       "demo/views.py:1159"
-      ],
-      "verified_by_ci": false
-     }
+      "id": "US1",
+      "priority": "P1",
+      "issue": 112,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_choices.py::TestChoiceLabel",
+              "tests/test_choices.py::TestModifiersLabels",
+              "tests/test_choices.py::TestFormChoicesLabel",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputLabel",
+              "tests/test_templatetags/test_daisyui.py::TestDrawnButtonLabel"
+            ],
+            "commands": [
+              "uv run pytest tests/test_choices.py tests/test_templatetags/test_daisyui.py -q"
+            ],
+            "code": [
+              "mvp_forms/choices.py:240",
+              "mvp_forms/choices.py:366",
+              "mvp_forms/choices.py:488",
+              "mvp_forms/templatetags/daisyui.py:227",
+              "mvp_forms/templatetags/daisyui.py:307",
+              "mvp_forms/templatetags/daisyui.py:323",
+              "mvp_forms/templatetags/daisyui.py:743"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_floating_labels.py::TestFloatingLabels",
+              "tests/test_pack/test_floating_labels.py::TestFloatingLabelKeepsTheData",
+              "tests/test_pack/test_floating_labels.py::TestFloatingLabelMistakes",
+              "tests/test_pack/test_floating_labels.py::TestFloatingLabelEscaping",
+              "tests/test_pack/test_independence.py::TestModifierTables",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_documented_examples.py::TestReadmeFloatingLabels"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack -q -n auto --dist loadscope"
+            ],
+            "code": [
+              "mvp_forms/templates/daisyui/frame.html:15",
+              "mvp_forms/templates/daisyui/field_body.html:13"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestFloatingLabelsPage",
+              "tests/test_demo.py::TestStandaloneFloatingLabelsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -q -k FloatingLabels"
+            ],
+            "code": [
+              "demo/forms.py:790",
+              "demo/views.py:950",
+              "demo/urls.py:95",
+              "demo/menus.py:97",
+              "demo/settings.py:137",
+              "demo/templates/demo/floating_labels.html:1",
+              "demo/templates/demo/floating_labels_standalone.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputLabel",
+              "tests/test_pack/test_legibility.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_templatetags/test_daisyui.py tests/test_pack/test_legibility.py -q"
+            ],
+            "code": [
+              "mvp_forms/templatetags/daisyui.py:428"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 113,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_layout.py::TestJoinMembers",
+              "tests/test_layout.py::TestJoinRender",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputMember",
+              "tests/test_templatetags/test_daisyui.py::TestFieldInputLabelDrawings",
+              "tests/test_pack/test_template_list.py::TestTheListMatchesThePackage",
+              "tests/test_pack/test_replacements.py",
+              "tests/test_pack/test_independence.py::TestEmittedClasses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_layout.py tests/test_templatetags tests/test_pack/test_template_list.py tests/test_pack/test_independence.py tests/test_pack/test_documented_examples.py -q"
+            ],
+            "code": [
+              "mvp_forms/layout.py:15",
+              "mvp_forms/layout.py:49",
+              "mvp_forms/layout.py:92",
+              "mvp_forms/layout.py:172",
+              "mvp_forms/templatetags/daisyui.py:126",
+              "mvp_forms/templatetags/daisyui.py:194",
+              "mvp_forms/templatetags/daisyui.py:389",
+              "mvp_forms/templatetags/daisyui.py:398",
+              "mvp_forms/templates/daisyui/layout/join.html:1",
+              "mvp_forms/templates/daisyui/layout/join_member.html:1",
+              "mvp_forms/templates/daisyui/field_messages.html:1",
+              "mvp_forms/templates/daisyui/field_body.html:22"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_joined_groups.py::TestJoinedGroups",
+              "tests/test_pack/test_joined_groups.py::TestJoinedGroupEdges",
+              "tests/test_pack/test_documented_examples.py::TestReadmeJoinedGroups",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_replacements.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_joined_groups.py -q",
+              "uv run pytest tests/test_layout.py tests/test_pack tests/test_templatetags -n auto --dist loadscope -q"
+            ],
+            "code": [
+              "mvp_forms/layout.py:172",
+              "mvp_forms/layout.py:135",
+              "mvp_forms/templates/daisyui/layout/join.html:1",
+              "mvp_forms/templates/daisyui/field_body.html:22",
+              "README.md:552",
+              "CHANGELOG.md:30",
+              "CONTEXT.md:119"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestJoinedGroupsPage",
+              "tests/test_demo.py::TestStandaloneJoinedGroupsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -q -k JoinedGroups"
+            ],
+            "code": [
+              "demo/forms.py:881",
+              "demo/views.py:1121",
+              "demo/urls.py:111",
+              "demo/menus.py:106",
+              "demo/settings.py:139",
+              "demo/templates/demo/joined_groups.html:1",
+              "demo/templates/demo/joined_groups_standalone.html:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_layout.py::TestJoinLabelText",
+              "tests/test_layout.py::TestJoinMembers",
+              "tests/test_pack/test_joined_groups.py::TestJoinedGroupEdges"
+            ],
+            "commands": [
+              "uv run pytest tests/test_layout.py tests/test_pack/test_joined_groups.py -q"
+            ],
+            "code": [
+              "mvp_forms/layout.py:95"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P3",
+      "issue": 114,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_floating_labels.py::TestFloatingLabelChoices",
+              "tests/test_pack/test_joined_groups.py::TestJoinedGroupChoices",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_demo.py::TestFloatingLabelsPage",
+              "tests/test_demo.py::TestStandaloneFloatingLabelsPage",
+              "tests/test_demo.py::TestJoinedGroupsPage",
+              "tests/test_demo.py::TestStandaloneJoinedGroupsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_floating_labels.py tests/test_pack/test_joined_groups.py -q",
+              "uv run pytest tests/test_pack/test_independence.py -q -k TestEmittedClasses",
+              "uv run pytest tests/test_demo.py -q -k 'Floating or Joined'",
+              "uv run pytest -n auto --dist loadscope",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv build"
+            ],
+            "code": [
+              "tests/test_pack/test_floating_labels.py:215",
+              "tests/test_pack/test_joined_groups.py:315",
+              "tests/test_pack/test_independence.py:421",
+              "demo/forms.py:877",
+              "demo/forms.py:931",
+              "demo/views.py:1084",
+              "demo/views.py:1159"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
     }
-   ]
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 21.35,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 98,
+    "draft": true
   }
- ],
- "budgets": {
-  "converge_cycles": {
-   "used": 1,
-   "max": 2
-  },
-  "review_cycles": {
-   "used": 1,
-   "max": 1
-  },
-  "design_review_cycles": {
-   "used": 1,
-   "max": 1
-  },
-  "tokens": {
-   "used": 21.35,
-   "max": 120
-  }
- },
- "pr": {
-  "number": 98,
-  "draft": true
- }
 }
