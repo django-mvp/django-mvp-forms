@@ -2,7 +2,7 @@
   "feature": "013-support-window",
   "branch": "013-support-window",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "QUEUED",
@@ -38,6 +38,11 @@
       "state": "PR_READY",
       "at": "2026-10-04T00:39:05Z",
       "note": "review approve; every finding closed; level with main"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-10-04T00:58:08Z",
+      "note": "PR #97 merged; approved by forge-aeo-reviewer"
     }
   ],
   "gates": {
@@ -53,8 +58,8 @@
       "at": "2026-10-03T23:34:54Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "forge-aeo-reviewer",
+      "at": "2026-10-04T00:58:01Z"
     },
     "design_review": {
       "approved_by": "design review, one reviewer, three lenses: changes requested, all findings applied",
@@ -438,12 +443,12 @@
       "max": 1
     },
     "tokens": {
-      "used": 14.88,
+      "used": 26.9,
       "max": 120
     }
   },
   "pr": {
     "number": 97,
-    "draft": true
+    "draft": false
   }
 }
