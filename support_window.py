@@ -11,6 +11,7 @@ import sys
 import tomllib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from http.client import HTTPException
 from importlib import metadata
 from pathlib import Path
 from typing import Any
@@ -55,7 +56,7 @@ RELEASE_HEADING = re.compile(r"^## \[v?([^\]]+)\]", re.M)
 STATEMENT = re.compile(r"<!-- support-window -->.*<!-- /dropped-versions -->", re.S)
 LINK_TARGET = re.compile(r"\]\(\s*<?([^)\s>]+)|href=[\"']([^\"']+)")
 ABSOLUTE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:")
-FINAL = re.compile(r"\d+(?:\.\d+)*")
+FINAL = re.compile(r"[0-9]{1,9}(?:\.[0-9]{1,9})*")
 DAY = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 
@@ -790,8 +791,8 @@ class Window:
             out: Takes each line to print.
 
         Returns:
-            ``2`` when a source could not be reached or its answer could not be
-            read, ``1`` when a release the window does not name is outstanding,
+            ``2`` when a source could not be reached, or its answer could not be
+            read or lists no final release, ``1`` when a release the window does not name is outstanding,
             and ``0`` otherwise. A new major version is printed and does not
             change the status. A line says the window is current only when the
             status is ``0``.
@@ -801,7 +802,7 @@ class Window:
         for package, address in SOURCES.items():
             try:
                 listings[package] = final_releases(fetch(address), package)
-            except (OSError, ValueError) as error:
+            except (OSError, ValueError, HTTPException) as error:
                 failed = True
                 out(f"{package}: could not find out ({type(error).__name__})")
                 listings[package] = {}
@@ -1036,9 +1037,10 @@ class MissingClassList(LookupError):
 def final_releases(payload: Any, source: str) -> dict[str, str]:
     """Read the final releases of a package from the answer of its source.
 
-    A final release is a version of digits and dots, so ``6.2a1`` and
-    ``5.8.0-beta.0`` are left out, and so are the ``created`` and ``modified``
-    entries that the npm registry keeps beside its versions.
+    A final release is a version of digits and dots, each number of at most nine
+    digits, so ``6.2a1`` and ``5.8.0-beta.0`` are left out, and so are the
+    ``created`` and ``modified`` entries that the npm registry keeps beside its
+    versions.
 
     Args:
         payload: The JSON of the package index for Django and
@@ -1051,7 +1053,8 @@ def final_releases(payload: Any, source: str) -> dict[str, str]:
         with no files is left out.
 
     Raises:
-        ValueError: The payload is not the shape the source gives.
+        ValueError: The payload is not the shape the source gives, or it lists no
+            final release, or a release has no readable date.
     """
     try:
         if source == "daisyui":
@@ -1066,10 +1069,13 @@ def final_releases(payload: Any, source: str) -> dict[str, str]:
             for version, times in stamps.items()
             if FINAL.fullmatch(version) and times
         }
+        readable = all(DAY.fullmatch(day) for day in days.values())
     except (AttributeError, KeyError, TypeError) as error:
         raise ValueError(f"{source}: the answer is not the shape expected") from error
-    if not all(DAY.fullmatch(day) for day in days.values()):
+    if not readable:
         raise ValueError(f"{source}: a release has no readable date")
+    if not days:
+        raise ValueError(f"{source}: the answer lists no final release")
     return days
 
 

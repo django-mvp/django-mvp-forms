@@ -2,6 +2,7 @@
 
 import copy
 import tomllib
+from http.client import IncompleteRead
 from types import SimpleNamespace
 
 import pytest
@@ -1069,11 +1070,43 @@ class TestFinalReleases:
             ({}, "daisyui"),
             ({"time": ["5.7.0"]}, "daisyui"),
             ({"time": {"5.7.0": 7}}, "daisyui"),
+            ({"time": {"5.7.0": ["2026-06-01"]}}, "daisyui"),
         ],
     )
     def test_a_payload_that_is_not_the_shape_expected_raises(self, payload, package):
         with pytest.raises(ValueError):
             final_releases(payload, package)
+
+    @pytest.mark.parametrize(
+        ("payload", "package"),
+        [
+            ({"releases": {}}, "django"),
+            (
+                {
+                    "releases": {
+                        "6.2a1": [{"upload_time_iso_8601": "2026-04-01T10:00:00Z"}]
+                    }
+                },
+                "django",
+            ),
+            ({"releases": {"6.1": []}}, "django"),
+            ({"time": {}}, "daisyui"),
+            ({"time": {"created": "2025-01-01T00:00:00.000Z"}}, "daisyui"),
+        ],
+    )
+    def test_an_answer_that_lists_no_final_release_raises(self, payload, package):
+        with pytest.raises(ValueError):
+            final_releases(payload, package)
+
+    def test_a_version_of_thousands_of_digits_is_not_a_final_release(self):
+        payload = {
+            "time": {
+                "5.7.0": "2026-06-01T00:00:00.000Z",
+                f"{'9' * 5000}.1.0": "2026-06-02T00:00:00.000Z",
+            }
+        }
+
+        assert final_releases(payload, "daisyui") == {"5.7.0": "2026-06-01"}
 
 
 class TestOutstanding:
@@ -1263,6 +1296,55 @@ class TestReportReleases:
         assert status == 2
         assert any("django" in line and "6.2" in line for line in lines)
         assert any("daisyui" in line for line in lines)
+
+    @pytest.mark.parametrize(
+        ("package", "payload"),
+        [
+            ("django", {"releases": {}}),
+            ("django-crispy-forms", {"releases": {}}),
+            ("daisyui", {"time": {}}),
+        ],
+    )
+    def test_a_source_that_lists_no_final_release_returns_2_and_names_the_package(
+        self, listings, package, payload
+    ):
+        lines = []
+
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings, **{package: payload}), out=lines.append
+        )
+
+        assert status == 2
+        assert len(lines) == 1
+        assert package in lines[0]
+
+    def test_a_fetch_cut_short_returns_2_and_a_line_names_the_package(self, listings):
+        lines = []
+
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings, daisyui=IncompleteRead(b"")), out=lines.append
+        )
+
+        assert status == 2
+        assert len(lines) == 1
+        assert "daisyui" in lines[0]
+
+    def test_a_time_entry_that_is_not_text_returns_2(self, listings):
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings, daisyui={"time": {"5.8.0": ["2026-09-10"]}}),
+            out=lambda line: None,
+        )
+
+        assert status == 2
+
+    def test_a_version_of_thousands_of_digits_returns_2(self, listings):
+        huge = {"time": {f"{'9' * 5000}.1.0": "2026-09-10T00:00:00.000Z"}}
+
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings, daisyui=huge), out=lambda line: None
+        )
+
+        assert status == 2
 
     def test_every_source_is_asked_for_once(self, listings):
         asked = []
