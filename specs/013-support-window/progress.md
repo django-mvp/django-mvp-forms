@@ -88,3 +88,13 @@ Did: COR-003 (README says the daisyUI ends are those named above), COR-004 (requ
 Verified: 24 new cases failed first for the right reasons (the long-run case by hanging: `timeout 20 pytest -k long_run` exited 124 before the fix). After: `uv run pytest tests/test_support_window.py` gave 172 passed (173 with test_smoke); `uv run pre-commit run --all-files` passed.
 Next: ledger, full verify, report.
 Watch: test_a_long_run_with_no_brace_is_read can only fail by taking minutes, since no test may time a run. Empty-list refusal sits in a new Window.named_versions because a pair may legitimately list no Django series.
+
+## 2026-10-04T00:39:13Z · Forge · review
+
+Did: two reviews, both approve; fourteen findings, every one closed by a change (T009 to T012); review write-up posted; ledger at ready.
+
+Verified: full verify green after the fixes; releases against the real sources reports nothing outstanding; no file under mvp_forms/ differs from main.
+
+Next: mark the pull request ready and hand over at the merge gate.
+
+Watch: record number 0036 is free on main as of this push; FS-011 is still building and may claim it first.

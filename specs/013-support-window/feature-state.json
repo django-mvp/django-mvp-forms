@@ -2,7 +2,7 @@
   "feature": "013-support-window",
   "branch": "013-support-window",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-04T00:21:36Z",
       "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-04T00:39:05Z",
+      "note": "review approve; every finding closed; level with main"
     }
   ],
   "gates": {
