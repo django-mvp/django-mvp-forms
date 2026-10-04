@@ -1,4 +1,4 @@
-"""Read the support window and hold the package metadata to it."""
+"""Read the support window, hold the repository to it, and report on it."""
 
 from __future__ import annotations
 
@@ -37,7 +37,6 @@ CLAUSE = re.compile(r"\s*(==|!=|~=|>=|<=|>|<)\s*([\w.*]+)\s*")
 REQUIREMENT = re.compile(r"\s*([A-Za-z0-9][A-Za-z0-9._-]*)\s*(.*)")
 DJANGO_CLASSIFIER = re.compile(r"Framework :: Django :: (\d+\.\d+)")
 PYTHON_CLASSIFIER = re.compile(r"Programming Language :: Python :: (\d+\.\d+)")
-VERSIONS = re.compile(r"\d+\.\d+")
 SUPPORT_BLOCK = re.compile(
     r"<!-- support-window -->(.*?)<!-- /support-window -->", re.S
 )
@@ -305,7 +304,7 @@ class Window:
         for version in versions:
             if not VERSION.fullmatch(version):
                 raise InvalidWindow(package, version, "not a release series")
-        return tuple(sorted(versions, key=lambda v: tuple(map(int, v.split(".")))))
+        return tuple(sorted(versions, key=Window.numbers))
 
     @property
     def daisyui(self) -> tuple[str, ...]:
@@ -484,13 +483,13 @@ class Window:
                 version
                 for name, cell in rows
                 if name.lower() == package
-                for version in VERSIONS.findall(cell)
+                for version in VERSION.findall(cell)
             }
             found += self.set_disagreements(
                 "README", package, set(versions), stated, "the statement"
             )
         stated_pairs = {
-            name: set(VERSIONS.findall(cell))
+            name: set(VERSION.findall(cell))
             for name, cell in rows
             if VERSION.fullmatch(name)
         }
@@ -1145,7 +1144,7 @@ def write_class_list(
     ]
     if not patches:
         raise MissingClassList(version)
-    newest = max(patches, key=lambda patch: tuple(map(int, patch.split("."))))
+    newest = max(patches, key=Window.numbers)
     address = f"https://cdn.jsdelivr.net/npm/daisyui@{newest}/daisyui.css"
     names = sorted(class_names(fetch(address)))
     header = (

@@ -45,8 +45,7 @@ minor release (FR-003 to FR-005).
 run on, and it borrows Django's own published support schedule, which a host project already
 plans around.
 
-**ADR:** expected, together with D4 and D5: one record for how the window is defined, how a
-version enters and how one leaves.
+**ADR:** docs/adr/0036-the-support-window-is-declared-once.md
 
 ## D3. Testing against a daisyUI version means checking its classes
 
@@ -97,7 +96,7 @@ the issue tracking it. A new major version of django-crispy-forms or daisyUI car
 upgrade and long enough for one maintainer to keep through a holiday. It is a number, so it can
 be changed by changing a number.
 
-**ADR:** expected, with D2.
+**ADR:** docs/adr/0036-the-support-window-is-declared-once.md
 
 ## D5. Dropping a version is not a breaking change
 
@@ -124,7 +123,7 @@ earlier releases get no fixes (FR-015 to FR-018).
 the work: a host project on a dropped Django keeps getting the last release that supported it
 without doing anything.
 
-**ADR:** expected, with D2. This is the part most likely to be questioned later.
+**ADR:** docs/adr/0036-the-support-window-is-declared-once.md
 
 ## D6. No upper limit on Django or django-crispy-forms
 
@@ -162,8 +161,7 @@ declaration is #92 (FR-009 to FR-014).
 delivered without a workflow change, and names the one remaining part and where it is tracked.
 Where the declaration lives and what form it takes is for the build.
 
-**ADR:** none expected. If the build puts the declaration somewhere a reader would not look for
-it, that choice earns one.
+**ADR:** none — the declaration is a file at the repository root named for what it holds (D12).
 
 ## D8. Python is stated and not promised
 
@@ -174,7 +172,7 @@ new Python version and this feature does not widen what is tested.
 the package without knowing it, and the metadata already declares it. Python 3.14 is not in the
 test matrix. Whether it joins is part of #92, because the matrix is set under `.github/`.
 
-**ADR:** none.
+**ADR:** none — the statement follows what the suite runs on and decides nothing a later feature inherits.
 
 ## D9. A command to notice a new release is in scope
 
@@ -189,7 +187,7 @@ would be kept by luck.
 **Why defensible:** it is the smallest thing that makes the period a promise the maintainer can
 keep on purpose. Running it on a schedule would need a workflow, so that part is in #92.
 
-**ADR:** none.
+**ADR:** none — a maintainer's command, outside the package.
 
 ## D10. No demo page and no sketch
 
@@ -199,7 +197,7 @@ keep on purpose. Running it on a schedule would need a workflow, so that part is
 README section, the package metadata and the test suite. Every form is drawn exactly as before
 (FR-022).
 
-**ADR:** none.
+**ADR:** none — local to this feature.
 
 ## D11. The daisyUI minimum is 5.0
 
@@ -293,7 +291,7 @@ django-crispy-forms or daisyUI is printed and does not change the outcome.
 **Why:** FR-020 says a source that does not answer must never read as "the window is current".
 A third outcome keeps "I could not look" apart from both of the others.
 
-**ADR:** none.
+**ADR:** none — the behaviour of one command, described where it is documented.
 
 ## D18. What the design review asked for
 
@@ -329,6 +327,8 @@ the counts in research R3 (4,036 and 3,662) are larger. Neither is a class, and 
 a class could hide a pack that writes it.
 
 **Revisit if:** daisyUI ships a class named `w3` or `org`, which a selector read would find.
+
+**ADR:** none — how one command reads a stylesheet.
 
 ## D20. The theme stylesheet follows the newest named daisyUI version
 
