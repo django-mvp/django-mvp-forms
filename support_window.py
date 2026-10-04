@@ -20,6 +20,7 @@ from urllib.request import urlopen
 ROOT = Path(__file__).resolve().parent
 DECLARATION = ROOT / "support-window.toml"
 CLASS_DIRECTORY = ROOT / "tests" / "data"
+WORKFLOW_FILE = ROOT / ".github" / "workflows" / "tests.yml"
 TIMEOUT = 30
 ASKED = {
     "django": "SUPPORT_WINDOW_DJANGO",
@@ -66,6 +67,7 @@ LINK_TARGET = re.compile(
 ABSOLUTE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:")
 FINAL = re.compile(r"[0-9]{1,9}(?:\.[0-9]{1,9})*")
 DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+WORKFLOW_VERSIONS = re.compile(r"^\s*(python|django)-versions:\s*'(\[.*\])'\s*$", re.M)
 
 
 def fetch_json(url: str) -> Any:
@@ -709,6 +711,41 @@ class Window:
             if entry["name"] in named
             and self.series(entry["version"]) not in named[entry["name"]]
         ]
+
+    def workflow_disagreements(self, workflow: str) -> list[Disagreement]:
+        """Compare the versions the test workflow runs on with the window.
+
+        Args:
+            workflow: The text of ``.github/workflows/tests.yml``.
+
+        Returns:
+            One disagreement for each Python version or Django series in one of
+            the window and the workflow and not the other, and one with an
+            empty version for each of the two that the workflow does not pass
+            as a JSON list in single quotes, since the shared workflow would
+            then run its own default.
+        """
+        declared = {"python": self.python, "django": self.django}
+        passed = {
+            package: set(json.loads(versions))
+            for package, versions in WORKFLOW_VERSIONS.findall(workflow)
+        }
+        found = []
+        for package, versions in declared.items():
+            if package not in passed:
+                found.append(
+                    Disagreement(
+                        "workflow",
+                        package,
+                        "",
+                        f"the workflow does not pass {package}-versions",
+                    )
+                )
+                continue
+            found += self.set_disagreements(
+                "workflow", package, set(versions), passed[package], "the workflow"
+            )
+        return found
 
     def installed_disagreements(
         self, installed: Mapping[str, str], asked: Mapping[str, str]
