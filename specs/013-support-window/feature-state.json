@@ -261,8 +261,33 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestFinalReleases",
+              "tests/test_support_window.py::TestOutstanding",
+              "tests/test_support_window.py::TestReportReleases",
+              "tests/test_support_window.py::TestMainReleases"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -x -q (exit 0, 129 passed)",
+              "uv run python support_window.py releases (exit 0)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)",
+              "uv run pytest -n auto --dist loadscope (exit 0, 4304 passed)"
+            ],
+            "code": [
+              "support_window.py:29",
+              "support_window.py:143",
+              "support_window.py:752",
+              "support_window.py:782",
+              "support_window.py:823",
+              "support_window.py:1037",
+              "support_window.py:1161"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }

@@ -50,3 +50,10 @@ Did: Added `first` keys and the commented `[[dropped]]` example to support-windo
 Verified: uv run pytest tests/test_support_window.py (exit 0, 93 passed). Seven mutations of the new mechanisms each failed the suite. uv run pre-commit run --all-files (exit 0). uv run mypy (exit 0). uv run pytest -n auto --dist loadscope (exit 0, 4268 passed).
 Next: US4, the releases command.
 Watch: `first` is now required in every mapping, so the mappings in tests/test_support_window.py gained it. For django-crispy-forms and daisyUI the walk from `first` is empty when `first` and the newest named are on different major versions.
+
+## 2026-10-04T00:13:29Z · Implementer US4 · T007
+
+Did: Added SOURCES, Outstanding, Window.outstanding, Window.later_series (the series walk shared by the three packages), Window.report_releases, final_releases and the `releases` command in main (with a `fetch` parameter so a test passes its own). fetch_json and fetch_text moved above Window because report_releases takes fetch_json as a default. README "Changing the support window" gets the command, its three statuses, the separate listing of a new major version, the pre-release rule and the pointer to issue 92. AGENTS.md gets one command line.
+Verified: red first (ImportError for SOURCES), then `uv run pytest tests/test_support_window.py -x -q` 129 passed. Six mutations of the new mechanism (new_major, one line per major, first-release date, status 1 test, min to max date, final filter) each failed the suite, except min to max, which survived until the test used files on different days; it fails now. `uv run python support_window.py releases` by hand against the real sources: one line, "The window names the newest release of each package.", exit 0. `uv run pre-commit run --all-files` exit 0, `uv run mypy` exit 0, `uv run pytest -n auto --dist loadscope` exit 0, 4304 passed.
+Next: the report.
+Watch: the by-hand run found nothing outstanding, and no test covers a live payload, so a change in the shape of either source shows up as status 2, not as a wrong 0. No CHANGELOG entry, as the brief says, because the command is not distributed.
