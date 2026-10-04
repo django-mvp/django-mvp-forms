@@ -948,6 +948,14 @@ class RangedLineForm(forms.Form):
 RangedLineFormSet = formset_factory(RangedLineForm, extra=3)
 
 
+class RestingLineForm(forms.Form):
+    name = forms.CharField()
+    level = forms.IntegerField(min_value=0, max_value=10, initial=5)
+
+
+RestingLineFormSet = formset_factory(RestingLineForm, extra=2)
+
+
 class FloatingForm(forms.Form):
     name = forms.CharField(label="Name", help_text="As on your card")
     notes = forms.CharField(label="Notes", widget=forms.Textarea, required=False)
