@@ -116,25 +116,25 @@ Everything a complete, dependable release is expected to have.
 
 ### R6 — Replacing one template
 
-*resolve · advances G8*
+*delivered in [#85](https://github.com/django-mvp/django-mvp-forms/issues/85) · advances G8*
 
 A host project can replace any single template in the pack and keep the rest. The template paths become a documented, stable part of the public surface.
 
 ### R7 — daisyUI's other form components
 
-*feature · advances G9*
+*delivered in [#86](https://github.com/django-mvp/django-mvp-forms/issues/86), [#87](https://github.com/django-mvp/django-mvp-forms/issues/87) · advances G9*
 
 Rating, range, floating labels and joined inputs can be placed from a layout, with the same size, colour and variant choices R5 provides.
 
 ### R8 — Every daisyUI theme
 
-*feature · advances G5*
+*delivered in [#88](https://github.com/django-mvp/django-mvp-forms/issues/88) · advances G5*
 
 Each form state stays legible under every theme daisyUI ships, light and dark, with nothing for the host project to adjust per theme.
 
 ### R9 — A stated support window
 
-*resolve · advances G7*
+*delivered in [#89](https://github.com/django-mvp/django-mvp-forms/issues/89) · advances G7*
 
 The package states which versions of Django, django-crispy-forms and daisyUI it supports, tests against all of them, and says how soon a new release of each is picked up.
 
