@@ -264,3 +264,28 @@ Issue: #114. Delivers FR-022, FR-023, FR-024, FR-028; SC-007.
   the variant, a coloured group with one member in error, and a `Choice` around a group.
 - README: each of the two sections says size, colour and variant apply as on any field, and in
   which order for a member. CHANGELOG, in the entries of the two features.
+
+---
+
+## After the review
+
+### T008 — Fixes to the floating label from the code review and the main branch (US1)
+
+**Files**: `mvp_forms/templatetags/daisyui.py`, `tests/test_templatetags/test_daisyui.py`,
+`tests/legibility/reader.py`, `README.md`
+
+- A widget attribute `disabled=""` disables the field, as Django writes it (decisions D25,
+  RV-002).
+- The README names the button as the target when a floating label is stated around a
+  `FieldWithButtons` (RV-004).
+- The contrast check reads `floating-label` and `w-auto` (decisions D24).
+
+### T009 — Fixes to the joined group from the code review (US2)
+
+**Files**: `mvp_forms/layout.py`, `mvp_forms/templates/daisyui/layout/join.html`,
+`tests/test_layout.py`, `tests/test_pack/test_joined_groups.py`, `README.md`, `CONTEXT.md`
+
+- `Join.label_text` names the fieldset as plain text when labels are off (RV-001).
+- A required member that is not the first still marks the legend (RV-003).
+- A `Field` with a `wrapper_class` or a `template` raises `InvalidMember` (RV-005).
+- A member's `Choice` is copied with `Choice.over` (RV-006).

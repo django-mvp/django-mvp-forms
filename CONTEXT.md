@@ -126,8 +126,8 @@ _Avoid_: input group (that is Bootstrap's name), compound field, field group.
 **Member**:
 One field of a joined group. It has no label of its own and is named by an
 `aria-label` that is its field's label, and it keeps its own help text, errors
-and place in the cleaned data. A hidden field named in a group is drawn beside
-the join and is not a member.
+and place in the cleaned data. A hidden member is drawn beside the join and takes
+no place in it.
 _Avoid_: item, child, part (a part is one widget of a multi-widget field).
 
 **Boolean field**:

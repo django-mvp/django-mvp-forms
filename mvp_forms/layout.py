@@ -1,13 +1,15 @@
 """Layout objects the package defines, beside those of django-crispy-forms."""
 
 from dataclasses import dataclass
+from html import unescape
 from typing import Any, cast
 
 from crispy_forms.layout import Field, LayoutObject
 from crispy_forms.utils import TEMPLATE_PACK, flatatt, render_field
 from django.template import Context
 from django.template.loader import render_to_string
-from django.utils.safestring import SafeString
+from django.utils.html import strip_tags
+from django.utils.safestring import SafeData, SafeString
 
 from mvp_forms.choices import Choice
 
@@ -53,8 +55,9 @@ class Join(LayoutObject):
     or a select, named for assistive technology by its own label, and keeps its
     own help text and errors. A hidden member is drawn beside the join, not in
     it. A ``Field`` holds the names it gives attributes to, and a ``Choice`` the
-    names it states a size, colour or variant for. Nothing else is held: a
-    ``Field``'s ``wrapper_class`` and ``template`` have no frame to apply to.
+    names it states a size, colour or variant for. Nothing else is held, and a
+    ``Field`` with a ``wrapper_class`` or a ``template`` of its own is refused,
+    because a member has no frame for either to apply to.
 
     This is the group of several fields. ``FieldWithButtons`` is the one field
     that has buttons joined to it, and ``FieldInput``'s ``join`` option and
@@ -89,6 +92,22 @@ class Join(LayoutObject):
         self.css_class = css_class
         self.flat_attrs = flatatt(attrs)
 
+    @property
+    def label_text(self) -> str:
+        """The label as plain text, for an attribute that is escaped once.
+
+        A label marked safe is markup, so its tags are dropped and its entities
+        read as characters. Any other label is returned as written, and no label
+        is an empty string.
+        """
+        if self.label is None:
+            return ""
+        # A lazy label says whether it is safe only once it is read.
+        plain = str(self.label)
+        if isinstance(plain, SafeData):
+            return unescape(strip_tags(plain)).strip()
+        return plain
+
     def members(self) -> list[Member]:
         """Return the fields the group holds, in the order it holds them.
 
@@ -100,7 +119,9 @@ class Join(LayoutObject):
 
         Raises:
             InvalidMember: The group holds a layout object other than ``Field``
-                and ``Choice``, which includes a subclass of ``Field``.
+                and ``Choice``, which includes a subclass of ``Field``, or a
+                ``Field`` with a ``wrapper_class`` or a ``template`` of its own,
+                which a member has no frame for.
         """
         return self.members_of(self.fields, None)
 
@@ -122,6 +143,8 @@ class Join(LayoutObject):
             if isinstance(item, str):
                 found.append(Member(item, {}, outer))
             elif type(item) is Field:
+                if item.wrapper_class or item.template != Field.template:
+                    raise InvalidMember(type(item).__name__)
                 found.extend(
                     Member(name, dict(item.attrs), outer) for name in item.fields
                 )
@@ -155,15 +178,8 @@ class Join(LayoutObject):
         field.attrs.update(member.attrs)
         held: Any = field
         if member.choice is not None:
-            choice = member.choice
-            held = Choice(
-                field,
-                size=choice.size,
-                color=choice.color,
-                variant=choice.variant,
-                drawing=choice.drawing,
-                label=choice.label,
-            )
+            held = member.choice.over(Choice())
+            held.fields = [field]
         drawn: SafeString = render_field(
             held, form, context, template_pack=template_pack
         )

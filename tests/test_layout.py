@@ -3,6 +3,7 @@
 import pytest
 from crispy_forms.bootstrap import InlineField, PrependedText, StrictButton
 from crispy_forms.layout import HTML, Div, Field, MultiWidgetField, Submit
+from django.utils.safestring import mark_safe
 
 from mvp_forms.choices import INHERIT, Choice
 from mvp_forms.layout import InvalidMember, Join
@@ -49,6 +50,20 @@ class TestJoinMembers:
             ("first", {"data-role": "phone"}),
             ("second", {"data-role": "phone"}),
         ]
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            Field("first", wrapper_class="wide"),
+            Field("first", template="tests/own_field.html"),
+        ],
+        ids=["wrapper_class", "template"],
+    )
+    def test_a_field_with_a_wrapper_class_or_a_template_raises(self, field):
+        with pytest.raises(InvalidMember) as raised:
+            Join(field).members()
+
+        assert raised.value.member == "Field"
 
     def test_a_choice_gives_each_name_it_holds_its_choice(self):
         group = Join(Choice("first", "second", size="sm"))
@@ -165,3 +180,16 @@ class TestJoinRender:
 
         assert soup.find("fieldset") is None
         assert drawn_names(soup) == ["first"]
+
+
+class TestJoinLabelText:
+    def test_a_plain_label_is_returned_as_written(self):
+        assert Join(label="Tel & fax").label_text == "Tel & fax"
+
+    def test_a_label_marked_safe_loses_its_tags_and_reads_its_entities(self):
+        label = mark_safe("<b>Tel</b> &amp; fax")
+
+        assert Join(label=label).label_text == "Tel & fax"
+
+    def test_no_label_is_an_empty_string(self):
+        assert Join().label_text == ""

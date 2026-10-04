@@ -3,6 +3,7 @@
 import pytest
 from crispy_forms.bootstrap import PrependedText
 from crispy_forms.layout import Div, Field
+from django.utils.safestring import mark_safe
 
 from mvp_forms.choices import Choice, FormChoices, Modifiers
 from mvp_forms.layout import InvalidMember, Join
@@ -144,6 +145,12 @@ class TestJoinedGroups:
         assert legend.find(attrs={"aria-hidden": "true"}) is not None
         assert soup.find(id="id_number").has_attr("required")
 
+    def test_a_required_member_after_an_optional_one_still_marks_the_legend(self, draw):
+        soup = draw(TAG, form=joined("extension", "number"))
+
+        legend = join_of(soup).find_parent("fieldset").find("legend")
+        assert legend.find(attrs={"aria-hidden": "true"}) is not None
+
     def test_a_group_of_optional_members_has_no_marker(self, draw):
         soup = draw(TAG, form=joined("extension"))
 
@@ -241,6 +248,34 @@ class TestJoinedGroupEdges:
         assert group.find_parent("fieldset").find("legend") is None
         for tag in children_of(group):
             assert tag["aria-label"] == form[tag["name"]].label
+
+    def test_with_labels_off_a_label_of_markup_names_the_fieldset_as_plain_text(
+        self, draw
+    ):
+        label = mark_safe('Tel <abbr title="number">no.</abbr>')
+        form = JoinedForm(layout=[Join("number", label=label)], show_labels=False)
+
+        soup = draw(TAG, form=form)
+
+        fieldset = join_of(soup).find_parent("fieldset")
+        assert fieldset["aria-label"] == Join("number", label=label).label_text
+        assert fieldset.find("abbr") is None
+        assert set(fieldset.attrs) == {"class", "aria-label"}
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            Field("number", wrapper_class="wide"),
+            Field("number", template="tests/own_field.html"),
+        ],
+        ids=["wrapper_class", "template"],
+    )
+    def test_a_field_with_a_frame_option_the_group_cannot_honour_raises(
+        self, draw, field
+    ):
+        error = refused(draw, joined(field))
+
+        assert error.member == "Field"
 
     def test_a_group_of_one_is_drawn(self, draw):
         soup = draw(TAG, form=joined("number"))

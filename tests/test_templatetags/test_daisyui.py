@@ -1938,6 +1938,24 @@ class TestFieldInputLabel:
         assert field_input.is_disabled
         assert not field_input.is_floating
 
+    def test_a_widget_attribute_django_writes_empty_still_disables_the_field(self):
+        form = FloatingEdgesForm()
+        form.fields["plain"].widget.attrs["disabled"] = ""
+
+        field_input = FieldInput(form["plain"], choices=FormChoices(label="floating"))
+
+        assert field_input.is_disabled
+        assert not field_input.is_floating
+
+    def test_a_widget_attribute_of_false_does_not_disable_the_field(self):
+        form = FloatingEdgesForm()
+        form.fields["plain"].widget.attrs["disabled"] = False
+
+        field_input = FieldInput(form["plain"], choices=FormChoices(label="floating"))
+
+        assert not field_input.is_disabled
+        assert field_input.is_floating
+
     def test_a_field_disabled_by_its_widget_is_not_floating(self):
         field_input = FieldInput(
             FloatingEdgesForm()["locked"], choices=FormChoices(label="floating")

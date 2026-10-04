@@ -424,7 +424,8 @@ class FieldInput:
         return (
             self.disabled
             or self.field.field.disabled
-            or bool(self.field.field.widget.attrs.get("disabled"))
+            # Django writes every attribute that is not False, an empty one too.
+            or self.field.field.widget.attrs.get("disabled", False) is not False
         )
 
     @property

@@ -364,3 +364,25 @@ known exceptions is unchanged.
 was being built, and it refuses a class it has no row for.
 
 **ADR:** none. ADR 0033 already says a class the pack writes gets a row.
+
+## D25. The code review's findings, and what was done with each
+
+One reviewer, verdict approve. Nothing was critical, high or medium. All six low findings were
+remedied.
+
+- **RV-001:** a group's label marked safe was written unescaped into the fieldset's `aria-label`
+  when labels are off. `Join.label_text` gives the label as plain text, as `FieldInput.label_text`
+  does for a field, and the template writes that.
+- **RV-002:** a widget attribute `disabled=""` was not seen as disabling the field. The pack now
+  follows Django's own rule: an attribute is written unless its value is `False`.
+- **RV-003:** nothing held the legend's required marker to "any member". A test now draws a
+  group whose required member is not the first.
+- **RV-004:** the README said the error for a floating label on a field with joined buttons names
+  the field. Stated around the `FieldWithButtons` it names the first button, and the README says
+  so.
+- **RV-005:** a `Field` with a `wrapper_class` or a `template` was accepted in a group and the
+  option dropped without notice. It now raises `InvalidMember`, as SC-008 asks.
+- **RV-006:** the group copied the kinds of a `Choice` by hand. It now uses `Choice.over`, so a
+  kind added later reaches members.
+
+**ADR:** none. Each remedy is in the code, the tests or the README.
