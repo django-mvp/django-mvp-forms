@@ -243,3 +243,42 @@ same daisyUI version. That test now reads the class list of the newest version t
 found through the declaration, so the window is the one place the version is chosen. The
 contributing text says to replace the theme stylesheet when the newest version changes. Two
 decision records that named the old class list name the lists under `tests/data/`.
+
+## Fixes from the code review
+
+### T009 — This feature's tests stand on windows and documents they supply (US2)
+
+**Files**: `tests/test_support_window.py`
+
+Review finding COR-001. Every test that changes a window in one direction builds its window, its
+README, its dependency list and its lock from values the test module supplies. Only the tests
+that say this repository agrees with its declaration read the real files. Naming a new version in
+the window must not turn any of these tests red.
+
+### T010 — The comparisons close the gaps the review found (US2)
+
+**Files**: `support_window.py`, `tests/test_support_window.py`, `README.md`,
+`specs/013-support-window/plan.md`
+
+Review findings COR-003 to COR-005 and COR-007 to COR-011, and SEC-001 and SEC-002.
+
+- The README does not repeat the daisyUI ends outside the checked block (COR-003).
+- A requirement's name is normalised before it is looked up, and a package no requirement names
+  is a disagreement (COR-004).
+- A table cell's versions are read as whole dotted numbers, so a patch release in a cell is
+  reported (COR-005).
+- A daisyUI minimum above the newest, a `first` above the oldest named version and an empty
+  list of versions each raise `InvalidWindow` (COR-007).
+- A lock with no Django or django-crispy-forms entry is a disagreement (COR-008).
+- `relative_links` reads reference-style links and `src` (COR-009).
+- `class_names` skips an `@layer` or `@container` prelude (COR-010) and reads preludes without a
+  backtracking scan (SEC-002). `write_class_list` encodes before it opens the file (SEC-001).
+- `django_series_from` is a static method of `Window`, beside `minors_from`. The plan says why
+  the three class-list functions stay functions (COR-011).
+
+### T011 — The `releases` command never calls an unusable answer current (US4)
+
+**Files**: `support_window.py`, `tests/test_support_window.py`
+
+Review findings COR-002, COR-006 and SEC-003. A source that lists no final release ends with
+status 2. So does an answer cut short, a date that is not text, and a version too long to read.
