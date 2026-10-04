@@ -57,3 +57,13 @@ Did: Added SOURCES, Outstanding, Window.outstanding, Window.later_series (the se
 Verified: red first (ImportError for SOURCES), then `uv run pytest tests/test_support_window.py -x -q` 129 passed. Six mutations of the new mechanism (new_major, one line per major, first-release date, status 1 test, min to max date, final filter) each failed the suite, except min to max, which survived until the test used files on different days; it fails now. `uv run python support_window.py releases` by hand against the real sources: one line, "The window names the newest release of each package.", exit 0. `uv run pre-commit run --all-files` exit 0, `uv run mypy` exit 0, `uv run pytest -n auto --dist loadscope` exit 0, 4304 passed.
 Next: the report.
 Watch: the by-hand run found nothing outstanding, and no test covers a live payload, so a change in the shape of either source shows up as status 2, not as a wrong 0. No CHANGELOG entry, as the brief says, because the command is not distributed.
+
+## 2026-10-04T00:21:21Z · Forge · converge
+
+Did: accepted US1 to US4; merged main twice (FS-010 record, FS-012); pointed the theme stylesheet check at the newest named class list (T008); small cleanup of support_window.py (one duplicate pattern, two sorts through Window.numbers, the module docstring); wrote ADR 0036; gave every decision its verdict.
+
+Verified: full verify green; the suite passes on each named pair through the test command (Django 5.2.17, 6.0.8 and 6.1.1 with django-crispy-forms 2.7, 4,304 tests each); a pair the window does not offer exits 2 and runs nothing; a run asked for Django 5.2 on 6.1.1 stops with a usage error; no file under mvp_forms/ differs from main; the wheel and source distribution list the same files as main; releases reports nothing outstanding.
+
+Next: code review.
+
+Watch: FS-011 is still building and will take record numbers; 0036 is re-checked at every update of the branch.
