@@ -2,7 +2,7 @@
   "feature": "013-support-window",
   "branch": "013-support-window",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "CONVERGE",
+  "state": "REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -28,6 +28,11 @@
       "state": "CONVERGE",
       "at": "2026-10-04T00:16:14Z",
       "note": "all four stories done"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-04T00:21:36Z",
+      "note": "one reviewer, correctness and spec compliance"
     }
   ],
   "gates": {
@@ -303,7 +308,7 @@
       "max": 2
     },
     "review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "design_review_cycles": {
