@@ -2,8 +2,22 @@
 
 from crispy_forms.bootstrap import Alert
 
+from mvp_forms.choices import Choice, FormChoices
+from tests.forms import StructureForm
+
 DEVELOPER_ATTRS = {"data-role": "notice", "lang": "en"}
 FORM_CONTROLS = {"first", "second", "csrfmiddlewaretoken"}
+
+
+def draw_stated(draw, *layout, choices=None):
+    form = StructureForm(layout=layout)
+    if choices is not None:
+        form.helper.daisyui = choices
+    return draw("{% crispy form %}", form=form)
+
+
+def dismiss_classes(soup, css_id="note"):
+    return soup.find(id=css_id).find("button")["class"]
 
 
 def alerts(soup):
@@ -99,3 +113,61 @@ class TestAlertOptions:
         soup = draw_layout(Alert("Mind this"))
 
         assert not alerts(soup)[0].has_attr("id")
+
+
+class TestAlertDismissControlSize:
+    def test_it_takes_the_size_stated_for_the_form(self, draw):
+        soup = draw_stated(
+            draw, Alert("Mind this", css_id="note"), choices=FormChoices(size="lg")
+        )
+
+        assert dismiss_classes(soup) == ["btn", "btn-lg"]
+
+    def test_with_no_size_stated_it_is_small(self, draw):
+        soup = draw_stated(draw, Alert("Mind this", css_id="note"))
+
+        assert dismiss_classes(soup) == ["btn", "btn-sm"]
+
+    def test_a_choice_around_the_alert_wins_over_the_form(self, draw):
+        soup = draw_stated(
+            draw,
+            Choice(Alert("Mind this", css_id="note"), size="xs"),
+            choices=FormChoices(size="lg"),
+        )
+
+        assert dismiss_classes(soup) == ["btn", "btn-xs"]
+
+    def test_a_choice_that_states_no_size_leaves_the_form_s(self, draw):
+        soup = draw_stated(
+            draw,
+            Choice(Alert("Mind this", css_id="note"), color="primary"),
+            choices=FormChoices(size="lg"),
+        )
+
+        assert dismiss_classes(soup) == ["btn", "btn-lg"]
+
+    def test_none_in_a_choice_is_the_size_it_has_with_nothing_stated(self, draw):
+        soup = draw_stated(
+            draw,
+            Choice(Alert("Mind this", css_id="note"), size=None),
+            choices=FormChoices(size="lg"),
+        )
+
+        assert dismiss_classes(soup) == ["btn", "btn-sm"]
+
+    def test_it_takes_neither_the_colour_nor_the_variant_of_buttons(self, draw):
+        soup = draw_stated(
+            draw,
+            Alert("Mind this", css_id="note"),
+            choices=FormChoices(button_color="primary", button_variant="outline"),
+        )
+
+        assert dismiss_classes(soup) == ["btn", "btn-sm"]
+
+    def test_a_choice_that_states_a_drawing_for_fields_is_passed_over(self, draw):
+        soup = draw_stated(
+            draw,
+            Choice(Alert("Mind this", css_id="note"), "first", label="floating"),
+        )
+
+        assert dismiss_classes(soup) == ["btn", "btn-sm"]

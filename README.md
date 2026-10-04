@@ -327,6 +327,7 @@ class ProfileForm(forms.Form):
 - The modal is a `<dialog class="modal">` with the `css_id` you give, holding a `modal-box` with the title, the fields and one close button. The dialog is where the layout puts it, inside the form element, so its fields are submitted with the rest of the form. Give two modals two ids and two `title_id` values: the title's id is built from `title_id`, so two modals left on the default share one title id and the second is named by the first one's title.
 - The pack draws nothing that opens the modal. Your page does, by the modal's id. A button outside the dialog that calls `showModal()` on it is enough: `<button type="button" onclick="document.getElementById('name-modal').showModal()">Edit name</button>`. A `<dialog>` opened this way is shown above the page, can be closed with the Escape key and returns focus to the button.
 - The close button is a `<button type="button">`, so it never submits the form, and closing the modal leaves what was typed in its fields as it was. The modal holds no submit button: submit with a button of the form.
+- The close button takes the size stated for the form, `FormChoices(size="sm")`, so it matches the form's other buttons, and the size of a `Choice` around the `Modal` wins over the form's. It takes the size alone: `button_color` and `button_variant` do not reach it, and neither do the colour and variant of a `Choice`, because the button belongs to the modal and is not one you placed. With no size stated it carries none.
 - The title is an `<h3>` with the id `<title_id>-label`, and the dialog's `aria-labelledby` names it, so it is the dialog's accessible name. The title is escaped. `title_class` is added to the title, which the pack gives no class of its own, and `title_id` defaults to `modal_title_id`.
 - The modal is drawn open when a field inside it has an error, including inside a `Tab` or an `AccordionGroup` in the modal, and then the tab and the group that hold the error are open too. It opens even when the helper's `form_show_errors` is off. A modal that holds only an `HTML` object never opens, and an error in a field outside it does not open it. A modal drawn open this way takes the keyboard focus when the page arrives and is closed with its close button. It was not opened with `showModal()`, so the Escape key does not close it and the page behind it can still be reached with the Tab key.
 - The `css_class` and attributes you give a `Modal` are kept on its `<dialog>`. A `Modal` you give no id gets `modal_id` from django-crispy-forms, so give each its own.
@@ -362,6 +363,7 @@ class ProfileForm(forms.Form):
 - The alert is a `<div role="alert" class="alert">` where the layout puts it, holding its content in a `<span>`. It is drawn again when the form is bound, and two alerts in one form are each drawn.
 - Colour it with a daisyUI modifier in `css_class`, as above: `alert-info`, `alert-success`, `alert-warning`, `alert-error`, `alert-soft`, `alert-outline` or `alert-dash`. The `css_id` and attributes you give are kept on the alert, and your classes come after the pack's.
 - A dismiss button is drawn by default: a `<button type="button">` named by an `aria-label`, which removes the alert from the page. It never submits the form. A dismissal is not remembered, so the alert is back the next time the page is drawn. Pass `dismiss=False` to draw the alert with no button.
+- The dismiss button is small, `btn-sm`, until a size is stated. It then takes the size stated for the form, or the size of a `Choice` around the `Alert`, which wins. `Choice(Alert(...), size=None)` draws it small again. Like a modal's close button it takes the size alone, never `button_color`, `button_variant` or the colour and variant of a `Choice`.
 - `block=True` is accepted and changes nothing, because daisyUI has no counterpart to the Bootstrap class it adds. `alert-block` is never drawn.
 - The content is trusted. It is written into the page as markup, as django-crispy-forms documents, so a tag in it is a tag in the page, and a context value in it is not filled in. Anything a person typed must be escaped before it is put there, for example with `django.utils.html.escape` or `format_html`.
 
@@ -679,7 +681,7 @@ The classes the names mean are written out in the tables of `Modifiers`, in `mvp
 - A name that is not in the lists above raises `InvalidChoice`, a `ValueError`, when the form is drawn. It carries the `kind`, the `value` and the names `allowed`.
 - A field in error keeps its error modifier and is drawn without the chosen colour, so the error is the only colour it shows. Its size and variant still apply.
 - Hidden inputs, labels, help text, error text and the `required`, `disabled` and `readonly` attributes are never changed, and classes you put on a widget are kept.
-- The size reaches every button too, as `btn-sm` and the like. A colour or a variant for the form's buttons is stated apart from the inputs', as `button_color` and `button_variant`, so `color` and `variant` reach no button and the two never touch. Buttons are described below.
+- The size reaches every button too, as `btn-sm` and the like. A colour or a variant for the form's buttons is stated apart from the inputs', as `button_color` and `button_variant`, so `color` and `variant` reach no button and the two never touch. Buttons are described below. The size also reaches the two buttons the pack draws itself, the close button of a `Modal` and the dismiss button of an `Alert`.
 
 ### One field's own choice
 
@@ -750,6 +752,7 @@ Here every button is small and outlined, `Delete` is in the error colour and the
 
 - A `Submit` is drawn `btn-primary` unless a colour is stated for it, by `button_color` or by a `Choice`. Then only the colour you stated is written. A `btn-primary` you pass as `css_class` is kept.
 - Your `css_class`, `css_id` and attributes are kept on every button, and a `Hidden` is never changed.
+- The close button of a `Modal` and the dismiss button of an `Alert` are drawn by the pack and belong to their containers. They take the form's `size`, or the size of a `Choice` around the container, and nothing else: `button_color`, `button_variant` and a `Choice`'s colour and variant pass them by, and a `Choice` around the container is never checked against them.
 - The statement reaches a button as the context name `daisyui`, which django-crispy-forms copies from the helper, so it works under whatever name the page gives its form, and with `{% crispy form %}`. Buttons are drawn only by the tag: `{{ form|crispy }}` draws no layout and no helper.
 
 ### Checkbox, toggle and switch
@@ -1005,10 +1008,12 @@ Each row is one template the pack distributes. `Draws` says what it draws. `Hand
 
 The pack's own template tags also read the page's context, which no template shows. For example `daisyui_field` reads `form_show_labels`, `form_show_errors` and `wrapper_class`, and `daisyui_layout_object` reads `form` and `template_pack`. A replacement that calls a tag gets what the pack's template gets. The list covers what is written in a template and not what the tags read.
 
+Two tags carry the form's size to the buttons the pack draws inside a container. `{% daisyui_button_size "btn-sm" %}` writes the class of the size stated for the form, or by a `Choice` around the layout object, and the class it is given when none is stated. django-crispy-forms draws a `Modal` with no context, so no tag in `daisyui/layout/modal.html` can read the form's size: the template writes the class `daisyui-size` on its close button, a `Choice` around the modal replaces it with its own size, and `{% daisyui_sized form.form_html %}` in `daisyui/display_form.html` replaces what is left with the form's, or removes it. A replacement for `daisyui/display_form.html` that draws `{{ form.form_html }}` without that tag leaves `daisyui-size` on the button, where it does nothing, and a replacement for `daisyui/layout/modal.html` that leaves the class out draws a close button that keeps one size. Both are `mvp_forms.choices.write_size` at work, which you do not call.
+
 | Template | Draws | Handed | Found by |
 |---|---|---|---|
 | `daisyui/whole_uni_form.html` | The whole form that `{% crispy form %}` draws: the `<form>` element when the helper asks for one, a CSRF token for a post, the fields and the helper's buttons. | `csrf_token`, `disable_csrf`, `flat_attrs`, `form`, `form_method`, `form_tag` | `TEMPLATES` |
-| `daisyui/display_form.html` | The form's media, its form-wide errors and then its fields, or the form's own `form_html` in their place when it has one. | `form`, `form_show_errors`, `include_media` | `TEMPLATES` |
+| `daisyui/display_form.html` | The form's media, its form-wide errors and then its fields, or the form's own `form_html` in their place when it has one, drawn through `{% daisyui_sized %}`, which writes the form's size on the close button of each `Modal` in it. | `form`, `form_show_errors`, `include_media` | `TEMPLATES` |
 | `daisyui/uni_form.html` | The form's media, its form-wide errors and each of its fields with no `<form>` element around them, which is what the `crispy` filter asks for when it is given a form. | `field_template`, `form`, `form_show_errors`, `include_media` | `TEMPLATES` |
 | `daisyui/errors.html` | The errors of the form as a whole in one alert under the helper's error title, and nothing for a form that has none. | `form`, `form_error_title` | `TEMPLATES` |
 | `daisyui/inputs.html` | The helper's buttons and inputs, with the hidden inputs first and the rest in a row. | `inputs` | `TEMPLATES` |
@@ -1027,8 +1032,8 @@ The pack's own template tags also read the page's context, which no template sho
 | `daisyui/layout/tab-link.html` | Nothing: django-crispy-forms renders it for every tab and hands the result to `daisyui/layout/tab.html` as `links`, which the pack's `tab.html` does not draw, so a replacement shows only beside a replacement of `tab.html` that draws `links`. |  | `TEMPLATES` |
 | `daisyui/accordion.html` | An `Accordion`: a `<div>` stacking its groups. | `accordion`, `content` | `TEMPLATES` |
 | `daisyui/accordion-group.html` | An `AccordionGroup`: a collapsible `<details>` with its name as the summary, holding its fields. | `div`, `fields` | `TEMPLATES` |
-| `daisyui/layout/modal.html` | A `Modal`: a `<dialog>` with its title, its fields and a button that closes it, open when a field in it fails. | `fields`, `modal` | `TEMPLATES` |
-| `daisyui/layout/alert.html` | An `Alert`: its content in an element with `role="alert"`, and a button that dismisses it when it can be dismissed. | `alert`, `content`, `dismiss` | `TEMPLATES` |
+| `daisyui/layout/modal.html` | A `Modal`: a `<dialog>` with its title, its fields and a button that closes it, open when a field in it fails. The button carries the class `daisyui-size` where its size goes, which whatever draws around the modal replaces. | `fields`, `modal` | `TEMPLATES` |
+| `daisyui/layout/alert.html` | An `Alert`: its content in an element with `role="alert"`, and a button that dismisses it when it can be dismissed, sized by `{% daisyui_button_size %}`. | `alert`, `content`, `dismiss` | `TEMPLATES` |
 | `daisyui/layout/multifield.html` | A `MultiField`: a fieldset with its label as the legend, holding its fields. | `fields_output`, `multifield` | `TEMPLATES` |
 | `daisyui/layout/buttonholder.html` | A `ButtonHolder`: a row holding its buttons. | `buttonholder`, `fields_output` | `TEMPLATES` |
 | `daisyui/layout/formactions.html` | `FormActions`: a row holding its buttons. | `fields_output`, `formactions` | `TEMPLATES` |
@@ -1275,7 +1280,7 @@ fails, so an error inside a fieldset, a row and a column can be seen:
 - `/layout-objects/` is the page inside the django-mvp shell, reached from its sidebar.
 - `/layout-objects/standalone/` is the same page styled by daisyUI's CDN build alone.
 
-One more page draws the size, colour and variant of a form's inputs and buttons. It holds a small form for each size and for each colour, each with one input and one button; a form holding every kind of input at one size; a form of inputs in the ghost variant and a button bar with one button in each variant; and a form that states choices and overrides them for one field in its layout, for one field by name, for one field that drops the colour, and for one button. The forms are built from the tables of `Modifiers`, so the page follows them, and none of them posts anywhere.
+One more page draws the size, colour and variant of a form's inputs and buttons. It holds a small form for each size and for each colour, each with one input and one button; a form holding every kind of input at one size; a form of inputs in the ghost variant and a button bar with one button in each variant; and a form that states choices and overrides them for one field in its layout, for one field by name, for one field that drops the colour, and for one button. It also holds a small and a large form with an alert and a modal in each, whose dismiss and close buttons take the form's size. The forms are built from the tables of `Modifiers`, so the page follows them, and none of them posts anywhere.
 
 - `/choices/` is the page inside the django-mvp shell, reached from its sidebar as "Size, colour and variant".
 - `/choices/standalone/` is the same page styled by daisyUI's CDN build alone.

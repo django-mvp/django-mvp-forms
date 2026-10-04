@@ -1,8 +1,11 @@
 """The layout object that shows part of a form in a modal."""
 
 from crispy_forms.bootstrap import Accordion, AccordionGroup, Modal, Tab, TabHolder
-from crispy_forms.layout import HTML, Div
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import HTML, Div, Layout
+from django.forms import formset_factory
 
+from mvp_forms.choices import SIZE_PLACEHOLDER, Choice, FormChoices
 from tests.forms import StructureForm
 
 DEVELOPER_ATTRS = {"data-role": "dialog-box", "lang": "en"}
@@ -16,6 +19,17 @@ def one_modal(**kwargs):
 
 def data_without(*names):
     return {name: value for name, value in FIELDS.items() if name not in names}
+
+
+def draw_stated(draw, *layout, choices=None):
+    form = StructureForm(layout=layout)
+    if choices is not None:
+        form.helper.daisyui = choices
+    return draw("{% crispy form %}", form=form)
+
+
+def close_classes(soup, css_id="box"):
+    return soup.find("dialog", id=css_id).find("button")["class"]
 
 
 def dialogs(soup):
@@ -243,3 +257,100 @@ class TestModalOpensForAnError:
         assert dialog.has_attr("open")
         assert checked == ["Nested"]
         assert [group.find("summary").get_text() for group in groups] == ["Two"]
+
+
+class TestModalCloseButtonSize:
+    def test_it_takes_the_size_stated_for_the_form(self, draw):
+        soup = draw_stated(draw, one_modal(), choices=FormChoices(size="sm"))
+
+        assert close_classes(soup) == ["btn", "btn-sm"]
+
+    def test_with_no_size_stated_it_carries_none(self, draw):
+        soup = draw_stated(draw, one_modal())
+
+        assert close_classes(soup) == ["btn"]
+
+    def test_a_form_that_states_another_choice_leaves_no_placeholder(self, draw):
+        soup = draw_stated(draw, one_modal(), choices=FormChoices(color="primary"))
+
+        assert close_classes(soup) == ["btn"]
+
+    def test_a_value_a_person_typed_is_never_taken_for_a_waiting_button(self, draw):
+        typed = f"<i {SIZE_PLACEHOLDER}>"
+        form = StructureForm(
+            {"first": typed, "second": "b", "third": "c", "fourth": "d"},
+            layout=(one_modal(),),
+        )
+        form.helper.daisyui = FormChoices(size="sm")
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert soup.find("input", id="id_first")["value"] == typed
+        assert close_classes(soup) == ["btn", "btn-sm"]
+
+    def test_a_choice_around_the_modal_sets_its_size(self, draw):
+        soup = draw_stated(draw, Choice(one_modal(), size="lg"))
+
+        assert close_classes(soup) == ["btn", "btn-lg"]
+
+    def test_a_choice_around_the_modal_wins_over_the_form(self, draw):
+        soup = draw_stated(
+            draw, Choice(one_modal(), size="lg"), choices=FormChoices(size="sm")
+        )
+
+        assert close_classes(soup) == ["btn", "btn-lg"]
+
+    def test_a_choice_that_states_no_size_leaves_the_form_s(self, draw):
+        soup = draw_stated(
+            draw, Choice(one_modal(), color="primary"), choices=FormChoices(size="sm")
+        )
+
+        assert close_classes(soup) == ["btn", "btn-sm"]
+
+    def test_none_in_a_choice_undoes_the_form_s_size(self, draw):
+        soup = draw_stated(
+            draw, Choice(one_modal(), size=None), choices=FormChoices(size="sm")
+        )
+
+        assert close_classes(soup) == ["btn"]
+
+    def test_a_choice_around_one_modal_does_not_reach_another(self, draw):
+        soup = draw_stated(
+            draw,
+            Choice(one_modal(), size="lg"),
+            Modal("third", css_id="other", title="Other"),
+            choices=FormChoices(size="sm"),
+        )
+
+        assert close_classes(soup) == ["btn", "btn-lg"]
+        assert close_classes(soup, "other") == ["btn", "btn-sm"]
+
+    def test_it_takes_neither_the_colour_nor_the_variant_of_buttons(self, draw):
+        soup = draw_stated(
+            draw,
+            one_modal(),
+            choices=FormChoices(button_color="primary", button_variant="outline"),
+        )
+
+        assert close_classes(soup) == ["btn"]
+
+    def test_a_choice_s_colour_and_variant_do_not_reach_it(self, draw):
+        soup = draw_stated(
+            draw, Choice(one_modal(), color="primary", variant="ghost", size="xs")
+        )
+
+        assert close_classes(soup) == ["btn", "btn-xs"]
+
+    def test_each_form_of_a_formset_sizes_its_own_modal(self, draw):
+        formset = formset_factory(StructureForm, extra=2)()
+        helper = FormHelper()
+        helper.form_tag = False
+        helper.layout = Layout(one_modal())
+        helper.daisyui = FormChoices(size="sm")
+
+        soup = draw("{% crispy formset helper %}", formset=formset, helper=helper)
+
+        assert [dialog.find("button")["class"] for dialog in dialogs(soup)] == [
+            ["btn", "btn-sm"],
+            ["btn", "btn-sm"],
+        ]
