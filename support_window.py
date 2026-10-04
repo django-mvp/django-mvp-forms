@@ -846,17 +846,25 @@ class Window:
             out: Takes each line to print.
 
         Returns:
-            ``2`` when a source could not be reached, or its answer could not be
-            read or lists no final release, ``1`` when a release the window does not name is outstanding,
-            and ``0`` otherwise. A new major version is printed and does not
-            change the status. A line says the window is current only when the
-            status is ``0``.
+            ``2`` when a source could not be reached, when its answer could not
+            be read, or when it lists no final release of the newest version the
+            window names. ``1`` when a release the window does not name is
+            outstanding, and ``0`` otherwise. A new major version is printed and
+            does not change the status. A line says the window is current only
+            when the status is ``0``.
         """
         listings: dict[str, dict[str, str]] = {}
         failed = False
+        newest = {
+            "django": self.django[-1],
+            "django-crispy-forms": self.crispy_forms[-1],
+            "daisyui": self.daisyui_newest,
+        }
         for package, address in SOURCES.items():
             try:
-                listings[package] = final_releases(fetch(address), package)
+                listings[package] = self.listing_with(
+                    newest[package], final_releases(fetch(address), package), package
+                )
             except (OSError, ValueError, HTTPException) as error:
                 failed = True
                 out(f"{package}: could not find out ({type(error).__name__})")
@@ -873,6 +881,29 @@ class Window:
             return 1
         out("The window names the newest release of each package.")
         return 0
+
+    @staticmethod
+    def listing_with(
+        newest: str, releases: dict[str, str], package: str
+    ) -> dict[str, str]:
+        """Check that a listing holds the newest version the window names.
+
+        A listing without it cannot say that nothing newer exists.
+
+        Args:
+            newest: The newest series the window names, such as ``6.1``.
+            releases: Each final release with the day it was published.
+            package: The package the releases belong to.
+
+        Returns:
+            The listing, unchanged.
+
+        Raises:
+            ValueError: No release of the newest named series is listed.
+        """
+        if newest not in map(Window.series, releases):
+            raise ValueError(f"{package}: {newest} is not listed")
+        return releases
 
     @staticmethod
     def later_series(

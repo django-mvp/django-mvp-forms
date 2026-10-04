@@ -344,3 +344,31 @@ replaced.
 **Revisit if:** the themes are ever wanted for the minimum version as well.
 
 **ADR:** none. One test's choice of which file to read.
+
+## D21. What the code review asked for
+
+Two reviews of the whole change: one for correctness against the specification, one of the
+module's requests, its subprocess and the file it writes. Both approved. Every finding was closed
+by a change.
+
+- **This feature's tests stood on the versions declared today** (medium). Naming Django 6.2 would
+  have turned a dozen of them red with everything in agreement. They now build their windows,
+  README, metadata and lock from values the test module supplies, and only the tests that say
+  this repository agrees with its declaration read the real files.
+- **`releases` called an unusable answer current** (medium). A source that listed no release, or
+  none of the versions the window names, ended with 0. It now ends with 2, as does an answer cut
+  short, a date that is not text and a version too long to read.
+- **The README repeated the daisyUI ends outside the checked tables** (medium). The sentence now
+  points at the table.
+- **Smaller gaps in the comparisons** (low): a requirement written with an underscore or missing
+  altogether, a patch release in a table cell, a daisyUI minimum above the newest, a `first`
+  above the oldest named version, a lock with no entry for a package, reference-style links, a
+  dotted name in an `@layer` rule read as a class. Each has a test with the failing input.
+- **A hostile or broken stylesheet** (low): the class list is encoded before its file is opened,
+  so a failure leaves the old list as it was, and selectors are read without a scan that took
+  time quadratic in a run with no brace.
+- **`django_series_from` is a method of `Window`** beside its twin. The three functions that read
+  and write a class list stay functions: none takes a window, and a class of static methods
+  would add a name and no state (low).
+
+**ADR:** none — the record of one review.

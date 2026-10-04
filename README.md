@@ -1146,8 +1146,9 @@ first released. Its exit status is:
 
 - `0` when nothing is outstanding.
 - `1` when at least one such release is missing from the window.
-- `2` when a source could not be reached or its answer could not be read. The output names the
-  package it could not find out about and does not say the window is current.
+- `2` when a source could not be reached, its answer could not be read, or it does not list the
+  newest version the window names. The output names the package it could not find out about and
+  does not say the window is current.
 
 A new major version of django-crispy-forms or daisyUI is printed and does not change the status.
 Every newer Django series counts, including a new major version. Pre-releases are ignored. The

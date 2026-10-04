@@ -282,3 +282,10 @@ Review findings COR-003 to COR-005 and COR-007 to COR-011, and SEC-001 and SEC-0
 
 Review findings COR-002, COR-006 and SEC-003. A source that lists no final release ends with
 status 2. So does an answer cut short, a date that is not text, and a version too long to read.
+
+### T012 — A listing without the newest named version is not read as current (US4)
+
+**Files**: `support_window.py`, `tests/test_support_window.py`, `README.md`
+
+The rest of review finding COR-002. A source that answers with releases, none of them the newest
+version the window names, ends with status 2: such a listing cannot say that nothing newer exists.

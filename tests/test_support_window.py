@@ -1399,6 +1399,27 @@ class TestReportReleases:
         assert status == 0
         assert any("django-crispy-forms" in line and "3.0" in line for line in lines)
 
+    @pytest.mark.parametrize(
+        ("package", "listed"),
+        [
+            ("django", {"1.0": "2008-09-03"}),
+            ("django-crispy-forms", {"2.6": "2025-08-01"}),
+            ("daisyui", {"4.12.0": "2024-06-01"}),
+        ],
+    )
+    def test_a_listing_without_the_newest_named_version_returns_2(
+        self, listings, package, listed
+    ):
+        listings[package] = listed
+        lines = []
+
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings), out=lines.append
+        )
+
+        assert status == 2
+        assert any(package in line for line in lines)
+
     def test_a_new_major_version_does_not_hide_a_missing_release(self, listings):
         listings["daisyui"]["6.0.0"] = "2026-09-01"
         listings["django"]["6.2"] = "2026-10-01"
@@ -1523,6 +1544,7 @@ class TestMainReleases:
     ):
         declaration = tmp_path / "window.toml"
         declaration.write_text(DECLARATION_TEXT)
+        listings["daisyui"]["5.4.0"] = "2025-11-01"
 
         status = main(["releases"], declaration=declaration, fetch=served(listings))
 

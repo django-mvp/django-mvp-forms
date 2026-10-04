@@ -62,6 +62,26 @@
         "SPC-003 (low) the period is not a version: dropped from the declaration, the README check and the releases report",
         "SPC-004 (low) three pieces of work with no requirement behind them: dropped from T005 and T007"
       ]
+    },
+    "review": {
+      "approved_by": "code review, two reviewers (correctness and spec compliance; security): approve",
+      "at": "2026-10-04T00:37:53Z",
+      "self_resolved": [
+        "COR-001 (medium) tests stood on the versions declared today: fixed, T009",
+        "COR-002 (medium) releases called an empty or unrelated listing current: fixed, T011 and T012",
+        "COR-003 (medium) the README repeated the daisyUI ends outside the checked block: fixed, T010",
+        "COR-004 (low) requirement names not normalised, a missing requirement not reported: fixed, T010",
+        "COR-005 (low) a patch release in a README cell passed as its series: fixed, T010",
+        "COR-006 (low) an answer cut short escaped as a traceback: fixed, T011",
+        "COR-007 (low) a minimum above the newest and a first above the oldest were accepted: fixed, T010",
+        "COR-008 (low) a lock with no entry for a package passed: fixed, T010",
+        "COR-009 (low) reference-style links and src were not read: fixed, T010",
+        "COR-010 (low) a dotted name in an at-rule was read as a class: fixed, T010",
+        "COR-011 (low) django_series_from beside its twin: made a method of Window; the class-list functions stay functions, reason in the plan, T010",
+        "SEC-001 (low) a failed encode left the class list empty: fixed, T010",
+        "SEC-002 (low) a scan quadratic in a run with no brace: fixed, T010",
+        "SEC-003 (low) three answers escaped the could-not-find-out path: fixed, T011"
+      ]
     }
   },
   "stories": [
@@ -376,6 +396,24 @@
               "support_window.py:1096"
             ],
             "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestReportReleases"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -q",
+              "uv run python support_window.py releases"
+            ],
+            "code": [
+              "support_window.py:866",
+              "tests/test_support_window.py:1402"
+            ]
           }
         }
       ]
