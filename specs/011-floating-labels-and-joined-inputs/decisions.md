@@ -4,8 +4,8 @@ Rationale too long to inline in `spec.md`, and the ambiguities resolved while sp
 maintainer was not available for questions on this feature, so every reading of the issue below
 was made without him and is his to overturn when he reviews the specification.
 
-Records under `docs/adr/` are written when the feature is built, alongside the code they explain.
-Each decision says here whether it is expected to earn one.
+Records under `docs/adr/` are written alongside the code they explain. Each decision says here
+which record it went to, or why it has none.
 
 ## D1. The reading of the issue was confirmed without the maintainer
 
@@ -43,9 +43,7 @@ the field's own statement wins over the form's, and a field can undo the form's 
 **Why defensible:** it reuses the one mechanism the pack already has, costs a developer nothing to
 learn, and reaches both drawing paths.
 
-**ADR:** expected, at build. It adds a fifth kind of choice, and a kind that is neither a class
-from the `Modifiers` table nor limited to boolean fields. The record should say how it sits beside
-ADRs 0019 to 0022.
+**ADR:** docs/adr/0036-a-floating-label-is-a-kind-of-choice.md
 
 ## D3. Which fields take a floating label, and what happens to the rest
 
@@ -63,7 +61,7 @@ Passing over for the form and raising for one named field is the rule ADR 0020 a
 choice that an input has no modifier for. A form-wide choice has to be usable on a form that
 mixes kinds of field, and a choice on one named field that can never apply is a mistake.
 
-**ADR:** none of its own. It belongs in the record D2 expects.
+**ADR:** docs/adr/0036-a-floating-label-is-a-kind-of-choice.md
 
 ## D4. An empty field shows the label's text, and a disabled field keeps its ordinary label
 
@@ -91,8 +89,7 @@ class of its own (Article XIV), so the field falls back to the ordinary label.
 **Rejected:** raising when a floating label is stated on a disabled field. A field is often
 disabled at run time, for one person and not another, and an error for that would be hostile.
 
-**ADR:** expected, at build, as part of the record D2 expects. The fallback for a disabled field
-is not something a reader would guess.
+**ADR:** docs/adr/0036-a-floating-label-is-a-kind-of-choice.md
 
 ## D5. A floating label does not combine with another decoration
 
@@ -107,7 +104,7 @@ in place of the input, which daisyUI does not document either. Article XIV says 
 
 **Revisit if:** daisyUI documents a floating label inside a join or beside attached text.
 
-**ADR:** none of its own. It belongs in the record D2 expects.
+**ADR:** docs/adr/0036-a-floating-label-is-a-kind-of-choice.md
 
 ## D6. Joining is a layout object the package defines
 
@@ -130,9 +127,7 @@ specification does not name the class.
 fields. Stating it there keeps it out of the form class and beside the other arrangement
 decisions.
 
-**ADR:** expected, at build. ADR 0008 says the package defines no layout classes and ADR 0019
-made one exception. This is a second, and the record should say why it does not subclass or
-shadow an upstream object.
+**ADR:** docs/adr/0037-fields-are-joined-by-a-layout-object-of-the-packs.md
 
 ## D7. One label for the group, and each member keeps the rest
 
@@ -155,7 +150,7 @@ required (FR-017).
 **Why defensible:** it is what ADR 0011 and ADR 0027 already do for a group and for the parts of
 a multi-widget field: one legend, and a name on each part.
 
-**ADR:** expected, at build, in the record D6 expects.
+**ADR:** docs/adr/0037-fields-are-joined-by-a-layout-object-of-the-packs.md
 
 ## D8. A joined group holds inputs and selects, and no buttons
 
@@ -193,7 +188,7 @@ This specification is told not to settle #15, so it keeps FS-007's order and nam
 **Why:** both parts are stock daisyUI components placed in a form by a statement in Python. The
 only pages added are demo pages that list states, which follow the pattern of the existing ones.
 
-**ADR:** none.
+**ADR:** none. It decides how the feature was built, and nothing in the code depends on it.
 
 ## D11. The floating label is spelt `label="floating"`
 
@@ -209,7 +204,7 @@ the same way. A boolean would be the one kind with three states spelt `True`, `F
 **Why defensible:** the spec says an unknown value for the label raises "as it does for an
 unknown size", which presumes a set of names.
 
-**ADR:** docs/adr/0033-a-floating-label-is-a-kind-of-choice.md
+**ADR:** docs/adr/0036-a-floating-label-is-a-kind-of-choice.md
 
 ## D12. A floating label stated around a button raises
 
@@ -239,7 +234,7 @@ it through `render_field`, inside the accumulated `Choice` when the member is wr
   recording the field as rendered, applying a `Field`'s attributes, and reporting a name the
   form lacks.
 
-**ADR:** none of its own. It belongs in the record for the joined group.
+**ADR:** docs/adr/0037-fields-are-joined-by-a-layout-object-of-the-packs.md
 
 ## D14. The developer's id, class and attributes go on the join element
 
@@ -249,7 +244,7 @@ it through `render_field`, inside the accumulated `Choice` when the member is wr
 assumptions say that is how a developer stacks a group. `FieldWithButtons` already puts them
 there (ADR 0026).
 
-**ADR:** none of its own. It belongs in the record for the joined group.
+**ADR:** docs/adr/0037-fields-are-joined-by-a-layout-object-of-the-packs.md
 
 ## D15. The group's label is escaped
 
@@ -271,7 +266,7 @@ neither. `w-auto` is added to the class test by name.
 
 **Revisit if:** #16 or #18 rules on which layout utilities the pack may write.
 
-**ADR:** docs/adr/0034-fields-are-joined-by-a-layout-object-of-the-packs.md
+**ADR:** docs/adr/0037-fields-are-joined-by-a-layout-object-of-the-packs.md
 
 ## D17. Help text and errors move to a template of their own
 
@@ -291,7 +286,7 @@ class name of a layout object the group cannot hold.
 **Rejected:** reusing `InvalidChoice`. It carries a kind, a value and the names allowed, none of
 which a field that cannot be joined has.
 
-**ADR:** none of its own. It belongs in the record for the joined group.
+**ADR:** docs/adr/0037-fields-are-joined-by-a-layout-object-of-the-packs.md
 
 ## D19. The demo's standalone pages are one per page
 
@@ -357,3 +352,15 @@ better than a tuple of three, and the glossary already has the term.
 draws. No existing form and no existing assertion changed.
 
 **ADR:** none. Local to the tests.
+
+## D24. The contrast check reads a floating label as text on the page's own colour
+
+**Chosen:** the table the contrast check reads classes from gains a row for `floating-label`,
+whose text sits on a patch of the base colour over the input's border, and lists `w-auto` among
+the classes that paint nothing. No pairing fell short under any theme, so the README's list of
+known exceptions is unchanged.
+
+**Why:** the check for legibility under every theme arrived on the main branch while this feature
+was being built, and it refuses a class it has no row for.
+
+**ADR:** none. ADR 0033 already says a class the pack writes gets a row.
