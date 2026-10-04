@@ -9,6 +9,7 @@ import pytest
 from support_window import (
     DECLARATION,
     ROOT,
+    SOURCES,
     Dropped,
     InvalidWindow,
     MissingClassList,
@@ -16,6 +17,7 @@ from support_window import (
     class_list,
     class_names,
     django_series_from,
+    final_releases,
     installed_versions,
     main,
     relative_links,
@@ -31,6 +33,17 @@ MAPPING = {
         "pairs": {"2.6": ["5.2"], "2.7": ["5.2", "6.0"]},
     },
     "daisyui": {"first": "5.0", "minimum": "5.0", "newest": "5.4"},
+}
+
+CURRENT = {
+    "python": ["3.12", "3.13"],
+    "django": {"first": "5.2", "versions": ["5.2", "6.0", "6.1"]},
+    "django-crispy-forms": {
+        "first": "2.7",
+        "versions": ["2.7"],
+        "pairs": {"2.7": ["5.2", "6.0", "6.1"]},
+    },
+    "daisyui": {"first": "5.0", "minimum": "5.0", "newest": "5.7"},
 }
 
 CHANGELOG = "## [Unreleased]\n\n## [v0.1.0] - 2026-10-03\n"
@@ -854,3 +867,359 @@ class TestMain:
             main(["classes", "5.0.1"])
 
         assert raised.value.version == "5.0.1"
+
+
+@pytest.fixture
+def listings():
+    return {
+        "django": {
+            "5.2": "2025-04-02",
+            "5.2.1": "2025-05-07",
+            "6.0": "2025-12-03",
+            "6.1": "2026-04-01",
+            "6.1.1": "2026-05-05",
+        },
+        "django-crispy-forms": {
+            "2.6": "2025-08-01",
+            "2.7": "2026-02-02",
+            "2.7.1": "2026-03-03",
+        },
+        "daisyui": {
+            "5.0.0": "2025-03-01",
+            "5.7.0": "2026-06-01",
+            "5.7.1": "2026-06-20",
+        },
+    }
+
+
+def outstanding_in(listings):
+    return Window.from_mapping(CURRENT).outstanding(
+        listings["django"], listings["django-crispy-forms"], listings["daisyui"]
+    )
+
+
+def index_payload(listing):
+    return {
+        "releases": {
+            version: [{"upload_time_iso_8601": f"{day}T10:00:00.000000Z"}]
+            for version, day in listing.items()
+        }
+    }
+
+
+def served(listings, **failing):
+    payloads = {
+        SOURCES["django"]: index_payload(listings["django"]),
+        SOURCES["django-crispy-forms"]: index_payload(listings["django-crispy-forms"]),
+        SOURCES["daisyui"]: {
+            "time": {
+                "created": "2025-01-01T00:00:00.000Z",
+                "modified": "2026-07-01T00:00:00.000Z",
+                **{
+                    version: f"{day}T10:00:00.000Z"
+                    for version, day in listings["daisyui"].items()
+                },
+            }
+        },
+    }
+    for package, broken in failing.items():
+        payloads[SOURCES[package.replace("_", "-")]] = broken
+
+    def fetch(url):
+        payload = payloads[url]
+        if isinstance(payload, Exception):
+            raise payload
+        return payload
+
+    return fetch
+
+
+class TestFinalReleases:
+    def test_a_version_has_the_date_of_its_earliest_file(self):
+        payload = {
+            "releases": {
+                "6.1": [
+                    {"upload_time_iso_8601": "2026-04-01T10:00:00.000000Z"},
+                    {"upload_time_iso_8601": "2026-03-30T09:00:00.000000Z"},
+                ]
+            }
+        }
+
+        assert final_releases(payload, "django") == {"6.1": "2026-03-30"}
+
+    def test_pre_releases_of_the_package_index_are_left_out(self):
+        payload = {
+            "releases": {
+                version: [{"upload_time_iso_8601": "2026-04-01T10:00:00.000000Z"}]
+                for version in ("6.2a1", "6.2b1", "6.2rc1", "6.1")
+            }
+        }
+
+        assert set(final_releases(payload, "django")) == {"6.1"}
+
+    def test_a_version_with_no_files_is_left_out(self):
+        payload = {
+            "releases": {
+                "6.2": [],
+                "6.1": [{"upload_time_iso_8601": "2026-04-01T10:00:00Z"}],
+            }
+        }
+
+        assert set(final_releases(payload, "django")) == {"6.1"}
+
+    def test_the_npm_registry_leaves_out_pre_releases_and_its_own_entries(self):
+        payload = {
+            "time": {
+                "created": "2025-01-01T00:00:00.000Z",
+                "modified": "2026-07-01T00:00:00.000Z",
+                "5.6.0-beta.0": "2026-05-01T00:00:00.000Z",
+                "5.6.0": "2026-05-20T08:00:00.000Z",
+            }
+        }
+
+        assert final_releases(payload, "daisyui") == {"5.6.0": "2026-05-20"}
+
+    @pytest.mark.parametrize(
+        ("payload", "package"),
+        [
+            ({}, "django"),
+            ({"releases": []}, "django"),
+            ({"releases": {"6.1": "2026-04-01"}}, "django"),
+            ({"releases": {"6.1": [{}]}}, "django"),
+            ({"releases": {"6.1": [{"upload_time_iso_8601": 7}]}}, "django"),
+            ([], "django-crispy-forms"),
+            ({}, "daisyui"),
+            ({"time": ["5.7.0"]}, "daisyui"),
+            ({"time": {"5.7.0": 7}}, "daisyui"),
+        ],
+    )
+    def test_a_payload_that_is_not_the_shape_expected_raises(self, payload, package):
+        with pytest.raises(ValueError):
+            final_releases(payload, package)
+
+
+class TestOutstanding:
+    def test_a_window_naming_the_newest_of_each_has_nothing_outstanding(self, listings):
+        assert outstanding_in(listings) == []
+
+    def test_a_django_series_the_window_does_not_name_is_outstanding(self, listings):
+        listings["django"]["6.2"] = "2026-10-01"
+        listings["django"]["6.2.1"] = "2026-11-05"
+
+        (missing,) = outstanding_in(listings)
+
+        assert (missing.package, missing.version) == ("django", "6.2")
+        assert missing.released == "2026-10-01"
+        assert not missing.new_major
+
+    def test_a_django_series_is_reported_once_with_its_first_release(self, listings):
+        listings["django"]["6.2.1"] = "2026-11-05"
+        listings["django"]["6.2"] = "2026-10-01"
+        listings["django"]["6.2.2"] = "2026-12-05"
+
+        assert [m.version for m in outstanding_in(listings)] == ["6.2"]
+
+    def test_a_new_django_major_version_is_outstanding_without_new_major(
+        self, listings
+    ):
+        listings["django"]["7.0"] = "2026-12-01"
+
+        (missing,) = outstanding_in(listings)
+
+        assert (missing.package, missing.version) == ("django", "7.0")
+        assert not missing.new_major
+
+    def test_every_newer_django_series_is_outstanding(self, listings):
+        listings["django"]["6.2"] = "2026-10-01"
+        listings["django"]["7.0"] = "2026-12-01"
+
+        assert [m.version for m in outstanding_in(listings)] == ["6.2", "7.0"]
+
+    def test_a_crispy_forms_feature_release_the_window_does_not_name_is_outstanding(
+        self, listings
+    ):
+        listings["django-crispy-forms"]["2.8"] = "2026-09-01"
+
+        (missing,) = outstanding_in(listings)
+
+        assert (missing.package, missing.version) == ("django-crispy-forms", "2.8")
+        assert missing.released == "2026-09-01"
+        assert not missing.new_major
+
+    def test_a_daisyui_minor_release_the_window_does_not_name_is_outstanding(
+        self, listings
+    ):
+        listings["daisyui"]["5.8.0"] = "2026-09-10"
+        listings["daisyui"]["5.8.1"] = "2026-09-20"
+
+        (missing,) = outstanding_in(listings)
+
+        assert (missing.package, missing.version) == ("daisyui", "5.8")
+        assert missing.released == "2026-09-10"
+        assert not missing.new_major
+
+    def test_a_new_crispy_forms_major_version_is_returned_with_new_major(
+        self, listings
+    ):
+        listings["django-crispy-forms"]["3.0"] = "2026-09-01"
+
+        (missing,) = outstanding_in(listings)
+
+        assert (missing.package, missing.version) == ("django-crispy-forms", "3.0")
+        assert missing.new_major
+
+    def test_a_new_daisyui_major_version_is_returned_with_new_major(self, listings):
+        listings["daisyui"]["6.0.0"] = "2026-09-01"
+
+        (missing,) = outstanding_in(listings)
+
+        assert (missing.package, missing.version) == ("daisyui", "6.0")
+        assert missing.new_major
+
+    def test_a_later_major_version_is_reported_once_at_its_first_series(self, listings):
+        listings["daisyui"]["6.0.0"] = "2026-09-01"
+        listings["daisyui"]["6.1.0"] = "2026-10-01"
+
+        assert [m.version for m in outstanding_in(listings)] == ["6.0"]
+
+    def test_a_newer_patch_release_of_a_named_version_is_not_outstanding(
+        self, listings
+    ):
+        listings["django"]["6.1.2"] = "2026-06-01"
+        listings["daisyui"]["5.7.48"] = "2026-08-01"
+
+        assert outstanding_in(listings) == []
+
+    def test_a_listing_with_no_releases_has_nothing_outstanding(self, listings):
+        listings["django"] = {}
+
+        assert outstanding_in(listings) == []
+
+
+class TestReportReleases:
+    def test_nothing_outstanding_returns_0(self, listings):
+        lines = []
+
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings), out=lines.append
+        )
+
+        assert status == 0
+
+    def test_a_missing_release_returns_1_and_a_line_holds_its_package_and_version(
+        self, listings
+    ):
+        listings["daisyui"]["5.8.0"] = "2026-09-10"
+        lines = []
+
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings), out=lines.append
+        )
+
+        assert status == 1
+        assert any("daisyui" in line and "5.8" in line for line in lines)
+
+    def test_a_new_major_version_alone_returns_0_and_a_line_holds_it(self, listings):
+        listings["django-crispy-forms"]["3.0"] = "2026-09-01"
+        lines = []
+
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings), out=lines.append
+        )
+
+        assert status == 0
+        assert any("django-crispy-forms" in line and "3.0" in line for line in lines)
+
+    def test_a_new_major_version_does_not_hide_a_missing_release(self, listings):
+        listings["daisyui"]["6.0.0"] = "2026-09-01"
+        listings["django"]["6.2"] = "2026-10-01"
+
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings), out=lambda line: None
+        )
+
+        assert status == 1
+
+    def test_a_fetch_that_raises_oserror_returns_2_and_a_line_names_the_package(
+        self, listings
+    ):
+        lines = []
+
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings, django=OSError("no route")), out=lines.append
+        )
+
+        assert status == 2
+        assert len(lines) == 1
+        assert "django" in lines[0]
+
+    def test_a_payload_that_is_not_the_shape_expected_returns_2(self, listings):
+        lines = []
+
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings, daisyui={"unexpected": True}), out=lines.append
+        )
+
+        assert status == 2
+        assert len(lines) == 1
+        assert "daisyui" in lines[0]
+
+    def test_an_answer_that_is_not_json_returns_2(self, listings):
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings, django=ValueError("not json")),
+            out=lambda line: None,
+        )
+
+        assert status == 2
+
+    def test_a_failing_source_beside_a_missing_release_returns_2_and_prints_both(
+        self, listings
+    ):
+        listings["django"]["6.2"] = "2026-10-01"
+        lines = []
+
+        status = Window.from_mapping(CURRENT).report_releases(
+            fetch=served(listings, daisyui=OSError("no route")), out=lines.append
+        )
+
+        assert status == 2
+        assert any("django" in line and "6.2" in line for line in lines)
+        assert any("daisyui" in line for line in lines)
+
+    def test_every_source_is_asked_for_once(self, listings):
+        asked = []
+        inner = served(listings)
+
+        def fetch(url):
+            asked.append(url)
+            return inner(url)
+
+        Window.from_mapping(CURRENT).report_releases(fetch=fetch, out=lambda line: None)
+
+        assert sorted(asked) == sorted(SOURCES.values())
+
+
+class TestMainReleases:
+    def test_the_releases_command_returns_the_status_of_the_report(
+        self, tmp_path, listings
+    ):
+        declaration = tmp_path / "window.toml"
+        declaration.write_text(DECLARATION_TEXT)
+
+        status = main(["releases"], declaration=declaration, fetch=served(listings))
+
+        assert status == 1
+
+    def test_the_releases_command_returns_2_when_a_source_fails(
+        self, tmp_path, listings
+    ):
+        declaration = tmp_path / "window.toml"
+        declaration.write_text(DECLARATION_TEXT)
+
+        status = main(
+            ["releases"],
+            declaration=declaration,
+            fetch=served(listings, django=OSError("no route")),
+        )
+
+        assert status == 2

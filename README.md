@@ -1134,6 +1134,23 @@ django-crispy-forms it ran on, and a run that finds other versions than the ones
 stops before the first test with a usage error. A pair the window does not offer runs nothing and
 exits with a failing status.
 
+`uv run python support_window.py releases` asks the package index for Django and
+django-crispy-forms and the npm registry for daisyUI, and says whether a final release exists that
+the window does not name. It prints one line for each Django series, django-crispy-forms feature
+release and daisyUI minor release newer than the newest the window names, with the day it was
+first released. Its exit status is:
+
+- `0` when nothing is outstanding.
+- `1` when at least one such release is missing from the window.
+- `2` when a source could not be reached or its answer could not be read. The output names the
+  package it could not find out about and does not say the window is current.
+
+A new major version of django-crispy-forms or daisyUI is printed and does not change the status.
+Every newer Django series counts, including a new major version. Pre-releases are ignored. The
+command uses the network and the test suite never runs it. It is run by hand, because running it
+on a schedule needs a workflow, which is tracked in
+[issue 92](https://github.com/django-mvp/django-mvp-forms/issues/92).
+
 The test workflow runs every Django series and Python version named in the window, and the one
 django-crispy-forms release named today. Naming a second django-crispy-forms release needs the
 workflow to read its versions from the declaration, which is tracked in

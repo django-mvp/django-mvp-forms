@@ -26,6 +26,11 @@ ASKED = {
 }
 SUITE_ARGUMENTS = ("-n", "auto", "--dist", "loadscope")
 PACKAGES = ("django", "django-crispy-forms", "daisyui")
+SOURCES = {
+    "django": "https://pypi.org/pypi/Django/json",
+    "django-crispy-forms": "https://pypi.org/pypi/django-crispy-forms/json",
+    "daisyui": "https://registry.npmjs.org/daisyui",
+}
 
 VERSION = re.compile(r"\d+\.\d+")
 CLAUSE = re.compile(r"\s*(==|!=|~=|>=|<=|>|<)\s*([\w.*]+)\s*")
@@ -51,6 +56,34 @@ RELEASE_HEADING = re.compile(r"^## \[v?([^\]]+)\]", re.M)
 STATEMENT = re.compile(r"<!-- support-window -->.*<!-- /dropped-versions -->", re.S)
 LINK_TARGET = re.compile(r"\]\(\s*<?([^)\s>]+)|href=[\"']([^\"']+)")
 ABSOLUTE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:")
+FINAL = re.compile(r"\d+(?:\.\d+)*")
+DAY = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def fetch_json(url: str) -> Any:
+    """Fetch an address and read the answer as JSON.
+
+    Args:
+        url: A fixed https address.
+
+    Returns:
+        The parsed JSON.
+    """
+    with urlopen(url, timeout=TIMEOUT) as response:  # noqa: S310 fixed https address
+        return json.load(response)
+
+
+def fetch_text(url: str) -> str:
+    """Fetch an address and read the answer as text.
+
+    Args:
+        url: An https address built from a version already matched as numbers.
+
+    Returns:
+        The text of the answer.
+    """
+    with urlopen(url, timeout=TIMEOUT) as response:  # noqa: S310 built from numbers
+        return response.read().decode("utf-8")
 
 
 class InvalidWindow(ValueError):
@@ -104,6 +137,27 @@ class Dropped:
     package: str
     version: str
     last_release: str
+
+
+@dataclass(frozen=True)
+class Outstanding:
+    """A release that the window does not name.
+
+    Args:
+        package: The package the release belongs to: ``django``,
+            ``django-crispy-forms`` or ``daisyui``.
+        version: The release series, such as ``6.2`` for Django or ``5.8`` for
+            daisyUI.
+        released: The day of the first final release of the series, such as
+            ``2026-10-01``.
+        new_major: True for the first series of a later major version of
+            django-crispy-forms or daisyUI, which is reported apart.
+    """
+
+    package: str
+    version: str
+    released: str
+    new_major: bool = False
 
 
 @dataclass(frozen=True)
@@ -695,6 +749,115 @@ class Window:
         }
         return run(command, env=environment, cwd=ROOT, check=False).returncode
 
+    def outstanding(
+        self,
+        django: Mapping[str, str],
+        crispy_forms: Mapping[str, str],
+        daisyui: Mapping[str, str],
+    ) -> list[Outstanding]:
+        """List the releases the window does not name.
+
+        Args:
+            django: The final releases of Django, as ``final_releases`` gives
+                them.
+            crispy_forms: The final releases of django-crispy-forms.
+            daisyui: The final releases of daisyUI.
+
+        Returns:
+            Every Django series newer than the newest named, every feature
+            release of django-crispy-forms and every minor release of daisyUI
+            newer than the newest named on the same major version, and the first
+            series of each later major version of the last two with
+            ``new_major`` set. A newer patch release of a named version is not
+            one of them.
+        """
+        return [
+            *self.later_series("django", django, self.django[-1], False),
+            *self.later_series(
+                "django-crispy-forms", crispy_forms, self.crispy_forms[-1], True
+            ),
+            *self.later_series("daisyui", daisyui, self.daisyui_newest, True),
+        ]
+
+    def report_releases(
+        self,
+        fetch: Callable[[str], Any] = fetch_json,
+        out: Callable[[str], object] = print,
+    ) -> int:
+        """Print the releases the window does not name and say how it ended.
+
+        Args:
+            fetch: Reads the JSON at an address, one of ``SOURCES``.
+            out: Takes each line to print.
+
+        Returns:
+            ``2`` when a source could not be reached or its answer could not be
+            read, ``1`` when a release the window does not name is outstanding,
+            and ``0`` otherwise. A new major version is printed and does not
+            change the status. A line says the window is current only when the
+            status is ``0``.
+        """
+        listings: dict[str, dict[str, str]] = {}
+        failed = False
+        for package, address in SOURCES.items():
+            try:
+                listings[package] = final_releases(fetch(address), package)
+            except (OSError, ValueError) as error:
+                failed = True
+                out(f"{package}: could not find out ({type(error).__name__})")
+                listings[package] = {}
+        found = self.outstanding(
+            listings["django"], listings["django-crispy-forms"], listings["daisyui"]
+        )
+        for release in found:
+            kind = "new major version" if release.new_major else "release"
+            out(f"{release.package} {release.version}: {kind} of {release.released}")
+        if failed:
+            return 2
+        if any(not release.new_major for release in found):
+            return 1
+        out("The window names the newest release of each package.")
+        return 0
+
+    @staticmethod
+    def later_series(
+        package: str,
+        releases: Mapping[str, str],
+        newest: str,
+        major_is_new: bool,
+    ) -> list[Outstanding]:
+        """List the release series of a package that are newer than one.
+
+        Args:
+            package: The package the releases belong to.
+            releases: Each final release with the day it was published.
+            newest: The newest series the window names, such as ``2.7``.
+            major_is_new: True when a later major version is reported apart,
+                once, at its first series. False when every later series is
+                reported.
+
+        Returns:
+            One outstanding release for each series newer than ``newest``,
+            oldest first, dated by the first final release of the series.
+        """
+        first: dict[str, str] = {}
+        for version, released in releases.items():
+            series = Window.series(version)
+            if VERSION.fullmatch(series) and Window.numbers(series) > Window.numbers(
+                newest
+            ):
+                first[series] = min(released, first.get(series, released))
+        found = []
+        majors: set[int] = set()
+        for series in sorted(first, key=Window.numbers):
+            major = Window.numbers(series)[0]
+            new_major = major_is_new and major > Window.numbers(newest)[0]
+            if new_major and major in majors:
+                continue
+            majors.add(major)
+            found.append(Outstanding(package, series, first[series], new_major))
+        return found
+
     @staticmethod
     def series(version: str) -> str:
         """Reduce a version to its release series.
@@ -871,30 +1034,44 @@ class MissingClassList(LookupError):
         self.version = version
 
 
-def fetch_json(url: str) -> Any:
-    """Fetch an address and read the answer as JSON.
+def final_releases(payload: Any, source: str) -> dict[str, str]:
+    """Read the final releases of a package from the answer of its source.
+
+    A final release is a version of digits and dots, so ``6.2a1`` and
+    ``5.8.0-beta.0`` are left out, and so are the ``created`` and ``modified``
+    entries that the npm registry keeps beside its versions.
 
     Args:
-        url: A fixed https address.
+        payload: The JSON of the package index for Django and
+            django-crispy-forms, or of the npm registry for daisyUI.
+        source: The package the payload is for, a key of ``SOURCES``.
 
     Returns:
-        The parsed JSON.
+        Each final release with the day it was first published. For the package
+        index that is the day of the earliest file of the release, and a release
+        with no files is left out.
+
+    Raises:
+        ValueError: The payload is not the shape the source gives.
     """
-    with urlopen(url, timeout=TIMEOUT) as response:  # noqa: S310 fixed https address
-        return json.load(response)
-
-
-def fetch_text(url: str) -> str:
-    """Fetch an address and read the answer as text.
-
-    Args:
-        url: An https address built from a version already matched as numbers.
-
-    Returns:
-        The text of the answer.
-    """
-    with urlopen(url, timeout=TIMEOUT) as response:  # noqa: S310 built from numbers
-        return response.read().decode("utf-8")
+    try:
+        if source == "daisyui":
+            stamps = {version: [stamp] for version, stamp in payload["time"].items()}
+        else:
+            stamps = {
+                version: [file["upload_time_iso_8601"] for file in files]
+                for version, files in payload["releases"].items()
+            }
+        days = {
+            version: min(stamp[:10] for stamp in times)
+            for version, times in stamps.items()
+            if FINAL.fullmatch(version) and times
+        }
+    except (AttributeError, KeyError, TypeError) as error:
+        raise ValueError(f"{source}: the answer is not the shape expected") from error
+    if not all(DAY.fullmatch(day) for day in days.values()):
+        raise ValueError(f"{source}: a release has no readable date")
+    return days
 
 
 def class_names(stylesheet: str) -> set[str]:
@@ -985,6 +1162,7 @@ def main(
     argv: Sequence[str] | None = None,
     run: Callable[..., Any] = subprocess.run,
     declaration: Path = DECLARATION,
+    fetch: Callable[[str], Any] = fetch_json,
 ) -> int:
     """Run a command of this module.
 
@@ -993,6 +1171,7 @@ def main(
             arguments the program was started with.
         run: Runs a command, for the ``test`` command.
         declaration: The file that declares the window.
+        fetch: Reads the JSON at an address, for the ``releases`` command.
 
     Returns:
         The exit status.
@@ -1013,6 +1192,10 @@ def main(
         nargs=argparse.REMAINDER,
         help="arguments for pytest, which replace the default of running in parallel",
     )
+    commands.add_parser(
+        "releases",
+        help="say whether a release exists that the window does not name",
+    )
     classes = commands.add_parser(
         "classes", help="write the class list of a daisyUI version"
     )
@@ -1021,6 +1204,8 @@ def main(
     if arguments.command == "classes":
         print(write_class_list(arguments.version))
         return 0
+    if arguments.command == "releases":
+        return Window.read(declaration).report_releases(fetch=fetch)
     return Window.read(declaration).run_suite(
         arguments.django,
         arguments.crispy_forms,
