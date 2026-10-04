@@ -53,6 +53,21 @@
       </section>
       <section class="card card-border bg-base-100">
         <div class="card-body">
+          <h2 class="card-title">A modal's and an alert's own buttons</h2>
+          <p>
+            The pack draws the button that dismisses an alert and the button that closes a
+            modal. Both take the form's size, like the form's other buttons, and no colour
+            or variant.
+          </p>
+          {% for container in containers %}
+            <h3 class="font-semibold">{{ container.title }}</h3>
+            {% crispy container.form %}
+            <button type="button" class="btn self-start" onclick="document.getElementById('{{ container.form.dialog_id }}').showModal()">Edit the address</button>
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
           <h2 class="card-title">Overriding what the form states</h2>
           <p>
             The form states a size, a colour and a variant. One field overrides them in its

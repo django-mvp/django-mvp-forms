@@ -4,7 +4,7 @@
     <h3 id="{{ modal.title_id }}-label"{% if modal.title_class %} class="{{ modal.title_class }}"{% endif %}>{{ modal.title }}</h3>
     {{ fields }}
     <div class="modal-action">
-      <button type="button" class="btn" onclick="this.closest('dialog').close()">{% translate "Close" %}</button>
+      <button type="button" class="btn daisyui-size" onclick="this.closest('dialog').close()">{% translate "Close" %}</button>
     </div>
   </div>
 </dialog>

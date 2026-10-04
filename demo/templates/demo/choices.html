@@ -34,6 +34,19 @@
     {% crispy variant_form %}
     {% crispy buttons_form %}
   </c-section>
+  <c-section title="A modal's and an alert's own buttons" level="3">
+    <c-text>
+      The pack draws the button that dismisses an alert and the button that closes
+      a modal. Both take the form's size, like the form's other buttons, and no
+      colour or variant.
+    </c-text>
+    {% for container in containers %}
+      <c-section :title="container.title" level="4">
+        {% crispy container.form %}
+        <c-button type="button" text="Edit the address" onclick="document.getElementById('{{ container.form.dialog_id }}').showModal()" />
+      </c-section>
+    {% endfor %}
+  </c-section>
   <c-section title="Overriding what the form states" level="3">
     <c-text>
       The form states a size, a colour and a variant. One field overrides them in its

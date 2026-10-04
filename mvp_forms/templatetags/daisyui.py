@@ -16,7 +16,14 @@ from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
 from django.utils.translation import gettext_lazy
 
-from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice, Modifiers
+from mvp_forms.choices import (
+    INHERIT,
+    Choice,
+    FormChoices,
+    InvalidChoice,
+    Modifiers,
+    write_size,
+)
 from mvp_forms.deprecation import host_template
 from mvp_forms.layout import InvalidMember
 
@@ -1052,6 +1059,56 @@ def daisyui_button(context: Context, button: Any) -> DrawnButton:
         choices=FormChoices.lookup(context),
         placed=placed if isinstance(placed, Choice) else None,
     )
+
+
+@register.simple_tag(takes_context=True)
+def daisyui_button_size(context: Context, ordinary: str = "") -> str:
+    """Return the size class of a button the pack draws inside a layout object.
+
+    Used for the control that dismisses an ``Alert``, which belongs to the
+    alert and so takes the size alone, never a button's colour or variant.
+
+    Args:
+        context: The template context, read for the form's statement of
+            choices and for the choice of a layout around the object.
+        ordinary: The class written when no size is stated, or when None is.
+
+    Returns:
+        The class of the size a ``Choice`` around the object states, or failing
+        that of the form's, or ``ordinary``.
+
+    Raises:
+        InvalidChoice: The size stated is not one daisyUI has.
+    """
+    choices = FormChoices.lookup(context) or FormChoices()
+    placed = context.get(Choice.context_name)
+    modifier = Modifiers.resolve(
+        "size",
+        Modifiers.button,
+        own=placed.size if isinstance(placed, Choice) else INHERIT,
+        form=choices.size,
+    )
+    return modifier or ordinary
+
+
+@register.simple_tag(takes_context=True)
+def daisyui_sized(context: Context, drawn: str) -> str:
+    """Write the form's size on every button in a drawn layout that waits for one.
+
+    A ``Modal`` is drawn by django-crispy-forms with no context, so its close
+    button is drawn waiting for a size. A ``Choice`` around the modal has
+    written its own by now, and the form's is written on the rest here.
+
+    Args:
+        context: The template context, read for the form's statement of choices.
+        drawn: The markup of a form's layout.
+
+    Returns:
+        The markup with the form's size written in, or with no size where the
+        form states none.
+    """
+    choices = FormChoices.lookup(context)
+    return write_size(drawn, choices.size if choices else None)
 
 
 @register.simple_tag(takes_context=True)

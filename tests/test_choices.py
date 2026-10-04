@@ -5,13 +5,16 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import LayoutObject
 from django import forms
 from django.template import Context
+from django.utils.safestring import SafeString
 
 from mvp_forms.choices import (
     INHERIT,
+    SIZE_PLACEHOLDER,
     Choice,
     FormChoices,
     InvalidChoice,
     Modifiers,
+    write_size,
 )
 
 INPUT_COMPONENTS = ["input", "textarea", "select", "file-input", "checkbox", "radio"]
@@ -687,3 +690,77 @@ class TestFormChoicesLabel:
     def test_lookup_checks_the_label_it_finds_on_the_helper(self):
         with pytest.raises(InvalidChoice):
             FormChoices.lookup(Context(), HelpedForm(FormChoices(label="sliding")))
+
+
+WAITING = f"<button {SIZE_PLACEHOLDER}></button>"
+
+
+def waiting_button():
+    return SafeString(WAITING)
+
+
+class Waiting(LayoutObject):
+    def render(self, form, context, template_pack="daisyui", **kwargs):
+        return waiting_button()
+
+
+class TestWriteSize:
+    def test_a_size_is_written_where_a_button_waits_for_one(self):
+        assert write_size(waiting_button(), "sm") == (
+            '<button class="btn btn-sm"></button>'
+        )
+
+    def test_none_leaves_the_button_with_no_size(self):
+        assert write_size(waiting_button(), None) == '<button class="btn"></button>'
+
+    def test_every_waiting_button_is_written(self):
+        written = write_size(waiting_button() + waiting_button(), "lg")
+
+        assert written.count("btn-lg") == 2
+        assert SIZE_PLACEHOLDER not in written
+
+    def test_safe_markup_stays_safe(self):
+        assert isinstance(write_size(waiting_button(), "sm"), SafeString)
+
+    def test_markup_that_was_not_safe_is_not_made_safe(self):
+        assert not isinstance(write_size(WAITING, "sm"), SafeString)
+
+    def test_a_size_daisyui_does_not_have_is_refused(self):
+        with pytest.raises(InvalidChoice) as raised:
+            write_size(waiting_button(), "huge")
+
+        assert raised.value.kind == "size"
+
+    def test_markup_with_no_waiting_button_is_returned_unchecked(self):
+        assert write_size("<p></p>", "huge") == "<p></p>"
+
+
+class TestChoiceRenderSize:
+    def test_its_size_is_written_on_a_button_that_waits_for_one(self):
+        html = Choice(Waiting(), size="lg").render(
+            None, Context(), template_pack="daisyui"
+        )
+
+        assert html == '<button class="btn btn-lg"></button>'
+        assert isinstance(html, SafeString)
+
+    def test_a_choice_that_states_no_size_leaves_the_button_waiting(self):
+        html = Choice(Waiting(), color="primary").render(
+            None, Context(), template_pack="daisyui"
+        )
+
+        assert SIZE_PLACEHOLDER in html
+
+    def test_the_inner_of_two_choices_is_the_one_written(self):
+        html = Choice(Choice(Waiting(), size="xs"), size="lg").render(
+            None, Context(), template_pack="daisyui"
+        )
+
+        assert html == '<button class="btn btn-xs"></button>'
+
+    def test_an_outer_size_reaches_through_a_choice_that_states_none(self):
+        html = Choice(Choice(Waiting(), color="primary"), size="lg").render(
+            None, Context(), template_pack="daisyui"
+        )
+
+        assert html == '<button class="btn btn-lg"></button>'

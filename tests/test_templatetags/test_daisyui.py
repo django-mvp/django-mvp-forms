@@ -14,7 +14,13 @@ from django.test import override_settings
 from django.utils.functional import Promise, lazy
 from django.utils.safestring import SafeString, mark_safe
 
-from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice
+from mvp_forms.choices import (
+    INHERIT,
+    SIZE_PLACEHOLDER,
+    Choice,
+    FormChoices,
+    InvalidChoice,
+)
 from mvp_forms.deprecation import WITHDRAWN
 from mvp_forms.layout import InvalidMember
 from mvp_forms.templatetags.daisyui import (
@@ -24,10 +30,12 @@ from mvp_forms.templatetags.daisyui import (
     FieldInput,
     FormsetTable,
     daisyui_button,
+    daisyui_button_size,
     daisyui_classes,
     daisyui_field,
     daisyui_formset_table,
     daisyui_shown,
+    daisyui_sized,
     daisyui_tab_group,
 )
 from tests.conftest import clear_crispy_template_caches
@@ -1218,6 +1226,69 @@ class TestDaisyuiButton:
         drawn = daisyui_button(Context(), Submit("act", "Go"))
 
         assert set(drawn.css_class.split()) == {"btn", "btn-primary"}
+
+
+class TestDaisyuiButtonSize:
+    def test_the_form_s_size_is_returned_as_a_button_s_class(self):
+        context = Context({"daisyui": FormChoices(size="lg")})
+
+        assert daisyui_button_size(context, "btn-sm") == "btn-lg"
+
+    def test_the_choice_a_layout_placed_in_the_context_wins(self):
+        context = Context(
+            {"daisyui": FormChoices(size="lg"), "daisyui_choice": Choice(size="xs")}
+        )
+
+        assert daisyui_button_size(context, "btn-sm") == "btn-xs"
+
+    def test_with_nothing_stated_the_ordinary_class_is_returned(self):
+        assert daisyui_button_size(Context(), "btn-sm") == "btn-sm"
+        assert daisyui_button_size(Context()) == ""
+
+    def test_none_in_the_choice_is_the_ordinary_class(self):
+        context = Context(
+            {"daisyui": FormChoices(size="lg"), "daisyui_choice": Choice(size=None)}
+        )
+
+        assert daisyui_button_size(context, "btn-sm") == "btn-sm"
+
+    def test_a_context_value_that_is_not_a_statement_is_the_pages_own(self):
+        context = Context({"daisyui": "the page's own", "daisyui_choice": 3})
+
+        assert daisyui_button_size(context, "btn-sm") == "btn-sm"
+
+    def test_a_size_daisyui_does_not_have_is_refused(self):
+        context = Context({"daisyui_choice": Choice(size="huge")})
+
+        with pytest.raises(InvalidChoice):
+            daisyui_button_size(context)
+
+
+class TestDaisyuiSized:
+    markup = f"<button {SIZE_PLACEHOLDER}></button>"
+
+    def waiting(self):
+        return SafeString(self.markup)
+
+    def test_the_form_s_size_is_written_on_a_waiting_button(self):
+        context = Context({"daisyui": FormChoices(size="sm")})
+
+        assert daisyui_sized(context, self.waiting()) == (
+            '<button class="btn btn-sm"></button>'
+        )
+
+    def test_a_form_that_states_nothing_leaves_the_button_with_no_size(self):
+        assert daisyui_sized(Context(), self.waiting()) == (
+            '<button class="btn"></button>'
+        )
+
+    def test_markup_that_is_not_safe_is_escaped_when_drawn(self, draw):
+        soup = draw(
+            "{% load daisyui %}{% daisyui_sized markup %}",
+            markup=self.markup,
+        )
+
+        assert soup.find("button") is None
 
 
 def tab_radio(checked=False):

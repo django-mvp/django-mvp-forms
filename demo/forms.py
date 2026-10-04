@@ -665,6 +665,39 @@ class PlainButtonsForm(ChosenForm):
         )
 
 
+class ContainerButtonsForm(ChosenForm):
+    """A form with an alert and a modal, whose own buttons take the form's size.
+
+    The pack draws the alert's dismiss button and the modal's close button. The
+    pack draws nothing that opens the modal: the page does, by ``dialog_id``.
+    The form must be given a prefix.
+    """
+
+    name = forms.CharField(label=_("Name"), required=False)
+    street = forms.CharField(label=_("Street"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id and button name."""
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper.layout = Layout(
+            Alert(_("A notice the reader can dismiss."), css_id=f"{prefix}-notice"),
+            "name",
+            Modal(
+                "street",
+                css_id=self.dialog_id,
+                title=_("Address"),
+                title_id=f"{prefix}-title",
+            ),
+            FormActions(Submit(f"{prefix}-save", _("Save"))),
+        )
+
+    @property
+    def dialog_id(self):
+        """The id of the modal's dialog, for the control that opens it."""
+        return f"{self.prefix}-dialog"
+
+
 class OverrideForm(ChosenForm):
     """A form that states choices and then overrides them in each way there is.
 

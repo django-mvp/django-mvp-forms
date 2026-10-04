@@ -22,6 +22,7 @@ from demo.forms import (
     ButtonBarForm,
     ChoiceInputsForm,
     ChosenGroupsForm,
+    ContainerButtonsForm,
     DrawingOverrideForm,
     DrawingsForm,
     DrawingStateForm,
@@ -786,6 +787,7 @@ class ChoicesMixin:
 
     inputs_size = "md"
     inputs_variant = "ghost"
+    container_sizes = ("sm", "lg")
 
     def build_sizes(self):
         """Build one small form for each size in the table.
@@ -818,10 +820,27 @@ class ChoicesMixin:
             for name in Modifiers.names("color", None)
         ]
 
+    def build_containers(self):
+        """Build one form holding an alert and a modal for each of two sizes.
+
+        Returns:
+            A list of dicts holding each size's name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": ContainerButtonsForm(
+                    prefix=f"containers-{name}", choices=FormChoices(size=name)
+                ),
+            }
+            for name in self.container_sizes
+        ]
+
     def get_context_data(self, **kwargs):
         """Add the generated forms and the ones that state several choices."""
         kwargs["sizes"] = self.build_sizes()
         kwargs["colors"] = self.build_colors()
+        kwargs["containers"] = self.build_containers()
         kwargs["inputs_size"] = self.inputs_size
         kwargs["inputs_form"] = InputKindsForm(
             prefix="inputs", choices=FormChoices(size=self.inputs_size)

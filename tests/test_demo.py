@@ -1961,6 +1961,10 @@ def modifier_classes(kind, name, components):
     return {Modifiers.tables[kind][component][name] for component in components}
 
 
+CHOICES_CONTAINERS_PREFIX = "containers"
+CHOICES_CONTAINER_SIZES = ["sm", "lg"]
+
+
 class ChoicesPageContract:
     url_name = ""
 
@@ -2001,6 +2005,31 @@ class ChoicesPageContract:
         field = page.find(id=f"id_{CHOICES_OVERRIDE_PREFIX}-notes")
         assert Modifiers.colors["textarea"]["primary"] not in field["class"]
         assert Modifiers.sizes["textarea"]["sm"] in field["class"]
+
+    @pytest.mark.parametrize("size", CHOICES_CONTAINER_SIZES)
+    def test_a_modal_s_and_an_alert_s_own_buttons_take_the_form_s_size(
+        self, page, size
+    ):
+        prefix = f"{CHOICES_CONTAINERS_PREFIX}-{size}"
+        expected = Modifiers.sizes["btn"][size]
+        close = page.find("dialog", id=f"{prefix}-dialog").find("button")
+        dismiss = page.find(id=f"{prefix}-notice").find("button")
+        save = page.find(attrs={"name": f"{prefix}-save"})
+
+        assert expected in close["class"]
+        assert expected in dismiss["class"]
+        assert expected in save["class"]
+
+    @pytest.mark.parametrize("size", CHOICES_CONTAINER_SIZES)
+    def test_a_button_on_the_page_opens_each_sized_modal(self, page, size):
+        dialog_id = f"{CHOICES_CONTAINERS_PREFIX}-{size}-dialog"
+
+        assert [
+            button
+            for button in page.find_all("button", onclick=True)
+            if f"'{dialog_id}'" in button["onclick"]
+            and button.find_parent("dialog") is None
+        ]
 
     def test_no_form_element_surrounds_a_form(self, page):
         field = page.find(id=f"id_{CHOICES_OVERRIDE_PREFIX}-search")

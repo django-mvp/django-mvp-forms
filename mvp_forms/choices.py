@@ -1,12 +1,17 @@
 """The size, colour, variant, drawing and label a form states, and what they mean."""
 
 from enum import Enum
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 from crispy_forms.layout import LayoutObject
 from crispy_forms.utils import TEMPLATE_PACK
 from django.template import Context
-from django.utils.safestring import SafeString
+from django.utils.safestring import SafeData, SafeString
+
+# The class attribute layout/modal.html writes on its close button. A modal is
+# drawn with no context, so what is drawn around it writes the size in. The
+# quotes keep a value a person typed, which is escaped, from ever matching.
+SIZE_PLACEHOLDER = 'class="btn daisyui-size"'
 
 
 class Inherit(Enum):
@@ -362,6 +367,28 @@ class Modifiers:
         return modifiers[value]
 
 
+def write_size(drawn: str, size: str | None) -> str:
+    """Write a size on every button in the markup that is waiting for one.
+
+    Args:
+        drawn: Markup that may hold ``SIZE_PLACEHOLDER``.
+        size: The size stated, or None for the pack's ordinary drawing.
+
+    Returns:
+        The markup with each waiting button given the size's class, or no
+        size when the size is None. Safe when ``drawn`` was.
+
+    Raises:
+        InvalidChoice: A button is waiting and the size is not one daisyUI has.
+    """
+    if SIZE_PLACEHOLDER not in drawn:
+        return drawn
+    modifier = Modifiers.resolve("size", Modifiers.button, own=size)
+    names = " ".join(filter(None, [Modifiers.button, modifier]))
+    written = drawn.replace(SIZE_PLACEHOLDER, f'class="{names}"')
+    return SafeString(written) if isinstance(drawn, SafeData) else written
+
+
 class Choice(LayoutObject):
     """A size, a colour, a variant, a drawing and a label stated for one field.
 
@@ -369,7 +396,8 @@ class Choice(LayoutObject):
     and None is the pack's ordinary drawing, which undoes it.
 
     In a layout it draws what it holds, at any depth, with itself placed in the
-    context under ``context_name``, merged over any ``Choice`` around it. Holding
+    context under ``context_name``, merged over any ``Choice`` around it. Its
+    size is also written on the close button of a ``Modal`` it holds. Holding
     nothing, it is the value in ``FormChoices(fields=...)``.
 
     Args:
@@ -444,6 +472,10 @@ class Choice(LayoutObject):
 
         Returns:
             The markup of what the choice holds, in order.
+
+        Raises:
+            InvalidChoice: The choice holds a ``Modal`` and states a size that
+                is not one daisyUI has.
         """
         outer = context.get(self.context_name)
         placed = self.over(outer) if isinstance(outer, Choice) else self
@@ -452,7 +484,9 @@ class Choice(LayoutObject):
             drawn: SafeString = self.get_rendered_fields(
                 form, context, template_pack, **kwargs
             )
-            return drawn
+            if placed.size is INHERIT:
+                return drawn
+            return cast(SafeString, write_size(drawn, placed.size))
         finally:
             for index in range(len(context.dicts) - 1, -1, -1):
                 if context.dicts[index] is layer:
