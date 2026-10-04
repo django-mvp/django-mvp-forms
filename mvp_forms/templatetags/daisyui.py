@@ -18,6 +18,7 @@ from django.utils.translation import gettext_lazy
 
 from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice, Modifiers
 from mvp_forms.deprecation import host_template
+from mvp_forms.layout import InvalidMember
 
 register = template.Library()
 
@@ -64,7 +65,7 @@ class FieldInput:
             named by an ``aria-label``.
         show_errors: Whether the form draws errors. Without them the input has
             no error modifier and no description naming the error element.
-        choices: The form's statement of size, colour and variant, if any.
+        choices: The form's statement of size, colour, variant and label, if any.
         placed: The ``Choice`` of a layout around the field, if any. It wins
             over the form's statement for this field, and the field's entry in
             ``choices.fields`` stands between the two.
@@ -75,19 +76,32 @@ class FieldInput:
             does not fit, and not one under another.
         join: The ``FieldWithButtons`` whose buttons are joined to the input, if
             any. Its buttons were drawn by django-crispy-forms before the field.
+            This is one field with buttons, and ``member`` is one field among
+            several in a ``Join``.
         disabled: Whether the input is drawn disabled, whatever the form field
             says. The form field and its widget are not changed.
         unlabelled: Whether the field is drawn with no visible label, named by an
             ``aria-label`` and, on a text input or a textarea, offering the label
             as its placeholder. A single checkbox keeps its label.
+        member: Whether the input is a member of a ``Join``. It is drawn with
+            no label, named by an ``aria-label``, as an item of the join, and a
+            floating label passes it over. A hidden field is not a member and is
+            drawn as it is.
 
     Raises:
-        InvalidChoice: A size, colour or variant stated for the form or the
-            field is not one daisyUI has, or the field states one its input has
-            no modifier for. A drawing the field states is not one of the
+        InvalidChoice: A size, colour, variant or label stated for the form or
+            the field is not one daisyUI has, or the field states one its input
+            has no modifier for. A drawing the field states is not one of the
             drawings its widget takes: a boolean field's three, ``"rating"``
             for a select or a radio group that holds one choice, ``"range"``
-            for a number input, and none for any other widget.
+            for a number input, and none for any other widget. A label the
+            field states is for a field that cannot float: only a lone input,
+            textarea or select can, with no attached text, joined buttons or
+            inline drawing, and never a member of a ``Join``. The form's
+            statement passes such a field over.
+        InvalidMember: A member that is not hidden is not drawn as a lone input
+            or select: any other widget, a rating, a range, a group of choices
+            or a multi-widget.
     """
 
     components: dict[type[forms.Widget], str] = {
@@ -107,6 +121,9 @@ class FieldInput:
     # Makes an input fill its field, unless the developer's own class holds a
     # width. See docs/adr/0007-inputs-fill-their-container.md.
     width = "w-full"
+    # A member of a join shares the group's width with the others: an input
+    # takes what is left and a select its own width.
+    member_widths: dict[str, str] = {"input": "flex-1", "select": "w-auto"}
     # A checkbox, a radio, a toggle and a rating are fixed-size and never widened.
     fixed_size: set[str] = {"checkbox", "radio", "toggle", "rating"}
     templates: dict[type[forms.Widget], str] = {
@@ -165,15 +182,19 @@ class FieldInput:
         join: Any = None,
         disabled: bool = False,
         unlabelled: bool = False,
+        member: bool = False,
     ) -> None:
         self.field = field
         self.choices = choices or FormChoices()
         self.own = self.own_choice(self.choices, placed)
         # A hidden field is drawn as it is, so nothing stated reaches it.
         self.drawing = None if field.is_hidden else self.resolve_drawing(self.own)
+        self.member = member
+        if self.is_member and not self.can_join:
+            raise InvalidMember(field.name)
         self.unlabelled = unlabelled
         self.show_labels = show_labels and not (
-            unlabelled and not self.is_single_checkbox
+            (unlabelled or self.is_member) and not self.is_single_checkbox
         )
         self.show_errors = show_errors
         self.wrapper_class = wrapper_class
@@ -182,6 +203,7 @@ class FieldInput:
         self.inline = inline
         self.join = join
         self.disabled = disabled
+        self.floats = self.resolve_label(self.own, self.choices)
         # A multi-widget's parts state their own choices, so the field
         # resolves none.
         self.modifiers = (
@@ -267,6 +289,41 @@ class FieldInput:
             raise InvalidChoice("drawing", drawing, allowed, self.field.name)
         return str(drawing)
 
+    def resolve_label(self, own: Choice, choices: FormChoices) -> bool:
+        """Return whether a floating label is in force for the field.
+
+        Resolved when the input is built, so a mistake is raised from the tag
+        and not from inside a template's ``{% if %}``. The field's own statement
+        wins over the form's, and None is the ordinary label.
+
+        Args:
+            own: What is stated for this field alone.
+            choices: The form's statement.
+
+        Returns:
+            True when the label is stated and the field can float. False when
+            nothing is stated, when the statement is None, for a hidden field,
+            and when the form's statement is passed over a field that cannot
+            float.
+
+        Raises:
+            InvalidChoice: See the class.
+        """
+        if self.field.is_hidden:
+            return False
+        stated_here = own.label is not INHERIT
+        value = own.label if stated_here else choices.label
+        if value is None:
+            return False
+        blamed = self.field.name if stated_here else None
+        if value not in Modifiers.labels:
+            raise InvalidChoice("label", value, tuple(Modifiers.labels), blamed)
+        if not self.can_float:
+            if stated_here:
+                raise InvalidChoice("label", value, (), blamed)
+            return False
+        return True
+
     def resolve_modifiers(
         self,
         choices: FormChoices,
@@ -310,6 +367,66 @@ class FieldInput:
             for kind in kinds
         )
         return [modifier for modifier in resolved if modifier]
+
+    @property
+    def can_float(self) -> bool:
+        """Whether the field is a lone input, textarea or select.
+
+        One with attached text, joined buttons or an inline drawing has its
+        own frame, and a group or a multi-widget is several inputs.
+        """
+        return (
+            self.component in {"input", "textarea", "select"}
+            and not self.is_group
+            and not self.is_multi_widget
+            and not self.has_attached_text
+            and not self.is_joined
+            and not self.unlabelled
+            and not self.is_member
+        )
+
+    @property
+    def can_join(self) -> bool:
+        """Whether the field is a lone input or select, which a ``Join`` can hold."""
+        return (
+            self.component in self.member_widths
+            and not self.is_group
+            and not self.is_multi_widget
+        )
+
+    @property
+    def is_member(self) -> bool:
+        """Whether the field is drawn as a member of a ``Join``.
+
+        This is about a field among several in a group. ``is_joined`` is about
+        the buttons joined to one field. A hidden field is never a member.
+        """
+        return self.member and not self.field.is_hidden
+
+    @property
+    def is_floating(self) -> bool:
+        """Whether the label is drawn as daisyUI's floating label.
+
+        Not with the form's labels off, where the input is named by an
+        ``aria-label``, nor for a disabled field, which keeps its ordinary
+        label, nor for a field with no label text.
+        """
+        return (
+            self.floats
+            and self.show_labels
+            and bool(self.field.label)
+            and not self.is_disabled
+        )
+
+    @property
+    def is_disabled(self) -> bool:
+        """Whether the input is disabled: by the option, the field or its widget."""
+        return (
+            self.disabled
+            or self.field.field.disabled
+            # Django writes every attribute that is not False, an empty one too.
+            or self.field.field.widget.attrs.get("disabled", False) is not False
+        )
 
     @property
     def is_in_error(self) -> bool:
@@ -592,20 +709,23 @@ class FieldInput:
 
         Returns:
             The component, the choices, ``join-item`` when the field is joined
-            and is not a group, a width unless the component is fixed-size or an
-            own class is a width, and the error modifier. Empty with no
+            and is not a group or is a member, a width unless the component is
+            fixed-size or an own class is a width, and the error modifier. The
+            width is the member's own when the field is a member. Empty with no
             component.
         """
         classes: list[str] = []
         if component:
             classes.append(component)
             classes.extend(modifiers)
-            if self.is_joined and not self.is_group:
+            if (self.is_joined and not self.is_group) or self.is_member:
                 classes.append("join-item")
             if component not in self.fixed_size and not any(
                 name.startswith("w-") for name in own
             ):
-                classes.append(self.width)
+                classes.append(
+                    self.member_widths[component] if self.is_member else self.width
+                )
             if self.is_in_error:
                 classes.append(self.error_modifiers[component])
         return classes
@@ -682,9 +802,9 @@ class FieldInput:
 
     @property
     def requires_placeholder(self) -> bool:
-        """Whether the label is offered as the placeholder of an unlabelled field."""
+        """Whether the label is the placeholder of an unlabelled or floating field."""
         return (
-            self.unlabelled
+            (self.unlabelled or self.is_floating)
             and self.component in {"input", "textarea"}
             and not self.is_group
             and "placeholder" not in self.field.field.widget.attrs
@@ -794,7 +914,7 @@ class DrawnButton:
     Raises:
         InvalidChoice: A size, colour or variant stated for the form or the
             button is not one daisyUI has, or the layout around the button
-            states a drawing, which a button has none of.
+            states a drawing or a label, which a button has none of.
     """
 
     # The colour django-crispy-forms gives a Submit when none is chosen.
@@ -834,6 +954,8 @@ class DrawnButton:
         own = Choice() if placed is None else placed
         if own.drawing is not None and own.drawing is not INHERIT:
             raise InvalidChoice("drawing", own.drawing, (), self.target)
+        if own.label is not None and own.label is not INHERIT:
+            raise InvalidChoice("label", own.label, (), self.target)
         stated = {
             "size": choices.size,
             "color": choices.button_color,
@@ -955,7 +1077,10 @@ def daisyui_field(context: Context, field: BoundField, **decoration: Any) -> Fie
 
     Raises:
         InvalidChoice: A choice that applies to the field is not one daisyUI has,
-            or a drawing is stated that the field's widget does not take.
+            a drawing is stated that the field's widget does not take, or a
+            label is stated for a field that cannot float.
+        InvalidMember: The field is a member of a ``Join`` and is not drawn as a
+            lone input or select.
         TypeError: The form's helper holds a ``daisyui`` attribute that is not a
             ``FormChoices``.
     """

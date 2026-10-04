@@ -1,4 +1,4 @@
-"""The size, colour, variant and drawing a form states, and the classes they mean."""
+"""The size, colour, variant, drawing and label a form states, and what they mean."""
 
 from enum import Enum
 from typing import Any, ClassVar
@@ -19,17 +19,18 @@ INHERIT = Inherit.INHERIT
 
 
 class InvalidChoice(ValueError):
-    """A size, colour, variant or drawing that cannot be drawn.
+    """A size, colour, variant, drawing or label that cannot be drawn.
 
     Args:
-        kind: What was stated: ``"size"``, ``"color"``, ``"variant"`` or
-            ``"drawing"``.
+        kind: What was stated: ``"size"``, ``"color"``, ``"variant"``,
+            ``"drawing"`` or ``"label"``.
         value: The value that was stated.
         allowed: The names allowed, in daisyUI's order. Empty when the input
-            drawn has no modifier of this kind at all, or when a drawing was
-            stated for a field that takes none. For a drawing, the names the
-            field takes: the three of a boolean field, ``"rating"`` for a
-            field that holds one choice, or ``"range"`` for a number field.
+            drawn has no modifier of this kind at all, when a drawing was
+            stated for a field that takes none, or when a label was stated for
+            something that cannot take one. For a drawing, the names the field
+            takes: the three of a boolean field, ``"rating"`` for a field that
+            holds one choice, or ``"range"`` for a number field.
         target: The field's name, or the button's name or content, when the
             statement was made for one of them. None when the form made it.
     """
@@ -273,6 +274,9 @@ class Modifiers:
         "range": "range",
     }
 
+    # The label a field is drawn with, other than the ordinary one.
+    labels: ClassVar[dict[str, str]] = {"floating": "floating-label"}
+
     tables: ClassVar[dict[str, dict[str, dict[str, str]]]] = {
         "size": sizes,
         "color": colors,
@@ -359,7 +363,7 @@ class Modifiers:
 
 
 class Choice(LayoutObject):
-    """A size, a colour, a variant and a drawing stated for one field or button.
+    """A size, a colour, a variant, a drawing and a label stated for one field.
 
     Each argument left out is inherited from the statement it is merged over,
     and None is the pack's ordinary drawing, which undoes it.
@@ -378,6 +382,9 @@ class Choice(LayoutObject):
             ``"checkbox"``, ``"toggle"`` or ``"switch"``. A field that holds one
             choice, a select or a radio group, takes ``"rating"``. A number
             field takes ``"range"``. Any other field takes none.
+        label: ``"floating"`` to draw the label of an input, a textarea or a
+            select as daisyUI's floating label, or ``INHERIT``. None is the
+            ordinary label. A button takes none.
     """
 
     context_name = "daisyui_choice"
@@ -389,12 +396,14 @@ class Choice(LayoutObject):
         color: str | Inherit | None = INHERIT,
         variant: str | Inherit | None = INHERIT,
         drawing: str | Inherit | None = INHERIT,
+        label: str | Inherit | None = INHERIT,
     ) -> None:
         self.fields = list(fields)
         self.size = size
         self.color = color
         self.variant = variant
         self.drawing = drawing
+        self.label = label
 
     def over(self, outer: "Choice") -> "Choice":
         """Return this choice merged over an outer one, each kind separately.
@@ -411,6 +420,7 @@ class Choice(LayoutObject):
             color=outer.color if self.color is INHERIT else self.color,
             variant=outer.variant if self.variant is INHERIT else self.variant,
             drawing=outer.drawing if self.drawing is INHERIT else self.drawing,
+            label=outer.label if self.label is INHERIT else self.label,
         )
 
     def render(
@@ -464,6 +474,8 @@ class FormChoices:
         variant: The variant of every input.
         button_color: The colour of every button.
         button_variant: The variant of every button.
+        label: ``"floating"`` to draw the label of every input, textarea and
+            select as daisyUI's floating label. Every other field is passed over.
         fields: A ``Choice`` for a field, by the field's name.
     """
 
@@ -477,6 +489,7 @@ class FormChoices:
         variant: str | None = None,
         button_color: str | None = None,
         button_variant: str | None = None,
+        label: str | None = None,
         fields: dict[str, Choice] | None = None,
     ) -> None:
         self.size = size
@@ -484,6 +497,7 @@ class FormChoices:
         self.variant = variant
         self.button_color = button_color
         self.button_variant = button_variant
+        self.label = label
         self.fields = dict(fields or {})
 
     def check(self) -> None:
@@ -496,8 +510,8 @@ class FormChoices:
 
         Raises:
             InvalidChoice: A size, a colour or a variant is not one daisyUI has
-                for the inputs, or a button's colour or variant is not one it
-                has for buttons.
+                for the inputs, a button's colour or variant is not one it has
+                for buttons, or the label is not one the pack has.
         """
         stated = (
             ("size", self.size, None),
@@ -510,6 +524,8 @@ class FormChoices:
             allowed = Modifiers.names(kind, component)
             if value is not None and value not in allowed:
                 raise InvalidChoice(kind, value, allowed)
+        if self.label is not None and self.label not in Modifiers.labels:
+            raise InvalidChoice("label", self.label, tuple(Modifiers.labels))
 
     @classmethod
     def lookup(cls, context: Context, form: Any = None) -> "FormChoices | None":

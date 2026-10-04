@@ -16,6 +16,7 @@ from django.utils.safestring import SafeString, mark_safe
 
 from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice
 from mvp_forms.deprecation import WITHDRAWN
+from mvp_forms.layout import InvalidMember
 from mvp_forms.templatetags.daisyui import (
     SPLIT_DATE_TIME_PARTS,
     TAB_GROUP_PLACEHOLDER,
@@ -35,6 +36,7 @@ from tests.forms import (
     CheckboxGroupsForm,
     DateSelectsForm,
     DeveloperAttrsForm,
+    DisabledInputsForm,
     FilesForm,
     HelpedForm,
     InlineFieldsForm,
@@ -43,6 +45,9 @@ from tests.forms import (
     NoLinesFormSet,
     OwnTemplateDateWidget,
     RadioGroupsForm,
+    RangesForm,
+    RatingsForm,
+    ReadOnlyInputsForm,
     SelectsForm,
     TextInputsForm,
     UncoveredInput,
@@ -1145,6 +1150,44 @@ class TestDrawnButtonDrawing:
         assert built.modifiers == []
 
 
+class TestDrawnButtonLabel:
+    @pytest.mark.parametrize(
+        "button", [Submit("save", "Save"), StrictButton("More", css_id="more")]
+    )
+    def test_a_label_stated_around_a_button_raises(self, button):
+        with pytest.raises(InvalidChoice) as caught:
+            DrawnButton(button, placed=Choice(label="floating"))
+
+        assert caught.value.kind == "label"
+        assert caught.value.value == "floating"
+        assert caught.value.allowed == ()
+        assert caught.value.target is not None
+
+    def test_the_button_is_the_target(self):
+        with pytest.raises(InvalidChoice) as caught:
+            DrawnButton(Submit("save", "Save"), placed=Choice(label="floating"))
+
+        assert caught.value.target == "save"
+
+    @pytest.mark.parametrize("label", [None, INHERIT])
+    def test_none_and_inherit_state_nothing_for_a_button(self, label):
+        built = DrawnButton(Submit("save", "Save"), placed=Choice(label=label))
+
+        assert built.modifiers == []
+
+    def test_the_forms_label_is_passed_over(self):
+        built = DrawnButton(
+            Submit("save", "Save"), choices=FormChoices(label="floating")
+        )
+
+        assert built.modifiers == []
+
+    def test_a_hidden_input_takes_no_label_and_raises_nothing(self):
+        built = DrawnButton(Hidden("secret", "x"), placed=Choice(label="floating"))
+
+        assert built.modifiers == []
+
+
 class TestDaisyuiButton:
     def test_the_statement_in_the_context_is_used(self):
         context = Context({"daisyui": FormChoices(size="lg")})
@@ -1692,6 +1735,515 @@ class TestDaisyuiFieldUnlabelledTag:
         )
 
         assert (shown, hidden) == ("True", "False")
+
+
+class FloatingEdgesForm(forms.Form):
+    plain = forms.CharField(label="Plain")
+    own = forms.CharField(
+        label="Own", widget=forms.TextInput(attrs={"placeholder": "Mine"})
+    )
+    note = forms.CharField(label="Note", widget=forms.Textarea)
+    pick = forms.ChoiceField(choices=[("a", "A")], label="Pick")
+    locked = forms.CharField(
+        label="Locked", widget=forms.TextInput(attrs={"disabled": True})
+    )
+    unlabelled = forms.CharField(label="", required=False)
+    token = forms.CharField(widget=forms.HiddenInput)
+
+
+def own_statement(name, how, value="floating"):
+    if how == "layout":
+        return {"placed": Choice(label=value)}
+    return {"choices": FormChoices(fields={name: Choice(label=value)})}
+
+
+FLOATS = [
+    (TextInputsForm, "text"),
+    (TextInputsForm, "message"),
+    (SelectsForm, "choice"),
+]
+CANNOT_FLOAT = [
+    (CheckboxForm, "agree"),
+    (RadioGroupsForm, "choice"),
+    (CheckboxGroupsForm, "choice"),
+    (FilesForm, "plain"),
+    (MultiWidgetsForm, "phone"),
+    (MultiWidgetsForm, "moment"),
+    (DateSelectsForm, "born"),
+]
+DECORATIONS = [
+    {"prepended": "$"},
+    {"appended": ".00"},
+    {"join": FieldWithButtons("text")},
+    {"unlabelled": True},
+]
+
+
+class TestFieldInputLabel:
+    @pytest.mark.parametrize(("form", "name"), FLOATS)
+    def test_the_forms_statement_floats_an_input_a_textarea_and_a_select(
+        self, form, name
+    ):
+        field_input = FieldInput(form()[name], choices=FormChoices(label="floating"))
+
+        assert field_input.is_floating
+
+    @pytest.mark.parametrize(("form", "name"), FLOATS)
+    def test_nothing_stated_floats_nothing(self, form, name):
+        assert not FieldInput(form()[name]).is_floating
+
+    @pytest.mark.parametrize("how", ["layout", "name"])
+    @pytest.mark.parametrize(("form", "name"), FLOATS)
+    def test_the_fields_own_statement_floats_it(self, form, name, how):
+        field_input = FieldInput(form()[name], **own_statement(name, how))
+
+        assert field_input.is_floating
+
+    @pytest.mark.parametrize(("form", "name"), CANNOT_FLOAT)
+    def test_the_forms_statement_passes_over_a_field_that_cannot_float(
+        self, form, name
+    ):
+        field_input = FieldInput(form()[name], choices=FormChoices(label="floating"))
+
+        assert not field_input.can_float
+        assert not field_input.floats
+        assert not field_input.is_floating
+
+    @pytest.mark.parametrize("decoration", DECORATIONS)
+    def test_the_forms_statement_passes_over_a_decorated_field(self, decoration):
+        field_input = FieldInput(
+            TextInputsForm()["text"],
+            choices=FormChoices(label="floating"),
+            **decoration,
+        )
+
+        assert not field_input.can_float
+        assert not field_input.is_floating
+
+    @pytest.mark.parametrize("how", ["layout", "name"])
+    @pytest.mark.parametrize(("form", "name"), CANNOT_FLOAT)
+    def test_the_fields_own_statement_raises_for_a_field_that_cannot_float(
+        self, form, name, how
+    ):
+        with pytest.raises(InvalidChoice) as caught:
+            FieldInput(form()[name], **own_statement(name, how))
+
+        error = caught.value
+        assert (error.kind, error.value) == ("label", "floating")
+        assert error.allowed == ()
+        assert error.target == name
+
+    @pytest.mark.parametrize("how", ["layout", "name"])
+    @pytest.mark.parametrize("decoration", DECORATIONS)
+    def test_the_fields_own_statement_raises_for_a_decorated_field(
+        self, decoration, how
+    ):
+        with pytest.raises(InvalidChoice) as caught:
+            FieldInput(
+                TextInputsForm()["text"], **own_statement("text", how), **decoration
+            )
+
+        error = caught.value
+        assert (error.kind, error.value) == ("label", "floating")
+        assert error.allowed == ()
+        assert error.target == "text"
+
+    @pytest.mark.parametrize("how", ["layout", "name"])
+    def test_an_unknown_name_stated_for_a_field_raises_with_the_names_allowed(
+        self, how
+    ):
+        with pytest.raises(InvalidChoice) as caught:
+            FieldInput(
+                TextInputsForm()["text"], **own_statement("text", how, "sliding")
+            )
+
+        error = caught.value
+        assert (error.kind, error.value) == ("label", "sliding")
+        assert error.allowed == ("floating",)
+        assert error.target == "text"
+
+    def test_an_unknown_name_stated_for_the_form_raises_naming_no_field(self):
+        with pytest.raises(InvalidChoice) as caught:
+            FieldInput(TextInputsForm()["text"], choices=FormChoices(label="sliding"))
+
+        error = caught.value
+        assert (error.kind, error.value) == ("label", "sliding")
+        assert error.allowed == ("floating",)
+        assert error.target is None
+
+    def test_none_for_the_field_undoes_the_forms_statement(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"],
+            choices=FormChoices(label="floating"),
+            placed=Choice(label=None),
+        )
+
+        assert not field_input.is_floating
+
+    def test_none_stated_by_name_undoes_the_forms_statement(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"],
+            choices=FormChoices(label="floating", fields={"text": Choice(label=None)}),
+        )
+
+        assert not field_input.is_floating
+
+    def test_none_for_a_field_that_cannot_float_raises_nothing(self):
+        field_input = FieldInput(CheckboxForm()["agree"], placed=Choice(label=None))
+
+        assert not field_input.is_floating
+
+    def test_a_layouts_statement_wins_over_the_one_stated_by_name(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"],
+            choices=FormChoices(fields={"text": Choice(label="floating")}),
+            placed=Choice(label=None),
+        )
+
+        assert not field_input.is_floating
+
+    def test_a_choice_that_leaves_the_label_out_takes_the_forms(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"],
+            choices=FormChoices(label="floating"),
+            placed=Choice(size="lg"),
+        )
+
+        assert field_input.is_floating
+
+    def test_a_statement_for_another_field_changes_nothing_here(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"],
+            choices=FormChoices(fields={"email": Choice(label="floating")}),
+        )
+
+        assert not field_input.is_floating
+
+    def test_a_disabled_form_field_is_not_floating(self):
+        field_input = FieldInput(
+            DisabledInputsForm()["text"], choices=FormChoices(label="floating")
+        )
+
+        assert field_input.is_disabled
+        assert field_input.floats
+        assert not field_input.is_floating
+
+    def test_a_field_disabled_by_the_option_is_not_floating(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"],
+            choices=FormChoices(label="floating"),
+            disabled=True,
+        )
+
+        assert field_input.is_disabled
+        assert not field_input.is_floating
+
+    def test_a_widget_attribute_django_writes_empty_still_disables_the_field(self):
+        form = FloatingEdgesForm()
+        form.fields["plain"].widget.attrs["disabled"] = ""
+
+        field_input = FieldInput(form["plain"], choices=FormChoices(label="floating"))
+
+        assert field_input.is_disabled
+        assert not field_input.is_floating
+
+    def test_a_widget_attribute_of_false_does_not_disable_the_field(self):
+        form = FloatingEdgesForm()
+        form.fields["plain"].widget.attrs["disabled"] = False
+
+        field_input = FieldInput(form["plain"], choices=FormChoices(label="floating"))
+
+        assert not field_input.is_disabled
+        assert field_input.is_floating
+
+    def test_a_field_disabled_by_its_widget_is_not_floating(self):
+        field_input = FieldInput(
+            FloatingEdgesForm()["locked"], choices=FormChoices(label="floating")
+        )
+
+        assert field_input.is_disabled
+        assert not field_input.is_floating
+
+    @pytest.mark.parametrize("how", ["layout", "name"])
+    def test_the_fields_own_statement_on_a_disabled_field_raises_nothing(self, how):
+        field_input = FieldInput(
+            DisabledInputsForm()["text"], **own_statement("text", how)
+        )
+
+        assert not field_input.is_floating
+
+    def test_a_field_that_is_not_disabled_says_so(self):
+        assert not FieldInput(TextInputsForm()["text"]).is_disabled
+
+    def test_a_read_only_field_floats(self):
+        field_input = FieldInput(
+            ReadOnlyInputsForm()["text"], choices=FormChoices(label="floating")
+        )
+
+        assert field_input.is_floating
+
+    def test_with_labels_off_nothing_floats_and_the_input_is_named(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"],
+            show_labels=False,
+            choices=FormChoices(label="floating"),
+        )
+
+        assert not field_input.is_floating
+        assert field_input.attrs["aria-label"] == field_input.label_text
+
+    def test_a_field_with_no_label_does_not_float(self):
+        field_input = FieldInput(
+            FloatingEdgesForm()["unlabelled"], choices=FormChoices(label="floating")
+        )
+
+        assert not field_input.is_floating
+
+    @pytest.mark.parametrize("name", ["plain", "note"])
+    def test_the_label_is_the_placeholder_of_a_floating_input_and_textarea(self, name):
+        field_input = FieldInput(
+            FloatingEdgesForm()[name], choices=FormChoices(label="floating")
+        )
+
+        assert field_input.attrs["placeholder"] == field_input.label_text
+
+    def test_a_placeholder_of_the_developers_is_kept(self):
+        field_input = FieldInput(
+            FloatingEdgesForm()["own"], choices=FormChoices(label="floating")
+        )
+
+        assert "placeholder" not in field_input.attrs
+        assert 'placeholder="Mine"' in field_input.render()
+
+    def test_a_floating_select_gets_no_placeholder(self):
+        field_input = FieldInput(
+            FloatingEdgesForm()["pick"], choices=FormChoices(label="floating")
+        )
+
+        assert "placeholder" not in field_input.attrs
+
+    def test_a_field_that_does_not_float_gets_no_placeholder(self):
+        field_input = FieldInput(
+            FloatingEdgesForm()["plain"],
+            choices=FormChoices(label="floating"),
+            show_labels=False,
+        )
+
+        assert "placeholder" not in field_input.attrs
+
+    def test_a_disabled_field_gets_no_placeholder(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"],
+            choices=FormChoices(label="floating"),
+            disabled=True,
+        )
+
+        assert "placeholder" not in field_input.attrs
+
+    def test_the_render_draws_the_placeholder_without_changing_the_widget(self):
+        form = FloatingEdgesForm()
+
+        drawn = FieldInput(
+            form["plain"], choices=FormChoices(label="floating")
+        ).render()
+
+        assert 'placeholder="Plain"' in drawn
+        assert "placeholder" not in form.fields["plain"].widget.attrs
+
+    @pytest.mark.parametrize("how", ["layout", "name"])
+    def test_a_hidden_field_takes_nothing_and_raises_nothing(self, how):
+        field_input = FieldInput(
+            FloatingEdgesForm()["token"],
+            **own_statement("token", how),
+        )
+        form_wide = FieldInput(
+            FloatingEdgesForm()["token"], choices=FormChoices(label="floating")
+        )
+
+        assert not field_input.is_floating
+        assert not form_wide.is_floating
+
+    def test_the_input_keeps_its_component_and_choices(self):
+        plain = FieldInput(FloatingEdgesForm()["plain"], choices=FormChoices(size="lg"))
+        floating = FieldInput(
+            FloatingEdgesForm()["plain"],
+            choices=FormChoices(size="lg", label="floating"),
+        )
+
+        assert floating.css_class == plain.css_class
+
+
+class TestFieldInputLabelDrawings:
+    DRAWINGS = [
+        (RatingsForm, "score", "rating"),
+        (RatingsForm, "again", "rating"),
+        (RangesForm, "volume", "range"),
+        (RangesForm, "ratio", "range"),
+    ]
+
+    @pytest.mark.parametrize(("form", "name", "drawing"), DRAWINGS)
+    def test_the_forms_statement_passes_over_a_rating_and_a_range(
+        self, form, name, drawing
+    ):
+        field_input = FieldInput(
+            form()[name],
+            choices=FormChoices(
+                label="floating", fields={name: Choice(drawing=drawing)}
+            ),
+        )
+
+        assert not field_input.can_float
+        assert not field_input.floats
+        assert not field_input.is_floating
+
+    @pytest.mark.parametrize("how", ["layout", "name"])
+    @pytest.mark.parametrize(("form", "name", "drawing"), DRAWINGS)
+    def test_the_fields_own_statement_raises_for_a_rating_and_a_range(
+        self, form, name, drawing, how
+    ):
+        statement = Choice(drawing=drawing, label="floating")
+        own = (
+            {"placed": statement}
+            if how == "layout"
+            else {"choices": FormChoices(fields={name: statement})}
+        )
+
+        with pytest.raises(InvalidChoice) as caught:
+            FieldInput(form()[name], **own)
+
+        error = caught.value
+        assert (error.kind, error.value) == ("label", "floating")
+        assert error.allowed == ()
+        assert error.target == name
+
+
+class TestFieldInputMember:
+    ACCEPTED = [
+        (TextInputsForm, "text"),
+        (TextInputsForm, "email"),
+        (TextInputsForm, "number"),
+        (TextInputsForm, "date"),
+        (SelectsForm, "choice"),
+        (SelectsForm, "grouped"),
+    ]
+    REFUSED = [
+        (TextInputsForm, "message"),
+        (CheckboxForm, "agree"),
+        (RadioGroupsForm, "choice"),
+        (CheckboxGroupsForm, "choice"),
+        (FilesForm, "plain"),
+        (FilesForm, "empty"),
+        (MultiWidgetsForm, "phone"),
+        (MultiWidgetsForm, "moment"),
+        (DateSelectsForm, "born"),
+        (UncoveredWidgetsForm, "choice"),
+    ]
+
+    @pytest.mark.parametrize(("form", "name"), ACCEPTED)
+    def test_an_input_and_a_select_are_accepted(self, form, name):
+        assert FieldInput(form()[name], member=True).is_member
+
+    @pytest.mark.parametrize(("form", "name"), REFUSED)
+    def test_any_other_visible_widget_raises_naming_the_field(self, form, name):
+        with pytest.raises(InvalidMember) as caught:
+            FieldInput(form()[name], member=True)
+
+        assert caught.value.member == name
+
+    @pytest.mark.parametrize(
+        ("form", "name", "drawing"),
+        [
+            (RatingsForm, "score", "rating"),
+            (RatingsForm, "kind", "rating"),
+            (RangesForm, "volume", "range"),
+            (CheckboxForm, "agree", "toggle"),
+            (CheckboxForm, "agree", "switch"),
+        ],
+    )
+    def test_a_drawing_that_is_not_an_input_or_a_select_raises(
+        self, form, name, drawing
+    ):
+        with pytest.raises(InvalidMember) as caught:
+            FieldInput(form()[name], member=True, placed=Choice(drawing=drawing))
+
+        assert caught.value.member == name
+
+    def test_a_hidden_field_raises_nothing_and_is_not_a_member(self):
+        field_input = FieldInput(FloatingEdgesForm()["token"], member=True)
+
+        assert not field_input.is_member
+
+    def test_a_field_that_is_not_a_member_says_so(self):
+        assert not FieldInput(TextInputsForm()["text"]).is_member
+
+    @pytest.mark.parametrize(("form", "name"), ACCEPTED)
+    def test_the_member_carries_join_item(self, form, name, parse):
+        drawn = parse(FieldInput(form()[name], member=True).render())
+
+        assert "join-item" in drawn.find(["input", "select"])["class"]
+
+    def test_a_field_that_is_not_a_member_carries_no_join_item(self):
+        assert "join-item" not in FieldInput(TextInputsForm()["text"]).css_class
+
+    @pytest.mark.parametrize(("form", "name"), ACCEPTED)
+    def test_the_member_is_named_by_its_own_label(self, form, name, parse):
+        bound = form()[name]
+
+        drawn = parse(FieldInput(bound, member=True).render())
+
+        assert drawn.find(["input", "select"])["aria-label"] == bound.label
+
+    def test_the_developers_own_aria_label_is_kept(self, parse):
+        field_input = FieldInput(OwnAriaForm()["labelled"], member=True)
+
+        assert "aria-label" not in field_input.attrs
+        assert parse(field_input.render()).find("input")["aria-label"] == "Mine"
+
+    def test_a_member_draws_no_label_of_its_own(self):
+        assert not FieldInput(TextInputsForm()["text"], member=True).show_labels
+
+    def test_the_forms_choices_reach_a_member(self):
+        field_input = FieldInput(
+            TextInputsForm()["text"],
+            member=True,
+            choices=FormChoices(size="lg", color="primary"),
+        )
+
+        assert {"input-lg", "input-primary"} <= set(field_input.css_class.split())
+
+    def test_the_error_modifier_reaches_a_member(self):
+        field_input = FieldInput(TextInputsForm({})["text"], member=True)
+
+        assert "input-error" in field_input.css_class.split()
+
+    @pytest.mark.parametrize("how", ["layout", "name"])
+    @pytest.mark.parametrize(("form", "name"), ACCEPTED)
+    def test_a_floating_label_stated_on_a_member_raises(self, form, name, how):
+        with pytest.raises(InvalidChoice) as caught:
+            FieldInput(form()[name], member=True, **own_statement(name, how))
+
+        error = caught.value
+        assert (error.kind, error.value) == ("label", "floating")
+        assert error.allowed == ()
+        assert error.target == name
+
+    @pytest.mark.parametrize(("form", "name"), ACCEPTED)
+    def test_the_forms_floating_label_passes_a_member_over(self, form, name):
+        field_input = FieldInput(
+            form()[name], member=True, choices=FormChoices(label="floating")
+        )
+
+        assert not field_input.can_float
+        assert not field_input.floats
+        assert not field_input.is_floating
+        assert "placeholder" not in field_input.attrs
+
+    def test_the_render_leaves_the_widget_unchanged(self):
+        form = TextInputsForm()
+
+        FieldInput(form["text"], member=True).render()
+
+        assert form.fields["text"].widget.attrs == {}
 
 
 class TestFieldInputMultiWidget:

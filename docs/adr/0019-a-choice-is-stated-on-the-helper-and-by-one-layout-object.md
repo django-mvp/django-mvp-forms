@@ -1,6 +1,6 @@
 # ADR 0019 — A choice is stated on the form helper, and by one layout object
 
-**Status:** accepted
+**Status:** accepted, amended by [ADR 0037](0037-fields-are-joined-by-a-layout-object-of-the-packs.md): the package defines a second layout object, `Join`
 
 ## Decision
 

@@ -92,9 +92,10 @@ have several.
 _Avoid_: style, look.
 
 **Choice**:
-A size, a colour, a variant or a drawing stated in Python, for a form, for one
-field or for one button. The four are independent of each other. A drawing is
-stated for one field at a time and never for a form.
+A size, a colour, a variant, a drawing or a label stated in Python, for a form,
+for one field or for one button. The five are independent of each other. A
+drawing is stated for one field at a time and never for a form. A label is
+stated for a form or for one field and never for a button.
 _Avoid_: option, setting, modifier (a modifier is the daisyUI class a choice
 means).
 
@@ -107,6 +108,27 @@ A field that states none is drawn as its widget is: a boolean field as a
 checkbox, a single-choice field as a select or a radio group, a number field as
 a number input. Any other field takes none.
 _Avoid_: style, look, type (an input's type is the HTML attribute).
+
+**Floating label**:
+An input's label drawn as daisyUI's `floating-label`: its text is the empty
+input's placeholder and moves to the field's edge once the field is focused or
+holds a value. It is the one name of the label kind of choice, `"floating"`, and
+only a lone input, textarea or select takes one.
+_Avoid_: animated label, placeholder label.
+
+**Joined group**:
+Several fields a developer names in a layout with `Join`, drawn as one daisyUI
+join under one label. It is the package's own layout object. Its inputs sit side
+by side as the direct children of one element, in one fieldset whose legend is
+the group's label, and only an input or a select can be one.
+_Avoid_: input group (that is Bootstrap's name), compound field, field group.
+
+**Member**:
+One field of a joined group. It has no label of its own and is named by an
+`aria-label` that is its field's label, and it keeps its own help text, errors
+and place in the cleaned data. A hidden member is drawn beside the join and takes
+no place in it.
+_Avoid_: item, child, part (a part is one widget of a multi-widget field).
 
 **Boolean field**:
 A field whose widget is a Django `CheckboxInput`, or a subclass of one, such as

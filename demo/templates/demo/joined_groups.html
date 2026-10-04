@@ -1,0 +1,95 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="joined-groups">
+    <c-text>
+      The country code and the number are two fields joined under one label. Each input
+      is named by its own label. Submit the form with no number to see its error, or with
+      one to see what the form cleaned to.
+    </c-text>
+    {% crispy form %}
+  </c-section>
+  {% if cleaned %}
+    <c-section title="What the form cleaned to" level="3">
+      <ul id="{{ prefix }}-cleaned">
+        {% for item in cleaned %}
+          <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+        {% endfor %}
+      </ul>
+    </c-section>
+  {% endif %}
+  <c-section title="A group that already fails" level="3">
+    <c-text>
+      The code is chosen and the number is missing. Only the number is marked invalid,
+      and its error is drawn once, under the group.
+    </c-text>
+    {% crispy failing_form %}
+  </c-section>
+  <c-section title="Help text on a member" level="3">
+    <c-text>
+      The amount has help text, drawn once under the group and tied to the amount alone.
+    </c-text>
+    {% crispy help_form %}
+  </c-section>
+  <c-section title="Disabled, read-only and hidden" level="3">
+    <c-text>
+      A disabled member stays in its place disabled and a read-only member keeps its
+      attribute. The hidden member is a hidden input beside the join, not in it.
+    </c-text>
+    {% crispy states_form %}
+  </c-section>
+  <c-section title="A group with no label" level="3">
+    <c-text>
+      With no label the group has no legend, and each input is still named by its own
+      label.
+    </c-text>
+    {% crispy unlabelled_form %}
+  </c-section>
+  <c-section title="A group of one" level="3">
+    <c-text>
+      A group that holds one field is drawn as a group of one.
+    </c-text>
+    {% crispy single_form %}
+  </c-section>
+  <c-section title="Sizes" level="3">
+    <c-text>
+      A group states a size for the form, and every member takes it.
+    </c-text>
+    {% for size in sizes %}
+      <c-section :title="size.title" level="4">
+        {% crispy size.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Colours" level="3">
+    {% for color in colors %}
+      <c-section :title="color.title" level="4">
+        {% crispy color.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Variant" level="3">
+    {% for variant in variants %}
+      <c-section :title="variant.title" level="4">
+        {% crispy variant.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="A coloured group with one member in error" level="3">
+    <c-text>
+      The form states a colour. The number is missing, so it carries the error
+      modifier and none of the colour, and the code keeps the colour.
+    </c-text>
+    {% crispy error_form %}
+  </c-section>
+  <c-section title="A Choice around a group" level="3">
+    <c-text>
+      The form states a small size. A Choice around the group states a large size and
+      a colour, which win for every member.
+    </c-text>
+    {% crispy choice_form %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'joined-groups-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}
