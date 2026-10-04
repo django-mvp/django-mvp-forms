@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.2.0] - 2026-10-04
+
 ### Added
 
 - The close button of a `Modal` and the dismiss button of an `Alert` follow the form's size. `FormChoices(size="sm")` now draws a modal's Close button with `btn-sm` beside the form's other small buttons, and a `Choice` around the `Modal` or the `Alert` states a size for that one. They take the size alone: `button_color`, `button_variant` and a `Choice`'s colour and variant still pass them by. A form that states no size is drawn as before, with an alert's dismiss button small. A project that replaced `daisyui/display_form.html` should draw the form's layout with `{% daisyui_sized form.form_html %}` in place of `{{ form.form_html }}`, or a modal's close button carries a class `daisyui-size` that does nothing and keeps its ordinary size. The demo's "Size, colour and variant" page, at `/choices/` and `/choices/standalone/`, shows both in a small and a large form.
