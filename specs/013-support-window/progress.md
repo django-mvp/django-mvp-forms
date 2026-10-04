@@ -67,3 +67,24 @@ Verified: full verify green; the suite passes on each named pair through the tes
 Next: code review.
 
 Watch: FS-011 is still building and will take record numbers; 0036 is re-checked at every update of the branch.
+
+## 2026-10-04T00:29:48Z · Implementer review fixes · T009
+
+Did: COR-001. The tests that change a window in one direction now build it from the module's CURRENT mapping and compare it with a README text, a dependency list with classifiers and a lock that the test module supplies. The real files are read only by the seven tests that say the repository agrees with its declaration, through fixtures named repository_*. Added one test each that the supplied README, dependency list and lock agree with the supplied window, so a mutation test starts from agreement.
+Verified: before the change, with Django 6.2, daisyUI 5.8 and Python 3.14 added to support-window.toml, the README tables and the pyproject classifiers, `uv run --no-sync pytest tests/test_support_window.py` gave 5 failed and 1 error. After the change the same scratch edit gave 131 passed and 1 error, the error being the check that a class list exists for every daisyUI version the real window names (5.8 has none). Files restored with git checkout; pyproject.toml and uv.lock show no diff. Without the change: 132 passed.
+Next: T011, then T010.
+Watch: hatchling refuses the classifier Framework :: Django :: 6.2 as unknown, so `uv run` fails to build the project in that scratch state; I used --no-sync for the proof. The README steps do not mention it.
+
+## 2026-10-04T00:30:49Z · Implementer review fixes · T011
+
+Did: COR-002, COR-006, SEC-003. final_releases raises ValueError when an answer lists no final release, and its date check now sits inside the try, so a stamp that is a list is a ValueError too. FINAL takes numbers of at most nine digits, so a version of thousands of digits is not a final release. report_releases catches http.client.HTTPException beside OSError and ValueError. Everything that can raise for one package now happens inside final_releases, which sits inside the try.
+Verified: 13 new cases failed first for the right reasons (TypeError on a list stamp, ValueError 'Exceeds the limit (4300 digits)', IncompleteRead leaving report_releases, an empty listing returning status 0). Then `uv run pytest tests/test_support_window.py` gave 145 passed; `uv run pre-commit run --all-files` passed.
+Next: T010.
+Watch: a listing that holds only versions the window does not name, such as only 1.0, is still read as a listing with a final release. COR-002's fix and this brief ask only for the empty case.
+
+## 2026-10-04T00:33:51Z · Implementer review fixes · T010
+
+Did: COR-003 (README says the daisyUI ends are those named above), COR-004 (requirement names are normalised with [-_.]+ and a package no requirement names is a disagreement with an empty version), COR-005 (a README cell is read with one pattern that takes the whole dotted number), COR-007 (daisyUI minimum and newest are parsed apart; a minimum above the newest, a first above the oldest named version and an empty list of versions raise InvalidWindow), COR-008 (a lock with no Django or django-crispy-forms entry is a disagreement with an empty version), COR-009 (relative_links reads reference definitions, src and angle-bracketed targets), COR-010 (a name after @layer or @container is not a class), SEC-001 (write_class_list encodes before it writes; class_list reads as UTF-8), SEC-002 (preludes are read by splitting, not by a backtracking scan), COR-011 (Window.django_series_from, caller and test updated; the plan's Article X row says why class_names, class_list and write_class_list stay functions). The version patterns use [0-9] instead of \d. README gains the two additions to the take-out steps and AGENTS.md drops the repeated Django list.
+Verified: 24 new cases failed first for the right reasons (the long-run case by hanging: `timeout 20 pytest -k long_run` exited 124 before the fix). After: `uv run pytest tests/test_support_window.py` gave 172 passed (173 with test_smoke); `uv run pre-commit run --all-files` passed.
+Next: ledger, full verify, report.
+Watch: test_a_long_run_with_no_brace_is_read can only fail by taking minutes, since no test may time a run. Empty-list refusal sits in a new Window.named_versions because a pair may legitimately list no Django series.

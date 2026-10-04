@@ -224,13 +224,60 @@
         },
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -q",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "tests/test_support_window.py:73",
+              "tests/test_support_window.py:101"
+            ],
+            "verified_by_ci": false
+          }
         },
         {
           "id": "T010",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestWindow",
+              "tests/test_support_window.py::TestMetadata",
+              "tests/test_support_window.py::TestReadme",
+              "tests/test_support_window.py::TestReadmeLinks",
+              "tests/test_support_window.py::TestLockfile",
+              "tests/test_support_window.py::TestClassNames",
+              "tests/test_support_window.py::TestClassLists",
+              "tests/test_support_window.py::TestDropped"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -q",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "support_window.py:221",
+              "support_window.py:355",
+              "support_window.py:680",
+              "support_window.py:977",
+              "support_window.py:1056",
+              "support_window.py:1141",
+              "support_window.py:1187",
+              "README.md:77",
+              "README.md:1115",
+              "README.md:1123"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     },
@@ -311,8 +358,25 @@
         },
         {
           "id": "T011",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestFinalReleases",
+              "tests/test_support_window.py::TestReportReleases"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -q",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "support_window.py:837",
+              "support_window.py:1096"
+            ],
+            "verified_by_ci": false
+          }
         }
       ]
     }
