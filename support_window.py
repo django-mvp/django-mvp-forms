@@ -33,11 +33,13 @@ SOURCES = {
     "daisyui": "https://registry.npmjs.org/daisyui",
 }
 
-VERSION = re.compile(r"\d+\.\d+")
+VERSION = re.compile(r"[0-9]+\.[0-9]+")
+CELL_VERSION = re.compile(r"[0-9]+(?:\.[0-9]+)+")
+NAME_SEPARATOR = re.compile(r"[-_.]+")
 CLAUSE = re.compile(r"\s*(==|!=|~=|>=|<=|>|<)\s*([\w.*]+)\s*")
 REQUIREMENT = re.compile(r"\s*([A-Za-z0-9][A-Za-z0-9._-]*)\s*(.*)")
-DJANGO_CLASSIFIER = re.compile(r"Framework :: Django :: (\d+\.\d+)")
-PYTHON_CLASSIFIER = re.compile(r"Programming Language :: Python :: (\d+\.\d+)")
+DJANGO_CLASSIFIER = re.compile(r"Framework :: Django :: ([0-9]+\.[0-9]+)")
+PYTHON_CLASSIFIER = re.compile(r"Programming Language :: Python :: ([0-9]+\.[0-9]+)")
 SUPPORT_BLOCK = re.compile(
     r"<!-- support-window -->(.*?)<!-- /support-window -->", re.S
 )
@@ -45,7 +47,8 @@ SEPARATOR = re.compile(r":?-+:?")
 PATCH = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+")
 COMMENT = re.compile(r"/\*.*?\*/", re.S)
 LITERAL = re.compile(r"\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|url\([^)\"']*\)")
-PRELUDE = re.compile(r"([^{};]*)\{")
+PRELUDE_START = re.compile(r"[};]")
+NAMED_AT_RULE = re.compile(r"\s*@(?:layer|container)\b")
 CLASS_SELECTOR = re.compile(r"\.(?![0-9])((?:\\[0-9a-fA-F]{1,6}\s?|\\.|[\w-])+)")
 HEX_ESCAPE = re.compile(r"\\([0-9a-fA-F]{1,6})\s?")
 ESCAPE = re.compile(r"\\(.)")
@@ -54,10 +57,15 @@ DROPPED_BLOCK = re.compile(
 )
 RELEASE_HEADING = re.compile(r"^## \[v?([^\]]+)\]", re.M)
 STATEMENT = re.compile(r"<!-- support-window -->.*<!-- /dropped-versions -->", re.S)
-LINK_TARGET = re.compile(r"\]\(\s*<?([^)\s>]+)|href=[\"']([^\"']+)")
+LINK_TARGET = re.compile(
+    r"\]\(\s*(?:<([^>]*)>|([^)\s]+))"
+    r"|(?:href|src)=[\"']([^\"']+)"
+    r"|^\[[^\]]+\]:\s*(?:<([^>]*)>|(\S+))",
+    re.M,
+)
 ABSOLUTE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:")
 FINAL = re.compile(r"[0-9]{1,9}(?:\.[0-9]{1,9})*")
-DAY = re.compile(r"\d{4}-\d{2}-\d{2}")
+DAY = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 
 
 def fetch_json(url: str) -> Any:
@@ -203,9 +211,8 @@ class Window:
             The window the file declares.
 
         Raises:
-            InvalidWindow: The file declares a version that is not two numbers, a
-                pair that names a version the window does not, or a dropped
-                entry that is malformed.
+            InvalidWindow: The file is refused as ``from_mapping`` refuses a
+                mapping.
         """
         with path.open("rb") as handle:
             return cls.from_mapping(tomllib.load(handle))
@@ -221,18 +228,20 @@ class Window:
             The window the mapping declares.
 
         Raises:
-            InvalidWindow: A version is not two numbers, a pair names a release
-                or a Django series the window does not, or a dropped entry is
+            InvalidWindow: A list of versions is empty, a version is not two
+                numbers, the daisyUI minimum is above the newest, a ``first`` is
+                above the oldest version named, a pair names a release or a
+                Django series the window does not, or a dropped entry is
                 malformed.
         """
-        python = cls.parse_versions("python", data["python"])
-        django = cls.parse_versions("django", data["django"]["versions"])
+        python = cls.named_versions("python", data["python"])
+        django = cls.named_versions("django", data["django"]["versions"])
         (django_first,) = cls.parse_versions("django", [data["django"]["first"]])
         crispy = data["django-crispy-forms"]
         (crispy_forms_first,) = cls.parse_versions(
             "django-crispy-forms", [crispy["first"]]
         )
-        crispy_forms = cls.parse_versions("django-crispy-forms", crispy["versions"])
+        crispy_forms = cls.named_versions("django-crispy-forms", crispy["versions"])
         pairs = {}
         for release, series in crispy["pairs"].items():
             if release not in crispy_forms:
@@ -247,9 +256,18 @@ class Window:
                     )
         daisyui = data["daisyui"]
         (daisyui_first,) = cls.parse_versions("daisyui", [daisyui["first"]])
-        minimum, newest = cls.parse_versions(
-            "daisyui", [daisyui["minimum"], daisyui["newest"]]
-        )
+        (minimum,) = cls.parse_versions("daisyui", [daisyui["minimum"]])
+        (newest,) = cls.parse_versions("daisyui", [daisyui["newest"]])
+        if cls.numbers(minimum) > cls.numbers(newest):
+            raise InvalidWindow("daisyui", minimum, "the minimum is above the newest")
+        oldest = {
+            "django": (django_first, django[0]),
+            "django-crispy-forms": (crispy_forms_first, crispy_forms[0]),
+            "daisyui": (daisyui_first, minimum),
+        }
+        for package, (first, named) in oldest.items():
+            if cls.numbers(first) > cls.numbers(named):
+                raise InvalidWindow(package, first, "first is above the oldest named")
         dropped = tuple(cls.parse_dropped(entry) for entry in data.get("dropped", []))
         return cls(
             python,
@@ -289,6 +307,24 @@ class Window:
         return Dropped(package, version, release)
 
     @staticmethod
+    def named_versions(package: str, versions: list[str]) -> tuple[str, ...]:
+        """Check that a window names at least one version of a package.
+
+        Args:
+            package: The package the versions belong to.
+            versions: The versions as written.
+
+        Returns:
+            The versions, oldest first.
+
+        Raises:
+            InvalidWindow: The list is empty, or a version is not two numbers.
+        """
+        if not versions:
+            raise InvalidWindow(package, "", "no version named")
+        return Window.parse_versions(package, versions)
+
+    @staticmethod
     def parse_versions(package: str, versions: list[str]) -> tuple[str, ...]:
         """Check that every version is two numbers and order them.
 
@@ -324,7 +360,9 @@ class Window:
 
         Returns:
             One disagreement for each requirement that is not ``>=`` the oldest
-            named version and nothing else, and for each Django or Python
+            named version and nothing else, one with an empty version for each of
+            Django and django-crispy-forms that no requirement names, and for
+            each Django or Python
             classifier the window does not name or does not have, and for each
             dropped Django or django-crispy-forms version the requirements still
             admit.
@@ -335,13 +373,21 @@ class Window:
             "django": self.django[0],
             "django-crispy-forms": self.crispy_forms[0],
         }
+        named = set()
         for requirement in project["dependencies"]:
             name, specifiers = REQUIREMENT.fullmatch(requirement).groups()
-            if name.lower() in required:
+            package = NAME_SEPARATOR.sub("-", name).lower()
+            if package in required:
+                named.add(package)
                 found += self.requirement_disagreements(
-                    name.lower(), specifiers, required[name.lower()]
+                    package, specifiers, required[package]
                 )
-                found += self.admitted_disagreements(name.lower(), specifiers)
+                found += self.admitted_disagreements(package, specifiers)
+        found += [
+            Disagreement("metadata", package, "", f"no requirement names {package}")
+            for package in required
+            if package not in named
+        ]
         found += self.classifier_disagreements(
             "django", DJANGO_CLASSIFIER, self.django, project["classifiers"]
         )
@@ -484,13 +530,13 @@ class Window:
                 version
                 for name, cell in rows
                 if name.lower() == package
-                for version in VERSION.findall(cell)
+                for version in CELL_VERSION.findall(cell)
             }
             found += self.set_disagreements(
                 "README", package, set(versions), stated, "the statement"
             )
         stated_pairs = {
-            name: set(VERSION.findall(cell))
+            name: set(CELL_VERSION.findall(cell))
             for name, cell in rows
             if VERSION.fullmatch(name)
         }
@@ -587,7 +633,7 @@ class Window:
         """
         walks = {
             "django": (
-                django_series_from(self.django_first, self.django[-1]),
+                self.django_series_from(self.django_first, self.django[-1]),
                 self.django,
             ),
             "django-crispy-forms": (
@@ -602,7 +648,7 @@ class Window:
         found = []
         for package, (walk, named) in walks.items():
             dropped = {d.version for d in self.dropped if d.package == package}
-            for version in self.parse_versions(package, list(dropped & set(named))):
+            for version in sorted(dropped & set(named), key=self.numbers):
                 found.append(
                     Disagreement(
                         "dropped", package, version, "both in the window and dropped"
@@ -640,10 +686,19 @@ class Window:
         Returns:
             One disagreement for each locked Django or django-crispy-forms
             whose release series the window does not name, giving the version
-            as locked.
+            as locked, and one with an empty version for each of the two that
+            the lock has no entry for.
         """
         named = {"django": self.django, "django-crispy-forms": self.crispy_forms}
-        return [
+        locked = {entry["name"] for entry in lock["package"]}
+        missing = [
+            Disagreement(
+                "lockfile", package, "", f"the lock has no entry for {package}"
+            )
+            for package in named
+            if package not in locked
+        ]
+        return missing + [
             Disagreement(
                 "lockfile",
                 entry["name"],
@@ -919,6 +974,27 @@ class Window:
         return tuple(map(int, version.split(".")))
 
     @staticmethod
+    def django_series_from(first: str, newest: str) -> tuple[str, ...]:
+        """List the Django release series from one to another.
+
+        Django numbers its series ``A.0``, ``A.1``, ``A.2`` and then ``(A+1).0``.
+
+        Args:
+            first: The oldest series, such as ``5.2``.
+            newest: The newest series, such as ``7.0``.
+
+        Returns:
+            Every series from ``first`` to ``newest``, such as ``5.2``, ``6.0``,
+            ``6.1``, ``6.2`` and ``7.0``.
+        """
+        major, minor = Window.numbers(first)
+        series = []
+        while (major, minor) <= Window.numbers(newest):
+            series.append(f"{major}.{minor}")
+            major, minor = (major, minor + 1) if minor < 2 else (major + 1, 0)
+        return tuple(series)
+
+    @staticmethod
     def minors_from(first: str, newest: str) -> tuple[str, ...]:
         """List the releases of a package whose second number counts up.
 
@@ -964,27 +1040,6 @@ class Window:
         return found
 
 
-def django_series_from(first: str, newest: str) -> tuple[str, ...]:
-    """List the Django release series from one to another.
-
-    Django numbers its series ``A.0``, ``A.1``, ``A.2`` and then ``(A+1).0``.
-
-    Args:
-        first: The oldest series, such as ``5.2``.
-        newest: The newest series, such as ``7.0``.
-
-    Returns:
-        Every series from ``first`` to ``newest``, such as ``5.2``, ``6.0``,
-        ``6.1``, ``6.2`` and ``7.0``.
-    """
-    major, minor = Window.numbers(first)
-    series = []
-    while (major, minor) <= Window.numbers(newest):
-        series.append(f"{major}.{minor}")
-        major, minor = (major, minor + 1) if minor < 2 else (major + 1, 0)
-    return tuple(series)
-
-
 def installed_versions() -> dict[str, str]:
     """Read the installed versions of Django and django-crispy-forms.
 
@@ -1003,7 +1058,8 @@ def relative_links(readme: str) -> list[str]:
 
     The statement runs from the ``support-window`` comment to the end of the
     ``dropped-versions`` comment. A link that is not absolute breaks on the
-    package index, where the README is shown away from the repository.
+    package index, where the README is shown away from the repository. Inline
+    links, reference definitions, ``href`` and ``src`` are read.
 
     Args:
         readme: The text of the README.
@@ -1015,7 +1071,10 @@ def relative_links(readme: str) -> list[str]:
     statement = STATEMENT.search(readme)
     if statement is None:
         return []
-    targets = (a or b for a, b in LINK_TARGET.findall(statement.group()))
+    targets = (
+        match.group(match.lastindex)
+        for match in LINK_TARGET.finditer(statement.group())
+    )
     return [target for target in targets if not ABSOLUTE.match(target)]
 
 
@@ -1083,7 +1142,8 @@ def class_names(stylesheet: str) -> set[str]:
     """List the class selectors of a stylesheet with CSS escapes undone.
 
     Only the selector in front of each ``{`` is read, so a dot in a number, a
-    string or an address in a declaration is never taken for a class.
+    string or an address in a declaration is never taken for a class, and the
+    name after ``@layer`` or ``@container`` is not one either.
 
     Args:
         stylesheet: The text of the stylesheet.
@@ -1094,7 +1154,10 @@ def class_names(stylesheet: str) -> set[str]:
     """
     text = LITERAL.sub("", COMMENT.sub("", stylesheet))
     names = set()
-    for prelude in PRELUDE.findall(text):
+    for chunk in text.split("{")[:-1]:
+        prelude = PRELUDE_START.split(chunk)[-1]
+        if NAMED_AT_RULE.match(prelude):
+            continue
         for escaped in CLASS_SELECTOR.findall(prelude):
             unescaped = HEX_ESCAPE.sub(lambda m: chr(int(m.group(1), 16)), escaped)
             names.add(ESCAPE.sub(r"\1", unescaped))
@@ -1117,7 +1180,7 @@ def class_list(version: str, directory: Path = CLASS_DIRECTORY) -> set[str]:
     path = directory / f"daisyui-classes-{version}.txt"
     if not path.is_file():
         raise MissingClassList(version)
-    lines = path.read_text().splitlines()
+    lines = path.read_text(encoding="utf-8").splitlines()
     return {line for line in lines if line and not line.startswith("#")}
 
 
@@ -1140,6 +1203,8 @@ def write_class_list(
 
     Raises:
         MissingClassList: The registry holds no release of the version.
+        UnicodeEncodeError: The stylesheet holds a name that cannot be written.
+            The list already there is left as it was.
     """
     Window.parse_versions("daisyui", [version])
     versions = registry("https://registry.npmjs.org/daisyui")["versions"]
@@ -1159,7 +1224,7 @@ def write_class_list(
         f"# Written by: uv run python support_window.py classes {version}\n"
     )
     path = directory / f"daisyui-classes-{version}.txt"
-    path.write_text(header + "\n".join(names) + "\n")
+    path.write_bytes((header + "\n".join(names) + "\n").encode("utf-8"))
     return path
 
 

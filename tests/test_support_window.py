@@ -17,7 +17,6 @@ from support_window import (
     Window,
     class_list,
     class_names,
-    django_series_from,
     final_releases,
     installed_versions,
     main,
@@ -252,6 +251,44 @@ class TestWindow:
         assert raised.value.package == "django"
         assert raised.value.version == "6.1"
 
+    def test_a_daisyui_minimum_above_the_newest_is_refused(self):
+        mapping = copy.deepcopy(MAPPING)
+        mapping["daisyui"]["minimum"] = "5.9"
+
+        with pytest.raises(InvalidWindow) as raised:
+            Window.from_mapping(mapping)
+
+        assert raised.value.package == "daisyui"
+        assert raised.value.version == "5.9"
+
+    @pytest.mark.parametrize(
+        ("package", "version"),
+        [("django", "6.0"), ("django-crispy-forms", "2.7"), ("daisyui", "5.1")],
+    )
+    def test_a_first_version_above_the_oldest_named_is_refused(self, package, version):
+        mapping = copy.deepcopy(MAPPING)
+        mapping[package]["first"] = version
+
+        with pytest.raises(InvalidWindow) as raised:
+            Window.from_mapping(mapping)
+
+        assert raised.value.package == package
+        assert raised.value.version == version
+
+    @pytest.mark.parametrize("package", ["python", "django", "django-crispy-forms"])
+    def test_an_empty_list_of_versions_is_refused(self, package):
+        mapping = copy.deepcopy(MAPPING)
+        if package == "python":
+            mapping["python"] = []
+        else:
+            mapping[package]["versions"] = []
+
+        with pytest.raises(InvalidWindow) as raised:
+            Window.from_mapping(mapping)
+
+        assert raised.value.package == package
+        assert raised.value.version == ""
+
     def test_the_oldest_version_ever_supported_is_read_for_each_package(self):
         window = Window.from_mapping(MAPPING)
 
@@ -361,6 +398,37 @@ class TestMetadata:
             window.metadata_disagreements(pyproject)
         )
 
+    @pytest.mark.parametrize(
+        "name", ["django_crispy_forms", "Django.Crispy_Forms", "DJANGO-CRISPY-FORMS"]
+    )
+    def test_a_requirement_written_with_another_separator_is_still_checked(
+        self, declared, pyproject, name
+    ):
+        pyproject["project"]["dependencies"] = ["django>=5.2", f"{name}>=2.7,<3"]
+        window = Window.from_mapping(declared)
+
+        assert found(window.metadata_disagreements(pyproject)) == {
+            ("metadata", "django-crispy-forms", "3")
+        }
+
+    @pytest.mark.parametrize(
+        ("dependencies", "missing"),
+        [
+            (["django>=5.2"], {"django-crispy-forms"}),
+            (["django-crispy-forms>=2.7"], {"django"}),
+            ([], {"django", "django-crispy-forms"}),
+        ],
+    )
+    def test_a_package_that_no_requirement_names_is_a_disagreement(
+        self, declared, pyproject, dependencies, missing
+    ):
+        pyproject["project"]["dependencies"] = dependencies
+        window = Window.from_mapping(declared)
+
+        assert found(window.metadata_disagreements(pyproject)) == {
+            ("metadata", package, "") for package in missing
+        }
+
     def test_a_pinned_requirement_is_a_disagreement(self, declared, pyproject):
         pyproject["project"]["dependencies"] = [
             "django==5.2",
@@ -413,6 +481,13 @@ def section(*links):
     )
 
 
+def statement(body):
+    return (
+        f"<!-- support-window -->\n{body}\n<!-- /support-window -->\n"
+        "<!-- dropped-versions -->\n<!-- /dropped-versions -->\n"
+    )
+
+
 class TestReadmeLinks:
     def test_the_section_of_the_repositorys_readme_holds_no_relative_link(
         self, repository_readme
@@ -429,6 +504,24 @@ class TestReadmeLinks:
         links = section("https://github.com/django-mvp/django-mvp-forms/issues/1")
 
         assert relative_links(links) == []
+
+    def test_a_relative_reference_style_link_in_the_section_is_returned(self):
+        body = "[a link][ref]\n\n[ref]: docs/support.md"
+
+        assert relative_links(statement(body)) == ["docs/support.md"]
+
+    def test_an_absolute_reference_style_link_in_the_section_is_not_returned(self):
+        body = "[a link][ref]\n\n[ref]: https://example.org/support"
+
+        assert relative_links(statement(body)) == []
+
+    def test_a_relative_image_source_in_the_section_is_returned(self):
+        assert relative_links(statement("<img src='pic.png'>")) == ["pic.png"]
+
+    def test_an_angle_bracketed_target_with_a_space_is_returned_whole(self):
+        body = "[a link](<docs/two words.md>)"
+
+        assert relative_links(statement(body)) == ["docs/two words.md"]
 
     def test_a_relative_link_outside_the_section_is_not_returned(self):
         assert relative_links(section()) == []
@@ -463,6 +556,22 @@ class TestReadme:
         window = Window.from_mapping(declared)
 
         assert ("README", "django", "6.2") in found(window.readme_disagreements(readme))
+
+    def test_a_patch_release_in_the_table_is_named(self, declared, readme):
+        window = Window.from_mapping(declared)
+        stated = readme.replace("| Django | 5.2, 6.0", "| Django | 5.2.17, 6.0")
+
+        assert ("README", "django", "5.2.17") in found(
+            window.readme_disagreements(stated)
+        )
+
+    def test_a_patch_release_in_the_pairs_table_is_named(self, declared, readme):
+        window = Window.from_mapping(declared)
+        stated = readme.replace("| 2.7 | 5.2, 6.0", "| 2.7 | 5.2.17, 6.0")
+
+        assert ("README", "django", "5.2.17") in found(
+            window.readme_disagreements(stated)
+        )
 
     def test_a_django_series_removed_from_the_window_is_named(self, declared, readme):
         removed = declared["django"]["versions"].pop()
@@ -619,6 +728,17 @@ class TestLockfile:
             window.lockfile_disagreements(locked(lock, "django-crispy-forms", "3.0"))
         )
 
+    @pytest.mark.parametrize("package", ["django", "django-crispy-forms"])
+    def test_a_lock_with_no_entry_for_a_package_names_the_package(
+        self, declared, lock, package
+    ):
+        lock["package"] = [
+            entry for entry in lock["package"] if entry["name"] != package
+        ]
+        window = Window.from_mapping(declared)
+
+        assert found(window.lockfile_disagreements(lock)) == {("lockfile", package, "")}
+
 
 class TestInstalled:
     def test_the_versions_this_run_is_on_are_inside_the_window(
@@ -687,6 +807,19 @@ class TestClassNames:
 
         assert class_names(sheet) == {"logo"}
 
+    def test_a_dotted_name_after_layer_is_not_a_class(self):
+        sheet = "@layer daisyui.base.theme { .btn { display: flex } }"
+
+        assert class_names(sheet) == {"btn"}
+
+    def test_a_dotted_name_after_container_is_not_a_class(self):
+        sheet = "@container card.body (min-width: 1px) { .q { top: 0 } }"
+
+        assert class_names(sheet) == {"q"}
+
+    def test_a_long_run_with_no_brace_is_read(self):
+        assert class_names("a" * 100_000) == set()
+
     def test_every_class_of_a_compound_selector_is_found(self):
         sheet = ".btn.btn-primary:hover > .icon, :where(.menu) li { color: red }"
 
@@ -743,7 +876,26 @@ class TestClassLists:
 
         assert raised.value.version == "5.3"
 
-    @pytest.mark.parametrize("version", ["5.3.1", "5", "../5.3", "5.x"])
+    def test_a_stylesheet_that_cannot_be_encoded_leaves_the_existing_list_as_it_was(
+        self, tmp_path
+    ):
+        path = tmp_path / "daisyui-classes-5.3.txt"
+        path.write_text("btn\n")
+        registry = {"versions": {"5.3.0": {}}}
+
+        with pytest.raises(UnicodeEncodeError):
+            write_class_list(
+                "5.3",
+                fetch=lambda url: r".\d800 x {}",
+                registry=lambda url: registry,
+                directory=tmp_path,
+            )
+
+        assert path.read_text() == "btn\n"
+
+    @pytest.mark.parametrize(
+        "version", ["5.3.1", "5", "../5.3", "5.x", "\uff15.\uff13", "5.3\n"]
+    )
     def test_a_version_that_is_not_two_numbers_is_refused_before_anything_is_fetched(
         self, tmp_path, version
     ):
@@ -770,7 +922,13 @@ class TestDropped:
         assert window.dropped_disagreements(repository_changelog) == []
 
     def test_django_series_are_walked_from_one_release_to_the_next(self):
-        assert django_series_from("5.2", "7.0") == ("5.2", "6.0", "6.1", "6.2", "7.0")
+        assert Window.django_series_from("5.2", "7.0") == (
+            "5.2",
+            "6.0",
+            "6.1",
+            "6.2",
+            "7.0",
+        )
 
     def test_a_django_series_in_neither_the_window_nor_the_dropped_list_is_named(self):
         window = Window.from_mapping(mapping_starting_at_django_6_0())

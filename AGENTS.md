@@ -11,7 +11,7 @@ depend on django-mvp at runtime.
 
 ## Stack and commands
 
-- **Stack:** Python 3.12+ / Django 5.2, 6.0 and 6.1, uv-managed (hatchling build backend), built on
+- **Stack:** Python 3.12+ / Django, uv-managed (hatchling build backend), built on
   django-crispy-forms. The versions supported are declared in `support-window.toml`. django-mvp is a
   development dependency, for the demo project only
 - **Install:** `uv sync`

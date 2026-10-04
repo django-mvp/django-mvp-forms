@@ -74,7 +74,7 @@ Each django-crispy-forms release works with the Django series on its row:
 
 A version is named the way a project chooses it: a release series for Django, a feature release for django-crispy-forms, and a major version with a minimum minor release for daisyUI. The newest patch release of each named version is the one meant. The Python versions are the ones the test suite runs on.
 
-Django is supported for every release series the Django project still supports with mainstream or security fixes. django-crispy-forms is supported for every feature release of its current major series from the minimum named above. daisyUI is supported for its current major version from the minimum named above. The test suite checks the pack against the two ends of the daisyUI range, 5.0 and 5.7, and does not check the releases between them one by one. A daisyUI version below the minimum is outside the window, whether it comes from the CDN or from a Tailwind build of your own.
+Django is supported for every release series the Django project still supports with mainstream or security fixes. django-crispy-forms is supported for every feature release of its current major series from the minimum named above. daisyUI is supported for its current major version from the minimum named above. The test suite checks the pack against the two ends of the daisyUI range named above, and does not check the releases between them one by one. A daisyUI version below the minimum is outside the window, whether it comes from the CDN or from a Tailwind build of your own.
 
 A Django or django-crispy-forms release newer than any named above installs, because the package sets no upper limit on either. It is not vouched for until this section names it.
 
@@ -1112,12 +1112,16 @@ To take a version out, change these together:
    comes out of every line that lists it.
 2. Remove it from the two tables in "Supported versions" and add a row to the table of versions
    that have left, between the `dropped-versions` comments, as `| package | version | last release |`
-   under a header row.
+   under a header row. When the first version leaves, remove the sentence "No version has left
+   the window." from "Versions that have left", as the first row goes into the table.
 3. For a Django or django-crispy-forms version, raise the minimum in the dependencies of
    `pyproject.toml`, so that an installer in a project still on the dropped version selects the
    last release that supported it. For a Django series, also remove its trove classifier.
 4. Write the CHANGELOG entry under Removed, naming each version dropped and the last release that
    supported it.
+
+A Python version is taken out by removing it from `python` in the declaration, from the table and
+from its classifier, and it gets no `[[dropped]]` entry.
 
 The suite names a version that is both in the window and dropped, a version between `first`, the
 oldest this package ever supported, and the newest named that is neither, a last release that the

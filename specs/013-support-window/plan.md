@@ -53,7 +53,7 @@ lists, one README section and one addition to its contributing section.
 | VI Documentation | README, CHANGELOG and CONTEXT change in the story that introduces what they describe. README links are absolute |
 | VII Dependencies | none added, runtime or development |
 | VIII Internationalization | nothing a person using a host project sees is added |
-| X Cohesion | everything that is asked of the window is a method of `Window`: the comparisons, the suite on one pair and the releases it is missing. `relative_links`, `django_series_from`, `final_releases`, `class_names`, `class_list`, `write_class_list` and the two fetch functions stay functions, because none of them takes a window and they share no subject |
+| X Cohesion | everything that is asked of the window is a method of `Window`: the comparisons, the suite on one pair and the releases it is missing. `django_series_from` is a static method of `Window`, beside `minors_from`. `relative_links`, `final_releases` and the two fetch functions stay functions, because none of them takes a window and they share no subject. `class_names`, `class_list` and `write_class_list` stay functions because they read and write a file of class names, and none of them takes or needs a window. Grouping them on a class of static methods would add a name and no state |
 | XI Compatibility | no public API changes. Dropping a version is not a removal under this article (decisions D5), and the record of that decision is written at convergence |
 | XII Scope, XIII Plain templates, XIV Stock daisyUI | no template, class or import is added to the package |
 
@@ -150,7 +150,7 @@ Each comparison is a method of `Window`.
   that are not absolute. The suite asserts there are none (US-1, scenario 4).
 - `Window.dropped_disagreements(changelog)`:
   - a version both named and dropped;
-  - a version from `first` up to the newest named that is neither. `django_series_from(first,
+  - a version from `first` up to the newest named that is neither. `Window.django_series_from(first,
     newest)` walks `A.0`, `A.1`, `A.2`, `(A+1).0`; django-crispy-forms and daisyUI count the
     second number up. For daisyUI the versions below `minimum` are the ones that must be dropped;
   - a dropped version whose `last_release` is not a release heading in the changelog
