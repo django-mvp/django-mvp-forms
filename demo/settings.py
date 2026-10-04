@@ -135,6 +135,8 @@ EASY_ICONS = {
             "choices": "bi bi-palette",
             "drawings": "bi bi-toggles",
             "rating-and-range": "bi bi-star",
+            "floating-labels": "bi bi-tag",
+            "joined-groups": "bi bi-distribute-horizontal",
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",
             "themes": "bi bi-brush",

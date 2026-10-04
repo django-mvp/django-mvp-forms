@@ -1,6 +1,6 @@
 # ADR 0008 — Layouts use django-crispy-forms' own layout objects
 
-**Status:** accepted, amended by [ADR 0019](0019-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md): the package defines one layout object, `Choice`
+**Status:** accepted, amended by [ADR 0019](0019-a-choice-is-stated-on-the-helper-and-by-one-layout-object.md) and [ADR 0037](0037-fields-are-joined-by-a-layout-object-of-the-packs.md): the package defines two layout objects, `Choice` and `Join`
 
 ## Decision
 

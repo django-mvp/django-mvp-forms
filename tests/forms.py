@@ -3,7 +3,7 @@
 import datetime
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout
+from crispy_forms.layout import Field, Layout
 from django import forms
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -16,6 +16,8 @@ from django.forms import (
     widgets,
 )
 from django.utils.safestring import mark_safe
+
+from mvp_forms.layout import Join
 
 
 class TextInputsForm(forms.Form):
@@ -944,3 +946,85 @@ class RangedLineForm(forms.Form):
 
 
 RangedLineFormSet = formset_factory(RangedLineForm, extra=3)
+
+
+class FloatingForm(forms.Form):
+    name = forms.CharField(label="Name", help_text="As on your card")
+    notes = forms.CharField(label="Notes", widget=forms.Textarea, required=False)
+    country = forms.ChoiceField(choices=FRUIT, label="Fruit")
+    agree = forms.BooleanField(label="Agree", required=False)
+    nickname = forms.CharField(
+        label="Nickname",
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Mine"}),
+    )
+    locked = forms.CharField(
+        label="Locked", required=False, disabled=True, initial="Ada"
+    )
+    markup = forms.CharField(label="<b>Marked</b> & up", required=False)
+    token = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, layout=None, choices=None, show_labels=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.form_show_labels = show_labels
+        if layout is not None:
+            self.helper.layout = Layout(*layout)
+        if choices is not None:
+            self.helper.daisyui = choices
+
+
+CODES = [("+49", "+49"), ("+44", "+44")]
+
+
+class JoinedForm(forms.Form):
+    notes = forms.CharField(label="Notes", required=False)
+    country_code = forms.ChoiceField(choices=CODES, label="Country code")
+    number = forms.CharField(label="Number", help_text="Digits only")
+    extension = forms.CharField(label="Extension", required=False)
+    token = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, layout=None, choices=None, show_labels=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.form_show_labels = show_labels
+        self.helper.layout = Layout(
+            *(
+                layout
+                if layout is not None
+                else (
+                    "notes",
+                    Join(
+                        "country_code",
+                        Field("number", autocomplete="tel"),
+                        "extension",
+                        "token",
+                        label="Phone",
+                    ),
+                )
+            )
+        )
+        if choices is not None:
+            self.helper.daisyui = choices
+
+
+class JoinedEdgesForm(forms.Form):
+    country_code = forms.ChoiceField(choices=CODES, label="Country code")
+    locked = forms.CharField(label="Locked", required=False, disabled=True)
+    fixed = forms.CharField(
+        label="Fixed",
+        required=False,
+        initial="Ada",
+        widget=forms.TextInput(attrs={"readonly": True}),
+    )
+    bio = forms.CharField(label="Bio", required=False, widget=forms.Textarea)
+    agree = forms.BooleanField(label="Agree", required=False)
+    token = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, layout=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(*layout)

@@ -131,6 +131,8 @@ class Reader:
         ),
         "bg-base-200": Paint(surface="base-200"),
         "modal-box": Paint(surface="base-100"),
+        # A floating label's text sits on a patch of base-100 over the border.
+        "floating-label": Paint(surface="base-100"),
         "table": Paint(control="table"),
         "collapse-arrow": Paint(control="arrow"),
         "tabs-border": Paint(variant="border"),
@@ -172,6 +174,7 @@ class Reader:
             "gap-4",
             "md:flex-row",
             "flex-1",
+            "w-auto",
             "min-w-0",
             "flex-wrap",
             "gap-2",

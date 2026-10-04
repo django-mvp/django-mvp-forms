@@ -473,6 +473,51 @@ class TestReadmeDrawings:
         assert "toggle" in soup.find(id="id_notify")["class"]
 
 
+class TestReadmeFloatingLabels:
+    @pytest.mark.parametrize("source", ["{{ form|crispy }}", "{% crispy form %}"])
+    def test_the_example_floats_the_fields_it_states_and_no_other(self, draw, source):
+        form = readme_example("Floating labels")["SignInForm"]()
+
+        soup = draw(source, form=form)
+
+        for name in ("email", "password", "country"):
+            field = soup.find(id=f"id_{name}")
+            label = field.find_parent("label", class_="floating-label")
+            assert label["for"] == f"id_{name}"
+        notes = soup.find("label", attrs={"for": "id_notes"})
+        assert "floating-label" not in notes.get("class", [])
+        assert (
+            soup.find(id="id_remember").find_parent("label", class_="floating-label")
+            is None
+        )
+
+
+class TestReadmeJoinedGroups:
+    def test_the_example_draws_its_two_fields_as_one_join(self, draw):
+        form = readme_example("Joined groups")["ContactForm"]()
+
+        soup = draw("{% crispy form %}", form=form)
+
+        group = soup.find("div", class_="join")
+        names = [tag["name"] for tag in group.find_all(True, recursive=False)]
+        assert names == ["country_code", "number"]
+        assert soup.find(id="id_name").find_parent(class_="join") is None
+        number = soup.find(id="id_number")
+        assert number["autocomplete"] == "tel"
+        assert number["aria-label"] == form["number"].label
+
+    def test_the_example_posts_and_cleans_to_its_fields(self, draw, posted):
+        form = readme_example("Joined groups")["ContactForm"]()
+        data = posted(draw("{% crispy form %}", form=form))
+        data["name"] = "Ada"
+        data["number"] = "5551234"
+
+        posted_form = readme_example("Joined groups")["ContactForm"](data)
+
+        assert posted_form.is_valid()
+        assert posted_form.cleaned_data["number"] == "5551234"
+
+
 class TestReadmeDrawingSizeAndColour:
     def test_the_example_gives_the_toggle_and_the_switch_the_size_and_colour(
         self, draw

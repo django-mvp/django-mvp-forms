@@ -2751,3 +2751,437 @@ class TestStandaloneThemesPage(ThemesPageContract):
 
     def test_it_links_back_to_the_shell_page(self, page):
         assert page.find("a", href=reverse("themes")) is not None
+
+
+FLOATING_PREFIX = "floating"
+FLOATING_FAILING_PREFIX = "failing-floating"
+FLOATING_STATES_PREFIX = "floating-states"
+FLOATING_BY_NAME_PREFIX = "floating-by-name"
+FLOATING_POST = {
+    f"{FLOATING_PREFIX}-name": "Ada Lovelace",
+    f"{FLOATING_PREFIX}-notes": "Notes on the engine",
+    f"{FLOATING_PREFIX}-country": "uk",
+    f"{FLOATING_PREFIX}-nickname": "Ada",
+    f"{FLOATING_PREFIX}-subscribe": "on",
+    f"{FLOATING_PREFIX}-submit": "Submit",
+}
+FLOATING_EMPTY_POST = {f"{FLOATING_PREFIX}-submit": "Submit"}
+
+
+def floating_field(page, prefix, name):
+    return page.find(id=layout_field_id(prefix, name))
+
+
+def floating_label_around(page, prefix, name):
+    field = floating_field(page, prefix, name)
+    return field.find_parent("label", class_="floating-label")
+
+
+FLOATING_CHOSEN_COMPONENTS = {"name": "input", "notes": "textarea", "country": "select"}
+CHOSEN_KINDS = ("size", "color", "variant")
+
+
+def carried_modifiers(field, kind, component):
+    return set(field["class"]) & set(Modifiers.tables[kind][component].values())
+
+
+class FloatingLabelsPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    @pytest.mark.parametrize("name", ["name", "notes", "country"])
+    @pytest.mark.parametrize("prefix", [FLOATING_PREFIX, FLOATING_FAILING_PREFIX])
+    def test_the_floating_fields_are_drawn_inside_a_label_that_names_them(
+        self, page, prefix, name
+    ):
+        label = floating_label_around(page, prefix, name)
+
+        assert label["for"] == layout_field_id(prefix, name)
+
+    @pytest.mark.parametrize("name", ["nickname", "subscribe"])
+    def test_the_field_that_opts_out_and_the_checkbox_are_not_floating(
+        self, page, name
+    ):
+        field = floating_field(page, FLOATING_PREFIX, name)
+        label = page.find("label", attrs={"for": field["id"]})
+
+        assert floating_label_around(page, FLOATING_PREFIX, name) is None
+        assert label is not None
+        assert "floating-label" not in label.get("class", [])
+
+    def test_every_floating_input_and_textarea_has_a_placeholder_and_a_select_none(
+        self, page
+    ):
+        for name in ("name", "notes"):
+            assert floating_field(page, FLOATING_PREFIX, name)["placeholder"]
+        assert not floating_field(page, FLOATING_PREFIX, "country").has_attr(
+            "placeholder"
+        )
+
+    def test_the_form_that_already_fails_keeps_its_marker_help_and_error(self, page):
+        field = floating_field(page, FLOATING_FAILING_PREFIX, "name")
+        label = floating_label_around(page, FLOATING_FAILING_PREFIX, "name")
+        field_id = field["id"]
+
+        assert label.find(attrs={"aria-hidden": "true"}) is not None
+        assert page.find(id=f"{field_id}_helptext") is not None
+        assert page.find(id=f"{field_id}_error") is not None
+        assert field["aria-invalid"] == "true"
+        assert {f"{field_id}_helptext", f"{field_id}_error"} <= set(
+            field["aria-describedby"].split()
+        )
+
+    def test_the_disabled_field_has_its_ordinary_label_and_the_read_only_one_floats(
+        self, page
+    ):
+        locked = floating_field(page, FLOATING_STATES_PREFIX, "locked")
+        readonly = floating_field(page, FLOATING_STATES_PREFIX, "readonly")
+
+        assert locked.has_attr("disabled")
+        assert floating_label_around(page, FLOATING_STATES_PREFIX, "locked") is None
+        assert page.find("label", attrs={"for": locked["id"]}) is not None
+        assert readonly.has_attr("readonly")
+        assert floating_label_around(page, FLOATING_STATES_PREFIX, "readonly")
+
+    def test_the_form_with_no_layout_floats_only_the_field_named(self, page):
+        assert floating_label_around(page, FLOATING_BY_NAME_PREFIX, "title")
+        assert floating_label_around(page, FLOATING_BY_NAME_PREFIX, "company") is None
+
+    @pytest.mark.parametrize("kind", CHOSEN_KINDS)
+    def test_every_name_in_the_tables_reaches_a_floating_field_of_each_kind(
+        self, page, kind
+    ):
+        for value in Modifiers.names(kind, None):
+            prefix = f"floating-{kind}-{value}"
+            for name, component in FLOATING_CHOSEN_COMPONENTS.items():
+                field = floating_field(page, prefix, name)
+                expected = Modifiers.tables[kind][component].get(value)
+
+                assert floating_label_around(page, prefix, name) is not None
+                assert carried_modifiers(field, kind, component) == (
+                    {expected} - {None}
+                )
+
+    def test_the_forms_that_state_a_choice_are_not_form_elements(self, page):
+        for kind in CHOSEN_KINDS:
+            for value in Modifiers.names(kind, None):
+                field = floating_field(page, f"floating-{kind}-{value}", "name")
+                assert field.find_parent("form") is None
+
+    def test_the_form_to_submit_posts_with_a_token_and_a_button(self, page):
+        form = floating_field(page, FLOATING_PREFIX, "name").find_parent("form")
+
+        assert form["method"] == "post"
+        assert form.find("input", attrs={"name": "csrfmiddlewaretoken"}) is not None
+        assert form.find("input", attrs={"type": "submit"}) is not None
+
+    def test_only_the_form_to_submit_is_a_form_element(self, page):
+        for prefix in (
+            FLOATING_FAILING_PREFIX,
+            FLOATING_STATES_PREFIX,
+            FLOATING_BY_NAME_PREFIX,
+        ):
+            field = page.find(id=re.compile(f"^id_{prefix}-"))
+            assert field.find_parent("form") is None
+
+    def test_nothing_is_shown_as_cleaned_before_a_post(self, page):
+        assert page.find(id=f"{FLOATING_PREFIX}-cleaned") is None
+
+    def test_a_post_shows_what_the_form_cleaned_to(self, open_page):
+        page = open_page(self.url_name, FLOATING_POST)
+
+        for name, expected in (
+            ("name", "Ada Lovelace"),
+            ("country", "uk"),
+            ("nickname", "Ada"),
+            ("subscribe", "True"),
+        ):
+            shown = page.find(id=f"{FLOATING_PREFIX}-cleaned-{name}")
+            assert shown.get_text(strip=True) == expected
+
+    def test_a_post_keeps_the_fields_floating(self, open_page):
+        page = open_page(self.url_name, FLOATING_POST)
+
+        assert floating_label_around(page, FLOATING_PREFIX, "name")
+        assert floating_label_around(page, FLOATING_PREFIX, "nickname") is None
+
+    def test_a_post_of_the_empty_form_comes_back_with_its_error(self, open_page):
+        page = open_page(self.url_name, FLOATING_EMPTY_POST)
+
+        field = floating_field(page, FLOATING_PREFIX, "name")
+
+        assert page.find(id=f"{field['id']}_error") is not None
+        assert field["aria-invalid"] == "true"
+        assert page.find(id=f"{FLOATING_PREFIX}-cleaned") is None
+
+    @pytest.mark.parametrize(
+        "data",
+        [None, FLOATING_POST, FLOATING_EMPTY_POST],
+        ids=["get", "valid", "empty"],
+    )
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+
+        assert len(ids) == len(set(ids))
+
+
+class TestFloatingLabelsPage(FloatingLabelsPageContract):
+    url_name = "floating-labels"
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("floating-labels")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, page):
+        assert page.find("a", href=reverse("floating-labels-standalone")) is not None
+
+
+class TestStandaloneFloatingLabelsPage(FloatingLabelsPageContract):
+    url_name = "floating-labels-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, page):
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, page):
+        assert page.find("a", href=reverse("floating-labels")) is not None
+
+
+JOINED_PREFIX = "joined"
+JOINED_FAILING_PREFIX = "failing-joined"
+JOINED_HELP_PREFIX = "joined-help"
+JOINED_STATES_PREFIX = "joined-states"
+JOINED_UNLABELLED_PREFIX = "joined-unlabelled"
+JOINED_SINGLE_PREFIX = "joined-single"
+JOINED_POST = {
+    f"{JOINED_PREFIX}-country_code": "+44",
+    f"{JOINED_PREFIX}-number": "5551234",
+    f"{JOINED_PREFIX}-submit": "Submit",
+}
+JOINED_ONE_MEMBER_FAILS = {
+    f"{JOINED_PREFIX}-country_code": "+44",
+    f"{JOINED_PREFIX}-submit": "Submit",
+}
+
+
+def joined_field(page, prefix, name):
+    return page.find(id=layout_field_id(prefix, name))
+
+
+def join_around(page, prefix, name):
+    return joined_field(page, prefix, name).find_parent("div", class_="join")
+
+
+def members_of(group):
+    return [tag["name"] for tag in group.find_all(True, recursive=False)]
+
+
+JOINED_CHOSEN_COMPONENTS = {"country_code": "select", "number": "input"}
+JOINED_ERROR_PREFIX = "joined-error"
+JOINED_CHOICE_PREFIX = "joined-choice"
+
+
+class JoinedGroupsPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    def test_the_form_to_submit_joins_the_code_and_the_number_under_one_legend(
+        self, page
+    ):
+        group = join_around(page, JOINED_PREFIX, "number")
+
+        assert members_of(group) == [
+            f"{JOINED_PREFIX}-country_code",
+            f"{JOINED_PREFIX}-number",
+        ]
+        assert len(group.find_parent("fieldset").find_all("legend")) == 1
+
+    def test_the_form_that_already_fails_flags_only_the_member_that_failed(self, page):
+        number = joined_field(page, JOINED_FAILING_PREFIX, "number")
+        code = joined_field(page, JOINED_FAILING_PREFIX, "country_code")
+
+        assert number["aria-invalid"] == "true"
+        assert not code.has_attr("aria-invalid")
+        assert page.find(id=f"{number['id']}_error") is not None
+        assert page.find(id=f"{code['id']}_error") is None
+
+    def test_a_member_with_help_text_is_described_by_it(self, page):
+        amount = joined_field(page, JOINED_HELP_PREFIX, "amount")
+        unit = joined_field(page, JOINED_HELP_PREFIX, "unit")
+
+        assert page.find(id=f"{amount['id']}_helptext") is not None
+        assert f"{amount['id']}_helptext" in amount["aria-describedby"].split()
+        assert not unit.has_attr("aria-describedby")
+
+    def test_the_states_group_has_a_disabled_a_read_only_and_a_hidden_member(
+        self, page
+    ):
+        group = join_around(page, JOINED_STATES_PREFIX, "locked")
+        locked = joined_field(page, JOINED_STATES_PREFIX, "locked")
+        reference = joined_field(page, JOINED_STATES_PREFIX, "reference")
+        token = joined_field(page, JOINED_STATES_PREFIX, "token")
+
+        assert locked.has_attr("disabled")
+        assert reference.has_attr("readonly")
+        assert token["type"] == "hidden"
+        assert token.find_parent(class_="join") is None
+        assert token["name"] not in members_of(group)
+        assert locked["name"] in members_of(group)
+        assert reference["name"] in members_of(group)
+
+    def test_the_group_with_no_label_has_no_legend_and_names_its_inputs(self, page):
+        group = join_around(page, JOINED_UNLABELLED_PREFIX, "amount")
+
+        assert group.find_parent("fieldset").find("legend") is None
+        for tag in group.find_all(True, recursive=False):
+            assert tag["aria-label"]
+
+    def test_the_group_of_one_is_a_join_of_one_input(self, page):
+        group = join_around(page, JOINED_SINGLE_PREFIX, "quantity")
+
+        assert members_of(group) == [f"{JOINED_SINGLE_PREFIX}-quantity"]
+
+    @pytest.mark.parametrize("kind", CHOSEN_KINDS)
+    def test_every_name_in_the_tables_reaches_every_member_of_a_group(self, page, kind):
+        for value in Modifiers.names(kind, None):
+            prefix = f"joined-{kind}-{value}"
+            for name, component in JOINED_CHOSEN_COMPONENTS.items():
+                field = joined_field(page, prefix, name)
+                expected = Modifiers.tables[kind][component].get(value)
+
+                assert join_around(page, prefix, name) is not None
+                assert carried_modifiers(field, kind, component) == (
+                    {expected} - {None}
+                )
+
+    def test_in_the_coloured_group_only_the_failing_member_carries_the_error_modifier(
+        self, page
+    ):
+        number = joined_field(page, JOINED_ERROR_PREFIX, "number")
+        code = joined_field(page, JOINED_ERROR_PREFIX, "country_code")
+        colour = Modifiers.colors
+
+        assert number["aria-invalid"] == "true"
+        assert carried_modifiers(number, "color", "input") == {colour["input"]["error"]}
+        assert carried_modifiers(code, "color", "select") == {
+            colour["select"]["primary"]
+        }
+
+    def test_the_choice_around_a_group_wins_over_the_form_for_each_member(self, page):
+        for name, component in JOINED_CHOSEN_COMPONENTS.items():
+            field = joined_field(page, JOINED_CHOICE_PREFIX, name)
+
+            assert carried_modifiers(field, "size", component) == {
+                Modifiers.sizes[component]["lg"]
+            }
+            assert carried_modifiers(field, "color", component) == {
+                Modifiers.colors[component]["accent"]
+            }
+
+    def test_the_forms_that_state_a_choice_are_not_form_elements(self, page):
+        prefixes = [
+            f"joined-{kind}-{value}"
+            for kind in CHOSEN_KINDS
+            for value in Modifiers.names(kind, None)
+        ]
+        for prefix in [*prefixes, JOINED_ERROR_PREFIX, JOINED_CHOICE_PREFIX]:
+            assert joined_field(page, prefix, "number").find_parent("form") is None
+
+    def test_the_form_to_submit_posts_with_a_token_and_a_button(self, page):
+        form = joined_field(page, JOINED_PREFIX, "number").find_parent("form")
+
+        assert form["method"] == "post"
+        assert form.find("input", attrs={"name": "csrfmiddlewaretoken"}) is not None
+        assert form.find("input", attrs={"type": "submit"}) is not None
+
+    def test_only_the_form_to_submit_is_a_form_element(self, page):
+        for prefix in (
+            JOINED_FAILING_PREFIX,
+            JOINED_HELP_PREFIX,
+            JOINED_STATES_PREFIX,
+            JOINED_UNLABELLED_PREFIX,
+            JOINED_SINGLE_PREFIX,
+        ):
+            field = page.find(id=re.compile(f"^id_{prefix}-"))
+            assert field.find_parent("form") is None
+
+    def test_nothing_is_shown_as_cleaned_before_a_post(self, page):
+        assert page.find(id=f"{JOINED_PREFIX}-cleaned") is None
+
+    def test_a_valid_post_shows_what_the_form_cleaned_to(self, open_page):
+        page = open_page(self.url_name, JOINED_POST)
+
+        for name, expected in (("country_code", "+44"), ("number", "5551234")):
+            shown = page.find(id=f"{JOINED_PREFIX}-cleaned-{name}")
+            assert shown.get_text(strip=True) == expected
+
+    def test_a_post_that_fails_in_one_member_comes_back_with_that_members_error(
+        self, open_page
+    ):
+        page = open_page(self.url_name, JOINED_ONE_MEMBER_FAILS)
+
+        number = joined_field(page, JOINED_PREFIX, "number")
+        code = joined_field(page, JOINED_PREFIX, "country_code")
+        assert number["aria-invalid"] == "true"
+        assert not code.has_attr("aria-invalid")
+        assert page.find(id=f"{number['id']}_error") is not None
+        assert code.find("option", selected=True)["value"] == "+44"
+        assert page.find(id=f"{JOINED_PREFIX}-cleaned") is None
+
+    @pytest.mark.parametrize(
+        "data",
+        [None, JOINED_POST, JOINED_ONE_MEMBER_FAILS],
+        ids=["get", "valid", "one member fails"],
+    )
+    def test_no_id_repeats(self, open_page, data):
+        page = open_page(self.url_name, data)
+        ids = [element["id"] for element in page.find_all(id=True)]
+
+        assert len(ids) == len(set(ids))
+
+
+class TestJoinedGroupsPage(JoinedGroupsPageContract):
+    url_name = "joined-groups"
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("joined-groups")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, page):
+        assert page.find("a", href=reverse("joined-groups-standalone")) is not None
+
+
+class TestStandaloneJoinedGroupsPage(JoinedGroupsPageContract):
+    url_name = "joined-groups-standalone"
+
+    def test_it_carries_no_stylesheet_but_daisyuis_cdn_build(self, page):
+        sheets = page.find_all("link", rel="stylesheet")
+        assert [sheet["href"] for sheet in sheets] == [
+            "https://cdn.jsdelivr.net/npm/daisyui@5"
+        ]
+
+    def test_it_carries_none_of_the_shells_navigation(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, page):
+        assert page.find("a", href=reverse("joined-groups")) is not None

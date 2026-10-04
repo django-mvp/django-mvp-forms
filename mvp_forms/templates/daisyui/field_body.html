@@ -10,16 +10,13 @@
     {{ drawn.render }}
     {% if drawn.appended %}<span class="label text-base-content">{{ drawn.appended|safe }}</span>{% endif %}
   </label>
+{% elif drawn.is_floating %}
+  <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="floating-label">
+    <span>{{ field.label }}{% include "daisyui/required_marker.html" %}</span>
+    {{ drawn.render }}
+  </label>
 {% else %}
   {{ drawn.render }}
 {% endif %}
 {% if drawn.is_joined %}{{ buttons }}</div>{% endif %}
-{% if field_class %}</div>{% endif %}
-{% if field.help_text %}
-  <p{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %} class="label text-base-content">{{ field.help_text }}</p>
-{% endif %}
-{% if field.errors and form_show_errors != False %}
-  <div{% if field.auto_id %} id="{{ field.auto_id }}_error"{% endif %}>
-    {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
-  </div>
-{% endif %}
+{% if field_class %}</div>{% endif %}{% include "daisyui/field_messages.html" %}

@@ -27,10 +27,20 @@ from demo.forms import (
     DrawingStateForm,
     DrawingTrioForm,
     FieldWithButtonsForm,
+    FloatingByNameForm,
+    FloatingChosenForm,
+    FloatingLabelsForm,
+    FloatingStatesForm,
     HelperButtonsForm,
     InlineChoicesForm,
     InlineFieldForm,
     InputKindsForm,
+    JoinedChosenForm,
+    JoinedGroupsForm,
+    JoinedHelpForm,
+    JoinedSingleForm,
+    JoinedStatesForm,
+    JoinedUnlabelledForm,
     LayoutObjectsForm,
     LockedKindsForm,
     ModalForm,
@@ -840,15 +850,8 @@ class StandaloneChoicesView(ChoicesMixin, TemplateView):
     template_name = "demo/choices_standalone.html"
 
 
-class DrawingsMixin:
-    """The form both drawings pages draw, with what it cleaned to once posted.
-
-    A post binds the form and draws the page again. Nothing is saved.
-    """
-
-    drawings_prefix = "drawings"
-    drawing_names = FieldInput.boolean_drawings
-    drawing_states = ("off", "on", "help", "error", "disabled")
+class CleanedMixin:
+    """What a posted form cleaned to, for a page to show."""
 
     def build_cleaned(self, form):
         """List what a posted form cleaned to, for the page to show.
@@ -866,6 +869,17 @@ class DrawingsMixin:
             {"name": name, "label": form.fields[name].label, "value": value}
             for name, value in form.cleaned_data.items()
         ]
+
+
+class DrawingsMixin(CleanedMixin):
+    """The form both drawings pages draw, with what it cleaned to once posted.
+
+    A post binds the form and draws the page again. Nothing is saved.
+    """
+
+    drawings_prefix = "drawings"
+    drawing_names = FieldInput.boolean_drawings
+    drawing_states = ("off", "on", "help", "error", "disabled")
 
     def build_drawing_states(self):
         """Build one small form for each drawing in each state.
@@ -1063,6 +1077,167 @@ class StandaloneRatingAndRangeView(RatingAndRangeMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/rating_and_range_standalone.html"
+
+
+class FloatingLabelsMixin(CleanedMixin):
+    """The forms both floating-label pages draw, with what the first cleaned to.
+
+    A post binds the form to submit and draws the page again. Nothing is saved.
+    """
+
+    floating_prefix = "floating"
+    floating_failing_prefix = "failing-floating"
+    floating_states_prefix = "floating-states"
+    floating_by_name_prefix = "floating-by-name"
+
+    def build_floating(self, kind):
+        """Build one small floating form for each name the tables have for a kind.
+
+        Args:
+            kind: ``"size"``, ``"color"`` or ``"variant"``.
+
+        Returns:
+            A list of dicts holding each name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": FloatingChosenForm(
+                    prefix=f"floating-{kind}-{name}",
+                    choices=FormChoices(label="floating", **{kind: name}),
+                ),
+            }
+            for name in Modifiers.names(kind, None)
+        ]
+
+    def get_context_data(self, **kwargs):
+        """Add the form to submit, what it cleaned to, and the forms beside it."""
+        form = kwargs.setdefault(
+            "form", FloatingLabelsForm(prefix=self.floating_prefix)
+        )
+        kwargs["sizes"] = self.build_floating("size")
+        kwargs["colors"] = self.build_floating("color")
+        kwargs["variants"] = self.build_floating("variant")
+        kwargs["failing_form"] = FloatingLabelsForm(
+            {}, prefix=self.floating_failing_prefix, posts=False
+        )
+        kwargs["states_form"] = FloatingStatesForm(prefix=self.floating_states_prefix)
+        kwargs["by_name_form"] = FloatingByNameForm(prefix=self.floating_by_name_prefix)
+        kwargs["cleaned"] = self.build_cleaned(form)
+        kwargs["prefix"] = self.floating_prefix
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to submit unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to submit bound to what was posted."""
+        form = FloatingLabelsForm(request.POST, prefix=self.floating_prefix)
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class FloatingLabelsView(FloatingLabelsMixin, MVPTemplateView):
+    """Fields drawn with a floating label, inside the application shell."""
+
+    template_name = "demo/floating_labels.html"
+    page_title = "Floating labels"
+    page_subtitle = "A label that floats over the field, chosen in Python"
+    breadcrumbs = [{"text": "Floating labels"}]
+
+
+class StandaloneFloatingLabelsView(FloatingLabelsMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/floating_labels_standalone.html"
+
+
+class JoinedGroupsMixin(CleanedMixin):
+    """The forms both joined-group pages draw, with what the first cleaned to.
+
+    A post binds the form to submit and draws the page again. Nothing is saved.
+    """
+
+    joined_prefix = "joined"
+    joined_failing_prefix = "failing-joined"
+    joined_help_prefix = "joined-help"
+    joined_states_prefix = "joined-states"
+    joined_unlabelled_prefix = "joined-unlabelled"
+    joined_single_prefix = "joined-single"
+
+    def build_joined(self, kind):
+        """Build one small joined group for each name the tables have for a kind.
+
+        Args:
+            kind: ``"size"``, ``"color"`` or ``"variant"``.
+
+        Returns:
+            A list of dicts holding each name and form.
+        """
+        return [
+            {
+                "title": name,
+                "form": JoinedChosenForm(
+                    prefix=f"joined-{kind}-{name}", choices=FormChoices(**{kind: name})
+                ),
+            }
+            for name in Modifiers.names(kind, None)
+        ]
+
+    def get_context_data(self, **kwargs):
+        """Add the form to submit, what it cleaned to, and the groups beside it."""
+        kwargs["sizes"] = self.build_joined("size")
+        kwargs["colors"] = self.build_joined("color")
+        kwargs["variants"] = self.build_joined("variant")
+        kwargs["error_form"] = JoinedChosenForm(
+            {"joined-error-country_code": "+49"},
+            prefix="joined-error",
+            choices=FormChoices(color="primary"),
+        )
+        kwargs["choice_form"] = JoinedChosenForm(
+            prefix="joined-choice",
+            choices=FormChoices(size="sm"),
+            around={"size": "lg", "color": "accent"},
+        )
+        form = kwargs.setdefault("form", JoinedGroupsForm(prefix=self.joined_prefix))
+        kwargs["failing_form"] = JoinedGroupsForm(
+            {f"{self.joined_failing_prefix}-country_code": "+49"},
+            prefix=self.joined_failing_prefix,
+            posts=False,
+        )
+        kwargs["help_form"] = JoinedHelpForm(prefix=self.joined_help_prefix)
+        kwargs["states_form"] = JoinedStatesForm(prefix=self.joined_states_prefix)
+        kwargs["unlabelled_form"] = JoinedUnlabelledForm(
+            prefix=self.joined_unlabelled_prefix
+        )
+        kwargs["single_form"] = JoinedSingleForm(prefix=self.joined_single_prefix)
+        kwargs["cleaned"] = self.build_cleaned(form)
+        kwargs["prefix"] = self.joined_prefix
+        return super().get_context_data(**kwargs)
+
+    def get(self, request, *args, **kwargs):
+        """Render the page with the form to submit unbound."""
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        """Render the page with the form to submit bound to what was posted."""
+        form = JoinedGroupsForm(request.POST, prefix=self.joined_prefix)
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class JoinedGroupsView(JoinedGroupsMixin, MVPTemplateView):
+    """Several fields drawn as one join under one label, inside the shell."""
+
+    template_name = "demo/joined_groups.html"
+    page_title = "Joined groups"
+    page_subtitle = "Several fields in one join under one label, chosen in Python"
+    breadcrumbs = [{"text": "Joined groups"}]
+
+
+class StandaloneJoinedGroupsView(JoinedGroupsMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/joined_groups_standalone.html"
 
 
 class OrderFormsetMixin:

@@ -2,6 +2,7 @@
 
 import ast
 import re
+from functools import partial
 from pathlib import Path
 
 import pytest
@@ -42,6 +43,7 @@ from django.apps import apps
 
 import mvp_forms
 from mvp_forms.choices import Choice, FormChoices, Modifiers
+from mvp_forms.layout import Join
 from tests.forms import (
     ButtonedForm,
     CheckboxForm,
@@ -53,11 +55,14 @@ from tests.forms import (
     EveryInputForm,
     FieldAndFormWideErrorsForm,
     FilesForm,
+    FloatingForm,
     FormWideErrorsForm,
     HelpedForm,
     InlineCheckboxesForm,
     InlineFieldsForm,
     InlineRadiosForm,
+    JoinedEdgesForm,
+    JoinedForm,
     LineFormSet,
     MediaForm,
     MultiWidgetsForm,
@@ -99,6 +104,7 @@ LAYOUT_UTILITIES = {
     "gap-2",
     "mt-4",
     "overflow-x-auto",
+    "w-auto",
 }
 
 
@@ -408,9 +414,17 @@ RANGES_SIZED = FormChoices(
     },
 )
 EVERY_CHOICE = FormChoices(size="sm", color="primary", variant="ghost")
+FLOATING_LABELS = FormChoices(label="floating")
 EVERY_BUTTON_CHOICE = FormChoices(
     size="lg", color="accent", button_color="neutral", button_variant="outline"
 )
+CHOSEN = [
+    (kind, name)
+    for kind in ("size", "color", "variant")
+    for name in Modifiers.names(kind, None)
+]
+CHOSEN_IN_ERROR = [(kind, name) for kind, name in CHOSEN if kind == "color"]
+ONE_MEMBER_FAILS = {"country_code": "+49", "number": ""}
 ERRORS_ONLY = "{{ form|as_crispy_errors }}"
 
 STATES = [
@@ -760,6 +774,80 @@ STATES = [
         "{{ form|crispy }}", MediaForm, NOTHING, id="media, through the filter"
     ),
     pytest.param("{% crispy form %}", MediaForm, NOTHING, id="media, through the tag"),
+    pytest.param(
+        "{{ form|crispy }}",
+        lambda: FloatingForm(choices=FLOATING_LABELS),
+        NOTHING,
+        id="floating labels, through the filter",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: FloatingForm({}, choices=FLOATING_LABELS),
+        NOTHING,
+        id="floating labels, invalid, through the tag",
+    ),
+    pytest.param("{% crispy form %}", JoinedForm, NOTHING, id="joined group"),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: JoinedForm({"country_code": "+99"}),
+        NOTHING,
+        id="joined group, invalid",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: JoinedForm(show_labels=False),
+        NOTHING,
+        id="joined group without labels",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: JoinedEdgesForm(
+            {"country_code": "+99"},
+            layout=[Join("country_code", "locked", "fixed", "token", css_class="mine")],
+        ),
+        MINE,
+        id="joined group with a disabled, a read-only and a hidden member, invalid",
+    ),
+    *[
+        pytest.param(
+            "{{ form|crispy }}",
+            partial(
+                FloatingForm, choices=FormChoices(label="floating", **{kind: name})
+            ),
+            NOTHING,
+            id=f"floating labels at {kind} {name}",
+        )
+        for kind, name in CHOSEN
+    ],
+    *[
+        pytest.param(
+            "{% crispy form %}",
+            partial(
+                FloatingForm, {}, choices=FormChoices(label="floating", **{kind: name})
+            ),
+            NOTHING,
+            id=f"floating labels at {kind} {name}, invalid",
+        )
+        for kind, name in CHOSEN_IN_ERROR
+    ],
+    *[
+        pytest.param(
+            "{% crispy form %}",
+            partial(JoinedForm, choices=FormChoices(**{kind: name})),
+            NOTHING,
+            id=f"joined group at {kind} {name}",
+        )
+        for kind, name in CHOSEN
+    ],
+    *[
+        pytest.param(
+            "{% crispy form %}",
+            partial(JoinedForm, ONE_MEMBER_FAILS, choices=FormChoices(**{kind: name})),
+            NOTHING,
+            id=f"joined group at {kind} {name}, one member invalid",
+        )
+        for kind, name in CHOSEN_IN_ERROR
+    ],
 ]
 
 
@@ -791,6 +879,12 @@ class TestModifierTables:
             for modifiers in Modifiers.tables[kind].values()
             for name in modifiers.values()
         }
+
+        assert written
+        assert written <= daisyui_classes, written - daisyui_classes
+
+    def test_every_class_a_label_means_is_one_daisyui_defines(self, daisyui_classes):
+        written = set(Modifiers.labels.values())
 
         assert written
         assert written <= daisyui_classes, written - daisyui_classes
