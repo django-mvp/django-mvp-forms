@@ -12,6 +12,7 @@ from tests.forms import (
     RangedLineFormSet,
     RangesForm,
     RefusedRangesForm,
+    RestingLineFormSet,
     formset_helper,
 )
 
@@ -44,6 +45,14 @@ def submitted(soup, **slid):
     data = QueryDict(mutable=True)
     for name, value in slid.items():
         data[input_of(soup, name)["name"]] = str(value)
+    return data
+
+
+def as_drawn(soup):
+    """Return the data sent when nobody touches the page: every input as drawn."""
+    data = QueryDict(mutable=True)
+    for tag in soup.find_all("input", attrs={"name": True}):
+        data[tag["name"]] = tag.get("value", "")
     return data
 
 
@@ -303,6 +312,28 @@ class TestRangeAmongOtherFields:
         for row in range(3):
             assert input_of(soup, f"form-{row}-level")["type"] == "range"
         assert len(ids) == len(set(ids))
+
+    @pytest.mark.parametrize("template", [None, TABLE], ids=["stacked", "table"])
+    def test_an_extra_form_left_alone_is_unchanged_when_its_range_has_an_initial_value(
+        self, draw, template
+    ):
+        settings = {} if template is None else {"template": template}
+        helper = formset_helper(**settings)
+        helper.daisyui = stating("level")
+        soup = draw(
+            "{% crispy formset helper %}",
+            formset=RestingLineFormSet(),
+            helper=helper,
+        )
+
+        formset = RestingLineFormSet(as_drawn(soup))
+
+        assert [input_of(soup, f"form-{row}-level")["value"] for row in range(2)] == [
+            "5",
+            "5",
+        ]
+        assert [form.has_changed() for form in formset.forms] == [False, False]
+        assert formset.is_valid()
 
     def test_text_attached_to_a_range_is_not_drawn_and_the_range_is(self, draw):
         form = RangesForm(
