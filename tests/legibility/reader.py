@@ -180,6 +180,7 @@ class Reader:
             "gap-2",
             "mt-4",
             "overflow-x-auto",
+            "text-wrap",
             *(
                 f"{control}-{size}"
                 for control in (*CONTROLS, "rating")
