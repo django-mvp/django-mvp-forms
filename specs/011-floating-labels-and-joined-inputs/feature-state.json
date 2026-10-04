@@ -2,7 +2,7 @@
   "feature": "011-floating-labels-and-joined-inputs",
   "branch": "011-floating-labels-and-joined-inputs",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "QUEUED",
@@ -38,6 +38,11 @@
       "state": "PR_READY",
       "at": "2026-10-04T00:35:24Z",
       "note": "review closed, walkthrough laid out"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-10-04T00:42:59Z",
+      "note": "PR #98 merged; approved by forge-aeo-reviewer"
     }
   ],
   "gates": {
@@ -53,8 +58,8 @@
       "at": "2026-10-03T23:17:37Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "forge-aeo-reviewer",
+      "at": "2026-10-04T00:42:54Z"
     },
     "design_review": {
       "approved_by": "design review, one reviewer, three lenses: approve, all findings applied",
@@ -81,8 +86,8 @@
       ]
     },
     "walkthrough": {
-      "approved_by": null,
-      "at": "2026-10-04T00:34:55Z",
+      "approved_by": "delegated review",
+      "at": "2026-10-04T00:42:56Z",
       "self_resolved": []
     }
   },
@@ -363,12 +368,12 @@
       "max": 1
     },
     "tokens": {
-      "used": 21.35,
+      "used": 32.53,
       "max": 120
     }
   },
   "pr": {
     "number": 98,
-    "draft": true
+    "draft": false
   }
 }
