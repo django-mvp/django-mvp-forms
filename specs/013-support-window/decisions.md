@@ -45,7 +45,7 @@ minor release (FR-003 to FR-005).
 run on, and it borrows Django's own published support schedule, which a host project already
 plans around.
 
-**ADR:** docs/adr/0036-the-support-window-is-declared-once.md
+**ADR:** docs/adr/0038-the-support-window-is-declared-once.md
 
 ## D3. Testing against a daisyUI version means checking its classes
 
@@ -96,7 +96,7 @@ the issue tracking it. A new major version of django-crispy-forms or daisyUI car
 upgrade and long enough for one maintainer to keep through a holiday. It is a number, so it can
 be changed by changing a number.
 
-**ADR:** docs/adr/0036-the-support-window-is-declared-once.md
+**ADR:** docs/adr/0038-the-support-window-is-declared-once.md
 
 ## D5. Dropping a version is not a breaking change
 
@@ -123,7 +123,7 @@ earlier releases get no fixes (FR-015 to FR-018).
 the work: a host project on a dropped Django keeps getting the last release that supported it
 without doing anything.
 
-**ADR:** docs/adr/0036-the-support-window-is-declared-once.md
+**ADR:** docs/adr/0038-the-support-window-is-declared-once.md
 
 ## D6. No upper limit on Django or django-crispy-forms
 

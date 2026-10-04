@@ -98,3 +98,13 @@ Verified: full verify green after the fixes; releases against the real sources r
 Next: mark the pull request ready and hand over at the merge gate.
 
 Watch: record number 0036 is free on main as of this push; FS-011 is still building and may claim it first.
+
+## 2026-10-04T00:46:02Z · Forge · level with main
+
+Did: merged main after FS-011 landed and took record numbers 0036 and 0037; this feature's record is now 0038.
+
+Verified: full verify green on the merged branch.
+
+Next: hand over at the merge gate.
+
+Watch: no sibling build is left to claim a number.

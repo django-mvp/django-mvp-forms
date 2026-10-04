@@ -1,4 +1,4 @@
-# ADR 0036 — The support window is declared once, and a version leaves by a published rule
+# ADR 0038 — The support window is declared once, and a version leaves by a published rule
 
 **Status:** accepted
 
