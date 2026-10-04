@@ -1,10 +1,10 @@
 # The support window: the versions of Django, django-crispy-forms and daisyUI this
-# package states it works with. The README, the package metadata and the test
-# suite are checked against this file. To change it, follow "Changing the support
-# window" under Contributing in the README.
+# package states it works with. The README, the package metadata, the test
+# workflow and the test suite are checked against this file. To change it, follow
+# "Changing the support window" under Contributing in the README.
 
 # The Python versions the suite runs on.
-python = ["3.12", "3.13"]
+python = ["3.12", "3.13", "3.14"]
 
 [django]
 # The oldest release series any release of this package supported.
