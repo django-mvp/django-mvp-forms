@@ -11,6 +11,7 @@ from support_window import (
     DECLARATION,
     ROOT,
     SOURCES,
+    WORKFLOW_FILE,
     Dropped,
     InvalidWindow,
     MissingClassList,
@@ -92,6 +93,18 @@ Each django-crispy-forms release works with the Django series on its row:
 """
 
 
+WORKFLOW = """
+jobs:
+  call-tests:
+    uses: django-mvp/shared/.github/workflows/tests.yml@v0.6.0
+    with:
+      coverage-package: mvp_forms
+      python-versions: '["3.12", "3.13"]'
+      django-versions: '["5.2", "6.0", "6.1"]'
+    secrets: inherit
+"""
+
+
 @pytest.fixture
 def declared():
     return copy.deepcopy(CURRENT)
@@ -117,6 +130,11 @@ def pyproject():
 @pytest.fixture
 def readme():
     return README
+
+
+@pytest.fixture
+def workflow():
+    return WORKFLOW
 
 
 @pytest.fixture
@@ -150,6 +168,11 @@ def repository_readme():
 @pytest.fixture
 def repository_changelog():
     return (ROOT / "CHANGELOG.md").read_text()
+
+
+@pytest.fixture
+def repository_workflow():
+    return WORKFLOW_FILE.read_text()
 
 
 @pytest.fixture
@@ -691,6 +714,51 @@ class TestReadme:
         assert ("README", "dropped-versions", "") in found(
             window.readme_disagreements(unmarked)
         )
+
+
+class TestWorkflow:
+    def test_the_repositorys_workflow_agrees_with_its_declaration(
+        self, repository_declaration, repository_workflow
+    ):
+        window = Window.from_mapping(repository_declaration)
+
+        assert window.workflow_disagreements(repository_workflow) == []
+
+    def test_a_workflow_written_for_a_window_agrees_with_it(self, declared, workflow):
+        window = Window.from_mapping(declared)
+
+        assert window.workflow_disagreements(workflow) == []
+
+    def test_a_python_version_added_to_the_window_is_named(self, declared, workflow):
+        declared["python"].append("3.14")
+        window = Window.from_mapping(declared)
+
+        assert found(window.workflow_disagreements(workflow)) == {
+            ("workflow", "python", "3.14")
+        }
+
+    def test_a_django_series_removed_from_the_window_is_named(self, workflow):
+        window = Window.from_mapping(mapping_starting_at_django_6_0())
+
+        assert ("workflow", "django", "5.2") in found(
+            window.workflow_disagreements(workflow)
+        )
+
+    @pytest.mark.parametrize(
+        ("package", "line"),
+        [
+            ("python", """      python-versions: '["3.12", "3.13"]'\n"""),
+            ("django", """      django-versions: '["5.2", "6.0", "6.1"]'\n"""),
+        ],
+    )
+    def test_a_workflow_that_does_not_pass_its_versions_names_the_package(
+        self, declared, workflow, package, line
+    ):
+        window = Window.from_mapping(declared)
+
+        assert found(window.workflow_disagreements(workflow.replace(line, ""))) == {
+            ("workflow", package, "")
+        }
 
 
 def locked(lock, package, version):

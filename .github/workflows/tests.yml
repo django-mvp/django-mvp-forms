@@ -23,4 +23,7 @@ jobs:
     uses: django-mvp/shared/.github/workflows/tests.yml@v0.6.0
     with:
       coverage-package: mvp_forms
+      # The versions support-window.toml names. A test fails when the two differ.
+      python-versions: '["3.12", "3.13", "3.14"]'
+      django-versions: '["5.2", "6.0", "6.1"]'
     secrets: inherit

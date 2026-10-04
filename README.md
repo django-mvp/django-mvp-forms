@@ -63,7 +63,7 @@ A host project with its own Tailwind build has to make that build produce the cl
 | Django | 5.2, 6.0, 6.1 |
 | django-crispy-forms | 2.7 |
 | daisyUI | 5.0 to 5.7 |
-| Python | 3.12, 3.13 |
+| Python | 3.12, 3.13, 3.14 |
 
 Each django-crispy-forms release works with the Django series on its row:
 
@@ -1167,8 +1167,9 @@ The versions this package supports are declared in
 The tables in
 [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions), the
 table of versions that have left, the package metadata, the lockfile, the installed versions, the
-release headings of the changelog and the daisyUI class lists are checked against that file on
-every test run, so a change to one that the others do not follow fails the suite.
+versions the test workflow runs on, the release headings of the changelog and the daisyUI class
+lists are checked against that file on every test run, so a change to one that the others do not
+follow fails the suite.
 
 To add a version, change these together:
 
@@ -1176,7 +1177,9 @@ To add a version, change these together:
    `[django-crispy-forms.pairs]` naming the Django series it supports.
 2. Add it to the two tables in "Supported versions".
 3. For a Django series or a Python version, add its trove classifier to `pyproject.toml`. The
-   requirements there say `>=` the oldest named version and nothing else.
+   requirements there say `>=` the oldest named version and nothing else. Add it as well to
+   `django-versions` or `python-versions` in `.github/workflows/tests.yml`, which passes both
+   lists to the shared tests workflow so that its defaults are never the versions run.
 4. For a daisyUI version that becomes the minimum or the newest, write its class list with
    `uv run python support_window.py classes 5.8`. It finds the newest patch release of that minor
    version, reads the stylesheet daisyUI publishes for it and writes
@@ -1200,12 +1203,14 @@ To take a version out, change these together:
    the window." from "Versions that have left", as the first row goes into the table.
 3. For a Django or django-crispy-forms version, raise the minimum in the dependencies of
    `pyproject.toml`, so that an installer in a project still on the dropped version selects the
-   last release that supported it. For a Django series, also remove its trove classifier.
+   last release that supported it. For a Django series, also remove its trove classifier and take
+   it out of `django-versions` in `.github/workflows/tests.yml`.
 4. Write the CHANGELOG entry under Removed, naming each version dropped and the last release that
    supported it.
 
-A Python version is taken out by removing it from `python` in the declaration, from the table and
-from its classifier, and it gets no `[[dropped]]` entry.
+A Python version is taken out by removing it from `python` in the declaration, from the table,
+from its classifier and from `python-versions` in `.github/workflows/tests.yml`, and it gets no
+`[[dropped]]` entry.
 
 The suite names a version that is both in the window and dropped, a version between `first`, the
 oldest this package ever supported, and the newest named that is neither, a last release that the
@@ -1238,12 +1243,14 @@ A new major version of django-crispy-forms or daisyUI is printed and does not ch
 Every newer Django series counts, including a new major version. Pre-releases are ignored. The
 command uses the network and the test suite never runs it. It is run by hand, because running it
 on a schedule needs a workflow, which is tracked in
-[issue 92](https://github.com/django-mvp/django-mvp-forms/issues/92).
+[issue 127](https://github.com/django-mvp/django-mvp-forms/issues/127).
 
-The test workflow runs every Django series and Python version named in the window, and the one
-django-crispy-forms release named today. Naming a second django-crispy-forms release needs the
-workflow to read its versions from the declaration, which is tracked in
-[issue 92](https://github.com/django-mvp/django-mvp-forms/issues/92).
+The test workflow runs every Django series and Python version named in the window, and the suite
+fails when the lists in `.github/workflows/tests.yml` differ from the declaration. It runs
+django-crispy-forms only at the release in `uv.lock`, which is the one release named today. Running
+a second named release needs the shared tests workflow to take the versions of another package,
+which is tracked in
+[issue 126](https://github.com/django-mvp/django-mvp-forms/issues/126).
 
 `demo/` is a Django project on django-mvp's application shell, for looking at
 this package in a browser while working on it:
