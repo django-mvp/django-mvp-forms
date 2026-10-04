@@ -11,12 +11,17 @@ depend on django-mvp at runtime.
 
 ## Stack and commands
 
-- **Stack:** Python 3.12+ / Django 5.2, 6.0 and 6.1, uv-managed (hatchling build backend), built on
-  django-crispy-forms. django-mvp is a development dependency, for the demo project only
+- **Stack:** Python 3.12+ / Django, uv-managed (hatchling build backend), built on
+  django-crispy-forms. The versions supported are declared in `support-window.toml`. django-mvp is a
+  development dependency, for the demo project only
 - **Install:** `uv sync`
 - **Test (whole suite):** `uv run pytest -n auto --dist loadscope`
 - **Test (one class or file, while iterating):** `uv run pytest <path> -x` —
   serial, because starting the workers costs more than a focused run takes
+- **Test (one named Django and django-crispy-forms pair):**
+  `uv run python support_window.py test 5.2 2.7` — the pair must be one the window offers
+- **Releases the window does not name:** `uv run python support_window.py releases` —
+  uses the network, exit 0 nothing outstanding, 1 a release is missing, 2 a source failed
 - **Legibility report:** `uv run python -m tests.legibility` — prints the table of
   known exceptions as the README should hold it, then the dimmed pairings of every
   disabled control with their ratio under each theme

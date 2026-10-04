@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table. Nothing is published to PyPI.
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table. Nothing is published to PyPI. The versions of Django, django-crispy-forms and daisyUI it supports are in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions).
 
 ## Why
 
@@ -46,7 +46,7 @@ INSTALLED_APPS = [
 ]
 ```
 
-The host project supplies daisyUI itself. This package ships markup, not a stylesheet. Pages that draw these forms must load daisyUI 5. Its CDN build needs no build step, so daisyUI's own CDN install in the page's `<head>` is enough:
+The host project supplies daisyUI itself. This package ships markup, not a stylesheet. Pages that draw these forms must load daisyUI 5, from the minor release named in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions) upward. Its CDN build needs no build step, so daisyUI's own CDN install in the page's `<head>` is enough:
 
 ```html
 <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
@@ -54,6 +54,52 @@ The host project supplies daisyUI itself. This package ships markup, not a style
 ```
 
 A host project with its own Tailwind build has to make that build produce the classes the pack writes. Tailwind only generates a class it finds in the files it scans, so point it at the whole installed `mvp_forms` package: the classes are written in its templates and in its template tags.
+
+## Supported versions
+
+<!-- support-window -->
+| | Supported |
+|---|---|
+| Django | 5.2, 6.0, 6.1 |
+| django-crispy-forms | 2.7 |
+| daisyUI | 5.0 to 5.7 |
+| Python | 3.12, 3.13 |
+
+Each django-crispy-forms release works with the Django series on its row:
+
+| django-crispy-forms | Django |
+|---|---|
+| 2.7 | 5.2, 6.0, 6.1 |
+<!-- /support-window -->
+
+A version is named the way a project chooses it: a release series for Django, a feature release for django-crispy-forms, and a major version with a minimum minor release for daisyUI. The newest patch release of each named version is the one meant. The Python versions are the ones the test suite runs on.
+
+Django is supported for every release series the Django project still supports with mainstream or security fixes. django-crispy-forms is supported for every feature release of its current major series from the minimum named above. daisyUI is supported for its current major version from the minimum named above. The test suite checks the pack against the two ends of the daisyUI range named above, and does not check the releases between them one by one. A daisyUI version below the minimum is outside the window, whether it comes from the CDN or from a Tailwind build of your own.
+
+A Django or django-crispy-forms release newer than any named above installs, because the package sets no upper limit on either. It is not vouched for until this section names it.
+
+### How soon a new release is supported
+
+Within thirty days of its final release, a new Django release series, a new django-crispy-forms feature release in its current major series and a new daisyUI minor release in its current major version are each either supported by a release of this package or listed here as not supported, with a link to the [issue](https://github.com/django-mvp/django-mvp-forms/issues) that tracks it. A pre-release is not covered. Python versions carry no period: this section follows what the suite runs on.
+
+A new major version of django-crispy-forms or daisyUI has no period. It is supported only from the release of this package that names it.
+
+A page that loads `daisyui@5` from the CDN receives a new daisyUI minor release as soon as daisyUI publishes it, before this section names it. For up to thirty days that release is neither checked nor named. After that this section either names it or says it is not supported and links the issue.
+
+### How a version leaves
+
+- A Django series leaves when the Django project ends its support for it.
+- A django-crispy-forms release leaves when the minimum is raised. The minimum is raised only when the release no longer supports any Django series in the window, or when the pack needs something a later release provides.
+- The daisyUI minimum is raised only when the pack needs a class that a later minor release provides. A daisyUI major version leaves only when this package's own major version changes.
+
+Dropping a version is not a breaking change. It ships in a minor or major release of this package and never in a patch release. The changelog names each version a release drops.
+
+### Versions that have left
+
+No version has left the window. When one does, it is listed below with the last release of this package that supported it. An installer in a project still on a dropped Django or django-crispy-forms version selects that last release by itself, because every later release requires a newer version. That last release is not fixed further: a defect found in it later gets no new release.
+
+<!-- dropped-versions -->
+<!-- /dropped-versions -->
 
 ## Quickstart
 
@@ -1112,6 +1158,91 @@ uv sync
 uv run pytest
 uv run pre-commit install
 ```
+
+### Changing the support window
+
+The versions this package supports are declared in
+[support-window.toml](https://github.com/django-mvp/django-mvp-forms/blob/main/support-window.toml).
+The tables in
+[Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions), the
+table of versions that have left, the package metadata, the lockfile, the installed versions, the
+release headings of the changelog and the daisyUI class lists are checked against that file on
+every test run, so a change to one that the others do not follow fails the suite.
+
+To add a version, change these together:
+
+1. Add the version to `support-window.toml`. A django-crispy-forms release also gets a line under
+   `[django-crispy-forms.pairs]` naming the Django series it supports.
+2. Add it to the two tables in "Supported versions".
+3. For a Django series or a Python version, add its trove classifier to `pyproject.toml`. The
+   requirements there say `>=` the oldest named version and nothing else.
+4. For a daisyUI version that becomes the minimum or the newest, write its class list with
+   `uv run python support_window.py classes 5.8`. It finds the newest patch release of that minor
+   version, reads the stylesheet daisyUI publishes for it and writes
+   `tests/data/daisyui-classes-5.8.txt`. It uses the network. Delete the list of a version that is
+   no longer one end of the range. Every test that compares the pack's classes with daisyUI's runs
+   once for each list. When the newest version changes, also replace `tests/data/daisyui-themes.css`
+   with the `themes.css` of the same patch release, which the legibility check reads. A test fails
+   until that file and the newest class list name the same version.
+5. Run the suite on the new pair, as below.
+
+To take a version out, change these together:
+
+1. Remove it from `versions` in `support-window.toml`, or for daisyUI raise `minimum`. Add a
+   `[[dropped]]` table for it with its `package`, its `version` and the `last-release`, the last
+   release of this package that supported it. The file has a commented example. A django-crispy-forms
+   release also loses its line under `[django-crispy-forms.pairs]`, and a dropped Django series
+   comes out of every line that lists it.
+2. Remove it from the two tables in "Supported versions" and add a row to the table of versions
+   that have left, between the `dropped-versions` comments, as `| package | version | last release |`
+   under a header row. When the first version leaves, remove the sentence "No version has left
+   the window." from "Versions that have left", as the first row goes into the table.
+3. For a Django or django-crispy-forms version, raise the minimum in the dependencies of
+   `pyproject.toml`, so that an installer in a project still on the dropped version selects the
+   last release that supported it. For a Django series, also remove its trove classifier.
+4. Write the CHANGELOG entry under Removed, naming each version dropped and the last release that
+   supported it.
+
+A Python version is taken out by removing it from `python` in the declaration, from the table and
+from its classifier, and it gets no `[[dropped]]` entry.
+
+The suite names a version that is both in the window and dropped, a version between `first`, the
+oldest this package ever supported, and the newest named that is neither, a last release that the
+changelog has no heading for, a row of the table that the declaration does not match, and a
+requirement that still admits a dropped version. A drop ships in a minor or major release and
+never in a patch release, and one release may drop several versions. No check enforces the kind
+of release, because the version number is raised after the change merges.
+
+`uv run python support_window.py test 5.2 2.7` runs the whole suite on Django 5.2 and
+django-crispy-forms 2.7. The two versions are laid over the project's environment for that one
+command, so your own environment is left as it was. Arguments after the pair go to pytest instead
+of the default of running in parallel. The header of every test run names the Django and
+django-crispy-forms it ran on, and a run that finds other versions than the ones it was asked for
+stops before the first test with a usage error. A pair the window does not offer runs nothing and
+exits with a failing status.
+
+`uv run python support_window.py releases` asks the package index for Django and
+django-crispy-forms and the npm registry for daisyUI, and says whether a final release exists that
+the window does not name. It prints one line for each Django series, django-crispy-forms feature
+release and daisyUI minor release newer than the newest the window names, with the day it was
+first released. Its exit status is:
+
+- `0` when nothing is outstanding.
+- `1` when at least one such release is missing from the window.
+- `2` when a source could not be reached, its answer could not be read, or it does not list the
+  newest version the window names. The output names the package it could not find out about and
+  does not say the window is current.
+
+A new major version of django-crispy-forms or daisyUI is printed and does not change the status.
+Every newer Django series counts, including a new major version. Pre-releases are ignored. The
+command uses the network and the test suite never runs it. It is run by hand, because running it
+on a schedule needs a workflow, which is tracked in
+[issue 92](https://github.com/django-mvp/django-mvp-forms/issues/92).
+
+The test workflow runs every Django series and Python version named in the window, and the one
+django-crispy-forms release named today. Naming a second django-crispy-forms release needs the
+workflow to read its versions from the declaration, which is tracked in
+[issue 92](https://github.com/django-mvp/django-mvp-forms/issues/92).
 
 `demo/` is a Django project on django-mvp's application shell, for looking at
 this package in a browser while working on it:

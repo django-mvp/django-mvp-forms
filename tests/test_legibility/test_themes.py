@@ -2,12 +2,14 @@ from pathlib import Path
 
 import pytest
 
+from support_window import DECLARATION, Window
 from tests.legibility.colours import Colour
 from tests.legibility.themes import Themes
 
 DATA = Path(__file__).parent.parent / "data"
 THEMES_CSS = (DATA / "daisyui-themes.css").read_text()
-CLASSES_TXT = (DATA / "daisyui-classes.txt").read_text()
+NEWEST = Window.read(DECLARATION).daisyui_newest
+CLASSES_TXT = (DATA / f"daisyui-classes-{NEWEST}.txt").read_text()
 
 COLOURS = {
     "base-100",

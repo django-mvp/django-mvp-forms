@@ -1,0 +1,449 @@
+{
+  "feature": "013-support-window",
+  "branch": "013-support-window",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-03T21:42:59Z",
+      "note": "specification approved by delegated review at commit ab39cb060bb7830951bcec62af010295bdd95897, on pull request #97; epic #89, stories #107, #109, #110 and #111"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-03T23:28:42Z",
+      "note": "plan.md, research.md, tasks.md: 4 stories, 7 tasks; continues on pull request #97"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-03T23:28:54Z",
+      "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-03T23:35:03Z",
+      "note": "plan gate open; US1 first"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-04T00:16:14Z",
+      "note": "all four stories done"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-04T00:21:36Z",
+      "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-04T00:39:05Z",
+      "note": "review approve; every finding closed; level with main"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "delegated review",
+      "at": "2026-10-03T21:42:59Z",
+      "self_resolved": [
+        "approved at commit ab39cb060bb7830951bcec62af010295bdd95897 (forge spec-gate, pull request #97); spec gate opened by Sam, 2026-10-03: all gates are open"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-03T23:34:54Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: changes requested, all findings applied",
+      "at": "2026-10-03T23:34:54Z",
+      "self_resolved": [
+        "ARC-001 (high) eight functions took the window first: made methods of Window, Article X row added to the plan, tasks renamed",
+        "SPC-001 (medium) a test of the versions declared today is a change detector: TestWindow builds its windows from supplied mappings and files",
+        "ARC-002 (medium) the two urlopen calls trip a lint rule: exemption on the line with its reason, no change to pyproject.toml, applied to plan and T004",
+        "SPC-002 (low) the asked-for mismatch was tested for Django only: two django-crispy-forms cases added to T003",
+        "SPC-003 (low) the period is not a version: dropped from the declaration, the README check and the releases report",
+        "SPC-004 (low) three pieces of work with no requirement behind them: dropped from T005 and T007"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, two reviewers (correctness and spec compliance; security): approve",
+      "at": "2026-10-04T00:37:53Z",
+      "self_resolved": [
+        "COR-001 (medium) tests stood on the versions declared today: fixed, T009",
+        "COR-002 (medium) releases called an empty or unrelated listing current: fixed, T011 and T012",
+        "COR-003 (medium) the README repeated the daisyUI ends outside the checked block: fixed, T010",
+        "COR-004 (low) requirement names not normalised, a missing requirement not reported: fixed, T010",
+        "COR-005 (low) a patch release in a README cell passed as its series: fixed, T010",
+        "COR-006 (low) an answer cut short escaped as a traceback: fixed, T011",
+        "COR-007 (low) a minimum above the newest and a first above the oldest were accepted: fixed, T010",
+        "COR-008 (low) a lock with no entry for a package passed: fixed, T010",
+        "COR-009 (low) reference-style links and src were not read: fixed, T010",
+        "COR-010 (low) a dotted name in an at-rule was read as a class: fixed, T010",
+        "COR-011 (low) django_series_from beside its twin: made a method of Window; the class-list functions stay functions, reason in the plan, T010",
+        "SEC-001 (low) a failed encode left the class list empty: fixed, T010",
+        "SEC-002 (low) a scan quadratic in a run with no brace: fixed, T010",
+        "SEC-003 (low) three answers escaped the could-not-find-out path: fixed, T011"
+      ]
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 107,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestWindow",
+              "tests/test_support_window.py::TestMetadata"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -x -q (exit 0, 19 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "support_window.py:24",
+              "support_window.py:44",
+              "support_window.py:61",
+              "support_window.py:162",
+              "support-window.toml:1"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestReadmeLinks"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -q (exit 0, 25 passed)",
+              "uv run pytest tests/test_pack/test_documented_examples.py tests/test_pack/test_template_surface.py tests/test_pack/test_template_list.py tests/test_support_window.py -q (exit 0, 157 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "support_window.py:267",
+              "README.md:58",
+              "CONTEXT.md:147",
+              "CHANGELOG.md:31",
+              "AGENTS.md:15"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 109,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestReadme",
+              "tests/test_support_window.py::TestLockfile",
+              "tests/test_support_window.py::TestInstalled"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -x -q (exit 0, 44 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "support_window.py:293",
+              "support_window.py:353",
+              "support_window.py:377",
+              "support_window.py:529"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestClassNames",
+              "tests/test_support_window.py::TestClassLists",
+              "tests/test_pack/test_independence.py::TestEmittedClasses",
+              "tests/test_pack/test_independence.py::TestModifierTables"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py tests/test_pack/test_independence.py -q -n auto --dist loadscope (exit 0, 287 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run python -c, calling write_class_list for 5.0 and for 5.7 (exit 0, by hand, network)"
+            ],
+            "code": [
+              "support_window.py:563",
+              "support_window.py:578",
+              "support_window.py:591",
+              "support_window.py:604",
+              "support_window.py:626",
+              "support_window.py:646",
+              "tests/conftest.py:138"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestRunSuite",
+              "tests/test_support_window.py::TestMain"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -x -q (exit 0, 67 passed)",
+              "uv run python support_window.py test 5.2 2.7 (exit 0, 3964 passed on Django 5.2.17)",
+              "SUPPORT_WINDOW_DJANGO=5.2 uv run pytest tests/test_smoke.py (exit 4, usage error, no test run)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "support_window.py:417",
+              "support_window.py:688",
+              "tests/conftest.py:31",
+              "tests/conftest.py:36"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_legibility/test_themes.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_legibility/test_themes.py -q",
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "tests/test_legibility/test_themes.py:12",
+              "README.md:1099"
+            ]
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -q",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "tests/test_support_window.py:73",
+              "tests/test_support_window.py:101"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestWindow",
+              "tests/test_support_window.py::TestMetadata",
+              "tests/test_support_window.py::TestReadme",
+              "tests/test_support_window.py::TestReadmeLinks",
+              "tests/test_support_window.py::TestLockfile",
+              "tests/test_support_window.py::TestClassNames",
+              "tests/test_support_window.py::TestClassLists",
+              "tests/test_support_window.py::TestDropped"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -q",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "support_window.py:221",
+              "support_window.py:355",
+              "support_window.py:680",
+              "support_window.py:977",
+              "support_window.py:1056",
+              "support_window.py:1141",
+              "support_window.py:1187",
+              "README.md:77",
+              "README.md:1115",
+              "README.md:1123"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P3",
+      "issue": 110,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestDropped",
+              "tests/test_support_window.py::TestWindow",
+              "tests/test_support_window.py::TestMetadata",
+              "tests/test_support_window.py::TestReadme"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -x -q (exit 0, 93 passed)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)",
+              "uv run pytest -n auto --dist loadscope (exit 0, 4268 passed)"
+            ],
+            "code": [
+              "support_window.py:93",
+              "support_window.py:337",
+              "support_window.py:463",
+              "support_window.py:518",
+              "support_window.py:804"
+            ],
+            "verified_by_ci": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P3",
+      "issue": 111,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestFinalReleases",
+              "tests/test_support_window.py::TestOutstanding",
+              "tests/test_support_window.py::TestReportReleases",
+              "tests/test_support_window.py::TestMainReleases"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -x -q (exit 0, 129 passed)",
+              "uv run python support_window.py releases (exit 0)",
+              "uv run pre-commit run --all-files (exit 0)",
+              "uv run mypy (exit 0)",
+              "uv run pytest -n auto --dist loadscope (exit 0, 4304 passed)"
+            ],
+            "code": [
+              "support_window.py:29",
+              "support_window.py:143",
+              "support_window.py:752",
+              "support_window.py:782",
+              "support_window.py:823",
+              "support_window.py:1037",
+              "support_window.py:1161"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestFinalReleases",
+              "tests/test_support_window.py::TestReportReleases"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -q",
+              "uv run pre-commit run --all-files",
+              "uv run mypy",
+              "uv run pytest -n auto --dist loadscope"
+            ],
+            "code": [
+              "support_window.py:837",
+              "support_window.py:1096"
+            ],
+            "verified_by_ci": false
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_support_window.py::TestReportReleases"
+            ],
+            "commands": [
+              "uv run pytest tests/test_support_window.py -q",
+              "uv run python support_window.py releases"
+            ],
+            "code": [
+              "support_window.py:866",
+              "tests/test_support_window.py:1402"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 14.88,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 97,
+    "draft": true
+  }
+}
