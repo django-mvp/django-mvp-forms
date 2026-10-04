@@ -70,30 +70,90 @@ newest = "5.4"
 """
 
 
+README = """# A package
+
+<!-- support-window -->
+| | Supported |
+|---|---|
+| Django | 5.2, 6.0, 6.1 |
+| django-crispy-forms | 2.7 |
+| daisyUI | 5.0 to 5.7 |
+| Python | 3.12, 3.13 |
+
+Each django-crispy-forms release works with the Django series on its row:
+
+| django-crispy-forms | Django |
+|---|---|
+| 2.7 | 5.2, 6.0, 6.1 |
+<!-- /support-window -->
+
+<!-- dropped-versions -->
+<!-- /dropped-versions -->
+"""
+
+
 @pytest.fixture
 def declared():
+    return copy.deepcopy(CURRENT)
+
+
+@pytest.fixture
+def pyproject():
+    return {
+        "project": {
+            "dependencies": ["django>=5.2", "django-crispy-forms>=2.7"],
+            "classifiers": [
+                "Framework :: Django",
+                "Framework :: Django :: 5.2",
+                "Framework :: Django :: 6.0",
+                "Framework :: Django :: 6.1",
+                "Programming Language :: Python :: 3.12",
+                "Programming Language :: Python :: 3.13",
+            ],
+        }
+    }
+
+
+@pytest.fixture
+def readme():
+    return README
+
+
+@pytest.fixture
+def lock():
+    return {
+        "package": [
+            {"name": "django", "version": "6.1.1"},
+            {"name": "django-crispy-forms", "version": "2.7"},
+            {"name": "mvp-forms", "version": "0.1.0"},
+        ]
+    }
+
+
+@pytest.fixture
+def repository_declaration():
     with DECLARATION.open("rb") as handle:
         return tomllib.load(handle)
 
 
 @pytest.fixture
-def pyproject():
+def repository_pyproject():
     with (ROOT / "pyproject.toml").open("rb") as handle:
         return tomllib.load(handle)
 
 
 @pytest.fixture
-def readme():
+def repository_readme():
     return (ROOT / "README.md").read_text()
 
 
 @pytest.fixture
-def changelog():
+def repository_changelog():
     return (ROOT / "CHANGELOG.md").read_text()
 
 
 @pytest.fixture
-def lock():
+def repository_lock():
     with (ROOT / "uv.lock").open("rb") as handle:
         return tomllib.load(handle)
 
@@ -232,8 +292,13 @@ class TestWindow:
 
 class TestMetadata:
     def test_the_repositorys_metadata_agrees_with_its_declaration(
-        self, declared, pyproject
+        self, repository_declaration, repository_pyproject
     ):
+        window = Window.from_mapping(repository_declaration)
+
+        assert window.metadata_disagreements(repository_pyproject) == []
+
+    def test_metadata_written_for_a_window_agrees_with_it(self, declared, pyproject):
         window = Window.from_mapping(declared)
 
         assert window.metadata_disagreements(pyproject) == []
@@ -272,7 +337,6 @@ class TestMetadata:
         )
 
     def test_an_upper_limit_on_django_is_a_disagreement(self, declared, pyproject):
-        pyproject = copy.deepcopy(pyproject)
         pyproject["project"]["dependencies"] = [
             "django>=5.2,<7",
             "django-crispy-forms>=2.7",
@@ -286,7 +350,6 @@ class TestMetadata:
     def test_an_upper_limit_on_crispy_forms_is_a_disagreement(
         self, declared, pyproject
     ):
-        pyproject = copy.deepcopy(pyproject)
         pyproject["project"]["dependencies"] = [
             "django>=5.2",
             "django-crispy-forms>=2.7,<3",
@@ -298,7 +361,6 @@ class TestMetadata:
         )
 
     def test_a_pinned_requirement_is_a_disagreement(self, declared, pyproject):
-        pyproject = copy.deepcopy(pyproject)
         pyproject["project"]["dependencies"] = [
             "django==5.2",
             "django-crispy-forms>=2.7",
@@ -351,10 +413,10 @@ def section(*links):
 
 
 class TestReadmeLinks:
-    def test_the_section_of_the_repositorys_readme_holds_no_relative_link(self):
-        readme = (ROOT / "README.md").read_text()
-
-        assert relative_links(readme) == []
+    def test_the_section_of_the_repositorys_readme_holds_no_relative_link(
+        self, repository_readme
+    ):
+        assert relative_links(repository_readme) == []
 
     def test_a_relative_link_in_the_section_is_returned(self):
         assert relative_links(section("docs/support.md")) == ["docs/support.md"]
@@ -383,7 +445,14 @@ def with_dropped_rows(readme, *rows):
 
 
 class TestReadme:
-    def test_the_repositorys_readme_agrees_with_its_declaration(self, declared, readme):
+    def test_the_repositorys_readme_agrees_with_its_declaration(
+        self, repository_declaration, repository_readme
+    ):
+        window = Window.from_mapping(repository_declaration)
+
+        assert window.readme_disagreements(repository_readme) == []
+
+    def test_a_readme_written_for_a_window_agrees_with_it(self, declared, readme):
         window = Window.from_mapping(declared)
 
         assert window.readme_disagreements(readme) == []
@@ -523,7 +592,14 @@ def locked(lock, package, version):
 
 
 class TestLockfile:
-    def test_the_repositorys_lockfile_agrees_with_its_declaration(self, declared, lock):
+    def test_the_repositorys_lockfile_agrees_with_its_declaration(
+        self, repository_declaration, repository_lock
+    ):
+        window = Window.from_mapping(repository_declaration)
+
+        assert window.lockfile_disagreements(repository_lock) == []
+
+    def test_a_lock_written_for_a_window_agrees_with_it(self, declared, lock):
         window = Window.from_mapping(declared)
 
         assert window.lockfile_disagreements(lock) == []
@@ -544,8 +620,10 @@ class TestLockfile:
 
 
 class TestInstalled:
-    def test_the_versions_this_run_is_on_are_inside_the_window(self, declared):
-        window = Window.from_mapping(declared)
+    def test_the_versions_this_run_is_on_are_inside_the_window(
+        self, repository_declaration
+    ):
+        window = Window.from_mapping(repository_declaration)
 
         assert window.installed_disagreements(installed_versions(), {}) == []
 
@@ -684,11 +762,11 @@ class TestClassLists:
 
 class TestDropped:
     def test_the_repositorys_dropped_versions_agree_with_its_changelog(
-        self, declared, changelog
+        self, repository_declaration, repository_changelog
     ):
-        window = Window.from_mapping(declared)
+        window = Window.from_mapping(repository_declaration)
 
-        assert window.dropped_disagreements(changelog) == []
+        assert window.dropped_disagreements(repository_changelog) == []
 
     def test_django_series_are_walked_from_one_release_to_the_next(self):
         assert django_series_from("5.2", "7.0") == ("5.2", "6.0", "6.1", "6.2", "7.0")
