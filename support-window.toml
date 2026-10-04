@@ -7,9 +7,13 @@
 python = ["3.12", "3.13"]
 
 [django]
+# The oldest release series any release of this package supported.
+first = "5.2"
 versions = ["5.2", "6.0", "6.1"]
 
 [django-crispy-forms]
+# The oldest release any release of this package supported.
+first = "2.7"
 versions = ["2.7"]
 
 # The Django release series each named release supports.
@@ -17,5 +21,14 @@ versions = ["2.7"]
 "2.7" = ["5.2", "6.0", "6.1"]
 
 [daisyui]
+# The oldest minor release any release of this package supported.
+first = "5.0"
 minimum = "5.0"
 newest = "5.7"
+
+# One table for each version that has left the window:
+#
+# [[dropped]]
+# package = "django"
+# version = "5.2"
+# last-release = "1.4.0"

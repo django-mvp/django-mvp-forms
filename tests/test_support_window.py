@@ -9,11 +9,13 @@ import pytest
 from support_window import (
     DECLARATION,
     ROOT,
+    Dropped,
     InvalidWindow,
     MissingClassList,
     Window,
     class_list,
     class_names,
+    django_series_from,
     installed_versions,
     main,
     relative_links,
@@ -22,21 +24,26 @@ from support_window import (
 
 MAPPING = {
     "python": ["3.12", "3.13"],
-    "django": {"versions": ["5.2", "6.0"]},
+    "django": {"first": "5.2", "versions": ["5.2", "6.0"]},
     "django-crispy-forms": {
+        "first": "2.6",
         "versions": ["2.6", "2.7"],
         "pairs": {"2.6": ["5.2"], "2.7": ["5.2", "6.0"]},
     },
-    "daisyui": {"minimum": "5.0", "newest": "5.4"},
+    "daisyui": {"first": "5.0", "minimum": "5.0", "newest": "5.4"},
 }
+
+CHANGELOG = "## [Unreleased]\n\n## [v0.1.0] - 2026-10-03\n"
 
 DECLARATION_TEXT = """
 python = ["3.12", "3.13"]
 
 [django]
+first = "5.2"
 versions = ["5.2", "6.0"]
 
 [django-crispy-forms]
+first = "2.6"
 versions = ["2.6", "2.7"]
 
 [django-crispy-forms.pairs]
@@ -44,6 +51,7 @@ versions = ["2.6", "2.7"]
 "2.7" = ["5.2", "6.0"]
 
 [daisyui]
+first = "5.0"
 minimum = "5.0"
 newest = "5.4"
 """
@@ -67,6 +75,11 @@ def readme():
 
 
 @pytest.fixture
+def changelog():
+    return (ROOT / "CHANGELOG.md").read_text()
+
+
+@pytest.fixture
 def lock():
     with (ROOT / "uv.lock").open("rb") as handle:
         return tomllib.load(handle)
@@ -74,6 +87,18 @@ def lock():
 
 def found(disagreements):
     return {(d.source, d.package, d.version) for d in disagreements}
+
+
+def drop(package, version, release="0.1.0"):
+    return {"package": package, "version": version, "last-release": release}
+
+
+def mapping_starting_at_django_6_0(*dropped):
+    mapping = copy.deepcopy(MAPPING)
+    mapping["django"]["versions"] = ["6.0"]
+    mapping["django-crispy-forms"]["pairs"] = {"2.6": [], "2.7": ["6.0"]}
+    mapping["dropped"] = list(dropped)
+    return mapping
 
 
 class TestWindow:
@@ -152,6 +177,44 @@ class TestWindow:
 
         assert raised.value.package == "django"
         assert raised.value.version == "6.1"
+
+    def test_the_oldest_version_ever_supported_is_read_for_each_package(self):
+        window = Window.from_mapping(MAPPING)
+
+        assert window.django_first == "5.2"
+        assert window.crispy_forms_first == "2.6"
+        assert window.daisyui_first == "5.0"
+
+    def test_a_window_with_no_dropped_table_has_no_dropped_version(self):
+        assert Window.from_mapping(MAPPING).dropped == ()
+
+    def test_a_dropped_table_is_read_as_the_version_and_its_last_release(self):
+        mapping = copy.deepcopy(MAPPING)
+        mapping["dropped"] = [drop("django", "5.0", "0.3.1")]
+
+        assert Window.from_mapping(mapping).dropped == (
+            Dropped("django", "5.0", "0.3.1"),
+        )
+
+    @pytest.mark.parametrize(
+        ("entry", "package", "version"),
+        [
+            (drop("flask", "3.0"), "flask", "3.0"),
+            (drop("django", "5.0.1"), "django", "5.0.1"),
+            ({"package": "django", "version": "5.0"}, "django", "5.0"),
+            (drop("django", "5.0", "latest"), "django", "5.0"),
+            (drop("django", "5.0", "0.1"), "django", "5.0"),
+        ],
+    )
+    def test_a_malformed_dropped_table_is_refused(self, entry, package, version):
+        mapping = copy.deepcopy(MAPPING)
+        mapping["dropped"] = [entry]
+
+        with pytest.raises(InvalidWindow) as raised:
+            Window.from_mapping(mapping)
+
+        assert raised.value.package == package
+        assert raised.value.version == version
 
 
 class TestMetadata:
@@ -241,6 +304,28 @@ class TestMetadata:
             window.metadata_disagreements(pyproject)
         )
 
+    @pytest.mark.parametrize(
+        ("package", "version"),
+        [("django", "5.2"), ("django-crispy-forms", "2.7")],
+    )
+    def test_a_dropped_version_the_requirement_still_admits_is_named(
+        self, declared, pyproject, package, version
+    ):
+        declared["dropped"] = [drop(package, version)]
+        window = Window.from_mapping(declared)
+
+        assert ("metadata", package, version) in found(
+            window.metadata_disagreements(pyproject)
+        )
+
+    def test_a_dropped_version_below_the_requirements_minimum_is_not_named(
+        self, declared, pyproject
+    ):
+        declared["dropped"] = [drop("django", "5.0")]
+        window = Window.from_mapping(declared)
+
+        assert found(window.metadata_disagreements(pyproject)) == set()
+
 
 def section(*links):
     body = "\n".join(f"[a link]({link})" for link in links)
@@ -274,6 +359,14 @@ class TestReadmeLinks:
 
     def test_a_readme_with_no_section_has_no_relative_link(self):
         assert relative_links("[a link](docs/support.md)") == []
+
+
+def with_dropped_rows(readme, *rows):
+    table = "| Package | Version | Last release |\n|---|---|---|\n" + "".join(
+        f"| {package} | {version} | {release} |\n" for package, version, release in rows
+    )
+    marker = "<!-- dropped-versions -->\n"
+    return readme.replace(marker, marker + table)
 
 
 class TestReadme:
@@ -361,6 +454,50 @@ class TestReadme:
 
         assert ("README", "django", "5.2") in found(
             window.readme_disagreements("# a README with no statement")
+        )
+
+    def test_a_dropped_version_missing_from_the_table_is_named(self, declared, readme):
+        declared["dropped"] = [drop("django", "5.0")]
+        window = Window.from_mapping(declared)
+
+        assert ("README", "django", "5.0") in found(window.readme_disagreements(readme))
+
+    def test_a_dropped_version_in_the_table_that_the_declaration_keeps_is_named(
+        self, declared, readme
+    ):
+        window = Window.from_mapping(declared)
+        listed = with_dropped_rows(readme, ("django", "5.0", "0.1.0"))
+
+        assert ("README", "django", "5.0") in found(window.readme_disagreements(listed))
+
+    def test_a_dropped_version_with_another_last_release_is_named(
+        self, declared, readme
+    ):
+        declared["dropped"] = [drop("django", "5.0", "0.1.0")]
+        window = Window.from_mapping(declared)
+        listed = with_dropped_rows(readme, ("django", "5.0", "0.2.0"))
+
+        assert ("README", "django", "5.0") in found(window.readme_disagreements(listed))
+
+    def test_a_dropped_version_listed_with_its_last_release_is_no_disagreement(
+        self, declared, readme
+    ):
+        declared["dropped"] = [drop("django", "5.0", "0.1.0")]
+        window = Window.from_mapping(declared)
+        listed = with_dropped_rows(readme, ("django", "5.0", "0.1.0"))
+
+        assert window.readme_disagreements(listed) == []
+
+    def test_a_readme_with_no_dropped_versions_block_is_a_disagreement(
+        self, declared, readme
+    ):
+        window = Window.from_mapping(declared)
+        unmarked = readme.replace("<!-- dropped-versions -->", "").replace(
+            "<!-- /dropped-versions -->", ""
+        )
+
+        assert ("README", "dropped-versions", "") in found(
+            window.readme_disagreements(unmarked)
         )
 
 
@@ -530,6 +667,89 @@ class TestClassLists:
         assert raised.value.version == version
         assert fetched == []
         assert list(tmp_path.iterdir()) == []
+
+
+class TestDropped:
+    def test_the_repositorys_dropped_versions_agree_with_its_changelog(
+        self, declared, changelog
+    ):
+        window = Window.from_mapping(declared)
+
+        assert window.dropped_disagreements(changelog) == []
+
+    def test_django_series_are_walked_from_one_release_to_the_next(self):
+        assert django_series_from("5.2", "7.0") == ("5.2", "6.0", "6.1", "6.2", "7.0")
+
+    def test_a_django_series_in_neither_the_window_nor_the_dropped_list_is_named(self):
+        window = Window.from_mapping(mapping_starting_at_django_6_0())
+
+        assert ("dropped", "django", "5.2") in found(
+            window.dropped_disagreements(CHANGELOG)
+        )
+
+    def test_a_django_series_dropped_at_a_recorded_release_is_no_disagreement(self):
+        window = Window.from_mapping(
+            mapping_starting_at_django_6_0(drop("django", "5.2"))
+        )
+
+        assert window.dropped_disagreements(CHANGELOG) == []
+
+    def test_a_release_heading_without_a_v_records_the_release(self):
+        window = Window.from_mapping(
+            mapping_starting_at_django_6_0(drop("django", "5.2"))
+        )
+
+        assert window.dropped_disagreements("## [0.1.0] - 2026-10-03\n") == []
+
+    def test_a_django_series_both_named_and_dropped_is_named(self):
+        mapping = copy.deepcopy(MAPPING)
+        mapping["dropped"] = [drop("django", "5.2")]
+        window = Window.from_mapping(mapping)
+
+        assert ("dropped", "django", "5.2") in found(
+            window.dropped_disagreements(CHANGELOG)
+        )
+
+    def test_a_last_release_the_changelog_does_not_record_is_named(self):
+        window = Window.from_mapping(
+            mapping_starting_at_django_6_0(drop("django", "5.2", "9.9.9"))
+        )
+
+        assert ("changelog", "django", "5.2") in found(
+            window.dropped_disagreements(CHANGELOG)
+        )
+
+    def test_the_unreleased_section_does_not_record_a_release(self):
+        window = Window.from_mapping(
+            mapping_starting_at_django_6_0(drop("django", "5.2", "0.2.0"))
+        )
+
+        assert ("changelog", "django", "5.2") in found(
+            window.dropped_disagreements("## [Unreleased]\n\n## [v0.1.0]\n")
+        )
+
+    def test_every_daisyui_version_below_a_raised_minimum_is_named(self):
+        mapping = copy.deepcopy(MAPPING)
+        mapping["daisyui"]["minimum"] = "5.2"
+        window = Window.from_mapping(mapping)
+
+        assert found(window.dropped_disagreements(CHANGELOG)) == {
+            ("dropped", "daisyui", "5.0"),
+            ("dropped", "daisyui", "5.1"),
+        }
+
+    def test_every_crispy_forms_release_below_the_window_is_named(self):
+        mapping = copy.deepcopy(MAPPING)
+        crispy = mapping["django-crispy-forms"]
+        crispy["first"] = "2.7"
+        crispy["versions"] = ["2.9"]
+        crispy["pairs"] = {"2.9": ["5.2", "6.0"]}
+        window = Window.from_mapping(mapping)
+
+        assert found(window.dropped_disagreements(CHANGELOG)) == {
+            ("dropped", "django-crispy-forms", "2.7"),
+            ("dropped", "django-crispy-forms", "2.8"),
+        }
 
 
 class RecordedRun:

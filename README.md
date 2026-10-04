@@ -96,7 +96,7 @@ Dropping a version is not a breaking change. It ships in a minor or major releas
 
 ### Versions that have left
 
-No version has left the window. When one does, it is listed below with the last release of this package that supported it. A release earlier than that one receives no fixes.
+No version has left the window. When one does, it is listed below with the last release of this package that supported it. An installer in a project still on a dropped Django or django-crispy-forms version selects that last release by itself, because every later release requires a newer version. That last release is not fixed further: a defect found in it later gets no new release.
 
 <!-- dropped-versions -->
 <!-- /dropped-versions -->
@@ -1082,9 +1082,9 @@ The versions this package supports are declared in
 [support-window.toml](https://github.com/django-mvp/django-mvp-forms/blob/main/support-window.toml).
 The tables in
 [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions), the
-package metadata, the lockfile, the installed versions and the daisyUI class lists are checked
-against that file on every test run, so a change to one that the others do not follow fails the
-suite.
+table of versions that have left, the package metadata, the lockfile, the installed versions, the
+release headings of the changelog and the daisyUI class lists are checked against that file on
+every test run, so a change to one that the others do not follow fails the suite.
 
 To add a version, change these together:
 
@@ -1102,6 +1102,29 @@ To add a version, change these together:
    with the `themes.css` of the same patch release, which the legibility check reads. A test fails
    until that file and the newest class list name the same version.
 5. Run the suite on the new pair, as below.
+
+To take a version out, change these together:
+
+1. Remove it from `versions` in `support-window.toml`, or for daisyUI raise `minimum`. Add a
+   `[[dropped]]` table for it with its `package`, its `version` and the `last-release`, the last
+   release of this package that supported it. The file has a commented example. A django-crispy-forms
+   release also loses its line under `[django-crispy-forms.pairs]`, and a dropped Django series
+   comes out of every line that lists it.
+2. Remove it from the two tables in "Supported versions" and add a row to the table of versions
+   that have left, between the `dropped-versions` comments, as `| package | version | last release |`
+   under a header row.
+3. For a Django or django-crispy-forms version, raise the minimum in the dependencies of
+   `pyproject.toml`, so that an installer in a project still on the dropped version selects the
+   last release that supported it. For a Django series, also remove its trove classifier.
+4. Write the CHANGELOG entry under Removed, naming each version dropped and the last release that
+   supported it.
+
+The suite names a version that is both in the window and dropped, a version between `first`, the
+oldest this package ever supported, and the newest named that is neither, a last release that the
+changelog has no heading for, a row of the table that the declaration does not match, and a
+requirement that still admits a dropped version. A drop ships in a minor or major release and
+never in a patch release, and one release may drop several versions. No check enforces the kind
+of release, because the version number is raised after the change merges.
 
 `uv run python support_window.py test 5.2 2.7` runs the whole suite on Django 5.2 and
 django-crispy-forms 2.7. The two versions are laid over the project's environment for that one

@@ -25,6 +25,7 @@ ASKED = {
     "django-crispy-forms": "SUPPORT_WINDOW_CRISPY_FORMS",
 }
 SUITE_ARGUMENTS = ("-n", "auto", "--dist", "loadscope")
+PACKAGES = ("django", "django-crispy-forms", "daisyui")
 
 VERSION = re.compile(r"\d+\.\d+")
 CLAUSE = re.compile(r"\s*(==|!=|~=|>=|<=|>|<)\s*([\w.*]+)\s*")
@@ -43,6 +44,10 @@ PRELUDE = re.compile(r"([^{};]*)\{")
 CLASS_SELECTOR = re.compile(r"\.(?![0-9])((?:\\[0-9a-fA-F]{1,6}\s?|\\.|[\w-])+)")
 HEX_ESCAPE = re.compile(r"\\([0-9a-fA-F]{1,6})\s?")
 ESCAPE = re.compile(r"\\(.)")
+DROPPED_BLOCK = re.compile(
+    r"<!-- dropped-versions -->(.*?)<!-- /dropped-versions -->", re.S
+)
+RELEASE_HEADING = re.compile(r"^## \[v?([^\]]+)\]", re.M)
 STATEMENT = re.compile(r"<!-- support-window -->.*<!-- /dropped-versions -->", re.S)
 LINK_TARGET = re.compile(r"\]\(\s*<?([^)\s>]+)|href=[\"']([^\"']+)")
 ABSOLUTE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:")
@@ -85,25 +90,53 @@ class Disagreement:
 
 
 @dataclass(frozen=True)
+class Dropped:
+    """A version that has left the window.
+
+    Args:
+        package: The package the version belongs to: ``django``,
+            ``django-crispy-forms`` or ``daisyui``.
+        version: The version that left, such as ``5.2``.
+        last_release: The last release of this package that supported it, such
+            as ``0.1.0``.
+    """
+
+    package: str
+    version: str
+    last_release: str
+
+
+@dataclass(frozen=True)
 class Window:
     """The versions the package states it works with.
 
     Args:
         python: The Python versions the suite runs on, oldest first.
         django: The named Django release series, oldest first.
+        django_first: The oldest Django series any release of this package
+            supported.
         crispy_forms: The named django-crispy-forms releases, oldest first.
+        crispy_forms_first: The oldest django-crispy-forms release any release
+            of this package supported.
         pairs: For each named django-crispy-forms release, the named Django
             series it supports.
+        daisyui_first: The oldest daisyUI minor release any release of this
+            package supported.
         daisyui_minimum: The oldest daisyUI minor release named.
         daisyui_newest: The newest daisyUI minor release named.
+        dropped: The versions that have left the window.
     """
 
     python: tuple[str, ...]
     django: tuple[str, ...]
+    django_first: str
     crispy_forms: tuple[str, ...]
+    crispy_forms_first: str
     pairs: dict[str, tuple[str, ...]]
+    daisyui_first: str
     daisyui_minimum: str
     daisyui_newest: str
+    dropped: tuple[Dropped, ...] = ()
 
     @classmethod
     def read(cls, path: Path) -> Window:
@@ -116,8 +149,9 @@ class Window:
             The window the file declares.
 
         Raises:
-            InvalidWindow: The file declares a version that is not two numbers, or
-                a pair that names a version the window does not.
+            InvalidWindow: The file declares a version that is not two numbers, a
+                pair that names a version the window does not, or a dropped
+                entry that is malformed.
         """
         with path.open("rb") as handle:
             return cls.from_mapping(tomllib.load(handle))
@@ -133,12 +167,17 @@ class Window:
             The window the mapping declares.
 
         Raises:
-            InvalidWindow: A version is not two numbers, or a pair names a release
-                or a Django series the window does not.
+            InvalidWindow: A version is not two numbers, a pair names a release
+                or a Django series the window does not, or a dropped entry is
+                malformed.
         """
         python = cls.parse_versions("python", data["python"])
         django = cls.parse_versions("django", data["django"]["versions"])
+        (django_first,) = cls.parse_versions("django", [data["django"]["first"]])
         crispy = data["django-crispy-forms"]
+        (crispy_forms_first,) = cls.parse_versions(
+            "django-crispy-forms", [crispy["first"]]
+        )
         crispy_forms = cls.parse_versions("django-crispy-forms", crispy["versions"])
         pairs = {}
         for release, series in crispy["pairs"].items():
@@ -153,10 +192,47 @@ class Window:
                         "django", version, "a pair names a series not named"
                     )
         daisyui = data["daisyui"]
+        (daisyui_first,) = cls.parse_versions("daisyui", [daisyui["first"]])
         minimum, newest = cls.parse_versions(
             "daisyui", [daisyui["minimum"], daisyui["newest"]]
         )
-        return cls(python, django, crispy_forms, pairs, minimum, newest)
+        dropped = tuple(cls.parse_dropped(entry) for entry in data.get("dropped", []))
+        return cls(
+            python,
+            django,
+            django_first,
+            crispy_forms,
+            crispy_forms_first,
+            pairs,
+            daisyui_first,
+            minimum,
+            newest,
+            dropped,
+        )
+
+    @classmethod
+    def parse_dropped(cls, entry: dict[str, Any]) -> Dropped:
+        """Check one dropped entry and read it.
+
+        Args:
+            entry: One ``[[dropped]]`` table as ``tomllib`` parses it.
+
+        Returns:
+            The version that left and the last release that supported it.
+
+        Raises:
+            InvalidWindow: The package is not one of the three, the version is not
+                two numbers, or the last release is not three numbers.
+        """
+        package = str(entry.get("package", ""))
+        version = str(entry.get("version", ""))
+        if package not in PACKAGES:
+            raise InvalidWindow(package, version, "not a package that can be dropped")
+        (version,) = cls.parse_versions(package, [version])
+        release = str(entry.get("last-release", ""))
+        if not PATCH.fullmatch(release):
+            raise InvalidWindow(package, version, "no last release such as 0.1.0")
+        return Dropped(package, version, release)
 
     @staticmethod
     def parse_versions(package: str, versions: list[str]) -> tuple[str, ...]:
@@ -195,7 +271,9 @@ class Window:
         Returns:
             One disagreement for each requirement that is not ``>=`` the oldest
             named version and nothing else, and for each Django or Python
-            classifier the window does not name or does not have.
+            classifier the window does not name or does not have, and for each
+            dropped Django or django-crispy-forms version the requirements still
+            admit.
         """
         project = pyproject["project"]
         found = []
@@ -209,6 +287,7 @@ class Window:
                 found += self.requirement_disagreements(
                     name.lower(), specifiers, required[name.lower()]
                 )
+                found += self.admitted_disagreements(name.lower(), specifiers)
         found += self.classifier_disagreements(
             "django", DJANGO_CLASSIFIER, self.django, project["classifiers"]
         )
@@ -254,6 +333,37 @@ class Window:
                 )
             )
         return found
+
+    def admitted_disagreements(
+        self, package: str, specifiers: str
+    ) -> list[Disagreement]:
+        """Compare the dropped versions of a package with what its requirement admits.
+
+        Args:
+            package: The package the requirement is for.
+            specifiers: The version specifiers, such as ``>=5.2``.
+
+        Returns:
+            One disagreement for each dropped version of the package that is not
+            below the version the requirement asks for. None when the requirement
+            has no ``>=`` clause, which ``requirement_disagreements`` names.
+        """
+        clauses = (CLAUSE.fullmatch(clause) for clause in specifiers.split(","))
+        minimums = [m.group(2) for m in clauses if m and m.group(1) == ">="]
+        floor = VERSION.match(minimums[0]) if minimums else None
+        if floor is None:
+            return []
+        return [
+            Disagreement(
+                "metadata",
+                package,
+                entry.version,
+                f"the requirement admits {entry.version}, which has left the window",
+            )
+            for entry in self.dropped
+            if entry.package == package
+            and self.numbers(entry.version) >= self.numbers(floor.group())
+        ]
 
     @staticmethod
     def classifier_disagreements(
@@ -348,6 +458,123 @@ class Window:
                 stated_pairs[release],
                 f"the pairs table, on the row for django-crispy-forms {release}",
             )
+        return found + self.dropped_table_disagreements(readme)
+
+    def dropped_table_disagreements(self, readme: str) -> list[Disagreement]:
+        """Compare the table of dropped versions in the README with the window.
+
+        The table is read between the ``dropped-versions`` comments. A row is
+        ``| package | version | last release |`` and is found by the package
+        named in its first cell. An empty table means no version has left.
+
+        Args:
+            readme: The text of the README.
+
+        Returns:
+            One disagreement for each dropped version the table lacks, for each
+            version the table gives and the window does not drop, and for each
+            dropped version listed with another last release. A README with no
+            ``dropped-versions`` block is one disagreement, naming the block.
+        """
+        block = DROPPED_BLOCK.search(readme)
+        found = []
+        if block is None:
+            found.append(
+                Disagreement(
+                    "README",
+                    "dropped-versions",
+                    "",
+                    "the README has no dropped-versions block",
+                )
+            )
+        rows = [
+            cells
+            for cells in self.table_cells(block.group(1) if block else "")
+            if len(cells) >= 3 and cells[0].lower() in PACKAGES
+        ]
+        for package in PACKAGES:
+            found += self.set_disagreements(
+                "README",
+                package,
+                {d.version for d in self.dropped if d.package == package},
+                {cells[1] for cells in rows if cells[0].lower() == package},
+                "the table of dropped versions",
+            )
+        listed = {(cells[0].lower(), cells[1]): cells[2] for cells in rows}
+        for entry in self.dropped:
+            release = listed.get((entry.package, entry.version), entry.last_release)
+            if release != entry.last_release:
+                found.append(
+                    Disagreement(
+                        "README",
+                        entry.package,
+                        entry.version,
+                        f"the table gives last release {release}, "
+                        f"and the window gives {entry.last_release}",
+                    )
+                )
+        return found
+
+    def dropped_disagreements(self, changelog: str) -> list[Disagreement]:
+        """Compare the dropped versions with the window and with the changelog.
+
+        Every version from the oldest ever supported to the newest named is in
+        the window or in the dropped list. For daisyUI the window starts at the
+        minimum, so the versions below it are the ones that must be dropped.
+
+        Args:
+            changelog: The text of ``CHANGELOG.md``.
+
+        Returns:
+            One ``dropped`` disagreement for each version that is both named and
+            dropped, and for each version in between that is neither. One
+            ``changelog`` disagreement for each dropped version whose last
+            release has no heading in the changelog, with or without a ``v``.
+        """
+        walks = {
+            "django": (
+                django_series_from(self.django_first, self.django[-1]),
+                self.django,
+            ),
+            "django-crispy-forms": (
+                self.minors_from(self.crispy_forms_first, self.crispy_forms[-1]),
+                self.crispy_forms,
+            ),
+            "daisyui": (
+                self.minors_from(self.daisyui_first, self.daisyui_newest),
+                self.minors_from(self.daisyui_minimum, self.daisyui_newest),
+            ),
+        }
+        found = []
+        for package, (walk, named) in walks.items():
+            dropped = {d.version for d in self.dropped if d.package == package}
+            for version in self.parse_versions(package, list(dropped & set(named))):
+                found.append(
+                    Disagreement(
+                        "dropped", package, version, "both in the window and dropped"
+                    )
+                )
+            for version in walk:
+                if version not in named and version not in dropped:
+                    found.append(
+                        Disagreement(
+                            "dropped",
+                            package,
+                            version,
+                            "neither in the window nor dropped",
+                        )
+                    )
+        recorded = set(RELEASE_HEADING.findall(changelog))
+        for entry in self.dropped:
+            if entry.last_release not in recorded:
+                found.append(
+                    Disagreement(
+                        "changelog",
+                        entry.package,
+                        entry.version,
+                        f"the changelog has no release {entry.last_release}",
+                    )
+                )
         return found
 
     def lockfile_disagreements(self, lock: dict[str, Any]) -> list[Disagreement]:
@@ -481,23 +708,71 @@ class Window:
         return ".".join(version.split(".")[:2])
 
     @staticmethod
-    def table_rows(text: str) -> list[tuple[str, str]]:
-        """Read the rows of the Markdown tables in a text.
+    def table_cells(text: str) -> list[list[str]]:
+        """Read the cells of the Markdown tables in a text.
 
         Args:
             text: Markdown that holds tables.
 
         Returns:
-            The first two cells of every row that is not a header separator.
+            The cells of every row that is not a header separator.
         """
         rows = []
         for line in text.splitlines():
             if not line.startswith("|"):
                 continue
             cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-            if len(cells) >= 2 and not SEPARATOR.fullmatch(cells[0]):
-                rows.append((cells[0], cells[1]))
+            if not SEPARATOR.fullmatch(cells[0]):
+                rows.append(cells)
         return rows
+
+    @staticmethod
+    def table_rows(text: str) -> list[tuple[str, str]]:
+        """Read the first two cells of the rows of the Markdown tables in a text.
+
+        Args:
+            text: Markdown that holds tables.
+
+        Returns:
+            The first two cells of every row that has two and is not a header
+            separator.
+        """
+        return [
+            (cells[0], cells[1])
+            for cells in Window.table_cells(text)
+            if len(cells) >= 2
+        ]
+
+    @staticmethod
+    def numbers(version: str) -> tuple[int, ...]:
+        """Read a version as numbers, so that ``5.10`` is after ``5.9``.
+
+        Args:
+            version: A version such as ``5.2``.
+
+        Returns:
+            The numbers of the version, such as ``(5, 2)``.
+        """
+        return tuple(map(int, version.split(".")))
+
+    @staticmethod
+    def minors_from(first: str, newest: str) -> tuple[str, ...]:
+        """List the releases of a package whose second number counts up.
+
+        Args:
+            first: The oldest release, such as ``2.7``.
+            newest: The newest release, such as ``2.9``.
+
+        Returns:
+            Every release from ``first`` to ``newest``, such as ``2.7``, ``2.8``
+            and ``2.9``. Empty when the two are on different major versions,
+            because the releases of the older major version are not known.
+        """
+        major, low = first.split(".")
+        newest_major, high = newest.split(".")
+        if major != newest_major:
+            return ()
+        return tuple(f"{major}.{minor}" for minor in range(int(low), int(high) + 1))
 
     @staticmethod
     def set_disagreements(
@@ -524,6 +799,27 @@ class Window:
             for version in sorted(stated - declared)
         ]
         return found
+
+
+def django_series_from(first: str, newest: str) -> tuple[str, ...]:
+    """List the Django release series from one to another.
+
+    Django numbers its series ``A.0``, ``A.1``, ``A.2`` and then ``(A+1).0``.
+
+    Args:
+        first: The oldest series, such as ``5.2``.
+        newest: The newest series, such as ``7.0``.
+
+    Returns:
+        Every series from ``first`` to ``newest``, such as ``5.2``, ``6.0``,
+        ``6.1``, ``6.2`` and ``7.0``.
+    """
+    major, minor = Window.numbers(first)
+    series = []
+    while (major, minor) <= Window.numbers(newest):
+        series.append(f"{major}.{minor}")
+        major, minor = (major, minor + 1) if minor < 2 else (major + 1, 0)
+    return tuple(series)
 
 
 def installed_versions() -> dict[str, str]:
