@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A long help text, and a long label on a single checkbox, on an option of a radio or checkbox group or on a file input's removal checkbox, now wraps. daisyUI keeps anything drawn with its `label` class on one line, so a help text of a full sentence made its form wider than a phone screen and the page scrolled sideways. These four now also carry Tailwind's `text-wrap` utility. Text attached before or after an input is unchanged and stays on one line. A page that loads daisyUI's CDN build with Tailwind's browser build needs nothing, and neither does a django-mvp project, whose stylesheet already holds the utility. A host project with its own Tailwind build gets it on its next build, as long as that build scans the installed `mvp_forms` package. A project that replaced `daisyui/field_messages.html`, `daisyui/field_body.html`, `daisyui/widgets/group_options.html` or `daisyui/widgets/clearable_file_input.html` adds `text-wrap` beside `label` in its own copy.
+
 ## [v0.2.0] - 2026-10-04
 
 ### Added

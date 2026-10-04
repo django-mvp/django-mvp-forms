@@ -105,6 +105,7 @@ LAYOUT_UTILITIES = {
     "mt-4",
     "overflow-x-auto",
     "w-auto",
+    "text-wrap",
 }
 
 

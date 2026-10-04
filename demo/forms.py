@@ -44,6 +44,11 @@ from django.utils.translation import gettext_lazy as _
 from mvp_forms.choices import Choice, FormChoices, Modifiers
 from mvp_forms.layout import Join
 
+LONG_OPTION = _(
+    "C, with a label long enough that a narrow page shows it wrapping onto "
+    "several lines beside its input"
+)
+
 
 class TextInputsForm(forms.Form):
     """One field of each text input kind the pack draws.
@@ -65,7 +70,10 @@ class TextInputsForm(forms.Form):
     textarea = forms.CharField(label=_("Textarea"), widget=forms.Textarea)
 
     help_texts = {
-        "text": _("A line of free text."),
+        "text": _(
+            "A line of free text. This help text is a long one, so that a narrow "
+            "page shows it wrapping onto several lines under its input."
+        ),
         "email": _("An address such as name@example.com."),
         "url": _("An address that starts with http:// or https://."),
         "number": _("A whole number."),
@@ -132,13 +140,13 @@ class ChoiceInputsForm(forms.Form):
     )
     radio = forms.ChoiceField(
         label=_("Radio group"),
-        choices=[("a", "A"), ("b", "B"), ("c", "C")],
+        choices=[("a", "A"), ("b", "B"), ("c", LONG_OPTION)],
         widget=forms.RadioSelect,
     )
     checkbox = forms.BooleanField(label=_("Checkbox"))
     checkbox_group = forms.MultipleChoiceField(
         label=_("Checkbox group"),
-        choices=[("a", "A"), ("b", "B"), ("c", "C")],
+        choices=[("a", "A"), ("b", "B"), ("c", LONG_OPTION)],
         widget=forms.CheckboxSelectMultiple,
     )
     file = forms.FileField(label=_("File"), widget=forms.FileInput)
