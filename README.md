@@ -367,6 +367,14 @@ class ProfileForm(forms.Form):
 - `block=True` is accepted and changes nothing, because daisyUI has no counterpart to the Bootstrap class it adds. `alert-block` is never drawn.
 - The content is trusted. It is written into the page as markup, as django-crispy-forms documents, so a tag in it is a tag in the page, and a context value in it is not filled in. Anything a person typed must be escaped before it is put there, for example with `django.utils.html.escape` or `format_html`.
 
+Two of the buttons above run a line of script written on the button itself, in its `onclick` attribute: the close button of a `Modal` and the dismiss button of an `Alert`. Neither HTML nor daisyUI has another way to do either job that works in every browser daisyUI supports. A page served with a Content Security Policy that forbids inline event handlers, such as `script-src 'self'` with nothing more, draws both buttons and neither does anything:
+
+- Tabs and an accordion use no script and work under any policy, as does everything else the pack draws.
+- A modal your page opened as a modal is still closed with the Escape key. A modal drawn open because a field in it has an error has no other way to close, and an alert stays where it is.
+- Both buttons work when the policy allows inline event handlers, with `script-src-attr 'unsafe-inline'` or with `'unsafe-inline'` in `script-src`. To allow these two handlers and no other, add `'unsafe-hashes'` and the SHA-256 hash of each handler's text to either directive. The text is the value of `onclick` in `daisyui/layout/modal.html` and in `daisyui/layout/alert.html`, and the hash has to be worked out again if a release changes that text.
+- A project that keeps its policy strict can draw the buttons its own way (see [Replacing one template](https://github.com/django-mvp/django-mvp-forms#replacing-one-template)). A close button written as `<button type="button" class="btn daisyui-size" commandfor="{{ modal.css_id }}" command="close">` in your own `daisyui/layout/modal.html` closes the dialog with no script, in a browser that has the `command` and `commandfor` attributes. Chrome, Firefox and Safari all gained them during 2025, and an older browser draws a button that does nothing. `Alert(..., dismiss=False)` draws an alert with no button.
+- The button in the example above that opens the modal is an inline handler too. Under such a policy write it as `<button type="button" commandfor="name-modal" command="show-modal">Edit name</button>`, or open the modal from a script file of your own.
+
 Buttons are drawn as daisyUI buttons. `FormActions` and `StrictButton` come from `crispy_forms.bootstrap`, where django-crispy-forms keeps them:
 
 ```python
