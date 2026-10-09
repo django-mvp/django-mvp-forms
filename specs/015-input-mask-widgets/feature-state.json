@@ -1,189 +1,194 @@
 {
- "feature": "015-input-mask-widgets",
- "branch": "015-input-mask-widgets",
- "repo": "django-mvp/django-mvp-forms",
- "state": "DESIGN_REVIEW",
- "state_history": [
-  {
-   "state": "QUEUED",
-   "at": "2026-10-09T11:35:07Z",
-   "note": "specification approved by Sam in the session at commit e8ad2e5f3268e1e3283ccd01d324ae677ced3fc3, on pull request #151; epic #150, stories #152 to #157"
-  },
-  {
-   "state": "PLAN",
-   "at": "2026-10-09T19:08:55Z",
-   "note": "research.md, plan.md, tasks.md: 6 stories, 8 tasks; continues on pull request #151 from the approved sketch"
-  },
-  {
-   "state": "DESIGN_REVIEW",
-   "at": "2026-10-09T19:09:25Z",
-   "note": "one reviewer, three lenses"
-  }
- ],
- "gates": {
-  "spec": {
-   "approved_by": "Sam",
-   "at": "2026-10-09T11:35:07Z",
-   "self_resolved": [
-    "approved in the session at commit e8ad2e5f3268e1e3283ccd01d324ae677ced3fc3 (pull request #151), with no changes"
-   ]
-  },
-  "sketch": {
-   "approved_by": "Sam",
-   "at": "2026-10-09T19:02:07Z",
-   "self_resolved": [
-    "round 2: the page is grouped by widget",
-    "round 2: placeholders say what each position takes, # for a digit, a for a letter, d m y for a date",
-    "round 2: every pattern and regular expression is stated in its field's help text",
-    "round 3: the PIN field showed nothing; the script acts once per page and the form receives the digits",
-    "round 4: each widget's section links to the IMask guide"
-   ]
-  },
-  "plan": {
-   "approved_by": "open",
-   "at": "2026-10-09T19:17:41Z"
-  },
-  "merge": {
-   "approved_by": null,
-   "at": null
-  },
-  "design_review": {
-   "approved_by": "design review, one reviewer, three lenses: changes requested, every finding applied",
-   "at": "2026-10-09T19:17:41Z",
-   "self_resolved": [
-    "SPEC-001 (high) a thousands separator equal to the default decimal mark is refused: plan and T005",
-    "SPEC-002 (medium) the form's data is corrected for every masked input, so a display character inside a list of masks is covered: plan, T002, T006",
-    "SPEC-003 (medium) IMask's default definitions are at IMask.MaskedPattern.InputDefinition: research R4",
-    "SPEC-004 (medium) T001 moves the demo's forms so the tree is green at its end",
-    "ARCH-001 (medium) one test module for one source module; the browser module declared non-mirror",
-    "SPEC-005 (low) a page under a policy forbidding inline script is tested: T002",
-    "SPEC-006 (low) number bounds take int, float or Decimal: T005",
-    "SEC-001 (low) the demo and README load an exact IMask version with an integrity value: T003"
-   ]
-  }
- },
- "stories": [
-  {
-   "id": "US1",
-   "priority": "P1",
-   "issue": 152,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
+  "feature": "015-input-mask-widgets",
+  "branch": "015-input-mask-widgets",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "IMPLEMENT",
+  "state_history": [
     {
-     "id": "T001",
-     "status": "todo",
-     "attempts": 0
+      "state": "QUEUED",
+      "at": "2026-10-09T11:35:07Z",
+      "note": "specification approved by Sam in the session at commit e8ad2e5f3268e1e3283ccd01d324ae677ced3fc3, on pull request #151; epic #150, stories #152 to #157"
     },
     {
-     "id": "T002",
-     "status": "todo",
-     "attempts": 0
+      "state": "PLAN",
+      "at": "2026-10-09T19:08:55Z",
+      "note": "research.md, plan.md, tasks.md: 6 stories, 8 tasks; continues on pull request #151 from the approved sketch"
     },
     {
-     "id": "T003",
-     "status": "todo",
-     "attempts": 0
-    }
-   ]
-  },
-  {
-   "id": "US2",
-   "priority": "P2",
-   "issue": 153,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-09T19:09:25Z",
+      "note": "one reviewer, three lenses"
+    },
     {
-     "id": "T004",
-     "status": "todo",
-     "attempts": 0
+      "state": "IMPLEMENT",
+      "at": "2026-10-09T19:18:03Z",
+      "note": "plan gate open; US1 dispatched"
     }
-   ]
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "Sam",
+      "at": "2026-10-09T11:35:07Z",
+      "self_resolved": [
+        "approved in the session at commit e8ad2e5f3268e1e3283ccd01d324ae677ced3fc3 (pull request #151), with no changes"
+      ]
+    },
+    "sketch": {
+      "approved_by": "Sam",
+      "at": "2026-10-09T19:02:07Z",
+      "self_resolved": [
+        "round 2: the page is grouped by widget",
+        "round 2: placeholders say what each position takes, # for a digit, a for a letter, d m y for a date",
+        "round 2: every pattern and regular expression is stated in its field's help text",
+        "round 3: the PIN field showed nothing; the script acts once per page and the form receives the digits",
+        "round 4: each widget's section links to the IMask guide"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-09T19:17:41Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: changes requested, every finding applied",
+      "at": "2026-10-09T19:17:41Z",
+      "self_resolved": [
+        "SPEC-001 (high) a thousands separator equal to the default decimal mark is refused: plan and T005",
+        "SPEC-002 (medium) the form's data is corrected for every masked input, so a display character inside a list of masks is covered: plan, T002, T006",
+        "SPEC-003 (medium) IMask's default definitions are at IMask.MaskedPattern.InputDefinition: research R4",
+        "SPEC-004 (medium) T001 moves the demo's forms so the tree is green at its end",
+        "ARCH-001 (medium) one test module for one source module; the browser module declared non-mirror",
+        "SPEC-005 (low) a page under a policy forbidding inline script is tested: T002",
+        "SPEC-006 (low) number bounds take int, float or Decimal: T005",
+        "SEC-001 (low) the demo and README load an exact IMask version with an integrity value: T003"
+      ]
+    }
   },
-  {
-   "id": "US3",
-   "priority": "P2",
-   "issue": 154,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
+  "stories": [
     {
-     "id": "T005",
-     "status": "todo",
-     "attempts": 0
+      "id": "US1",
+      "priority": "P1",
+      "issue": 152,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T002",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T003",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 153,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 154,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 156,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T006",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 155,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US6",
+      "priority": "P3",
+      "issue": 157,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T008",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
     }
-   ]
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 0,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 120
+    }
   },
-  {
-   "id": "US5",
-   "priority": "P3",
-   "issue": 156,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T006",
-     "status": "todo",
-     "attempts": 0
-    }
-   ]
-  },
-  {
-   "id": "US4",
-   "priority": "P2",
-   "issue": 155,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T007",
-     "status": "todo",
-     "attempts": 0
-    }
-   ]
-  },
-  {
-   "id": "US6",
-   "priority": "P3",
-   "issue": 157,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T008",
-     "status": "todo",
-     "attempts": 0
-    }
-   ]
+  "pr": {
+    "number": 151,
+    "draft": true
   }
- ],
- "budgets": {
-  "converge_cycles": {
-   "used": 0,
-   "max": 2
-  },
-  "review_cycles": {
-   "used": 0,
-   "max": 1
-  },
-  "design_review_cycles": {
-   "used": 1,
-   "max": 1
-  },
-  "tokens": {
-   "used": 0,
-   "max": 120
-  }
- },
- "pr": {
-  "number": 151,
-  "draft": true
- }
 }
