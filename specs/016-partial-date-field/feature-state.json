@@ -2,7 +2,7 @@
   "feature": "016-partial-date-field",
   "branch": "016-partial-date-field",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "QUEUED",
@@ -18,6 +18,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-10-09T22:47:24Z",
       "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-09T22:58:02Z",
+      "note": "plan gate open; US1 dispatched"
     }
   ],
   "gates": {
