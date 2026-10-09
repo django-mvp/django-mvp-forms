@@ -225,8 +225,37 @@ class TestRangeBlock:
         with pytest.raises(ValueError, match="placeholder_char"):
             RangeBlock(1, 31, placeholder_char="dd")
 
+    @pytest.mark.parametrize(
+        ("arguments", "option"),
+        [
+            pytest.param((None, 3), "minimum", id="no minimum"),
+            pytest.param((1, "3"), "maximum", id="maximum as text"),
+            pytest.param((Decimal(1), 3), "minimum", id="a Decimal"),
+            pytest.param((True, 3), "minimum", id="a boolean"),
+        ],
+    )
+    def test_a_bound_that_is_not_a_whole_number_is_refused_naming_it(
+        self, arguments, option
+    ):
+        with pytest.raises(ValueError, match=option):
+            RangeBlock(*arguments)
+
+    def test_a_length_that_is_not_a_whole_number_is_refused_naming_it(self):
+        with pytest.raises(ValueError, match="max_length"):
+            RangeBlock(1, 31, max_length="2")
+
 
 class TestEnumBlock:
+    @pytest.mark.parametrize(
+        "values",
+        [pytest.param("HD", id="text"), pytest.param(["HD", 4], id="a number in it")],
+    )
+    def test_values_that_are_not_a_list_of_text_are_refused_naming_the_option(
+        self, values
+    ):
+        with pytest.raises(ValueError, match="values"):
+            EnumBlock(values)
+
     def test_an_empty_list_is_refused_naming_the_option(self):
         with pytest.raises(ValueError, match="values"):
             EnumBlock([])
@@ -381,6 +410,10 @@ class TestNumberMaskInput:
                 {"thousands_separator": "  "}, "thousands_separator", id="two spaces"
             ),
             pytest.param({"thousands_separator": 5}, "thousands_separator", id="digit"),
+            pytest.param({"map_to_radix": "."}, "map_to_radix", id="marks as text"),
+            pytest.param(
+                {"map_to_radix": ["..", ","]}, "map_to_radix", id="a mark of two"
+            ),
             pytest.param({"radix": ",,"}, "radix", id="radix of two characters"),
             pytest.param({"radix": ""}, "radix", id="radix of none"),
             pytest.param(

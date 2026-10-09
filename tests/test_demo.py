@@ -3644,22 +3644,31 @@ class InputMasksPageContract:
         assert received == list(DYNAMIC_POST.values())
 
     @pytest.mark.parametrize(
-        ("prefix", "form"),
+        ("prefix", "form", "names"),
         [
-            pytest.param("states", MaskStatesForm, id="states"),
-            pytest.param("sizes", MaskSizesForm, id="sizes"),
-            pytest.param("contact", MaskedModalForm, id="modal"),
+            pytest.param(
+                "states",
+                MaskStatesForm,
+                {"filled", "disabled", "read_only", "invalid"},
+                id="states",
+            ),
+            pytest.param(
+                "sizes",
+                MaskSizesForm,
+                {"extra_small", "small", "large", "coloured"},
+                id="sizes",
+            ),
+            pytest.param("contact", MaskedModalForm, {"phone", "iban"}, id="modal"),
         ],
     )
-    def test_each_place_holds_a_masked_input(self, page, prefix, form):
+    def test_each_place_holds_its_masked_inputs(self, page, prefix, form, names):
         masked = {
             name
             for name in form.base_fields
             if page.find(id=f"id_{prefix}-{name}").has_attr("data-imask")
         }
 
-        assert masked
-        assert masked <= set(form.base_fields)
+        assert masked == names
 
     def test_the_modal_holds_its_masked_inputs_inside_the_dialog(self, page):
         dialog = page.find(id=MaskedModalForm(prefix="contact").dialog_id)

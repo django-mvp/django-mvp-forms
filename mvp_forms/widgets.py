@@ -82,6 +82,22 @@ class Check:
             raise ValueError(f"{option} must be one of {allowed!r}, not {value!r}.")
 
     @staticmethod
+    def whole_number(option, value):
+        """Refuse a value that is not an ``int``, or is a boolean.
+
+        Args:
+            option: The option's name, for the message.
+            value: What was stated.
+
+        Raises:
+            ValueError: The value is not a whole number.
+        """
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError(  # noqa: TRY004
+                f"{option} must be a whole number, not {value!r}."
+            )
+
+    @staticmethod
     def separator(option, value):
         """Refuse a value that is not one character of text, or no character.
 
@@ -155,9 +171,14 @@ class RangeBlock(MaskBlock):
             placeholder_char: The character shown in each open position.
 
         Raises:
-            ValueError: The minimum is above the maximum, or the placeholder
-                character is not one character.
+            ValueError: A bound or the length is not a whole number, the minimum
+                is above the maximum, or the placeholder character is not one
+                character.
         """
+        Check.whole_number("minimum", minimum)
+        Check.whole_number("maximum", maximum)
+        if max_length is not None:
+            Check.whole_number("max_length", max_length)
         if minimum > maximum:
             raise ValueError(
                 f"minimum must not be above maximum, not {minimum!r} and {maximum!r}."
@@ -188,11 +209,14 @@ class EnumBlock(MaskBlock):
             placeholder_char: The character shown in each open position.
 
         Raises:
-            ValueError: There are no values, or the placeholder character is not
-                one character.
+            ValueError: The values are not a list of text, there are none, or
+                the placeholder character is not one character.
         """
+        Check.of_type("values", values, list | tuple, "a list of text")
         if not values:
             raise ValueError("values must hold at least one value.")
+        for each in values:
+            Check.of_type("values", each, str, f"a list of text, not holding {each!r}")
         if placeholder_char is not None:
             Check.character("placeholder_char", placeholder_char)
         super().__init__({"enum": list(values), "placeholderChar": placeholder_char})
@@ -448,7 +472,8 @@ class NumberMaskInput(MaskInput):
             thousands_separator: The character between groups of three digits,
                 or an empty string for none.
             radix: The decimal mark.
-            map_to_radix: Other characters to read as the decimal mark.
+            map_to_radix: A list of other characters to read as the decimal
+                mark.
             pad_fractional_zeros: Pad the decimal places with zeros.
             normalize_zeros: Trim needless zeros.
             min_value: The smallest value, an ``int``, a ``float`` or a
@@ -473,6 +498,10 @@ class NumberMaskInput(MaskInput):
                     "thousands_separator must not be the decimal mark, "
                     f"{radix or self.default_radix!r}."
                 )
+        if map_to_radix is not None:
+            Check.of_type("map_to_radix", map_to_radix, list | tuple, "a list")
+            for each in map_to_radix:
+                Check.character("map_to_radix", each)
         for option, value in (("min_value", min_value), ("max_value", max_value)):
             if value is not None:
                 Check.number(option, value)
@@ -488,7 +517,7 @@ class NumberMaskInput(MaskInput):
             scale=scale,
             thousandsSeparator=thousands_separator,
             radix=radix,
-            mapToRadix=map_to_radix,
+            mapToRadix=None if map_to_radix is None else list(map_to_radix),
             padFractionalZeros=pad_fractional_zeros,
             normalizeZeros=normalize_zeros,
             min=self.write_bound(min_value),

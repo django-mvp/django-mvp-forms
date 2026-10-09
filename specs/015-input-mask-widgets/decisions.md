@@ -410,3 +410,37 @@ uses, so the example is what the test runs.
 
 **ADR:** none — local to this feature's build, and nothing downstream inherits it.
 
+
+## D31. What the code review changed
+
+One reviewer read the finished diff. Everything it found was fixed, directly and not by a second
+dispatch, since each fix was a few lines with its test.
+
+- The script corrected every masked input's entry in the form's data with the mask's own value.
+  After a reset, or a value a script assigned, that value is stale, and the form submitted what
+  had been typed before. The script now leaves the browser's entry alone unless the mask is in
+  step with the input, and changes it in two cases only: a display character, and a placeholder
+  nothing was typed into.
+- An input disabled by its fieldset was put back into the form's data. It is now left out.
+- One input whose options IMask refuses stopped every mask on the page. It now costs that input
+  its mask, and is reported in the console.
+- `map_to_radix`, a range block's bounds and length, and an enum block's values are checked when
+  the form class is defined.
+- A demo test that could not fail now names the fields it expects.
+- The CHANGELOG names all four widgets and the event.
+
+**ADR:** none — corrections to the build, recorded in the README where they change what a developer sees.
+
+## D32. A placeholder nothing was typed into submits nothing
+
+**Chosen:** a pattern shown always (`lazy=False`) that the person never typed into hands the form
+an empty value. A pattern partly filled in still hands it what is shown.
+
+**Why:** IMask writes the placeholder into the input, so the browser would submit `#####` for an
+untouched postcode. A required field then passes untouched and an optional one stores the
+placeholder. The specification says the field receives the text as the person saw it, and a
+placeholder is not text the person entered. The code review raised it as a decision for the
+maintainer. It was taken here because the alternative makes `required=True` meaningless on these
+fields, and it is his to reverse at the merge.
+
+**ADR:** docs/adr/0045-mask-widgets-bring-one-script-that-acts-once.md

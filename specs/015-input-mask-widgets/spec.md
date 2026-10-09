@@ -370,7 +370,8 @@ change an option on the instance it carries.
 
 - **FR-017**: The pattern widget, the regular expression widget and the widget that chooses
   between masks MUST hand the field the submitted text unchanged. Where a pattern has a display
-  character, the text submitted MUST be what the person typed.
+  character, the text submitted MUST be what the person typed. Where a pattern shows its
+  placeholder always and nothing was typed into it, the text submitted MUST be empty.
 - **FR-018**: The number widget MUST hand the field the submitted number with the thousands
   separator removed and the decimal mark as a full stop.
 - **FR-019**: The number widget MUST show an initial or submitted value so that IMask reads it as

@@ -15,8 +15,10 @@ The script sets a flag on `window` the first time it runs and returns at once on
 It waits for the document to finish loading before it looks for IMask, applies a mask to each
 `input[data-imask]`, and watches for inputs added afterwards.
 
-For every masked input that has a form, the script sets the field's entry in the form's data to
-the mask's value when the data is collected.
+When a form's data is collected, the script changes a masked input's entry in two cases only.
+A field with a display character hands the form what was typed. A placeholder nothing was typed
+into hands the form an empty value. In every other case, and whenever the mask is out of step
+with what the input shows, the browser's own entry stands.
 
 ## Why
 
@@ -35,9 +37,16 @@ script tag also sits inside the form, usually ahead of the tag that loads IMask,
 script waits for the document.
 
 IMask writes a display character into the input, so the browser would submit the dots of a PIN
-field and not the digits. The correction is made for every masked input and not only where a
-display character is seen, because a pattern inside `DynamicMaskInput` hides its display character
-from the outer mask, and for any other mask the value and what is shown are the same.
+field and not the digits. The script compares the mask's value with what the input shows
+and does not ask whether the mask has a display character, because a pattern inside
+`DynamicMaskInput` hides its display character from the outer mask.
+
+IMask also writes an always-visible placeholder into the input. Submitted as it stands, an
+untouched required field would pass and an optional one would store the placeholder.
+
+A reset button, or a script that assigns to the input, changes what the input shows without
+telling IMask. The mask's value is then stale, so the script touches nothing unless the two
+agree.
 
 ## Revisit if
 

@@ -49,19 +49,35 @@
     return rest;
   }
 
+  // The entry the form should hold for a masked input, or undefined to leave
+  // the browser's own. The browser's stands whenever the mask is out of step
+  // with the input, as it is after a reset or a value a script assigned.
+  function entry(input, mask) {
+    if (input.value !== mask.displayValue) return undefined;
+    // A placeholder nothing was typed into is not a value.
+    if (mask.masked.rawInputValue === "") return "";
+    // A display character hides what was typed, and a pattern inside a list of
+    // masks hides its display character from the outer mask.
+    return mask.value === input.value ? undefined : mask.value;
+  }
+
   function apply(input) {
     if (!window.IMask || masked.has(input)) return;
-    const mask = window.IMask(input, build(JSON.parse(input.dataset.imask)));
+    let mask;
+    try {
+      mask = window.IMask(input, build(JSON.parse(input.dataset.imask)));
+    } catch (error) {
+      // Options IMask refuses cost this input its mask and no other input.
+      console.error(input, error);
+      return;
+    }
     masked.set(input, mask);
-    // What the input shows is not always what the form should receive: a
-    // display character hides the digits typed, and a pattern inside a list of
-    // masks hides its display character from the outer mask.
     const form = input.form;
     if (form) {
       form.addEventListener("formdata", function (event) {
-        if (input.form === form && input.name && !input.disabled) {
-          event.formData.set(input.name, mask.value);
-        }
+        if (input.form !== form || !input.name || input.matches(":disabled")) return;
+        const value = entry(input, mask);
+        if (value !== undefined) event.formData.set(input.name, value);
       });
     }
     input.dispatchEvent(

@@ -51,6 +51,26 @@ document.addEventListener("mvp-forms:imask", (event) => {
   }
 });
 """
+# One node holding an input IMask refuses and, after it, an input it accepts.
+INSERT_REFUSED_THEN_ACCEPTED = """
+const holder = document.createElement("div");
+for (const [id, options] of [
+  ["id_refused", { kind: "regex", mask: "^a*$", flags: "ii" }],
+  ["id_accepted", { kind: "pattern", mask: "000" }],
+]) {
+  const input = document.createElement("input");
+  input.id = id;
+  input.dataset.imask = JSON.stringify(options);
+  holder.append(input);
+}
+document.getElementById("masked").append(holder);
+"""
+DISABLE_BY_FIELDSET = """
+const fieldset = document.createElement("fieldset");
+fieldset.disabled = true;
+document.getElementById("id_pin").before(fieldset);
+fieldset.append(document.getElementById("id_pin"));
+"""
 MASKS_OF = "(id) => window.masked.filter((each) => each === id).length"
 ENTRIES = "Object.fromEntries(new FormData(document.getElementById('masked')))"
 
@@ -277,6 +297,20 @@ class TestInputsAddedAfterThePageLoads:
         assert page.evaluate(MASKS_OF, "id_mobile") == 1
 
 
+class TestAnInputIMaskRefuses:
+    def test_it_does_not_stop_the_inputs_after_it(self, masked_page, page_errors):
+        page = masked_page()
+
+        page.evaluate(INSERT_REFUSED_THEN_ACCEPTED)
+        page.wait_for_function("window.masked.includes('id_accepted')")
+        field = page.locator("#id_accepted")
+        field.click()
+        field.press_sequentially("1a2")
+
+        assert field.input_value() == "12"
+        assert page_errors == []
+
+
 class TestDisabledAndReadOnlyInputs:
     def test_a_disabled_input_shows_its_value_under_the_mask_and_stays_disabled(
         self, masked_page
@@ -381,6 +415,46 @@ class TestWhatTheFormReceives:
         page.evaluate("document.getElementById('id_pin').disabled = true")
 
         assert "pin" not in page.evaluate(ENTRIES)
+
+    def test_an_input_disabled_by_its_fieldset_adds_no_entry(self, masked_page):
+        page = masked_page()
+        type_into(page, "pin", "1234")
+
+        page.evaluate(DISABLE_BY_FIELDSET)
+
+        assert "pin" not in page.evaluate(ENTRIES)
+
+    def test_a_form_that_was_reset_submits_what_its_inputs_show(self, masked_page):
+        page = masked_page()
+        type_into(page, "pin", "1234")
+        type_into(page, "shelf", "3")
+
+        page.evaluate("document.getElementById('masked').reset()")
+
+        entries = page.evaluate(ENTRIES)
+        assert entries["pin"] == page.locator("#id_pin").input_value()
+        assert entries["shelf"] == page.locator("#id_shelf").input_value()
+
+    def test_a_value_a_script_assigned_is_what_is_submitted(self, masked_page):
+        page = masked_page()
+        type_into(page, "pin", "1234")
+
+        page.evaluate("document.getElementById('id_pin').value = '99'")
+
+        assert page.evaluate(ENTRIES)["pin"] == "99"
+
+    def test_a_placeholder_nothing_was_typed_into_submits_nothing(self, masked_page):
+        page = masked_page()
+
+        assert page.locator("#id_postcode").input_value() == "#####"
+        assert page.evaluate(ENTRIES)["postcode"] == ""
+
+    def test_a_placeholder_partly_filled_submits_what_is_shown(self, masked_page):
+        page = masked_page()
+
+        shown = type_into(page, "postcode", "12")
+
+        assert page.evaluate(ENTRIES)["postcode"] == shown == "12###"
 
     def test_an_input_with_no_name_adds_no_entry(self, masked_page):
         page = masked_page()

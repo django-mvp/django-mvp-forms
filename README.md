@@ -1282,7 +1282,7 @@ Two things have to be on a page that draws a masked field: IMask, and the form's
 
 - `{% crispy form %}` writes the form's media inside the form, so the page template writes only IMask. A page with several forms drawn this way holds the script once for each of them, and the script acts once however often it is included.
 - `{{ form|crispy }}`, `{{ field|as_crispy_field }}` and Django's own form rendering write no media. Render `{{ form.media }}` in the page template, or load `{% static 'mvp_forms/imask.js' %}` yourself.
-- The script waits for the document to finish loading before it looks for IMask, so it may be written before or after IMask. A project that bundles IMask exposes it as `window.IMask`, the name IMask publishes, and the widgets work as they do with the copy from a CDN.
+- The script waits for the document to finish loading before it looks for IMask, so it may be written before or after IMask, as long as IMask is loaded by the time the document has finished loading. An IMask loaded later than that, with `async` for example, is not found for the inputs already on the page. A project that bundles IMask exposes it as `window.IMask`, the name IMask publishes, and the widgets work as they do with the copy from a CDN.
 - The script is a file and the widgets write no inline script and no inline handler. A page whose Content Security Policy allows scripts from its own origin and from the origin serving IMask, and forbids inline script, masks every field.
 - A project that uses none of these widgets never loads the script. The pack's own templates still need no script.
 
@@ -1313,7 +1313,7 @@ class BookingForm(forms.Form):
 |---|---|---|
 | `definitions` | `definitions` | A mapping from one character to the regular expression it stands for, written as text in JavaScript's dialect: `{"S": "[1-6]"}` |
 | `blocks` | `blocks` | A mapping from a name used in the pattern to a block, described below |
-| `lazy` | `lazy` | `False` shows the whole pattern, with its placeholder, before anything is typed |
+| `lazy` | `lazy` | `False` shows the whole pattern, with its placeholder, before anything is typed. A field nothing was typed into submits nothing, and a field partly filled in submits what is shown, placeholder characters included |
 | `placeholder_char` | `placeholderChar` | One character shown in each open position, or a mapping from a definition's character to the character shown for it: `{"0": "#", "a": "a"}` |
 | `overwrite` | `overwrite` | `True` has what is typed replace what is there, and `"shift"` has it replace and shift the rest |
 | `eager` | `eager` | `True` writes the fixed characters ahead of the cursor, `"append"` and `"remove"` do so in one direction only |
@@ -1348,8 +1348,8 @@ serial = PatternMaskInput("N", blocks={"N": PatternBlock("0", repeat=4)})
 
 | Block | What it takes |
 |---|---|
-| `RangeBlock(minimum, maximum, *, max_length=None, autofix=None, placeholder_char=None)` | A whole number between the bounds. `max_length` is the number of digits, and `autofix=True` corrects a number outside the bounds to the nearest one. A minimum above the maximum raises `ValueError` |
-| `EnumBlock(values, *, placeholder_char=None)` | One of a list of values. An empty list raises `ValueError` |
+| `RangeBlock(minimum, maximum, *, max_length=None, autofix=None, placeholder_char=None)` | A whole number between the bounds. `max_length` is the number of digits, and `autofix=True` corrects a number outside the bounds to the nearest one. A bound or a `max_length` that is not a whole number, and a minimum above the maximum, raise `ValueError` |
+| `EnumBlock(values, *, placeholder_char=None)` | One of a list of values. An empty list, and anything that is not a list of text, raise `ValueError` |
 | `PatternBlock(mask, *, repeat=None, placeholder_char=None)` | A pattern of its own, repeated `repeat` times when that is stated |
 
 A date is masked with a pattern whose day, month and year are ranges, and Django's `DateField` reads the result through `input_formats`.
@@ -1408,7 +1408,7 @@ class InvoiceForm(forms.Form):
 | `max_value` | `max` | The largest value, of the same kinds |
 | `autofix` | `autofix` | `True` corrects a value outside the bounds to the nearest one |
 
-A value that cannot be right raises `ValueError` when the form class is defined, and its message names the option: a negative `scale`, a `thousands_separator` or `radix` that is more than one character, a `thousands_separator` that is the decimal mark (a comma when you state no `radix`, so `NumberMaskInput(thousands_separator=",")` is refused until you state `radix="."`), a `min_value` or `max_value` that is not a finite number, and a `min_value` above the `max_value`.
+A value that cannot be right raises `ValueError` when the form class is defined, and its message names the option: a negative `scale`, a `thousands_separator` or `radix` that is more than one character, a `thousands_separator` that is the decimal mark (a comma when you state no `radix`, so `NumberMaskInput(thousands_separator=",")` is refused until you state `radix="."`), a `map_to_radix` that is not a list of single characters, a `min_value` or `max_value` that is not a finite number, and a `min_value` above the `max_value`.
 
 The input is a text input, since IMask masks no other type, and it asks a touch device for a decimal keypad, or a numeric one when `scale=0`. An `inputmode` in your `attrs` replaces that.
 
@@ -1468,9 +1468,11 @@ Register the listener before the script runs, so that it hears the inputs that a
 
 #### What the form receives
 
-A pattern, a regular expression or a list of masks hands the field the text as the person saw it, fixed characters included, and the field cleans it as it would any text. A number mask hands it the plain number, as described above. A pattern submitted half filled in reaches the field half filled in, and whether that is acceptable is the field's validation to decide: add a validator to a field that must match a shape.
+A pattern, a regular expression or a list of masks hands the field the text as the person saw it, fixed characters included, and the field cleans it as it would any text. A number mask hands it the plain number, as described above. A pattern submitted half filled in reaches the field half filled in, with its placeholder characters where `lazy=False` shows them, and whether that is acceptable is the field's validation to decide: add a validator to a field that must match a shape. A pattern nothing was typed into submits nothing, whatever placeholder it shows, so a required field left untouched is still reported as empty.
 
-A field with a `display_char` shows that character, and the form receives what was typed. The script sets the field's entry in the form's data to the mask's value when the form's data is read, which covers a native submit and a script that builds a `FormData` from the form, as htmx 2 does. A masked input that has been removed from its form, is disabled or has no name adds no entry.
+A field with a `display_char` shows that character, and the form receives what was typed. In these two cases, a display character and an untouched placeholder, the script sets the field's entry in the form's data when the form's data is read, which covers a native submit and a script that builds a `FormData` from the form, as htmx 2 does. Every other masked input is submitted by the browser as it shows. So is any masked input whose value was changed without typing, by a reset button or by a script that assigns to it: the form receives what the input then shows. A masked input that has been removed from its form, is disabled by itself or by a `<fieldset>`, or has no name adds no entry.
+
+Options IMask refuses, such as a regular expression JavaScript cannot compile, leave that one input unmasked and are reported in the browser's console. Every other input on the page is masked as usual.
 
 #### What is not supported
 

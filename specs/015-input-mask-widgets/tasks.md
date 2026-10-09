@@ -227,3 +227,18 @@ Issue: #157. Delivers FR-027.
   instance from the listener apply to what is typed next.
 - The red step removes the dispatch.
 - The README documents the event with one example that sets an option the widgets do not carry.
+
+---
+
+## Fixes from the code review
+
+### T009 — The form's data is corrected only where the mask is in step with the input (US1)
+
+A reset form and a value a script assigned submit what the input shows. An input disabled by its
+fieldset adds no entry. A placeholder nothing was typed into submits nothing.
+
+### T010 — An input IMask refuses costs only that input its mask (US1)
+
+### T011 — `map_to_radix`, a range block's bounds and length and an enum block's values are checked (US3)
+
+### T012 — The demo test names the fields it expects, and the CHANGELOG names every widget (US1)
