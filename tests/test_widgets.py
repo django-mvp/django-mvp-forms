@@ -10,6 +10,7 @@ from django import forms
 from django.utils import translation
 
 from mvp_forms.widgets import (
+    DynamicMaskInput,
     EnumBlock,
     NumberMaskInput,
     PatternBlock,
@@ -594,3 +595,113 @@ class TestHowTheNumberFieldIsDrawn:
         received = field.widget.value_from_datadict({"n": html["value"]}, {}, "n")
 
         assert field.clean(received) == Decimal("1234.5")
+
+
+class TestDynamicMaskInput:
+    def test_each_masks_options_are_written_in_the_order_stated(self):
+        widget = DynamicMaskInput(
+            [PatternMaskInput("000-0000"), PatternMaskInput("(000) 000-0000")]
+        )
+
+        assert written(widget) == {
+            "kind": "dynamic",
+            "mask": [
+                {"kind": "pattern", "mask": "000-0000"},
+                {"kind": "pattern", "mask": "(000) 000-0000"},
+            ],
+        }
+
+    def test_a_pattern_a_regular_expression_and_a_number_each_write_their_own(self):
+        widget = DynamicMaskInput(
+            [
+                RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i"),
+                NumberMaskInput(scale=0, max_value=999),
+                PatternMaskInput(
+                    "S-00", definitions={"S": "[1-6]"}, lazy=False, display_char="•"
+                ),
+            ]
+        )
+
+        assert written(widget)["mask"] == [
+            {"kind": "regex", "mask": "^#[0-9a-f]{0,6}$", "flags": "i"},
+            {"kind": "number", "scale": 0, "max": 999},
+            {
+                "kind": "pattern",
+                "mask": "S-00",
+                "definitions": {"S": "[1-6]"},
+                "lazy": False,
+                "displayChar": "•",
+            },
+        ]
+
+    def test_a_tuple_of_masks_is_written_as_a_list(self):
+        widget = DynamicMaskInput((PatternMaskInput("0"), PatternMaskInput("00")))
+
+        assert written(widget)["mask"] == [
+            {"kind": "pattern", "mask": "0"},
+            {"kind": "pattern", "mask": "00"},
+        ]
+
+    @pytest.mark.parametrize(
+        "masks",
+        [
+            pytest.param([], id="empty list"),
+            pytest.param(PatternMaskInput("0"), id="a widget and not a list"),
+            pytest.param("0000", id="text"),
+            pytest.param(["0000"], id="a pattern as text"),
+            pytest.param([RangeBlock(1, 2)], id="a block"),
+            pytest.param([forms.TextInput()], id="a widget of Django's"),
+            pytest.param(
+                [PatternMaskInput("0"), DynamicMaskInput([PatternMaskInput("00")])],
+                id="another list of masks",
+            ),
+            pytest.param([PatternMaskInput("0"), None], id="one that is not a widget"),
+        ],
+    )
+    def test_a_list_that_cannot_be_right_is_refused_naming_the_option(self, masks):
+        with pytest.raises(ValueError, match="masks"):
+            DynamicMaskInput(masks)
+
+    def test_an_option_it_does_not_have_is_refused(self):
+        with pytest.raises(TypeError, match="lazy"):
+            DynamicMaskInput([PatternMaskInput("0")], lazy=False)
+
+    def test_it_names_the_script_in_its_media(self):
+        assert "mvp_forms/imask.js" in str(
+            DynamicMaskInput([PatternMaskInput("0")]).media
+        )
+
+    def test_the_developers_attrs_are_kept(self):
+        widget = DynamicMaskInput(
+            [PatternMaskInput("0")], attrs={"placeholder": "number"}
+        )
+
+        html = input_of(widget)
+
+        assert html["placeholder"] == "number"
+        assert html["type"] == "text"
+
+    @pytest.mark.parametrize(
+        "masks",
+        [
+            [PatternMaskInput("000-0000"), PatternMaskInput("(000) 000-0000")],
+            [RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i")],
+            [NumberMaskInput(thousands_separator=" ", radix=",")],
+            [
+                RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i"),
+                NumberMaskInput(scale=0, thousands_separator=".", radix=","),
+            ],
+        ],
+        ids=["patterns", "regular expression", "number", "expression and number"],
+    )
+    def test_what_a_form_posts_reaches_the_field_as_it_was_typed(self, masks):
+        widget = DynamicMaskInput(masks)
+
+        received = widget.value_from_datadict({"n": "1 234,5"}, {}, "n")
+
+        assert received == "1 234,5"
+
+    def test_a_value_is_drawn_unchanged_whatever_the_masks_in_the_list(self):
+        widget = DynamicMaskInput([NumberMaskInput(radix=",")])
+
+        assert input_of(widget, "1234.5")["value"] == "1234.5"

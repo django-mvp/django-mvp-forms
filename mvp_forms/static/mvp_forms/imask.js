@@ -32,6 +32,7 @@
     const { kind, definitions, blocks, flags, ...rest } = written;
     if (kind === "regex") return { mask: new RegExp(rest.mask, flags) };
     if (kind === "number") return { mask: Number, ...rest };
+    if (kind === "dynamic") return { mask: rest.mask.map(build) };
     if (definitions) {
       rest.definitions = Object.fromEntries(
         Object.entries(definitions).map(([character, value]) => [

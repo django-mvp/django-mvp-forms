@@ -338,3 +338,25 @@ existing routes return cannot show that a browser's `1 234 567,5` reached the fi
 
 **Revisit if:** a second widget needs its cleaned value read in a browser test. The routes then
 carry that field too.
+
+## D27. A list of masks is written under `mask`, and a list inside a list is refused
+
+**Decision:** `DynamicMaskInput` writes `{"kind": "dynamic", "mask": [...]}`, each item being the
+options its widget writes, in order. The script builds each item with the function that builds a
+whole input's options. An item that is another `DynamicMaskInput` is refused, naming `masks`, as
+is a value that is not a list or a tuple.
+
+**Why:** `mask` is the name IMask gives the list, and the plan refuses an item that is not one of
+the other three widgets. A list of lists has no meaning in IMask's dispatch that the one list does
+not already have.
+
+**Revisit if:** nesting is wanted. The refusal is one entry in the tuple of allowed classes.
+
+## D28. The code field's help text still says max, as the quantity's says min and max
+
+**Decision:** the Colour or number field is restored with `max_value=999` and its help text keeps
+"a number with scale=0 and max=999" as approved.
+
+**Why:** the same as D25: the brief forbids rewording help text on the approved page.
+
+**Revisit if:** the maintainer rewords the number sections' help text. It is one line.

@@ -17,6 +17,7 @@ from demo.autocompletes import ROCKS, UNGROUPED_ROCKS
 from demo.forms import (
     DAISYUI_VERSION,
     THEME_NAMES,
+    DynamicMaskForm,
     NumberMaskForm,
     PatternMaskForm,
     RegexMaskForm,
@@ -3482,6 +3483,8 @@ PATTERN_POST = {
 }
 REGEX_PREFIX = "regex"
 REGEX_POST = {"digits": "12345678", "colour": "#A0b", "username": "ab_1"}
+DYNAMIC_PREFIX = "dynamic"
+DYNAMIC_POST = {"card": "1234 567890 12345", "phone": "(123) 456-7890", "code": "#a0B"}
 NUMBER_PREFIX = "number"
 NUMBER_POST = {
     "amount": "1 234 567,5",
@@ -3593,6 +3596,49 @@ class InputMasksPageContract:
         rows = page.find(id=NUMBER_PREFIX).find("table").find("tbody").find_all("tr")
         received = [row.find_all("code")[1].get_text() for row in rows]
         assert received == NUMBER_RECEIVED
+
+    def test_the_dynamic_section_holds_a_masked_input_for_each_field(self, page):
+        section = page.find(id=DYNAMIC_PREFIX)
+
+        masked = section.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {
+            f"{DYNAMIC_PREFIX}-{name}" for name in DynamicMaskForm.base_fields
+        }
+
+    def test_the_phone_lists_its_two_patterns_in_order(self, page):
+        options = json.loads(page.find(id=f"id_{DYNAMIC_PREFIX}-phone")["data-imask"])
+
+        assert options == {
+            "kind": "dynamic",
+            "mask": [
+                {"kind": "pattern", "mask": "000-0000"},
+                {"kind": "pattern", "mask": "(000) 000-0000"},
+            ],
+        }
+
+    def test_the_code_lists_a_regular_expression_and_a_number(self, page):
+        options = json.loads(page.find(id=f"id_{DYNAMIC_PREFIX}-code")["data-imask"])
+
+        assert options == {
+            "kind": "dynamic",
+            "mask": [
+                {"kind": "regex", "mask": "^#[0-9a-f]{0,6}$", "flags": "i"},
+                {"kind": "number", "scale": 0, "max": 999},
+            ],
+        }
+
+    def test_a_post_of_the_dynamic_form_returns_what_each_field_received(
+        self, open_page
+    ):
+        data = {f"{DYNAMIC_PREFIX}-{name}": v for name, v in DYNAMIC_POST.items()}
+        data[f"{DYNAMIC_PREFIX}-submit"] = ""
+
+        page = open_page(self.url_name, data)
+
+        rows = page.find(id=DYNAMIC_PREFIX).find("table").find("tbody").find_all("tr")
+        received = [row.find_all("code")[1].get_text() for row in rows]
+        assert received == list(DYNAMIC_POST.values())
 
     def test_the_disabled_field_of_the_states_form_is_a_disabled_number(self, page):
         disabled = page.find(id="id_states-disabled")

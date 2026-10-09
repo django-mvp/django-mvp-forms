@@ -44,6 +44,7 @@ from django.utils.translation import gettext_lazy as _
 from mvp_forms.choices import Choice, FormChoices, Modifiers
 from mvp_forms.layout import Join
 from mvp_forms.widgets import (
+    DynamicMaskInput,
     EnumBlock,
     NumberMaskInput,
     PatternMaskInput,
@@ -1872,6 +1873,50 @@ class NumberMaskForm(MaskForm):
         required=False,
         widget=NumberMaskInput(
             scale=3, thousands_separator=",", radix=".", map_to_radix=[","]
+        ),
+    )
+
+
+class DynamicMaskForm(MaskForm):
+    """The widget that chooses between several masks."""
+
+    card = forms.CharField(
+        label=_("Card number"),
+        help_text=_(
+            "Two patterns: 0000 000000 00000 and 0000 0000 0000 0000. The "
+            "second applies from the sixteenth digit."
+        ),
+        required=False,
+        widget=DynamicMaskInput(
+            [
+                PatternMaskInput("0000 000000 00000"),
+                PatternMaskInput("0000 0000 0000 0000"),
+            ]
+        ),
+    )
+    phone = forms.CharField(
+        label=_("Phone number"),
+        help_text=_(
+            "Two patterns: 000-0000 and (000) 000-0000. The second applies "
+            "from the eighth digit."
+        ),
+        required=False,
+        widget=DynamicMaskInput(
+            [PatternMaskInput("000-0000"), PatternMaskInput("(000) 000-0000")]
+        ),
+    )
+    code = forms.CharField(
+        label=_("Colour or number"),
+        help_text=_(
+            "A regular expression, ^#[0-9a-f]{0,6}$ with the flag i, and a "
+            "number with scale=0 and max=999."
+        ),
+        required=False,
+        widget=DynamicMaskInput(
+            [
+                RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i"),
+                NumberMaskInput(scale=0, max_value=999),
+            ]
         ),
     )
 

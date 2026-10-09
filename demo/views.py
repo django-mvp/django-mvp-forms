@@ -27,6 +27,7 @@ from demo.forms import (
     DrawingsForm,
     DrawingStateForm,
     DrawingTrioForm,
+    DynamicMaskForm,
     FieldWithButtonsForm,
     FloatingByNameForm,
     FloatingChosenForm,
@@ -1692,6 +1693,14 @@ class InputMasksMixin:
             NumberMaskForm,
             "https://imask.js.org/guide.html#masked-number",
             "Number mask in the IMask guide",
+        ),
+        (
+            "dynamic",
+            "DynamicMaskInput",
+            "A list of masks. IMask applies whichever fits what has been typed.",
+            DynamicMaskForm,
+            "https://imask.js.org/guide.html#masked-dynamic",
+            "Dynamic mask in the IMask guide",
         ),
     ]
 

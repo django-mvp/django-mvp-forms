@@ -221,8 +221,27 @@
       "tasks": [
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestDynamicMaskInput",
+              "tests/test_imask_e2e.py::TestDynamicMaskedInputs",
+              "tests/test_demo.py::TestInputMasksPage",
+              "tests/test_demo.py::TestStandaloneInputMasksPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_imask_e2e.py tests/test_demo.py -k 'Dynamic or InputMasks' -q",
+              "uv run pytest -n auto -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:534",
+              "mvp_forms/static/mvp_forms/imask.js:35",
+              "demo/forms.py:1880",
+              "demo/views.py:1697"
+            ]
+          }
         }
       ]
     },

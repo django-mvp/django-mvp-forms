@@ -150,6 +150,39 @@ class TestNumberMaskedInputs:
         assert '"amount": "1234567.5"' in page.inner_text("body")
 
 
+class TestDynamicMaskedInputs:
+    def test_the_mask_in_place_changes_as_more_is_typed(self, masked_page):
+        page = masked_page()
+        field = page.locator("#id_telephone")
+
+        seven = type_into(page, "telephone", "1234567")
+        field.press("End")
+        field.press_sequentially("8")
+
+        assert seven == "123-4567"
+        assert field.input_value() == "(123) 456-78"
+
+    def test_a_regular_expression_and_a_number_in_the_list_each_apply_their_rule(
+        self, masked_page
+    ):
+        colour = type_into(masked_page(), "code", "#AbCg")
+        number = type_into(masked_page(), "code", "12a3")
+
+        assert (colour, number) == ("#AbC", "123")
+
+    def test_a_list_holding_a_display_character_submits_what_was_typed(
+        self, masked_page
+    ):
+        page = masked_page()
+
+        shown = type_into(page, "secret", "1234")
+        with page.expect_navigation():
+            page.click("button[type=submit]")
+
+        assert shown == "••••"
+        assert '"secret": ["1234"]' in page.inner_text("body")
+
+
 class TestOneMaskForEachInput:
     def test_every_input_is_masked_once_when_the_script_is_on_the_page_once(
         self, masked_page

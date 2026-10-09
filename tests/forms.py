@@ -26,6 +26,7 @@ from django_tomselect.forms import (
 
 from mvp_forms.layout import Join
 from mvp_forms.widgets import (
+    DynamicMaskInput,
     EnumBlock,
     NumberMaskInput,
     PatternBlock,
@@ -1136,4 +1137,28 @@ class MaskedPageForm(forms.Form):
     amount = forms.DecimalField(
         required=False,
         widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=","),
+    )
+    telephone = forms.CharField(
+        required=False,
+        widget=DynamicMaskInput(
+            [PatternMaskInput("000-0000"), PatternMaskInput("(000) 000-0000")]
+        ),
+    )
+    code = forms.CharField(
+        required=False,
+        widget=DynamicMaskInput(
+            [
+                RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i"),
+                NumberMaskInput(scale=0, max_value=999),
+            ]
+        ),
+    )
+    secret = forms.CharField(
+        required=False,
+        widget=DynamicMaskInput(
+            [
+                PatternMaskInput("0000", display_char="•"),
+                PatternMaskInput("000000", display_char="•"),
+            ]
+        ),
     )

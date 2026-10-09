@@ -529,3 +529,39 @@ class NumberMaskInput(MaskInput):
         if isinstance(value, Decimal | float):
             value = format(Decimal(str(value)), "f")
         return str(value).replace(".", self.radix)
+
+
+class DynamicMaskInput(MaskInput):
+    """A list of masks, from which IMask applies the one that fits best."""
+
+    kind = "dynamic"
+
+    def __init__(self, masks, attrs=None):
+        """State the masks, in order.
+
+        IMask applies the mask that takes the most of what has been typed, and
+        the earlier one where two take the same. Only each mask's options are
+        used. Its ``attrs`` and the way it writes a number are not.
+
+        Args:
+            masks: A list of ``PatternMaskInput``, ``RegexMaskInput`` and
+                ``NumberMaskInput`` widgets.
+            attrs: HTML attributes for the input.
+
+        Raises:
+            ValueError: The list is empty, is not a list, or holds something
+                other than one of the three widgets. The message names the
+                option.
+        """
+        Check.of_type("masks", masks, list | tuple, "a list of mask widgets")
+        if not masks:
+            raise ValueError("masks must hold at least one mask.")
+        for each in masks:
+            Check.of_type(
+                "masks",
+                each,
+                (PatternMaskInput, RegexMaskInput, NumberMaskInput),
+                "a PatternMaskInput, a RegexMaskInput or a NumberMaskInput, "
+                f"for each mask in the list, not {each!r}",
+            )
+        super().__init__(attrs, mask=[each.mask_options() for each in masks])

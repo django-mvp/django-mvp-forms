@@ -1262,6 +1262,7 @@ This is the public surface:
 - `mvp_forms.widgets.PatternMaskInput`, with the three blocks it takes, `RangeBlock`, `EnumBlock` and `PatternBlock`, from the same module
 - `mvp_forms.widgets.RegexMaskInput`
 - `mvp_forms.widgets.NumberMaskInput`
+- `mvp_forms.widgets.DynamicMaskInput`
 - the attribute `data-imask`, which holds a widget's options as JSON on its `<input>`
 - the script `mvp_forms/imask.js`, which each widget names in its media
 
@@ -1416,6 +1417,30 @@ The widget reads and writes the number by one rule, with IMask on the page or no
 - A value the form is drawn with, a `Decimal`, a number or a plain string such as `"1234.5"`, is written with the widget's decimal mark and no thousands separator: `1234,5`. IMask adds the separators when it applies the mask, and without IMask the same text reads back as the same number. The widget does not localise the value, whatever the field's `localize` says, because its own options say how the number is written.
 
 A page that does not load IMask shows the number as the widget wrote it, with no separators, and the field still reads what is typed by the rule above. A person who types `1234.56` where the decimal mark is a comma and the thousands separator a full stop therefore submits `123456`, since the full stop is dropped as a separator. The field's own validation is what catches a number that is not what was meant.
+
+#### `DynamicMaskInput`
+
+A [dynamic mask](https://imask.js.org/guide.html#masked-dynamic) is a list of masks. As a person types, IMask applies the mask from the list that takes the most of what has been typed, and the earlier one where two take the same. Use it where one field takes values of more than one shape: a phone number of two lengths, a card number of two.
+
+```python
+from django import forms
+
+from mvp_forms.widgets import DynamicMaskInput, PatternMaskInput
+
+
+class ContactForm(forms.Form):
+    phone = forms.CharField(
+        widget=DynamicMaskInput(
+            [PatternMaskInput("000-0000"), PatternMaskInput("(000) 000-0000")]
+        )
+    )
+```
+
+`DynamicMaskInput(masks, attrs=None)`. `masks` is a list of `PatternMaskInput`, `RegexMaskInput` and `NumberMaskInput` widgets, in the order IMask tries them, and each is written with its own options. Only a widget's options are used: its `attrs` are not, and the way a `NumberMaskInput` reads and writes a number is not. The widget takes no options of its own, since which mask applies is IMask's decision.
+
+An empty list, a value that is not a list, and an item that is not one of the three widgets (another `DynamicMaskInput` included) raise `ValueError` when the form class is defined, and the message names `masks`.
+
+The field receives the submitted text unchanged, as it does from a pattern or a regular expression, including where a mask in the list is a number. A list that holds a pattern with a `display_char` shows that character and submits what was typed.
 
 #### What the form receives
 
