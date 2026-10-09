@@ -156,8 +156,8 @@ alert from the page.
 
 **Why defensible:** there is no script-free mechanism to use, and the planning notes allow an
 inline handler in exactly that case. Removing the element needs no class to win against the
-alert's own display rule. Issue #47 stays open on whether a strict Content Security Policy must
-be supported (research R9).
+alert's own display rule. Issue #47 asked whether a strict Content Security Policy must be
+supported, and ADR 0041 answers that it need not be (research R9).
 
 **ADR:** docs/adr/0014-interactive-layout-objects-need-only-daisyui.md
 

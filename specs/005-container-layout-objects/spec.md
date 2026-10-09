@@ -194,7 +194,7 @@ All four (User Stories 1 to 4)
 - A person can have errors in more than one tab or group. They see the first, fix it and submit again. Marking every tab or group that holds an error is not part of this feature. Issue #46 asks whether it should be added.
 - The rule for which tab or group opens lives in django-crispy-forms' Python classes. The pack draws the state those classes give it and adds no rule of its own, except for the modal in FR-012, where django-crispy-forms has none.
 - An alert's colour is chosen by passing one of daisyUI's alert modifiers as an extra class. A first-class Python option for size, colour and variant belongs to issue #11.
-- Whether the pack's interactive pieces have to work under a Content Security Policy that forbids inline script is not settled. Issue #47 asks, and the answer may constrain how FR-010, FR-012 and FR-015 are met.
+- The pack's interactive pieces do not all have to work under a Content Security Policy that forbids inline script. Under one, the modal's close button and the alert's dismiss button are drawn and do nothing, and tabs and the accordion are unaffected. Issue #47 asked, and ADR 0041 records the answer and what a host project with such a policy does.
 - Forms split across steps, with a tab per step and validation between them, are a form view's business and belong to django-mvp.
 - A formset inside a tab or group is drawn by issue #10's work. Nothing here is specific to one.
 - The demo pages are the demo project's own pages, on django-mvp's shell. Nothing in them is distributed.
