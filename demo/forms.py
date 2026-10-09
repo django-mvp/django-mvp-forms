@@ -1851,7 +1851,7 @@ class NumberMaskForm(MaskForm):
     )
     quantity = forms.IntegerField(
         label=_("Quantity"),
-        help_text=_("scale=0, min=0, max=100, autofix=True"),
+        help_text=_("scale=0, min_value=0, max_value=100, autofix=True"),
         required=False,
         widget=NumberMaskInput(scale=0, min_value=0, max_value=100, autofix=True),
     )
@@ -1909,7 +1909,7 @@ class DynamicMaskForm(MaskForm):
         label=_("Colour or number"),
         help_text=_(
             "A regular expression, ^#[0-9a-f]{0,6}$ with the flag i, and a "
-            "number with scale=0 and max=999."
+            "number with scale=0 and max_value=999."
         ),
         required=False,
         widget=DynamicMaskInput(
