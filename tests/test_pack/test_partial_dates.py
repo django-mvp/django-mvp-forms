@@ -10,6 +10,10 @@ from tests.forms import (
     PartialDateLineFormSet,
     PartialDateMaskForm,
     PartialDateMaskLineFormSet,
+    PartialDatePartsForm,
+    PartialDatePartsLineFormSet,
+    PartialDateSelectLineFormSet,
+    PartialDateSelectPartsForm,
 )
 
 SOURCES = [
@@ -130,3 +134,156 @@ class TestPartialDateMaskInput:
 
     def test_the_forms_media_names_the_script(self):
         assert "mvp_forms/imask.js" in str(PartialDateMaskForm().media)
+
+
+SENT = {"born_year": "2021", "born_month": "02", "born_day": "30"}
+
+
+class ThreePartDateDrawn:
+    """How the pack draws a three-part date, run once for each widget."""
+
+    form = None
+    line_formset = None
+    year_tag = None
+
+    def part(self, soup, name):
+        return soup.find(attrs={"data-partial-date-part": name})
+
+    def shown(self, soup, name):
+        part = self.part(soup, name)
+        if part.name == "input":
+            return part.get("value") or None
+        option = part.find("option", selected=True)
+        return (option["value"] or None) if option else None
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_it_is_one_fieldset_whose_legend_is_the_label(self, draw, source):
+        soup = draw(source, form=self.form())
+
+        frame = soup.find(id="div_id_born")
+
+        assert frame.name == "fieldset"
+        assert len(frame.find_all("legend")) == 1
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_it_has_one_help_text_and_one_set_of_errors(self, draw, source):
+        soup = draw(source, form=self.form({"born_year": "", "born_month": "3"}))
+
+        frame = soup.find(id="div_id_born")
+
+        assert len(frame.find_all(id="id_born_helptext")) == 1
+        assert len(frame.find_all(id="id_born_error")) == 1
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_the_parts_are_inside_one_element_that_marks_the_group(self, draw, source):
+        soup = draw(source, form=self.form())
+
+        groups = soup.find_all(attrs={"data-partial-date": True})
+
+        assert len(groups) == 1
+        parts = groups[0].find_all(attrs={"data-partial-date-part": True})
+        assert [part["data-partial-date-part"] for part in parts] == [
+            "year",
+            "month",
+            "day",
+        ]
+        assert all(part["aria-label"] for part in parts)
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_only_the_year_is_required(self, draw, source):
+        soup = draw(source, form=self.form())
+
+        assert self.part(soup, "year").has_attr("required")
+        assert not self.part(soup, "month").has_attr("required")
+        assert not self.part(soup, "day").has_attr("required")
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    @pytest.mark.parametrize(
+        ("kind", "value", "added"),
+        [
+            ("size", "lg", "lg"),
+            ("color", "primary", "primary"),
+            ("variant", "ghost", "ghost"),
+        ],
+    )
+    def test_each_part_takes_the_size_colour_and_variant_stated_for_the_form(
+        self, draw, source, kind, value, added
+    ):
+        form = self.form()
+        form.helper.daisyui = FormChoices(**{kind: value})
+
+        soup = draw(source, form=form)
+
+        for name in ("year", "month", "day"):
+            part = self.part(soup, name)
+            assert f"{part.name}-{added}" in part["class"]
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    @pytest.mark.parametrize(
+        ("sent", "expected"),
+        [
+            (SENT, ("2021", "02", "30")),
+            ({**SENT, "born_month": ""}, ("2021", None, "30")),
+        ],
+        ids=["30th of February", "day with no month"],
+    )
+    def test_a_refused_submission_is_drawn_as_it_was_sent(
+        self, draw, source, sent, expected
+    ):
+        form = self.form(sent)
+
+        soup = draw(source, form=form)
+
+        assert not form.is_valid()
+        assert (
+            tuple(self.shown(soup, name) for name in ("year", "month", "day"))
+            == expected
+        )
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_the_empty_form_of_a_formset_draws_the_three_parts(self, draw, source):
+        soup = draw(source, form=self.line_formset().empty_form)
+
+        names = [
+            tag["name"] for tag in soup.find_all(attrs={"data-partial-date-part": True})
+        ]
+
+        assert names == [
+            "form-__prefix__-born_year",
+            "form-__prefix__-born_month",
+            "form-__prefix__-born_day",
+        ]
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_parts_drawn_by_any_renderer_submit_what_they_were_given(
+        self, draw, posted, source
+    ):
+        soup = draw(source, form=self.form(initial={"born": "2021-03-14"}))
+
+        sent = posted(soup)
+        form = self.form(sent)
+
+        assert [
+            tag.name for tag in soup.find_all(attrs={"data-partial-date-part": True})
+        ] == [
+            self.year_tag,
+            "select",
+            "select",
+        ]
+        assert form.is_valid()
+        assert form.cleaned_data["born"] == "2021-03-14"
+
+    def test_the_forms_media_names_the_script(self):
+        assert "mvp_forms/partial-date.js" in str(self.form().media)
+
+
+class TestPartialDateInput(ThreePartDateDrawn):
+    form = PartialDatePartsForm
+    line_formset = PartialDatePartsLineFormSet
+    year_tag = "input"
+
+
+class TestPartialDateSelect(ThreePartDateDrawn):
+    form = PartialDateSelectPartsForm
+    line_formset = PartialDateSelectLineFormSet
+    year_tag = "select"

@@ -1487,6 +1487,9 @@ This is the public surface:
 
 - `mvp_forms.fields.PartialDateField`
 - `mvp_forms.widgets.PartialDateMaskInput`
+- `mvp_forms.widgets.PartialDateInput`
+- `mvp_forms.widgets.PartialDateSelect`
+- the template `mvp_forms/widgets/partial_date.html` and the script `mvp_forms/partial-date.js`
 
 #### The field
 
@@ -1568,6 +1571,33 @@ The year is four digits, then a hyphen, a month and a hyphen, a day, and the hyp
 The mask refuses the digits a calendar cannot have and nothing more. The field is what checks the value.
 
 The padding is done by a subclass of IMask's range block that overrides `_appendCharRaw`, a method that IMask's guide does not document, because the two options the guide does document for changing typed text lose the rest of a value that is changed in the middle. The widget is tested against IMask 7.6.1, and a newer release needs the browser tests run against it before it is relied on.
+
+#### The year, the month and the day
+
+`PartialDateInput` draws a year, a month and a day as three parts that make one value, and `PartialDateSelect` is the same with the year chosen from a list.
+
+```python
+from mvp_forms.widgets import PartialDateInput, PartialDateSelect
+
+
+class SampleForm(forms.Form):
+    collected = PartialDateField(required=False, widget=PartialDateInput())
+    born = PartialDateField(required=False, widget=PartialDateSelect())
+```
+
+Both take `attrs` and nothing else, and every option is a keyword of the field. The attributes you give reach every part. The parts are one joined group in a single element that carries `data-partial-date`:
+
+- The year is a text input of four digits with a numeric keypad, or, in `PartialDateSelect`, a select of years.
+- The month is a select of the twelve months, named in the active language.
+- The day is a select of 1 to 31.
+
+Each part carries an `aria-label` that says which part it is and `data-partial-date-part` set to `year`, `month` or `day`. The parts submit under the field's name followed by `_year`, `_month` and `_day`, so a field named `collected` is posted as `collected_year`, `collected_month` and `collected_day`. In the pack the parts are drawn in one fieldset whose legend is the label, with one help text and one set of errors, and each part takes the size, colour and variant stated for the form. Only the year carries `required`, because a month and a day may be left out. Through Django's own rendering the same three controls are drawn.
+
+The widget joins the parts with hyphens and leaves out the empty ones from the right, so the field receives `2021`, `2021-03` or `2021-03-14`. A day with no month and a month with no year reach the field and are refused with `no_month` and `no_year`. A form drawn again after a refused submission shows each part as it was sent, including `2021-02-30` and a day with no month. An `initial` value, as text or as a `datetime.date`, fills the parts it has and leaves the rest empty.
+
+`PartialDateSelect` lists the years from this year back a hundred years, latest first. A year the form already holds that is not on the list is still an option, so a stored `1850` is shown and not lost.
+
+The widgets name `mvp_forms/partial-date.js` in the form's media. The script needs no IMask.
 
 ### Themes
 

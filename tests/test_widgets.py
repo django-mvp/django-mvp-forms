@@ -1,5 +1,6 @@
 """The mask widgets and the blocks a pattern names, as the form writes them."""
 
+import datetime
 import json
 import re
 from decimal import Decimal
@@ -8,12 +9,16 @@ import pytest
 from bs4 import BeautifulSoup
 from django import forms
 from django.utils import translation
+from django.utils.dates import MONTHS
 
+from mvp_forms.fields import PartialDateField
 from mvp_forms.widgets import (
     DynamicMaskInput,
     EnumBlock,
     NumberMaskInput,
+    PartialDateInput,
     PartialDateMaskInput,
+    PartialDateSelect,
     PatternBlock,
     PatternMaskInput,
     RangeBlock,
@@ -783,3 +788,232 @@ class TestPartialDateMaskInput:
         assert form.is_valid()
         assert form.cleaned_data["born"] == "2021-03"
         assert BeautifulSoup(str(form["born"]), "html.parser").input["type"] == "text"
+
+
+def drawn(widget, value=None, name="born"):
+    """Return the parts of a three-part widget, by the name each part submits."""
+    soup = BeautifulSoup(widget.render(name, value), "html.parser")
+    return {
+        part: soup.find(attrs={"name": f"{name}_{part}"})
+        for part in ("year", "month", "day")
+    }
+
+
+def chosen(part):
+    """Return the value of the option a select shows as chosen, or None."""
+    option = part.find("option", selected=True)
+    return option["value"] if option else None
+
+
+def cleaned(widget, **sent):
+    """Return the form a field with this widget reads from the parts, validated."""
+
+    class Form(forms.Form):
+        born = PartialDateField(required=False, widget=widget)
+
+    form = Form({f"born_{part}": value for part, value in sent.items()})
+    form.is_valid()
+    return form
+
+
+class ThreePartWidget:
+    """What both three-part widgets do alike, run once for each of them."""
+
+    widget = None
+
+    def test_its_parts_submit_under_names_ending_year_month_and_day(self):
+        parts = drawn(self.widget())
+
+        assert all(parts.values())
+
+    def test_an_option_it_does_not_have_is_refused(self):
+        with pytest.raises(TypeError, match="resolution"):
+            self.widget(resolution="month")
+
+    def test_it_names_the_script_in_its_media(self):
+        assert "mvp_forms/partial-date.js" in str(self.widget().media)
+
+    @pytest.mark.parametrize(
+        ("sent", "expected"),
+        [
+            ({"year": "2021", "month": "", "day": ""}, "2021"),
+            ({"year": "2021", "month": "03", "day": ""}, "2021-03"),
+            ({"year": "2021", "month": "03", "day": "14"}, "2021-03-14"),
+            ({"year": "2021", "month": "3", "day": "4"}, "2021-03-04"),
+            ({"year": "", "month": "", "day": ""}, ""),
+        ],
+        ids=["year", "year and month", "all three", "unpadded", "nothing"],
+    )
+    def test_the_parts_reach_the_field_as_one_padded_iso_text(self, sent, expected):
+        form = cleaned(self.widget(), **sent)
+
+        assert form.is_valid()
+        assert form.cleaned_data["born"] == expected
+
+    @pytest.mark.parametrize(
+        ("sent", "code"),
+        [
+            ({"year": "2021", "month": "", "day": "14"}, "no_month"),
+            ({"year": "", "month": "03", "day": ""}, "no_year"),
+            ({"year": "", "month": "03", "day": "14"}, "no_year"),
+        ],
+    )
+    def test_a_gap_reaches_the_field_and_is_refused(self, sent, code):
+        form = cleaned(self.widget(), **sent)
+
+        assert form.has_error("born", code=code)
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("2021", ("2021", None, None)),
+            ("2021-03", ("2021", "03", None)),
+            ("2021-03-14", ("2021", "03", "14")),
+            (datetime.date(2021, 3, 14), ("2021", "03", "14")),
+            (None, (None, None, None)),
+        ],
+        ids=["year", "year and month", "text", "date", "nothing"],
+    )
+    def test_an_initial_value_fills_the_parts_it_has_and_leaves_the_rest(
+        self, value, expected
+    ):
+        parts = drawn(self.widget(), value)
+
+        year = parts["year"]
+        shown = year.get("value") if year.name == "input" else chosen(year)
+        assert (
+            shown or None,
+            chosen(parts["month"]) or None,
+            chosen(parts["day"]) or None,
+        ) == expected
+
+    @pytest.mark.parametrize(
+        ("sent", "expected"),
+        [
+            ({"year": "2021", "month": "02", "day": "30"}, ("2021", "02", "30")),
+            ({"year": "2021", "month": "", "day": "14"}, ("2021", None, "14")),
+            ({"year": "", "month": "03", "day": ""}, (None, "03", None)),
+            ({"year": "2021", "month": "2", "day": "30"}, ("2021", "02", "30")),
+        ],
+        ids=[
+            "30th of February",
+            "day with no month",
+            "month with no year",
+            "unpadded parts",
+        ],
+    )
+    def test_a_refused_submission_is_drawn_again_as_it_was_sent(self, sent, expected):
+        form = cleaned(self.widget(), **sent)
+
+        parts = drawn(self.widget(), form["born"].value())
+
+        year = parts["year"]
+        shown = year.get("value") if year.name == "input" else chosen(year)
+        assert (
+            shown or None,
+            chosen(parts["month"]) or None,
+            chosen(parts["day"]) or None,
+        ) == expected
+
+    def test_the_month_options_carry_the_names_of_the_active_language(self):
+        widget = self.widget()
+
+        with translation.override("de"):
+            month = drawn(widget)["month"]
+            names = {number: str(name) for number, name in MONTHS.items()}
+
+        labels = {
+            option["value"]: option.get_text()
+            for option in month("option")
+            if option["value"]
+        }
+        assert labels == {f"{number:02}": name for number, name in names.items()}
+        assert names[1] != str(MONTHS[1])
+
+    def test_the_developers_attrs_reach_every_part(self):
+        widget = self.widget(attrs={"data-note": "kept", "title": "Born"})
+
+        parts = drawn(widget)
+
+        assert [part["data-note"] for part in parts.values()] == ["kept"] * 3
+        assert [part["title"] for part in parts.values()] == ["Born"] * 3
+
+    def test_each_part_says_which_part_it_is(self):
+        parts = drawn(self.widget())
+
+        assert {
+            name: part["data-partial-date-part"] for name, part in parts.items()
+        } == {
+            "year": "year",
+            "month": "month",
+            "day": "day",
+        }
+        assert all(part["aria-label"] for part in parts.values())
+
+    def test_the_parts_are_drawn_inside_one_element_that_marks_the_group(self):
+        soup = BeautifulSoup(self.widget().render("born", None), "html.parser")
+
+        group = soup.find(attrs={"data-partial-date": True})
+
+        assert len(soup.find_all(attrs={"data-partial-date": True})) == 1
+        assert len(group.find_all(attrs={"data-partial-date-part": True})) == 3
+
+    def test_only_the_year_is_required(self):
+        class Form(forms.Form):
+            born = PartialDateField(widget=self.widget())
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        required = {
+            part: soup.find(attrs={"data-partial-date-part": part}).has_attr("required")
+            for part in ("year", "month", "day")
+        }
+        assert required == {"year": True, "month": False, "day": False}
+
+
+class TestPartialDateInput(ThreePartWidget):
+    widget = PartialDateInput
+
+    def test_the_year_is_a_text_input_of_four_digits(self):
+        year = drawn(PartialDateInput())["year"]
+
+        assert year.name == "input"
+        assert year["type"] == "text"
+        assert year["maxlength"] == "4"
+
+    def test_the_month_and_the_day_are_selects_of_twelve_and_of_31(self):
+        parts = drawn(PartialDateInput())
+
+        months = [option["value"] for option in parts["month"]("option")]
+        days = [option["value"] for option in parts["day"]("option")]
+        assert months == ["", *(f"{number:02}" for number in range(1, 13))]
+        assert days == ["", *(f"{number:02}" for number in range(1, 32))]
+
+
+class TestPartialDateSelect(ThreePartWidget):
+    widget = PartialDateSelect
+
+    def years(self, value=None):
+        year = drawn(PartialDateSelect(), value)["year"]
+        return [option["value"] for option in year("option") if option["value"]]
+
+    def test_the_year_is_a_select(self):
+        assert drawn(PartialDateSelect())["year"].name == "select"
+
+    def test_the_years_run_from_this_year_back_a_hundred_latest_first(self):
+        this_year = datetime.date.today().year
+
+        assert self.years() == [
+            f"{year:04}" for year in range(this_year, this_year - 101, -1)
+        ]
+
+    def test_a_held_year_that_is_not_on_the_list_is_still_an_option(self):
+        parts = drawn(PartialDateSelect(), "1850-03")
+
+        assert "1850" in self.years("1850-03")
+        assert chosen(parts["year"]) == "1850"
+
+    def test_a_year_on_the_list_is_chosen(self):
+        parts = drawn(PartialDateSelect(), "2020")
+
+        assert chosen(parts["year"]) == "2020"

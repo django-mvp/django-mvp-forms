@@ -31,7 +31,9 @@ from mvp_forms.widgets import (
     DynamicMaskInput,
     EnumBlock,
     NumberMaskInput,
+    PartialDateInput,
     PartialDateMaskInput,
+    PartialDateSelect,
     PatternBlock,
     PatternMaskInput,
     RangeBlock,
@@ -1221,6 +1223,37 @@ class PartialDateMaskLineForm(forms.Form):
 
 
 PartialDateMaskLineFormSet = formset_factory(PartialDateMaskLineForm, extra=2)
+
+
+class PartialDatePartsForm(forms.Form):
+    born = PartialDateField(
+        help_text="Known to the year, the month or the day.",
+        widget=PartialDateInput(attrs={"data-note": "kept"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class PartialDateSelectPartsForm(PartialDatePartsForm):
+    born = PartialDateField(
+        help_text="Known to the year, the month or the day.",
+        widget=PartialDateSelect(attrs={"data-note": "kept"}),
+    )
+
+
+class PartialDatePartsLineForm(forms.Form):
+    born = PartialDateField(widget=PartialDateInput())
+
+
+class PartialDateSelectLineForm(forms.Form):
+    born = PartialDateField(widget=PartialDateSelect())
+
+
+PartialDatePartsLineFormSet = formset_factory(PartialDatePartsLineForm, extra=2)
+PartialDateSelectLineFormSet = formset_factory(PartialDateSelectLineForm, extra=2)
 
 
 def partial_date_form(**options):
