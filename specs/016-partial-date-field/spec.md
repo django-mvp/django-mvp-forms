@@ -97,6 +97,16 @@ should be shaped.
 - **Q: Can a developer leave the day out altogether?**
   A: Yes, and this was already so: a finest precision of month. It is User Story 4.
 
+- **Q: A masked input is drawn again holding a date its mask refuses, such as `2021-02-30` sent
+  from a page with no script. What does it show?**
+  A: What was sent, in full, beside the field's error. The mask is held off that input until the
+  person has changed it to something the mask takes. Cutting the value to what fits would show
+  the person a date they did not send. Self-resolved after the question was put to the maintainer
+  twice with the prototype and left open. Recorded as FR-042.
+
+- **Q: What is the option for the finest precision called?**
+  A: `resolution`. The maintainer named it when he approved the prototype.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A developer adds a partial date field to a form (Priority: P1)
@@ -373,6 +383,9 @@ precision on both sides of each limit, and draw the field with each widget.
   masked, no input is masked twice, and a page without IMask gets a plain text input and no
   error.
 
+- **FR-042**: A masked input drawn holding a value its mask refuses MUST show that value whole,
+  and MUST be masked from the moment the person changes it to a value the mask takes.
+
 #### The three-part widget
 
 - **FR-015**: The package MUST provide a widget that draws a year, a month and a day as separate
@@ -467,7 +480,7 @@ precision on both sides of each limit, and draw the field with each widget.
 | Story | Requirements |
 |---|---|
 | US1: A developer adds a partial date field to a form | FR-001 to FR-010, FR-028 to FR-030, FR-033 |
-| US2: A person types a partial date into one masked input | FR-011 to FR-014, FR-027, FR-031, FR-032 |
+| US2: A person types a partial date into one masked input | FR-011 to FR-014, FR-027, FR-031, FR-032, FR-042 |
 | US3: A person enters a partial date as a year, a month and a day | FR-015 to FR-022, FR-032, FR-039, FR-040 |
 | US4: A developer sets how precise a partial date must be | FR-023 to FR-026, FR-041 |
 | US5: A developer sets the earliest and latest date a field accepts | FR-034 to FR-038 |

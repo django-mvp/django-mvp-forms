@@ -602,12 +602,12 @@ class DynamicMaskInput(MaskInput):
 class PartialDateMaskInput(MaskInput):
     """One text input masked as a year, a year and month, or a full date.
 
-    The partial date field states the finest precision and the earliest and
+    The partial date field states the resolution and the earliest and
     latest dates on the widget it is given.
     """
 
     kind = "partial-date"
-    finest = "day"
+    resolution = "day"
     min_value = None
     max_value = None
 
@@ -624,7 +624,7 @@ class PartialDateMaskInput(MaskInput):
         limits = {"min": self.min_value, "max": self.max_value}
         return {
             "kind": self.kind,
-            "finest": self.finest,
+            "resolution": self.resolution,
             **{name: value for name, value in limits.items() if value},
         }
 
@@ -632,12 +632,12 @@ class PartialDateMaskInput(MaskInput):
 class PartialDateInput(forms.MultiWidget):
     """A year, a month and a day as three parts that make one ISO value.
 
-    The year is typed. The partial date field states the finest precision and
+    The year is typed. The partial date field states the resolution and
     the earliest and latest dates on the widget it is given.
     """
 
     template_name = "mvp_forms/widgets/partial_date.html"
-    finest = "day"
+    resolution = "day"
     min_value = None
     max_value = None
 
@@ -706,11 +706,11 @@ class PartialDateInput(forms.MultiWidget):
         return "-".join((part or "").strip() for part in parts).rstrip("-")
 
     def get_context(self, name, value, attrs):
-        """Draw the parts down to the finest, with only the year required."""
+        """Draw the parts down to the resolution, with only the year required."""
         context = super().get_context(name, value, attrs)
         widget = context["widget"]
         names = ("year", "month", "day")
-        widget["subwidgets"] = widget["subwidgets"][: names.index(self.finest) + 1]
+        widget["subwidgets"] = widget["subwidgets"][: names.index(self.resolution) + 1]
         for part in widget["subwidgets"][1:]:
             part["attrs"].pop("required", None)
         widget["min_value"] = self.min_value

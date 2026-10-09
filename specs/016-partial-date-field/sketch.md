@@ -60,8 +60,8 @@ The code behind it is the plan's to keep, change or rebuild.
 - The masked input pads by overriding a method of IMask's range block that IMask does not
   document. The plan needs a way that rests on IMask's published interface.
 - When a masked input is drawn again holding a value the mask would refuse, such as `2021-02-30`,
-  IMask shows as much as fits (`2021-02-0`) beside the field's error. Nothing was decided about
-  this.
+  IMask shows as much as fits (`2021-02-0`) beside the field's error. The specification now says
+  it shows what was sent (FR-042).
 - The field tells the widget what was stated by setting three attributes on it, the way Django's
   own fields set `is_required`. A widget swapped in after the form is built has to be told again,
   which the demo does by hand.
@@ -95,3 +95,4 @@ Rulings from the maintainer:
 - 2026-10-10: the first round "all looks pretty good". He asked for a select for the year, an
   earliest and latest date followed by the field and the widgets, and confirmed that a field may
   leave the day out altogether.
+- 2026-10-10: approved. The option that states the finest precision is named `resolution`.

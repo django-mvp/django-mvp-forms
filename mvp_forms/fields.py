@@ -33,7 +33,7 @@ class PartialDateField(forms.CharField):
         self,
         *,
         coarsest="year",
-        finest="day",
+        resolution="day",
         min_value=None,
         max_value=None,
         **kwargs,
@@ -42,7 +42,7 @@ class PartialDateField(forms.CharField):
 
         Args:
             coarsest: The least precise value accepted.
-            finest: The most precise value accepted.
+            resolution: The most precise value accepted.
             min_value: The earliest date accepted, as a partial date or a
                 Python date.
             max_value: The latest date accepted, as a partial date or a Python
@@ -51,21 +51,21 @@ class PartialDateField(forms.CharField):
 
         Raises:
             ValueError: A precision is not one of year, month and day, the
-                finest is coarser than the coarsest, or the earliest date is
+                resolution is coarser than the coarsest, or the earliest date is
                 later than the latest.
         """
-        for option, value in (("coarsest", coarsest), ("finest", finest)):
+        for option, value in (("coarsest", coarsest), ("resolution", resolution)):
             if value not in PRECISIONS:
                 raise ValueError(
                     f"{option} must be one of {', '.join(PRECISIONS)}, not {value!r}."
                 )
-        if PRECISIONS.index(finest) < PRECISIONS.index(coarsest):
+        if PRECISIONS.index(resolution) < PRECISIONS.index(coarsest):
             raise ValueError(
-                f"finest must not be coarser than coarsest, not {finest!r} "
+                f"resolution must not be coarser than coarsest, not {resolution!r} "
                 f"and {coarsest!r}."
             )
         self.coarsest = coarsest
-        self.finest = finest
+        self.resolution = resolution
         super().__init__(**kwargs)
         self.min_value = self.limit("min_value", min_value)
         self.max_value = self.limit("max_value", max_value)
@@ -92,8 +92,8 @@ class PartialDateField(forms.CharField):
             ) from None
 
     def limit_widget(self, widget):
-        """Tell a widget the finest precision and the dates the field accepts."""
-        widget.finest = self.finest
+        """Tell a widget the resolution and the dates the field accepts."""
+        widget.resolution = self.resolution
         widget.min_value = self.min_value
         widget.max_value = self.max_value
 
@@ -123,8 +123,8 @@ class PartialDateField(forms.CharField):
         given = value.count("-") + 1
         if given <= PRECISIONS.index(self.coarsest):
             self.fail(f"needs_{self.coarsest}")
-        if given - 1 > PRECISIONS.index(self.finest):
-            self.fail(f"too_fine_{PRECISIONS[PRECISIONS.index(self.finest) + 1]}")
+        if given - 1 > PRECISIONS.index(self.resolution):
+            self.fail(f"too_fine_{PRECISIONS[PRECISIONS.index(self.resolution) + 1]}")
         first, last = self.span(value)
         if self.min_value and last < self.span(self.min_value)[0]:
             self.fail("min_value", limit=self.min_value)

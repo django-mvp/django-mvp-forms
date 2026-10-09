@@ -69,12 +69,12 @@
   // A year, then a month and a day a person may leave off. A digit is refused
   // when no month, no day of the month typed, or no date the field accepts
   // could follow from it.
-  function partialDate(finest, min, max) {
+  function partialDate(resolution, min, max) {
     const Range = window.IMask.MaskedRange;
     const earliest = min ? limit(min, false) : 0;
     const latest = max ? limit(max, true) : Infinity;
     return {
-      mask: { year: "Y", month: "Y-M", day: "Y-M-D" }[finest || "day"],
+      mask: { year: "Y", month: "Y-M", day: "Y-M-D" }[resolution || "day"],
       blocks: {
         Y: { mask: Range, from: 1, to: 9999, maxLength: 4 },
         M: { mask: paddedRange("2"), from: 1, to: 12, maxLength: 2 },
@@ -96,7 +96,7 @@
 
   function build(written) {
     const { kind, definitions, blocks, flags, ...rest } = written;
-    if (kind === "partial-date") return partialDate(rest.finest, rest.min, rest.max);
+    if (kind === "partial-date") return partialDate(rest.resolution, rest.min, rest.max);
     if (kind === "regex") return { mask: new RegExp(rest.mask, flags) };
     if (kind === "number") return { mask: Number, ...rest };
     if (kind === "dynamic") return { mask: rest.mask.map(build) };

@@ -1,0 +1,162 @@
+{
+  "feature": "016-partial-date-field",
+  "branch": "016-partial-date-field",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PLAN",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-09T21:38:16Z",
+      "note": "specification approved on Sam's words in the session at commit fc2cbd6951feabc9d32befde2b137424240204a6, on pull request #159; epic #132, stories #160 to #164"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-09T22:47:14Z",
+      "note": "research.md, plan.md, tasks.md: 5 stories, 8 tasks; continues on pull request #159 from the approved sketch"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "Sam",
+      "at": "2026-10-09T21:38:16Z",
+      "self_resolved": [
+        "spec gate opened on his words: \"Looks good. Take this through to sketch gate\", at commit fc2cbd6951feabc9d32befde2b137424240204a6 (pull request #159)",
+        "2026-10-10, at his request in sketch review: User Story 5 and FR-034 to FR-041 added (earliest and latest date, a select for the year, every option on the field)",
+        "2026-10-10, self-resolved: FR-042, a masked input shows a refused value whole"
+      ]
+    },
+    "sketch": {
+      "approved_by": "Sam",
+      "at": "2026-10-09T22:42:42Z",
+      "self_resolved": [
+        "A select for the year: added as a third widget, PartialDateSelect",
+        "An earliest and latest date followed by the field and the widgets: min_value and max_value on the field",
+        "A field that leaves the day out: already there as the finest precision of month",
+        "One field with a swappable widget: every option is stated on the field and none on a widget",
+        "The option finest renamed resolution: done in the build"
+      ]
+    },
+    "plan": {
+      "approved_by": null,
+      "at": null
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 160,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 161,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T002",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T003",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 162,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T005",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P3",
+      "issue": 163,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T006",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 164,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T008",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 0,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 159,
+    "draft": true
+  }
+}

@@ -38,14 +38,14 @@ class PartialDateForm(forms.Form):
     )
     no_day = PartialDateField(
         label=_("Published"),
-        help_text=_('PartialDateField(finest="month"): no day can be entered.'),
-        finest="month",
+        help_text=_('PartialDateField(resolution="month"): no day can be entered.'),
+        resolution="month",
         required=False,
     )
     year_only = PartialDateField(
         label=_("Founded"),
-        help_text=_('PartialDateField(finest="year"): a year and nothing else.'),
-        finest="year",
+        help_text=_('PartialDateField(resolution="year"): a year and nothing else.'),
+        resolution="year",
         required=False,
     )
     in_range = PartialDateField(
@@ -62,11 +62,11 @@ class PartialDateForm(forms.Form):
         label=_("Reported"),
         help_text=_(
             'PartialDateField(min_value="1998-03", max_value="2004-09", '
-            'finest="month"): a range of months, with no day.'
+            'resolution="month"): a range of months, with no day.'
         ),
         min_value="1998-03",
         max_value="2004-09",
-        finest="month",
+        resolution="month",
         required=False,
     )
 
