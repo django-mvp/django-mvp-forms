@@ -14,7 +14,7 @@ from django.template.loader import get_template
 from django.urls import reverse
 
 from demo.autocompletes import ROCKS, UNGROUPED_ROCKS
-from demo.forms import DAISYUI_VERSION, THEME_NAMES, PatternMaskForm
+from demo.forms import DAISYUI_VERSION, THEME_NAMES, PatternMaskForm, RegexMaskForm
 from demo.tomselect_forms import SampleFormSet, country_field
 from demo.tomselect_views import TomSelectMixin
 from mvp_forms.choices import Modifiers
@@ -3474,6 +3474,8 @@ PATTERN_POST = {
     "licence": "AB12-CD34-EF56",
     "pin": "1234",
 }
+REGEX_PREFIX = "regex"
+REGEX_POST = {"digits": "12345678", "colour": "#A0b", "username": "ab_1"}
 REFERENCE_OPTIONS = {
     "kind": "pattern",
     "mask": "aa-0000",
@@ -3509,6 +3511,34 @@ class InputMasksPageContract:
         rows = page.find(id=PATTERN_PREFIX).find("table").find("tbody").find_all("tr")
         received = [row.find_all("code")[1].get_text() for row in rows]
         assert received == list(PATTERN_POST.values())
+
+    def test_the_regex_section_holds_a_masked_input_for_each_field(self, page):
+        section = page.find(id=REGEX_PREFIX)
+
+        masked = section.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {
+            f"{REGEX_PREFIX}-{name}" for name in RegexMaskForm.base_fields
+        }
+
+    def test_the_colour_states_its_expression_and_the_flag(self, page):
+        options = json.loads(page.find(id=f"id_{REGEX_PREFIX}-colour")["data-imask"])
+
+        assert options == {
+            "kind": "regex",
+            "mask": "^#[0-9a-f]{0,6}$",
+            "flags": "i",
+        }
+
+    def test_a_post_of_the_regex_form_returns_what_each_field_received(self, open_page):
+        data = {f"{REGEX_PREFIX}-{name}": v for name, v in REGEX_POST.items()}
+        data[f"{REGEX_PREFIX}-submit"] = ""
+
+        page = open_page(self.url_name, data)
+
+        rows = page.find(id=REGEX_PREFIX).find("table").find("tbody").find_all("tr")
+        received = [row.find_all("code")[1].get_text() for row in rows]
+        assert received == list(REGEX_POST.values())
 
     def test_the_reference_states_a_placeholder_character_for_each_definition(
         self, page

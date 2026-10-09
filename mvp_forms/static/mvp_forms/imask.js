@@ -29,7 +29,8 @@
   }
 
   function build(written) {
-    const { kind, definitions, blocks, ...rest } = written;
+    const { kind, definitions, blocks, flags, ...rest } = written;
+    if (kind === "regex") return { mask: new RegExp(rest.mask, flags) };
     if (definitions) {
       rest.definitions = Object.fromEntries(
         Object.entries(definitions).map(([character, value]) => [

@@ -20,3 +20,10 @@ Did: Moved the demo's reference field and the formset's article field to the pat
 Verified: tests/test_demo.py -k InputMasks, 16 passed; the new tests failed first on the standalone route, the placeholder options and the pinned script. pre-commit green. Full suite run at the end of the story.
 Next: report.
 Watch: the integrity value is the hash of the copy of 7.6.1 under tests/data, taken from the npm package, with no request to the CDN. The sentence naming the price field on the page stays until the number story restores the field.
+
+## 2026-10-09T19:45:13Z · Implementer US2 · T004
+
+Did: Added RegexMaskInput(mask, attrs=None, *, flags=None) to mvp_forms/widgets.py: it refuses an empty or non-text mask (a compiled Python pattern included) and any flag character JavaScript lacks, naming the option, and never compiles the expression. The script gains the regex kind: it builds a RegExp from the source and the flags. Restored the demo's RegexMaskForm exactly as approved and the view's entry for it. README: the widget in the public surface and a RegexMaskInput section with the caution about partial values.
+Verified: uv run pytest tests/test_widgets.py -k Regex, 16 passed (red first: the import of RegexMaskInput failed). uv run pytest tests/test_imask_e2e.py, 19 passed in Chrome; red seen against the script without the regex branch (a string mask treated as a pattern: typed 12a3 became ^d1,8$), and the flag test failed with the flags dropped from the RegExp ('#b' for '#AbC'). uv run pytest tests/test_demo.py -k InputMasks, 22 passed; the three new section tests failed with the view's entry removed. uv run pre-commit run --all-files green. uv run pytest -n auto -q: 5248 passed.
+Next: T005, the number widget.
+Watch: demo/forms.py is not in tasks.md's file list for T004 but the form has to come back with the view entry. A repeated flag or u with v is refused by the browser, not by Python (D22).

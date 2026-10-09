@@ -25,7 +25,13 @@ from django_tomselect.forms import (
 )
 
 from mvp_forms.layout import Join
-from mvp_forms.widgets import EnumBlock, PatternBlock, PatternMaskInput, RangeBlock
+from mvp_forms.widgets import (
+    EnumBlock,
+    PatternBlock,
+    PatternMaskInput,
+    RangeBlock,
+    RegexMaskInput,
+)
 
 
 class TextInputsForm(forms.Form):
@@ -1121,4 +1127,8 @@ class MaskedPageForm(forms.Form):
     )
     pin = forms.CharField(
         required=False, widget=PatternMaskInput("0000", display_char="•")
+    )
+    customer = forms.CharField(required=False, widget=RegexMaskInput(r"^\d{0,8}$"))
+    colour = forms.CharField(
+        required=False, widget=RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i")
     )

@@ -345,3 +345,36 @@ class PatternMaskInput(MaskInput):
                 f"a RangeBlock, an EnumBlock or a PatternBlock, for {name!r}",
             )
         return {name: block.mask_options() for name, block in blocks.items()}
+
+
+class RegexMaskInput(MaskInput):
+    """A mask that accepts a character only while the value still matches."""
+
+    kind = "regex"
+    javascript_flags = "dgimsuvy"
+
+    def __init__(self, mask, attrs=None, *, flags=None):
+        """State the expression and its flags.
+
+        Python never compiles the expression. IMask runs it in the browser, in
+        JavaScript's dialect.
+
+        Args:
+            mask: The expression, as text, in JavaScript's dialect.
+            attrs: HTML attributes for the input.
+            flags: The expression's flags, such as ``"i"``.
+
+        Raises:
+            ValueError: The expression is empty or not text, or a flag is one
+                JavaScript does not have. The message names the option.
+        """
+        Check.text("mask", mask)
+        if flags is not None:
+            Check.of_type("flags", flags, str, "text")
+            for flag in flags:
+                if flag not in self.javascript_flags:
+                    raise ValueError(
+                        f"flags holds {flag!r}, which is not one of "
+                        f"{self.javascript_flags!r}."
+                    )
+        super().__init__(attrs, mask=mask, flags=flags)

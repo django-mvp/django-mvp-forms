@@ -62,6 +62,7 @@ from demo.forms import (
     RatingAndRangeTrioForm,
     RatingStateForm,
     ReadOnlyKindsForm,
+    RegexMaskForm,
     RowButtonsForm,
     StackedOrderHelper,
     TableOrderHelper,
@@ -1671,6 +1672,15 @@ class InputMasksMixin:
             PatternMaskForm,
             "https://imask.js.org/guide.html#masked-pattern",
             "Pattern mask in the IMask guide",
+        ),
+        (
+            "regex",
+            "RegexMaskInput",
+            "A mask that accepts a character only while the whole value still "
+            "matches a JavaScript regular expression.",
+            RegexMaskForm,
+            "https://imask.js.org/guide.html#masked-base",
+            "Regular expression mask in the IMask guide",
         ),
     ]
 

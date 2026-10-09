@@ -1260,6 +1260,7 @@ A mask is a rule [IMask](https://imask.js.org/) applies to a text input as a per
 This is the public surface:
 
 - `mvp_forms.widgets.PatternMaskInput`, with the three blocks it takes, `RangeBlock`, `EnumBlock` and `PatternBlock`, from the same module
+- `mvp_forms.widgets.RegexMaskInput`
 - the attribute `data-imask`, which holds a widget's options as JSON on its `<input>`
 - the script `mvp_forms/imask.js`, which each widget names in its media
 
@@ -1349,6 +1350,27 @@ serial = PatternMaskInput("N", blocks={"N": PatternBlock("0", repeat=4)})
 | `PatternBlock(mask, *, repeat=None, placeholder_char=None)` | A pattern of its own, repeated `repeat` times when that is stated |
 
 A date is masked with a pattern whose day, month and year are ranges, and Django's `DateField` reads the result through `input_formats`.
+
+#### `RegexMaskInput`
+
+A [regular expression mask](https://imask.js.org/guide.html#masked-base) accepts a character only while the whole value still matches the expression. Use it where a field has no fixed shape but a limited alphabet: digits only, letters and hyphens, a hexadecimal colour.
+
+```python
+from django import forms
+
+from mvp_forms.widgets import RegexMaskInput
+
+
+class AccountForm(forms.Form):
+    customer_number = forms.CharField(widget=RegexMaskInput(r"^\d{0,8}$"))
+    colour = forms.CharField(widget=RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i"))
+```
+
+`RegexMaskInput(mask, attrs=None, *, flags=None)`. `mask` is the expression as text, and `flags` is its flags as text, such as `"i"` for a match that ignores case. Both are written on the input and IMask runs them in the browser, so the expression is written in JavaScript's dialect and Python never compiles it. A difference between the two dialects, such as `(?<name>...)` for a named group, is yours to mind.
+
+An empty or non-text `mask`, which includes a compiled Python pattern, and a flag JavaScript does not have (`d`, `g`, `i`, `m`, `s`, `u`, `v` and `y` are the ones it has) raise `ValueError` when the form class is defined, and the message names the option.
+
+IMask tests the value after every keystroke, so the expression has to accept every partial value on the way to a whole one. An expression that matches only a finished value, such as `^\d{5}$`, accepts no first character and the field cannot be typed into. Write `^\d{0,5}$` instead, and let the field's own validation decide that five digits were required.
 
 #### What the form receives
 

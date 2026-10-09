@@ -279,3 +279,26 @@ what the CDN serves.
 
 **Revisit if:** a browser refuses the file on either page. Then the CDN's copy differs and the hash
 is read from it.
+
+## D22. A regular expression's flags are checked against the eight JavaScript has, and no further
+
+**Decision:** `RegexMaskInput` refuses `flags` that is not text and any character outside `dgimsuvy`,
+naming `flags`. It does not refuse a repeated flag or `u` and `v` together, which JavaScript's own
+`RegExp` refuses in the browser. The expression is never compiled in Python.
+
+**Why:** the plan lists "a character JavaScript does not have" as what is refused. Telling the
+combinations apart is JavaScript's rule to keep, and a copy of it in Python would drift.
+
+**Revisit if:** a repeated flag reaches a page often enough to matter. A bad combination makes the
+script throw while building that input's options.
+
+## D23. The regular expression's section of the demo restores its form with the view
+
+**Decision:** `RegexMaskForm` is restored in `demo/forms.py` exactly as at the approved prototype,
+with its three fields, labels and help text, and the view's list of widgets gains its entry again.
+
+**Why:** the section's markup comes from the view's list, so the entry alone would have no form
+to draw. `demo/forms.py` is not among the files `tasks.md` names for this task, and the brief
+names the restoration of the form as part of it.
+
+**Revisit if:** none.

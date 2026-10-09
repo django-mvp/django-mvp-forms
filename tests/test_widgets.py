@@ -1,11 +1,18 @@
 """The mask widgets and the blocks a pattern names, as the form writes them."""
 
 import json
+import re
 
 import pytest
 from bs4 import BeautifulSoup
 
-from mvp_forms.widgets import EnumBlock, PatternBlock, PatternMaskInput, RangeBlock
+from mvp_forms.widgets import (
+    EnumBlock,
+    PatternBlock,
+    PatternMaskInput,
+    RangeBlock,
+    RegexMaskInput,
+)
 
 
 def written(widget, value=None):
@@ -228,3 +235,66 @@ class TestPatternBlock:
     def test_a_placeholder_character_of_two_characters_is_refused_naming_it(self):
         with pytest.raises(ValueError, match="placeholder_char"):
             PatternBlock("aa", placeholder_char="aa")
+
+
+class TestRegexMaskInput:
+    def test_an_expression_alone_writes_its_kind_and_the_source(self):
+        assert written(RegexMaskInput(r"^\d{0,8}$")) == {
+            "kind": "regex",
+            "mask": r"^\d{0,8}$",
+        }
+
+    def test_the_flags_are_written_beside_the_source(self):
+        assert written(RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i")) == {
+            "kind": "regex",
+            "mask": "^#[0-9a-f]{0,6}$",
+            "flags": "i",
+        }
+
+    @pytest.mark.parametrize("flags", ["dgimsuy", "v", ""])
+    def test_each_flag_javascript_has_is_accepted(self, flags):
+        assert written(RegexMaskInput("^a*$", flags=flags))["flags"] == flags
+
+    @pytest.mark.parametrize(
+        ("regex", "option"),
+        [
+            pytest.param({"mask": ""}, "mask", id="empty expression"),
+            pytest.param({"mask": 5}, "mask", id="expression that is not text"),
+            pytest.param(
+                {"mask": re.compile("^a*$")}, "mask", id="compiled python pattern"
+            ),
+            pytest.param({"mask": "^a*$", "flags": "x"}, "flags", id="unknown flag"),
+            pytest.param({"mask": "^a*$", "flags": "iL"}, "flags", id="one in two"),
+            pytest.param({"mask": "^a*$", "flags": 5}, "flags", id="flags a number"),
+        ],
+    )
+    def test_a_value_that_cannot_be_right_is_refused_naming_the_option(
+        self, regex, option
+    ):
+        with pytest.raises(ValueError, match=option):
+            RegexMaskInput(**regex)
+
+    def test_an_expression_python_would_refuse_is_written_unchanged(self):
+        source = r"^(?<letter>\p{L})*$"
+
+        assert written(RegexMaskInput(source, flags="u"))["mask"] == source
+
+    def test_an_option_it_does_not_have_is_refused(self):
+        with pytest.raises(TypeError, match="lazy"):
+            RegexMaskInput("^a*$", lazy=False)
+
+    def test_it_names_the_script_in_its_media(self):
+        assert "mvp_forms/imask.js" in str(RegexMaskInput("^a*$").media)
+
+    def test_the_developers_attrs_are_kept(self):
+        widget = RegexMaskInput("^a*$", attrs={"placeholder": "name"})
+
+        drawn = BeautifulSoup(widget.render("field", None), "html.parser").input
+
+        assert drawn["placeholder"] == "name"
+        assert drawn["type"] == "text"
+
+    def test_what_a_form_posts_reaches_the_field_as_it_was_typed(self):
+        widget = RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i")
+
+        assert widget.value_from_datadict({"colour": "#A0b"}, {}, "colour") == "#A0b"

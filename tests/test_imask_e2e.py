@@ -106,6 +106,20 @@ class TestMaskedInputs:
         assert page.locator("#id_postcode").input_value() == "12###"
 
 
+class TestRegexMaskedInputs:
+    def test_a_character_that_stops_the_value_matching_is_not_accepted(
+        self, masked_page
+    ):
+        page = masked_page()
+
+        assert type_into(page, "customer", "12a3") == "123"
+
+    def test_a_flag_reaches_imask(self, masked_page):
+        page = masked_page()
+
+        assert type_into(page, "colour", "#AbC") == "#AbC"
+
+
 class TestOneMaskForEachInput:
     def test_every_input_is_masked_once_when_the_script_is_on_the_page_once(
         self, masked_page

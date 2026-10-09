@@ -47,6 +47,7 @@ from mvp_forms.widgets import (
     EnumBlock,
     PatternMaskInput,
     RangeBlock,
+    RegexMaskInput,
 )
 
 LONG_OPTION = _(
@@ -1809,6 +1810,29 @@ class PatternMaskForm(MaskForm):
         ),
         required=False,
         widget=PatternMaskInput("0000", display_char="•"),
+    )
+
+
+class RegexMaskForm(MaskForm):
+    """The regular expression widget, with and without a flag."""
+
+    digits = forms.CharField(
+        label=_("Customer number"),
+        help_text=_("Regular expression: ^\\d{0,8}$"),
+        required=False,
+        widget=RegexMaskInput(r"^\d{0,8}$"),
+    )
+    colour = forms.CharField(
+        label=_("Colour"),
+        help_text=_("Regular expression: ^#[0-9a-f]{0,6}$ with the flag i"),
+        required=False,
+        widget=RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i"),
+    )
+    username = forms.CharField(
+        label=_("Username"),
+        help_text=_("Regular expression: ^[a-z][a-z0-9_]{0,15}$|^$"),
+        required=False,
+        widget=RegexMaskInput("^[a-z][a-z0-9_]{0,15}$|^$"),
     )
 
 
