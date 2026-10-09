@@ -45,6 +45,24 @@ the controls look and behave on the demo pages.
 10. A field that accepts a value typed in needs a field class that does not reject it. The demo
     has one. Whether the README shows one is for the plan.
 
+11. An open control has to be lifted above the controls after it. Each wrapper is positioned, so
+    without that the next control is drawn over the dropdown.
+12. django-tomselect announces what was chosen in an element it hides with a class only Bootstrap
+    defines. The stylesheet has to hide it, or the announcement shows under every control.
+
+## What django-tomselect does that the sketch left alone
+
+Seen while testing in a browser. Each is django-tomselect's behaviour and not this package's
+drawing, so the sketch does not change it.
+
+- In a control that holds several values, the text typed stays in the box after a value is
+  picked, so the next search starts with the old text in front of it. Creating a new value does
+  clear it.
+- A required single control submitted empty reports "Select a valid choice" and not "This field
+  is required".
+- The Tab key stops inside an open dropdown and on the clear button before it reaches the next
+  field.
+
 ## What the sketch faked
 
 - The four autocomplete views answer from lists in `demo/autocompletes.py`. No model is involved,
@@ -67,7 +85,8 @@ maintainer's to change.
 
 - A control that holds several values has no caret.
 - Tags are neutral: the theme's second base colour with a border in the third, whatever colour
-  the control states. The tag the keyboard is on takes the theme's neutral colour.
+  the control states. They have the corner radius and the text size of an option in a stock
+  multiple select, which the form to submit now shows above the control for comparison. The tag the keyboard is on takes the theme's neutral colour.
 - The tag's remove button is separated from the text by a line and darkens under the pointer.
 - The clear button appears only while the control holds a value and is under the pointer or
   focused.
@@ -77,5 +96,7 @@ maintainer's to change.
 - Group headings are smaller, semibold and slightly muted, and groups are separated by a line.
 - The offer to add a value sits under a line at the end of the options.
 - While options are fetched, a small ring turns beside the caret.
+- A control that holds several values keeps the height of an input, and does not take the taller
+  frame of a stock multiple select.
 - At the two smallest sizes a control holding tags is a few pixels taller than a stock select,
   because django-tomselect keeps each remove button at least 24 pixels square.

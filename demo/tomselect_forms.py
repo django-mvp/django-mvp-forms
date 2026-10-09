@@ -13,6 +13,7 @@ from django_tomselect.app_settings import (
 )
 from django_tomselect.forms import TomSelectChoiceField, TomSelectMultipleChoiceField
 
+from demo.autocompletes import LANGUAGES
 from demo.forms import ChosenForm
 from mvp_forms.choices import FormChoices
 
@@ -99,6 +100,11 @@ class TomSelectForm(forms.Form):
     name = forms.CharField(label=_("Name"), required=False)
     plan = forms.ChoiceField(label=_("Plan"), choices=PLANS, required=False)
     country = country_field(help_text=_("One value, fetched as you type."))
+    spoken = forms.MultipleChoiceField(
+        label=_("Languages (a stock multiple select)"),
+        choices=[(name, name) for name in LANGUAGES[:6]],
+        required=False,
+    )
     languages = languages_field(
         required=False, help_text=_("Several values, each with a remove button.")
     )
