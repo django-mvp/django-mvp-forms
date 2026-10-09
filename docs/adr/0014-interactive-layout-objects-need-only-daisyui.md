@@ -5,7 +5,8 @@
 ## Decision
 
 A layout object that opens, closes or hides part of a form works on a page that loads daisyUI and
-nothing else. The pack ships no script file. Each one uses the mechanism the browser already has:
+nothing else. The pack's templates need no script file. Each one uses the mechanism the browser
+already has:
 
 - A tab is a radio input directly before its content, which daisyUI shows when the radio is
   checked.

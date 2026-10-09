@@ -1,0 +1,436 @@
+{
+  "feature": "015-input-mask-widgets",
+  "branch": "015-input-mask-widgets",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-09T11:35:07Z",
+      "note": "specification approved by Sam in the session at commit e8ad2e5f3268e1e3283ccd01d324ae677ced3fc3, on pull request #151; epic #150, stories #152 to #157"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-09T19:08:55Z",
+      "note": "research.md, plan.md, tasks.md: 6 stories, 8 tasks; continues on pull request #151 from the approved sketch"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-09T19:09:25Z",
+      "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-09T19:18:03Z",
+      "note": "plan gate open; US1 dispatched"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-09T20:05:59Z",
+      "note": "six stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-09T20:07:57Z",
+      "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-09T20:21:04Z",
+      "note": "review closed, walkthrough laid out"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "Sam",
+      "at": "2026-10-09T11:35:07Z",
+      "self_resolved": [
+        "approved in the session at commit e8ad2e5f3268e1e3283ccd01d324ae677ced3fc3 (pull request #151), with no changes"
+      ]
+    },
+    "sketch": {
+      "approved_by": "Sam",
+      "at": "2026-10-09T19:02:07Z",
+      "self_resolved": [
+        "round 2: the page is grouped by widget",
+        "round 2: placeholders say what each position takes, # for a digit, a for a letter, d m y for a date",
+        "round 2: every pattern and regular expression is stated in its field's help text",
+        "round 3: the PIN field showed nothing; the script acts once per page and the form receives the digits",
+        "round 4: each widget's section links to the IMask guide"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-09T19:17:41Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: changes requested, every finding applied",
+      "at": "2026-10-09T19:17:41Z",
+      "self_resolved": [
+        "SPEC-001 (high) a thousands separator equal to the default decimal mark is refused: plan and T005",
+        "SPEC-002 (medium) the form's data is corrected for every masked input, so a display character inside a list of masks is covered: plan, T002, T006",
+        "SPEC-003 (medium) IMask's default definitions are at IMask.MaskedPattern.InputDefinition: research R4",
+        "SPEC-004 (medium) T001 moves the demo's forms so the tree is green at its end",
+        "ARCH-001 (medium) one test module for one source module; the browser module declared non-mirror",
+        "SPEC-005 (low) a page under a policy forbidding inline script is tested: T002",
+        "SPEC-006 (low) number bounds take int, float or Decimal: T005",
+        "SEC-001 (low) the demo and README load an exact IMask version with an integrity value: T003"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer (correctness, spec compliance and security): changes requested, every finding fixed",
+      "at": "2026-10-09T20:20:37Z",
+      "self_resolved": [
+        "COR-001 (high) a reset form submitted what had been typed before: the form's data is corrected only where the mask is in step with the input (T009)",
+        "COR-002 (medium) one input IMask refuses stopped every mask on the page: caught and reported for that input alone (T010)",
+        "DOC-003 (medium) an untouched always-visible placeholder was submitted: it now submits nothing, and the README says so (T009, D32)",
+        "DOC-004 (medium) the CHANGELOG named one widget: it names all four and the event (T012)",
+        "COR-005 (low) an input disabled by its fieldset was submitted: left out (T009)",
+        "COR-006 (low) inputs sharing a name were collapsed: the script no longer touches an entry that needs no correction (T009)",
+        "COR-007 (low) unchecked options: map_to_radix, range bounds and length, enum values are checked (T011)",
+        "TST-008 (low) a demo test that could not fail: it names the fields it expects, seen to fail under mutation (T012)"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-09T20:21:18Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 152,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py",
+              "tests/test_pack/test_masked_inputs.py",
+              "tests/test_pack/test_independence.py::TestDistributedFiles"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_pack/test_masked_inputs.py tests/test_pack/test_independence.py tests/test_demo.py -n auto -q"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:221",
+              "mvp_forms/widgets.py:104",
+              "mvp_forms/widgets.py:142",
+              "mvp_forms/widgets.py:165"
+            ]
+          }
+        },
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py -q",
+              "uv run pytest -n auto -q"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:1",
+              "tests/test_imask_e2e.py:1",
+              "tests/conftest.py:221"
+            ]
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestInputMasksPage",
+              "tests/test_demo.py::TestStandaloneInputMasksPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -k InputMasks -q",
+              "uv run pytest -n auto -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "demo/views.py:1660",
+              "demo/views.py:1733",
+              "demo/forms.py:1753",
+              "demo/templates/demo/input_masks_standalone.html:1",
+              "README.md:1256"
+            ]
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestWhatTheFormReceives"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py -q (exit 0, 41 passed; 5 new tests failed before the fix)"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:52"
+            ]
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestAnInputIMaskRefuses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py -q (exit 0, 41 passed; failed before the fix)"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:64"
+            ]
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestInputMasksPage"
+            ],
+            "commands": [
+              "uv run pytest -n auto -q (exit 0); mutation of MaskSizesForm.large fails the repaired test"
+            ],
+            "code": [
+              "tests/test_demo.py:3646"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 153,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestRegexMaskInput",
+              "tests/test_imask_e2e.py::TestRegexMaskedInputs",
+              "tests/test_demo.py::TestInputMasksPage",
+              "tests/test_demo.py::TestStandaloneInputMasksPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_imask_e2e.py tests/test_demo.py -k 'Regex or InputMasks' -q",
+              "uv run pytest -n auto -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:350",
+              "mvp_forms/static/mvp_forms/imask.js:31",
+              "demo/forms.py:1816",
+              "demo/views.py:1676"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 154,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestNumberMaskInput",
+              "tests/test_widgets.py::TestWhatTheNumberFieldReceives",
+              "tests/test_widgets.py::TestHowTheNumberFieldIsDrawn",
+              "tests/test_imask_e2e.py::TestNumberMaskedInputs",
+              "tests/test_demo.py::TestInputMasksPage",
+              "tests/test_demo.py::TestStandaloneInputMasksPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_imask_e2e.py tests/test_demo.py -k 'Number or InputMasks' -q",
+              "uv run pytest -n auto -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:419",
+              "mvp_forms/static/mvp_forms/imask.js:34",
+              "demo/forms.py:1840",
+              "demo/views.py:1686"
+            ]
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestRangeBlock",
+              "tests/test_widgets.py::TestEnumBlock",
+              "tests/test_widgets.py::TestNumberMaskInput"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py -q (exit 0; new cases failed before the checks)"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:84"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 156,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestDynamicMaskInput",
+              "tests/test_imask_e2e.py::TestDynamicMaskedInputs",
+              "tests/test_demo.py::TestInputMasksPage",
+              "tests/test_demo.py::TestStandaloneInputMasksPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_imask_e2e.py tests/test_demo.py -k 'Dynamic or InputMasks' -q",
+              "uv run pytest -n auto -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:534",
+              "mvp_forms/static/mvp_forms/imask.js:35",
+              "demo/forms.py:1880",
+              "demo/views.py:1697"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P2",
+      "issue": 155,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestInputsAddedAfterThePageLoads",
+              "tests/test_imask_e2e.py::TestDisabledAndReadOnlyInputs",
+              "tests/test_demo.py::TestInputMasksPage",
+              "tests/test_demo.py::TestStandaloneInputMasksPage",
+              "tests/test_pack/test_masked_inputs.py::TestMaskedInputs"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py -q",
+              "uv run pytest tests/test_demo.py -k InputMasks -q",
+              "uv run pytest -n auto -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:79",
+              "tests/test_imask_e2e.py:229",
+              "tests/test_imask_e2e.py:263",
+              "tests/test_demo.py:3654"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US6",
+      "priority": "P3",
+      "issue": 157,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestTheEvent"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py -q",
+              "uv run pytest -n auto -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:67",
+              "tests/test_imask_e2e.py:303"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 26.74,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 151,
+    "draft": true
+  }
+}

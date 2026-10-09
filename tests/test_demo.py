@@ -3,6 +3,7 @@
 # Everything in the demo fails quietly: an unresolvable component renders empty
 # and a menu entry whose URL will not resolve is dropped from the tree.
 
+import json
 import re
 
 import pytest
@@ -13,7 +14,17 @@ from django.template.loader import get_template
 from django.urls import reverse
 
 from demo.autocompletes import ROCKS, UNGROUPED_ROCKS
-from demo.forms import DAISYUI_VERSION, THEME_NAMES
+from demo.forms import (
+    DAISYUI_VERSION,
+    THEME_NAMES,
+    DynamicMaskForm,
+    MaskedModalForm,
+    MaskSizesForm,
+    MaskStatesForm,
+    NumberMaskForm,
+    PatternMaskForm,
+    RegexMaskForm,
+)
 from demo.tomselect_forms import SampleFormSet, country_field
 from demo.tomselect_views import TomSelectMixin
 from mvp_forms.choices import Modifiers
@@ -3460,3 +3471,284 @@ class TestEveryShellPage:
 
         assert reverse("tomselect") in hrefs
         assert unlinked == []
+
+
+PATTERN_PREFIX = "pattern"
+PATTERN_POST = {
+    "phone": "+49 151 2345678",
+    "postcode": "12345",
+    "reference": "ab-1234",
+    "shelf": "3-12",
+    "date": "24.12.2025",
+    "resolution": "HD",
+    "licence": "AB12-CD34-EF56",
+    "pin": "1234",
+}
+REGEX_PREFIX = "regex"
+REGEX_POST = {"digits": "12345678", "colour": "#A0b", "username": "ab_1"}
+DYNAMIC_PREFIX = "dynamic"
+DYNAMIC_POST = {"card": "1234 567890 12345", "phone": "(123) 456-7890", "code": "#a0B"}
+NUMBER_PREFIX = "number"
+NUMBER_POST = {
+    "amount": "1 234 567,5",
+    "quantity": "42",
+    "price": "1.234,5",
+    "weight": "1,234.567",
+}
+NUMBER_RECEIVED = ["1234567.5", "42", "1234.5", "1234.567"]
+NUMBER_OPTIONS = {"kind": "number", "scale": 2, "thousandsSeparator": " ", "radix": ","}
+REFERENCE_OPTIONS = {
+    "kind": "pattern",
+    "mask": "aa-0000",
+    "definitions": {"0": {"placeholderChar": "#"}, "a": {"placeholderChar": "a"}},
+    "lazy": False,
+}
+
+
+class InputMasksPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    def test_the_pattern_section_holds_a_masked_input_for_each_field(self, page):
+        section = page.find(id=PATTERN_PREFIX)
+
+        masked = section.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {
+            f"{PATTERN_PREFIX}-{name}" for name in PatternMaskForm.base_fields
+        }
+
+    def test_a_post_of_the_pattern_form_returns_what_each_field_received(
+        self, open_page
+    ):
+        data = {f"{PATTERN_PREFIX}-{name}": v for name, v in PATTERN_POST.items()}
+        data[f"{PATTERN_PREFIX}-submit"] = ""
+
+        page = open_page(self.url_name, data)
+
+        rows = page.find(id=PATTERN_PREFIX).find("table").find("tbody").find_all("tr")
+        received = [row.find_all("code")[1].get_text() for row in rows]
+        assert received == list(PATTERN_POST.values())
+
+    def test_the_regex_section_holds_a_masked_input_for_each_field(self, page):
+        section = page.find(id=REGEX_PREFIX)
+
+        masked = section.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {
+            f"{REGEX_PREFIX}-{name}" for name in RegexMaskForm.base_fields
+        }
+
+    def test_the_colour_states_its_expression_and_the_flag(self, page):
+        options = json.loads(page.find(id=f"id_{REGEX_PREFIX}-colour")["data-imask"])
+
+        assert options == {
+            "kind": "regex",
+            "mask": "^#[0-9a-f]{0,6}$",
+            "flags": "i",
+        }
+
+    def test_a_post_of_the_regex_form_returns_what_each_field_received(self, open_page):
+        data = {f"{REGEX_PREFIX}-{name}": v for name, v in REGEX_POST.items()}
+        data[f"{REGEX_PREFIX}-submit"] = ""
+
+        page = open_page(self.url_name, data)
+
+        rows = page.find(id=REGEX_PREFIX).find("table").find("tbody").find_all("tr")
+        received = [row.find_all("code")[1].get_text() for row in rows]
+        assert received == list(REGEX_POST.values())
+
+    def test_the_number_section_holds_a_masked_input_for_each_field(self, page):
+        section = page.find(id=NUMBER_PREFIX)
+
+        masked = section.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {
+            f"{NUMBER_PREFIX}-{name}" for name in NumberMaskForm.base_fields
+        }
+
+    def test_the_quantity_states_its_bounds_under_imasks_names(self, page):
+        options = json.loads(page.find(id=f"id_{NUMBER_PREFIX}-quantity")["data-imask"])
+
+        assert options == {
+            "kind": "number",
+            "scale": 0,
+            "min": 0,
+            "max": 100,
+            "autofix": True,
+        }
+
+    def test_the_price_is_drawn_with_its_initial_value_in_the_widgets_decimal_mark(
+        self, page
+    ):
+        price = page.find(id=f"id_{NUMBER_PREFIX}-price")
+
+        assert price["value"] == "1234,5"
+
+    def test_a_post_of_the_number_form_returns_what_each_field_received(
+        self, open_page
+    ):
+        data = {f"{NUMBER_PREFIX}-{name}": v for name, v in NUMBER_POST.items()}
+        data[f"{NUMBER_PREFIX}-submit"] = ""
+
+        page = open_page(self.url_name, data)
+
+        rows = page.find(id=NUMBER_PREFIX).find("table").find("tbody").find_all("tr")
+        received = [row.find_all("code")[1].get_text() for row in rows]
+        assert received == NUMBER_RECEIVED
+
+    def test_the_dynamic_section_holds_a_masked_input_for_each_field(self, page):
+        section = page.find(id=DYNAMIC_PREFIX)
+
+        masked = section.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {
+            f"{DYNAMIC_PREFIX}-{name}" for name in DynamicMaskForm.base_fields
+        }
+
+    def test_the_phone_lists_its_two_patterns_in_order(self, page):
+        options = json.loads(page.find(id=f"id_{DYNAMIC_PREFIX}-phone")["data-imask"])
+
+        assert options == {
+            "kind": "dynamic",
+            "mask": [
+                {"kind": "pattern", "mask": "000-0000"},
+                {"kind": "pattern", "mask": "(000) 000-0000"},
+            ],
+        }
+
+    def test_the_code_lists_a_regular_expression_and_a_number(self, page):
+        options = json.loads(page.find(id=f"id_{DYNAMIC_PREFIX}-code")["data-imask"])
+
+        assert options == {
+            "kind": "dynamic",
+            "mask": [
+                {"kind": "regex", "mask": "^#[0-9a-f]{0,6}$", "flags": "i"},
+                {"kind": "number", "scale": 0, "max": 999},
+            ],
+        }
+
+    def test_a_post_of_the_dynamic_form_returns_what_each_field_received(
+        self, open_page
+    ):
+        data = {f"{DYNAMIC_PREFIX}-{name}": v for name, v in DYNAMIC_POST.items()}
+        data[f"{DYNAMIC_PREFIX}-submit"] = ""
+
+        page = open_page(self.url_name, data)
+
+        rows = page.find(id=DYNAMIC_PREFIX).find("table").find("tbody").find_all("tr")
+        received = [row.find_all("code")[1].get_text() for row in rows]
+        assert received == list(DYNAMIC_POST.values())
+
+    @pytest.mark.parametrize(
+        ("prefix", "form", "names"),
+        [
+            pytest.param(
+                "states",
+                MaskStatesForm,
+                {"filled", "disabled", "read_only", "invalid"},
+                id="states",
+            ),
+            pytest.param(
+                "sizes",
+                MaskSizesForm,
+                {"extra_small", "small", "large", "coloured"},
+                id="sizes",
+            ),
+            pytest.param("contact", MaskedModalForm, {"phone", "iban"}, id="modal"),
+        ],
+    )
+    def test_each_place_holds_its_masked_inputs(self, page, prefix, form, names):
+        masked = {
+            name
+            for name in form.base_fields
+            if page.find(id=f"id_{prefix}-{name}").has_attr("data-imask")
+        }
+
+        assert masked == names
+
+    def test_the_modal_holds_its_masked_inputs_inside_the_dialog(self, page):
+        dialog = page.find(id=MaskedModalForm(prefix="contact").dialog_id)
+
+        masked = dialog.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {"contact-phone", "contact-iban"}
+
+    def test_each_line_of_the_formset_holds_a_masked_input(self, page):
+        lines = page.find(id="lines-formset")
+
+        masked = lines.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {
+            "lines-0-article",
+            "lines-0-price",
+            "lines-1-article",
+            "lines-1-price",
+        }
+
+    def test_the_disabled_field_of_the_states_form_is_a_disabled_number(self, page):
+        disabled = page.find(id="id_states-disabled")
+
+        assert json.loads(disabled["data-imask"]) == NUMBER_OPTIONS
+        assert disabled.has_attr("disabled")
+        assert disabled["value"] == "98765,4"
+
+    def test_the_price_of_the_formset_is_a_number(self, page):
+        options = json.loads(page.find(id="id_lines-0-price")["data-imask"])
+
+        assert options == NUMBER_OPTIONS
+
+    def test_the_reference_states_a_placeholder_character_for_each_definition(
+        self, page
+    ):
+        options = json.loads(
+            page.find(id=f"id_{PATTERN_PREFIX}-reference")["data-imask"]
+        )
+
+        assert options == {**REFERENCE_OPTIONS, "overwrite": True}
+
+    def test_the_article_of_the_formset_states_the_same_pattern(self, page):
+        options = json.loads(page.find(id="id_lines-0-article")["data-imask"])
+
+        assert options == REFERENCE_OPTIONS
+
+    def test_it_loads_an_exact_version_of_imask_with_an_integrity_value(self, page):
+        scripts = page.find_all("script", src=re.compile(r"^https://.*imask"))
+
+        assert len(scripts) == 1
+        assert "imask@7.6.1/" in scripts[0]["src"]
+        assert scripts[0]["integrity"].startswith("sha384-")
+        assert scripts[0]["crossorigin"] == "anonymous"
+
+
+class TestInputMasksPage(InputMasksPageContract):
+    url_name = "input-masks"
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("input-masks")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, page):
+        assert page.find("a", href=reverse("input-masks-standalone")) is not None
+
+
+class TestStandaloneInputMasksPage(InputMasksPageContract):
+    url_name = "input-masks-standalone"
+
+    def test_it_carries_none_of_the_shells_navigation(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_draws_no_cotton_component(self):
+        source = get_template("demo/input_masks_standalone.html").template.source
+        assert "<c-" not in source
+        assert "cotton" not in source
+
+    def test_it_links_back_to_the_shell_page(self, page):
+        assert page.find("a", href=reverse("input-masks")) is not None

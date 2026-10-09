@@ -27,6 +27,7 @@ from demo.forms import (
     DrawingsForm,
     DrawingStateForm,
     DrawingTrioForm,
+    DynamicMaskForm,
     FieldWithButtonsForm,
     FloatingByNameForm,
     FloatingChosenForm,
@@ -44,11 +45,17 @@ from demo.forms import (
     JoinedUnlabelledForm,
     LayoutObjectsForm,
     LockedKindsForm,
+    MaskedLineFormSet,
+    MaskedModalForm,
+    MaskSizesForm,
+    MaskStatesForm,
     ModalForm,
     MultiWidgetFieldForm,
+    NumberMaskForm,
     OrderLineFormSet,
     OverrideForm,
     PairForm,
+    PatternMaskForm,
     PlaceholdersForm,
     PlainButtonsForm,
     RangeStateForm,
@@ -57,6 +64,7 @@ from demo.forms import (
     RatingAndRangeTrioForm,
     RatingStateForm,
     ReadOnlyKindsForm,
+    RegexMaskForm,
     RowButtonsForm,
     StackedOrderHelper,
     TableOrderHelper,
@@ -1650,3 +1658,109 @@ class StandaloneThemesView(ThemesMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/themes_standalone.html"
+
+
+class InputMasksMixin:
+    """The forms both input-mask pages draw: each widget in a group, then each place."""
+
+    widgets = [
+        (
+            "pattern",
+            "PatternMaskInput",
+            "A mask written as a pattern. In a pattern 0 is a digit, a is a "
+            "letter, * is any character, and every other character is fixed. "
+            "Square brackets make a part optional and braces keep a fixed part "
+            "in the value.",
+            PatternMaskForm,
+            "https://imask.js.org/guide.html#masked-pattern",
+            "Pattern mask in the IMask guide",
+        ),
+        (
+            "regex",
+            "RegexMaskInput",
+            "A mask that accepts a character only while the whole value still "
+            "matches a JavaScript regular expression.",
+            RegexMaskForm,
+            "https://imask.js.org/guide.html#masked-base",
+            "Regular expression mask in the IMask guide",
+        ),
+        (
+            "number",
+            "NumberMaskInput",
+            "A mask that formats a number as it is typed. The field receives "
+            "the number with no thousands separator and a full stop as its "
+            "decimal mark.",
+            NumberMaskForm,
+            "https://imask.js.org/guide.html#masked-number",
+            "Number mask in the IMask guide",
+        ),
+        (
+            "dynamic",
+            "DynamicMaskInput",
+            "A list of masks. IMask applies whichever fits what has been typed.",
+            DynamicMaskForm,
+            "https://imask.js.org/guide.html#masked-dynamic",
+            "Dynamic mask in the IMask guide",
+        ),
+    ]
+
+    def get_context_data(self, **kwargs):
+        """Add a group for each widget, the other forms, and their media."""
+        posted = kwargs.pop("posted", None)
+        groups = []
+        for prefix, name, text, form_class, docs, docs_text in self.widgets:
+            form = form_class(prefix=prefix)
+            received = None
+            if posted is not None and f"{prefix}-submit" in posted:
+                form = form_class(posted, prefix=prefix)
+                if form.is_valid():
+                    received = [
+                        (form[field].label, posted.get(form.add_prefix(field)), value)
+                        for field, value in form.cleaned_data.items()
+                    ]
+            groups.append(
+                {
+                    "id": prefix,
+                    "name": name,
+                    "text": text,
+                    "form": form,
+                    "docs": docs,
+                    "docs_text": docs_text,
+                    "received": received,
+                }
+            )
+        lines_helper = FormHelper()
+        lines_helper.form_tag = False
+        lines_helper.template = "daisyui/table_inline_formset.html"
+        states_form = MaskStatesForm(
+            {"states-filled": "+49 151 2345678", "states-read_only": "+49 301 2345678"},
+            prefix="states",
+        )
+        kwargs.update(
+            groups=groups,
+            states_form=states_form,
+            sizes_form=MaskSizesForm(prefix="sizes"),
+            lines=MaskedLineFormSet(prefix="lines"),
+            lines_helper=lines_helper,
+            modal_form=MaskedModalForm(prefix="contact"),
+        )
+        return super().get_context_data(**kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """Draw the page again with what the posted form's fields received."""
+        return self.render_to_response(self.get_context_data(posted=request.POST))
+
+
+class InputMasksView(InputMasksMixin, MVPTemplateView):
+    """Each mask widget in a group of its own, inside the application shell."""
+
+    template_name = "demo/input_masks.html"
+    page_title = "Input masks"
+    page_subtitle = "Text inputs that format what is typed, with IMask"
+    breadcrumbs = [{"text": "Input masks"}]
+
+
+class StandaloneInputMasksView(InputMasksMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/input_masks_standalone.html"

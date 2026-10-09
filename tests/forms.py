@@ -2,6 +2,7 @@
 
 import datetime
 
+from crispy_forms.bootstrap import Modal
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Field, Layout
 from django import forms
@@ -25,6 +26,15 @@ from django_tomselect.forms import (
 )
 
 from mvp_forms.layout import Join
+from mvp_forms.widgets import (
+    DynamicMaskInput,
+    EnumBlock,
+    NumberMaskInput,
+    PatternBlock,
+    PatternMaskInput,
+    RangeBlock,
+    RegexMaskInput,
+)
 
 
 class TextInputsForm(forms.Form):
@@ -1063,3 +1073,114 @@ class TomSelectForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+
+
+class MaskedForm(forms.Form):
+    phone = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("+{49} 000 0000000", attrs={"placeholder": "Phone"}),
+    )
+    postcode = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("00000", lazy=False, placeholder_char="#"),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class MaskedLineForm(forms.Form):
+    article = forms.CharField(widget=PatternMaskInput("aa-0000"))
+
+
+MaskedLineFormSet = formset_factory(MaskedLineForm, extra=2)
+
+
+class MaskedDialogForm(forms.Form):
+    name = forms.CharField(required=False)
+    mobile = forms.CharField(
+        required=False, widget=PatternMaskInput("+{49} 000 0000000")
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            "name", Modal("mobile", css_id="contact-dialog", title="Contact")
+        )
+
+
+class MaskedPageForm(forms.Form):
+    phone = forms.CharField(
+        required=False, widget=PatternMaskInput("+{49} 000 0000000")
+    )
+    postcode = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("00000", lazy=False, placeholder_char="#"),
+    )
+    reference = forms.CharField(
+        required=False,
+        widget=PatternMaskInput(
+            "aa-0000", lazy=False, placeholder_char={"0": "#", "a": "a"}
+        ),
+    )
+    shelf = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("S-00", definitions={"S": "[1-6]"}),
+    )
+    day = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("d", blocks={"d": RangeBlock(1, 31, max_length=2)}),
+    )
+    resolution = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("Q", blocks={"Q": EnumBlock(["HD", "TV"])}),
+    )
+    serial = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("N", blocks={"N": PatternBlock("0", repeat=3)}),
+    )
+    pin = forms.CharField(
+        required=False, widget=PatternMaskInput("0000", display_char="•")
+    )
+    customer = forms.CharField(required=False, widget=RegexMaskInput(r"^\d{0,8}$"))
+    colour = forms.CharField(
+        required=False, widget=RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i")
+    )
+    amount = forms.DecimalField(
+        required=False,
+        widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=","),
+    )
+    locked = forms.CharField(
+        required=False, disabled=True, widget=PatternMaskInput("000-000")
+    )
+    frozen = forms.CharField(
+        required=False, widget=PatternMaskInput("000-000", attrs={"readonly": True})
+    )
+    telephone = forms.CharField(
+        required=False,
+        widget=DynamicMaskInput(
+            [PatternMaskInput("000-0000"), PatternMaskInput("(000) 000-0000")]
+        ),
+    )
+    code = forms.CharField(
+        required=False,
+        widget=DynamicMaskInput(
+            [
+                RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i"),
+                NumberMaskInput(scale=0, max_value=999),
+            ]
+        ),
+    )
+    secret = forms.CharField(
+        required=False,
+        widget=DynamicMaskInput(
+            [
+                PatternMaskInput("0000", display_char="•"),
+                PatternMaskInput("000000", display_char="•"),
+            ]
+        ),
+    )

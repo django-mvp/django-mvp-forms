@@ -82,6 +82,11 @@ addopts = [
     "--tb=short",
     "-ra",
 ]
+markers = ["e2e: Tests that drive Chrome through Playwright"]
+# pytest-playwright's sync API keeps an event loop on the main thread, which
+# trips Django's async-safety guard as a false positive during a live_server
+# test. Nothing here is asynchronous, so the guard is turned off.
+env = ["DJANGO_ALLOW_ASYNC_UNSAFE=1"]
 
 [tool.coverage.report]
 skip_empty = true
@@ -148,10 +153,11 @@ DEP002 = ["django-crispy-forms"]
 [tool.forge.conformance]
 # None has a module under mvp_forms/ to mirror: the first covers the app
 # registry, the second the undistributed demo project, the third the pack's
-# templates.
+# templates, and the fifth the script, which runs in a browser.
 non-mirror-paths = [
   "tests/test_smoke.py",
   "tests/test_demo.py",
   "tests/test_pack/",
   "tests/test_legibility/",
+  "tests/test_imask_e2e.py",
 ]

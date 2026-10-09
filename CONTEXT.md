@@ -61,7 +61,7 @@ A django-crispy-forms Python class placed in a form's `Layout` to say how part
 of the form is arranged: `Fieldset`, `Row`, `Div`, `Submit` and the rest. Each
 is drawn by a template in the pack. A pack is complete when every layout object
 crispy-forms documents has one.
-_Avoid_: component, block, element.
+_Avoid_: component, element, and block (a block is a named part of a pattern).
 
 **Formset**:
 A Django formset: several forms of one kind, handed to the pack as a whole with
@@ -244,6 +244,36 @@ _Avoid_: grace period, SLA, deadline.
 A version that has left the support window, kept on record with the last
 release of this package that supported it.
 _Avoid_: deprecated version, end-of-life version, removed version.
+
+**Mask**:
+A rule IMask applies to a text input as a person types, which decides what can
+be typed and how it is shown. A mask lives in the browser: the widgets only
+write its options on the input and the package's script hands them to IMask.
+_Avoid_: format, filter, validator (a mask never validates on the server).
+
+**Pattern**:
+A mask written as text in which some characters stand for what may be typed at
+that position and the rest are fixed. `PatternMaskInput` takes it as IMask's
+pattern text, unchanged.
+_Avoid_: template (that is a Django template), format string.
+
+**Definition**:
+The meaning of one character in a pattern, such as `0` for any digit. IMask has
+three of its own, `0`, `a` and `*`, and a developer states others by name with
+the regular expression each stands for.
+_Avoid_: rule, symbol, token.
+
+**Block**:
+A named part of a pattern with a rule of its own: a number range, a list of
+allowed values, or a pattern of its own that may be repeated. A developer states
+one with `RangeBlock`, `EnumBlock` or `PatternBlock` and writes its name in the
+pattern. It is not a layout object.
+_Avoid_: segment, section, group (a group is a framed set of fields).
+
+**Fixed character**:
+A character of a pattern that IMask writes and the person does not type, such as
+the hyphen in `aa-0000`.
+_Avoid_: literal, separator, constant.
 
 ## Terms deliberately not used
 

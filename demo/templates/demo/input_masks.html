@@ -1,0 +1,127 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  {% for group in groups %}
+    <c-section :title="group.name" icon="input-masks" id="{{ group.id }}">
+      <c-text>{{ group.text }}</c-text>
+      <c-text>
+        <c-link :href="group.docs" :text="group.docs_text" target="_blank" rel="noopener noreferrer" />
+      </c-text>
+      {% crispy group.form %}
+      {% if group.received %}
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Submitted</th>
+                <th>Received by the field</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for label, submitted, value in group.received %}
+                <tr>
+                  <td>{{ label }}</td>
+                  <td><code>{{ submitted }}</code></td>
+                  <td><code>{{ value }}</code></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </c-section>
+  {% endfor %}
+  <c-section title="Any widget, in each state" level="3">
+    {% crispy states_form %}
+  </c-section>
+  <c-section title="Any widget, with a size, colour and variant" level="3">
+    <c-text>
+      Each field is a PatternMaskInput with the pattern 000-000 and # as its
+      placeholder character.
+    </c-text>
+    {% crispy sizes_form %}
+  </c-section>
+  <c-section title="Any widget, in a formset" level="3">
+    <c-text>
+      Article is a PatternMaskInput with the pattern aa-0000, where each a is
+      shown as a and each 0 is shown as #. Price is a NumberMaskInput with
+      scale=2, thousands_separator=" " and radix=",". A line added in the browser
+      is masked as the others are, with no script written for it.
+    </c-text>
+    <div id="{{ lines.prefix }}-formset">
+      {% crispy lines lines_helper %}
+    </div>
+    <c-button type="button" text="Add a line" data-add-line="{{ lines.prefix }}" />
+  </c-section>
+  <c-section title="Any widget, in a modal" level="3">
+    <c-button type="button" text="Edit the contact details" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()" />
+    {% crispy modal_form %}
+  </c-section>
+  <c-section title="The event" level="3">
+    <c-text>
+      Each input sends an event once its mask is in place, and the event carries
+      the IMask instance. This page listens for it and shows the value of the
+      field last typed in, with and without its fixed characters.
+    </c-text>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <tbody>
+          <tr>
+            <th>Field</th>
+            <td><code data-mask-readout="name">–</code></td>
+          </tr>
+          <tr>
+            <th>Value</th>
+            <td><code data-mask-readout="value">–</code></td>
+          </tr>
+          <tr>
+            <th>Unmasked value</th>
+            <td><code data-mask-readout="unmasked">–</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'input-masks-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    // This page's own listener for the event, and its "Add a line" button.
+    document.addEventListener("mvp-forms:imask", function (event) {
+      const mask = event.detail.mask;
+      mask.on("accept", function () {
+        const show = function (part, text) {
+          document.querySelector('[data-mask-readout="' + part + '"]').textContent = text || "–";
+        };
+        show("name", event.target.name);
+        show("value", mask.value);
+        show("unmasked", mask.unmaskedValue);
+      });
+    });
+    document.addEventListener("click", function (event) {
+      const button = event.target.closest("[data-add-line]");
+      if (!button) return;
+      const prefix = button.dataset.addLine;
+      const total = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
+      const rows = document.querySelectorAll("#" + prefix + "-formset tbody tr");
+      const last = rows[rows.length - 1];
+      const row = last.cloneNode(true);
+      const from = new RegExp(prefix + "-\\d+-", "g");
+      row.querySelectorAll("*").forEach(function (node) {
+        ["id", "name", "for", "aria-describedby"].forEach(function (attribute) {
+          if (node.hasAttribute(attribute)) {
+            node.setAttribute(attribute, node.getAttribute(attribute).replace(from, prefix + "-" + total.value + "-"));
+          }
+        });
+        if (node.matches("input")) node.value = "";
+      });
+      last.after(row);
+      total.value = Number(total.value) + 1;
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js" integrity="sha384-UO8YwPv//GjwHj93ZlwXcDNjv3BSxdBFUB2jtiOuL3d/a0kS9E8sYvHjTBkQI8u8" crossorigin="anonymous"></script>
+{% endblock extra_js %}

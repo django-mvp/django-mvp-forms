@@ -24,7 +24,7 @@ The pack's templates are plain Django templates. They do not use [django-cotton]
 
 Fields and widgets are collected as real projects need them. They are not planned ahead and do not appear on the roadmap, so the set grows unevenly and that is intended. The package is complete without any of them, and each one has to fit the pack without changing what the pack promises.
 
-Widgets from popular third-party Django packages may get templates here so they sit properly in a daisyUI form. Which packages are supported is the maintainers' call, and none of them becomes a dependency. A supported package whose controls are built by script, as django-tomselect's are, may also get one optional stylesheet that the host project loads. The pack's own templates define no class and need no stylesheet, and there is never one stylesheet for several packages.
+Widgets from popular third-party Django packages may get templates here so they sit properly in a daisyUI form. Which packages are supported is the maintainers' call, and none of them becomes a dependency. A supported package whose controls are built by script, as django-tomselect's are, may also get one optional stylesheet that the host project loads. The pack's own templates define no class and need no stylesheet, and there is never one stylesheet for several packages. The package also ships one script, for its input mask widgets, which a form names in its media. A project that uses none of those widgets never loads it, and the pack's own templates need no script.
 
 When two reasonable designs conflict, stock daisyUI markup wins over custom styling, and matching crispy-forms' documented behaviour wins over inventing a new one.
 
@@ -1252,6 +1252,231 @@ Without it a control's script starts the control when the document finishes load
 #### The release tested
 
 The support is tested against django-tomselect 2026.6.2, which the development dependencies name as the least release. That release declares Django up to 6.0, and its controls work on Django 6.1, apart from the `{% tomselect_media %}` tag above. Which releases of django-tomselect are supported is stated here and is not part of the [support window](https://github.com/django-mvp/django-mvp-forms#supported-versions), whose periods apply to Django, django-crispy-forms and daisyUI.
+
+### Input masks
+
+A mask is a rule [IMask](https://imask.js.org/) applies to a text input as a person types: it decides what can be typed and how it is shown. The package gives a developer a widget to name on a field, and one script that hands what the widget wrote to IMask. The widgets add nothing to validation, so a field cleans and validates exactly as it did.
+
+This is the public surface:
+
+- `mvp_forms.widgets.PatternMaskInput`, with the three blocks it takes, `RangeBlock`, `EnumBlock` and `PatternBlock`, from the same module
+- `mvp_forms.widgets.RegexMaskInput`
+- `mvp_forms.widgets.NumberMaskInput`
+- `mvp_forms.widgets.DynamicMaskInput`
+- the attribute `data-imask`, which holds a widget's options as JSON on its `<input>`
+- the script `mvp_forms/imask.js`, which each widget names in its media
+- the event `mvp-forms:imask`, which the script sends from each input once its mask is applied, with the IMask instance in `event.detail.mask`
+
+The widgets are written for IMask 7, and the package's tests run against 7.6.1. IMask is not a dependency of the package and the package does not distribute it.
+
+#### What to load
+
+Two things have to be on a page that draws a masked field: IMask, and the form's media, which names the script.
+
+```django
+<script src="https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js"
+        integrity="sha384-UO8YwPv//GjwHj93ZlwXcDNjv3BSxdBFUB2jtiOuL3d/a0kS9E8sYvHjTBkQI8u8"
+        crossorigin="anonymous"></script>
+{{ form.media }}
+```
+
+- `{% crispy form %}` writes the form's media inside the form, so the page template writes only IMask. A page with several forms drawn this way holds the script once for each of them, and the script acts once however often it is included.
+- `{{ form|crispy }}`, `{{ field|as_crispy_field }}` and Django's own form rendering write no media. Render `{{ form.media }}` in the page template, or load `{% static 'mvp_forms/imask.js' %}` yourself.
+- The script waits for the document to finish loading before it looks for IMask, so it may be written before or after IMask, as long as IMask is loaded by the time the document has finished loading. An IMask loaded later than that, with `async` for example, is not found for the inputs already on the page. A project that bundles IMask exposes it as `window.IMask`, the name IMask publishes, and the widgets work as they do with the copy from a CDN.
+- The script is a file and the widgets write no inline script and no inline handler. A page whose Content Security Policy allows scripts from its own origin and from the origin serving IMask, and forbids inline script, masks every field.
+- A project that uses none of these widgets never loads the script. The pack's own templates still need no script.
+
+A page that does not load IMask draws every masked field as an ordinary text input. Nothing is masked, no error is raised in the browser, and the form submits.
+
+#### `PatternMaskInput`
+
+The pattern is written as [IMask's pattern text](https://imask.js.org/guide.html#masked-pattern), unchanged. In it `0` stands for a digit, `a` for a letter and `*` for any character, a part in square brackets is optional, and every other character is fixed.
+
+```python
+from django import forms
+
+from mvp_forms.widgets import PatternMaskInput
+
+
+class BookingForm(forms.Form):
+    phone = forms.CharField(widget=PatternMaskInput("+{49} 000 0000000"))
+    reference = forms.CharField(
+        widget=PatternMaskInput(
+            "aa-0000", lazy=False, placeholder_char={"0": "#", "a": "a"}
+        )
+    )
+```
+
+`PatternMaskInput(mask, attrs=None, *, definitions=None, blocks=None, lazy=None, placeholder_char=None, overwrite=None, eager=None, display_char=None)`. Every option is written on the input under IMask's own name, and an option you do not state is not written, so IMask's default applies.
+
+| Option | IMask's name | What it does |
+|---|---|---|
+| `definitions` | `definitions` | A mapping from one character to the regular expression it stands for, written as text in JavaScript's dialect: `{"S": "[1-6]"}` |
+| `blocks` | `blocks` | A mapping from a name used in the pattern to a block, described below |
+| `lazy` | `lazy` | `False` shows the whole pattern, with its placeholder, before anything is typed. A field nothing was typed into submits nothing, and a field partly filled in submits what is shown, placeholder characters included |
+| `placeholder_char` | `placeholderChar` | One character shown in each open position, or a mapping from a definition's character to the character shown for it: `{"0": "#", "a": "a"}` |
+| `overwrite` | `overwrite` | `True` has what is typed replace what is there, and `"shift"` has it replace and shift the rest |
+| `eager` | `eager` | `True` writes the fixed characters ahead of the cursor, `"append"` and `"remove"` do so in one direction only |
+| `display_char` | `displayChar` | The character shown in place of what was typed, for a PIN |
+
+A mapping for `placeholder_char` may name `0`, `a`, `*` and any definition you state. For one of IMask's three own definitions the script reads the expression from IMask, so the package holds no copy of it.
+
+A value that cannot be right raises `ValueError` when the form class is defined, and its message names the option: an empty or non-text pattern, a definition that is not one character and text, a placeholder or display character that is not one character, a block that is not one of the three classes, and an `overwrite` or `eager` that is not one of the values above. An option the widget does not have is Python's own `TypeError`.
+
+Your own `attrs` are kept. A pattern holding a quote or an angle bracket is escaped as any attribute value is.
+
+#### Blocks
+
+A block is a named part of a pattern with a rule of its own. Name it in `blocks` and write its name in the pattern.
+
+```python
+from mvp_forms.widgets import EnumBlock, PatternBlock, PatternMaskInput, RangeBlock
+
+date = PatternMaskInput(
+    "d{.}`m{.}`Y",
+    lazy=False,
+    overwrite=True,
+    blocks={
+        "d": RangeBlock(1, 31, max_length=2, placeholder_char="d"),
+        "m": RangeBlock(1, 12, max_length=2, placeholder_char="m"),
+        "Y": RangeBlock(1900, 2100, placeholder_char="y"),
+    },
+)
+resolution = PatternMaskInput("Q", blocks={"Q": EnumBlock(["HD", "TV", "VR"])})
+serial = PatternMaskInput("N", blocks={"N": PatternBlock("0", repeat=4)})
+```
+
+| Block | What it takes |
+|---|---|
+| `RangeBlock(minimum, maximum, *, max_length=None, autofix=None, placeholder_char=None)` | A whole number between the bounds. `max_length` is the number of digits, and `autofix=True` corrects a number outside the bounds to the nearest one. A bound or a `max_length` that is not a whole number, and a minimum above the maximum, raise `ValueError` |
+| `EnumBlock(values, *, placeholder_char=None)` | One of a list of values. An empty list, and anything that is not a list of text, raise `ValueError` |
+| `PatternBlock(mask, *, repeat=None, placeholder_char=None)` | A pattern of its own, repeated `repeat` times when that is stated |
+
+A date is masked with a pattern whose day, month and year are ranges, and Django's `DateField` reads the result through `input_formats`.
+
+#### `RegexMaskInput`
+
+A [regular expression mask](https://imask.js.org/guide.html#masked-base) accepts a character only while the whole value still matches the expression. Use it where a field has no fixed shape but a limited alphabet: digits only, letters and hyphens, a hexadecimal colour.
+
+```python
+from django import forms
+
+from mvp_forms.widgets import RegexMaskInput
+
+
+class AccountForm(forms.Form):
+    customer_number = forms.CharField(widget=RegexMaskInput(r"^\d{0,8}$"))
+    colour = forms.CharField(widget=RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i"))
+```
+
+`RegexMaskInput(mask, attrs=None, *, flags=None)`. `mask` is the expression as text, and `flags` is its flags as text, such as `"i"` for a match that ignores case. Both are written on the input and IMask runs them in the browser, so the expression is written in JavaScript's dialect and Python never compiles it. A difference between the two dialects, such as `(?<name>...)` for a named group, is yours to mind.
+
+An empty or non-text `mask`, which includes a compiled Python pattern, and a flag JavaScript does not have (`d`, `g`, `i`, `m`, `s`, `u`, `v` and `y` are the ones it has) raise `ValueError` when the form class is defined, and the message names the option.
+
+IMask tests the value after every keystroke, so the expression has to accept every partial value on the way to a whole one. An expression that matches only a finished value, such as `^\d{5}$`, accepts no first character and the field cannot be typed into. Write `^\d{0,5}$` instead, and let the field's own validation decide that five digits were required.
+
+#### `NumberMaskInput`
+
+A [number mask](https://imask.js.org/guide.html#masked-number) writes the separators as a number is typed: `1 234 567,5` appears as `1234567,5` is keyed in. The field receives the plain number, so a `DecimalField` or an `IntegerField` needs no cleaning code.
+
+```python
+from django import forms
+
+from mvp_forms.widgets import NumberMaskInput
+
+
+class InvoiceForm(forms.Form):
+    amount = forms.DecimalField(
+        widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=",")
+    )
+    quantity = forms.IntegerField(
+        widget=NumberMaskInput(scale=0, min_value=0, max_value=100, autofix=True)
+    )
+```
+
+`NumberMaskInput(attrs=None, *, scale=None, thousands_separator=None, radix=None, map_to_radix=None, pad_fractional_zeros=None, normalize_zeros=None, min_value=None, max_value=None, autofix=None)`. An option you do not state is not written, so IMask's default applies: two decimal places, no thousands separator and a comma as the decimal mark.
+
+| Option | IMask's name | What it does |
+|---|---|---|
+| `scale` | `scale` | The number of decimal places. `0` takes whole numbers only |
+| `thousands_separator` | `thousandsSeparator` | The character between groups of three digits, or `""` for none |
+| `radix` | `radix` | The decimal mark, one character |
+| `map_to_radix` | `mapToRadix` | A list of other characters to read as the decimal mark |
+| `pad_fractional_zeros` | `padFractionalZeros` | `True` pads the decimal places with zeros |
+| `normalize_zeros` | `normalizeZeros` | `False` keeps needless zeros |
+| `min_value` | `min` | The smallest value, an `int`, a `float` or a `Decimal`, written as a JSON number |
+| `max_value` | `max` | The largest value, of the same kinds |
+| `autofix` | `autofix` | `True` corrects a value outside the bounds to the nearest one |
+
+A value that cannot be right raises `ValueError` when the form class is defined, and its message names the option: a negative `scale`, a `thousands_separator` or `radix` that is more than one character, a `thousands_separator` that is the decimal mark (a comma when you state no `radix`, so `NumberMaskInput(thousands_separator=",")` is refused until you state `radix="."`), a `map_to_radix` that is not a list of single characters, a `min_value` or `max_value` that is not a finite number, and a `min_value` above the `max_value`.
+
+The input is a text input, since IMask masks no other type, and it asks a touch device for a decimal keypad, or a numeric one when `scale=0`. An `inputmode` in your `attrs` replaces that.
+
+The widget reads and writes the number by one rule, with IMask on the page or not:
+
+- A submitted value has its thousands separator removed and its decimal mark written as a full stop, so `1 234 567,5` reaches the field as `1234567.5`, a negative keeps its sign, and an empty value stays empty.
+- A value the form is drawn with, a `Decimal`, a number or a plain string such as `"1234.5"`, is written with the widget's decimal mark and no thousands separator: `1234,5`. IMask adds the separators when it applies the mask, and without IMask the same text reads back as the same number. The widget does not localise the value, whatever the field's `localize` says, because its own options say how the number is written.
+
+A page that does not load IMask shows the number as the widget wrote it, with no separators, and the field still reads what is typed by the rule above. A person who types `1234.56` where the decimal mark is a comma and the thousands separator a full stop therefore submits `123456`, since the full stop is dropped as a separator. The field's own validation is what catches a number that is not what was meant.
+
+#### `DynamicMaskInput`
+
+A [dynamic mask](https://imask.js.org/guide.html#masked-dynamic) is a list of masks. As a person types, IMask applies the mask from the list that takes the most of what has been typed, and the earlier one where two take the same. Use it where one field takes values of more than one shape: a phone number of two lengths, a card number of two.
+
+```python
+from django import forms
+
+from mvp_forms.widgets import DynamicMaskInput, PatternMaskInput
+
+
+class ContactForm(forms.Form):
+    phone = forms.CharField(
+        widget=DynamicMaskInput(
+            [PatternMaskInput("000-0000"), PatternMaskInput("(000) 000-0000")]
+        )
+    )
+```
+
+`DynamicMaskInput(masks, attrs=None)`. `masks` is a list of `PatternMaskInput`, `RegexMaskInput` and `NumberMaskInput` widgets, in the order IMask tries them, and each is written with its own options. Only a widget's options are used: its `attrs` are not, and the way a `NumberMaskInput` reads and writes a number is not. The widget takes no options of its own, since which mask applies is IMask's decision.
+
+An empty list, a value that is not a list, and an item that is not one of the three widgets (another `DynamicMaskInput` included) raise `ValueError` when the form class is defined, and the message names `masks`.
+
+The field receives the submitted text unchanged, as it does from a pattern or a regular expression, including where a mask in the list is a number. A list that holds a pattern with a `display_char` shows that character and submits what was typed.
+
+#### Inputs added later
+
+The script applies a mask to each masked input on the page when it loads, and then watches the document for inputs added afterwards. A formset row added by a script, a form that htmx 2 swaps into the page and a node your own script inserts all get their mask with no script of yours, and so does a field in a `Modal`, which is masked before the dialog is opened. Each input has one mask: an input moved within the page keeps its mask, and a page that includes the script more than once masks each input once.
+
+A formset's `empty_form`, the template a script clones to add a row, is drawn through the same widget, so it carries the same `data-imask` as the rows beside it.
+
+A disabled or a read-only masked input shows its value under the mask and stays disabled or read-only. A disabled input adds no entry to the form's data, as for any input.
+
+#### The event
+
+An option that is a JavaScript function, or any other option the widgets do not carry, is set in a few lines of your own script. The script sends the event `mvp-forms:imask` from each input once its mask is applied. The event bubbles, so a listener on the document hears every input, including one added after the page loaded, and `event.detail.mask` is the [IMask instance](https://imask.js.org/guide.html). Change an option on it with `updateOptions` and it applies to what is typed next.
+
+```js
+document.addEventListener("mvp-forms:imask", (event) => {
+  if (event.target.id !== "id_reference") return;
+  event.detail.mask.updateOptions({
+    prepareChar: (char) => char.toUpperCase(),
+  });
+});
+```
+
+Register the listener before the script runs, so that it hears the inputs that are already on the page: write it in a script that comes before the form's media. Where the page's Content Security Policy forbids inline script, the listener goes in a file or carries a nonce, like any other script.
+
+#### What the form receives
+
+A pattern, a regular expression or a list of masks hands the field the text as the person saw it, fixed characters included, and the field cleans it as it would any text. A number mask hands it the plain number, as described above. A pattern submitted half filled in reaches the field half filled in, with its placeholder characters where `lazy=False` shows them, and whether that is acceptable is the field's validation to decide: add a validator to a field that must match a shape. A pattern nothing was typed into submits nothing, whatever placeholder it shows, so a required field left untouched is still reported as empty.
+
+A field with a `display_char` shows that character, and the form receives what was typed. In these two cases, a display character and an untouched placeholder, the script sets the field's entry in the form's data when the form's data is read, which covers a native submit and a script that builds a `FormData` from the form, as htmx 2 does. Every other masked input is submitted by the browser as it shows. So is any masked input whose value was changed without typing, by a reset button or by a script that assigns to it: the form receives what the input then shows. A masked input that has been removed from its form, is disabled by itself or by a `<fieldset>`, or has no name adds no entry.
+
+Options IMask refuses, such as a regular expression JavaScript cannot compile, leave that one input unmasked and are reported in the browser's console. Every other input on the page is masked as usual.
+
+#### What is not supported
+
+An option whose value is a JavaScript function cannot be written in Python and is not supported: function masks, `prepare`, `prepareChar`, `commit`, `validate`, `dispatch`, `format` and `parse`. IMask's date mask needs two of them for any format but its default, so there is no date widget. There are no widgets for one particular format, such as a phone number or an IBAN, because the pattern differs by country and each is one line with `PatternMaskInput`. IMask's pipes, which format a value with no input, are not covered.
 
 ### Themes
 

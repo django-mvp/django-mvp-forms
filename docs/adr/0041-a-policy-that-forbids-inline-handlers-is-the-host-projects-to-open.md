@@ -8,9 +8,9 @@ The pack does not have to work in full under a Content Security Policy that forb
 handlers. Under such a policy the close button of a `Modal` and the dismiss button of an `Alert`
 are drawn and do nothing, and everything else the pack draws works as it does anywhere.
 
-The two inline handlers of ADR 0014 stay, and the pack still ships no script file. A host project
-that keeps such a policy has two routes, both in the README: allow the two handlers by hash with
-`'unsafe-hashes'`, or draw the buttons itself in its own copy of the template.
+The two inline handlers of ADR 0014 stay, and the pack's templates still need no script file. A
+host project that keeps such a policy has two routes, both in the README: allow the two handlers
+by hash with `'unsafe-hashes'`, or draw the buttons itself in its own copy of the template.
 
 This answers issue #47.
 

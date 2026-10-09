@@ -1,0 +1,18 @@
+{% load crispy_forms_tags %}<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Masked fields</title>
+  </head>
+  <body>
+    <form id="masked" method="post" action="">
+      {{ form.as_div }}
+      {% crispy dialog %}
+      <input id="unnamed" data-imask='{"kind": "pattern", "mask": "000"}'>
+      <button type="submit">Send</button>
+    </form>
+    <template id="line">{{ line.as_div }}</template>
+    {% for copy in copies %}{{ form.media }}{% endfor %}
+    {% if imask %}<script src="{{ imask_url }}"></script>{% endif %}
+  </body>
+</html>
