@@ -172,8 +172,19 @@
         },
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_partial_date_e2e.py::TestPartialDateScript"
+            ],
+            "commands": [
+              "uv run pytest tests/test_partial_date_e2e.py -q"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/partial-date.js:36"
+            ]
+          }
         }
       ]
     },
