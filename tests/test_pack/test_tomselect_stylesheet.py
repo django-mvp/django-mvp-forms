@@ -26,6 +26,7 @@ TAG = ":root .ts-wrapper.multi .ts-control > .item"
 TAG_ACTIVE = ":root .ts-wrapper.multi .ts-control > .item.active"
 TAG_REMOVE = ":root .ts-wrapper.plugin-remove_button .ts-control .item .remove"
 DISABLED_TAG = ":root .ts-wrapper.multi.disabled .ts-control > .item"
+GROUP_HEADING = ":root .ts-dropdown .optgroup-header"
 DISABLED_WRAPPER = ":root .ts-wrapper.disabled"
 DISABLED_OPTION = ":root .ts-dropdown [data-disabled]"
 THEMES = [Themes.named("light"), Themes.named("dark")]
@@ -42,6 +43,7 @@ HELD = [
     "the remove button of a tag",
     "the tag the keyboard is on",
     "the remove button of the tag the keyboard is on",
+    "a group heading",
 ]
 MEASURED = ["the disabled wrapper", "a disabled option", "a disabled tag"]
 
@@ -297,6 +299,9 @@ class TestTheLegibilityOfTheStylesheet:
                     sheet.number(RING, "opacity")
                 ),
                 sheet.ink(LOADING, "background-color"),
+            ),
+            "a group heading": Pairing.of(
+                "text", sheet.ink(GROUP_HEADING, "color"), surface
             ),
             "a tag": Pairing.of("text", tag_text, tag_surface),
             "the remove button of a tag": Pairing.of(

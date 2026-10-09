@@ -49,6 +49,13 @@ shown as a tag with a remove button. The pack draws it. Saving a new value is th
 developer's, and the field must accept a value that is not among its choices.
 _Avoid_: tags field (a field the developer writes, not a thing the pack ships).
 
+**Option group**:
+The heading a django-tomselect dropdown lists a set of options under. An option
+joins a group by carrying an `optgroup` key whose value is the heading. The pack's
+template for django-tomselect reads that key, which needs `mvp_forms` listed before
+`django_tomselect` in `INSTALLED_APPS`.
+_Avoid_: category, optgroup (that is the key and the HTML element, not the term).
+
 **Layout object**:
 A django-crispy-forms Python class placed in a form's `Layout` to say how part
 of the form is arranged: `Fieldset`, `Row`, `Div`, `Submit` and the rest. Each

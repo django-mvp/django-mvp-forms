@@ -1184,6 +1184,49 @@ class ArticleForm(forms.Form):
 
 `cleaned_data["keywords"]` is then a list of strings, whether or not each is among the options, and your view decides which of them to save.
 
+#### Grouping
+
+An option can be listed under a heading. Give the option an `optgroup` key whose value is the heading, and every option that carries the same value is listed under it. An option with no `optgroup` key, or an empty one, is listed with no heading. django-tomselect draws the headings and has no setting that names an option's group, so the pack's `django_tomselect/tomselect.html` tells Tom Select to read the group from `optgroup`. You write no template.
+
+This works only when `mvp_forms` is listed before `django_tomselect` in `INSTALLED_APPS`, because Django uses the first template of a name that it finds. With the order reversed the control is still drawn, with its options in one flat list.
+
+A view names the group on each result. A view over a list of choices does it in `get_iterable`; a view over a model does it in `hook_prepare_results`, from a field it asked for in `value_fields`:
+
+```python
+from django_tomselect.autocompletes import (
+    AutocompleteIterablesView,
+    AutocompleteModelView,
+)
+
+from shop.models import Product
+
+ROCKS = {"Igneous": ["Basalt", "Granite"], "Sedimentary": ["Chalk", "Shale"]}
+
+
+class RockAutocomplete(AutocompleteIterablesView):
+    iterable = True
+
+    def get_iterable(self):
+        return [
+            {"value": rock, "label": rock, "optgroup": group}
+            for group, rocks in ROCKS.items()
+            for rock in rocks
+        ]
+
+
+class ProductAutocomplete(AutocompleteModelView):
+    model = Product
+    search_lookups = ["name__icontains"]
+    value_fields = ["id", "name", "category__name"]
+
+    def hook_prepare_results(self, results):
+        for result in results:
+            result["optgroup"] = result.pop("category__name")
+        return results
+```
+
+A project that has a `django_tomselect/tomselect.html` of its own keeps the grouping by extending the template of the same name: `{% extends "django_tomselect/tomselect.html" %}`. Django resolves that to the next template of that name, which is the pack's, and the pack's extends django-tomselect's.
+
 #### What is not supported
 
 - django-tomselect's token widget, `TomSelectTokenWidget`, which the stylesheet does not style.

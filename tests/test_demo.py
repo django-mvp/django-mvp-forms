@@ -12,6 +12,7 @@ from django.shortcuts import resolve_url
 from django.template.loader import get_template
 from django.urls import reverse
 
+from demo.autocompletes import ROCKS, UNGROUPED_ROCKS
 from demo.forms import DAISYUI_VERSION, THEME_NAMES
 from demo.tomselect_views import TomSelectMixin
 from mvp_forms.choices import Modifiers
@@ -3342,6 +3343,29 @@ class TestStandaloneTomSelectPage(TomSelectPageContract):
     def test_it_links_back_to_the_shell_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("tomselect")) is not None
+
+
+class TestTheRocksEndpoint:
+    @pytest.fixture
+    def results(self, client, db):
+        response = client.get(reverse("ac-rocks"))
+        assert response.status_code == 200
+        return response.json()["results"]
+
+    def test_a_grouped_rock_names_its_group(self, results):
+        groups = {rock: group for group, rocks in ROCKS.items() for rock in rocks}
+        grouped = {
+            result["value"]: result["optgroup"]
+            for result in results
+            if "optgroup" in result
+        }
+
+        assert grouped == groups
+
+    def test_the_rocks_that_have_no_group_carry_no_optgroup_key(self, results):
+        ungrouped = {result["value"] for result in results if "optgroup" not in result}
+
+        assert ungrouped == set(UNGROUPED_ROCKS)
 
 
 class TestEveryShellPage:
