@@ -155,9 +155,9 @@ attributes alone.
 leaves out a number beside the slider and marks under it.
 
 **Why:** daisyUI has no component for either. A live readout needs a script, and the pack ships
-none. Whether it may is tied to #47. Step marks in daisyUI's documentation are plain elements laid
-out with utilities, which ADR 0003 allows only for layout where daisyUI has nothing, and they
-would need a decision of their own.
+none, and #47 was answered without one (ADR 0041). Step marks in daisyUI's documentation are
+plain elements laid out with utilities, which ADR 0003 allows only for layout where daisyUI has
+nothing, and they would need a decision of their own.
 
 **Open with the maintainer:** #90 asks whether the pack should offer either.
 
