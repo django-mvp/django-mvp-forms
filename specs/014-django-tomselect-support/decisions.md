@@ -142,3 +142,34 @@ repository. Nothing here patches them.
 scripts.
 
 **ADR:** none.
+
+## D12. No test that a state has a rule
+
+**Chosen:** the suite does not hold a table of states and the selectors that draw them. The design
+review found that such a test can fail only when someone removes a rule on purpose, which the
+testing standard calls a change detector.
+
+**Why:** the states are on the demo page and are walked at review. The legibility test still
+fails when a rule it reads a colour from goes.
+
+**ADR:** none. Local to this feature's tests.
+
+## D13. FR-004's radius and border width are the frame's
+
+**Chosen:** "every colour, radius, border width and field size from the theme" is read as the
+frame of the control, of a tag and of the dropdown. The loading ring and the dropdown's spinner
+are shapes with a stroke of their own. The test holds colour only.
+
+**Why:** a ring's stroke is not a border the theme sizes. The maintainer approved both on screen.
+
+**ADR:** none.
+
+## D14. A field with no help text is described by an element that is not there
+
+**Chosen:** recorded, not fixed. django-tomselect writes `aria-describedby` naming a help-text
+element whether or not the field has help text. The pack's own value wins on a field in error.
+It joins the behaviours of D11 as an issue in this repository.
+
+**Why:** the attribute is django-tomselect's to write.
+
+**ADR:** none.

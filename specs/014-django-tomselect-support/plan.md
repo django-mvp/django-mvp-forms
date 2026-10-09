@@ -29,7 +29,7 @@ What the feature distributes:
 | Article | How the plan meets it |
 |---|---|
 | I, testing | Every task writes its tests first. For a rule that already exists in the stylesheet, "first" means the test is seen to fail with the rule taken out, then pass with it back. |
-| II and III, simplicity | No Python is added to the package. The stylesheet is one file. Grouping is eight lines of template. |
+| II and III, simplicity | No Python is added to the package. The stylesheet is one file. Grouping is fifteen lines of template. |
 | VI, documentation | Each story documents its own surface in the README in the same task. |
 | VII, dependencies | django-tomselect is a development dependency. A test holds that no module imports it. |
 | XII, scope | No view, URL, field or widget class in the package. The demo's autocomplete views are the demo's. |
@@ -47,16 +47,24 @@ Kept as the sketch has it. The tests hold its structure, not its taste:
   selector. An exception is matched whole, so a new rule outside a control fails.
 - **No colour of its own (FR-004).** No hex colour, no `rgb(`, `hsl(`, `oklch(`, `oklab(` and no
   named colour other than `transparent` and `currentColor` in any declaration. Colours appear only
-  as `var(--color-…)`, alone or inside `color-mix`. Radius, border width and size come from
-  `var(--radius-…)`, `var(--border)` and `var(--size)`.
-- **A rule for each state (FR-012, FR-013, FR-015 to FR-018, FR-021, FR-024, FR-025, FR-028).** A
-  table in the test names each state and the selector that draws it. The test fails when a
-  selector in the table has no rule. It asserts no value.
-- **Legibility (FR-014).** For each pairing of text on background the stylesheet sets, the test
-  reads both declarations from the file, resolves `var(--color-…)` and `color-mix(in oklab, …)`
-  with `tests/legibility`, and holds the contrast to FS-012's standard under `light` and `dark`.
-  The disabled pairing is daisyUI's own for a disabled select and is asserted equal to it, not to
-  the standard. The helper that reads a declaration lives beside the test, under `tests/`.
+  as `var(--color-…)`, alone or inside `color-mix`. The test covers colour only.
+- **Legibility (FR-014).** A named table of ink and surface: for each, the selector, the
+  declaration or opacity that makes the ink, and the surface it sits on. The test reads each from
+  the file, resolves `var(--color-…)`, `color-mix(in oklab, …)` and opacity with
+  `tests/legibility`, and holds the contrast to FS-012's standard under `light` and `dark`. Held:
+  a tag, its remove button, the tag the keyboard is on and its remove button, an option, the
+  active option, a chosen option, a group heading, the lines that cannot be chosen, the clear
+  button and the loading ring. The placeholder is daisyUI's own pairing and counts as the
+  exception FS-012 already lists. The disabled wrapper, the disabled tag and the disabled option
+  are measured and not held, as FS-012 does for a disabled field.
+- **No table of states.** Whether each state the specification lists has a drawing is not held by
+  a test: a test that a selector exists could only fail when someone removes the rule on purpose.
+  Those states are shown on the demo page and walked by the maintainer. The legibility test fails
+  if a rule it reads a colour from disappears.
+
+One class in one module directly under `tests/`, beside `template_surface.py`, reads the
+stylesheet into rules and answers for a selector's declarations. The scope, colour and legibility
+tests all use it. There is no second helper.
 
 ## The pack's markup
 
@@ -64,8 +72,10 @@ No production change. `tests/test_pack/test_tomselect.py` draws forms with each 
 widgets through `{{ form|crispy }}` and `{% crispy form %}` and holds: the `select` class, each
 size, each colour, the variant, `select-error` with no colour on a field in error, the `disabled`
 attribute, the label's `for`, `aria-describedby` naming the help text and the errors, and the same
-markup on a second draw. Model-backed widgets use an autocomplete view over a model the suite
-already has, registered in `tests/urls.py`.
+markup on a second draw. Model-backed widgets use an autocomplete view over `django.contrib.auth`'s `Group`, registered in
+`tests/urls.py`, and are drawn with a current request, through the client, because
+django-tomselect draws a different template without one. `aria-describedby` is asserted only on
+a field that has help text or errors. No drawn form names `tomselect.css` (FR-002).
 
 `tests/test_pack/test_independence.py` gains django-tomselect to the modules no package module may
 import. The fixture that leaves only the pack and crispy installed already shows the pack draws
@@ -81,7 +91,8 @@ The three checks that name every distributed template are narrowed:
 
 - `test_every_template_named_by_a_template_is_the_packs_own` reads templates under `daisyui/`. A
   second test holds that a template under `django_tomselect/` names only django-tomselect's
-  template of the same path.
+  template of the same path. The README's two tables together are still compared with every
+  `*.html` under `mvp_forms/templates/`, so a template anywhere else fails.
 - The README's template list gains a second, short table for a supported package's templates, and
   `tests/template_surface.py` reads it. The row says what it draws, that it is found through
   application directories, and the order `INSTALLED_APPS` needs.

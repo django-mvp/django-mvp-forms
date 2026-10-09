@@ -2,7 +2,7 @@
   "feature": "014-django-tomselect-support",
   "branch": "014-django-tomselect-support",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-10-09T10:51:10Z",
       "note": "research.md, plan.md, tasks.md: 4 stories, 7 tasks; continues on pull request #139 from the approved sketch"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-09T10:51:39Z",
+      "note": "one reviewer, three lenses"
     }
   ],
   "gates": {
@@ -128,7 +133,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

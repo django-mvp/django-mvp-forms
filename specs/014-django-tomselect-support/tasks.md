@@ -8,6 +8,7 @@ that exists the test is written, seen to fail with the rule taken out, and seen 
 back. A task is done when its tests pass, the tree is green and the work is committed.
 Documentation lands in the task that introduces what it describes.
 
+`tomselect.css` and the grouping template appear under a task's files for the red step only.
 What the maintainer approved on screen is not changed: no value in `tomselect.css`, no markup and
 no wording on the demo pages. A test that cannot pass without changing one is reported, not made
 to pass.
@@ -53,11 +54,15 @@ as the plan says, so the suite is green at its end and stays green.
 - The three checks that name every distributed template read the pack's own directory,
   `daisyui/`. A second test holds that a template under `django_tomselect/` names only
   django-tomselect's template of the same path. The README gains the second table with the
-  grouping template's row, and `tests/template_surface.py` reads it. The marker-copy test draws
+  grouping template's row, and `tests/template_surface.py` reads it. The two tables together
+  are compared with every `*.html` under `mvp_forms/templates/`, so a template outside
+  `daisyui/` and other than `django_tomselect/tomselect.html` fails: adding an empty
+  `mvp_forms/templates/other/x.html` must turn the suite red. The marker-copy test draws
   `daisyui/` templates. What the grouping template does is tested in T006.
 
-- A helper under `tests/` that reads the stylesheet into rules: selectors and declarations, with
-  comments and `@keyframes` handled.
+- One class in one module directly under `tests/`, beside `template_surface.py`, that reads the
+  stylesheet into rules: selectors and declarations, with comments and `@keyframes` handled. T003
+  adds a method to it. There is no second helper.
 - Scope: every selector is inside a control or is one of the three named exceptions.
 - No colour of its own, in any declaration.
 - The package's static directory holds `mvp_forms/tomselect.css` and nothing else, in place of
@@ -71,22 +76,28 @@ as the plan says, so the suite is green at its end and stays green.
 Plan, *The pack's markup*; research R1.
 
 - Single and multiple, model-backed and plain choices, each through the filter and the tag.
-- Class, each size, each colour, the variant, error with no colour, disabled, label, description,
-  and the same markup on a second draw with the form's widget left as it was.
+- Class, each size, each colour, the variant, error with no colour, disabled, label, and the
+  same markup on a second draw with the widget's `attrs` the same before and after.
+  `aria-describedby` is asserted only on a field that has help text or errors. No drawn form
+  names `tomselect.css`.
+- Model-backed widgets are drawn with a current request, through the client: django-tomselect
+  draws a different template without one. The model is `django.contrib.auth`'s `Group`.
 - A page drawn with no django-tomselect field is byte for byte what it was (the existing suite
   already holds this: confirm and name the tests in the report, add none).
 - No production change is expected. If one is needed, stop and report why.
 
-### T003 — A rule for each state, and legibility under light and dark
+### T003 — Legibility under light and dark
 
-**Files**: `tests/test_pack/test_tomselect_stylesheet.py`, a helper beside it
+**Files**: `tests/test_pack/test_tomselect_stylesheet.py`, the stylesheet reader under `tests/`
 
-Plan, *The stylesheet* (states, legibility); spec FR-012 to FR-015, FR-028.
+Plan, *The stylesheet* (legibility, no table of states); spec FR-014.
 
-- The table of states and selectors for the control, the dropdown, loading, the clear button and
-  the remove button.
-- Contrast for each pairing the stylesheet sets, read from the file, under `light` and `dark`.
-  The disabled pairing equals daisyUI's own for a disabled select.
+- A named table of ink and surface for what the first story draws: an option, the active option,
+  a chosen option, the lines that cannot be chosen, the clear button and the loading ring. Each
+  is read from the file and held to FS-012's standard under `light` and `dark`.
+- The placeholder is asserted to be daisyUI's own pairing and is not held. The disabled wrapper
+  and the disabled option are measured and not held.
+- No test that a state has a rule.
 
 ### T004 — The demo page, and the documentation of the first story
 
@@ -98,7 +109,9 @@ Plan, *The demo*, *Documentation*; spec FR-029 to FR-031.
   and a post in error.
 - README: the "django-tomselect" section as far as the first story goes (install, load, order,
   the look, sizes, colours, variant, states, the two plugins, what is not supported, the release
-  tested, Django 6.1), the sentences about shipping no stylesheet, the demo's pages. CHANGELOG.
+  tested, and that on Django 6.1 the `tomselect_media` tag writes no links, so the files are
+  loaded through form media or by path, and that without `tomselect.css` daisyUI cuts the
+  dropdown off), the sentences about shipping no stylesheet, the demo's pages. CHANGELOG.
   CONTEXT: "Supported package".
 
 ---
@@ -112,12 +125,12 @@ Issue: #141. Delivers FR-016 to FR-019; FR-028, FR-030, FR-031.
 **Files**: `tests/test_pack/test_tomselect_stylesheet.py`, `tests/test_demo.py`, `README.md`,
 `CONTEXT.md`
 
-- States table: a tag, the tag the keyboard is on, a disabled tag, the remove button and its
-  hover, the offer to add, and that tags wrap and the control grows (the declarations that make
-  it so are present on the multiple wrapper and the tag).
-- Tag pairings join the legibility check.
+- The legibility table gains a tag, its remove button, the tag the keyboard is on and its remove
+  button. The disabled tag is measured and not held.
 - Demo: the tagging control posts a value that was not an option and the page shows it.
-- README: tagging, and that saving a new value is the developer's. CONTEXT: "Tagging".
+- README: tagging, that saving a new value is the developer's, and that the field must accept a
+  value that is not among its choices, which django-tomselect's stock field does not. The demo's
+  `TagsField` is shown as the example. CONTEXT: "Tagging".
 
 ---
 
@@ -136,8 +149,8 @@ Plan, *Grouping*; research R4.
 - The drawn widget's script names `optgroupField` and `optionGroupRegister`. With `mvp_forms`
   after `django_tomselect` it does not, and the widget draws.
 - A project template at the same path that extends it still groups.
-- States table: group heading, options set in under it, the line between groups. The heading's
-  pairing joins the legibility check.
+- The group heading joins the legibility table.
+- At least one draw is made with a current request.
 - Demo: the rocks endpoint answers with `optgroup` on grouped rocks and without on the two that
   have none.
 - Check in the running demo whether a chosen option is listed under its group when
@@ -153,10 +166,8 @@ Issue: #143. Delivers FR-024 to FR-027; FR-030, FR-031; SC-006.
 
 ### T007 — Modal, table and htmx
 
-**Files**: `tests/test_pack/test_tomselect_stylesheet.py`, `tests/test_demo.py`, `README.md`
+**Files**: `tests/test_demo.py`, `README.md`
 
-- States table: the open wrapper is lifted, the modal box and the table's scroller overflow
-  while a dropdown in them is open. The two `:has()` rules are the scope test's named exceptions.
 - Demo: the modal form and the table formset are drawn with their controls, the fetched form
   responds and carries a prefix of its own, the second page responds, and the demo's settings
   set `use_htmx` by default.

@@ -24,10 +24,11 @@ directory, so the file ships with no change to `pyproject.toml`. A host project 
 
 django-tomselect's widgets name Tom Select's stylesheet and its own in their form media, and
 django-crispy-forms writes a form's media beside the form. Our file is in the page's head, so
-theirs usually arrives later. Every selector starts with `:root`, which adds one pseudo-class of
+theirs usually arrives later. Every selector inside a control starts with `:root`, which adds one pseudo-class of
 specificity and makes the result independent of order. Six selectors needed one more class to win
-a tie. django-tomselect marks the clear button's colour and opacity `!important`, and those two
-declarations are the only ones of ours that are.
+a tie. django-tomselect and Tom Select mark some declarations `!important`: the clear button's colour
+and opacity, and the margin of the input inside a control. Ours are important only where theirs
+are.
 
 The alternative, telling a developer to stop django-tomselect loading its stylesheets, would need a
 setting django-tomselect does not have.
@@ -58,8 +59,9 @@ extend itself across application directories.
 - The template is found ahead of django-tomselect's only when `mvp_forms` is listed before
   `django_tomselect` in `INSTALLED_APPS`. The other way round nothing breaks and nothing is
   grouped. The README has to state the order.
-- A project that already has its own `django_tomselect/tomselect.html` in `DIRS` keeps working:
-  its template extends ours, which extends django-tomselect's.
+- A project that already has its own `django_tomselect/tomselect.html` keeps working where its
+  template is found ahead of ours and extends the same name: in an application listed before
+  `mvp_forms`, or in `DIRS` when the project's form renderer reads its templates setting.
 - A developer names the group by returning `optgroup` on each result: from `hook_prepare_results`
   on a model view, from `get_iterable` on a view that answers from a list. That is the one
   documented place FR-020 asks for.
@@ -116,8 +118,8 @@ maintainer to walk. Adding a browser to the suite and to CI for this feature is 
 ## R8. Versions
 
 django-tomselect 2026.6.2 is the release installed. It declares Django up to 6.0. On Django 6.1
-its controls work, and its `tomselect_media` template tag raises, because form media holds
-objects where it expects strings. A host project on 6.1 loads its files through form media, which
+its controls work, and its `tomselect_media` template tag writes nothing and logs an error,
+because form media holds objects where it expects strings. A host project on 6.1 loads its files through form media, which
 django-crispy-forms writes, or links them by path. The README names the release tested and says
 this.
 
