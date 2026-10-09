@@ -175,9 +175,17 @@ demo project.
 ### Article XIV — Stock daisyUI
 
 Pack templates are built from daisyUI's component classes and Tailwind
-utilities as documented. The pack ships no stylesheet and defines no classes of
-its own. Where daisyUI has a component for the job, the pack uses it rather
-than assembling a look-alike from utilities.
+utilities as documented. The pack's own templates need no stylesheet and
+define no classes of their own. Where daisyUI has a component for the job, the
+pack uses it rather than assembling a look-alike from utilities.
+
+A supported third-party package may build its controls in the browser, under
+class names of its own, where no template of the pack's can reach them. For
+such a package, and for no other reason, this package may ship one optional
+stylesheet. It styles that package's controls and nothing else, takes every
+colour from the daisyUI theme, and is loaded by the host project, never by the
+pack. Each supported package has a stylesheet of its own. There is never one
+stylesheet for several packages.
 
 Where django-crispy-forms documents how a layout object behaves, the pack
 matches it. A host project moving from another pack should find the same
@@ -214,4 +222,4 @@ Read at planning and at review; applies to every change.
 
 ---
 
-**Version**: 2.0.0 | **Ratified**: 2026-10-03 | **Last Amended**: 2026-10-03
+**Version**: 2.1.0 | **Ratified**: 2026-10-03 | **Last Amended**: 2026-10-09
