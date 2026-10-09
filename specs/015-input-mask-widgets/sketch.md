@@ -25,6 +25,16 @@ behind it is tested, and the code behind the page is the plan's to keep or rebui
   later, and never twice to the same one.
 - An event from each input once its mask is in place, carrying the IMask instance.
 - A page template that loads IMask and then renders the form's media.
+- The script acts once however many times a page includes it. django-crispy-forms writes a form's
+  media inside each form it draws, so a page with eight forms holds the script eight times. The
+  first prototype applied a mask once for each copy, and a field with a display character then
+  accepted nothing. The specification's edge case that says Django's media loads the script once
+  is wrong for forms drawn with `{% crispy %}` and is to be corrected when the feature is planned.
+- A page drawn with `{% crispy %}` needs IMask and nothing else added, since the form brings the
+  script. A page drawn with `|crispy` or Django's own rendering renders the form's media itself.
+- A field with a display character submits what was typed. IMask puts the display characters in
+  the input, so without help the form receives dots. The sketch sets the real value when the
+  form's data is collected.
 - A placeholder that says what each position takes. IMask has one placeholder character for a
   whole pattern, so the sketch splits a pattern into blocks to give letters and digits a
   character each. A developer should not have to write blocks for that.
@@ -60,6 +70,10 @@ Ruled by the maintainer on the first round:
   position is not used.
 - Every field that demonstrates a pattern or a regular expression states it in full in its help
   text, with the meaning of any definition or block. A number field states its options.
+
+Ruled by the maintainer on the second round:
+
+- The PIN field has to show a dot for each digit typed. It showed nothing.
 
 Decided while building, and the maintainer's to change:
 

@@ -4,6 +4,10 @@
 (function () {
   "use strict";
 
+  // A page may hold this script once for each form on it. Only the first acts.
+  if (window.mvpFormsImask) return;
+  window.mvpFormsImask = true;
+
   const SELECTOR = "input[data-imask]";
   const EVENT = "mvp-forms:imask";
   const masked = new WeakMap();
@@ -52,6 +56,13 @@
     const mask = window.IMask(input, build(options));
     if (options.kind === "number" && plain) mask.unmaskedValue = plain;
     masked.set(input, mask);
+    // A mask with a display character shows something other than its value, so
+    // the form is given the value and not what is shown.
+    if (mask.masked.displayChar && input.form) {
+      input.form.addEventListener("formdata", function (event) {
+        if (input.name && !input.disabled) event.formData.set(input.name, mask.value);
+      });
+    }
     input.dispatchEvent(
       new CustomEvent(EVENT, { bubbles: true, detail: { mask: mask } }),
     );

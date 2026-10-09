@@ -1737,7 +1737,6 @@ class InputMasksView(MVPTemplateView):
             lines=MaskedLineFormSet(prefix="lines"),
             lines_helper=lines_helper,
             modal_form=MaskedModalForm(prefix="contact"),
-            media=groups[0]["form"].media,
         )
         return super().get_context_data(**kwargs)
 

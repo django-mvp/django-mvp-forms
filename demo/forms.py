@@ -1807,7 +1807,10 @@ class PatternMaskForm(MaskForm):
     )
     pin = forms.CharField(
         label=_("PIN"),
-        help_text=_("Pattern: 0000. Each digit typed is shown as a dot."),
+        help_text=_(
+            'Pattern: 0000 with display_char="•". Each digit typed is shown as '
+            "a dot, and the form receives the digits."
+        ),
         required=False,
         widget=PatternMaskInput("0000", display_char="•"),
     )
@@ -1892,19 +1895,28 @@ class DynamicMaskForm(MaskForm):
             ]
         ),
     )
-    colour = forms.CharField(
-        label=_("Colour"),
+    phone = forms.CharField(
+        label=_("Phone number"),
+        help_text=_(
+            "Two patterns: 000-0000 and (000) 000-0000. The second applies "
+            "from the eighth digit."
+        ),
+        required=False,
+        widget=DynamicMaskInput(
+            [PatternMaskInput("000-0000"), PatternMaskInput("(000) 000-0000")]
+        ),
+    )
+    code = forms.CharField(
+        label=_("Colour or number"),
         help_text=_(
             "A regular expression, ^#[0-9a-f]{0,6}$ with the flag i, and a "
-            "pattern, C,C,C, whose block C is a number range from 0 to 255."
+            "number with scale=0 and max=999."
         ),
         required=False,
         widget=DynamicMaskInput(
             [
-                PatternMaskInput(
-                    "C,C,C", blocks={"C": {"kind": "range", "from": 0, "to": 255}}
-                ),
                 RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i"),
+                NumberMaskInput(scale=0, max=999),
             ]
         ),
     )
