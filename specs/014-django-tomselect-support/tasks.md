@@ -172,3 +172,22 @@ Issue: #143. Delivers FR-024 to FR-027; FR-030, FR-031; SC-006.
   responds and carries a prefix of its own, the second page responds, and the demo's settings
   set `use_htmx` by default.
 - README: modal and table, htmx and the `use_htmx` default.
+
+---
+
+## Review fixes
+
+### T008 — The stylesheet wins whichever stylesheet is loaded first (US1)
+
+Review finding: three rules matched Tom Select's class for class and lost when its stylesheet
+arrived after ours, as it does with a form's media. Every selector now starts `html:root`.
+
+### T009 — The offer to add a value is set apart (US2)
+
+Review finding: Tom Select lists the offer first, so the rule that drew a line above it could
+never match. The line is now drawn beneath it.
+
+### T010 — The README says what the stylesheet really does (US4)
+
+Review findings: the classes are copied to the wrapper only; either load order works; a scrolled
+modal or table loses its position while a dropdown in it is open.
