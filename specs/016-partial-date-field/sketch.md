@@ -58,7 +58,8 @@ The code behind it is the plan's to keep, change or rebuild.
 ## What the sketch faked
 
 - The masked input pads by overriding a method of IMask's range block that IMask does not
-  document. The plan needs a way that rests on IMask's published interface.
+  document. Research R1 tried IMask's published options and found none that keeps a change in
+  the middle of a date whole, so the override stays and browser tests pin it.
 - When a masked input is drawn again holding a value the mask would refuse, such as `2021-02-30`,
   IMask shows as much as fits (`2021-02-0`) beside the field's error. The specification now says
   it shows what was sent (FR-042).

@@ -36,22 +36,31 @@ widgets take `attrs` and nothing else. R3 below is how the field tells its widge
 one part. An option on `PartialDateInput` was not adopted, because note 4 asks that changing
 widget be one name and nothing else, and an option on a widget is a second thing to carry over.
 
-## R1. Padding a single digit without IMask's internals
+## R1. Padding a single digit
 
-The prototype padded `4` to `04` by overriding `_appendCharRaw` on a subclass of IMask's range
+The prototype pads `4` to `04` by overriding `_appendCharRaw` on a subclass of IMask's range
 block, a method IMask does not document. IMask documents two options for changing what was typed
-before it is masked: `prepareChar`, called for each character, and `prepare`, called once for
-each insertion. Both were tried in Chrome against IMask 7.6.1.
+before it is masked: `prepareChar`, called for each character, and `prepare`, called for each
+insertion. Both were tried in Chrome against IMask 7.6.1, with plain range blocks.
 
 - `prepareChar` returning `04` for `4` fills the month, but the day typed next is then refused.
-- `prepare` returning `04` for `4` works: IMask takes the two characters one at a time. `20214`
-  gives `2021-04`, `202149` gives `2021-04-09`, `202113` keeps `2021-1`, and the cursor ends
-  after the last digit each time.
+- `prepare` returning `04` for `4` works for typing in order: `20214` gives `2021-04` and
+  `202149` gives `2021-04-09`.
+- `prepare` fails for a change in the middle of a value, whether or not it is limited to what
+  the person typed (`flags.input` set and `flags.tail` not). IMask puts the text after the cursor
+  back one character at a time and gives up the whole insertion when two characters arrive for
+  one. With `2021-12-14` typed, selecting the month and typing `4` gives `2021-1`: the month is
+  changed and the day is lost. With `2020-02-29` typed, replacing the last digit of the year with
+  `1` gives `2020-`. Sent unnoticed, either cleans to a date the person did not enter.
+- The prototype's subclass gives `2021-04-14` for the first and leaves `2020-02-29` for the
+  second, which is what FR-012 asks: a digit is refused and nothing is corrected.
 
-**Chosen: `prepare`.** It pads an insertion of one character that is a digit from 2 to 9 where a
-month starts, or from 4 to 9 where a day starts. It also pads the one-digit parts of a pasted
-partial date, so `2021-3-4` pasted gives `2021-03-04`. Anything else is passed on unchanged. The
-subclass of the range block goes.
+**Chosen: the subclass of the range block stays.** It is the one way found that pads and keeps a
+change in the middle whole. The cost is a dependence on a method of IMask's that is not in its
+guide, so the browser tests of T003 pin each behaviour it gives, and the README names the IMask
+version the widget is tested against. A pasted partial date with one-digit parts is padded in
+`prepare`, which is called once for a paste at the end of the input and has no text after the
+cursor to put back: `2021-3-4` pasted into an empty input gives `2021-03-04`.
 
 ## R2. A masked input holding a value its mask refuses (FR-042)
 
@@ -70,11 +79,12 @@ The prototype set three attributes on the widget in the field's `__init__`. A de
 swaps the widget afterwards, as `self.fields["collected"].widget = PartialDateSelect()` in a
 form's `__init__`, got a widget that knew nothing, and the demo told it again by hand.
 
-Django gives a field one documented hook that runs each time a form asks for the field to be
-drawn: `Field.get_bound_field(form, field_name)`. **Chosen:** the field overrides it, sets
+Django gives a field one documented hook that runs once for each form, the first time the form reads
+the field: `Field.get_bound_field(form, field_name)`. **Chosen:** the field overrides it, sets
 `resolution`, `min_value` and `max_value` on `self.widget`, and returns what `super()` returns.
 Each form holds its own copy of the field and of the widget, so nothing is shared between forms.
-Nothing is set in `__init__`. A widget used with no partial date field keeps its class defaults:
+Nothing is set in `__init__`. A form keeps what the hook returned, so a widget is swapped before
+the form is first drawn or validated, which is where a form's `__init__` does it. A widget used with no partial date field keeps its class defaults:
 a resolution of day and no limits.
 
 Setting plain attributes on the widget is what Django's own fields do with `is_required` and

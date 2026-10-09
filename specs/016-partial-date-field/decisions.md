@@ -99,3 +99,81 @@ templates still need none.
 **Self-resolved.**
 
 **ADR:** expected, beside ADR 0045.
+
+## D8. Every option on the field, and three widgets that take none
+
+**Chosen:** `coarsest`, `resolution`, `min_value` and `max_value` are keywords of the field. The
+widgets take `attrs` only. The year select is a third widget, `PartialDateSelect`, and not an
+option of the three-part widget. This supersedes what D1, D2 and D6 say of two widgets and of the
+finest precision being all that crosses to a script.
+
+**Why:** the maintainer asked for one field with a swappable widget, so changing widget has to be
+a change of one name.
+
+**Ruled by the maintainer**, 2026-10-10, including the name `resolution`.
+
+**ADR:** expected, with D9.
+
+## D9. The field tells its widget through `get_bound_field`
+
+**Chosen:** the field sets `resolution`, `min_value` and `max_value` on its widget when a form
+first reads the field. A widget is swapped before the form is first drawn or validated.
+
+**Why:** a widget named in a form's `__init__` after the field was built would otherwise know
+nothing. Research R3.
+
+**Revisit if:** a project needs to swap a widget on a form that has already been validated.
+
+**ADR:** expected.
+
+## D10. A partial value is inside the limits when any day it could be is
+
+**Chosen:** `1998` passes an earliest date of `1998-03-15`. `1998-02` does not.
+
+**Why:** refusing `1998` would force a person who knows only the year to invent a month.
+
+**Self-resolved**, shown to the maintainer with the prototype.
+
+**ADR:** none — a rule of this one field, stated in the README.
+
+## D11. The year list with an earliest date in the future
+
+**Chosen:** with no latest date and an earliest date after this year, the list runs a hundred
+years on from the earliest. FR-040 read to the letter ends the list at this year, which would
+leave it empty.
+
+**Self-resolved**, for the maintainer to overturn.
+
+**ADR:** none — local to one widget's default.
+
+## D12. The padding keeps IMask's range block subclass
+
+**Chosen:** the month and day blocks subclass `IMask.MaskedRange` and override `_appendCharRaw`.
+
+**Why:** IMask's published `prepare` and `prepareChar` options both lose part of the value when a
+person changes the middle of a date. Research R1 has the cases.
+
+**Revisit if:** IMask gains a published way to pad a range, or a new IMask version fails the
+browser tests that pin this.
+
+**ADR:** expected.
+
+## D13. A masked input shows a refused value whole
+
+**Chosen:** FR-042. The mask is held off an input whose value it would cut, until the person has
+changed it to one the mask takes.
+
+**Self-resolved** after the question was put to the maintainer twice and left open.
+
+**ADR:** none — covered by the README and the browser test.
+
+## D14. Design review
+
+One reviewer, three lenses, one round: changes requested. Applied: the padding decision above
+(high), the mid-value cases and the refused change in T003, ASCII digits only in T001, the month
+names under another language in T004, a held value outside the limits in T008, the waiting input
+recorded, and three README sentences. Carried as documentation: a limit is fixed when the form
+class is defined. Whether a limit could be a callable is a question for the maintainer and is
+not built.
+
+**ADR:** none — a record of the review.

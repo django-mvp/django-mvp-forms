@@ -26,7 +26,7 @@ page is kept as approved. The field, the widgets and the scripts behind it are r
 | II and III, least machinery | One field class, three widget classes of which one subclasses another to replace one part. No registry, no settings, no dataclass, no shared script |
 | VIII | Error messages and part names are translatable, and the English catalogue is regenerated |
 | X | The rules are methods of the field. The scripts are each one function scope |
-| XI, public surface | The field, its five options and error codes, the three widgets, the template path, the script path and the `data-partial-date` attributes are public from this release and listed in the README |
+| XI, public surface | The field, its four options and error codes, the three widgets, the template path, the script path and the `data-partial-date` attributes are public from this release and listed in the README |
 | XII, scope | A field and widgets only |
 | XIII | The new template is a plain Django template. The modules import Django and the standard library |
 | XIV | daisyUI's `join`, `join-item`, `input` and `select`, and Tailwind width utilities. No stylesheet |
@@ -51,7 +51,8 @@ Methods:
 
 - `to_python(value)`: empty gives `""`. Otherwise `parse`, then the precision checks, then the
   limits.
-- `parse(value)`: the calendar rules, returning padded ISO text. A trailing hyphen is dropped.
+- `parse(value)`: the calendar rules, returning padded ISO text. Each part is ASCII digits, 0 to
+  9, and nothing else. One trailing hyphen is dropped.
   A value cut off inside a part cannot be told from a one-digit part for a month or day, so
   `2021-0` fails as a month of zero and `202` fails as a year.
 - `span(value)`: the first and last day a partial date could be, as two `(year, month, day)`
@@ -102,8 +103,8 @@ held year that is not on the list is put first.
 ## The scripts
 
 **`imask.js`** gains the `partial-date` kind. Its options for IMask: the pattern for the
-resolution (`Y`, `Y-M` or `Y-M-D`), three plain `IMask.MaskedRange` blocks, `prepare` for the
-padding (research R1), and `validate`, which works out the lowest and highest date the typed
+resolution (`Y`, `Y-M` or `Y-M-D`), a year block that is IMask's range, month and day blocks that are the padding subclass of it,
+`prepare` for a pasted date (research R1), and `validate`, which works out the lowest and highest date the typed
 text could still become and refuses the keystroke when that reach holds no date the calendar and
 the limits allow. Before a partial date mask is created the value is tried, and a value the mask
 would change is left alone until the person's edit makes one it takes (research R2). Everything
@@ -157,13 +158,16 @@ A standalone page without django-mvp is added, as every other demo page has.
 
 - README: a section "Partial dates" under the public surface, after "Input masks". The field's
   values, options and error codes land with US1, each widget with its story, the precision
-  options with US4 and the limits with US5. The template joins the template list in US3.
+  options with US4 and the limits with US5. It says that a widget is swapped before the form is
+  first drawn or validated, that a limit is fixed when the form class is defined, and which
+  IMask version the masked widget is tested against. The template joins the template list in US3.
 - FS-015's `spec.md`, ADR 0047 and the README's "Input masks" section stop saying there is no
   date widget (research R10), in US2.
 - `CONTEXT.md`: partial date, precision, and the sense of part, in US1.
 - CHANGELOG: one entry under Added, grown story by story.
 - Decision records at convergence: the package's first field and where validation lives, the
-  field telling its widget through `get_bound_field`, and a second script that needs no IMask.
+  field telling its widget through `get_bound_field`, a second script that needs no IMask, and
+  the padding that rests on a method of IMask's range block.
 
 ## Story order
 

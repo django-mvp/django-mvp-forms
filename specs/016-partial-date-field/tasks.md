@@ -46,7 +46,7 @@ Issue: #160. Delivers FR-001 to FR-010, FR-028 to FR-030, FR-033; SC-001, SC-004
 ### T001 — The field and its rules
 
 **Files**: `tests/test_fields.py` (new), `tests/test_pack/test_partial_dates.py` (new),
-`tests/forms.py`, `mvp_forms/fields.py`, `mvp_forms/locale/en/LC_MESSAGES/django.po`,
+`tests/test_pack/test_independence.py`, `tests/forms.py`, `mvp_forms/fields.py`, `mvp_forms/locale/en/LC_MESSAGES/django.po`,
 `README.md`, `CHANGELOG.md`, `CONTEXT.md`
 
 Plan, *The field*; research R8.
@@ -55,7 +55,8 @@ Plan, *The field*; research R8.
   empty value to `""`. One-digit months and days are padded. A trailing hyphen is dropped.
   Surrounding space is dropped.
 - Each way a value can be wrong raises its own code: `invalid`, `year`, `month`, `day`,
-  `no_year`, `no_month`. The cases: text that is not a date, more than three parts, a year not of
+  `no_year`, `no_month`. The cases: text that is not a date, digits that are not 0 to 9 (such
+  as `２０２１` or `٢٠٢١`, refused with `invalid`), more than three parts, a year not of
   four digits, the year `0000`, a month or day of `00`, a month above 12, a day the month does
   not have, the 29th of February outside a leap year, a month with no year, a day with no month,
   a value cut off inside a part.
@@ -66,10 +67,15 @@ Plan, *The field*; research R8.
   date shows it.
 - `required`, `disabled`, `validators` and a developer's own `error_messages` behave as on a
   `CharField`.
+- `2021-` is the year 2021. `2021--` and `2021---` are refused.
 - With no widget named the field is drawn through the pack as any text input, taking a stated
   size, colour and variant, and its form's media names no script.
 - The options `coarsest`, `resolution`, `min_value` and `max_value` are T006's and T007's. The
   prototype's code for them stays until then and gains no test here.
+- The tree is green from this task on. The static-directory test in
+  `tests/test_pack/test_independence.py` is widened to name the stylesheet and both scripts, and
+  `mvp_forms/widgets/partial_date.html` joins the README's template list, since both files are
+  already on the branch.
 - README: the section "Partial dates" opens with the field: the values accepted and returned,
   the error codes, and how the text is handed to a model. CHANGELOG entry. `CONTEXT.md` gains
   partial date and precision, and the sense of part. The English catalogue is regenerated.
@@ -78,7 +84,7 @@ Plan, *The field*; research R8.
 
 ## US2 — A person types a partial date into one masked input (P1)
 
-Issue: #161. Delivers FR-011 to FR-014, FR-027, FR-031, FR-042; SC-002 to SC-004.
+Issue: #161. Delivers FR-011 to FR-014, FR-027, FR-031, FR-032, FR-042; SC-002 to SC-004.
 
 ### T002 — The masked widget
 
@@ -107,15 +113,20 @@ Plan, *The scripts*; research R1, R2 and R10.
 - Typing digits places the hyphens. A digit that would make the month 0 or above 12 is refused.
   A digit that would make a day the typed month does not have is refused, and February takes 29
   only in a leap year.
-- A single digit that can only be the whole month or day is padded, through IMask's `prepare`
-  option. The subclass of IMask's range block is removed. A pasted `2021-3-4` gives `2021-03-04`.
+- A single digit that can only be the whole month or day is padded, by the subclass of IMask's
+  range block (research R1). A pasted `2021-3-4` gives `2021-03-04`.
+- A change in the middle of a value keeps the rest: with `2021-12-14` typed, selecting the month
+  and typing 4 gives `2021-04-14`.
+- A change to the year or month that would leave the day without a date is refused, and the
+  input keeps the date it held: with `2020-02-29` typed, replacing the last digit of the year
+  with 1 leaves `2020-02-29`.
+- An input that is waiting under FR-042 is recorded where a masked one is, so a second scan of
+  the page leaves it alone.
 - Stopping after the year or the month and submitting sends that value, and the form is valid.
 - An initial `2021-03` is shown as `2021-03`.
 - An input drawn holding `2021-02-30` shows `2021-02-30`, and is masked once the person has
   changed it to a value the mask takes (FR-042).
 - An input added to the page later is masked. A page without IMask raises no error and submits.
-- A full date whose year is then changed so the day no longer exists submits and the field
-  reports the error.
 - The limits and the resolution in the mask are T006's and T008's.
 - FS-015's specification, ADR 0047 and the README's "Input masks" section stop saying there is
   no date widget, as research R10 words it.
@@ -145,18 +156,19 @@ Plan, *The widgets*.
   carries `required`.
 - A form drawn again after a refused submission shows in each part what was sent, including the
   30th of February and a day with no month.
+- Under another active language the month options carry Django's names for that language,
+  compared with `django.utils.dates.MONTHS` under `translation.override`, never with fixed words.
 - A developer's `attrs` reach every part. Through Django's own rendering three working controls
   are drawn.
 - `PartialDateSelect` draws the year as a select and is otherwise the same. With no limits its
   years run from this year back a hundred, latest first, and a held year not on the list is
   still an option. The years under a `min_value` and `max_value` are T007's.
 - The widgets' media names `mvp_forms/partial-date.js`.
-- README: both widgets, and the template in the template list.
+- README: both widgets.
 
 ### T005 — The three parts kept in step, tested in Chrome
 
-**Files**: `tests/test_partial_date_e2e.py` (new), `tests/test_pack/test_independence.py`,
-`tests/urls.py`, `tests/forms.py`, `tests/templates/`, `pyproject.toml` (`non-mirror-paths`),
+**Files**: `tests/test_partial_date_e2e.py` (new), `tests/urls.py`, `tests/forms.py`, `tests/templates/`, `pyproject.toml` (`non-mirror-paths`),
 `mvp_forms/static/mvp_forms/partial-date.js`, `README.md`
 
 Plan, *The scripts*; research R4 and R7.
@@ -172,7 +184,6 @@ Plan, *The scripts*; research R4 and R7.
 - A group added to the page later behaves the same. The script included twice acts once.
 - A page that does not load the script offers twelve months and 31 days, and submits.
 - The page loads no IMask, and the script works.
-- The static-directory test names the stylesheet and both scripts.
 - README: what the script does and what the widgets do without it.
 
 ---
@@ -191,7 +202,7 @@ Issue: #163. Delivers FR-023 to FR-026, FR-041; SC-006.
 Plan, *The field* and *The widgets*; research R3.
 
 - `coarsest="month"` refuses a year alone with `needs_month`, and `coarsest="day"` refuses
-  anything but a full date with `needs_month` or `needs_day`.
+  a year alone and a year and month with `needs_day`.
 - `resolution="month"` refuses a full date with `too_fine_day`, and `resolution="year"` refuses a
   month with `too_fine_month`.
 - A precision that is not one of the three, and a `resolution` coarser than `coarsest`, raise
@@ -203,7 +214,8 @@ Plan, *The field* and *The widgets*; research R3.
   Chrome. The three-part widgets draw no day part, and at year draw the year alone.
 - A widget on a field that is not a partial date field keeps a resolution of day.
 - The demo's help text says `resolution=`, and its forms stop telling their widgets by hand.
-- README: the two options and what each widget does with the resolution.
+- README: the two options, what each widget does with the resolution, and that a widget is
+  swapped before the form is first drawn or validated.
 
 ---
 
@@ -233,7 +245,9 @@ Plan, *The field* and *The widgets*.
   the three cases of a missing limit follow the plan.
 - A form drawn again after a date outside the limits was sent shows what was sent in every
   widget.
-- README: the two options and how a partial value is compared with a limit.
+- README: the two options, how a partial value is compared with a limit, and that a limit is
+  fixed when the form class is defined, so one that follows today's date is given by declaring
+  the field in the form's `__init__`.
 
 ### T008 — The limits in the browser, and the demo
 
@@ -248,6 +262,8 @@ Plan, *The scripts* and *The demo*; research R5.
 - Three parts, same limits: 1997 leaves the month closed. 1998 offers March to December, and
   March offers the 15th onward. 2004 offers January to September.
 - A chosen month or day that a change of year puts outside the limits is cleared.
+- A masked input and a three-part group drawn already holding a date outside the limits each
+  show what was sent.
 - The same holds with the year as a select, whose list holds 1998 to 2004.
 - The demo page keeps what was approved, with the plan's three differences, and gains a
   standalone version without django-mvp. `tests/test_demo.py`: both pages answer, each widget's

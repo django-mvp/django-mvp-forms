@@ -2,7 +2,7 @@
   "feature": "016-partial-date-field",
   "branch": "016-partial-date-field",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PLAN",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -13,6 +13,11 @@
       "state": "PLAN",
       "at": "2026-10-09T22:47:14Z",
       "note": "research.md, plan.md, tasks.md: 5 stories, 8 tasks; continues on pull request #159 from the approved sketch"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-09T22:47:24Z",
+      "note": "one reviewer, three lenses"
     }
   ],
   "gates": {
@@ -37,12 +42,27 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-09T22:57:31Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: changes requested, every finding applied",
+      "at": "2026-10-09T22:57:31Z",
+      "self_resolved": [
+        "SPEC-001 (high) padding through IMask's prepare loses the rest of a value changed in the middle; the range block subclass stays, research R1 rewritten, two cases added to T003",
+        "SPEC-002 (medium) a change that would leave the day without a date is refused by the page: T003",
+        "SEC-001 (medium) digits that are not 0 to 9 are refused: plan and T001",
+        "ARCH-001 (low) the hook runs once for each form: research R3, README sentence in T006",
+        "SPEC-003 (low) month names under another language: T004",
+        "SPEC-004 (low) a held value outside the limits is shown in the browser: T008",
+        "SPEC-005 (low) a waiting input is recorded so a second scan leaves it alone: T003",
+        "SPEC-006 (low) the year list with an earliest date in the future: decisions D11",
+        "SPEC-007 (low) a limit is fixed when the form class is defined: README sentence in T007"
+      ]
     }
   },
   "stories": [
@@ -147,7 +167,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

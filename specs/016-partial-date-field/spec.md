@@ -464,9 +464,9 @@ precision on both sides of each limit, and draw the field with each widget.
 
 #### Shipping it
 
-- **FR-030**: The README MUST gain a section on the field and both widgets: the values accepted
+- **FR-030**: The README MUST gain a section on the field and its widgets: the values accepted
   and returned, the precision options, what each widget needs the page to load, what each does on
-  a page without its script, and how the text is handed to a model. The field and both widgets
+  a page without its script, and how the text is handed to a model. The field and every widget
   MUST appear in the README's public surface, and any template the feature adds MUST appear in
   the template list.
 - **FR-031**: The specification of FS-015 and the README's section on mask widgets MUST be
@@ -500,12 +500,12 @@ precision on both sides of each limit, and draw the field with each widget.
 
 - **SC-001**: For every year, month and day combination a person can submit, the field accepts it
   exactly when that date exists, and every accepted value comes back as padded ISO text.
-- **SC-002**: On a page with its script loaded, a person cannot bring either widget to offer or
+- **SC-002**: On a page with its script loaded, a person cannot bring any widget to offer or
   accept a month outside 1 to 12, or a day beyond the length of the month and year already
   entered.
-- **SC-003**: A person can enter a date known only to the year, or only to the month, in either
+- **SC-003**: A person can enter a date known only to the year, or only to the month, in any
   widget without entering a placeholder for the missing parts.
-- **SC-004**: With every script blocked, a form using either widget can still be filled in and
+- **SC-004**: With every script blocked, a form using any widget can still be filled in and
   submitted, and an impossible date is reported as an error on the field.
 - **SC-005**: A form that uses neither widget loads no script from this package, as before.
 - **SC-006**: A developer adds a partial date to a form with one field and, at most, one widget
