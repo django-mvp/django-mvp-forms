@@ -154,8 +154,20 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_tomselect_stylesheet.py::TestTheLegibilityOfTheStylesheet",
+              "tests/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest -n auto -q (exit 0)"
+            ],
+            "code": [
+              "README.md:1"
+            ]
+          }
         }
       ]
     },
@@ -169,8 +181,19 @@
       "tasks": [
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_tomselect_grouping.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_tomselect_grouping.py -q (exit 0)"
+            ],
+            "code": [
+              "tests/test_pack/test_tomselect_grouping.py:1"
+            ]
+          }
         }
       ]
     },
@@ -184,8 +207,20 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest -n auto -q (exit 0)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "tests/test_demo.py:1"
+            ]
+          }
         }
       ]
     }
