@@ -1,0 +1,103 @@
+{% load crispy_forms_tags static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>django-tomselect</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2/dist/htmx.min.js"></script>
+    <link rel="stylesheet" href="{% static 'django_tomselect/vendor/tom-select/css/tom-select.default.css' %}" />
+    <link rel="stylesheet" href="{% static 'django_tomselect/css/django-tomselect.css' %}" />
+    <link rel="stylesheet" href="{% static 'mvp_forms/tomselect.css' %}" />
+    <script src="{% static 'django_tomselect/js/django-tomselect.min.js' %}"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">django-tomselect</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet,
+        django-tomselect's own files and the pack's <code>tomselect.css</code>.
+        <a class="link" href="{% url 'tomselect' %}">The same page inside the django-mvp shell</a>
+      </p>
+      <label class="flex items-center gap-3">
+        <input type="checkbox" class="toggle" onchange="document.documentElement.dataset.theme = this.checked ? 'dark' : 'light'" />
+        Dark theme
+      </label>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Try it</h2>
+          {% crispy form %}
+        </div>
+      </section>
+      {% if cleaned %}
+        <section class="card card-border bg-base-100">
+          <div class="card-body">
+            <h2 class="card-title">What the form cleaned to</h2>
+            <ul id="{{ prefix }}-cleaned">
+              {% for item in cleaned %}
+                <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </section>
+      {% endif %}
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">In every state</h2>
+          {% for state in states %}
+            <h3 class="font-semibold">{{ state.title }}</h3>
+            {% crispy state.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Sizes</h2>
+          {% for size in sizes %}
+            <h3 class="font-semibold">{{ size.title }}</h3>
+            {% crispy size.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Colours and variant</h2>
+          {% for color in colors %}
+            <h3 class="font-semibold">{{ color.title }}</h3>
+            {% crispy color.form %}
+          {% endfor %}
+          {% for variant in variants %}
+            <h3 class="font-semibold">{{ variant.title }}</h3>
+            {% crispy variant.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">In a modal</h2>
+          <div>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()">Open the modal</button>
+          </div>
+          {% crispy modal_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">In a formset drawn as a table</h2>
+          {% crispy formset formset_helper %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Loaded by htmx</h2>
+          <div>
+            <button type="button" class="btn btn-primary" hx-get="{% url 'tomselect-fetched' %}" hx-target="#tomselect-fetched" hx-swap="innerHTML">Fetch a form</button>
+          </div>
+          <div id="tomselect-fetched"></div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

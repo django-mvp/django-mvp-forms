@@ -1,6 +1,6 @@
 # ADR 0034 — A shortfall in daisyUI's own drawing is published, never patched
 
-**Status:** accepted
+**Status:** accepted, with [ADR 0042](0042-one-optional-stylesheet-for-each-supported-package.md): the package may ship a stylesheet for a supported package's controls, and still corrects nothing daisyUI draws
 
 ## Decision
 

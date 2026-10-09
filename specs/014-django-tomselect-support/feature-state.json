@@ -1,0 +1,331 @@
+{
+ "feature": "014-django-tomselect-support",
+ "branch": "014-django-tomselect-support",
+ "repo": "django-mvp/django-mvp-forms",
+ "state": "PR_READY",
+ "state_history": [
+  {
+   "state": "QUEUED",
+   "at": "2026-10-09T08:13:34Z",
+   "note": "specification approved by Sam in the session at commit 01553b743ffcf812762714a627ac02e55b514962, on pull request #139; epic #138, stories #140 to #143"
+  },
+  {
+   "state": "PLAN",
+   "at": "2026-10-09T10:51:10Z",
+   "note": "research.md, plan.md, tasks.md: 4 stories, 7 tasks; continues on pull request #139 from the approved sketch"
+  },
+  {
+   "state": "DESIGN_REVIEW",
+   "at": "2026-10-09T10:51:39Z",
+   "note": "one reviewer, three lenses"
+  },
+  {
+   "state": "IMPLEMENT",
+   "at": "2026-10-09T11:03:11Z",
+   "note": "plan gate open; US1 dispatched"
+  },
+  {
+   "state": "CONVERGE",
+   "at": "2026-10-09T11:38:41Z",
+   "note": "four stories accepted"
+  },
+  {
+   "state": "REVIEW",
+   "at": "2026-10-09T11:40:07Z",
+   "note": "one reviewer, correctness and spec compliance"
+  },
+  {
+   "state": "PR_READY",
+   "at": "2026-10-09T11:52:57Z",
+   "note": "review closed, walkthrough laid out"
+  }
+ ],
+ "gates": {
+  "spec": {
+   "approved_by": "Sam",
+   "at": "2026-10-09T08:13:34Z",
+   "self_resolved": [
+    "approved in the session at commit 01553b743ffcf812762714a627ac02e55b514962 (pull request #139); he cut the plugins story to the clear and remove buttons"
+   ]
+  },
+  "sketch": {
+   "approved_by": "Sam",
+   "at": "2026-10-09T10:45:41Z",
+   "self_resolved": [
+    "round 2: an open dropdown was drawn under later controls; the open control is lifted",
+    "round 2: a stock multiple select shown beside the multiple control, tag radius and text size matched to its options",
+    "round 3: group headings read as an option; now small capitals with options set in and a stronger line between groups"
+   ]
+  },
+  "plan": {
+   "approved_by": "open",
+   "at": "2026-10-09T11:01:41Z"
+  },
+  "merge": {
+   "approved_by": null,
+   "at": null
+  },
+  "design_review": {
+   "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
+   "at": "2026-10-09T11:01:41Z",
+   "self_resolved": [
+    "ARCH-001 (medium) a table of states and selectors is a change detector: dropped from T003, T005, T006 and T007 (D12)",
+    "SPEC-001 (medium) narrowing the template checks must still fail a template anywhere else: stated in T001",
+    "SPEC-002 (medium) tomselect_media writes nothing on Django 6.1, it does not raise: research R8 and T004 corrected",
+    "SPEC-003 (low) legibility pairings named as ink and surface, opacity-made ones listed, placeholder and disabled not held: plan and T003, T005",
+    "SPEC-004 (low) no drawn form names tomselect.css: added to T002",
+    "SPEC-005 (low) FR-004 radius and border width read as the frame's: D13",
+    "SPEC-006 (low) a tagging field must accept a value outside its choices: README bullet in T005",
+    "SPEC-007 (low) model-backed widgets drawn with a request; aria-describedby asserted only with help or errors; attrs compared, not template_name: T002, T006, D14",
+    "ARCH-002 (low) one stylesheet reader under tests/: T001, T003"
+   ]
+  },
+  "review": {
+   "approved_by": "code review, one reviewer (correctness and spec compliance): changes requested, all findings dealt with",
+   "at": "2026-10-09T11:52:13Z",
+   "self_resolved": [
+    "COR-001 (high) rules lost to Tom Select's stylesheet when it loaded second: fixed, T008",
+    "COR-002 (medium) the add offer's separator could never match: fixed, T009",
+    "COR-003 (medium, likely) a scrolled modal or table loses its position while a dropdown is open: accepted, stated in the README, T010",
+    "DOC-001 (low) classes are copied to the wrapper only: fixed, T010",
+    "DOC-002 (low) either load order is supported: fixed, T010"
+   ]
+  },
+  "walkthrough": {
+   "approved_by": null,
+   "at": "2026-10-09T11:52:32Z",
+   "self_resolved": []
+  }
+ },
+ "stories": [
+  {
+   "id": "US1",
+   "priority": "P1",
+   "issue": 140,
+   "worktree": null,
+   "status": "done",
+   "replans": 0,
+   "tasks": [
+    {
+     "id": "T001",
+     "status": "done",
+     "attempts": 1,
+     "evidence": {
+      "tests": [
+       "tests/test_pack/test_tomselect_stylesheet.py::TestTheScopeOfTheStylesheet",
+       "tests/test_pack/test_independence.py::TestDistributedFiles",
+       "tests/test_pack/test_template_list.py"
+      ],
+      "commands": [
+       "uv run pytest -n auto -q (exit 0, 5098 passed)"
+      ],
+      "code": [
+       "tests/tomselect_stylesheet.py:1"
+      ]
+     }
+    },
+    {
+     "id": "T002",
+     "status": "done",
+     "attempts": 1,
+     "evidence": {
+      "tests": [
+       "tests/test_pack/test_tomselect.py"
+      ],
+      "commands": [
+       "uv run pytest tests/test_pack/test_tomselect.py -q (exit 0, 50 passed)"
+      ],
+      "code": [
+       "tests/test_pack/test_tomselect.py:1"
+      ]
+     }
+    },
+    {
+     "id": "T003",
+     "status": "done",
+     "attempts": 1,
+     "evidence": {
+      "tests": [
+       "tests/test_pack/test_tomselect_stylesheet.py::TestTheLegibilityOfTheStylesheet"
+      ],
+      "commands": [
+       "uv run pytest tests/test_pack/test_tomselect_stylesheet.py -q (exit 0, 80 passed)"
+      ],
+      "code": [
+       "tests/test_pack/test_tomselect_stylesheet.py:1"
+      ]
+     }
+    },
+    {
+     "id": "T004",
+     "status": "done",
+     "attempts": 1,
+     "evidence": {
+      "tests": [
+       "tests/test_demo.py"
+      ],
+      "commands": [
+       "uv run pytest -n auto -q (exit 0, 5098 passed)",
+       "uv run pre-commit run --all-files (exit 0)"
+      ],
+      "code": [
+       "README.md:1"
+      ]
+     }
+    },
+    {
+     "id": "T008",
+     "status": "done",
+     "attempts": 1,
+     "evidence": {
+      "tests": [
+       "tests/test_pack/test_tomselect_stylesheet.py"
+      ],
+      "commands": [
+       "uv run pytest -n auto -q (exit 0, 5128 passed)",
+       "computed styles of every control compared in a headless browser with the two stylesheets in each order: 9 states, 0 differences"
+      ],
+      "code": [
+       "mvp_forms/static/mvp_forms/tomselect.css:12"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "US2",
+   "priority": "P2",
+   "issue": 141,
+   "worktree": null,
+   "status": "done",
+   "replans": 0,
+   "tasks": [
+    {
+     "id": "T005",
+     "status": "done",
+     "attempts": 1,
+     "evidence": {
+      "tests": [
+       "tests/test_pack/test_tomselect_stylesheet.py::TestTheLegibilityOfTheStylesheet",
+       "tests/test_demo.py"
+      ],
+      "commands": [
+       "uv run pytest -n auto -q (exit 0)"
+      ],
+      "code": [
+       "README.md:1"
+      ]
+     }
+    },
+    {
+     "id": "T009",
+     "status": "done",
+     "attempts": 1,
+     "evidence": {
+      "tests": [
+       "tests/test_pack/test_tomselect_stylesheet.py"
+      ],
+      "commands": [
+       "uv run pytest -n auto -q (exit 0, 5128 passed)",
+       "headless browser: the add offer is the first child and carries the separating border"
+      ],
+      "code": [
+       "mvp_forms/static/mvp_forms/tomselect.css:360"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "US3",
+   "priority": "P2",
+   "issue": 142,
+   "worktree": null,
+   "status": "done",
+   "replans": 0,
+   "tasks": [
+    {
+     "id": "T006",
+     "status": "done",
+     "attempts": 1,
+     "evidence": {
+      "tests": [
+       "tests/test_pack/test_tomselect_grouping.py"
+      ],
+      "commands": [
+       "uv run pytest tests/test_pack/test_tomselect_grouping.py -q (exit 0)"
+      ],
+      "code": [
+       "tests/test_pack/test_tomselect_grouping.py:1"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "US4",
+   "priority": "P3",
+   "issue": 143,
+   "worktree": null,
+   "status": "done",
+   "replans": 0,
+   "tasks": [
+    {
+     "id": "T007",
+     "status": "done",
+     "attempts": 1,
+     "evidence": {
+      "tests": [
+       "tests/test_demo.py"
+      ],
+      "commands": [
+       "uv run pytest -n auto -q (exit 0)",
+       "uv run pre-commit run --all-files (exit 0)"
+      ],
+      "code": [
+       "tests/test_demo.py:1"
+      ]
+     }
+    },
+    {
+     "id": "T010",
+     "status": "done",
+     "attempts": 1,
+     "evidence": {
+      "tests": [
+       "tests/test_pack/test_template_list.py"
+      ],
+      "commands": [
+       "uv run pre-commit run --all-files (exit 0)"
+      ],
+      "code": [
+       "README.md:1090"
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "budgets": {
+  "converge_cycles": {
+   "used": 1,
+   "max": 2
+  },
+  "review_cycles": {
+   "used": 1,
+   "max": 1
+  },
+  "design_review_cycles": {
+   "used": 1,
+   "max": 1
+  },
+  "tokens": {
+   "used": 27.65,
+   "max": 120
+  }
+ },
+ "pr": {
+  "number": 139,
+  "draft": false
+ }
+}

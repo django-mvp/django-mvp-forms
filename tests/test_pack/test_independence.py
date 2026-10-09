@@ -81,7 +81,11 @@ from tests.forms import (
 
 PACKAGE = Path(mvp_forms.__file__).parent
 TEMPLATES = sorted((PACKAGE / "templates").rglob("*.html"))
-FORBIDDEN_MODULES = {"mvp", "django_cotton", "daisy_cotton"}
+PACK_OWN_TEMPLATES = sorted((PACKAGE / "templates" / "daisyui").rglob("*.html"))
+SUPPORTED_PACKAGE_TEMPLATES = sorted(
+    (PACKAGE / "templates" / "django_tomselect").rglob("*.html")
+)
+FORBIDDEN_MODULES = {"mvp", "django_cotton", "daisy_cotton", "django_tomselect"}
 FORBIDDEN_LIBRARIES = {"cotton", "mvp"}
 
 DEVELOPER_CLASS = "wide"
@@ -937,7 +941,7 @@ class TestDistributedFiles:
     def test_every_template_named_by_a_template_is_the_packs_own(self):
         named = [
             path
-            for template in TEMPLATES
+            for template in PACK_OWN_TEMPLATES
             for path in re.findall(
                 r"{%\s*(?:extends|include)\s+[\"']([^\"']+)[\"']", template.read_text()
             )
@@ -946,14 +950,37 @@ class TestDistributedFiles:
         assert named
         assert all(path.startswith("daisyui/") for path in named)
 
+    def test_a_supported_packages_template_names_only_its_own_path(self):
+        named = {
+            template: re.findall(
+                r"{%\s*(?:extends|include)\s+[\"']([^\"']+)[\"']", template.read_text()
+            )
+            for template in SUPPORTED_PACKAGE_TEMPLATES
+        }
+
+        assert named
+        assert all(
+            paths == [template.relative_to(PACKAGE / "templates").as_posix()]
+            for template, paths in named.items()
+        )
+
     @pytest.mark.parametrize(
         "path", sorted(PACKAGE.rglob("*.py")), ids=lambda path: path.name
     )
     def test_no_module_imports_django_mvp_or_cotton(self, path):
         assert not imported_modules(path) & FORBIDDEN_MODULES
 
-    def test_the_package_has_no_static_directory(self):
-        assert not [path for path in PACKAGE.rglob("static") if path.is_dir()]
+    def test_the_package_static_directory_holds_only_the_stylesheet(self):
+        files = sorted(
+            path.relative_to(PACKAGE / "static").as_posix()
+            for path in (PACKAGE / "static").rglob("*")
+            if path.is_file()
+        )
+
+        assert files == ["mvp_forms/tomselect.css"]
+        assert [path for path in PACKAGE.rglob("static") if path.is_dir()] == [
+            PACKAGE / "static"
+        ]
 
     def test_no_template_or_module_writes_a_theme(self):
         written = [

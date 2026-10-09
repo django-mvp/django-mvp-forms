@@ -16,6 +16,13 @@ from django.forms import (
     widgets,
 )
 from django.utils.safestring import mark_safe
+from django_tomselect.app_settings import TomSelectConfig
+from django_tomselect.forms import (
+    TomSelectChoiceField,
+    TomSelectModelChoiceField,
+    TomSelectModelMultipleChoiceField,
+    TomSelectMultipleChoiceField,
+)
 
 from mvp_forms.layout import Join
 
@@ -1036,3 +1043,23 @@ class JoinedEdgesForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(*layout)
+
+
+GROUPS = TomSelectConfig(url="ac-groups", value_field="id", label_field="name")
+COUNTRIES = TomSelectConfig(
+    url="ac-countries", value_field="value", label_field="label"
+)
+
+
+class TomSelectForm(forms.Form):
+    group = TomSelectModelChoiceField(config=GROUPS, help_text="One group")
+    groups = TomSelectModelMultipleChoiceField(config=GROUPS, help_text="Some groups")
+    country = TomSelectChoiceField(config=COUNTRIES, help_text="One country")
+    countries = TomSelectMultipleChoiceField(
+        config=COUNTRIES, help_text="Some countries"
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
