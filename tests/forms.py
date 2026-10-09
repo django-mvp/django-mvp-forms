@@ -25,6 +25,7 @@ from django_tomselect.forms import (
 )
 
 from mvp_forms.layout import Join
+from mvp_forms.widgets import PatternMaskInput
 
 
 class TextInputsForm(forms.Form):
@@ -1063,3 +1064,26 @@ class TomSelectForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+
+
+class MaskedForm(forms.Form):
+    phone = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("+{49} 000 0000000", attrs={"placeholder": "Phone"}),
+    )
+    postcode = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("00000", lazy=False, placeholder_char="#"),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class MaskedLineForm(forms.Form):
+    article = forms.CharField(widget=PatternMaskInput("aa-0000"))
+
+
+MaskedLineFormSet = formset_factory(MaskedLineForm, extra=2)

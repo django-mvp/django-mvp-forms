@@ -78,8 +78,24 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py",
+              "tests/test_pack/test_masked_inputs.py",
+              "tests/test_pack/test_independence.py::TestDistributedFiles"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_pack/test_masked_inputs.py tests/test_pack/test_independence.py tests/test_demo.py -n auto -q"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:221",
+              "mvp_forms/widgets.py:104",
+              "mvp_forms/widgets.py:142",
+              "mvp_forms/widgets.py:165"
+            ]
+          }
         },
         {
           "id": "T002",

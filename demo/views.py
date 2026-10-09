@@ -27,7 +27,6 @@ from demo.forms import (
     DrawingsForm,
     DrawingStateForm,
     DrawingTrioForm,
-    DynamicMaskForm,
     FieldWithButtonsForm,
     FloatingByNameForm,
     FloatingChosenForm,
@@ -51,7 +50,6 @@ from demo.forms import (
     MaskStatesForm,
     ModalForm,
     MultiWidgetFieldForm,
-    NumberMaskForm,
     OrderLineFormSet,
     OverrideForm,
     PairForm,
@@ -64,7 +62,6 @@ from demo.forms import (
     RatingAndRangeTrioForm,
     RatingStateForm,
     ReadOnlyKindsForm,
-    RegexMaskForm,
     RowButtonsForm,
     StackedOrderHelper,
     TableOrderHelper,
@@ -1678,33 +1675,6 @@ class InputMasksView(MVPTemplateView):
             PatternMaskForm,
             "https://imask.js.org/guide.html#masked-pattern",
             "Pattern mask in the IMask guide",
-        ),
-        (
-            "regex",
-            "RegexMaskInput",
-            "A mask that accepts a character only while the whole value still "
-            "matches a JavaScript regular expression.",
-            RegexMaskForm,
-            "https://imask.js.org/guide.html#masked-base",
-            "Regular expression mask in the IMask guide",
-        ),
-        (
-            "number",
-            "NumberMaskInput",
-            "A mask that formats a number as it is typed. The field receives "
-            "the number with no thousands separator and a full stop as its "
-            "decimal mark.",
-            NumberMaskForm,
-            "https://imask.js.org/guide.html#masked-number",
-            "Number mask in the IMask guide",
-        ),
-        (
-            "dynamic",
-            "DynamicMaskInput",
-            "A list of masks. IMask applies whichever fits what has been typed.",
-            DynamicMaskForm,
-            "https://imask.js.org/guide.html#masked-dynamic",
-            "Dynamic mask in the IMask guide",
         ),
     ]
 

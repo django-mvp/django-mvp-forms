@@ -204,3 +204,29 @@ One reviewer read the plan before any of it was built. Everything it found was t
 - The demo and the README load an exact version of IMask with an integrity value.
 
 **ADR:** none. Each is a correction to the plan and is recorded where it applies.
+
+## D16. A definition is written as text, or as an object when it carries a placeholder character
+
+**Decision:** in `data-imask`, `definitions` maps a character to its expression as text. Where a
+placeholder character is stated for the definition, it maps to an object holding `mask` and
+`placeholderChar`. A built-in definition (`0`, `a`, `*`) with a placeholder character maps to an
+object holding `placeholderChar` alone, and the script reads its expression from IMask.
+
+**Why:** the plain case stays what the approved prototype wrote, so the script that is on the
+branch keeps working between the first task and the second. Nothing is written that was not
+stated.
+
+**Revisit if:** the script ever needs one shape for every definition. Then every definition is an
+object.
+
+## D17. Every refused option is a `ValueError`, including a value of the wrong type
+
+**Decision:** a `blocks` that is not a mapping, a block that is not one of the three classes and
+a definition whose expression is not text raise `ValueError` naming the option, through one
+helper that carries the one `noqa: TRY004` for it.
+
+**Why:** the specification asks for one error that names the option for every refusal, and a
+caller catching it should not need two.
+
+**Revisit if:** the maintainer prefers Python's `TypeError` for a wrong type, which is a change
+in that helper alone.
