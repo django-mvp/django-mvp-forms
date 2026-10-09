@@ -118,3 +118,69 @@ of IMask's and the suite has no browser, so a version named there would be a pro
 checks. If planning gives the suite a browser, this can be revisited then.
 
 **ADR:** no.
+
+## D9. The script acts once, however often a page includes it
+
+**Chosen:** the script sets a flag the first time it runs and returns at once on every later run.
+
+**Why:** django-crispy-forms writes a form's media inside every form drawn with `{% crispy %}`.
+The prototype's page held the script eight times and gave every input eight masks, which a field
+with a display character cannot survive. The specification's edge case said Django's media loads
+the script once. That holds only where the page template renders the media, and the edge case,
+FR-025 and SC-002 were edited to say what happens. The maintainer was told when the fault was
+found and approved the prototype afterwards.
+
+**ADR:** docs/adr/0045-mask-widgets-bring-one-script-that-acts-once.md
+
+## D10. A placeholder character for each definition
+
+**Chosen:** `placeholder_char` takes one character for the whole pattern, or a mapping from a
+definition's character to the character shown for it.
+
+**Why:** the maintainer ruled at the prototype that a placeholder has to say what each position
+takes, and a row of dots or underscores does not. IMask allows it on a definition, so it costs no
+blocks. FR-006 and a scenario of US-1 were edited.
+
+**ADR:** none. It is one option of one widget, described in the README.
+
+## D11. A display character's field submits what was typed
+
+**Chosen:** the script sets the field's entry in the form's data to the mask's value.
+
+**Why:** IMask writes the display characters into the input, so without this a PIN field submits
+dots. The option was kept in scope with this fix, since the specification already promised it and
+the fix is a few lines on a standard browser event. FR-017 and a scenario of US-1 were edited.
+
+**ADR:** docs/adr/0045-mask-widgets-bring-one-script-that-acts-once.md
+
+## D12. The script is tested in Chrome
+
+**Chosen:** browser tests with the Playwright already among the development tools, launching the
+installed Chrome, skipped where it is absent and failing in CI.
+
+**Why:** the fault of D9 passed a simulated DOM and was found by a person typing. django-mvp
+already tests its scripts this way. Chrome is launched by channel because this repository's test
+workflow does not download Playwright's own browsers and the workflow is outside this feature.
+
+**ADR:** docs/adr/0046-the-mask-script-is-tested-in-a-browser.md
+
+## D13. Blocks are small classes, and the widgets keep their names
+
+**Chosen:** `RangeBlock`, `EnumBlock` and `PatternBlock`. `PatternMaskInput`, `RegexMaskInput`,
+`NumberMaskInput` and `DynamicMaskInput`. Options are IMask's names in Python spelling, with
+`min_value` and `max_value` for the number bounds.
+
+**Why:** a block has options that should be named and checked as a widget's are, and `from`
+cannot be a Python argument. The widget names follow Django's `...Input`.
+
+**ADR:** none. The README is the record of the names.
+
+## D14. An initial number is written in the widget's own format
+
+**Chosen:** `format_value` writes the decimal mark the widget states and no thousands separator.
+
+**Why:** written in plain form, `1234.5` in a field whose thousands separator is a full stop is
+read back as `12345` on a page without IMask. Written as `1234,5` it round-trips with or without
+IMask, and the script needs no special case for numbers.
+
+**ADR:** none. Local to the number widget.

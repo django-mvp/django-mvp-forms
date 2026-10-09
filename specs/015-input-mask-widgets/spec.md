@@ -110,6 +110,10 @@ with no other story delivered.
    option.
 9. **Given** a form using the pattern widget, **When** it is submitted, **Then** the field
    receives the text as the person saw it, fixed characters included.
+10. **Given** a pattern widget with a placeholder character stated for a definition, **When** the
+    placeholder is shown, **Then** each position of that definition shows that character.
+11. **Given** a pattern widget with a display character, **When** the form is submitted, **Then**
+    the field receives what the person typed and not the display character.
 
 ---
 
@@ -280,8 +284,9 @@ change an option on the instance it carries.
 - A developer sets `attrs` on the widget, such as a `placeholder` or a class. They are kept, as
   they are on any widget.
 - A developer subclasses one of the widgets. The subclass is drawn and masked as its parent is.
-- The same page holds two forms that each name the script in their media. Django's media joins
-  them and the script is loaded once.
+- A page holds several forms drawn with `{% crispy %}`. django-crispy-forms writes a form's media
+  inside each form, so the page holds the script once for each of them. The script acts once and
+  each input gets one mask (FR-025).
 - A host project bundles IMask into its own script and exposes it under the name IMask publishes.
   The widgets work as they do with the copy from a CDN.
 - A form is drawn with `|crispy`, `{% crispy form %}` or `|as_crispy_field`, or with Django's own
@@ -322,8 +327,9 @@ change an option on the instance it carries.
 - **FR-005**: The pattern widget MUST take the pattern as IMask's pattern text, unchanged.
 - **FR-006**: The pattern widget MUST support definitions of the developer's own, each a single
   character and the regular expression it stands for, and these options: showing the placeholder
-  always, the placeholder character, overwriting in place of inserting, filling in fixed
-  characters ahead of the cursor, and the character shown in place of what was typed.
+  always, the placeholder character for the whole pattern or for each definition, overwriting in
+  place of inserting, filling in fixed characters ahead of the cursor, and the character shown in
+  place of what was typed.
 - **FR-007**: The pattern widget MUST support named blocks of four kinds: a number range with its
   bounds, its length and whether a value outside them is corrected; a list of allowed values; a
   nested pattern; and a pattern repeated a stated number of times.
@@ -363,7 +369,8 @@ change an option on the instance it carries.
 #### What the form receives
 
 - **FR-017**: The pattern widget, the regular expression widget and the widget that chooses
-  between masks MUST hand the field the submitted text unchanged.
+  between masks MUST hand the field the submitted text unchanged. Where a pattern has a display
+  character, the text submitted MUST be what the person typed.
 - **FR-018**: The number widget MUST hand the field the submitted number with the thousands
   separator removed and the decimal mark as a full stop.
 - **FR-019**: The number widget MUST show an initial or submitted value so that IMask reads it as
@@ -381,7 +388,8 @@ change an option on the instance it carries.
 - **FR-024**: The pack's own templates MUST still need no script. A page that loads daisyUI and
   nothing else MUST draw every form that uses none of these widgets exactly as before.
 - **FR-025**: The script MUST apply the mask to an input added to the page after it has loaded,
-  whichever script added it, and MUST NOT mask one input twice.
+  whichever script added it, and MUST NOT mask one input twice, however many times the page
+  includes the script.
 - **FR-026**: On a page where IMask is not present, the script MUST do nothing and MUST raise no
   error.
 - **FR-027**: The script MUST send an event from each input once its mask is applied. The event
@@ -439,8 +447,9 @@ change an option on the instance it carries.
 
 - **SC-001**: A developer masks a field by naming one widget and its options in Python, and
   writes no JavaScript, for every mask the four widgets cover.
-- **SC-002**: A host project needs two additions to a page to make every masked field on it work:
-  IMask, and the form's media.
+- **SC-002**: A host project needs at most two additions to a page to make every masked field on
+  it work: IMask, and the form's media where the form is not drawn with `{% crispy %}`, which
+  writes it.
 - **SC-003**: A `DecimalField` using the number widget accepts a number submitted with any
   thousands separator and decimal mark the widget was given, with no cleaning code written by the
   developer.
@@ -460,9 +469,9 @@ change an option on the instance it carries.
 - The widgets are written for IMask 7, the current major version. The README names it. IMask is
   not added to the package's stated support window, because nothing the package installs depends
   on it.
-- The host project renders the form's media in its page template. A project that does not can
-  load the script by its static path, which the README gives.
-- How the script's behaviour in a browser is tested is decided when the feature is planned. The
-  suite has no browser today.
-- The names of the widget classes and of the event are chosen when the feature is planned, and
-  from then on are public surface under Article XI.
+- A form drawn with `{% crispy %}` brings its media with it. For any other form the host project
+  renders the form's media in its page template, or loads the script by its static path, which
+  the README gives.
+- The script's behaviour is tested in a browser, against a copy of IMask kept with the tests.
+- The names of the widget classes and of the event are public surface under Article XI from the
+  release that ships them.
