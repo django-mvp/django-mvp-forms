@@ -1087,13 +1087,13 @@ The markup and the class names inside a template of the pack are not part of thi
 
 The pack draws the select widgets of [django-tomselect](https://github.com/OmenApps/django-tomselect) so that they sit in a daisyUI form as a stock select does. It covers the single and the multiple widget, over a model and over a list of choices: `TomSelectModelWidget`, `TomSelectModelMultipleWidget`, `TomSelectIterablesWidget` and `TomSelectIterablesMultipleWidget`, which `TomSelectModelChoiceField`, `TomSelectModelMultipleChoiceField`, `TomSelectChoiceField` and `TomSelectMultipleChoiceField` build. django-tomselect is not a dependency of the package and no module of the package imports it, so a project without it is drawn as before.
 
-`{{ form|crispy }}` and `{% crispy form %}` write nothing new for these widgets. They write daisyUI's `select` class on the `<select>` with `w-full`, the size, the colour and the variant stated for the form or for the field, and `select-error` in place of the colour on a field in error, exactly as for a stock select. A disabled field carries the `disabled` attribute and its label is tied to the select. Tom Select copies the classes of the element it replaces to the wrapper and the dropdown it builds, so both are daisyUI selects. The package ships one stylesheet, `mvp_forms/tomselect.css`, that fits Tom Select's own parts, its tags, its dropdown and its clear button, inside them. Every colour, radius and size in it comes from the daisyUI theme, so a control follows the theme as a stock select does, and the stylesheet styles nothing outside a control. The pack never writes a link to the stylesheet. Load it yourself, once.
+`{{ form|crispy }}` and `{% crispy form %}` write nothing new for these widgets. They write daisyUI's `select` class on the `<select>` with `w-full`, the size, the colour and the variant stated for the form or for the field, and `select-error` in place of the colour on a field in error, exactly as for a stock select. A disabled field carries the `disabled` attribute and its label is tied to the select. Tom Select copies the classes of the element it replaces to the wrapper it builds, so the wrapper is a daisyUI select, and the dropdown sits inside it and takes its size from it. The package ships one stylesheet, `mvp_forms/tomselect.css`, that fits Tom Select's own parts, its tags, its dropdown and its clear button, inside them. Every colour, radius and size in it comes from the daisyUI theme, so a control follows the theme as a stock select does, and the stylesheet styles nothing outside a control. The pack never writes a link to the stylesheet. Load it yourself, once.
 
 #### What to install and load
 
 1. Install django-tomselect and set it up as its documentation says. A model-backed widget reads the current request, so `django_tomselect.middleware.TomSelectMiddleware` is in `MIDDLEWARE`.
 2. List `mvp_forms` in `INSTALLED_APPS`, as above, so that Django's static files finder serves `mvp_forms/tomselect.css`.
-3. On every page that draws a django-tomselect select, load django-tomselect's two stylesheets, then `mvp_forms/tomselect.css`, then django-tomselect's script:
+3. On every page that draws a django-tomselect select, load django-tomselect's two stylesheets, `mvp_forms/tomselect.css` and django-tomselect's script:
 
 ```django
 {% load static %}
@@ -1103,7 +1103,7 @@ The pack draws the select widgets of [django-tomselect](https://github.com/OmenA
 <script src="{% static 'django_tomselect/js/django-tomselect.min.js' %}"></script>
 ```
 
-That order is the one that is supported. Without `mvp_forms/tomselect.css` the control still works and is drawn by django-tomselect alone, but daisyUI hides whatever overflows a select, so the dropdown, which Tom Select builds inside the wrapper, is cut off. A page that loads the stylesheet and draws no django-tomselect select is drawn as before.
+The stylesheets can be loaded in either order. django-tomselect's also arrive with a form's media, which `{% crispy form %}` writes beside the form, after anything in the page's head, and `mvp_forms/tomselect.css` is written to win either way. Without `mvp_forms/tomselect.css` the control still works and is drawn by django-tomselect alone, but daisyUI hides whatever overflows a select, so the dropdown, which Tom Select builds inside the wrapper, is cut off. A page that loads the stylesheet and draws no django-tomselect select is drawn as before.
 
 On Django 6.1, django-tomselect's `{% tomselect_media %}` tag writes no links and logs an error, because form media holds objects where it expects strings. Load the files by path, as above, or through form media, which `{% crispy form %}` writes beside the form. The controls work on Django 6.1 when their files are loaded.
 
@@ -1150,7 +1150,7 @@ The clear button, `PluginClearButton`, and the remove button on each tag of a mu
 
 #### Tagging
 
-Tagging is a multiple control that offers to add what was typed. Each value is a tag with a remove button, and when the typed text matches no option the dropdown ends with a line to add it. Turn it on with `create=True` in the `TomSelectConfig` of a multiple control that has `PluginRemoveButton`, and the stylesheet draws the tags, the tag the keyboard is on and the line that offers to add a value.
+Tagging is a multiple control that offers to add what was typed. Each value is a tag with a remove button, and when the typed text matches no option the dropdown begins with a line to add it, set apart from the options below by a rule. Turn it on with `create=True` in the `TomSelectConfig` of a multiple control that has `PluginRemoveButton`, and the stylesheet draws the tags, the tag the keyboard is on and the line that offers to add a value.
 
 The pack draws the control and nothing more. Saving a new value is yours: django-tomselect posts it as it posts any other, and what your view does with it is up to you. The field has to accept it first, and django-tomselect's stock fields do not. `TomSelectMultipleChoiceField` and `TomSelectModelMultipleChoiceField` reject a value that is not among their choices, so a form with a new tag comes back in error. Write a field of your own that accepts any value, as the demo's `TagsField` does:
 
@@ -1231,7 +1231,7 @@ A project that has a `django_tomselect/tomselect.html` of its own keeps the grou
 
 #### In a modal and in a table
 
-A control works inside a `Modal` layout object and inside a formset drawn as a table with no change to either. The stylesheet does two things for them. An open control is lifted above the controls after it, and the two boxes that would otherwise cut off its dropdown, daisyUI's modal box and the scroller around a table, show what overflows them for as long as a dropdown inside is open. Give a form in a modal a prefix, so that the ids and the button names inside it do not repeat those of the page. The formset's own prefix keeps the controls of each row apart.
+A control works inside a `Modal` layout object and inside a formset drawn as a table with no change to either. The stylesheet does two things for them. An open control is lifted above the controls after it, and the two boxes that would otherwise cut off its dropdown, daisyUI's modal box and the scroller around a table, show what overflows them for as long as a dropdown inside is open. A modal or a table that has been scrolled loses its scroll position while that lasts, because a box that shows its overflow does not scroll. Give a form in a modal a prefix, so that the ids and the button names inside it do not repeat those of the page. The formset's own prefix keeps the controls of each row apart.
 
 #### Loaded by htmx
 
@@ -1248,7 +1248,6 @@ Without it a control's script starts the control when the document finishes load
 - django-tomselect's token widget, `TomSelectTokenWidget`, which the stylesheet does not style.
 - django-tomselect's Bootstrap looks.
 - A floating label, text attached to a control, buttons joined to it and a joined group that holds it. The pack does not change what it draws when one is asked for.
-- Loading `mvp_forms/tomselect.css` before django-tomselect's own stylesheets.
 
 #### The release tested
 

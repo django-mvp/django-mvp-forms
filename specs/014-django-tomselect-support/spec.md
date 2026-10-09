@@ -214,8 +214,8 @@ page and use the control there.
   asks for it.
 - The host project sets django-tomselect to one of its Bootstrap looks. This is not supported, and
   the README names the one setting that is.
-- The host project loads the stylesheet before django-tomselect's own. The README states the
-  order that works, and the documented order is the only one supported.
+- The host project loads the stylesheet before django-tomselect's own, or after. The controls are
+  drawn the same either way.
 - A control holds more tags than fit on one line. They wrap, and the control grows.
 - A tag's text or an option's text is longer than the control is wide. It does not make the
   control or the page wider.

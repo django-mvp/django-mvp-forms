@@ -9,26 +9,24 @@ from tests.legibility.reader import BASE_100, CONTENT, Reader
 from tests.legibility.themes import Themes
 from tests.tomselect_stylesheet import Stylesheet, UnreadRule
 
-DROPDOWN = ":root div.ts-dropdown"
-ACTIVE = ":root .ts-dropdown .active"
-CHOSEN = ":root .ts-dropdown .option.selected"
-NO_RESULTS = ":root .ts-dropdown .no-results"
-NO_MORE_RESULTS = ":root .ts-dropdown .no-more-results"
-LOADING_MORE_RESULTS = ":root .ts-dropdown .loading-more-results"
-CLEAR = ":root .ts-wrapper.plugin-clear_button .clear-button"
-CLEAR_SHOWN = (
-    ":root .ts-wrapper.plugin-clear_button.has-items:not(.disabled):hover .clear-button"
-)
-LOADING = ":root .ts-wrapper.loading"
-RING = ":root .ts-wrapper.loading::before"
-PLACEHOLDER = ":root .ts-wrapper .ts-control > input::placeholder"
-TAG = ":root .ts-wrapper.multi .ts-control > .item"
-TAG_ACTIVE = ":root .ts-wrapper.multi .ts-control > .item.active"
-TAG_REMOVE = ":root .ts-wrapper.plugin-remove_button .ts-control .item .remove"
-DISABLED_TAG = ":root .ts-wrapper.multi.disabled .ts-control > .item"
-GROUP_HEADING = ":root .ts-dropdown .optgroup-header"
-DISABLED_WRAPPER = ":root .ts-wrapper.disabled"
-DISABLED_OPTION = ":root .ts-dropdown [data-disabled]"
+DROPDOWN = "html:root div.ts-dropdown"
+ACTIVE = "html:root .ts-dropdown .active"
+CHOSEN = "html:root .ts-dropdown .option.selected"
+NO_RESULTS = "html:root .ts-dropdown .no-results"
+NO_MORE_RESULTS = "html:root .ts-dropdown .no-more-results"
+LOADING_MORE_RESULTS = "html:root .ts-dropdown .loading-more-results"
+CLEAR = "html:root .ts-wrapper.plugin-clear_button .clear-button"
+CLEAR_SHOWN = "html:root .ts-wrapper.plugin-clear_button.has-items:not(.disabled):hover .clear-button"
+LOADING = "html:root .ts-wrapper.loading"
+RING = "html:root .ts-wrapper.loading::before"
+PLACEHOLDER = "html:root .ts-wrapper .ts-control > input::placeholder"
+TAG = "html:root .ts-wrapper.multi .ts-control > .item"
+TAG_ACTIVE = "html:root .ts-wrapper.multi .ts-control > .item.active"
+TAG_REMOVE = "html:root .ts-wrapper.plugin-remove_button .ts-control .item .remove"
+DISABLED_TAG = "html:root .ts-wrapper.multi.disabled .ts-control > .item"
+GROUP_HEADING = "html:root .ts-dropdown .optgroup-header"
+DISABLED_WRAPPER = "html:root .ts-wrapper.disabled"
+DISABLED_OPTION = "html:root .ts-dropdown [data-disabled]"
 THEMES = [Themes.named("light"), Themes.named("dark")]
 HELD = [
     "an option",
@@ -49,7 +47,7 @@ MEASURED = ["the disabled wrapper", "a disabled option", "a disabled tag"]
 
 READ = """
 /* A comment with { braces } and a colour: #fff; rgb(0, 0, 0) */
-:root .ts-wrapper, :root .ts-dropdown:has(.a, .b) {
+html:root .ts-wrapper, html:root .ts-dropdown:has(.a, .b) {
   color: var(--color-base-content) !important;
   content: "a;b";
   border: 2px solid currentColor;
@@ -67,8 +65,8 @@ class TestTheStylesheetReader:
 
     def test_a_selector_list_is_split_at_a_comma_outside_brackets(self):
         assert self.sheet.selectors() == [
-            ":root .ts-wrapper",
-            ":root .ts-dropdown:has(.a, .b)",
+            "html:root .ts-wrapper",
+            "html:root .ts-dropdown:has(.a, .b)",
         ]
 
     def test_a_comment_is_removed_whatever_it_holds(self):
@@ -158,7 +156,7 @@ class TestTheScopeOfTheStylesheet:
         "selector",
         [
             ".btn",
-            ":root .btn",
+            "html:root .btn",
             "body .ts-wrapper",
             ".modal-box",
             ".ts-wrapperish",
@@ -176,10 +174,10 @@ class TestTheScopeOfTheStylesheet:
         "selector",
         [
             ".ts-wrapper",
-            ":root .ts-wrapper.multi .ts-control > .item",
-            ":root div.ts-dropdown",
+            "html:root .ts-wrapper.multi .ts-control > .item",
+            "html:root div.ts-dropdown",
             ".ts-dropdown .option",
-            ':root [id$="_sr_status"].visually-hidden',
+            'html:root [id$="_sr_status"].visually-hidden',
             ".modal-box:has(.ts-wrapper.dropdown-active)",
             ".overflow-x-auto:has(.ts-wrapper.dropdown-active)",
         ],

@@ -21,7 +21,7 @@ stated size, colour and variant, on the select element, and Tom Select copies th
 the wrapper it builds. The stylesheet fits Tom Select's parts inside that box and draws the
 dropdown as daisyUI draws the options of its own select.
 
-Every selector inside a control starts with `:root`, so the rules win over Tom Select's own
+Every selector inside a control starts with `html:root`, so the rules win over Tom Select's own
 stylesheet whichever of the two a page loads first.
 
 ## Why

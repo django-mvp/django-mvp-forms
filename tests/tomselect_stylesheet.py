@@ -10,7 +10,7 @@ from tests.legibility.pairings import Ink
 STYLESHEET = Path(mvp_forms.__file__).parent / "static" / "mvp_forms" / "tomselect.css"
 COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
 CONTROL = re.compile(r"(?:div)?\.ts-(?:wrapper|dropdown)(?![\w-])")
-# The rules that reach outside a control, each matched whole after any `:root `.
+# The rules that reach outside a control, each matched whole after any `html:root `.
 NAMED_EXCEPTIONS = frozenset(
     {
         '[id$="_sr_status"].visually-hidden',
@@ -148,7 +148,7 @@ class Stylesheet:
     def outside_a_control(self) -> list[str]:
         """Return the selectors that begin outside a Tom Select control.
 
-        A selector is inside a control when, after an optional ``:root``, it
+        A selector is inside a control when, after an optional ``html:root``, it
         begins at ``.ts-wrapper``, ``.ts-dropdown`` or ``div.ts-dropdown``. The
         three rules that have to reach outside a control are matched whole.
 
@@ -158,7 +158,7 @@ class Stylesheet:
         """
         outside = []
         for selector in self.selectors():
-            start = selector.removeprefix(":root ")
+            start = selector.removeprefix("html:root ")
             if start in NAMED_EXCEPTIONS or CONTROL.match(start):
                 continue
             outside.append(selector)
