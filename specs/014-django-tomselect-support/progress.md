@@ -57,3 +57,13 @@ Did: added to `tests/test_demo.py`, on the contract both django-tomselect pages 
 Verified: `uv run pytest tests/test_demo.py -k "TomSelect or Htmx"`: 34 passed. Seen red by changing a file and putting it back (sha256 of `demo/settings.py`, `demo/tomselect_views.py` and `demo/tomselect_forms.py` equal before and after): `use_htmx` unset (both setting tests fail), the fetched prefix fixed at `fetched-1` (the count and collision tests fail), a control moved out of the modal (the modal test fails on both pages), a control dropped from the table's line (the table test fails on both pages), the second page's route renamed (its test and thirteen others that reverse it fail). `uv run pytest -n auto -q`: 5128 passed. `uv run pre-commit run --all-files`: all hooks passed.
 Next: nothing in this dispatch; Forge verifies the three stories.
 Watch: nothing in the suite starts a control, so whether the modal and the table let a dropdown out, and whether a swapped-in form starts up, is held by the stylesheet's rules existing and by the README's reading of django-tomselect's script, not by a test. The README says a control's script waits for the document to finish loading unless `use_htmx` is on; that is read from `tomselect.html` in 2026.6.2, not run.
+
+## 2026-10-09T11:52:58Z · Forge · ready for review
+
+Did: applied the code review (T008 to T010), recorded its outcome, laid the walkthrough out on the pull request and rewrote its description.
+
+Verified: 5,128 tests pass; lint passes; in a headless browser every open dropdown is on top and both stylesheet orders give the same computed styles.
+
+Next: the merge gate. #144 merges first.
+
+Watch: if the base moves, the branch takes main and is verified again before anything else.

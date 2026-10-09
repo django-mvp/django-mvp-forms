@@ -2,7 +2,7 @@
  "feature": "014-django-tomselect-support",
  "branch": "014-django-tomselect-support",
  "repo": "django-mvp/django-mvp-forms",
- "state": "REVIEW",
+ "state": "PR_READY",
  "state_history": [
   {
    "state": "QUEUED",
@@ -33,6 +33,11 @@
    "state": "REVIEW",
    "at": "2026-10-09T11:40:07Z",
    "note": "one reviewer, correctness and spec compliance"
+  },
+  {
+   "state": "PR_READY",
+   "at": "2026-10-09T11:52:57Z",
+   "note": "review closed, walkthrough laid out"
   }
  ],
  "gates": {
@@ -85,6 +90,11 @@
     "DOC-001 (low) classes are copied to the wrapper only: fixed, T010",
     "DOC-002 (low) either load order is supported: fixed, T010"
    ]
+  },
+  "walkthrough": {
+   "approved_by": null,
+   "at": "2026-10-09T11:52:32Z",
+   "self_resolved": []
   }
  },
  "stories": [
@@ -316,6 +326,6 @@
  },
  "pr": {
   "number": 139,
-  "draft": true
+  "draft": false
  }
 }
