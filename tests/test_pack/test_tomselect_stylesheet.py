@@ -2,8 +2,40 @@
 from the theme."""
 
 import pytest
+from bs4 import BeautifulSoup
 
+from tests.legibility.pairings import Ink, Pairing
+from tests.legibility.reader import BASE_100, CONTENT, Reader
+from tests.legibility.themes import Themes
 from tests.tomselect_stylesheet import Stylesheet, UnreadRule
+
+DROPDOWN = ":root div.ts-dropdown"
+ACTIVE = ":root .ts-dropdown .active"
+CHOSEN = ":root .ts-dropdown .option.selected"
+NO_RESULTS = ":root .ts-dropdown .no-results"
+NO_MORE_RESULTS = ":root .ts-dropdown .no-more-results"
+LOADING_MORE_RESULTS = ":root .ts-dropdown .loading-more-results"
+CLEAR = ":root .ts-wrapper.plugin-clear_button .clear-button"
+CLEAR_SHOWN = (
+    ":root .ts-wrapper.plugin-clear_button.has-items:not(.disabled):hover .clear-button"
+)
+LOADING = ":root .ts-wrapper.loading"
+RING = ":root .ts-wrapper.loading::before"
+PLACEHOLDER = ":root .ts-wrapper .ts-control > input::placeholder"
+DISABLED_WRAPPER = ":root .ts-wrapper.disabled"
+DISABLED_OPTION = ":root .ts-dropdown [data-disabled]"
+THEMES = [Themes.named("light"), Themes.named("dark")]
+HELD = [
+    "an option",
+    "the active option",
+    "a chosen option",
+    "the line with no results",
+    "the line with no more results",
+    "the line loading more results",
+    "the clear button",
+    "the loading ring",
+]
+MEASURED = ["the disabled wrapper", "a disabled option"]
 
 READ = """
 /* A comment with { braces } and a colour: #fff; rgb(0, 0, 0) */
@@ -58,6 +90,54 @@ class TestTheStylesheetReader:
 
     def test_the_stylesheet_the_package_ships_is_read_by_default(self):
         assert Stylesheet().rules
+
+
+class TestWhatTheStylesheetDeclares:
+    sheet = Stylesheet(
+        """
+        .a { color: var(--color-base-content); opacity: 0.5; }
+        .a, .b { color: color-mix(in oklab, var(--color-neutral) 30%, transparent); }
+        .c { color: color-mix(in oklab, var(--color-error) 25%, var(--color-base-100)); }
+        .d { color: inherit !important; border: 2px solid currentColor; }
+        .e { color: red; }
+        """
+    )
+
+    def test_the_last_rule_with_the_selector_that_declares_a_property_gives_it(self):
+        assert self.sheet.declared(".a", "color").startswith("color-mix")
+        assert self.sheet.declared(".a", "opacity") == "0.5"
+
+    def test_a_property_no_rule_with_the_selector_declares_is_refused(self):
+        with pytest.raises(KeyError):
+            self.sheet.declared(".b", "opacity")
+
+    def test_a_number_is_read_as_one(self):
+        assert self.sheet.number(".a", "opacity") == 0.5
+
+    def test_a_colour_mixed_with_transparent_is_the_ink_faded(self):
+        assert self.sheet.ink(".b", "color") == Ink("neutral").faded(0.3)
+
+    def test_a_colour_mixed_with_another_is_the_two_inks_mixed(self):
+        assert self.sheet.ink(".c", "color") == Ink("error").mixed(
+            Ink("base-100"), 0.25
+        )
+
+    @pytest.mark.parametrize("name", ["color", "border"])
+    def test_a_value_that_takes_the_surrounding_ink_is_the_ink_it_is_given(self, name):
+        assert self.sheet.ink(".d", name, inherited=Ink("base-content")) == Ink(
+            "base-content"
+        )
+
+    @pytest.mark.parametrize("name", ["color", "border"])
+    def test_a_value_that_takes_the_surrounding_ink_with_none_given_is_refused(
+        self, name
+    ):
+        with pytest.raises(ValueError, match="surrounding"):
+            self.sheet.ink(".d", name)
+
+    def test_a_colour_that_is_not_the_themes_is_refused(self):
+        with pytest.raises(ValueError, match="theme"):
+            self.sheet.ink(".e", "color")
 
 
 class TestTheScopeOfTheStylesheet:
@@ -162,3 +242,91 @@ class TestTheColoursOfTheStylesheet:
         )
 
         assert sheet.colours() == []
+
+
+class TestTheLegibilityOfTheStylesheet:
+    sheet = Stylesheet()
+
+    def pairings(self):
+        sheet = self.sheet
+        text = sheet.ink(DROPDOWN, "color")
+        surface = sheet.ink(DROPDOWN, "background")
+        return {
+            "an option": Pairing.of("text", text, surface),
+            "the active option": Pairing.of(
+                "text",
+                sheet.ink(ACTIVE, "color", inherited=text),
+                sheet.ink(ACTIVE, "background-color").over(surface),
+            ),
+            "a chosen option": Pairing.of(
+                "text",
+                sheet.ink(CHOSEN, "color"),
+                sheet.ink(CHOSEN, "background-color"),
+            ),
+            "the line with no results": Pairing.of(
+                "text", sheet.ink(NO_RESULTS, "color"), surface
+            ),
+            "the line with no more results": Pairing.of(
+                "text", sheet.ink(NO_MORE_RESULTS, "color"), surface
+            ),
+            "the line loading more results": Pairing.of(
+                "text", sheet.ink(LOADING_MORE_RESULTS, "color"), surface
+            ),
+            "the clear button": Pairing.of(
+                "mark",
+                sheet.ink(CLEAR, "color", inherited=CONTENT).faded(
+                    sheet.number(CLEAR_SHOWN, "opacity")
+                ),
+                BASE_100,
+            ),
+            "the loading ring": Pairing.of(
+                "mark",
+                sheet.ink(RING, "border", inherited=CONTENT).faded(
+                    sheet.number(RING, "opacity")
+                ),
+                sheet.ink(LOADING, "background-color"),
+            ),
+            "the disabled wrapper": Pairing.of(
+                "text",
+                sheet.ink(DISABLED_WRAPPER, "color"),
+                sheet.ink(DISABLED_WRAPPER, "background-color"),
+            ),
+            "a disabled option": Pairing.of(
+                "text", text.faded(sheet.number(DISABLED_OPTION, "opacity")), surface
+            ),
+        }
+
+    @pytest.mark.parametrize("theme", THEMES, ids=lambda theme: theme.name)
+    @pytest.mark.parametrize("name", HELD)
+    def test_what_a_person_has_to_make_out_meets_the_standard(self, name, theme):
+        pairing = self.pairings()[name]
+
+        assert pairing.meets(theme), f"{pairing.name}: {pairing.ratio(theme):.2f}"
+
+    @pytest.mark.parametrize("theme", THEMES, ids=lambda theme: theme.name)
+    @pytest.mark.parametrize("name", MEASURED)
+    def test_a_disabled_pairing_is_measured_and_not_held(self, name, theme):
+        assert 1 <= self.pairings()[name].ratio(theme) <= 21
+
+    def test_the_placeholder_is_the_pairing_daisyui_draws_on_its_own_input(self):
+        sheet = self.sheet
+        drawn = BeautifulSoup(
+            '<input type="text" class="input" placeholder="x">', "html.parser"
+        )
+        daisyui = next(
+            measurement.pairing
+            for measurement in Reader("an input").read(drawn)
+            if measurement.pairing.part == "placeholder"
+        )
+
+        ink = sheet.ink(PLACEHOLDER, "color").faded(
+            sheet.number(PLACEHOLDER, "opacity")
+        )
+
+        assert (ink, BASE_100) == (daisyui.ink, daisyui.surface)
+
+    def test_a_rule_the_pairings_are_read_from_that_is_gone_is_found(self):
+        sheet = Stylesheet(".ts-wrapper { margin: 0; }")
+
+        with pytest.raises(KeyError):
+            sheet.ink(DROPDOWN, "color")

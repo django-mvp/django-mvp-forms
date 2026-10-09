@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import mvp_forms
+from tests.legibility.pairings import Ink
 
 STYLESHEET = Path(mvp_forms.__file__).parent / "static" / "mvp_forms" / "tomselect.css"
 COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
@@ -52,6 +53,12 @@ NAMED_COLOURS = frozenset(
     )
 )
 KEYFRAMES = "@keyframes"
+THEME_COLOUR = re.compile(r"var\(--color-(?P<name>[\w-]+)\)")
+COLOUR_MIX = re.compile(
+    r"color-mix\(\s*in oklab,\s*(?P<first>.+?)\s+(?P<share>[\d.]+)%\s*,"
+    r"\s*(?P<second>.+?)\s*\)"
+)
+SURROUNDING_INK = {"inherit", "currentcolor"}
 OPENERS = {"(": ")", "[": "]"}
 QUOTES = "\"'"
 
@@ -178,6 +185,95 @@ class Stylesheet:
             ):
                 found.append(declaration)
         return found
+
+    def declared(self, selector: str, name: str) -> str:
+        """Return the value a selector's rule gives a property.
+
+        Args:
+            selector: One selector of the rule, exactly as the stylesheet writes it.
+            name: The property.
+
+        Returns:
+            The value of the last rule in the file that has the selector among its
+            own and declares the property, without ``!important``.
+
+        Raises:
+            KeyError: No rule with the selector declares the property.
+        """
+        for rule in reversed(self.rules):
+            if selector not in rule.selectors:
+                continue
+            for declaration in reversed(rule.declarations):
+                if declaration.name == name:
+                    return declaration.value
+        raise KeyError(f"{selector} declares no {name}")
+
+    def number(self, selector: str, name: str) -> float:
+        """Return a property a selector's rule gives as a plain number.
+
+        Args:
+            selector: One selector of the rule, exactly as the stylesheet writes it.
+            name: The property, such as ``opacity``.
+
+        Returns:
+            The number.
+
+        Raises:
+            KeyError: No rule with the selector declares the property.
+        """
+        return float(self.declared(selector, name))
+
+    def ink(self, selector: str, name: str, inherited: Ink | None = None) -> Ink:
+        """Return the theme colour a selector's rule gives a property.
+
+        A colour is ``var(--color-...)``, or ``color-mix(in oklab, ...)`` of such
+        colours and ``transparent``. A value that takes the colour of the
+        surrounding text, whether ``inherit`` or a shorthand ending in
+        ``currentColor``, is the ink the caller says is inherited.
+
+        Args:
+            selector: One selector of the rule, exactly as the stylesheet writes it.
+            name: The property.
+            inherited: The ink the surrounding text has, for a value that takes it.
+
+        Returns:
+            The ink, in the theme's own names.
+
+        Raises:
+            KeyError: No rule with the selector declares the property.
+            ValueError: The value is not a colour taken from the theme, or takes
+                the surrounding ink when none was given.
+        """
+        return self.read_ink(self.declared(selector, name), inherited)
+
+    def read_ink(self, value: str, inherited: Ink | None) -> Ink:
+        """Read one colour value into an ink.
+
+        Args:
+            value: The value as written.
+            inherited: The ink the surrounding text has, if known.
+
+        Returns:
+            The ink.
+
+        Raises:
+            ValueError: The value is not a colour taken from the theme, or takes
+                the surrounding ink when none was given.
+        """
+        text = value.strip()
+        if text.split()[-1].lower() in SURROUNDING_INK:
+            if inherited is None:
+                raise ValueError(f"{value!r} takes the surrounding ink")
+            return inherited
+        if found := THEME_COLOUR.fullmatch(text):
+            return Ink(found["name"])
+        if found := COLOUR_MIX.fullmatch(text):
+            first = self.read_ink(found["first"], inherited)
+            share = float(found["share"]) / 100
+            if found["second"] == "transparent":
+                return first.faded(share)
+            return first.mixed(self.read_ink(found["second"], inherited), share)
+        raise ValueError(f"{value!r} is not a colour taken from the theme")
 
     def read_rule(self, prelude: str, body: str) -> Rule:
         """Read one rule from the text before its braces and the text inside them.
