@@ -200,33 +200,6 @@ page and use the control there.
 
 ---
 
-### User Story 5 - A developer turns on one of django-tomselect's plugins (Priority: P3)
-
-A developer turns on a plugin django-tomselect offers: the clear button, the remove button, the
-dropdown header, the dropdown footer, the search input inside the dropdown, or checkboxes beside
-the options. What the plugin adds is drawn in the same theme as the rest of the control.
-
-**Why this priority**: A plugin left in django-tomselect's own look undoes the first story for the
-projects that use one. It is last because each plugin is a small addition to a control that
-already matches.
-
-**Independent Test**: On the demo page, a control for each plugin sits beside one without. Open
-each, use what the plugin adds and compare it with the rest of the control under a light and a
-dark theme.
-
-**Acceptance Scenarios**:
-
-1. **Given** a control with a plugin turned on, **When** it is drawn, **Then** what the plugin
-   adds takes its colours from the theme and follows the control's size.
-2. **Given** the dropdown footer with its link to create a record, **When** it is drawn, **Then**
-   the link can be reached with the keyboard and followed.
-3. **Given** the dropdown header with several columns, **When** the options are drawn, **Then**
-   each option's columns sit under their headings.
-4. **Given** checkboxes beside the options, **When** an option is chosen, **Then** its checkbox
-   is drawn as daisyUI draws a checked checkbox.
-
----
-
 ### Edge Cases
 
 - A floating label stated for the form is passed over for a django-tomselect control, as it is
@@ -236,6 +209,10 @@ dark theme.
   supported. The README says so, and this feature does not change what the pack draws when one is
   asked for.
 - django-tomselect's token widget is not covered. The stylesheet does not style it.
+- The developer turns on a plugin other than the clear button and the remove button: the dropdown
+  header, the dropdown footer, the search input inside the dropdown or checkboxes beside the
+  options. It works and keeps django-tomselect's own look. Support for one is added when a project
+  asks for it.
 - The host project sets django-tomselect to one of its Bootstrap looks. This is not supported, and
   the README names the one setting that is.
 - The host project loads the stylesheet before django-tomselect's own. The README states the
@@ -346,9 +323,10 @@ dark theme.
 
 #### Plugins
 
-- **FR-028**: What each of these django-tomselect plugins adds MUST be drawn from the theme and
-  follow the control's size: clear button, remove button, dropdown header, dropdown footer,
-  dropdown input and checkbox options.
+- **FR-028**: Of django-tomselect's plugins, the support MUST cover the clear button and the
+  remove button, which the first two stories rely on. It MUST NOT undertake to draw any other
+  plugin. The README MUST say which plugins are covered, and that support for another is added
+  when a project asks for it.
 
 #### Demo, documentation and tests
 
@@ -356,7 +334,7 @@ dark theme.
   apart from the standard widgets.
 - **FR-030**: The demo project MUST gain a page for django-tomselect in that group. It MUST show
   a single and a multiple control beside a stock select and a text input, each state of FR-012,
-  each size, the colours and the variant, tagging, grouping, each plugin of FR-028, a control in
+  each size, the colours and the variant, tagging, grouping, a control in
   a modal, a control in a table formset, a form fetched with htmx, and a form to submit that
   shows the values it cleaned to. The same controls MUST be shown on a page styled by daisyUI's
   CDN install alone, with no django-mvp.
@@ -372,11 +350,10 @@ dark theme.
 
 | Story | Requirements |
 |---|---|
-| US-1: A developer draws a django-tomselect field in a daisyUI form | FR-001 to FR-015, FR-029 to FR-032 |
-| US-2: A developer offers tagging | FR-016 to FR-019, FR-030, FR-031 |
+| US-1: A developer draws a django-tomselect field in a daisyUI form | FR-001 to FR-015, FR-028 to FR-032 |
+| US-2: A developer offers tagging | FR-016 to FR-019, FR-028, FR-030, FR-031 |
 | US-3: A developer groups the options in a dropdown | FR-020 to FR-023, FR-030, FR-031 |
 | US-4: A developer puts the control in a modal, a table and a page htmx loads | FR-024 to FR-027, FR-030, FR-031 |
-| US-5: A developer turns on one of django-tomselect's plugins | FR-028, FR-030, FR-031 |
 
 FR-030 and FR-031 land with the first story and are extended by each story after it, so every
 story shows its own behaviour on the demo page and documents its own surface.
@@ -390,6 +367,7 @@ story shows its own behaviour on the demo page and documents its own surface.
 - **Option group**: a named set of options listed together in a dropdown under a heading that
   cannot be chosen.
 - **Plugin**: one of the additions to a control that django-tomselect lets a developer turn on.
+  This feature covers two, the clear button and the remove button.
 - **Supported package**: a third-party Django package whose widgets the pack undertakes to draw
   well. django-tomselect is the first with a stylesheet of its own.
 

@@ -75,3 +75,15 @@ optional package's releases within a fixed time would make the window depend on 
 host projects do not install.
 
 **ADR:** none. The README's statement is the record.
+
+## D6. Two plugins are covered, and the rest wait for a request
+
+**Chosen:** the support covers the clear button and the remove button. The dropdown header, the
+dropdown footer, the search input inside the dropdown and checkboxes beside the options are not
+covered. This is the maintainer's ruling, given when he approved the specification.
+
+**Why:** the first two stories cannot be delivered without those two. Every other plugin is
+styled when a project needs it, which is how the package takes on fields and widgets in general
+(Article XV).
+
+**ADR:** none. The README's list of covered plugins is the record.
