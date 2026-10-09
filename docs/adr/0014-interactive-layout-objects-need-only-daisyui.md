@@ -1,6 +1,6 @@
 # ADR 0014 — Interactive layout objects need only daisyUI
 
-**Status:** accepted
+**Status:** accepted, amended by [ADR 0041](0041-a-policy-that-forbids-inline-handlers-is-the-host-projects-to-open.md): issue #47 is answered, and a Content Security Policy that forbids inline script no longer reopens this record
 
 ## Decision
 

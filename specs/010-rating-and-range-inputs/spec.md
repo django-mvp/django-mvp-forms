@@ -407,8 +407,8 @@ story shows its own behaviour on the demo page and documents its own surface.
 - The stars are daisyUI's ordinary star. Half stars, other shapes and a rating drawn from a
   multiple-choice field are not part of this feature and can be asked for separately.
 - A range is the slider alone. Showing its current value as a number and drawing step marks are
-  not part of this feature. #90 asks whether the pack should offer them, and #47 bears on whether
-  it could ship the script a live value needs.
+  not part of this feature. #90 asks whether the pack should offer them. A live value needs a
+  script, and #47 was answered with the pack still shipping no script file (ADR 0041).
 - A vertical range is not part of this feature.
 - An optional number field drawn as a range always submits a number, because a slider has no empty
   state. The README says so, and the pack does not refuse the combination.
