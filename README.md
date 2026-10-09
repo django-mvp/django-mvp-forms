@@ -1227,11 +1227,25 @@ class ProductAutocomplete(AutocompleteModelView):
 
 A project that has a `django_tomselect/tomselect.html` of its own keeps the grouping by extending the template of the same name: `{% extends "django_tomselect/tomselect.html" %}`. Django resolves that to the next template of that name, which is the pack's, and the pack's extends django-tomselect's.
 
+#### In a modal and in a table
+
+A control works inside a `Modal` layout object and inside a formset drawn as a table with no change to either. The stylesheet does two things for them. An open control is lifted above the controls after it, and the two boxes that would otherwise cut off its dropdown, daisyUI's modal box and the scroller around a table, show what overflows them for as long as a dropdown inside is open. Give a form in a modal a prefix, so that the ids and the button names inside it do not repeat those of the page. The formset's own prefix keeps the controls of each row apart.
+
+#### Loaded by htmx
+
+A form that htmx swaps into the page has its controls started as it arrives, provided `use_htmx` is on. Turn it on once, for every control, in the `TOMSELECT` setting:
+
+```python
+TOMSELECT = {"DEFAULT_CONFIG": {"use_htmx": True}}
+```
+
+Without it a control's script starts the control when the document finishes loading, and a swapped-in form is not a document load. The package changes nothing to make this automatic. Give each form you fetch a prefix of its own, such as one that counts the fetches, so that a second copy swapped in beside or over the first does not repeat its ids. The stylesheet needs nothing more, since it is already loaded by the page that fetches. A page reached by htmx navigation starts its controls in the same way.
+
 #### What is not supported
 
 - django-tomselect's token widget, `TomSelectTokenWidget`, which the stylesheet does not style.
 - django-tomselect's Bootstrap looks.
-- Text attached to a control, buttons joined to it and a joined group that holds it. The pack does not change what it draws when one is asked for.
+- A floating label, text attached to a control, buttons joined to it and a joined group that holds it. The pack does not change what it draws when one is asked for.
 - Loading `mvp_forms/tomselect.css` before django-tomselect's own stylesheets.
 
 #### The release tested

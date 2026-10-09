@@ -14,6 +14,7 @@ from django.urls import reverse
 
 from demo.autocompletes import ROCKS, UNGROUPED_ROCKS
 from demo.forms import DAISYUI_VERSION, THEME_NAMES
+from demo.tomselect_forms import SampleFormSet, country_field
 from demo.tomselect_views import TomSelectMixin
 from mvp_forms.choices import Modifiers
 from tests.forms import ruled_data
@@ -3222,6 +3223,7 @@ TOMSELECT_PREFIX = "tomselect"
 TOMSELECT_STYLESHEET = "mvp_forms/tomselect.css"
 TOMSELECT_SUBMIT = {f"{TOMSELECT_PREFIX}-submit": "Submit"}
 TOMSELECT_WITH_COUNTRY = {**TOMSELECT_SUBMIT, f"{TOMSELECT_PREFIX}-country": "Germany"}
+TOMSELECT_CONTROLS_OF_A_LINE = ("country", "rock", "keywords")
 TOMSELECT_NEW_KEYWORD = "a-keyword-no-option-holds"
 TOMSELECT_WITH_NEW_KEYWORD = {
     **TOMSELECT_WITH_COUNTRY,
@@ -3288,6 +3290,35 @@ class TomSelectPageContract:
         shown = page.find(id=f"{TOMSELECT_PREFIX}-cleaned-keywords")
         assert TOMSELECT_NEW_KEYWORD in shown.get_text()
 
+    def test_the_modal_holds_its_three_controls_and_no_other_modal_control_is_outside(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        dialog = page.find("dialog", id="modal-dialog")
+        inside = {select["id"] for select in dialog.find_all("select")}
+        everywhere = {
+            select["id"]
+            for select in page.find_all("select", id=re.compile("^id_modal-"))
+        }
+        expected = {f"id_modal-{name}" for name in TOMSELECT_CONTROLS_OF_A_LINE}
+        assert inside == everywhere == expected
+
+    def test_the_table_draws_a_control_in_every_row(self, open_page):
+        page = open_page(self.url_name)
+
+        rows = [
+            row
+            for row in page.find("table").find_all("tr")
+            if row.find("select") is not None
+        ]
+        assert [
+            {select["id"] for select in row.find_all("select")} for row in rows
+        ] == [
+            {f"id_samples-{line}-{name}" for name in TOMSELECT_CONTROLS_OF_A_LINE}
+            for line in range(SampleFormSet.extra)
+        ]
+
     def test_a_post_without_a_country_comes_back_in_error(self, open_page):
         page = open_page(self.url_name, TOMSELECT_SUBMIT)
 
@@ -3343,6 +3374,52 @@ class TestStandaloneTomSelectPage(TomSelectPageContract):
     def test_it_links_back_to_the_shell_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("tomselect")) is not None
+
+
+class TestTheFormHtmxFetches:
+    def fetched(self, client, parse, count):
+        response = client.get(reverse("tomselect-fetched"), {"count": count})
+        assert response.status_code == 200
+        return parse(response.content.decode())
+
+    @pytest.mark.parametrize("count", ["1", "2", "7"])
+    def test_its_controls_carry_a_prefix_that_follows_the_count_asked_for(
+        self, client, db, parse, count
+    ):
+        page = self.fetched(client, parse, count)
+
+        ids = {select["id"] for select in page.find_all("select")}
+        assert ids == {f"id_fetched-{count}-{name}" for name in ("country", "keywords")}
+
+    def test_its_ids_collide_with_none_on_the_page_and_none_of_another_fetch(
+        self, client, db, open_page, parse
+    ):
+        page = open_page("tomselect")
+        first = self.fetched(client, parse, "2")
+        second = self.fetched(client, parse, "3")
+
+        on_the_page, one, other = (
+            {element["id"] for element in soup.find_all(id=True)}
+            for soup in (page, first, second)
+        )
+        assert not on_the_page & one
+        assert not one & other
+
+
+class TestThePageHtmxNavigationLoads:
+    def test_it_responds_and_draws_the_form_with_its_controls(self, open_page):
+        page = open_page("tomselect-boosted")
+
+        for name in ("country", "keywords", "rock"):
+            assert page.find("select", id=f"id_{TOMSELECT_PREFIX}-{name}") is not None
+
+
+class TestTheDemosHtmxSetting:
+    def test_use_htmx_is_set_in_the_default_configuration(self, settings):
+        assert settings.TOMSELECT["DEFAULT_CONFIG"]["use_htmx"] is True
+
+    def test_a_control_of_the_demo_reads_it(self):
+        assert country_field().widget.use_htmx is True
 
 
 class TestTheRocksEndpoint:
