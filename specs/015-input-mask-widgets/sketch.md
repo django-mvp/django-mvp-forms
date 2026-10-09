@@ -75,6 +75,10 @@ Ruled by the maintainer on the second round:
 
 - The PIN field has to show a dot for each digit typed. It showed nothing.
 
+Ruled by the maintainer on the third round, when he approved the sketch:
+
+- Each widget's section links to the part of the IMask guide that documents its kind of mask.
+
 Decided while building, and the maintainer's to change:
 
 - Each widget's form shows the text submitted beside the value the field received.

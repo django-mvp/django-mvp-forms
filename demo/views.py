@@ -1676,6 +1676,8 @@ class InputMasksView(MVPTemplateView):
             "Square brackets make a part optional and braces keep a fixed part "
             "in the value.",
             PatternMaskForm,
+            "https://imask.js.org/guide.html#masked-pattern",
+            "Pattern mask in the IMask guide",
         ),
         (
             "regex",
@@ -1683,6 +1685,8 @@ class InputMasksView(MVPTemplateView):
             "A mask that accepts a character only while the whole value still "
             "matches a JavaScript regular expression.",
             RegexMaskForm,
+            "https://imask.js.org/guide.html#masked-base",
+            "Regular expression mask in the IMask guide",
         ),
         (
             "number",
@@ -1691,12 +1695,16 @@ class InputMasksView(MVPTemplateView):
             "the number with no thousands separator and a full stop as its "
             "decimal mark.",
             NumberMaskForm,
+            "https://imask.js.org/guide.html#masked-number",
+            "Number mask in the IMask guide",
         ),
         (
             "dynamic",
             "DynamicMaskInput",
             "A list of masks. IMask applies whichever fits what has been typed.",
             DynamicMaskForm,
+            "https://imask.js.org/guide.html#masked-dynamic",
+            "Dynamic mask in the IMask guide",
         ),
     ]
 
@@ -1704,7 +1712,7 @@ class InputMasksView(MVPTemplateView):
         """Add a group for each widget, the other forms, and their media."""
         posted = kwargs.pop("posted", None)
         groups = []
-        for prefix, name, text, form_class in self.widgets:
+        for prefix, name, text, form_class, docs, docs_text in self.widgets:
             form = form_class(prefix=prefix)
             received = None
             if posted is not None and f"{prefix}-submit" in posted:
@@ -1720,6 +1728,8 @@ class InputMasksView(MVPTemplateView):
                     "name": name,
                     "text": text,
                     "form": form,
+                    "docs": docs,
+                    "docs_text": docs_text,
                     "received": received,
                 }
             )

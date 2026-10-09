@@ -4,6 +4,9 @@
   {% for group in groups %}
     <c-section :title="group.name" icon="input-masks" id="{{ group.id }}">
       <c-text>{{ group.text }}</c-text>
+      <c-text>
+        <c-link :href="group.docs" :text="group.docs_text" target="_blank" rel="noopener noreferrer" />
+      </c-text>
       {% crispy group.form %}
       {% if group.received %}
         <div class="overflow-x-auto">
