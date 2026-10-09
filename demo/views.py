@@ -27,6 +27,7 @@ from demo.forms import (
     DrawingsForm,
     DrawingStateForm,
     DrawingTrioForm,
+    DynamicMaskForm,
     FieldWithButtonsForm,
     FloatingByNameForm,
     FloatingChosenForm,
@@ -46,16 +47,15 @@ from demo.forms import (
     LockedKindsForm,
     MaskedLineFormSet,
     MaskedModalForm,
-    MaskKindsForm,
     MaskSizesForm,
     MaskStatesForm,
     ModalForm,
     MultiWidgetFieldForm,
-    NumberOptionsForm,
+    NumberMaskForm,
     OrderLineFormSet,
     OverrideForm,
     PairForm,
-    PatternOptionsForm,
+    PatternMaskForm,
     PlaceholdersForm,
     PlainButtonsForm,
     RangeStateForm,
@@ -64,6 +64,7 @@ from demo.forms import (
     RatingAndRangeTrioForm,
     RatingStateForm,
     ReadOnlyKindsForm,
+    RegexMaskForm,
     RowButtonsForm,
     StackedOrderHelper,
     TableOrderHelper,
@@ -1660,19 +1661,68 @@ class StandaloneThemesView(ThemesMixin, TemplateView):
 
 
 class InputMasksView(MVPTemplateView):
-    """Every mask widget, its options, and a masked field wherever a form goes."""
+    """Each mask widget in a group of its own, then a masked field in each place."""
 
     template_name = "demo/input_masks.html"
     page_title = "Input masks"
     page_subtitle = "Text inputs that format what is typed, with IMask"
     breadcrumbs = [{"text": "Input masks"}]
-    kinds_prefix = "kinds"
-    lines_prefix = "lines"
+    widgets = [
+        (
+            "pattern",
+            "PatternMaskInput",
+            "A mask written as a pattern. In a pattern 0 is a digit, a is a "
+            "letter, * is any character, and every other character is fixed. "
+            "Square brackets make a part optional and braces keep a fixed part "
+            "in the value.",
+            PatternMaskForm,
+        ),
+        (
+            "regex",
+            "RegexMaskInput",
+            "A mask that accepts a character only while the whole value still "
+            "matches a JavaScript regular expression.",
+            RegexMaskForm,
+        ),
+        (
+            "number",
+            "NumberMaskInput",
+            "A mask that formats a number as it is typed. The field receives "
+            "the number with no thousands separator and a full stop as its "
+            "decimal mark.",
+            NumberMaskForm,
+        ),
+        (
+            "dynamic",
+            "DynamicMaskInput",
+            "A list of masks. IMask applies whichever fits what has been typed.",
+            DynamicMaskForm,
+        ),
+    ]
 
     def get_context_data(self, **kwargs):
-        """Add each form the page draws, and the media they share."""
-        kwargs.setdefault("kinds_form", MaskKindsForm(prefix=self.kinds_prefix))
-        lines = MaskedLineFormSet(prefix=self.lines_prefix)
+        """Add a group for each widget, the other forms, and their media."""
+        posted = kwargs.pop("posted", None)
+        groups = []
+        for prefix, name, text, form_class in self.widgets:
+            form = form_class(prefix=prefix)
+            received = None
+            if posted is not None and f"{prefix}-submit" in posted:
+                form = form_class(posted, prefix=prefix)
+                if form.is_valid():
+                    received = [
+                        (form[field].label, posted.get(form.add_prefix(field)), value)
+                        for field, value in form.cleaned_data.items()
+                    ]
+            groups.append(
+                {
+                    "id": prefix,
+                    "name": name,
+                    "text": text,
+                    "form": form,
+                    "received": received,
+                }
+            )
         lines_helper = FormHelper()
         lines_helper.form_tag = False
         lines_helper.template = "daisyui/table_inline_formset.html"
@@ -1680,28 +1730,17 @@ class InputMasksView(MVPTemplateView):
             {"states-filled": "+49 151 2345678", "states-read_only": "+49 301 2345678"},
             prefix="states",
         )
-        modal_form = MaskedModalForm(prefix="contact")
         kwargs.update(
-            pattern_form=PatternOptionsForm(prefix="pattern"),
-            number_form=NumberOptionsForm(prefix="number"),
+            groups=groups,
             states_form=states_form,
             sizes_form=MaskSizesForm(prefix="sizes"),
-            lines=lines,
+            lines=MaskedLineFormSet(prefix="lines"),
             lines_helper=lines_helper,
-            modal_form=modal_form,
-            media=kwargs["kinds_form"].media,
+            modal_form=MaskedModalForm(prefix="contact"),
+            media=groups[0]["form"].media,
         )
         return super().get_context_data(**kwargs)
 
     def post(self, request, *args, **kwargs):
-        """Draw the page again with what each field received."""
-        form = MaskKindsForm(request.POST, prefix=self.kinds_prefix)
-        received = None
-        if form.is_valid():
-            received = [
-                (form[name].label, request.POST.get(form.add_prefix(name)), value)
-                for name, value in form.cleaned_data.items()
-            ]
-        return self.render_to_response(
-            self.get_context_data(kinds_form=form, received=received)
-        )
+        """Draw the page again with what the posted form's fields received."""
+        return self.render_to_response(self.get_context_data(posted=request.POST))

@@ -1,58 +1,57 @@
 {% extends "page_view.html" %}
 {% load crispy_forms_tags %}
 {% block page.content %}
-  <c-section title="Try it" icon="input-masks">
-    <c-text>
-      One field for each kind of mask. Type into each one, then submit the form to
-      see what the field received beside what was typed.
-    </c-text>
-    {% crispy kinds_form %}
-    {% if received %}
-      <div class="overflow-x-auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Submitted</th>
-              <th>Received by the field</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for label, submitted, value in received %}
+  {% for group in groups %}
+    <c-section :title="group.name" icon="input-masks" id="{{ group.id }}">
+      <c-text>{{ group.text }}</c-text>
+      {% crispy group.form %}
+      {% if group.received %}
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
               <tr>
-                <td>{{ label }}</td>
-                <td><code>{{ submitted }}</code></td>
-                <td><code>{{ value }}</code></td>
+                <th>Field</th>
+                <th>Submitted</th>
+                <th>Received by the field</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% endif %}
-  </c-section>
-  <c-section title="Pattern options" level="3">
-    {% crispy pattern_form %}
-  </c-section>
-  <c-section title="Number options" level="3">
-    {% crispy number_form %}
-  </c-section>
-  <c-section title="States" level="3">
+            </thead>
+            <tbody>
+              {% for label, submitted, value in group.received %}
+                <tr>
+                  <td>{{ label }}</td>
+                  <td><code>{{ submitted }}</code></td>
+                  <td><code>{{ value }}</code></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </c-section>
+  {% endfor %}
+  <c-section title="Any widget, in each state" level="3">
     {% crispy states_form %}
   </c-section>
-  <c-section title="Size, colour and variant" level="3">
+  <c-section title="Any widget, with a size, colour and variant" level="3">
+    <c-text>
+      Each field is a PatternMaskInput with the pattern 000-000 and # as its
+      placeholder character.
+    </c-text>
     {% crispy sizes_form %}
   </c-section>
-  <c-section title="In a formset" level="3">
+  <c-section title="Any widget, in a formset" level="3">
     <c-text>
-      A line added in the browser is masked as the others are, with no script
-      written for it.
+      Article is a PatternMaskInput with the pattern L-N, where block L is aa,
+      shown as a, and block N is 0000, shown as #. Price is a NumberMaskInput with
+      scale=2, thousands_separator=" " and radix=",". A line added in the browser
+      is masked as the others are, with no script written for it.
     </c-text>
     <div id="{{ lines.prefix }}-formset">
       {% crispy lines lines_helper %}
     </div>
     <c-button type="button" text="Add a line" data-add-line="{{ lines.prefix }}" />
   </c-section>
-  <c-section title="In a modal" level="3">
+  <c-section title="Any widget, in a modal" level="3">
     <c-button type="button" text="Edit the contact details" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()" />
     {% crispy modal_form %}
   </c-section>

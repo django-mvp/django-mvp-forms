@@ -25,6 +25,9 @@ behind it is tested, and the code behind the page is the plan's to keep or rebui
   later, and never twice to the same one.
 - An event from each input once its mask is in place, carrying the IMask instance.
 - A page template that loads IMask and then renders the form's media.
+- A placeholder that says what each position takes. IMask has one placeholder character for a
+  whole pattern, so the sketch splits a pattern into blocks to give letters and digits a
+  character each. A developer should not have to write blocks for that.
 
 ## What the sketch faked
 
@@ -47,11 +50,18 @@ behind it is tested, and the code behind the page is the plan's to keep or rebui
 
 ## What was ruled by eye
 
+Ruled by the maintainer on the first round:
+
+- The page is grouped by widget. Each widget has a section of its own, named after the widget,
+  with its own form and submit button. Sections that show a masked field in a state, at a size, in
+  a formset and in a modal follow, and each says which widget and mask it uses.
+- An always-visible placeholder uses characters that say what the position takes: `#` for a digit,
+  `a` for a letter, and `d`, `m` and `y` for the parts of a date. A dot or an underscore for every
+  position is not used.
+- Every field that demonstrates a pattern or a regular expression states it in full in its help
+  text, with the meaning of any definition or block. A number field states its options.
+
 Decided while building, and the maintainer's to change:
 
-- One page for the whole feature, in the order: one field of each kind to try, pattern options,
-  number options, states, size and colour, a formset, a modal, the event.
-- Each field's help text states its mask, so the page explains itself without a second column.
-- The first form is the only one that submits. It shows the text submitted beside the value the
-  field received, since that difference is the point of the number widget.
+- Each widget's form shows the text submitted beside the value the field received.
 - The sidebar entry sits above "Themes" and uses the `bi-123` icon.
