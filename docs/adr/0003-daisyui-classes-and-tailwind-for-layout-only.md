@@ -1,6 +1,6 @@
 # ADR 0003 — daisyUI classes for every component, Tailwind utilities for layout only
 
-**Status:** accepted
+**Status:** accepted, extended by [ADR 0042](0042-one-optional-stylesheet-for-each-supported-package.md): a supported package's controls may have a stylesheet of their own
 
 ## Decision
 

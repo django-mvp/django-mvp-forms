@@ -21,7 +21,7 @@ shared stylesheet would grow with every package supported and be paid for by pro
 none of them. Article XIV is amended and not waived: the pack's own templates still define no
 class and need no stylesheet.
 
-**ADR:** yes. It changes what ADR 0003 and ADR 0034 rest on.
+**ADR:** docs/adr/0042-one-optional-stylesheet-for-each-supported-package.md
 
 ## D2. Legibility is checked under `light` and `dark` only
 
@@ -33,7 +33,7 @@ maintainer's ruling.
 what that theme's variables give a stock control. A shortfall there is the theme's, and ADR 0034
 already says how one of those is handled.
 
-**ADR:** yes, as an extension of ADR 0033.
+**ADR:** docs/adr/0043-a-supported-packages-stylesheet-is-checked-under-light-and-dark.md
 
 ## D3. Grouping is added here, though it is behaviour and not look
 
@@ -48,7 +48,7 @@ asked for grouping by name and confirmed that it must work without a template of
 supplied is for the plan. Whatever the plan chooses must touch django-tomselect only through
 places it offers for the purpose, and is retired if django-tomselect gains a setting of its own.
 
-**ADR:** yes.
+**ADR:** docs/adr/0044-grouping-is-added-by-extending-django-tomselects-template.md
 
 ## D4. Attached text, joined buttons and joined groups are left as they are
 
@@ -59,7 +59,7 @@ supported.
 **Why:** the maintainer ruled them out of this feature. Fixing a behaviour for them now would be
 specifying something nobody has asked for.
 
-**ADR:** none.
+**ADR:** none. Nothing is decided here beyond leaving the pack as it is.
 
 ## D5. The supported django-tomselect releases sit outside the support window
 
@@ -141,7 +141,7 @@ repository. Nothing here patches them.
 **Why:** the specification's assumptions say this package does not patch django-tomselect's
 scripts.
 
-**ADR:** none.
+**ADR:** none. The three issues are the record.
 
 ## D12. No test that a state has a rule
 
@@ -162,7 +162,7 @@ are shapes with a stroke of their own. The test holds colour only.
 
 **Why:** a ring's stroke is not a border the theme sizes. The maintainer approved both on screen.
 
-**ADR:** none.
+**ADR:** none. A reading of one requirement, local to this feature's test.
 
 ## D14. A field with no help text is described by an element that is not there
 
@@ -172,7 +172,7 @@ It joins the behaviours of D11 as an issue in this repository.
 
 **Why:** the attribute is django-tomselect's to write.
 
-**ADR:** none.
+**ADR:** none. The behaviour is django-tomselect's, and the issue is the record.
 
 ## D15. A floating label is left as it is, like attached text
 

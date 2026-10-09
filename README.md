@@ -1188,6 +1188,8 @@ class ArticleForm(forms.Form):
 
 An option can be listed under a heading. Give the option an `optgroup` key whose value is the heading, and every option that carries the same value is listed under it. An option with no `optgroup` key, or an empty one, is listed with no heading. django-tomselect draws the headings and has no setting that names an option's group, so the pack's `django_tomselect/tomselect.html` tells Tom Select to read the group from `optgroup`. You write no template.
 
+A value the control already holds when the page is drawn is added by django-tomselect with its value and label only. If you keep chosen options in the dropdown with `hide_selected=False`, that one is listed with no heading until it is fetched again.
+
 This works only when `mvp_forms` is listed before `django_tomselect` in `INSTALLED_APPS`, because Django uses the first template of a name that it finds. With the order reversed the control is still drawn, with its options in one flat list.
 
 A view names the group on each result. A view over a list of choices does it in `get_iterable`; a view over a model does it in `hook_prepare_results`, from a field it asked for in `value_fields`:

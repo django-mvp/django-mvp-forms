@@ -2,7 +2,7 @@
   "feature": "014-django-tomselect-support",
   "branch": "014-django-tomselect-support",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "QUEUED",
@@ -23,6 +23,11 @@
       "state": "IMPLEMENT",
       "at": "2026-10-09T11:03:11Z",
       "note": "plan gate open; US1 dispatched"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-09T11:38:41Z",
+      "note": "four stories accepted"
     }
   ],
   "gates": {
@@ -227,7 +232,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {

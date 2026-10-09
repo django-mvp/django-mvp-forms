@@ -1,6 +1,6 @@
 # ADR 0029 — Every template the pack distributes is public, with the names it reads
 
-**Status:** accepted
+**Status:** accepted, extended by [ADR 0044](0044-grouping-is-added-by-extending-django-tomselects-template.md): one template is distributed outside `daisyui/`
 
 ## Decision
 
