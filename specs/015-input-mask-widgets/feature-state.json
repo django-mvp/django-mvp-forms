@@ -2,7 +2,7 @@
   "feature": "015-input-mask-widgets",
   "branch": "015-input-mask-widgets",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-09T20:07:57Z",
       "note": "one reviewer, correctness and spec compliance"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-09T20:21:04Z",
+      "note": "review closed, walkthrough laid out"
     }
   ],
   "gates": {
@@ -89,6 +94,11 @@
         "COR-007 (low) unchecked options: map_to_radix, range bounds and length, enum values are checked (T011)",
         "TST-008 (low) a demo test that could not fail: it names the fields it expects, seen to fail under mutation (T012)"
       ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-09T20:21:18Z",
+      "self_resolved": []
     }
   },
   "stories": [
