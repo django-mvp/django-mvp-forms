@@ -93,7 +93,9 @@ maintainer's to change.
 - The dropdown is a rounded panel a short gap below the control, with a soft shadow, as wide as
   the control.
 - The part of an option that matches what was typed is bold and underlined, with no background.
-- Group headings are smaller, semibold and slightly muted, and groups are separated by a line.
+- Group headings are small capitals, bold and slightly muted, with the group's options set in
+  beneath them and a line between groups. The maintainer asked for this after reading the first
+  heading as an option.
 - The offer to add a value sits under a line at the end of the options.
 - While options are fetched, a small ring turns beside the caret.
 - A control that holds several values keeps the height of an input, and does not take the taller

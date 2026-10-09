@@ -318,23 +318,32 @@
   text-decoration: underline;
 }
 
-/* Group headings. */
+/* Group headings: a small capital label that cannot be mistaken for an option,
+   with the group's options set in beneath it, as a browser draws an optgroup. */
 :root .ts-dropdown .optgroup {
   border-block-start: 0 none;
 }
 
 :root .ts-dropdown .optgroup-header {
-  padding-block-start: 0.5em;
+  padding-block: 0.5rem 0.25rem;
   background: none;
   color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
-  font-size: 0.875em;
-  font-weight: 600;
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: default;
+}
+
+:root .ts-dropdown .optgroup .option {
+  padding-inline-start: calc(0.25rem * var(--option-px, 3) + 0.75rem);
 }
 
 :root .ts-dropdown .optgroup + .optgroup,
 :root .ts-dropdown .option + .optgroup {
-  margin-block-start: 0.25rem;
-  border-block-start: var(--border) solid var(--color-base-200);
+  margin-block-start: 0.5rem;
+  padding-block-start: 0.25rem;
+  border-block-start: var(--border) solid var(--color-base-300);
 }
 
 /* The offer to add what was typed, set apart from the options that exist. */
