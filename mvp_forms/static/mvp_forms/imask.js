@@ -11,6 +11,8 @@
   const SELECTOR = "input[data-imask]";
   const EVENT = "mvp-forms:imask";
   const masked = new WeakMap();
+  // Inputs left unmasked, holding a value their mask would change.
+  const waiting = new WeakSet();
 
   // A definition is an expression written as text, or an object holding the
   // expression and a placeholder character. A built-in definition has no
@@ -66,6 +68,17 @@
     return [Math.max(from, lowest), Math.min(from + room - 1, highest)];
   }
 
+  // A pasted date whose month or day is one digit, given its leading zeros.
+  // Text typed or put back after the cursor is never a whole date, so a change
+  // in the middle of a value is left to the padded range blocks.
+  function padPasted(text) {
+    if (!/^[0-9]{4}-[0-9]{1,2}(-[0-9]{1,2})?$/.test(text)) return text;
+    return text
+      .split("-")
+      .map((part) => (part.length === 1 ? "0" + part : part))
+      .join("-");
+  }
+
   // A year, then a month and a day a person may leave off. A digit is refused
   // when no month, no day of the month typed, or no date the field accepts
   // could follow from it.
@@ -79,6 +92,9 @@
         Y: { mask: Range, from: 1, to: 9999, maxLength: 4 },
         M: { mask: paddedRange("2"), from: 1, to: 12, maxLength: 2 },
         D: { mask: paddedRange("4"), from: 1, to: 31, maxLength: 2 },
+      },
+      prepare: function (text, masked, flags) {
+        return flags && flags.tail ? text : padPasted(text);
       },
       validate: function (value) {
         const [year, month, day] = value.split("-");
@@ -128,11 +144,39 @@
     return mask.value === input.value ? undefined : mask.value;
   }
 
+  // Whether the mask keeps what the input holds as it is.
+  function takes(options, value) {
+    const tried = window.IMask.createMask(options);
+    tried.resolve(value);
+    return tried.value === value;
+  }
+
+  // A partial date mask cuts a value it does not take, such as 2021-02-30, down
+  // to what it does. The input shows the whole value until the person has
+  // changed it to one the mask takes, and no scan of the page masks it before.
+  function wait(input) {
+    waiting.add(input);
+    input.addEventListener(
+      "input",
+      function () {
+        waiting.delete(input);
+        apply(input);
+      },
+      { once: true },
+    );
+  }
+
   function apply(input) {
-    if (!window.IMask || masked.has(input)) return;
+    if (!window.IMask || masked.has(input) || waiting.has(input)) return;
     let mask;
     try {
-      mask = window.IMask(input, build(JSON.parse(input.dataset.imask)));
+      const written = JSON.parse(input.dataset.imask);
+      const options = build(written);
+      if (written.kind === "partial-date" && !takes(options, input.value)) {
+        wait(input);
+        return;
+      }
+      mask = window.IMask(input, options);
     } catch (error) {
       // Options IMask refuses cost this input its mask and no other input.
       console.error(input, error);

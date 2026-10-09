@@ -71,6 +71,12 @@ fieldset.disabled = true;
 document.getElementById("id_pin").before(fieldset);
 fieldset.append(document.getElementById("id_pin"));
 """
+SELECT = "(node, [from, to]) => node.setSelectionRange(from, to)"
+MOVE_BORN = """
+const holder = document.createElement("div");
+document.getElementById("masked").append(holder);
+holder.append(document.getElementById("id_born"));
+"""
 MASKS_OF = "(id) => window.masked.filter((each) => each === id).length"
 ENTRIES = "Object.fromEntries(new FormData(document.getElementById('masked')))"
 
@@ -468,3 +474,165 @@ class TestAStrictContentSecurityPolicy:
 
         assert type_into(page, "shelf", "9") == ""
         assert type_into(page, "shelf", "3") == "3"
+
+
+def select_in(page, name, start, end):
+    """Focus the input and select the characters from start up to end."""
+    field = page.locator(f"#id_{name}")
+    field.focus()
+    field.evaluate(SELECT, [start, end])
+    return field
+
+
+class TestPartialDateMaskedInput:
+    def test_typed_digits_have_their_hyphens_placed(self, masked_page):
+        page = masked_page()
+
+        assert type_into(page, "born", "20210314") == "2021-03-14"
+
+    @pytest.mark.parametrize(
+        ("typed", "shown"),
+        [
+            ("202113", "2021-1"),
+            ("202100", "2021-0"),
+            ("20210332", "2021-03-3"),
+            ("20210400", "2021-04-0"),
+        ],
+    )
+    def test_a_digit_that_makes_no_month_or_day_is_refused(
+        self, masked_page, typed, shown
+    ):
+        page = masked_page()
+
+        assert type_into(page, "born", typed) == shown
+
+    @pytest.mark.parametrize(
+        ("typed", "shown"),
+        [
+            ("20210230", "2021-02-0"),
+            ("20210229", "2021-02-2"),
+            ("20200229", "2020-02-29"),
+            ("21000229", "2100-02-2"),
+            ("20000229", "2000-02-29"),
+            ("20210431", "2021-04-3"),
+            ("20210331", "2021-03-31"),
+        ],
+    )
+    def test_a_day_the_typed_month_does_not_have_is_refused(
+        self, masked_page, typed, shown
+    ):
+        page = masked_page()
+
+        assert type_into(page, "born", typed) == shown
+
+    def test_a_single_digit_that_can_only_be_the_whole_month_or_day_is_padded(
+        self, masked_page
+    ):
+        page = masked_page()
+
+        assert type_into(page, "born", "202145") == "2021-04-05"
+
+    def test_a_digit_that_could_start_two_digits_waits_for_the_next(self, masked_page):
+        page = masked_page()
+
+        assert type_into(page, "born", "20211") == "2021-1"
+
+    @pytest.mark.parametrize(
+        ("pasted", "shown"),
+        [("2021-3-4", "2021-03-04"), ("2021-1-4", "2021-01-04"), ("2021-3", "2021-03")],
+    )
+    def test_a_pasted_date_with_one_digit_parts_is_padded(
+        self, masked_page, pasted, shown
+    ):
+        page = masked_page()
+        page.locator("#id_born").focus()
+
+        page.keyboard.insert_text(pasted)
+
+        assert page.locator("#id_born").input_value() == shown
+
+    def test_a_change_in_the_middle_of_a_value_keeps_the_rest(self, masked_page):
+        page = masked_page(born="2021-12-14")
+        field = select_in(page, "born", 5, 7)
+
+        page.keyboard.type("4")
+
+        assert field.input_value() == "2021-04-14"
+
+    def test_a_change_that_leaves_the_day_without_a_date_is_refused(self, masked_page):
+        page = masked_page(born="2020-02-29")
+        field = select_in(page, "born", 3, 4)
+
+        page.keyboard.type("1")
+
+        assert field.input_value() == "2020-02-29"
+
+    @pytest.mark.parametrize(
+        ("typed", "cleaned"), [("2021", "2021"), ("202103", "2021-03")]
+    )
+    def test_stopping_after_the_year_or_the_month_submits_a_valid_form(
+        self, masked_page, typed, cleaned
+    ):
+        page = masked_page("masked-cleaned")
+        type_into(page, "born", typed)
+
+        with page.expect_navigation():
+            page.click("button[type=submit]")
+
+        assert f'"born": "{cleaned}"' in page.inner_text("body")
+
+    def test_a_year_and_month_the_form_was_drawn_with_are_shown(self, masked_page):
+        page = masked_page(born="2021-03")
+
+        assert page.locator("#id_born").input_value() == "2021-03"
+
+    def test_a_value_the_mask_would_change_is_shown_whole(self, masked_page):
+        page = masked_page(born="2021-02-30")
+
+        assert page.locator("#id_born").input_value() == "2021-02-30"
+
+    def test_a_value_shown_whole_is_left_alone_when_the_page_is_scanned_again(
+        self, masked_page
+    ):
+        page = masked_page(born="2021-02-30")
+        page.evaluate("document.getElementById('id_born').value = '2021-03'")
+
+        page.evaluate(MOVE_BORN)
+
+        assert page.locator("#id_born").input_value() == "2021-03"
+        assert page.evaluate(MASKS_OF, "id_born") == 0
+
+    def test_a_value_shown_whole_is_masked_once_it_is_changed_to_one_the_mask_takes(
+        self, masked_page
+    ):
+        page = masked_page(born="2021-02-30")
+        field = page.locator("#id_born")
+        field.focus()
+        field.press("End")
+        for _ in range(6):
+            field.press("Backspace")
+
+        page.keyboard.type("45")
+
+        assert field.input_value() == "2021-04-05"
+        assert page.evaluate(MASKS_OF, "id_born") == 1
+
+    def test_an_input_added_later_is_masked_once(self, masked_page):
+        page = masked_page()
+
+        page.evaluate(INSERT_INPUT, {"kind": "partial-date", "resolution": "day"})
+
+        assert type_into(page, "later", "202145") == "2021-04-05"
+        assert page.evaluate(MASKS_OF, "id_later") == 1
+
+    def test_a_page_without_imask_raises_no_error_and_submits(
+        self, masked_page, page_errors
+    ):
+        page = masked_page("masked-bare")
+        type_into(page, "born", "2021-03")
+
+        with page.expect_navigation():
+            page.click("button[type=submit]")
+
+        assert page_errors == []
+        assert '"born": ["2021-03"]' in page.inner_text("body")

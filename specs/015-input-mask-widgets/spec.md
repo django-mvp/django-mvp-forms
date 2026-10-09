@@ -43,8 +43,10 @@ the goals, the constitution and the decision records. Longer rationale is in `de
   regular expressions written as text. An option that is a JavaScript function cannot be written
   in Python and is not supported: function masks, `prepare`, `prepareChar`, `commit`, `validate`,
   `dispatch`, `format` and `parse`. IMask's date mask needs two of those functions for any format
-  but its default, so there is no date widget, and a date is masked with a pattern whose day,
-  month and year are number ranges. Recorded as FR-005 to FR-016 and under Out of scope.
+  but its default, so the four widgets take no JavaScript function, and a date is masked with a
+  pattern whose day, month and year are number ranges. A partial date has a widget of its own,
+  described under [Partial dates](https://github.com/django-mvp/django-mvp-forms#partial-dates).
+  Recorded as FR-005 to FR-016 and under Out of scope.
 
 - **Q: What does the form receive when a masked input is submitted?**
   A: A pattern or regular expression widget submits what the person sees, fixed characters
@@ -296,7 +298,9 @@ change an option on the instance it carries.
 
 - IMask itself. The package does not distribute it, load it or name a CDN outside the demo and
   the README's example.
-- A date widget, and every option that is a JavaScript function, as the clarifications record.
+- Every option that is a JavaScript function, as the clarifications record. A partial date has a
+  widget of its own, described under
+  [Partial dates](https://github.com/django-mvp/django-mvp-forms#partial-dates).
 - IMask's pipes, which format a value without an input.
 - Widgets for one particular format, such as a phone number or an IBAN. Formats differ by country
   and each is one line with the pattern widget.

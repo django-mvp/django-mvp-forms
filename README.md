@@ -1477,7 +1477,7 @@ Options IMask refuses, such as a regular expression JavaScript cannot compile, l
 
 #### What is not supported
 
-An option whose value is a JavaScript function cannot be written in Python and is not supported: function masks, `prepare`, `prepareChar`, `commit`, `validate`, `dispatch`, `format` and `parse`. IMask's date mask needs two of them for any format but its default, so there is no date widget. There are no widgets for one particular format, such as a phone number or an IBAN, because the pattern differs by country and each is one line with `PatternMaskInput`. IMask's pipes, which format a value with no input, are not covered.
+An option whose value is a JavaScript function cannot be written in Python and is not supported: function masks, `prepare`, `prepareChar`, `commit`, `validate`, `dispatch`, `format` and `parse`. IMask's date mask needs two of them for any format but its default, so none of the four widgets is a date widget: a date is a pattern of range blocks, and a partial date has a widget of its own, [`PartialDateMaskInput`](https://github.com/django-mvp/django-mvp-forms#partial-dates). There are no widgets for one particular format, such as a phone number or an IBAN, because the pattern differs by country and each is one line with `PatternMaskInput`. IMask's pipes, which format a value with no input, are not covered.
 
 ### Partial dates
 
@@ -1554,6 +1554,20 @@ The page has to load what a page loads for any mask widget: IMask and the form's
 A page that does not load IMask draws the input as an ordinary text input. Nothing is masked, no error is raised in the browser, and the form submits what was typed to the field, which checks it as it does any value.
 
 The widget on a field that is not a `PartialDateField` is a text input that submits what was typed.
+
+##### What the mask does
+
+The year is four digits, then a hyphen, a month and a hyphen, a day, and the hyphens are placed as the digits are typed.
+
+- A digit that would make the month `00` or above 12 is not accepted. A digit that would make a day the typed month does not have is not accepted, and February takes the 29th only in a leap year. A change to the year or the month that would leave the day with no date is not accepted either: the input keeps the date it held.
+- A first digit that can only be the whole month, 2 to 9, or the whole day, 4 to 9, is padded with a zero as it is typed: `202145` gives `2021-04-05`. A pasted date is padded in the same way: `2021-3-4` gives `2021-03-04`.
+- A change in the middle of a value keeps the rest of it. With `2021-12-14` in the input, selecting the month and typing `4` gives `2021-04-14`.
+- A person may stop after the year or after the month. `2021` and `2021-03` are submitted as they stand, and the field accepts them.
+- A value the form was drawn with is shown under the mask, `2021-03` as `2021-03`. A value the mask would cut, such as `2021-02-30` held in a form's `initial` or in a bound form that failed, is shown whole so that the person sees what was sent. The mask is put on the input once the person has changed it to a value the mask takes.
+
+The mask refuses the digits a calendar cannot have and nothing more. The field is what checks the value.
+
+The padding is done by a subclass of IMask's range block that overrides `_appendCharRaw`, a method that IMask's guide does not document, because the two options the guide does document for changing typed text lose the rest of a value that is changed in the middle. The widget is tested against IMask 7.6.1, and a newer release needs the browser tests run against it before it is relied on.
 
 ### Themes
 

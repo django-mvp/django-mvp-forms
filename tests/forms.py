@@ -1186,6 +1186,7 @@ class MaskedPageForm(forms.Form):
             ]
         ),
     )
+    born = PartialDateField(required=False, widget=PartialDateMaskInput())
 
 
 class PartialDateForm(forms.Form):

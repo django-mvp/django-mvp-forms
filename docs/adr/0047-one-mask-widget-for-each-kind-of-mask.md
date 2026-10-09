@@ -12,8 +12,10 @@ a `ValueError` that names the option, when the form class is defined.
 An option is supported when its value is text, a number, true or false, a list, or a regular
 expression written as text. An option whose value is a JavaScript function is not supported:
 function masks, `prepare`, `prepareChar`, `commit`, `validate`, `dispatch`, `format` and `parse`.
-There is no date widget, since IMask's date mask needs two of those functions for any format but
-its default. A date is a pattern whose day, month and year are `RangeBlock`s.
+The four widgets take no function, so none of them is a date widget: IMask's date mask needs two
+of those functions for any format but its default. A date is a pattern whose day, month and year
+are `RangeBlock`s. A partial date has a widget of its own, `PartialDateMaskInput`, described under
+[Partial dates](https://github.com/django-mvp/django-mvp-forms#partial-dates).
 
 A developer who needs one of those options listens for the `mvp-forms:imask` event, which carries
 the IMask instance.
