@@ -18,6 +18,9 @@ from demo.forms import (
     DAISYUI_VERSION,
     THEME_NAMES,
     DynamicMaskForm,
+    MaskedModalForm,
+    MaskSizesForm,
+    MaskStatesForm,
     NumberMaskForm,
     PatternMaskForm,
     RegexMaskForm,
@@ -3639,6 +3642,43 @@ class InputMasksPageContract:
         rows = page.find(id=DYNAMIC_PREFIX).find("table").find("tbody").find_all("tr")
         received = [row.find_all("code")[1].get_text() for row in rows]
         assert received == list(DYNAMIC_POST.values())
+
+    @pytest.mark.parametrize(
+        ("prefix", "form"),
+        [
+            pytest.param("states", MaskStatesForm, id="states"),
+            pytest.param("sizes", MaskSizesForm, id="sizes"),
+            pytest.param("contact", MaskedModalForm, id="modal"),
+        ],
+    )
+    def test_each_place_holds_a_masked_input(self, page, prefix, form):
+        masked = {
+            name
+            for name in form.base_fields
+            if page.find(id=f"id_{prefix}-{name}").has_attr("data-imask")
+        }
+
+        assert masked
+        assert masked <= set(form.base_fields)
+
+    def test_the_modal_holds_its_masked_inputs_inside_the_dialog(self, page):
+        dialog = page.find(id=MaskedModalForm(prefix="contact").dialog_id)
+
+        masked = dialog.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {"contact-phone", "contact-iban"}
+
+    def test_each_line_of_the_formset_holds_a_masked_input(self, page):
+        lines = page.find(id="lines-formset")
+
+        masked = lines.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {
+            "lines-0-article",
+            "lines-0-price",
+            "lines-1-article",
+            "lines-1-price",
+        }
 
     def test_the_disabled_field_of_the_states_form_is_a_disabled_number(self, page):
         disabled = page.find(id="id_states-disabled")

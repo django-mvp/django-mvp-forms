@@ -255,8 +255,29 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestInputsAddedAfterThePageLoads",
+              "tests/test_imask_e2e.py::TestDisabledAndReadOnlyInputs",
+              "tests/test_demo.py::TestInputMasksPage",
+              "tests/test_demo.py::TestStandaloneInputMasksPage",
+              "tests/test_pack/test_masked_inputs.py::TestMaskedInputs"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py -q",
+              "uv run pytest tests/test_demo.py -k InputMasks -q",
+              "uv run pytest -n auto -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:79",
+              "tests/test_imask_e2e.py:229",
+              "tests/test_imask_e2e.py:263",
+              "tests/test_demo.py:3654"
+            ]
+          }
         }
       ]
     },

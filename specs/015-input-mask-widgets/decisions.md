@@ -360,3 +360,19 @@ not already have.
 **Why:** the same as D25: the brief forbids rewording help text on the approved page.
 
 **Revisit if:** the maintainer rewords the number sections' help text. It is one line.
+
+## D29. The observer's story adds no code, and its red steps are probes
+
+**Decision:** the script is not changed for this story. The tests for inputs added later, a
+`Modal`, and disabled and read-only inputs pass against the script as it is, and the red step for
+each is a mutation: the observer removed fails the two insertion tests, and the check that an
+input already has a mask removed fails the test of an input moved within the page. The formset's
+empty form is covered by the pack test the first story wrote, which fails when the attribute is
+left off the widget of a form whose prefix is `__prefix__`.
+
+**Why:** the observer and the check are the prototype's, kept by the first story with no test of
+their own, and this story's job is the test. A test that fails only when the mechanism is removed
+is the evidence that it is exercised.
+
+**Revisit if:** the script is changed to find inputs another way. The probes then name the new
+mechanism.

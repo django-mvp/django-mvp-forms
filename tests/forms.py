@@ -2,6 +2,7 @@
 
 import datetime
 
+from crispy_forms.bootstrap import Modal
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Field, Layout
 from django import forms
@@ -1097,6 +1098,21 @@ class MaskedLineForm(forms.Form):
 MaskedLineFormSet = formset_factory(MaskedLineForm, extra=2)
 
 
+class MaskedDialogForm(forms.Form):
+    name = forms.CharField(required=False)
+    mobile = forms.CharField(
+        required=False, widget=PatternMaskInput("+{49} 000 0000000")
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            "name", Modal("mobile", css_id="contact-dialog", title="Contact")
+        )
+
+
 class MaskedPageForm(forms.Form):
     phone = forms.CharField(
         required=False, widget=PatternMaskInput("+{49} 000 0000000")
@@ -1137,6 +1153,12 @@ class MaskedPageForm(forms.Form):
     amount = forms.DecimalField(
         required=False,
         widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=","),
+    )
+    locked = forms.CharField(
+        required=False, disabled=True, widget=PatternMaskInput("000-000")
+    )
+    frozen = forms.CharField(
+        required=False, widget=PatternMaskInput("000-000", attrs={"readonly": True})
     )
     telephone = forms.CharField(
         required=False,

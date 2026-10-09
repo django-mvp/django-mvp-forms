@@ -1442,6 +1442,14 @@ An empty list, a value that is not a list, and an item that is not one of the th
 
 The field receives the submitted text unchanged, as it does from a pattern or a regular expression, including where a mask in the list is a number. A list that holds a pattern with a `display_char` shows that character and submits what was typed.
 
+#### Inputs added later
+
+The script applies a mask to each masked input on the page when it loads, and then watches the document for inputs added afterwards. A formset row added by a script, a form that htmx 2 swaps into the page and a node your own script inserts all get their mask with no script of yours, and so does a field in a `Modal`, which is masked before the dialog is opened. Each input has one mask: an input moved within the page keeps its mask, and a page that includes the script more than once masks each input once.
+
+A formset's `empty_form`, the template a script clones to add a row, is drawn through the same widget, so it carries the same `data-imask` as the rows beside it.
+
+A disabled or a read-only masked input shows its value under the mask and stays disabled or read-only. A disabled input adds no entry to the form's data, as for any input.
+
 #### What the form receives
 
 A pattern, a regular expression or a list of masks hands the field the text as the person saw it, fixed characters included, and the field cleans it as it would any text. A number mask hands it the plain number, as described above. A pattern submitted half filled in reaches the field half filled in, and whether that is acceptable is the field's validation to decide: add a validator to a field that must match a shape.

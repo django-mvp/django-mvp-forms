@@ -16,6 +16,25 @@ window.masked = [];
 document.addEventListener("mvp-forms:imask", (event) =>
   window.masked.push(event.target.id));
 """
+INSERT_INPUT = """
+(options) => {
+  const input = document.createElement("input");
+  input.id = "id_later";
+  input.name = "later";
+  input.dataset.imask = JSON.stringify(options);
+  document.getElementById("masked").append(input);
+}
+"""
+INSERT_LINE = """
+document.getElementById("masked").append(
+  document.getElementById("line").content.cloneNode(true));
+"""
+MOVE_PHONE = """
+const holder = document.createElement("div");
+document.getElementById("masked").append(holder);
+holder.append(document.getElementById("id_phone"));
+"""
+MASKS_OF = "(id) => window.masked.filter((each) => each === id).length"
 ENTRIES = "Object.fromEntries(new FormData(document.getElementById('masked')))"
 
 
@@ -205,6 +224,63 @@ class TestOneMaskForEachInput:
         )
 
         assert sorted(page.evaluate("window.masked")) == sorted(inputs)
+
+
+class TestInputsAddedAfterThePageLoads:
+    def test_an_input_inserted_by_a_script_is_masked_once(self, masked_page):
+        page = masked_page()
+
+        page.evaluate(INSERT_INPUT, {"kind": "pattern", "mask": "000"})
+
+        assert type_into(page, "later", "12a3") == "123"
+        assert page.evaluate(MASKS_OF, "id_later") == 1
+
+    def test_a_node_holding_an_input_is_masked_once(self, masked_page):
+        page = masked_page()
+
+        page.evaluate(INSERT_LINE)
+
+        assert type_into(page, "form-__prefix__-article", "ab1234") == "ab-1234"
+        assert page.evaluate(MASKS_OF, "id_form-__prefix__-article") == 1
+
+    def test_an_input_moved_within_the_page_keeps_one_mask(self, masked_page):
+        page = masked_page()
+
+        page.evaluate(MOVE_PHONE)
+
+        assert page.evaluate(MASKS_OF, "id_phone") == 1
+        assert type_into(page, "phone", "12a3") == "+49 123"
+
+    def test_an_input_in_a_modal_works_once_the_dialog_is_open(self, masked_page):
+        page = masked_page()
+
+        page.evaluate("document.getElementById('contact-dialog').showModal()")
+
+        assert type_into(page, "mobile", "12a3") == "+49 123"
+        assert page.evaluate(MASKS_OF, "id_mobile") == 1
+
+
+class TestDisabledAndReadOnlyInputs:
+    def test_a_disabled_input_shows_its_value_under_the_mask_and_stays_disabled(
+        self, masked_page
+    ):
+        page = masked_page(locked="123456")
+
+        field = page.locator("#id_locked")
+
+        assert field.input_value() == "123-456"
+        assert field.is_disabled()
+
+    def test_a_read_only_input_shows_its_value_under_the_mask_and_stays_read_only(
+        self, masked_page
+    ):
+        page = masked_page(frozen="654321")
+
+        field = page.locator("#id_frozen")
+
+        assert field.input_value() == "654-321"
+        assert field.get_attribute("readonly") is not None
+        assert not field.is_editable()
 
 
 class TestAPageWithoutIMask:

@@ -9,7 +9,7 @@ from django.views.generic import TemplateView
 from django_tomselect.autocompletes import AutocompleteModelView
 
 from demo.urls import urlpatterns as demo_urlpatterns
-from tests.forms import MaskedPageForm
+from tests.forms import MaskedDialogForm, MaskedLineFormSet, MaskedPageForm
 
 # Where the browser tests' pages ask for IMask. The tests answer the request from
 # a copy under tests/data/ and nothing is fetched.
@@ -40,6 +40,8 @@ class MaskedPage(TemplateView):
         """Draw the form, with its initial values taken from the query string."""
         return super().get_context_data(
             form=MaskedPageForm(initial=self.request.GET.dict()),
+            dialog=MaskedDialogForm(),
+            line=MaskedLineFormSet().empty_form,
             imask=self.imask,
             imask_url=IMASK_URL,
             copies=range(self.copies),
