@@ -243,8 +243,10 @@ page and use the control there.
   for django-tomselect's controls only.
 - **FR-002**: The developer MUST be the one who adds it to a page. The pack's templates, its
   template tags and the widget's media MUST NOT load it.
-- **FR-003**: Every rule in the stylesheet MUST apply only inside a Tom Select control or its
-  dropdown, so that loading it changes nothing else on a page.
+- **FR-003**: Every rule in the stylesheet MUST apply only to a Tom Select control, to its
+  dropdown, to the element django-tomselect announces a choice in, or to a box that holds an
+  open control and would otherwise cut its dropdown off. Loading it MUST change nothing on a
+  page that holds no control.
 - **FR-004**: The stylesheet MUST take every colour, radius, border width and field size from the
   variables the daisyUI theme sets, and MUST name no colour of its own, so that it follows any
   theme with no per-theme work.

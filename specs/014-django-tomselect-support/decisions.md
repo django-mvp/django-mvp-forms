@@ -87,3 +87,58 @@ styled when a project needs it, which is how the package takes on fields and wid
 (Article XV).
 
 **ADR:** none. The README's list of covered plugins is the record.
+
+## D7. The stylesheet may reach a box that holds an open control
+
+**What was ambiguous:** FR-003 first said every rule applies only inside a control or its
+dropdown. The approved sketch needs three rules that do not: one hides django-tomselect's status
+element, and two let a modal box and a table's scroller overflow while a dropdown in them is open.
+
+**Chosen:** FR-003 names those three. A page with no control is still drawn exactly as before.
+
+**Why:** the maintainer approved the screens that need them, and SC-004 is the promise the
+requirement exists to keep.
+
+**ADR:** none. The scope test's list of exceptions is the record.
+
+## D8. Article XIV is amended in its own pull request
+
+**Chosen:** the amendment FR-006 asks for is made in a pull request of its own, which merges
+before this one. The README sentences and the decision records change here.
+
+**Why:** the constitution says a rule is changed in its own pull request and then the work is
+done.
+
+**ADR:** none. The constitution's own footer records the amendment.
+
+## D9. Nothing in the suite runs a browser
+
+**Chosen:** the suite holds the pack's markup, the stylesheet's structure and its contrast. What
+a browser does with the rules was measured once during the sketch and is walked by the maintainer
+at review.
+
+**Why:** the repository has no browser tests and its workflow installs none. Adding one for a
+feature that serves an aspirational goal would cost every later change a slower suite.
+
+**ADR:** none. Local to this feature.
+
+## D10. htmx start-up is django-tomselect's setting, set once
+
+**Chosen:** the README tells a host project that swaps forms in with htmx to set `use_htmx` in
+django-tomselect's default configuration. The package changes nothing to make it automatic.
+
+**Why:** it is what django-tomselect provides for the purpose, and FR-026 allows what
+django-tomselect already asks for.
+
+**ADR:** none. The README's section is the record.
+
+## D11. Three behaviours of django-tomselect are recorded and left alone
+
+**Chosen:** typed text staying in a multiple control after a pick, the message an empty required
+control gives, and the Tab key stopping inside an open dropdown are each an issue in this
+repository. Nothing here patches them.
+
+**Why:** the specification's assumptions say this package does not patch django-tomselect's
+scripts.
+
+**ADR:** none.
