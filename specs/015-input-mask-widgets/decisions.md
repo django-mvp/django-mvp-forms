@@ -219,6 +219,8 @@ stated.
 **Revisit if:** the script ever needs one shape for every definition. Then every definition is an
 object.
 
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
+
 ## D17. Every refused option is a `ValueError`, including a value of the wrong type
 
 **Decision:** a `blocks` that is not a mapping, a block that is not one of the three classes and
@@ -230,6 +232,8 @@ caller catching it should not need two.
 
 **Revisit if:** the maintainer prefers Python's `TypeError` for a wrong type, which is a change
 in that helper alone.
+
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
 
 ## D18. The script keeps only the pattern kind, the observer and the event until their own tasks
 
@@ -243,6 +247,8 @@ event are the script's own shape, and their stories take the red step by removin
 
 **Revisit if:** a story needs the script to carry a kind before its widget exists.
 
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
+
 ## D19. The browser tests count masks through the event
 
 **Decision:** the test that a page holding the script three times gives each input one mask
@@ -253,6 +259,8 @@ carry `data-imask`.
 from. Every mask the script applies sends one.
 
 **Revisit if:** the event is dropped or sent more than once for an input by design.
+
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
 
 ## D20. The demo's sentence about the price stays until the number story restores the field
 
@@ -267,6 +275,8 @@ now would leave that story a template edit it does not list.
 **Revisit if:** the number story is dropped or delivered separately from this one. Then the sentence
 goes with the field.
 
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
+
 ## D21. The demo loads IMask at an exact version with the integrity value of the published file
 
 **Decision:** both demo pages and the README's example load
@@ -280,6 +290,8 @@ what the CDN serves.
 **Revisit if:** a browser refuses the file on either page. Then the CDN's copy differs and the hash
 is read from it.
 
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
+
 ## D22. A regular expression's flags are checked against the eight JavaScript has, and no further
 
 **Decision:** `RegexMaskInput` refuses `flags` that is not text and any character outside `dgimsuvy`,
@@ -292,6 +304,8 @@ combinations apart is JavaScript's rule to keep, and a copy of it in Python woul
 **Revisit if:** a repeated flag reaches a page often enough to matter. A bad combination makes the
 script throw while building that input's options.
 
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
+
 ## D23. The regular expression's section of the demo restores its form with the view
 
 **Decision:** `RegexMaskForm` is restored in `demo/forms.py` exactly as at the approved prototype,
@@ -302,6 +316,8 @@ to draw. `demo/forms.py` is not among the files `tasks.md` names for this task, 
 names the restoration of the form as part of it.
 
 **Revisit if:** none.
+
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
 
 ## D24. A number bound is a finite number, never a boolean, and a Decimal is written as a float
 
@@ -315,17 +331,15 @@ with more digits than a `float` keeps.
 
 **Revisit if:** a bound needs more digits than a double holds. IMask would need to be given text.
 
-## D25. The quantity's help text still says min and max
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
 
-**Decision:** the Quantity field of the demo's number section is restored with `min_value` and
-`max_value`, and its help text keeps "scale=0, min=0, max=100, autofix=True" as approved.
+## D25. The quantity's help text names `min_value` and `max_value`
 
-**Why:** the brief forbids rewording a label or help text on the approved page, and the only
-change it names for the number section is the two option names in code. The text now names two
-options the widget does not have.
+**Chosen:** the help text states the option under the name the widget takes.
 
-**Revisit if:** the maintainer wants the help text to name `min_value` and `max_value`. That is a
-one-line edit to the field's help text.
+**Why:** the help text exists to show how the field was written, so it follows the interface. It was left with the prototype's names while the story was built, since wording on the approved page was not the implementer's to change, and corrected when the story was accepted. The difference from the approved page is listed at the walkthrough.
+
+**ADR:** none — local to the demo page.
 
 ## D26. The test project's masked page can answer a post with what each field cleaned to
 
@@ -338,6 +352,8 @@ existing routes return cannot show that a browser's `1 234 567,5` reached the fi
 
 **Revisit if:** a second widget needs its cleaned value read in a browser test. The routes then
 carry that field too.
+
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
 
 ## D27. A list of masks is written under `mask`, and a list inside a list is refused
 
@@ -352,14 +368,15 @@ not already have.
 
 **Revisit if:** nesting is wanted. The refusal is one entry in the tuple of allowed classes.
 
-## D28. The code field's help text still says max, as the quantity's says min and max
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
 
-**Decision:** the Colour or number field is restored with `max_value=999` and its help text keeps
-"a number with scale=0 and max=999" as approved.
+## D28. The code field's help text names `max_value`
 
-**Why:** the same as D25: the brief forbids rewording help text on the approved page.
+**Chosen:** the help text states the option under the name the widget takes.
 
-**Revisit if:** the maintainer rewords the number sections' help text. It is one line.
+**Why:** the help text exists to show how the field was written, so it follows the interface. It was left with the prototype's names while the story was built, since wording on the approved page was not the implementer's to change, and corrected when the story was accepted. The difference from the approved page is listed at the walkthrough.
+
+**ADR:** none — local to the demo page.
 
 ## D29. The observer's story adds no code, and its red steps are probes
 
@@ -377,6 +394,8 @@ is the evidence that it is exercised.
 **Revisit if:** the script is changed to find inputs another way. The probes then name the new
 mechanism.
 
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
+
 ## D30. The README's event example sets `prepareChar`, and says to register the listener first
 
 **Decision:** the one example sets `prepareChar` to turn typed letters to upper case, an option
@@ -388,3 +407,6 @@ event sent before a listener exists is not replayed. The same listener is the on
 uses, so the example is what the test runs.
 
 **Revisit if:** the script ever replays the event for a listener added late.
+
+**ADR:** none — local to this feature's build, and nothing downstream inherits it.
+
