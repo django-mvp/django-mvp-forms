@@ -152,8 +152,23 @@
       "tasks": [
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestPartialDateInput",
+              "tests/test_widgets.py::TestPartialDateSelect",
+              "tests/test_pack/test_partial_dates.py::TestPartialDateInput",
+              "tests/test_pack/test_partial_dates.py::TestPartialDateSelect"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_pack/test_template_list.py -q"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:632",
+              "mvp_forms/templates/mvp_forms/widgets/partial_date.html:1"
+            ]
+          }
         },
         {
           "id": "T005",
