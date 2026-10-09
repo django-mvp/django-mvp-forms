@@ -1256,6 +1256,14 @@ PartialDatePartsLineFormSet = formset_factory(PartialDatePartsLineForm, extra=2)
 PartialDateSelectLineFormSet = formset_factory(PartialDateSelectLineForm, extra=2)
 
 
+class PartialDatePageForm(forms.Form):
+    typed = PartialDateField(required=False, widget=PartialDateInput())
+    listed = PartialDateField(required=False, widget=PartialDateSelect())
+
+
+PartialDatePageLineFormSet = formset_factory(PartialDatePageForm, extra=1)
+
+
 def partial_date_form(**options):
     """Return a form class holding one partial date field built from the options."""
     return type(

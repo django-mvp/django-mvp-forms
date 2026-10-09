@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Partial dates</title>
+  </head>
+  <body>
+    <form id="dates" method="post" action="">
+      {{ form.as_div }}
+      <button type="submit">Send</button>
+    </form>
+    <template id="line">{{ line.as_div }}</template>
+    {% if script %}{% for copy in copies %}{{ form.media }}{% endfor %}{% endif %}
+  </body>
+</html>

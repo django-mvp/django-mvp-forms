@@ -160,4 +160,5 @@ non-mirror-paths = [
   "tests/test_pack/",
   "tests/test_legibility/",
   "tests/test_imask_e2e.py",
+  "tests/test_partial_date_e2e.py",
 ]

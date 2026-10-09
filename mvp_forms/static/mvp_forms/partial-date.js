@@ -26,15 +26,35 @@
     return year * 10000 + (month || (last ? 12 : 1)) * 100 + (day || (last ? 31 : 1));
   }
 
-  // Hide the options a part cannot take. One that is held is kept when the
-  // form is first shown, and cleared after that.
+  // Every option a select held when it was first met. Safari ignores `hidden`
+  // on an option, so the options a part cannot take are taken out of the list
+  // and put back from here.
+  const LISTS = new WeakMap();
+
+  // Put into a select only the options that can be chosen. One that is held is
+  // kept when the form is first shown, and cleared after that.
   function offer(select, keep, allowed) {
-    Array.from(select.options).forEach(function (option) {
-      const out = option.value !== "" && !allowed(Number(option.value));
-      if (out && option.selected && !keep) select.value = "";
-      option.hidden = out && !(keep && option.selected);
-      option.disabled = option.hidden;
+    if (!LISTS.has(select)) LISTS.set(select, Array.from(select.options));
+    const held = select.value;
+    const wanted = LISTS.get(select).filter(function (option) {
+      return (
+        option.value === "" ||
+        allowed(Number(option.value)) ||
+        (keep && option.value === held)
+      );
     });
+    const shown = Array.from(select.options);
+    const same =
+      wanted.length === shown.length &&
+      wanted.every(function (option, index) {
+        return option === shown[index];
+      });
+    if (!same) select.replaceChildren.apply(select, wanted);
+    select.value = wanted.some(function (option) {
+      return option.value === held;
+    })
+      ? held
+      : "";
   }
 
   // What a form was sent is shown as it was sent: a part that holds a value is

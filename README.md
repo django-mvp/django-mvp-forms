@@ -1597,7 +1597,21 @@ The widget joins the parts with hyphens and leaves out the empty ones from the r
 
 `PartialDateSelect` lists the years from this year back a hundred years, latest first. A year the form already holds that is not on the list is still an option, so a stored `1850` is shown and not lost.
 
-The widgets name `mvp_forms/partial-date.js` in the form's media. The script needs no IMask.
+The widgets name `mvp_forms/partial-date.js` in the form's media. The script needs no IMask, and a page that loads the form's media is all it asks for.
+
+##### What the script does
+
+The script keeps the three parts in step with the calendar as the person fills them in.
+
+- No month can be chosen until the year has four digits, and no day can be chosen until a month is chosen. The parts that cannot be used yet are disabled, and so are not submitted.
+- The days on offer are the days the chosen month has in the entered year, and February offers the 29th only in a leap year. A day the month does not have is not in the list at all, so nothing greyed out is left to puzzle over.
+- A day the change has made impossible is cleared and never moved to another one. A chosen 31st is cleared when the month becomes February, and a chosen 29th of February is cleared when the year stops being a leap year. A day the new month still has is kept.
+- A form drawn holding a value that is not a date, such as `2021-02-30`, or a day with no month, shows what was sent until the person changes a part. The person sees what the field refused, and the first change puts the parts back in step.
+- A group added to the page later, such as the extra form of a formset, behaves in the same way, and a page that holds the form's media several times has the script act once.
+
+The script writes no inline script and no inline handler, and it makes no request. It holds on to the full list of a part's options the first time it meets it, and puts back into the select only those that can be chosen.
+
+A page that does not load the script draws the same three parts with every option: twelve months and the days 1 to 31, each part enabled. The form submits, and the field refuses a combination that is not a date, so a day with no month comes back as `no_month` and a date such as `2021-02-30` as `day`.
 
 ### Themes
 
