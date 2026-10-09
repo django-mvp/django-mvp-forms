@@ -798,6 +798,58 @@ class TestPartialDateMaskInput:
 
         assert json.loads(soup.input["data-imask"])["resolution"] == "day"
 
+    @pytest.mark.parametrize(
+        ("limits", "expected"),
+        [
+            ({"min_value": "1998-03-15"}, {"min": "1998-03-15"}),
+            ({"max_value": "2004-09"}, {"max": "2004-09"}),
+            (
+                {"min_value": "1998-03-15", "max_value": "2004-09"},
+                {"min": "1998-03-15", "max": "2004-09"},
+            ),
+            ({"min_value": datetime.date(1998, 3, 5)}, {"min": "1998-03-05"}),
+            ({"max_value": "2004-9"}, {"max": "2004-09"}),
+            ({}, {}),
+        ],
+        ids=["earliest", "latest", "both", "a Python date", "padded", "neither"],
+    )
+    def test_it_writes_the_limits_the_field_tells_it_where_they_are_stated(
+        self, limits, expected
+    ):
+        class Form(forms.Form):
+            born = PartialDateField(widget=PartialDateMaskInput(), **limits)
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        assert json.loads(soup.input["data-imask"]) == {
+            "kind": "partial-date",
+            "resolution": "day",
+            **expected,
+        }
+
+    def test_it_writes_no_limit_on_a_field_that_is_not_a_partial_date_field(self):
+        class Form(forms.Form):
+            born = forms.CharField(widget=PartialDateMaskInput())
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        assert set(json.loads(soup.input["data-imask"])) == {"kind", "resolution"}
+
+    @pytest.mark.parametrize("sent", ["1997-03-14", "2004-10", "1997"])
+    def test_a_refused_date_outside_the_limits_is_drawn_as_it_was_sent(self, sent):
+        class Form(forms.Form):
+            born = PartialDateField(
+                min_value="1998-03-15",
+                max_value="2004-09",
+                widget=PartialDateMaskInput(),
+            )
+
+        form = Form({"born": sent})
+        soup = BeautifulSoup(str(form["born"]), "html.parser")
+
+        assert not form.is_valid()
+        assert soup.input["value"] == sent
+
     def test_it_names_the_script_in_its_media(self):
         assert "mvp_forms/imask.js" in str(PartialDateMaskInput().media)
 
@@ -1014,6 +1066,88 @@ class ThreePartWidget:
             "day",
         ]
 
+    @pytest.mark.parametrize(
+        ("limits", "expected"),
+        [
+            ({"min_value": "1998-03-15"}, {"min": "1998-03-15"}),
+            ({"max_value": "2004-09"}, {"max": "2004-09"}),
+            (
+                {"min_value": "1998-03-15", "max_value": "2004-09"},
+                {"min": "1998-03-15", "max": "2004-09"},
+            ),
+            ({"min_value": datetime.date(1998, 3, 5)}, {"min": "1998-03-05"}),
+            ({}, {}),
+        ],
+        ids=["earliest", "latest", "both", "a Python date", "neither"],
+    )
+    def test_the_group_carries_the_limits_the_field_tells_it_where_they_are_stated(
+        self, limits, expected
+    ):
+        class Form(forms.Form):
+            born = PartialDateField(widget=self.widget(), **limits)
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        group = soup.find(attrs={"data-partial-date": True})
+        assert {
+            "min": group.get("data-partial-date-min"),
+            "max": group.get("data-partial-date-max"),
+        } == {"min": None, "max": None, **expected}
+
+    def test_the_group_carries_no_limit_on_a_field_that_is_not_a_partial_date_field(
+        self,
+    ):
+        class Form(forms.Form):
+            born = forms.CharField(widget=self.widget())
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        group = soup.find(attrs={"data-partial-date": True})
+        assert not group.has_attr("data-partial-date-min")
+        assert not group.has_attr("data-partial-date-max")
+
+    @pytest.mark.parametrize(
+        ("sent", "code"),
+        [
+            ({"year": "1997", "month": "03", "day": "14"}, "min_value"),
+            ({"year": "1998", "month": "03", "day": "14"}, "min_value"),
+            ({"year": "2004", "month": "10", "day": ""}, "max_value"),
+            ({"year": "2005", "month": "", "day": ""}, "max_value"),
+        ],
+    )
+    def test_a_refused_date_outside_the_limits_is_drawn_as_it_was_sent(
+        self, sent, code
+    ):
+        widget = self.widget()
+
+        class Form(forms.Form):
+            born = PartialDateField(
+                min_value="1998-03-15", max_value="2004-09", widget=widget
+            )
+
+        form = Form({f"born_{part}": value for part, value in sent.items()})
+        parts = drawn(widget, form["born"].value())
+
+        year = parts["year"]
+        shown = year.get("value") if year.name == "input" else chosen(year)
+        assert form.has_error("born", code=code)
+        assert (
+            shown or None,
+            chosen(parts["month"]) or None,
+            chosen(parts["day"]) or None,
+        ) == tuple(value or None for value in sent.values())
+
+    def test_a_datetime_is_split_by_its_date_alone(self):
+        parts = drawn(self.widget(), datetime.datetime(2021, 3, 14, 10, 30, 5))
+
+        year = parts["year"]
+        shown = year.get("value") if year.name == "input" else chosen(year)
+        assert (shown, chosen(parts["month"]), chosen(parts["day"])) == (
+            "2021",
+            "03",
+            "14",
+        )
+
     def test_a_part_the_resolution_leaves_out_is_refused_if_it_is_sent_anyway(self):
         class Form(forms.Form):
             born = PartialDateField(resolution="month", widget=self.widget())
@@ -1081,3 +1215,71 @@ class TestPartialDateSelect(ThreePartWidget):
         parts = drawn(PartialDateSelect(), "2020")
 
         assert chosen(parts["year"]) == "2020"
+
+    def test_the_years_run_from_the_latest_limits_year_down_to_the_earliests(self):
+        class Form(forms.Form):
+            born = PartialDateField(
+                min_value="1998-03-15", max_value="2004-09", widget=PartialDateSelect()
+            )
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        years = soup.find(attrs={"data-partial-date-part": "year"})("option")
+        assert [option["value"] for option in years if option["value"]] == [
+            f"{year}" for year in range(2004, 1997, -1)
+        ]
+
+    def test_with_no_earliest_date_the_years_reach_a_hundred_back_from_the_latest(
+        self,
+    ):
+        class Form(forms.Form):
+            born = PartialDateField(max_value="2004-09", widget=PartialDateSelect())
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        years = soup.find(attrs={"data-partial-date-part": "year"})("option")
+        assert [option["value"] for option in years if option["value"]] == [
+            f"{year}" for year in range(2004, 1903, -1)
+        ]
+
+    def test_with_no_latest_date_the_years_start_this_year(self):
+        this_year = datetime.date.today().year
+
+        class Form(forms.Form):
+            born = PartialDateField(min_value="1998", widget=PartialDateSelect())
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        years = soup.find(attrs={"data-partial-date-part": "year"})("option")
+        assert [option["value"] for option in years if option["value"]] == [
+            f"{year}" for year in range(this_year, 1997, -1)
+        ]
+
+    def test_with_no_latest_date_and_an_earliest_in_the_future_the_years_run_a_hundred_on(
+        self,
+    ):
+        first = datetime.date.today().year + 5
+
+        class Form(forms.Form):
+            born = PartialDateField(min_value=f"{first}-06", widget=PartialDateSelect())
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        years = soup.find(attrs={"data-partial-date-part": "year"})("option")
+        assert [option["value"] for option in years if option["value"]] == [
+            f"{year}" for year in range(first + 100, first - 1, -1)
+        ]
+
+    def test_a_held_year_outside_the_limits_is_put_first_and_chosen(self):
+        class Form(forms.Form):
+            born = PartialDateField(
+                min_value="1998", max_value="2004", widget=PartialDateSelect()
+            )
+
+        form = Form({"born_year": "1990", "born_month": "03"})
+        soup = BeautifulSoup(str(form["born"]), "html.parser")
+
+        year = soup.find(attrs={"data-partial-date-part": "year"})
+        values = [option["value"] for option in year("option") if option["value"]]
+        assert values == ["1990", *(f"{n}" for n in range(2004, 1997, -1))]
+        assert chosen(year) == "1990"

@@ -284,8 +284,16 @@ known only so far).
 
 **Precision**:
 How much of a partial date is given: one of year, month and day, from coarsest
-to finest. `2021-03` has the precision month.
+to finest. `2021-03` has the precision month. A developer states two options on
+the field: `coarsest`, the least precise value it accepts, and `resolution`,
+the most precise.
 _Avoid_: granularity, accuracy, format.
+
+**Earliest date** and **latest date**:
+The limits a field accepts, stated as `min_value` and `max_value`, each a
+partial date or a `datetime.date`. A partial value is inside them when any day
+it could be is, and a limit given to the month stands for the whole month.
+_Avoid_: minimum, maximum, bounds, range.
 
 **Part**:
 The year, the month or the day of a partial date. In the three-part widget each

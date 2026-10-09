@@ -291,3 +291,216 @@ class TestPartialDateField:
         assert parts["born"].field.widget.resolution == "month"
         assert isinstance(masked.fields["born"].widget, PartialDateMaskInput)
         assert Form.base_fields["born"].widget.resolution == "day"
+
+    @pytest.mark.parametrize(
+        ("limit", "typed"),
+        [
+            ("1998-03-15", "1998"),
+            ("1998-03-15", "1998-03"),
+            ("1998-03-15", "1998-03-15"),
+            ("1998-03-15", "2004-09-30"),
+            ("1998-03", "1998-03-01"),
+            ("1998-03", "1998-03"),
+            ("1998", "1998-01-01"),
+            ("1998", "1998"),
+        ],
+    )
+    def test_a_value_on_or_after_the_earliest_date_is_cleaned(self, limit, typed):
+        form = submit(typed, min_value=limit)
+
+        assert form.is_valid()
+        assert form.cleaned_data["born"] == typed
+
+    @pytest.mark.parametrize(
+        ("limit", "typed"),
+        [
+            ("1998-03-15", "1997"),
+            ("1998-03-15", "1998-02"),
+            ("1998-03-15", "1998-03-14"),
+            ("1998-03", "1998-02-28"),
+            ("1998-03", "1998-02"),
+            ("1998", "1997-12-31"),
+            ("1998", "1997"),
+        ],
+    )
+    def test_a_value_before_the_earliest_date_is_refused_with_min_value(
+        self, limit, typed
+    ):
+        form = submit(typed, min_value=limit)
+
+        assert codes(form) == ["min_value"]
+
+    @pytest.mark.parametrize(
+        ("limit", "typed"),
+        [
+            ("1998-03-15", "1998"),
+            ("1998-03-15", "1998-03"),
+            ("1998-03-15", "1998-03-15"),
+            ("1998-03-15", "1997-12-31"),
+            ("1998-03", "1998-03-31"),
+            ("1998-03", "1998-03"),
+            ("1998", "1998-12-31"),
+            ("1998", "1998"),
+        ],
+    )
+    def test_a_value_on_or_before_the_latest_date_is_cleaned(self, limit, typed):
+        form = submit(typed, max_value=limit)
+
+        assert form.is_valid()
+        assert form.cleaned_data["born"] == typed
+
+    @pytest.mark.parametrize(
+        ("limit", "typed"),
+        [
+            ("1998-03-15", "1999"),
+            ("1998-03-15", "1998-04"),
+            ("1998-03-15", "1998-03-16"),
+            ("1998-03", "1998-04-01"),
+            ("1998-03", "1998-04"),
+            ("1998", "1999-01-01"),
+            ("1998", "1999"),
+        ],
+    )
+    def test_a_value_after_the_latest_date_is_refused_with_max_value(
+        self, limit, typed
+    ):
+        form = submit(typed, max_value=limit)
+
+        assert codes(form) == ["max_value"]
+
+    @pytest.mark.parametrize(
+        ("typed", "expected"),
+        [
+            ("1997-12-31", ["min_value"]),
+            ("1998-03-14", ["min_value"]),
+            ("1998-03-15", []),
+            ("2000", []),
+            ("2004-09-30", []),
+            ("2004-10-01", ["max_value"]),
+            ("2004-10", ["max_value"]),
+            ("2005", ["max_value"]),
+        ],
+    )
+    def test_a_field_with_both_limits_refuses_a_value_beyond_either(
+        self, typed, expected
+    ):
+        form = submit(typed, min_value="1998-03-15", max_value="2004-09")
+
+        assert codes(form) == expected
+
+    def test_a_python_date_is_taken_as_a_limit_and_given_in_the_error(self):
+        form = submit("1998-03-14", min_value=datetime.date(1998, 3, 15))
+
+        error = form.errors.as_data()["born"][0]
+
+        assert error.code == "min_value"
+        assert error.params == {"limit": "1998-03-15"}
+
+    @pytest.mark.parametrize(
+        ("options", "typed", "code", "limit"),
+        [
+            ({"min_value": "1998-3"}, "1998-02", "min_value", "1998-03"),
+            ({"max_value": "1998-3-5"}, "1998-03-06", "max_value", "1998-03-05"),
+        ],
+    )
+    def test_the_limit_in_the_error_is_padded_iso_text(
+        self, options, typed, code, limit
+    ):
+        form = submit(typed, **options)
+
+        error = form.errors.as_data()["born"][0]
+
+        assert error.code == code
+        assert error.params == {"limit": limit}
+
+    @pytest.mark.parametrize("data", [{"born": ""}, {}])
+    def test_an_empty_optional_value_is_not_compared_with_the_limits(self, data):
+        form = partial_date_form(required=False, min_value="1998", max_value="2004")(
+            data
+        )
+
+        assert form.is_valid()
+        assert form.cleaned_data["born"] == ""
+
+    def test_the_limits_apply_after_the_value_is_known_to_be_a_date(self):
+        form = submit("1997-02-30", min_value="1998")
+
+        assert codes(form) == ["day"]
+
+    @pytest.mark.parametrize(
+        ("options", "named"),
+        [
+            ({"min_value": "abc"}, ["min_value"]),
+            ({"max_value": "abc"}, ["max_value"]),
+            ({"min_value": "1998-13"}, ["min_value"]),
+            ({"max_value": "1998-02-30"}, ["max_value"]),
+            ({"min_value": "98"}, ["min_value"]),
+            ({"max_value": "1998/03/15"}, ["max_value"]),
+            ({"min_value": "2004", "max_value": "1998"}, ["min_value", "max_value"]),
+            (
+                {"min_value": "1998-07", "max_value": "1998-06-30"},
+                ["min_value", "max_value"],
+            ),
+            (
+                {
+                    "min_value": datetime.date(2004, 9, 1),
+                    "max_value": datetime.date(2004, 8, 31),
+                },
+                ["min_value", "max_value"],
+            ),
+        ],
+    )
+    def test_a_limit_that_cannot_be_held_raises_when_the_form_is_defined(
+        self, options, named
+    ):
+        with pytest.raises(ValueError) as raised:
+            partial_date_form(**options)
+
+        assert all(option in str(raised.value) for option in named)
+
+    @pytest.mark.parametrize(
+        "options",
+        [
+            {"min_value": "1998-03-15", "max_value": "1998-03-15"},
+            {"min_value": "1998", "max_value": "1998-06"},
+            {"min_value": "1998-03", "max_value": "1998-03-01"},
+        ],
+    )
+    def test_limits_that_leave_a_day_to_choose_are_held(self, options):
+        assert partial_date_form(**options)
+
+    @pytest.mark.parametrize(
+        "widget", [PartialDateMaskInput, PartialDateInput, PartialDateSelect]
+    )
+    def test_the_field_tells_each_widget_the_limits(self, widget):
+        form = partial_date_form(
+            min_value=datetime.date(1998, 3, 15), max_value="2004-9", widget=widget()
+        )()
+
+        told = form["born"].field.widget
+
+        assert (told.min_value, told.max_value) == ("1998-03-15", "2004-09")
+
+    def test_a_widget_replaced_in_the_forms_init_is_told_the_limits(self):
+        class Form(forms.Form):
+            born = PartialDateField(min_value="1998", max_value="2004")
+
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.fields["born"].widget = PartialDateSelect()
+
+        told = Form()["born"].field.widget
+
+        assert (told.min_value, told.max_value) == ("1998", "2004")
+
+    def test_a_limit_that_follows_todays_date_is_given_in_the_forms_init(self):
+        class Form(forms.Form):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.fields["born"] = PartialDateField(max_value=datetime.date.today())
+
+        today = datetime.date.today()
+        tomorrow = today + datetime.timedelta(days=1)
+
+        assert Form({"born": today.isoformat()}).is_valid()
+        assert Form({"born": tomorrow.isoformat()}).has_error("born", "max_value")

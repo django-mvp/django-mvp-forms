@@ -330,3 +330,87 @@ class TestResolution:
 
         parts = soup.find_all(attrs={"data-partial-date-part": True})
         assert [part["name"] for part in parts] == ["form-__prefix__-born_year"]
+
+
+class TestLimits:
+    LIMITS = {"min_value": "1998-03-15", "max_value": "2004-09"}
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_masked_input_is_drawn_with_the_limits_of_the_field(self, draw, source):
+        form = partial_date_form(widget=PartialDateMaskInput(), **self.LIMITS)()
+
+        soup = draw(source, form=form)
+
+        assert json.loads(soup.find(id="id_born")["data-imask"]) == {
+            "kind": "partial-date",
+            "resolution": "day",
+            "min": "1998-03-15",
+            "max": "2004-09",
+        }
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("widget", [PartialDateInput, PartialDateSelect])
+    def test_the_group_of_parts_is_drawn_with_the_limits_of_the_field(
+        self, draw, source, widget
+    ):
+        form = partial_date_form(widget=widget(), **self.LIMITS)()
+
+        soup = draw(source, form=form)
+
+        group = soup.find(attrs={"data-partial-date": True})
+        assert group["data-partial-date-min"] == "1998-03-15"
+        assert group["data-partial-date-max"] == "2004-09"
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_the_empty_form_of_a_formset_is_drawn_with_the_limits_too(
+        self, draw, source
+    ):
+        masked = formset_factory(
+            partial_date_form(widget=PartialDateMaskInput(), **self.LIMITS), extra=1
+        )
+        parts = formset_factory(
+            partial_date_form(widget=PartialDateInput(), **self.LIMITS), extra=1
+        )
+
+        masked_soup = draw(source, form=masked().empty_form)
+        parts_soup = draw(source, form=parts().empty_form)
+
+        written = masked_soup.find(attrs={"data-imask": True})["data-imask"]
+        group = parts_soup.find(attrs={"data-partial-date": True})
+        assert json.loads(written)["min"] == "1998-03-15"
+        assert group["data-partial-date-max"] == "2004-09"
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_a_masked_input_refused_for_a_date_outside_the_limits_shows_what_was_sent(
+        self, draw, source
+    ):
+        form = partial_date_form(widget=PartialDateMaskInput(), **self.LIMITS)(
+            {"born": "1997-03-14"}
+        )
+
+        soup = draw(source, form=form)
+
+        assert form.has_error("born", code="min_value")
+        assert soup.find(id="id_born")["value"] == "1997-03-14"
+        assert len(soup.find(id="div_id_born").find_all(id="id_born_error")) == 1
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    @pytest.mark.parametrize("widget", [PartialDateInput, PartialDateSelect])
+    def test_a_group_of_parts_refused_for_a_date_outside_the_limits_shows_what_was_sent(
+        self, draw, source, widget
+    ):
+        form = partial_date_form(widget=widget(), **self.LIMITS)(
+            {"born_year": "2005", "born_month": "02", "born_day": "11"}
+        )
+
+        soup = draw(source, form=form)
+
+        shown = []
+        for name in ("year", "month", "day"):
+            part = soup.find(attrs={"data-partial-date-part": name})
+            if part.name == "input":
+                shown.append(part["value"])
+            else:
+                shown.append(part.find("option", selected=True)["value"])
+        assert form.has_error("born", code="max_value")
+        assert shown == ["2005", "02", "11"]

@@ -692,9 +692,11 @@ class PartialDateInput(forms.MultiWidget):
         )
 
     def decompress(self, value):
-        """Split ISO text, or a Python date, into its parts."""
+        """Split ISO text, a Python date or the date of a datetime into its parts."""
         if not value:
             return ["", "", ""]
+        if isinstance(value, datetime.datetime):
+            value = value.date()
         if hasattr(value, "isoformat"):
             value = value.isoformat()
         year, *rest = [*str(value).split("-"), "", ""][:3]

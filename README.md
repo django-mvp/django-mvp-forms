@@ -1536,6 +1536,8 @@ Every error is raised with a `code`, so a test or a form's `has_error` can name 
 | `needs_day` | is a year alone or a year and a month, on a field whose `coarsest` is `"day"` |
 | `too_fine_month` | has a month or a day, on a field whose `resolution` is `"year"` |
 | `too_fine_day` | has a day, on a field whose `resolution` is `"month"` |
+| `min_value` | is before the field's `min_value`. The limit is in the error's `params` as `limit` |
+| `max_value` | is after the field's `max_value`. The limit is in the error's `params` as `limit` |
 
 A value cut off inside a part cannot be told from a part of one digit, so `2021-0` is a month of zero and `202` is a year of three digits.
 
@@ -1575,6 +1577,52 @@ A widget is swapped before the form is first drawn or validated, since a form ke
 
 `coarsest` is checked by the field alone. A three-part widget still draws every part up to the resolution, and a masked input still takes a year alone, so a value too coarse comes back from the field with `needs_month` or `needs_day`.
 
+#### The earliest and latest date
+
+`min_value` is the earliest date a field accepts and `max_value` the latest. Each takes a partial date as text, in any of the three precisions, or a `datetime.date`. With neither stated the field accepts any date.
+
+```python
+import datetime
+
+
+class SampleForm(forms.Form):
+    letter = PartialDateField(min_value="1850", max_value="1899")
+    sample = PartialDateField(min_value="1998-03-15", max_value="2004-09")
+    filed = PartialDateField(min_value=datetime.date(2010, 1, 1))
+```
+
+A value outside the limits is refused with the code `min_value` or `max_value`, and the limit, padded to ISO text, is in the error's `params` as `limit`. A value that is not a date is refused with its own code first, and a value finer or coarser than the field allows is refused for its precision before the limits are looked at.
+
+A partial value is inside the limits when any day it could be is. The comparison is of the first and last day each value covers:
+
+- A value is refused by `min_value` when its last possible day is before the first day of `min_value`.
+- A value is refused by `max_value` when its first possible day is after the last day of `max_value`.
+- A limit given to the year or to the month stands for the whole of it. As an earliest date `1998-03` means 1 March 1998, and as a latest date it means 31 March 1998.
+
+With `min_value="1998-03-15"`, `1998`, `1998-03` and `1998-03-15` are accepted, because each of them holds a day on or after the 15th of March, and `1997`, `1998-02` and `1998-03-14` are refused. With `max_value="1998-03-15"` the same three are accepted and `1999`, `1998-04` and `1998-03-16` are refused.
+
+A limit that is not a partial date, and a `min_value` later than the `max_value`, raise `ValueError` when the form class is defined. The message names the option at fault, and both options when the earliest date is the later one.
+
+A limit is fixed when the form class is defined, and a class body runs once, when the module is imported. A limit that follows today's date, such as a sample that cannot be dated in the future, is given by declaring the field in the form's `__init__`, which runs for every form:
+
+```python
+class SampleForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["collected"] = PartialDateField(
+            max_value=datetime.date.today(), required=False
+        )
+```
+
+Every widget is told the limits by the field, as it is told the resolution, and you state them nowhere else:
+
+- `PartialDateMaskInput` writes `min` and `max` in its `data-imask`, as padded ISO text, for each limit the field states and for no other.
+- `PartialDateInput` and `PartialDateSelect` write `data-partial-date-min` and `data-partial-date-max` on the element that holds the parts, again for each limit stated and for no other.
+- `PartialDateSelect` lists the years from the year of `max_value` back to the year of `min_value`, latest first. With no `max_value` the list starts this year, or a hundred years on from the year of `min_value` when that year is still to come. With no `min_value` it reaches a hundred years back from where it starts. A year the form already holds that is outside the limits is still put first, so a refused date is drawn as it was sent.
+- A widget on a field that is not a `PartialDateField` is told no limits and writes none.
+
+A date outside the limits that was sent is drawn again as it was sent, in every widget, with the field's error.
+
 #### The masked input
 
 `PartialDateMaskInput` draws one text input and has IMask put the hyphens in as a person types.
@@ -1590,7 +1638,7 @@ class SampleForm(forms.Form):
     )
 ```
 
-`PartialDateMaskInput(attrs=None)` takes HTML attributes and nothing else. Every option is a keyword of the field. The input is drawn with the field's name and id, with `inputmode="numeric"` so a touch device offers a numeric keypad unless your `attrs` state an `inputmode`, and with every other attribute you gave kept. Its `data-imask` holds `{"kind": "partial-date", "resolution": "day"}`, with the field's `resolution` in place of `"day"` when the field states one. In the pack it is an `input`, takes the size, colour and variant stated for the form, and is drawn the same way through Django's own rendering.
+`PartialDateMaskInput(attrs=None)` takes HTML attributes and nothing else. Every option is a keyword of the field. The input is drawn with the field's name and id, with `inputmode="numeric"` so a touch device offers a numeric keypad unless your `attrs` state an `inputmode`, and with every other attribute you gave kept. Its `data-imask` holds `{"kind": "partial-date", "resolution": "day"}`, with the field's `resolution` in place of `"day"` when the field states one, and `min` and `max` when the field states a limit. In the pack it is an `input`, takes the size, colour and variant stated for the form, and is drawn the same way through Django's own rendering.
 
 The page has to load what a page loads for any mask widget: IMask and the form's media, which names `mvp_forms/imask.js`. [What to load](https://github.com/django-mvp/django-mvp-forms#what-to-load) says how, and how a page's Content Security Policy and a project's bundler are met.
 
@@ -1635,7 +1683,7 @@ Each part carries an `aria-label` that says which part it is and `data-partial-d
 
 The widget joins the parts with hyphens and leaves out the empty ones from the right, so the field receives `2021`, `2021-03` or `2021-03-14`. A day with no month and a month with no year reach the field and are refused with `no_month` and `no_year`. A form drawn again after a refused submission shows each part as it was sent, including `2021-02-30` and a day with no month. An `initial` value, as text or as a `datetime.date`, fills the parts it has and leaves the rest empty.
 
-`PartialDateSelect` lists the years from this year back a hundred years, latest first. A year the form already holds that is not on the list is still an option, so a stored `1850` is shown and not lost.
+`PartialDateSelect` lists the years from this year back a hundred years, latest first, or the years between the field's limits when it states them. A year the form already holds that is not on the list is still an option, so a stored `1850` is shown and not lost.
 
 The widgets name `mvp_forms/partial-date.js` in the form's media. The script needs no IMask, and a page that loads the form's media is all it asks for.
 
