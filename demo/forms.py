@@ -43,6 +43,12 @@ from django.utils.translation import gettext_lazy as _
 
 from mvp_forms.choices import Choice, FormChoices, Modifiers
 from mvp_forms.layout import Join
+from mvp_forms.widgets import (
+    DynamicMaskInput,
+    NumberMaskInput,
+    PatternMaskInput,
+    RegexMaskInput,
+)
 
 LONG_OPTION = _(
     "C, with a label long enough that a narrow page shows it wrapping onto "
@@ -1702,3 +1708,274 @@ class UneditableChoicesForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.layout = Layout(*[UneditableField(name) for name in self.fields])
+
+
+DATE_BLOCKS = {
+    "d": {"kind": "range", "from": 1, "to": 31, "maxLength": 2},
+    "m": {"kind": "range", "from": 1, "to": 12, "maxLength": 2},
+    "Y": {"kind": "range", "from": 1900, "to": 2100},
+}
+
+
+class MaskKindsForm(forms.Form):
+    """One field for each kind of mask, which can be posted.
+
+    The page shows what each field received, so the text a pattern submits and
+    the plain number the number widget hands over can be compared with what was
+    typed. The form must be given a prefix.
+    """
+
+    phone = forms.CharField(
+        label=_("Phone number"),
+        help_text=_("A pattern: +{49} 000 0000000"),
+        widget=PatternMaskInput("+{49} 000 0000000"),
+    )
+    colour = forms.CharField(
+        label=_("Colour"),
+        help_text=_("A regular expression: # and up to six hexadecimal digits"),
+        widget=RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i"),
+    )
+    amount = forms.DecimalField(
+        label=_("Amount"),
+        help_text=_("A number: two decimal places, a space between thousands"),
+        max_digits=12,
+        decimal_places=2,
+        widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=","),
+    )
+    card = forms.CharField(
+        label=_("Card number"),
+        help_text=_("A choice between two patterns: 15 digits or 16"),
+        widget=DynamicMaskInput(
+            [
+                PatternMaskInput("0000 000000 00000"),
+                PatternMaskInput("0000 0000 0000 0000"),
+            ]
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Build the helper, with a submit button named by the prefix."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
+
+
+class PatternOptionsForm(forms.Form):
+    """The pattern widget's options, one field for each."""
+
+    postcode = forms.CharField(
+        label=_("Postcode"),
+        help_text=_("The placeholder is always shown"),
+        required=False,
+        widget=PatternMaskInput("00000", lazy=False),
+    )
+    reference = forms.CharField(
+        label=_("Reference"),
+        help_text=_("A placeholder character of its own, and typing overwrites"),
+        required=False,
+        widget=PatternMaskInput(
+            "aa-0000", lazy=False, placeholder_char="·", overwrite=True
+        ),
+    )
+    shelf = forms.CharField(
+        label=_("Shelf"),
+        help_text=_("A definition of its own: # is a digit from 1 to 6"),
+        required=False,
+        widget=PatternMaskInput("#-00", definitions={"#": "[1-6]"}),
+    )
+    date = forms.CharField(
+        label=_("Date"),
+        help_text=_("Three number-range blocks: day, month and year"),
+        required=False,
+        widget=PatternMaskInput(
+            "d{.}`m{.}`Y", blocks=DATE_BLOCKS, lazy=False, overwrite=True
+        ),
+    )
+    resolution = forms.CharField(
+        label=_("Resolution"),
+        help_text=_("A block that takes one of a list: HD, TV or VR"),
+        required=False,
+        widget=PatternMaskInput(
+            "Q", blocks={"Q": {"kind": "enum", "enum": ["HD", "TV", "VR"]}}
+        ),
+    )
+    licence = forms.CharField(
+        label=_("Licence key"),
+        help_text=_("Fixed characters are filled in ahead of the cursor"),
+        required=False,
+        widget=PatternMaskInput(
+            "AAAA-AAAA-AAAA", definitions={"A": "[A-Za-z0-9]"}, eager=True
+        ),
+    )
+    pin = forms.CharField(
+        label=_("PIN"),
+        help_text=_("What is typed is shown as another character"),
+        required=False,
+        widget=PatternMaskInput("0000", display_char="•"),
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Build a helper that draws no form element and no button."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class NumberOptionsForm(forms.Form):
+    """The number widget's options, one field for each."""
+
+    quantity = forms.IntegerField(
+        label=_("Quantity"),
+        help_text=_("A whole number from 0 to 100, corrected to the nearest bound"),
+        required=False,
+        widget=NumberMaskInput(scale=0, min=0, max=100, autofix=True),
+    )
+    price = forms.DecimalField(
+        label=_("Price"),
+        help_text=_("Two decimal places, always shown"),
+        required=False,
+        initial="1234.5",
+        widget=NumberMaskInput(
+            scale=2, thousands_separator=".", radix=",", pad_fractional_zeros=True
+        ),
+    )
+    weight = forms.DecimalField(
+        label=_("Weight"),
+        help_text=_("Three decimal places, a full stop as the decimal mark"),
+        required=False,
+        widget=NumberMaskInput(
+            scale=3, thousands_separator=",", radix=".", map_to_radix=[","]
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Build a helper that draws no form element and no button."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class MaskStatesForm(forms.Form):
+    """A masked field in each state: filled, disabled, read-only and invalid."""
+
+    filled = forms.CharField(
+        label=_("With a value"),
+        initial="+49 151 2345678",
+        required=False,
+        widget=PatternMaskInput("+{49} 000 0000000"),
+    )
+    disabled = forms.DecimalField(
+        label=_("Disabled"),
+        initial="98765.4",
+        disabled=True,
+        required=False,
+        widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=","),
+    )
+    read_only = forms.CharField(
+        label=_("Read-only"),
+        initial="+49 301 2345678",
+        required=False,
+        widget=PatternMaskInput("+{49} 000 0000000", attrs={"readonly": True}),
+    )
+    invalid = forms.CharField(
+        label=_("With an error"),
+        widget=PatternMaskInput("+{49} 000 0000000"),
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Build a helper that draws no form element and no button."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class MaskSizesForm(forms.Form):
+    """A masked field at each size, and one with a colour and a variant."""
+
+    extra_small = forms.CharField(
+        label=_("Extra small"),
+        required=False,
+        widget=PatternMaskInput("000-000", lazy=False),
+    )
+    small = forms.CharField(
+        label=_("Small"),
+        required=False,
+        widget=PatternMaskInput("000-000", lazy=False),
+    )
+    large = forms.CharField(
+        label=_("Large"),
+        required=False,
+        widget=PatternMaskInput("000-000", lazy=False),
+    )
+    coloured = forms.CharField(
+        label=_("Primary, ghost"),
+        required=False,
+        widget=PatternMaskInput("000-000", lazy=False),
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Build a helper that states a choice for each field."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Choice("extra_small", size="xs"),
+            Choice("small", size="sm"),
+            Choice("large", size="lg"),
+            Choice("coloured", color="primary", variant="ghost"),
+        )
+
+
+class MaskedLineForm(forms.Form):
+    """One line of a price list: an article number and a price, both masked."""
+
+    article = forms.CharField(
+        label=_("Article"), widget=PatternMaskInput("aa-0000", lazy=False)
+    )
+    price = forms.DecimalField(
+        label=_("Price"),
+        max_digits=10,
+        decimal_places=2,
+        widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=","),
+    )
+
+
+MaskedLineFormSet = formset_factory(MaskedLineForm, extra=2)
+
+
+class MaskedModalForm(forms.Form):
+    """A form whose masked fields sit in a modal. It must be given a prefix."""
+
+    name = forms.CharField(label=_("Name"), required=False)
+    phone = forms.CharField(
+        label=_("Phone number"),
+        required=False,
+        widget=PatternMaskInput("+{49} 000 0000000", lazy=False),
+    )
+    iban = forms.CharField(
+        label=_("IBAN"),
+        required=False,
+        widget=PatternMaskInput("{DE}00 0000 0000 0000 0000 00", lazy=False),
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            "name",
+            Modal(
+                "phone",
+                "iban",
+                css_id=self.dialog_id,
+                title=_("Contact details"),
+                title_id=f"{self.prefix}-title",
+            ),
+        )
+
+    @property
+    def dialog_id(self):
+        """The id of the modal's dialog, for the control that opens it."""
+        return f"{self.prefix}-dialog"

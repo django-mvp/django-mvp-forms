@@ -119,6 +119,11 @@ AppMenu.extend(
             extra_context={"label": "Formset, as a table", "icon": "formset-table"},
         ),
         MenuItem(
+            name="input-masks",
+            view_name="input-masks",
+            extra_context={"label": "Input masks", "icon": "input-masks"},
+        ),
+        MenuItem(
             name="themes",
             view_name="themes",
             extra_context={"label": "Themes", "icon": "themes"},

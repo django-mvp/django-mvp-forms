@@ -1,0 +1,123 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="input-masks">
+    <c-text>
+      One field for each kind of mask. Type into each one, then submit the form to
+      see what the field received beside what was typed.
+    </c-text>
+    {% crispy kinds_form %}
+    {% if received %}
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Submitted</th>
+              <th>Received by the field</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for label, submitted, value in received %}
+              <tr>
+                <td>{{ label }}</td>
+                <td><code>{{ submitted }}</code></td>
+                <td><code>{{ value }}</code></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </c-section>
+  <c-section title="Pattern options" level="3">
+    {% crispy pattern_form %}
+  </c-section>
+  <c-section title="Number options" level="3">
+    {% crispy number_form %}
+  </c-section>
+  <c-section title="States" level="3">
+    {% crispy states_form %}
+  </c-section>
+  <c-section title="Size, colour and variant" level="3">
+    {% crispy sizes_form %}
+  </c-section>
+  <c-section title="In a formset" level="3">
+    <c-text>
+      A line added in the browser is masked as the others are, with no script
+      written for it.
+    </c-text>
+    <div id="{{ lines.prefix }}-formset">
+      {% crispy lines lines_helper %}
+    </div>
+    <c-button type="button" text="Add a line" data-add-line="{{ lines.prefix }}" />
+  </c-section>
+  <c-section title="In a modal" level="3">
+    <c-button type="button" text="Edit the contact details" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()" />
+    {% crispy modal_form %}
+  </c-section>
+  <c-section title="The event" level="3">
+    <c-text>
+      Each input sends an event once its mask is in place, and the event carries
+      the IMask instance. This page listens for it and shows the value of the
+      field last typed in, with and without its fixed characters.
+    </c-text>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <tbody>
+          <tr>
+            <th>Field</th>
+            <td><code data-mask-readout="name">–</code></td>
+          </tr>
+          <tr>
+            <th>Value</th>
+            <td><code data-mask-readout="value">–</code></td>
+          </tr>
+          <tr>
+            <th>Unmasked value</th>
+            <td><code data-mask-readout="unmasked">–</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </c-section>
+{% endblock page.content %}
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    // This page's own listener for the event, and its "Add a line" button.
+    document.addEventListener("mvp-forms:imask", function (event) {
+      const mask = event.detail.mask;
+      mask.on("accept", function () {
+        const show = function (part, text) {
+          document.querySelector('[data-mask-readout="' + part + '"]').textContent = text || "–";
+        };
+        show("name", event.target.name);
+        show("value", mask.value);
+        show("unmasked", mask.unmaskedValue);
+      });
+    });
+    document.addEventListener("click", function (event) {
+      const button = event.target.closest("[data-add-line]");
+      if (!button) return;
+      const prefix = button.dataset.addLine;
+      const total = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
+      const rows = document.querySelectorAll("#" + prefix + "-formset tbody tr");
+      const last = rows[rows.length - 1];
+      const row = last.cloneNode(true);
+      const from = new RegExp(prefix + "-\\d+-", "g");
+      row.querySelectorAll("*").forEach(function (node) {
+        ["id", "name", "for", "aria-describedby"].forEach(function (attribute) {
+          if (node.hasAttribute(attribute)) {
+            node.setAttribute(attribute, node.getAttribute(attribute).replace(from, prefix + "-" + total.value + "-"));
+          }
+        });
+        if (node.matches("input")) node.value = "";
+      });
+      last.after(row);
+      total.value = Number(total.value) + 1;
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/imask@7"></script>
+  {{ media }}
+{% endblock extra_js %}

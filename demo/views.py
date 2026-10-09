@@ -44,11 +44,18 @@ from demo.forms import (
     JoinedUnlabelledForm,
     LayoutObjectsForm,
     LockedKindsForm,
+    MaskedLineFormSet,
+    MaskedModalForm,
+    MaskKindsForm,
+    MaskSizesForm,
+    MaskStatesForm,
     ModalForm,
     MultiWidgetFieldForm,
+    NumberOptionsForm,
     OrderLineFormSet,
     OverrideForm,
     PairForm,
+    PatternOptionsForm,
     PlaceholdersForm,
     PlainButtonsForm,
     RangeStateForm,
@@ -1650,3 +1657,51 @@ class StandaloneThemesView(ThemesMixin, TemplateView):
     """The same page for a host project that has neither django-mvp nor Cotton."""
 
     template_name = "demo/themes_standalone.html"
+
+
+class InputMasksView(MVPTemplateView):
+    """Every mask widget, its options, and a masked field wherever a form goes."""
+
+    template_name = "demo/input_masks.html"
+    page_title = "Input masks"
+    page_subtitle = "Text inputs that format what is typed, with IMask"
+    breadcrumbs = [{"text": "Input masks"}]
+    kinds_prefix = "kinds"
+    lines_prefix = "lines"
+
+    def get_context_data(self, **kwargs):
+        """Add each form the page draws, and the media they share."""
+        kwargs.setdefault("kinds_form", MaskKindsForm(prefix=self.kinds_prefix))
+        lines = MaskedLineFormSet(prefix=self.lines_prefix)
+        lines_helper = FormHelper()
+        lines_helper.form_tag = False
+        lines_helper.template = "daisyui/table_inline_formset.html"
+        states_form = MaskStatesForm(
+            {"states-filled": "+49 151 2345678", "states-read_only": "+49 301 2345678"},
+            prefix="states",
+        )
+        modal_form = MaskedModalForm(prefix="contact")
+        kwargs.update(
+            pattern_form=PatternOptionsForm(prefix="pattern"),
+            number_form=NumberOptionsForm(prefix="number"),
+            states_form=states_form,
+            sizes_form=MaskSizesForm(prefix="sizes"),
+            lines=lines,
+            lines_helper=lines_helper,
+            modal_form=modal_form,
+            media=kwargs["kinds_form"].media,
+        )
+        return super().get_context_data(**kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """Draw the page again with what each field received."""
+        form = MaskKindsForm(request.POST, prefix=self.kinds_prefix)
+        received = None
+        if form.is_valid():
+            received = [
+                (form[name].label, request.POST.get(form.add_prefix(name)), value)
+                for name, value in form.cleaned_data.items()
+            ]
+        return self.render_to_response(
+            self.get_context_data(kinds_form=form, received=received)
+        )

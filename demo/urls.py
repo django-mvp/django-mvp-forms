@@ -15,6 +15,7 @@ from demo.views import (
     FloatingLabelsView,
     InlineChoicesView,
     InlineFieldView,
+    InputMasksView,
     JoinedGroupsView,
     LayoutObjectsView,
     ModalView,
@@ -128,6 +129,7 @@ urlpatterns = [
         StandaloneTableFormsetView.as_view(),
         name="formset-table-standalone",
     ),
+    path("input-masks/", InputMasksView.as_view(), name="input-masks"),
     path("themes/", ThemesView.as_view(), name="themes"),
     path(
         "themes/standalone/",
