@@ -44,8 +44,8 @@
   </c-section>
   <c-section title="Any widget, in a formset" level="3">
     <c-text>
-      Article is a PatternMaskInput with the pattern L-N, where block L is aa,
-      shown as a, and block N is 0000, shown as #. Price is a NumberMaskInput with
+      Article is a PatternMaskInput with the pattern aa-0000, where each a is
+      shown as a and each 0 is shown as #. Price is a NumberMaskInput with
       scale=2, thousands_separator=" " and radix=",". A line added in the browser
       is masked as the others are, with no script written for it.
     </c-text>
@@ -83,6 +83,9 @@
       </table>
     </div>
   </c-section>
+  <c-text>
+    <c-link href="{% url 'input-masks-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
 {% endblock page.content %}
 {% block extra_js %}
   {{ block.super }}
@@ -120,5 +123,5 @@
       total.value = Number(total.value) + 1;
     });
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/imask@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js" integrity="sha384-UO8YwPv//GjwHj93ZlwXcDNjv3BSxdBFUB2jtiOuL3d/a0kS9E8sYvHjTBkQI8u8" crossorigin="anonymous"></script>
 {% endblock extra_js %}

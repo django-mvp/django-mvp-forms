@@ -24,7 +24,7 @@ The pack's templates are plain Django templates. They do not use [django-cotton]
 
 Fields and widgets are collected as real projects need them. They are not planned ahead and do not appear on the roadmap, so the set grows unevenly and that is intended. The package is complete without any of them, and each one has to fit the pack without changing what the pack promises.
 
-Widgets from popular third-party Django packages may get templates here so they sit properly in a daisyUI form. Which packages are supported is the maintainers' call, and none of them becomes a dependency. A supported package whose controls are built by script, as django-tomselect's are, may also get one optional stylesheet that the host project loads. The pack's own templates define no class and need no stylesheet, and there is never one stylesheet for several packages.
+Widgets from popular third-party Django packages may get templates here so they sit properly in a daisyUI form. Which packages are supported is the maintainers' call, and none of them becomes a dependency. A supported package whose controls are built by script, as django-tomselect's are, may also get one optional stylesheet that the host project loads. The pack's own templates define no class and need no stylesheet, and there is never one stylesheet for several packages. The package also ships one script, for its input mask widgets, which a form names in its media. A project that uses none of those widgets never loads it, and the pack's own templates need no script.
 
 When two reasonable designs conflict, stock daisyUI markup wins over custom styling, and matching crispy-forms' documented behaviour wins over inventing a new one.
 
@@ -1252,6 +1252,113 @@ Without it a control's script starts the control when the document finishes load
 #### The release tested
 
 The support is tested against django-tomselect 2026.6.2, which the development dependencies name as the least release. That release declares Django up to 6.0, and its controls work on Django 6.1, apart from the `{% tomselect_media %}` tag above. Which releases of django-tomselect are supported is stated here and is not part of the [support window](https://github.com/django-mvp/django-mvp-forms#supported-versions), whose periods apply to Django, django-crispy-forms and daisyUI.
+
+### Input masks
+
+A mask is a rule [IMask](https://imask.js.org/) applies to a text input as a person types: it decides what can be typed and how it is shown. The package gives a developer a widget to name on a field, and one script that hands what the widget wrote to IMask. The widgets add nothing to validation, so a field cleans and validates exactly as it did.
+
+This is the public surface:
+
+- `mvp_forms.widgets.PatternMaskInput`, with the three blocks it takes, `RangeBlock`, `EnumBlock` and `PatternBlock`, from the same module
+- the attribute `data-imask`, which holds a widget's options as JSON on its `<input>`
+- the script `mvp_forms/imask.js`, which each widget names in its media
+
+The widgets are written for IMask 7, and the package's tests run against 7.6.1. IMask is not a dependency of the package and the package does not distribute it.
+
+#### What to load
+
+Two things have to be on a page that draws a masked field: IMask, and the form's media, which names the script.
+
+```django
+<script src="https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js"
+        integrity="sha384-UO8YwPv//GjwHj93ZlwXcDNjv3BSxdBFUB2jtiOuL3d/a0kS9E8sYvHjTBkQI8u8"
+        crossorigin="anonymous"></script>
+{{ form.media }}
+```
+
+- `{% crispy form %}` writes the form's media inside the form, so the page template writes only IMask. A page with several forms drawn this way holds the script once for each of them, and the script acts once however often it is included.
+- `{{ form|crispy }}`, `{{ field|as_crispy_field }}` and Django's own form rendering write no media. Render `{{ form.media }}` in the page template, or load `{% static 'mvp_forms/imask.js' %}` yourself.
+- The script waits for the document to finish loading before it looks for IMask, so it may be written before or after IMask. A project that bundles IMask exposes it as `window.IMask`, the name IMask publishes, and the widgets work as they do with the copy from a CDN.
+- The script is a file and the widgets write no inline script and no inline handler. A page whose Content Security Policy allows scripts from its own origin and from the origin serving IMask, and forbids inline script, masks every field.
+- A project that uses none of these widgets never loads the script. The pack's own templates still need no script.
+
+A page that does not load IMask draws every masked field as an ordinary text input. Nothing is masked, no error is raised in the browser, and the form submits.
+
+#### `PatternMaskInput`
+
+The pattern is written as [IMask's pattern text](https://imask.js.org/guide.html#masked-pattern), unchanged. In it `0` stands for a digit, `a` for a letter and `*` for any character, a part in square brackets is optional, and every other character is fixed.
+
+```python
+from django import forms
+
+from mvp_forms.widgets import PatternMaskInput
+
+
+class BookingForm(forms.Form):
+    phone = forms.CharField(widget=PatternMaskInput("+{49} 000 0000000"))
+    reference = forms.CharField(
+        widget=PatternMaskInput(
+            "aa-0000", lazy=False, placeholder_char={"0": "#", "a": "a"}
+        )
+    )
+```
+
+`PatternMaskInput(mask, attrs=None, *, definitions=None, blocks=None, lazy=None, placeholder_char=None, overwrite=None, eager=None, display_char=None)`. Every option is written on the input under IMask's own name, and an option you do not state is not written, so IMask's default applies.
+
+| Option | IMask's name | What it does |
+|---|---|---|
+| `definitions` | `definitions` | A mapping from one character to the regular expression it stands for, written as text in JavaScript's dialect: `{"S": "[1-6]"}` |
+| `blocks` | `blocks` | A mapping from a name used in the pattern to a block, described below |
+| `lazy` | `lazy` | `False` shows the whole pattern, with its placeholder, before anything is typed |
+| `placeholder_char` | `placeholderChar` | One character shown in each open position, or a mapping from a definition's character to the character shown for it: `{"0": "#", "a": "a"}` |
+| `overwrite` | `overwrite` | `True` has what is typed replace what is there, and `"shift"` has it replace and shift the rest |
+| `eager` | `eager` | `True` writes the fixed characters ahead of the cursor, `"append"` and `"remove"` do so in one direction only |
+| `display_char` | `displayChar` | The character shown in place of what was typed, for a PIN |
+
+A mapping for `placeholder_char` may name `0`, `a`, `*` and any definition you state. For one of IMask's three own definitions the script reads the expression from IMask, so the package holds no copy of it.
+
+A value that cannot be right raises `ValueError` when the form class is defined, and its message names the option: an empty or non-text pattern, a definition that is not one character and text, a placeholder or display character that is not one character, a block that is not one of the three classes, and an `overwrite` or `eager` that is not one of the values above. An option the widget does not have is Python's own `TypeError`.
+
+Your own `attrs` are kept. A pattern holding a quote or an angle bracket is escaped as any attribute value is.
+
+#### Blocks
+
+A block is a named part of a pattern with a rule of its own. Name it in `blocks` and write its name in the pattern.
+
+```python
+from mvp_forms.widgets import EnumBlock, PatternBlock, PatternMaskInput, RangeBlock
+
+date = PatternMaskInput(
+    "d{.}`m{.}`Y",
+    lazy=False,
+    overwrite=True,
+    blocks={
+        "d": RangeBlock(1, 31, max_length=2, placeholder_char="d"),
+        "m": RangeBlock(1, 12, max_length=2, placeholder_char="m"),
+        "Y": RangeBlock(1900, 2100, placeholder_char="y"),
+    },
+)
+resolution = PatternMaskInput("Q", blocks={"Q": EnumBlock(["HD", "TV", "VR"])})
+serial = PatternMaskInput("N", blocks={"N": PatternBlock("0", repeat=4)})
+```
+
+| Block | What it takes |
+|---|---|
+| `RangeBlock(minimum, maximum, *, max_length=None, autofix=None, placeholder_char=None)` | A whole number between the bounds. `max_length` is the number of digits, and `autofix=True` corrects a number outside the bounds to the nearest one. A minimum above the maximum raises `ValueError` |
+| `EnumBlock(values, *, placeholder_char=None)` | One of a list of values. An empty list raises `ValueError` |
+| `PatternBlock(mask, *, repeat=None, placeholder_char=None)` | A pattern of its own, repeated `repeat` times when that is stated |
+
+A date is masked with a pattern whose day, month and year are ranges, and Django's `DateField` reads the result through `input_formats`.
+
+#### What the form receives
+
+The field receives the text as the person saw it, fixed characters included, and cleans it as it would any text. A pattern submitted half filled in reaches the field half filled in, and whether that is acceptable is the field's validation to decide: add a validator to a field that must match a shape.
+
+A field with a `display_char` shows that character, and the form receives what was typed. The script sets the field's entry in the form's data to the mask's value when the form's data is read, which covers a native submit and a script that builds a `FormData` from the form, as htmx 2 does. A masked input that has been removed from its form, is disabled or has no name adds no entry.
+
+#### What is not supported
+
+An option whose value is a JavaScript function cannot be written in Python and is not supported: function masks, `prepare`, `prepareChar`, `commit`, `validate`, `dispatch`, `format` and `parse`. IMask's date mask needs two of them for any format but its default, so there is no date widget. There are no widgets for one particular format, such as a phone number or an IBAN, because the pattern differs by country and each is one line with `PatternMaskInput`. IMask's pipes, which format a value with no input, are not covered.
 
 ### Themes
 

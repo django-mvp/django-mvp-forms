@@ -253,3 +253,29 @@ carry `data-imask`.
 from. Every mask the script applies sends one.
 
 **Revisit if:** the event is dropped or sent more than once for an input by design.
+
+## D20. The demo's sentence about the price stays until the number story restores the field
+
+**Decision:** the formset section's sentence on the Input masks page still names the price field
+and its number widget, although the field is out of the form until the number story. Only the
+article half of that sentence changed, to state the pattern `aa-0000`.
+
+**Why:** the page's markup and wording are what the maintainer approved, and the number story puts
+the field back as it was, so the sentence is true again when it does. Taking the sentence out
+now would leave that story a template edit it does not list.
+
+**Revisit if:** the number story is dropped or delivered separately from this one. Then the sentence
+goes with the field.
+
+## D21. The demo loads IMask at an exact version with the integrity value of the published file
+
+**Decision:** both demo pages and the README's example load
+`https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js` with an `integrity` of
+`sha384-UO8YwPv//GjwHj93ZlwXcDNjv3BSxdBFUB2jtiOuL3d/a0kS9E8sYvHjTBkQI8u8` and `crossorigin`.
+
+**Why:** the hash is that of the copy of 7.6.1 kept under `tests/data/`, which is the file the
+npm package ships. No request was made to the CDN while building, so the hash is not read from
+what the CDN serves.
+
+**Revisit if:** a browser refuses the file on either page. Then the CDN's copy differs and the hash
+is read from it.

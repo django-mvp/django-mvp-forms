@@ -1657,13 +1657,9 @@ class StandaloneThemesView(ThemesMixin, TemplateView):
     template_name = "demo/themes_standalone.html"
 
 
-class InputMasksView(MVPTemplateView):
-    """Each mask widget in a group of its own, then a masked field in each place."""
+class InputMasksMixin:
+    """The forms both input-mask pages draw: each widget in a group, then each place."""
 
-    template_name = "demo/input_masks.html"
-    page_title = "Input masks"
-    page_subtitle = "Text inputs that format what is typed, with IMask"
-    breadcrumbs = [{"text": "Input masks"}]
     widgets = [
         (
             "pattern",
@@ -1723,3 +1719,18 @@ class InputMasksView(MVPTemplateView):
     def post(self, request, *args, **kwargs):
         """Draw the page again with what the posted form's fields received."""
         return self.render_to_response(self.get_context_data(posted=request.POST))
+
+
+class InputMasksView(InputMasksMixin, MVPTemplateView):
+    """Each mask widget in a group of its own, inside the application shell."""
+
+    template_name = "demo/input_masks.html"
+    page_title = "Input masks"
+    page_subtitle = "Text inputs that format what is typed, with IMask"
+    breadcrumbs = [{"text": "Input masks"}]
+
+
+class StandaloneInputMasksView(InputMasksMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/input_masks_standalone.html"

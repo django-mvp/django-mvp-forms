@@ -3,6 +3,7 @@
 # Everything in the demo fails quietly: an unresolvable component renders empty
 # and a menu entry whose URL will not resolve is dropped from the tree.
 
+import json
 import re
 
 import pytest
@@ -13,7 +14,7 @@ from django.template.loader import get_template
 from django.urls import reverse
 
 from demo.autocompletes import ROCKS, UNGROUPED_ROCKS
-from demo.forms import DAISYUI_VERSION, THEME_NAMES
+from demo.forms import DAISYUI_VERSION, THEME_NAMES, PatternMaskForm
 from demo.tomselect_forms import SampleFormSet, country_field
 from demo.tomselect_views import TomSelectMixin
 from mvp_forms.choices import Modifiers
@@ -3460,3 +3461,103 @@ class TestEveryShellPage:
 
         assert reverse("tomselect") in hrefs
         assert unlinked == []
+
+
+PATTERN_PREFIX = "pattern"
+PATTERN_POST = {
+    "phone": "+49 151 2345678",
+    "postcode": "12345",
+    "reference": "ab-1234",
+    "shelf": "3-12",
+    "date": "24.12.2025",
+    "resolution": "HD",
+    "licence": "AB12-CD34-EF56",
+    "pin": "1234",
+}
+REFERENCE_OPTIONS = {
+    "kind": "pattern",
+    "mask": "aa-0000",
+    "definitions": {"0": {"placeholderChar": "#"}, "a": {"placeholderChar": "a"}},
+    "lazy": False,
+}
+
+
+class InputMasksPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    def test_the_pattern_section_holds_a_masked_input_for_each_field(self, page):
+        section = page.find(id=PATTERN_PREFIX)
+
+        masked = section.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {
+            f"{PATTERN_PREFIX}-{name}" for name in PatternMaskForm.base_fields
+        }
+
+    def test_a_post_of_the_pattern_form_returns_what_each_field_received(
+        self, open_page
+    ):
+        data = {f"{PATTERN_PREFIX}-{name}": v for name, v in PATTERN_POST.items()}
+        data[f"{PATTERN_PREFIX}-submit"] = ""
+
+        page = open_page(self.url_name, data)
+
+        rows = page.find(id=PATTERN_PREFIX).find("table").find("tbody").find_all("tr")
+        received = [row.find_all("code")[1].get_text() for row in rows]
+        assert received == list(PATTERN_POST.values())
+
+    def test_the_reference_states_a_placeholder_character_for_each_definition(
+        self, page
+    ):
+        options = json.loads(
+            page.find(id=f"id_{PATTERN_PREFIX}-reference")["data-imask"]
+        )
+
+        assert options == {**REFERENCE_OPTIONS, "overwrite": True}
+
+    def test_the_article_of_the_formset_states_the_same_pattern(self, page):
+        options = json.loads(page.find(id="id_lines-0-article")["data-imask"])
+
+        assert options == REFERENCE_OPTIONS
+
+    def test_it_loads_an_exact_version_of_imask_with_an_integrity_value(self, page):
+        scripts = page.find_all("script", src=re.compile(r"^https://.*imask"))
+
+        assert len(scripts) == 1
+        assert "imask@7.6.1/" in scripts[0]["src"]
+        assert scripts[0]["integrity"].startswith("sha384-")
+        assert scripts[0]["crossorigin"] == "anonymous"
+
+
+class TestInputMasksPage(InputMasksPageContract):
+    url_name = "input-masks"
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("input-masks")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, page):
+        assert page.find("a", href=reverse("input-masks-standalone")) is not None
+
+
+class TestStandaloneInputMasksPage(InputMasksPageContract):
+    url_name = "input-masks-standalone"
+
+    def test_it_carries_none_of_the_shells_navigation(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_draws_no_cotton_component(self):
+        source = get_template("demo/input_masks_standalone.html").template.source
+        assert "<c-" not in source
+        assert "cotton" not in source
+
+    def test_it_links_back_to_the_shell_page(self, page):
+        assert page.find("a", href=reverse("input-masks")) is not None

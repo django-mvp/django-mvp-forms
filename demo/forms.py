@@ -45,7 +45,6 @@ from mvp_forms.choices import Choice, FormChoices, Modifiers
 from mvp_forms.layout import Join
 from mvp_forms.widgets import (
     EnumBlock,
-    PatternBlock,
     PatternMaskInput,
     RangeBlock,
 )
@@ -1710,16 +1709,12 @@ class UneditableChoicesForm(forms.Form):
         self.helper.layout = Layout(*[UneditableField(name) for name in self.fields])
 
 
-# Placeholder characters that say what goes in each position: # for a digit,
-# a for a letter, and d, m and y for the parts of a date.
+# Placeholder characters that say what goes in each position: d, m and y for the
+# parts of a date.
 DATE_BLOCKS = {
     "d": RangeBlock(1, 31, max_length=2, placeholder_char="d"),
     "m": RangeBlock(1, 12, max_length=2, placeholder_char="m"),
     "Y": RangeBlock(1900, 2100, placeholder_char="y"),
-}
-LETTERS_THEN_DIGITS = {
-    "L": PatternBlock("aa", placeholder_char="a"),
-    "N": PatternBlock("0000", placeholder_char="#"),
 }
 PHONE = "+{49} 000 0000000"
 
@@ -1758,12 +1753,15 @@ class PatternMaskForm(MaskForm):
     reference = forms.CharField(
         label=_("Reference"),
         help_text=_(
-            "Pattern: L-N. Block L is the pattern aa, two letters, shown as a. "
-            "Block N is the pattern 0000, four digits, shown as #. Typing overwrites."
+            "Pattern: aa-0000. Each a is a letter, shown as a, and each 0 is a "
+            "digit, shown as #. Typing overwrites."
         ),
         required=False,
         widget=PatternMaskInput(
-            "L-N", blocks=LETTERS_THEN_DIGITS, lazy=False, overwrite=True
+            "aa-0000",
+            lazy=False,
+            overwrite=True,
+            placeholder_char={"0": "#", "a": "a"},
         ),
     )
     shelf = forms.CharField(
@@ -1873,7 +1871,9 @@ class MaskedLineForm(forms.Form):
 
     article = forms.CharField(
         label=_("Article"),
-        widget=PatternMaskInput("L-N", blocks=LETTERS_THEN_DIGITS, lazy=False),
+        widget=PatternMaskInput(
+            "aa-0000", lazy=False, placeholder_char={"0": "#", "a": "a"}
+        ),
     )
 
 

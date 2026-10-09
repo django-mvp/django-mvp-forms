@@ -118,8 +118,26 @@
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestInputMasksPage",
+              "tests/test_demo.py::TestStandaloneInputMasksPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -k InputMasks -q",
+              "uv run pytest -n auto -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "demo/views.py:1660",
+              "demo/views.py:1733",
+              "demo/forms.py:1753",
+              "demo/templates/demo/input_masks_standalone.html:1",
+              "README.md:1256"
+            ]
+          }
         }
       ]
     },
