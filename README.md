@@ -995,8 +995,8 @@ A host project replaces one template of the pack by putting a file at the same p
 
 A replacement is found by one of two routes, and the last column of the list below says which:
 
-- The templates outside `daisyui/widgets/` are found through `TEMPLATES`. Put the replacement in a directory listed in `DIRS`, or in the `templates` directory of an app listed in `INSTALLED_APPS` before `mvp_forms`.
-- The templates under `daisyui/widgets/` are loaded by the form renderer, and Django's default renderer does not read `TEMPLATES`. It looks in Django's own form templates and then in the `templates` directory of each installed app, in order, so with the default renderer a replacement is found only in an app listed before `mvp_forms`. A project that keeps it in a `DIRS` directory sets `FORM_RENDERER = "django.forms.renderers.TemplatesSetting"` and adds `"django.forms"` to `INSTALLED_APPS`, so Django's own widget templates are still found.
+- The templates outside `daisyui/widgets/` and `mvp_forms/widgets/` are found through `TEMPLATES`. Put the replacement in a directory listed in `DIRS`, or in the `templates` directory of an app listed in `INSTALLED_APPS` before `mvp_forms`.
+- The templates under `daisyui/widgets/` and `mvp_forms/widgets/` are loaded by the form renderer, and Django's default renderer does not read `TEMPLATES`. It looks in Django's own form templates and then in the `templates` directory of each installed app, in order, so with the default renderer a replacement is found only in an app listed before `mvp_forms`. A project that keeps it in a `DIRS` directory sets `FORM_RENDERER = "django.forms.renderers.TemplatesSetting"` and adds `"django.forms"` to `INSTALLED_APPS`, so Django's own widget templates are still found.
 
 An app listed after `mvp_forms` is never used. Once django-crispy-forms has loaded `daisyui/field.html`, `daisyui/uni_form.html`, `daisyui/uni_formset.html`, `daisyui/whole_uni_form.html` or `daisyui/whole_uni_formset.html` it keeps it in memory, so restart the development server after you add or edit a replacement for one of those five.
 
@@ -1064,6 +1064,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/widgets/group_options.html` | The options of a radio group or a checkbox group, each an input in a label of its own, under a nested fieldset where the choices have group names, which the two group templates include. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/rating.html` | A field drawn as a rating: the element that holds the stars and one radio input for each choice, where `widget` also holds `rating_class`, the classes of that element, and `inputs`, the choices in the order they are drawn, the one that clears the rating first. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/select_date.html` | A date drawn by `SelectDateWidget`: a select for each part of the date, side by side. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/partial_date.html` | A partial date drawn by `PartialDateInput` or `PartialDateSelect`: one element that holds a year, a month and a day side by side, each a part of one field. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 
@@ -1477,6 +1478,58 @@ Options IMask refuses, such as a regular expression JavaScript cannot compile, l
 #### What is not supported
 
 An option whose value is a JavaScript function cannot be written in Python and is not supported: function masks, `prepare`, `prepareChar`, `commit`, `validate`, `dispatch`, `format` and `parse`. IMask's date mask needs two of them for any format but its default, so there is no date widget. There are no widgets for one particular format, such as a phone number or an IBAN, because the pattern differs by country and each is one line with `PatternMaskInput`. IMask's pipes, which format a value with no input, are not covered.
+
+### Partial dates
+
+A partial date is a date known to the year, to the month or to the day: a letter dated 1894, a sample collected in March 2021, a birth on 14 March 2021. `PartialDateField` takes one from a form, checks it against the calendar and hands the form `cleaned_data` ISO text.
+
+This is the public surface:
+
+- `mvp_forms.fields.PartialDateField`
+
+#### The field
+
+```python
+from django import forms
+
+from mvp_forms.fields import PartialDateField
+
+
+class SampleForm(forms.Form):
+    collected = PartialDateField(required=False)
+```
+
+The field takes `CharField`'s own arguments, and `required`, `disabled`, `validators`, `error_messages`, `label`, `help_text` and `initial` behave as they do there. With no widget named it is drawn as a text input, in the pack's `input` class with the size, colour and variant stated for the form, and its form's media names no script.
+
+| Entered | `cleaned_data` |
+|---|---|
+| `2021` | `"2021"` |
+| `2021-03` | `"2021-03"` |
+| `2021-3` | `"2021-03"` |
+| `2021-03-14` | `"2021-03-14"` |
+| `2021-3-4` | `"2021-03-04"` |
+| `2021-` | `"2021"` |
+| nothing, or only space | `""` |
+
+A value is a year of four digits, then a month, then a day, each part joined to the last by a hyphen. A month or a day of one digit is padded to two. Space around the value is dropped, and so is one trailing hyphen. A part is only ever left out from the right: a month with no year and a day with no month are refused. Every part is made of the digits 0 to 9, so a year written in the digits of another script is refused. A date has to exist: `2023-02-29` is refused and `2024-02-29` is not, and the Gregorian rules apply to every year from 0001.
+
+The field returns text, as a `CharField` does, and never a `datetime.date`, since a year alone is no date. A `datetime.date` given as the field's `initial` is shown as its ISO text. A model's `CharField` with `max_length=10` takes the value as it is, and so does a model field of your own that stores a partial date. How a project stores it is the project's.
+
+#### Error codes
+
+Every error is raised with a `code`, so a test or a form's `has_error` can name it, and each message can be replaced through `error_messages`:
+
+| Code | The value |
+|---|---|
+| `required` | is empty on a required field |
+| `invalid` | is not a date written with hyphens: it holds anything but the digits 0 to 9 and hyphens, has more than three parts, an empty part at its end, or more than one trailing hyphen |
+| `year` | has a year of fewer or more than four digits, or the year `0000` |
+| `month` | has a month above 12, or a month of `0` or `00` |
+| `day` | has a day the month does not have, including 29 February in a year that is not a leap year, or a day of `0` or `00` |
+| `no_year` | has a month or a day and no year |
+| `no_month` | has a day and no month |
+
+A value cut off inside a part cannot be told from a part of one digit, so `2021-0` is a month of zero and `202` is a year of three digits.
 
 ### Themes
 

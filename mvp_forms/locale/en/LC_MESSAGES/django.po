@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-mvp-forms\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-03 20:01+0200\n"
+"POT-Creation-Date: 2026-10-09 18:02-0500\n"
 "PO-Revision-Date: 2026-10-03 18:41+0200\n"
 "Last-Translator: django-mvp-forms\n"
 "Language-Team: English\n"
@@ -18,6 +18,56 @@ msgstr ""
 msgid "Forms"
 msgstr ""
 
+#: fields.py:18
+msgid "Enter a date as YYYY, YYYY-MM or YYYY-MM-DD."
+msgstr ""
+
+#: fields.py:19
+msgid "Enter the year with four digits."
+msgstr ""
+
+#: fields.py:20
+msgid "Enter a month from 1 to 12."
+msgstr ""
+
+#: fields.py:21
+msgid "That month has no such day."
+msgstr ""
+
+#: fields.py:22
+msgid "A month needs a year."
+msgstr ""
+
+#: fields.py:23
+msgid "A day needs a month."
+msgstr ""
+
+#: fields.py:24
+msgid "Enter at least a year and a month."
+msgstr ""
+
+#: fields.py:25
+msgid "Enter a full date."
+msgstr ""
+
+#: fields.py:26
+msgid "Enter the year only."
+msgstr ""
+
+#: fields.py:27
+msgid "Enter a year and a month, with no day."
+msgstr ""
+
+#: fields.py:28
+#, python-format
+msgid "Enter a date no earlier than %(limit)s."
+msgstr ""
+
+#: fields.py:29
+#, python-format
+msgid "Enter a date no later than %(limit)s."
+msgstr ""
+
 #: templates/daisyui/layout/alert.html:4
 msgid "Dismiss"
 msgstr ""
@@ -26,22 +76,23 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-#: templatetags/daisyui.py:18
+#: templatetags/daisyui.py:33 widgets.py:688 widgets.py:689 widgets.py:733
+#: widgets.py:756
 msgid "Year"
 msgstr ""
 
-#: templatetags/daisyui.py:19
+#: templatetags/daisyui.py:34 widgets.py:658 widgets.py:662
 msgid "Month"
 msgstr ""
 
-#: templatetags/daisyui.py:20
+#: templatetags/daisyui.py:35 widgets.py:669 widgets.py:673
 msgid "Day"
 msgstr ""
 
-#: templatetags/daisyui.py:28
+#: templatetags/daisyui.py:38
 msgid "Date"
 msgstr ""
 
-#: templatetags/daisyui.py:28
+#: templatetags/daisyui.py:38
 msgid "Time"
 msgstr ""

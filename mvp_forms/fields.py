@@ -134,8 +134,12 @@ class PartialDateField(forms.CharField):
 
     def parse(self, value):
         """Return the padded ISO text of a partial date that exists."""
-        parts = value.rstrip("-").split("-")
-        if len(parts) > 3 or any(not re.fullmatch(r"\d*", part) for part in parts):
+        parts = value.removesuffix("-").split("-")
+        if (
+            len(parts) > 3
+            or not parts[-1]
+            or any(not re.fullmatch("[0-9]*", part) for part in parts)
+        ):
             self.fail("invalid")
         year, month, day = [*parts, "", ""][:3]
         if not year:

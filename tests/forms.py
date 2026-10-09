@@ -25,6 +25,7 @@ from django_tomselect.forms import (
     TomSelectMultipleChoiceField,
 )
 
+from mvp_forms.fields import PartialDateField
 from mvp_forms.layout import Join
 from mvp_forms.widgets import (
     DynamicMaskInput,
@@ -1183,4 +1184,27 @@ class MaskedPageForm(forms.Form):
                 PatternMaskInput("000000", display_char="•"),
             ]
         ),
+    )
+
+
+class PartialDateForm(forms.Form):
+    born = PartialDateField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class PartialDateLineForm(forms.Form):
+    born = PartialDateField()
+
+
+PartialDateLineFormSet = formset_factory(PartialDateLineForm, extra=2)
+
+
+def partial_date_form(**options):
+    """Return a form class holding one partial date field built from the options."""
+    return type(
+        "PartialDateOptionsForm", (forms.Form,), {"born": PartialDateField(**options)}
     )
