@@ -109,8 +109,20 @@
       "tasks": [
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestPartialDateMaskInput",
+              "tests/test_pack/test_partial_dates.py::TestPartialDateMaskInput"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_pack/test_documented_examples.py tests/test_pack/test_template_list.py -q"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:602"
+            ]
+          }
         },
         {
           "id": "T003",
