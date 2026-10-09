@@ -126,8 +126,19 @@
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py tests/test_pack/test_masked_inputs.py -q"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:147"
+            ]
+          }
         }
       ]
     },
