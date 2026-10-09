@@ -28,8 +28,52 @@
     return rest;
   }
 
+  function daysIn(year, month) {
+    if (month === 2) {
+      return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 29 : 28;
+    }
+    return [4, 6, 9, 11].includes(month) ? 30 : 31;
+  }
+
+  // A number range whose first digit, when it can only be the whole part, is
+  // given its leading zero: 4 as a month is 04.
+  function paddedRange(first) {
+    return class extends window.IMask.MaskedRange {
+      _appendCharRaw(character, flags) {
+        if (this.value === "" && character >= first && character <= "9") {
+          return super
+            ._appendCharRaw("0", flags)
+            .aggregate(super._appendCharRaw(character, flags));
+        }
+        return super._appendCharRaw(character, flags);
+      }
+    };
+  }
+
+  // A year, then a month and a day a person may leave off. A digit is refused
+  // when no month, or no day of the month typed, could follow from it.
+  function partialDate(finest) {
+    const Range = window.IMask.MaskedRange;
+    return {
+      mask: { year: "Y", month: "Y-M", day: "Y-M-D" }[finest || "day"],
+      blocks: {
+        Y: { mask: Range, from: 1, to: 9999, maxLength: 4 },
+        M: { mask: paddedRange("2"), from: 1, to: 12, maxLength: 2 },
+        D: { mask: paddedRange("4"), from: 1, to: 31, maxLength: 2 },
+      },
+      validate: function (value) {
+        const [year, month, day] = value.split("-");
+        if (!day) return true;
+        const length = daysIn(Number(year), Number(month));
+        if (day.length === 1) return day === "0" || Number(day + "0") <= length;
+        return Number(day) >= 1 && Number(day) <= length;
+      },
+    };
+  }
+
   function build(written) {
     const { kind, definitions, blocks, flags, ...rest } = written;
+    if (kind === "partial-date") return partialDate(rest.finest);
     if (kind === "regex") return { mask: new RegExp(rest.mask, flags) };
     if (kind === "number") return { mask: Number, ...rest };
     if (kind === "dynamic") return { mask: rest.mask.map(build) };

@@ -9,6 +9,8 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from django import forms
+from django.utils.dates import MONTHS
+from django.utils.translation import gettext_lazy as _
 
 
 class Check:
@@ -594,3 +596,106 @@ class DynamicMaskInput(MaskInput):
                 f"for each mask in the list, not {each!r}",
             )
         super().__init__(attrs, mask=[each.mask_options() for each in masks])
+
+
+class PartialDateMaskInput(MaskInput):
+    """One text input masked as a year, a year and month, or a full date."""
+
+    kind = "partial-date"
+
+    def __init__(self, attrs=None, *, finest="day"):
+        """State the most precise value the input takes.
+
+        Args:
+            attrs: HTML attributes for the input.
+            finest: The last part the input takes: year, month or day.
+        """
+        super().__init__({"inputmode": "numeric", **(attrs or {})}, finest=finest)
+
+    def set_finest(self, finest):
+        """Take the finest precision of the field the widget is on."""
+        self.options["finest"] = finest
+
+
+class PartialDateInput(forms.MultiWidget):
+    """A year, a month and a day as three parts that make one ISO value."""
+
+    template_name = "mvp_forms/widgets/partial_date.html"
+
+    class Media:
+        js = ["mvp_forms/partial-date.js"]
+
+    def __init__(self, attrs=None, *, finest="day"):
+        """Build the parts.
+
+        Args:
+            attrs: HTML attributes for every part.
+            finest: The last part drawn: year, month or day.
+        """
+        self.shared_attrs = attrs
+        super().__init__(self.parts(finest), attrs)
+
+    def parts(self, finest):
+        """Return the parts down to the finest one."""
+        parts = {
+            "year": forms.TextInput(
+                {
+                    "class": "join-item w-24",
+                    "inputmode": "numeric",
+                    "maxlength": 4,
+                    "pattern": "[0-9]{4}",
+                    "placeholder": _("Year"),
+                    "aria-label": _("Year"),
+                    "data-partial-date-part": "year",
+                }
+            ),
+            "month": forms.Select(
+                {
+                    "class": "join-item w-auto",
+                    "aria-label": _("Month"),
+                    "data-partial-date-part": "month",
+                },
+                choices=[
+                    ("", _("Month")),
+                    *((f"{number:02}", name) for number, name in MONTHS.items()),
+                ],
+            ),
+            "day": forms.Select(
+                {
+                    "class": "join-item w-auto",
+                    "aria-label": _("Day"),
+                    "data-partial-date-part": "day",
+                },
+                choices=[
+                    ("", _("Day")),
+                    *((f"{number:02}", str(number)) for number in range(1, 32)),
+                ],
+            ),
+        }
+        names = ("year", "month", "day")
+        return {name: parts[name] for name in names[: names.index(finest) + 1]}
+
+    def set_finest(self, finest):
+        """Take the finest precision of the field the widget is on."""
+        self.__init__(self.shared_attrs, finest=finest)
+
+    def decompress(self, value):
+        """Split ISO text, or a Python date, into its parts."""
+        if not value:
+            return ["", "", ""]
+        if hasattr(value, "isoformat"):
+            value = value.isoformat()
+        year, *rest = [*str(value).split("-"), "", ""][:3]
+        return [year, *(part.zfill(2) if part else "" for part in rest)]
+
+    def value_from_datadict(self, data, files, name):
+        """Join what the parts hold, dropping empty parts from the right."""
+        parts = super().value_from_datadict(data, files, name)
+        return "-".join((part or "").strip() for part in parts).rstrip("-")
+
+    def get_context(self, name, value, attrs):
+        """Leave only the year required, since the other parts may be empty."""
+        context = super().get_context(name, value, attrs)
+        for part in context["widget"]["subwidgets"][1:]:
+            part["attrs"].pop("required", None)
+        return context
