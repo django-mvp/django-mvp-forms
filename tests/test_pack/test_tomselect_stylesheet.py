@@ -22,6 +22,10 @@ CLEAR_SHOWN = (
 LOADING = ":root .ts-wrapper.loading"
 RING = ":root .ts-wrapper.loading::before"
 PLACEHOLDER = ":root .ts-wrapper .ts-control > input::placeholder"
+TAG = ":root .ts-wrapper.multi .ts-control > .item"
+TAG_ACTIVE = ":root .ts-wrapper.multi .ts-control > .item.active"
+TAG_REMOVE = ":root .ts-wrapper.plugin-remove_button .ts-control .item .remove"
+DISABLED_TAG = ":root .ts-wrapper.multi.disabled .ts-control > .item"
 DISABLED_WRAPPER = ":root .ts-wrapper.disabled"
 DISABLED_OPTION = ":root .ts-dropdown [data-disabled]"
 THEMES = [Themes.named("light"), Themes.named("dark")]
@@ -34,8 +38,12 @@ HELD = [
     "the line loading more results",
     "the clear button",
     "the loading ring",
+    "a tag",
+    "the remove button of a tag",
+    "the tag the keyboard is on",
+    "the remove button of the tag the keyboard is on",
 ]
-MEASURED = ["the disabled wrapper", "a disabled option"]
+MEASURED = ["the disabled wrapper", "a disabled option", "a disabled tag"]
 
 READ = """
 /* A comment with { braces } and a colour: #fff; rgb(0, 0, 0) */
@@ -251,6 +259,10 @@ class TestTheLegibilityOfTheStylesheet:
         sheet = self.sheet
         text = sheet.ink(DROPDOWN, "color")
         surface = sheet.ink(DROPDOWN, "background")
+        tag_text = sheet.ink(TAG, "color")
+        tag_surface = sheet.ink(TAG, "background")
+        active_tag_text = sheet.ink(TAG_ACTIVE, "color")
+        active_tag_surface = sheet.ink(TAG_ACTIVE, "background")
         return {
             "an option": Pairing.of("text", text, surface),
             "the active option": Pairing.of(
@@ -285,6 +297,29 @@ class TestTheLegibilityOfTheStylesheet:
                     sheet.number(RING, "opacity")
                 ),
                 sheet.ink(LOADING, "background-color"),
+            ),
+            "a tag": Pairing.of("text", tag_text, tag_surface),
+            "the remove button of a tag": Pairing.of(
+                "mark",
+                sheet.ink(TAG_REMOVE, "color", inherited=tag_text).faded(
+                    sheet.number(TAG_REMOVE, "opacity")
+                ),
+                tag_surface,
+            ),
+            "the tag the keyboard is on": Pairing.of(
+                "text", active_tag_text, active_tag_surface
+            ),
+            "the remove button of the tag the keyboard is on": Pairing.of(
+                "mark",
+                sheet.ink(TAG_REMOVE, "color", inherited=active_tag_text).faded(
+                    sheet.number(TAG_REMOVE, "opacity")
+                ),
+                active_tag_surface,
+            ),
+            "a disabled tag": Pairing.of(
+                "text",
+                sheet.ink(DISABLED_TAG, "color"),
+                sheet.ink(DISABLED_TAG, "background"),
             ),
             "the disabled wrapper": Pairing.of(
                 "text",

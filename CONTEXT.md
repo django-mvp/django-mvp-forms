@@ -43,6 +43,12 @@ with another package. django-tomselect is the first. A supported package is neve
 a dependency.
 _Avoid_: integration, add-on.
 
+**Tagging**:
+A multiple django-tomselect control that offers to add what was typed, each value
+shown as a tag with a remove button. The pack draws it. Saving a new value is the
+developer's, and the field must accept a value that is not among its choices.
+_Avoid_: tags field (a field the developer writes, not a thing the pack ships).
+
 **Layout object**:
 A django-crispy-forms Python class placed in a form's `Layout` to say how part
 of the form is arranged: `Fieldset`, `Row`, `Div`, `Submit` and the rest. Each

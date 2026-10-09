@@ -3221,6 +3221,11 @@ TOMSELECT_PREFIX = "tomselect"
 TOMSELECT_STYLESHEET = "mvp_forms/tomselect.css"
 TOMSELECT_SUBMIT = {f"{TOMSELECT_PREFIX}-submit": "Submit"}
 TOMSELECT_WITH_COUNTRY = {**TOMSELECT_SUBMIT, f"{TOMSELECT_PREFIX}-country": "Germany"}
+TOMSELECT_NEW_KEYWORD = "a-keyword-no-option-holds"
+TOMSELECT_WITH_NEW_KEYWORD = {
+    **TOMSELECT_WITH_COUNTRY,
+    f"{TOMSELECT_PREFIX}-keywords": [TOMSELECT_NEW_KEYWORD],
+}
 # The prefix of each form the page draws in a state, a size, a colour and a variant.
 TOMSELECT_SECTIONS = [
     *(f"state-{state}" for state, _ in TomSelectMixin.states),
@@ -3273,6 +3278,14 @@ class TomSelectPageContract:
 
         shown = page.find(id=f"{TOMSELECT_PREFIX}-cleaned-country")
         assert shown.get_text(strip=True) == "Germany"
+
+    def test_a_post_with_a_keyword_that_is_not_an_option_shows_it_cleaned(
+        self, open_page
+    ):
+        page = open_page(self.url_name, TOMSELECT_WITH_NEW_KEYWORD)
+
+        shown = page.find(id=f"{TOMSELECT_PREFIX}-cleaned-keywords")
+        assert TOMSELECT_NEW_KEYWORD in shown.get_text()
 
     def test_a_post_without_a_country_comes_back_in_error(self, open_page):
         page = open_page(self.url_name, TOMSELECT_SUBMIT)

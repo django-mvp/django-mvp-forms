@@ -1148,6 +1148,42 @@ A control is drawn at rest, focused, in error, disabled and open. A control in e
 
 The clear button, `PluginClearButton`, and the remove button on each tag of a multiple control, `PluginRemoveButton`, are drawn. Another plugin works and keeps django-tomselect's own look. Support for another is added when a project asks for it.
 
+#### Tagging
+
+Tagging is a multiple control that offers to add what was typed. Each value is a tag with a remove button, and when the typed text matches no option the dropdown ends with a line to add it. Turn it on with `create=True` in the `TomSelectConfig` of a multiple control that has `PluginRemoveButton`, and the stylesheet draws the tags, the tag the keyboard is on and the line that offers to add a value.
+
+The pack draws the control and nothing more. Saving a new value is yours: django-tomselect posts it as it posts any other, and what your view does with it is up to you. The field has to accept it first, and django-tomselect's stock fields do not. `TomSelectMultipleChoiceField` and `TomSelectModelMultipleChoiceField` reject a value that is not among their choices, so a form with a new tag comes back in error. Write a field of your own that accepts any value, as the demo's `TagsField` does:
+
+```python
+from django import forms
+from django_tomselect.app_settings import PluginRemoveButton, TomSelectConfig
+from django_tomselect.forms import TomSelectMultipleChoiceField
+
+
+class TagsField(TomSelectMultipleChoiceField):
+    def clean(self, value):
+        if self.required and not value:
+            raise forms.ValidationError(
+                self.error_messages["required"], code="required"
+            )
+        return list(value or [])
+
+
+class ArticleForm(forms.Form):
+    keywords = TagsField(
+        config=TomSelectConfig(
+            url="keyword-autocomplete",
+            value_field="value",
+            label_field="label",
+            create=True,
+            plugin_remove_button=PluginRemoveButton(),
+        ),
+        required=False,
+    )
+```
+
+`cleaned_data["keywords"]` is then a list of strings, whether or not each is among the options, and your view decides which of them to save.
+
 #### What is not supported
 
 - django-tomselect's token widget, `TomSelectTokenWidget`, which the stylesheet does not style.
