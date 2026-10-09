@@ -13,6 +13,7 @@ from mvp_forms.widgets import (
     DynamicMaskInput,
     EnumBlock,
     NumberMaskInput,
+    PartialDateMaskInput,
     PatternBlock,
     PatternMaskInput,
     RangeBlock,
@@ -738,3 +739,47 @@ class TestDynamicMaskInput:
         widget = DynamicMaskInput([NumberMaskInput(radix=",")])
 
         assert input_of(widget, "1234.5")["value"] == "1234.5"
+
+
+class TestPartialDateMaskInput:
+    def test_it_writes_its_kind_and_the_finest_precision_a_form_may_hold(self):
+        assert written(PartialDateMaskInput()) == {
+            "kind": "partial-date",
+            "resolution": "day",
+        }
+
+    def test_it_asks_for_a_numeric_keypad(self):
+        assert input_of(PartialDateMaskInput())["inputmode"] == "numeric"
+
+    def test_an_inputmode_the_developer_states_is_kept(self):
+        widget = PartialDateMaskInput(attrs={"inputmode": "text"})
+
+        assert input_of(widget)["inputmode"] == "text"
+
+    def test_the_developers_attrs_are_kept(self):
+        widget = PartialDateMaskInput(attrs={"placeholder": "Born", "id": "born"})
+
+        drawn = input_of(widget)
+
+        assert drawn["placeholder"] == "Born"
+        assert drawn["id"] == "born"
+        assert drawn["type"] == "text"
+
+    def test_an_option_it_does_not_have_is_refused(self):
+        with pytest.raises(TypeError, match="resolution"):
+            PartialDateMaskInput(resolution="month")
+
+    def test_it_names_the_script_in_its_media(self):
+        assert "mvp_forms/imask.js" in str(PartialDateMaskInput().media)
+
+    def test_it_draws_and_submits_text_on_a_field_that_is_not_a_partial_date_field(
+        self,
+    ):
+        class Form(forms.Form):
+            born = forms.CharField(widget=PartialDateMaskInput())
+
+        form = Form(data={"born": "2021-03"})
+
+        assert form.is_valid()
+        assert form.cleaned_data["born"] == "2021-03"
+        assert BeautifulSoup(str(form["born"]), "html.parser").input["type"] == "text"

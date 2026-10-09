@@ -1486,6 +1486,7 @@ A partial date is a date known to the year, to the month or to the day: a letter
 This is the public surface:
 
 - `mvp_forms.fields.PartialDateField`
+- `mvp_forms.widgets.PartialDateMaskInput`
 
 #### The field
 
@@ -1530,6 +1531,29 @@ Every error is raised with a `code`, so a test or a form's `has_error` can name 
 | `no_month` | has a day and no month |
 
 A value cut off inside a part cannot be told from a part of one digit, so `2021-0` is a month of zero and `202` is a year of three digits.
+
+#### The masked input
+
+`PartialDateMaskInput` draws one text input and has IMask put the hyphens in as a person types.
+
+```python
+from mvp_forms.widgets import PartialDateMaskInput
+
+
+class SampleForm(forms.Form):
+    collected = PartialDateField(
+        required=False,
+        widget=PartialDateMaskInput(attrs={"placeholder": "2021-03-14"}),
+    )
+```
+
+`PartialDateMaskInput(attrs=None)` takes HTML attributes and nothing else. Every option is a keyword of the field. The input is drawn with the field's name and id, with `inputmode="numeric"` so a touch device offers a numeric keypad unless your `attrs` state an `inputmode`, and with every other attribute you gave kept. Its `data-imask` holds `{"kind": "partial-date", "resolution": "day"}`. In the pack it is an `input`, takes the size, colour and variant stated for the form, and is drawn the same way through Django's own rendering.
+
+The page has to load what a page loads for any mask widget: IMask and the form's media, which names `mvp_forms/imask.js`. [What to load](https://github.com/django-mvp/django-mvp-forms#what-to-load) says how, and how a page's Content Security Policy and a project's bundler are met.
+
+A page that does not load IMask draws the input as an ordinary text input. Nothing is masked, no error is raised in the browser, and the form submits what was typed to the field, which checks it as it does any value.
+
+The widget on a field that is not a `PartialDateField` is a text input that submits what was typed.
 
 ### Themes
 

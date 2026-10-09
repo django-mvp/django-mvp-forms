@@ -31,6 +31,7 @@ from mvp_forms.widgets import (
     DynamicMaskInput,
     EnumBlock,
     NumberMaskInput,
+    PartialDateMaskInput,
     PatternBlock,
     PatternMaskInput,
     RangeBlock,
@@ -1201,6 +1202,24 @@ class PartialDateLineForm(forms.Form):
 
 
 PartialDateLineFormSet = formset_factory(PartialDateLineForm, extra=2)
+
+
+class PartialDateMaskForm(forms.Form):
+    born = PartialDateField(
+        required=False, widget=PartialDateMaskInput(attrs={"placeholder": "Born"})
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class PartialDateMaskLineForm(forms.Form):
+    born = PartialDateField(widget=PartialDateMaskInput())
+
+
+PartialDateMaskLineFormSet = formset_factory(PartialDateMaskLineForm, extra=2)
 
 
 def partial_date_form(**options):
