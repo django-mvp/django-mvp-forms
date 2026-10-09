@@ -1,0 +1,377 @@
+/*
+ * django-tomselect controls drawn as daisyUI controls.
+ *
+ * Load this after daisyUI, on any page that draws a django-tomselect select. It
+ * styles nothing else. The pack writes daisyUI's `select` class, and the size,
+ * colour and variant stated for the field, on the select element. Tom Select
+ * copies those classes to the wrapper it builds, so the wrapper is a daisyUI
+ * select already, and the rules below fit Tom Select's own parts inside it.
+ *
+ * Every colour, radius, border width and size comes from the daisyUI theme.
+ * `:root` in front of each selector lets the rules win over Tom Select's own
+ * stylesheet whichever of the two is loaded first.
+ */
+
+/* The wrapper: a daisyUI select that holds a text input and not a native one. */
+
+/* daisyUI clips what leaves a select, which would clip the dropdown, and Tom
+   Select gives its wrapper a least height of its own. */
+:root .ts-wrapper {
+  min-height: 0;
+  overflow: visible;
+  cursor: text;
+}
+
+:root .ts-wrapper.single {
+  cursor: pointer;
+}
+
+/* A control holding several values grows with its tags and has no caret. */
+:root .ts-wrapper.multi {
+  height: auto;
+  min-height: var(--size);
+  padding-block: max(0px, calc((var(--size) - 2rem) / 2));
+  padding-inline-end: 0.75rem;
+  background-image: none;
+  white-space: normal;
+}
+
+:root .ts-wrapper.disabled {
+  cursor: not-allowed;
+  border-color: var(--color-base-200);
+  background-color: var(--color-base-200);
+  box-shadow: none;
+  color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
+}
+
+/* daisyUI's `loading` is a spinner drawn as a mask, and Tom Select marks a
+   wrapper that is fetching with the same class. Undo the spinner here and draw
+   a small ring beside the caret instead. */
+:root .ts-wrapper.loading {
+  pointer-events: auto;
+  aspect-ratio: auto;
+  width: clamp(3rem, 20rem, 100%);
+  display: inline-flex;
+  background-color: var(--color-base-100);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+:root .ts-wrapper.loading.w-full {
+  width: 100%;
+}
+
+:root .ts-wrapper.loading.select-ghost {
+  background-color: transparent;
+}
+
+:root .ts-wrapper.loading::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: 2rem;
+  width: 1em;
+  height: 1em;
+  margin-block-start: -0.5em;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 9999px;
+  opacity: 0.6;
+  animation: mvp-forms-tomselect-spin 0.7s linear infinite;
+}
+
+:root .ts-wrapper.multi.loading::before {
+  inset-inline-end: 0.75rem;
+}
+
+@keyframes mvp-forms-tomselect-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The control: the box Tom Select draws, now only a row inside the wrapper. */
+
+:root .ts-wrapper .ts-control {
+  --ts-pr-caret: 0px;
+  --ts-pr-min: 0px;
+  flex: 1 1 0%;
+  min-width: 0;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: 0 none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  font-size: inherit;
+  line-height: 1.25;
+  cursor: inherit;
+  overflow: visible;
+}
+
+:root .ts-wrapper.multi.has-items .ts-control {
+  --ts-pr-min: 0px;
+  padding: 0;
+}
+
+:root .ts-wrapper.disabled .ts-control {
+  background: none;
+  opacity: 1;
+}
+
+/* daisyUI draws the caret on the wrapper, which already leaves room for it. */
+:root .ts-wrapper.single .ts-control {
+  --ts-pr-caret: 0px;
+  background: none;
+  box-shadow: none;
+}
+
+:root .ts-wrapper.single .ts-control::after {
+  content: none;
+}
+
+:root .ts-wrapper .ts-control > input {
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  cursor: inherit;
+}
+
+:root .ts-wrapper.has-items .ts-control > input {
+  margin: 0 !important;
+}
+
+:root .ts-wrapper .ts-control > input::placeholder {
+  color: var(--color-base-content);
+  opacity: 0.5;
+}
+
+/* The one value of a single control. */
+:root .ts-wrapper.single .ts-control > .item {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tags: each value of a control that holds several. */
+
+:root .ts-wrapper.multi .ts-control > .item {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  margin: 0;
+  padding-block: 0.125em;
+  padding-inline: 0.5em;
+  border: var(--border) solid var(--color-base-300);
+  border-radius: var(--radius-selector);
+  background: var(--color-base-200);
+  box-shadow: none;
+  color: var(--color-base-content);
+  font-size: 0.875em;
+  line-height: 1.25;
+  text-shadow: none;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* The tag the keyboard is on. */
+:root .ts-wrapper.multi .ts-control > .item.active {
+  border-color: var(--color-neutral);
+  background: var(--color-neutral);
+  color: var(--color-neutral-content);
+}
+
+:root .ts-wrapper.multi.disabled .ts-control > .item,
+:root .ts-wrapper.multi.disabled .ts-control > .item.active {
+  border-color: var(--color-base-300);
+  background: var(--color-base-200);
+  color: color-mix(in oklab, var(--color-base-content) 40%, transparent);
+}
+
+:root .ts-wrapper.plugin-remove_button .ts-control .item .remove {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  margin-block: -0.125em;
+  margin-inline: 0.375em 0;
+  padding-inline: 0.375em;
+  border: 0 none;
+  border-inline-start: var(--border) solid var(--color-base-300);
+  border-radius: 0;
+  color: inherit;
+  opacity: 0.7;
+}
+
+:root .ts-wrapper.plugin-remove_button:not(.disabled) .ts-control .item .remove:hover {
+  background: color-mix(in oklab, var(--color-base-content) 10%, transparent);
+  opacity: 1;
+}
+
+:root .ts-wrapper.plugin-remove_button .ts-control .item.active .remove {
+  border-inline-start-color: color-mix(
+    in oklab,
+    var(--color-neutral-content) 30%,
+    transparent
+  );
+}
+
+/* The clear button sits at the end of the control, before the caret. It is
+   shown while the control holds a value and is under the pointer or focused.
+   django-tomselect marks its own colour and opacity important. */
+:root .ts-wrapper.plugin-clear_button .clear-button {
+  inset-inline-end: 0;
+  color: inherit !important;
+  opacity: 0 !important;
+  transition: opacity 0.2s;
+}
+
+:root .ts-wrapper.plugin-clear_button.has-items:not(.disabled):hover .clear-button,
+:root .ts-wrapper.plugin-clear_button.has-items.focus .clear-button {
+  opacity: 0.6 !important;
+}
+
+:root .ts-wrapper.plugin-clear_button.has-items:not(.disabled) .clear-button:hover {
+  opacity: 1 !important;
+}
+
+/* The dropdown, drawn as daisyUI draws the options of its own select. Tom
+   Select copies the wrapper's classes to it, so the select's own drawing is
+   undone first and its size is kept. */
+
+:root div.ts-dropdown {
+  display: block;
+  inset-inline-start: 0;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  border: var(--border) solid var(--color-base-200);
+  border-radius: var(--radius-box);
+  background: var(--color-base-100);
+  box-shadow: 0 8px 16px -6px
+    color-mix(in oklab, var(--color-neutral) 30%, transparent);
+  color: var(--color-base-content);
+  font-size: max(var(--font-size, 0rem), var(--font-size-min, 0.875rem));
+  line-height: 1.25;
+  white-space: normal;
+  cursor: default;
+  overflow: hidden;
+  outline: none;
+  z-index: 50;
+}
+
+:root .ts-dropdown .ts-dropdown-content {
+  max-height: min(18rem, 60dvh);
+  padding: 0.5rem;
+}
+
+:root .ts-dropdown .option,
+:root .ts-dropdown .create,
+:root .ts-dropdown .no-results,
+:root .ts-dropdown .no-more-results,
+:root .ts-dropdown .loading-more-results,
+:root .ts-dropdown .optgroup-header {
+  padding-block: 0.375rem;
+  padding-inline: calc(0.25rem * var(--option-px, 3));
+  border-radius: var(--radius-field);
+  overflow-wrap: anywhere;
+}
+
+:root .ts-dropdown .option {
+  transition: background-color 0.2s cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* The option under the pointer or the keyboard. */
+:root .ts-dropdown .active {
+  background-color: color-mix(in oklab, var(--color-base-content) 10%, transparent);
+  color: inherit;
+}
+
+/* An option already chosen, where the control still lists it. */
+:root .ts-dropdown .option.selected {
+  background-color: var(--color-neutral);
+  color: var(--color-neutral-content);
+}
+
+:root .ts-dropdown [data-disabled],
+:root .ts-dropdown .option[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* The part of an option that matches what was typed. */
+:root .ts-dropdown [data-selectable] .highlight {
+  background: none;
+  border-radius: 0;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* Group headings. */
+:root .ts-dropdown .optgroup {
+  border-block-start: 0 none;
+}
+
+:root .ts-dropdown .optgroup-header {
+  padding-block-start: 0.5em;
+  background: none;
+  color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+  font-size: 0.875em;
+  font-weight: 600;
+}
+
+:root .ts-dropdown .optgroup + .optgroup,
+:root .ts-dropdown .option + .optgroup {
+  margin-block-start: 0.25rem;
+  border-block-start: var(--border) solid var(--color-base-200);
+}
+
+/* The offer to add what was typed, set apart from the options that exist. */
+:root .ts-dropdown .create {
+  color: inherit;
+  cursor: pointer;
+}
+
+:root .ts-dropdown .option ~ .create,
+:root .ts-dropdown .optgroup ~ .create {
+  margin-block-start: 0.25rem;
+  border-block-start: var(--border) solid var(--color-base-200);
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
+
+/* The lines that say something and cannot be chosen. */
+:root .ts-dropdown .no-results,
+:root .ts-dropdown .no-more-results,
+:root .ts-dropdown .loading-more-results {
+  color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+}
+
+:root .ts-dropdown .spinner {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0.375rem auto;
+}
+
+:root .ts-dropdown .spinner::after {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 2px solid currentColor;
+  border-color: currentColor transparent currentColor transparent;
+  opacity: 0.6;
+}
+
+/* Where the control is used. An open dropdown has to leave a box that would
+   otherwise scroll it: daisyUI's modal box and the scroller around a table. */
+
+.modal-box:has(.ts-wrapper.dropdown-active),
+.overflow-x-auto:has(.ts-wrapper.dropdown-active) {
+  overflow: visible;
+}

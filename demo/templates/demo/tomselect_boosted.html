@@ -1,0 +1,14 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Reached by htmx" icon="tomselect">
+    <c-text>
+      htmx swapped this page in without a full page load. The controls below started up
+      when it arrived.
+    </c-text>
+    {% crispy form %}
+  </c-section>
+  <c-text>
+    <a class="link" href="{% url 'tomselect' %}" hx-boost="true" hx-target="body">Back to the django-tomselect page</a>
+  </c-text>
+{% endblock page.content %}

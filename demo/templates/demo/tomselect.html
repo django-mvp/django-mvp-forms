@@ -1,0 +1,87 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="tomselect">
+    <c-text>
+      A text input and a stock select, then four django-tomselect controls: one that holds
+      a single value, one that holds several, one for tagging and one whose options are
+      listed under groups. The country is required. Submit the form and the page shows
+      what it cleaned to.
+    </c-text>
+    {% crispy form %}
+  </c-section>
+  {% if cleaned %}
+    <c-section title="What the form cleaned to" level="3">
+      <ul id="{{ prefix }}-cleaned">
+        {% for item in cleaned %}
+          <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+        {% endfor %}
+      </ul>
+    </c-section>
+  {% endif %}
+  <c-section title="In every state" level="3">
+    <c-text>
+      A stock select, a single control and a tagging control in the same state. No form
+      from here down to the modal posts anywhere.
+    </c-text>
+    {% for state in states %}
+      <c-section :title="state.title" level="4">
+        {% crispy state.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Sizes" level="3">
+    <c-text>
+      The controls take the size stated for the form, as the stock select above them does.
+    </c-text>
+    {% for size in sizes %}
+      <c-section :title="size.title" level="4">
+        {% crispy size.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Colours" level="3">
+    <c-text>
+      They take its colour too.
+    </c-text>
+    {% for color in colors %}
+      <c-section :title="color.title" level="4">
+        {% crispy color.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Variant" level="3">
+    {% for variant in variants %}
+      <c-section :title="variant.title" level="4">
+        {% crispy variant.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="In a modal" level="3">
+    <c-text>
+      Three controls in a modal. The list of rocks is longer than the modal is tall.
+    </c-text>
+    <c-button type="button" variant="primary" text="Open the modal" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()" />
+    {% crispy modal_form %}
+  </c-section>
+  <c-section title="In a formset drawn as a table" level="3">
+    <c-text>
+      Three lines, each with three controls. Open one in the last row.
+    </c-text>
+    {% crispy formset formset_helper %}
+  </c-section>
+  <c-section title="Loaded by htmx" level="3">
+    <c-text>
+      The button fetches a form and puts it below. Press it again and the same form is
+      swapped in over the first. The link opens another page by htmx navigation.
+    </c-text>
+    <c-button type="button" variant="primary" text="Fetch a form" hx-get="{% url 'tomselect-fetched' %}" hx-target="#tomselect-fetched" hx-swap="innerHTML" />
+    <div id="tomselect-fetched" class="mt-4"></div>
+    <c-text>
+      <a class="link" href="{% url 'tomselect-boosted' %}" hx-boost="true" hx-target="body">A page reached by htmx</a>
+    </c-text>
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'tomselect-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}

@@ -3,7 +3,7 @@
 # A menu entry whose view_name will not resolve is dropped without an error, so a
 # page missing from the sidebar is usually a name that does not match the route.
 from flex_menu import MenuItem
-from mvp.menus import AppMenu
+from mvp.menus import AppMenu, MenuGroup
 
 AppMenu.extend(
     [
@@ -122,6 +122,17 @@ AppMenu.extend(
             name="themes",
             view_name="themes",
             extra_context={"label": "Themes", "icon": "themes"},
+        ),
+        MenuGroup(
+            name="third-party",
+            extra_context={"label": "Third-party widgets"},
+            children=[
+                MenuItem(
+                    name="tomselect",
+                    view_name="tomselect",
+                    extra_context={"label": "django-tomselect", "icon": "tomselect"},
+                ),
+            ],
         ),
     ]
 )

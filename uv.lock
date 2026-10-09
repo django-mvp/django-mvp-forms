@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.12, <4.0"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -619,6 +619,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "django-mvp" },
+    { name = "django-tomselect" },
     { name = "mvp-shared", extra = ["dev", "test"] },
 ]
 
@@ -631,6 +632,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "django-mvp", specifier = ">=0.24.0" },
+    { name = "django-tomselect", specifier = ">=2026.6.2" },
     { name = "mvp-shared", extras = ["dev", "test"], git = "https://github.com/django-mvp/shared.git?tag=v0.6.0" },
 ]
 
@@ -660,6 +662,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/4c/70/5f80a3acf99d26dea89e892d4573f0e650904e573708b5fbf3bfc9cec72c/django_stubs_ext-6.1.1.tar.gz", hash = "sha256:c35263135558d4c5d12b69e1f4c98632bf59bc3ab5118f7d4882d12800e3a7dd", size = 7217, upload-time = "2026-09-14T08:45:52.44Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/99/c3/305a9f7611c0dc96d2a638bc3a67bdcde5a7faa5f4669188db018b8af6fc/django_stubs_ext-6.1.1-py3-none-any.whl", hash = "sha256:64aebb7ce2c327a4a2b75207d67034e879fd7edf027c93487be69da363dc79fa", size = 10853, upload-time = "2026-09-14T08:45:51.289Z" },
+]
+
+[[package]]
+name = "django-tomselect"
+version = "2026.6.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bb/a6/3780a9bc35ca62897bc720a01f575d47b036d8ecc5aea63615479600d760/django_tomselect-2026.6.2.tar.gz", hash = "sha256:584da0f81889da263bf1498484f414b022ae6d4df968bd44169161084084ff1a", size = 285267, upload-time = "2026-06-13T22:23:01.151Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cf/d6/e0b85e7432eaea047e83d475680d47824a6e8215c087df5b2a989904ddbb/django_tomselect-2026.6.2-py3-none-any.whl", hash = "sha256:726f713a203015319045ecd09f4935394e4040357ba52c9bbfaaaf74ff96c501", size = 322977, upload-time = "2026-06-13T22:23:03.201Z" },
 ]
 
 [[package]]
