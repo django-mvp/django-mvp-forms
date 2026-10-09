@@ -4,6 +4,7 @@ Each widget writes its options on the input as JSON in ``data-imask``, and the
 script named in its media hands them to IMask. The host project loads IMask.
 """
 
+import datetime
 import json
 from collections.abc import Mapping
 from decimal import Decimal
@@ -599,56 +600,58 @@ class DynamicMaskInput(MaskInput):
 
 
 class PartialDateMaskInput(MaskInput):
-    """One text input masked as a year, a year and month, or a full date."""
+    """One text input masked as a year, a year and month, or a full date.
+
+    The partial date field states the finest precision and the earliest and
+    latest dates on the widget it is given.
+    """
 
     kind = "partial-date"
+    finest = "day"
+    min_value = None
+    max_value = None
 
-    def __init__(self, attrs=None, *, finest="day"):
-        """State the most precise value the input takes.
+    def __init__(self, attrs=None):
+        """Ask a touch device for a numeric keypad.
 
         Args:
             attrs: HTML attributes for the input.
-            finest: The last part the input takes: year, month or day.
         """
-        super().__init__({"inputmode": "numeric", **(attrs or {})}, finest=finest)
+        super().__init__({"inputmode": "numeric", **(attrs or {})})
 
-    def set_finest(self, finest):
-        """Take the finest precision of the field the widget is on."""
-        self.options["finest"] = finest
+    def mask_options(self):
+        """Return the kind of mask and what the field accepts."""
+        limits = {"min": self.min_value, "max": self.max_value}
+        return {
+            "kind": self.kind,
+            "finest": self.finest,
+            **{name: value for name, value in limits.items() if value},
+        }
 
 
 class PartialDateInput(forms.MultiWidget):
-    """A year, a month and a day as three parts that make one ISO value."""
+    """A year, a month and a day as three parts that make one ISO value.
+
+    The year is typed. The partial date field states the finest precision and
+    the earliest and latest dates on the widget it is given.
+    """
 
     template_name = "mvp_forms/widgets/partial_date.html"
+    finest = "day"
+    min_value = None
+    max_value = None
 
     class Media:
         js = ["mvp_forms/partial-date.js"]
 
-    def __init__(self, attrs=None, *, finest="day"):
+    def __init__(self, attrs=None):
         """Build the parts.
 
         Args:
             attrs: HTML attributes for every part.
-            finest: The last part drawn: year, month or day.
         """
-        self.shared_attrs = attrs
-        super().__init__(self.parts(finest), attrs)
-
-    def parts(self, finest):
-        """Return the parts down to the finest one."""
         parts = {
-            "year": forms.TextInput(
-                {
-                    "class": "join-item w-24",
-                    "inputmode": "numeric",
-                    "maxlength": 4,
-                    "pattern": "[0-9]{4}",
-                    "placeholder": _("Year"),
-                    "aria-label": _("Year"),
-                    "data-partial-date-part": "year",
-                }
-            ),
+            "year": self.year_part(),
             "month": forms.Select(
                 {
                     "class": "join-item w-auto",
@@ -672,12 +675,21 @@ class PartialDateInput(forms.MultiWidget):
                 ],
             ),
         }
-        names = ("year", "month", "day")
-        return {name: parts[name] for name in names[: names.index(finest) + 1]}
+        super().__init__(parts, attrs)
 
-    def set_finest(self, finest):
-        """Take the finest precision of the field the widget is on."""
-        self.__init__(self.shared_attrs, finest=finest)
+    def year_part(self):
+        """Return the part the year is entered in."""
+        return forms.TextInput(
+            {
+                "class": "join-item w-24",
+                "inputmode": "numeric",
+                "maxlength": 4,
+                "pattern": "[0-9]{4}",
+                "placeholder": _("Year"),
+                "aria-label": _("Year"),
+                "data-partial-date-part": "year",
+            }
+        )
 
     def decompress(self, value):
         """Split ISO text, or a Python date, into its parts."""
@@ -694,8 +706,54 @@ class PartialDateInput(forms.MultiWidget):
         return "-".join((part or "").strip() for part in parts).rstrip("-")
 
     def get_context(self, name, value, attrs):
-        """Leave only the year required, since the other parts may be empty."""
+        """Draw the parts down to the finest, with only the year required."""
         context = super().get_context(name, value, attrs)
-        for part in context["widget"]["subwidgets"][1:]:
+        widget = context["widget"]
+        names = ("year", "month", "day")
+        widget["subwidgets"] = widget["subwidgets"][: names.index(self.finest) + 1]
+        for part in widget["subwidgets"][1:]:
             part["attrs"].pop("required", None)
+        widget["min_value"] = self.min_value
+        widget["max_value"] = self.max_value
         return context
+
+
+class PartialDateSelect(PartialDateInput):
+    """A year, a month and a day as three selects that make one ISO value.
+
+    The years on offer run from the field's earliest date to its latest. Where
+    one is not stated, they reach a hundred years back from this year.
+    """
+
+    def year_part(self):
+        """Return a select, whose years are listed when it is drawn."""
+        return forms.Select(
+            {
+                "class": "join-item w-auto",
+                "aria-label": _("Year"),
+                "data-partial-date-part": "year",
+            }
+        )
+
+    def years(self, held):
+        """Return the years on offer, latest first, with the one held."""
+        today = datetime.date.today().year
+        last = int(self.max_value[:4]) if self.max_value else None
+        first = int(self.min_value[:4]) if self.min_value else None
+        if last is None:
+            last = today if first is None or first <= today else first + 100
+        if first is None:
+            first = last - 100
+        years = [f"{year:04}" for year in range(last, first - 1, -1)]
+        if held and held not in years:
+            years.insert(0, held)
+        return years
+
+    def get_context(self, name, value, attrs):
+        """List the years before the parts are drawn."""
+        held = value[0] if isinstance(value, list) else self.decompress(value)[0]
+        self.widgets[0].choices = [
+            ("", _("Year")),
+            *((year, year) for year in self.years(held)),
+        ]
+        return super().get_context(name, value, attrs)

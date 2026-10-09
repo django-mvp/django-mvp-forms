@@ -50,10 +50,29 @@
     };
   }
 
+  // The first and last day a partial date could be, each as one number. The
+  // first of a missing part is 1 and the last is 12 or 31.
+  function limit(written, last) {
+    const [year, month, day] = written.split("-").map(Number);
+    return year * 10000 + (month || (last ? 12 : 1)) * 100 + (day || (last ? 31 : 1));
+  }
+
+  // The lowest and highest number a part cut off after some digits could still
+  // become, given how many digits it has when whole.
+  function reach(typed, digits, lowest, highest) {
+    if (!typed) return [lowest, highest];
+    const room = Math.pow(10, digits - typed.length);
+    const from = Number(typed) * room;
+    return [Math.max(from, lowest), Math.min(from + room - 1, highest)];
+  }
+
   // A year, then a month and a day a person may leave off. A digit is refused
-  // when no month, or no day of the month typed, could follow from it.
-  function partialDate(finest) {
+  // when no month, no day of the month typed, or no date the field accepts
+  // could follow from it.
+  function partialDate(finest, min, max) {
     const Range = window.IMask.MaskedRange;
+    const earliest = min ? limit(min, false) : 0;
+    const latest = max ? limit(max, true) : Infinity;
     return {
       mask: { year: "Y", month: "Y-M", day: "Y-M-D" }[finest || "day"],
       blocks: {
@@ -63,17 +82,21 @@
       },
       validate: function (value) {
         const [year, month, day] = value.split("-");
-        if (!day) return true;
-        const length = daysIn(Number(year), Number(month));
-        if (day.length === 1) return day === "0" || Number(day + "0") <= length;
-        return Number(day) >= 1 && Number(day) <= length;
+        const years = reach(year, 4, 1, 9999);
+        const months = reach(month, 2, 1, 12);
+        const length = month && month.length === 2 ? daysIn(Number(year), Number(month)) : 31;
+        const days = reach(day, 2, 1, length);
+        if (months[0] > months[1] || days[0] > days[1]) return false;
+        const first = years[0] * 10000 + months[0] * 100 + days[0];
+        const last = years[1] * 10000 + months[1] * 100 + days[1];
+        return last >= earliest && first <= latest;
       },
     };
   }
 
   function build(written) {
     const { kind, definitions, blocks, flags, ...rest } = written;
-    if (kind === "partial-date") return partialDate(rest.finest);
+    if (kind === "partial-date") return partialDate(rest.finest, rest.min, rest.max);
     if (kind === "regex") return { mask: new RegExp(rest.mask, flags) };
     if (kind === "number") return { mask: Number, ...rest };
     if (kind === "dynamic") return { mask: rest.mask.map(build) };

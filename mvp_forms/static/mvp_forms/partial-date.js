@@ -20,30 +20,56 @@
     return group.querySelector('[data-partial-date-part="' + name + '"]');
   }
 
+  // The first or last day a partial date could be, as one number.
+  function limit(written, last) {
+    const [year, month, day] = written.split("-").map(Number);
+    return year * 10000 + (month || (last ? 12 : 1)) * 100 + (day || (last ? 31 : 1));
+  }
+
+  // Hide the options a part cannot take. One that is held is kept when the
+  // form is first shown, and cleared after that.
+  function offer(select, keep, allowed) {
+    Array.from(select.options).forEach(function (option) {
+      const out = option.value !== "" && !allowed(Number(option.value));
+      if (out && option.selected && !keep) select.value = "";
+      option.hidden = out && !(keep && option.selected);
+      option.disabled = option.hidden;
+    });
+  }
+
   // What a form was sent is shown as it was sent: a part that holds a value is
   // left alone until the person changes something.
   function sync(group, keep) {
     const year = part(group, "year");
     const month = part(group, "month");
     const day = part(group, "day");
-    const whole = /^\d{4}$/.test(year.value) && Number(year.value) > 0;
+    const earliest = group.dataset.partialDateMin ? limit(group.dataset.partialDateMin, false) : 0;
+    const latest = group.dataset.partialDateMax ? limit(group.dataset.partialDateMax, true) : Infinity;
+    const within = function (first, last) {
+      return last >= earliest && first <= latest;
+    };
+    const years = Number(year.value) * 10000;
+    const whole = /^\d{4}$/.test(year.value) && years > 0 && within(years + 101, years + 1231);
     if (month) {
       month.disabled = year.disabled || !whole;
       if (!whole && !keep) month.value = "";
+      if (whole) {
+        offer(month, keep, function (number) {
+          return within(years + number * 100 + 1, years + number * 100 + 31);
+        });
+      }
       if (keep && month.value !== "") month.disabled = year.disabled;
     }
     if (day) {
       const chosen = month.value !== "";
-      day.disabled = month.disabled || !chosen;
+      const months = years + Number(month.value) * 100;
       const length = chosen ? daysIn(Number(year.value), Number(month.value)) : 31;
-      Array.from(day.options).forEach(function (option) {
-        const beyond = option.value !== "" && Number(option.value) > length;
-        const held = keep && option.selected;
-        option.hidden = beyond && !held;
-        option.disabled = beyond && !held;
+      offer(day, keep, function (number) {
+        return number <= length && (!chosen || within(months + number, months + number));
       });
+      day.disabled = month.disabled || !chosen;
       if (keep && day.value !== "") day.disabled = year.disabled;
-      else if (!chosen || Number(day.value) > length) day.value = "";
+      else if (!chosen) day.value = "";
     }
   }
 

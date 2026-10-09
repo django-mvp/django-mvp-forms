@@ -25,19 +25,34 @@ class PartialDateField(forms.CharField):
         "needs_day": _("Enter a full date."),
         "too_fine_month": _("Enter the year only."),
         "too_fine_day": _("Enter a year and a month, with no day."),
+        "min_value": _("Enter a date no earlier than %(limit)s."),
+        "max_value": _("Enter a date no later than %(limit)s."),
     }
 
-    def __init__(self, *, coarsest="year", finest="day", **kwargs):
-        """State the precisions the field accepts.
+    def __init__(
+        self,
+        *,
+        coarsest="year",
+        finest="day",
+        min_value=None,
+        max_value=None,
+        **kwargs,
+    ):
+        """State the precisions and the dates the field accepts.
 
         Args:
             coarsest: The least precise value accepted.
             finest: The most precise value accepted.
+            min_value: The earliest date accepted, as a partial date or a
+                Python date.
+            max_value: The latest date accepted, as a partial date or a Python
+                date.
             **kwargs: Everything a ``CharField`` takes.
 
         Raises:
-            ValueError: A precision is not one of year, month and day, or the
-                finest is coarser than the coarsest.
+            ValueError: A precision is not one of year, month and day, the
+                finest is coarser than the coarsest, or the earliest date is
+                later than the latest.
         """
         for option, value in (("coarsest", coarsest), ("finest", finest)):
             if value not in PRECISIONS:
@@ -52,8 +67,42 @@ class PartialDateField(forms.CharField):
         self.coarsest = coarsest
         self.finest = finest
         super().__init__(**kwargs)
-        if hasattr(self.widget, "set_finest"):
-            self.widget.set_finest(finest)
+        self.min_value = self.limit("min_value", min_value)
+        self.max_value = self.limit("max_value", max_value)
+        if (
+            self.min_value
+            and self.max_value
+            and self.span(self.min_value)[0] > self.span(self.max_value)[1]
+        ):
+            raise ValueError(
+                f"min_value must not be later than max_value, not "
+                f"{self.min_value!r} and {self.max_value!r}."
+            )
+        self.limit_widget(self.widget)
+
+    def limit(self, option, value):
+        """Return an earliest or latest date as padded ISO text."""
+        if value is None:
+            return None
+        try:
+            return self.parse(str(self.prepare_value(value)))
+        except ValidationError:
+            raise ValueError(
+                f"{option} must be a partial date or a date, not {value!r}."
+            ) from None
+
+    def limit_widget(self, widget):
+        """Tell a widget the finest precision and the dates the field accepts."""
+        widget.finest = self.finest
+        widget.min_value = self.min_value
+        widget.max_value = self.max_value
+
+    @staticmethod
+    def span(value):
+        """Return the first and last day a partial date could be."""
+        parts = [int(part) for part in value.split("-")]
+        year, month, day = [*parts, 0, 0][:3]
+        return (year, month or 1, day or 1), (year, month or 12, day or 31)
 
     def prepare_value(self, value):
         """Show a Python date as ISO text."""
@@ -61,15 +110,30 @@ class PartialDateField(forms.CharField):
             return value.isoformat()
         return value
 
-    def fail(self, code):
+    def fail(self, code, **params):
         """Raise the field's error of this code."""
-        raise ValidationError(self.error_messages[code], code=code)
+        raise ValidationError(self.error_messages[code], code=code, params=params)
 
     def to_python(self, value):
         """Return the padded ISO text of what was entered."""
         value = super().to_python(value)
         if value in self.empty_values:
             return ""
+        value = self.parse(value)
+        given = value.count("-") + 1
+        if given <= PRECISIONS.index(self.coarsest):
+            self.fail(f"needs_{self.coarsest}")
+        if given - 1 > PRECISIONS.index(self.finest):
+            self.fail(f"too_fine_{PRECISIONS[PRECISIONS.index(self.finest) + 1]}")
+        first, last = self.span(value)
+        if self.min_value and last < self.span(self.min_value)[0]:
+            self.fail("min_value", limit=self.min_value)
+        if self.max_value and first > self.span(self.max_value)[1]:
+            self.fail("max_value", limit=self.max_value)
+        return value
+
+    def parse(self, value):
+        """Return the padded ISO text of a partial date that exists."""
         parts = value.rstrip("-").split("-")
         if len(parts) > 3 or any(not re.fullmatch(r"\d*", part) for part in parts):
             self.fail("invalid")
@@ -88,8 +152,4 @@ class PartialDateField(forms.CharField):
         ):
             self.fail("day")
         given = [part for part in (year, month, day) if part]
-        if len(given) <= PRECISIONS.index(self.coarsest):
-            self.fail(f"needs_{self.coarsest}")
-        if len(given) - 1 > PRECISIONS.index(self.finest):
-            self.fail(f"too_fine_{PRECISIONS[PRECISIONS.index(self.finest) + 1]}")
         return "-".join([year, *(part.zfill(2) for part in given[1:])])

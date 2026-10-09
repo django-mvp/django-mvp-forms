@@ -21,10 +21,11 @@ colour and variant choices of FS-007.
 **Input**: Research data often records a date to the year or the month only, because that is all
 the source says. A developer should be able to put a field on a form that accepts a year, a year
 and month, or a full date, and hands back the ISO text for whichever was given: `2021`, `2021-03`
-or `2021-03-14`. The developer chooses between two widgets for it. One is a single masked text
-input. The other is a year, a month and a day side by side. Both keep a person from entering a
-date that does not exist while they are still filling in the form, and the field checks again on
-the server.
+or `2021-03-14`. The developer chooses between three widgets for it. One is a single masked text
+input. One is a year, a month and a day side by side, with the year typed. The third is the same
+three parts with the year chosen from a list. All of them keep a person from entering a date that
+does not exist, or one outside the dates the developer allows, while they are still filling in the
+form, and the field checks again on the server.
 
 ## Clarifications
 
@@ -66,6 +67,35 @@ and the decision records. Longer rationale is in `decisions.md`.
   A: The one Python's own dates use: the Gregorian rules applied to every year from 0001 to 9999.
   Negative years, years beyond four digits and historical calendars are out of scope. Recorded as
   FR-002 and under Out of scope.
+
+### Session 2026-10-10
+
+The maintainer reviewed the prototype and asked for three things, and stated how the Python side
+should be shaped.
+
+- **Q: How does a developer ask for the year as a select?**
+  A: By naming a third widget. It is the three-part widget with a select for the year, and it
+  takes no options of its own. The years it offers come from the earliest and latest dates stated
+  on the field. Recorded as FR-039 and FR-040.
+
+- **Q: Can a developer state an earliest and a latest date?**
+  A: Yes, on the field. Each is a partial date or a Python date. The field enforces them and every
+  widget follows them. This reverses the earlier ruling that left them to a validator. Recorded as
+  FR-034 to FR-038.
+
+- **Q: A year alone is submitted to a field whose earliest date is `1998-03-15`. Is `1998`
+  accepted?**
+  A: Yes. A partial date stands for every day it could be, and it is accepted when at least one of
+  those days is allowed. `1998` could be a day after 15 March, so it passes. `1998-02` could not,
+  so it fails. Recorded as FR-035.
+
+- **Q: Where does a developer state the options: on the field or on the widget?**
+  A: On the field, all of them. There is one field, and a widget is named and nothing more. The
+  field tells whichever widget it has the finest precision and the earliest and latest dates, so a
+  developer changes from one widget to another by changing one name. Recorded as FR-041.
+
+- **Q: Can a developer leave the day out altogether?**
+  A: Yes, and this was already so: a finest precision of month. It is User Story 4.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -180,6 +210,11 @@ the three parts in a browser. Submit with one, two and three parts filled.
    day offers 1 to 31, and the field validates what was sent.
 10. **Given** a form whose submission failed on this field, **When** it is drawn again, **Then**
     each part shows what the person entered.
+11. **Given** a field using the widget whose year is a select, **When** its form is drawn,
+    **Then** the year is chosen from a list and the month and the day behave as they do beside a
+    typed year.
+12. **Given** such a field with no earliest or latest date stated, **When** its form is drawn,
+    **Then** the years on offer run from this year back a hundred years.
 
 ---
 
@@ -210,6 +245,48 @@ precision of month, submit values at each precision, and draw each field with bo
    class is defined, **Then** an error is raised that names the two options.
 6. **Given** a field with nothing stated, **When** it is submitted at any of the three
    precisions, **Then** it is accepted.
+
+---
+
+### User Story 5 - A developer sets the earliest and latest date a field accepts (Priority: P3)
+
+A developer has a field whose dates cannot fall before or after a known day: nothing before the
+project began, nothing in the future. They state an earliest date, a latest date or both on the
+field. The field enforces them, and whichever widget the field has keeps a person from entering a
+date outside them.
+
+**Why this priority**: Without it a developer writes a validator and the person only learns of the
+limit after the form is sent. It is last because every other story works without it.
+
+**Independent Test**: Define a field with an earliest and a latest date, submit values at each
+precision on both sides of each limit, and draw the field with each widget.
+
+**Acceptance Scenarios**:
+
+1. **Given** a field with an earliest date, **When** it is submitted with a value every day of
+   which is earlier, **Then** the field reports an error that names the earliest date.
+2. **Given** a field with a latest date, **When** it is submitted with a value every day of which
+   is later, **Then** the field reports an error that names the latest date.
+3. **Given** a field whose earliest date is `1998-03-15`, **When** it is submitted with `1998` or
+   `1998-03`, **Then** it is accepted. **When** it is submitted with `1998-02` or `1998-03-14`,
+   **Then** it is refused.
+4. **Given** a field whose earliest or latest date is stated as a year, a year and month, a full
+   date or a Python date, **When** the form class is defined, **Then** each is taken.
+5. **Given** a field whose earliest date is later than its latest, or one that is not a partial
+   date, **When** the form class is defined, **Then** an error is raised that names the option.
+6. **Given** such a field drawn with the masked widget, **When** a person types a digit from
+   which no allowed date could follow, **Then** the digit is not accepted.
+7. **Given** such a field drawn with either three-part widget, **When** a year is entered,
+   **Then** the months on offer are those with an allowed day in that year, and the days on offer
+   are the allowed days of the month chosen.
+8. **Given** such a field drawn with the widget whose year is a select, **When** its form is
+   drawn, **Then** the years on offer run from the year of the earliest date to the year of the
+   latest.
+9. **Given** a month or day already chosen, **When** the person changes the year so that it is no
+   longer allowed, **Then** it is cleared.
+10. **Given** a form submitted with a date outside the limits, as can happen on a page without the
+    script, **When** it is drawn again, **Then** every widget shows what was sent beside the
+    error.
 
 ---
 
@@ -244,7 +321,8 @@ precision of month, submit values at each precision, and draw each field with bo
 - Support for a particular partial date package. The text is plain ISO, which is what such a
   package reads.
 - Any order of parts but year, month, day, and any separator but a hyphen.
-- An earliest or latest allowed date. A developer who needs one adds a validator to the field.
+- An earliest or latest date that moves with another field's value, such as an end date no
+  earlier than a start date. A developer writes that in the form's own `clean`.
 - Years before 0001 or after 9999, historical calendars, seasons, quarters, decades, date ranges
   and approximate or uncertain dates.
 - A time of day or a time zone.
@@ -323,10 +401,44 @@ precision of month, submit values at each precision, and draw each field with bo
   finest, each one of year, month and day. With nothing stated it accepts all three.
 - **FR-024**: The field MUST reject a value coarser than the coarsest or finer than the finest,
   with an error that identifies the part that is needed or not allowed.
-- **FR-025**: Both widgets MUST follow the finest precision stated on the field: the masked input
-  accepts nothing beyond it, and the three-part widget draws no part beyond it.
+- **FR-025**: Every widget MUST follow the finest precision stated on the field: the masked input
+  accepts nothing beyond it, and a three-part widget draws no part beyond it.
 - **FR-026**: A finest precision coarser than the coarsest MUST raise an error when the form
   class is defined, naming both options.
+
+#### The earliest and latest date
+
+- **FR-034**: The field MUST let a developer state an earliest date, a latest date or both. Each
+  is a partial date as text or a Python date. With neither stated every date from 0001 to 9999 is
+  accepted.
+- **FR-035**: The field MUST accept a value when at least one day it could stand for lies on or
+  between the two dates, and MUST reject it otherwise with an error that names the date it
+  crossed. An earliest date given to the year or month counts from its first day, and a latest
+  date from its last.
+- **FR-036**: An earliest date later than the latest, or either one that is not a partial date,
+  MUST raise an error when the form class is defined, naming the option.
+- **FR-037**: On a page that loads IMask and the form's media, the masked input MUST refuse a
+  digit from which no accepted date could follow.
+- **FR-038**: On a page that loads the form's media, both three-part widgets MUST offer only the
+  months that hold an accepted day in the year entered and only the accepted days of the month
+  chosen, MUST NOT let a month be chosen under a year that holds no accepted day, and MUST clear a
+  month or day that a change of year leaves outside the limits.
+
+#### The three-part widget with a select for the year
+
+- **FR-039**: The package MUST provide a third widget: the three-part widget with the year chosen
+  from a select. Everything FR-015 to FR-022 require of the three-part widget MUST hold for it.
+- **FR-040**: The years it offers MUST run from the year of the field's earliest date to the year
+  of its latest, latest first. Where the latest is not stated the list MUST end at this year, and
+  where the earliest is not stated it MUST reach a hundred years back. A year the form was sent
+  that is not on the list MUST still be shown when the form is drawn again.
+
+#### One field, any widget
+
+- **FR-041**: Every option MUST be stated on the field: the precisions and the earliest and
+  latest dates. A widget MUST take none of them from the developer. The field MUST tell whichever
+  widget it is given what was stated, so that changing a field from one widget to another is a
+  change of the widget's name and nothing else.
 
 #### Constraints the package keeps
 
@@ -347,7 +459,7 @@ precision of month, submit values at each precision, and draw each field with bo
 - **FR-031**: The specification of FS-015 and the README's section on mask widgets MUST be
   brought up to date where they say the package has no date widget.
 - **FR-032**: The demo MUST gain a page showing the field with each widget at each precision,
-  with initial values, in an invalid state, in a formset whose rows can be added, and in a modal.
+  with an earliest and a latest date, with initial values, in an invalid state, in a formset whose rows can be added, and in a modal.
 - **FR-033**: `CONTEXT.md` MUST gain the terms under Key Entities.
 
 ### Requirement coverage
@@ -356,8 +468,9 @@ precision of month, submit values at each precision, and draw each field with bo
 |---|---|
 | US1: A developer adds a partial date field to a form | FR-001 to FR-010, FR-028 to FR-030, FR-033 |
 | US2: A person types a partial date into one masked input | FR-011 to FR-014, FR-027, FR-031, FR-032 |
-| US3: A person enters a partial date as a year, a month and a day | FR-015 to FR-022, FR-032 |
-| US4: A developer sets how precise a partial date must be | FR-023 to FR-026 |
+| US3: A person enters a partial date as a year, a month and a day | FR-015 to FR-022, FR-032, FR-039, FR-040 |
+| US4: A developer sets how precise a partial date must be | FR-023 to FR-026, FR-041 |
+| US5: A developer sets the earliest and latest date a field accepts | FR-034 to FR-038 |
 
 ### Key Entities
 
@@ -383,7 +496,10 @@ precision of month, submit values at each precision, and draw each field with bo
   submitted, and an impossible date is reported as an error on the field.
 - **SC-005**: A form that uses neither widget loads no script from this package, as before.
 - **SC-006**: A developer adds a partial date to a form with one field and, at most, one widget
-  named, and reads one text value from the cleaned data.
+  named, and reads one text value from the cleaned data. Changing the widget changes no other
+  line.
+- **SC-008**: On a page with its script loaded, a person cannot bring any widget to offer or
+  accept a date outside the earliest and latest dates stated on the field.
 - **SC-007**: The three-part widget is announced by assistive technology as one named group
   holding three named parts.
 

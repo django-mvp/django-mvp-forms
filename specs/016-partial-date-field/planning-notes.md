@@ -21,3 +21,12 @@ field."
 
 "This does not necessarily have to 'support' the partial_date package but it must validate and
 return an ISO date partial string."
+
+## 4. One field with a swappable widget
+
+"On the python side, I would prefer if we use a single field with a swappable widget for a more
+consistent experience for users that might wish to switch."
+
+## 5. A select for the year
+
+"the user should be able to designate a select box for the year field too."

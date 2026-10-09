@@ -1,5 +1,7 @@
 """The forms of the demo's partial date page."""
 
+import datetime
+
 from crispy_forms.bootstrap import Modal
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit
@@ -9,7 +11,11 @@ from django.utils.translation import gettext_lazy as _
 
 from mvp_forms.choices import Choice
 from mvp_forms.fields import PartialDateField
-from mvp_forms.widgets import PartialDateInput, PartialDateMaskInput
+from mvp_forms.widgets import (
+    PartialDateInput,
+    PartialDateMaskInput,
+    PartialDateSelect,
+)
 
 
 class PartialDateForm(forms.Form):
@@ -42,13 +48,34 @@ class PartialDateForm(forms.Form):
         finest="year",
         required=False,
     )
+    in_range = PartialDateField(
+        label=_("Sampled"),
+        help_text=_(
+            'PartialDateField(min_value="1998-03-15", max_value=date.today()): '
+            "nothing before 15 March 1998 and nothing after today."
+        ),
+        min_value="1998-03-15",
+        max_value=datetime.date.today(),
+        required=False,
+    )
+    in_range_no_day = PartialDateField(
+        label=_("Reported"),
+        help_text=_(
+            'PartialDateField(min_value="1998-03", max_value="2004-09", '
+            'finest="month"): a range of months, with no day.'
+        ),
+        min_value="1998-03",
+        max_value="2004-09",
+        finest="month",
+        required=False,
+    )
 
     def __init__(self, *args, posts=True, **kwargs):
         """Give every field the widget, and a submit button named by the prefix."""
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget = self.widget()
-            field.widget.set_finest(field.finest)
+            field.limit_widget(field.widget)
         self.helper = FormHelper(self)
         self.helper.attrs = {"novalidate": True}
         if posts:
@@ -67,6 +94,12 @@ class ThreePartPartialDateForm(PartialDateForm):
     """Every field drawn as a year, a month and a day."""
 
     widget = PartialDateInput
+
+
+class SelectPartialDateForm(PartialDateForm):
+    """Every field drawn as three selects."""
+
+    widget = PartialDateSelect
 
 
 class PlainPartialDateForm(forms.Form):
@@ -98,6 +131,7 @@ class PartialDateStatesForm(forms.Form):
         "day": "1987-06-30",
         "impossible": "2021-02-30",
         "gap": "2021--14",
+        "early": "1990-06",
     }
 
     year = PartialDateField(label=_("Known to the year"), required=False)
@@ -118,6 +152,13 @@ class PartialDateStatesForm(forms.Form):
         label=_("A day with no month"),
         help_text=_("Sent as a year and a day from a page with no script."),
     )
+    early = PartialDateField(
+        label=_("Earlier than the earliest date"),
+        help_text=_(
+            'min_value="1998-03-15", sent as 1990-06 from a page with no script.'
+        ),
+        min_value="1998-03-15",
+    )
 
     def __init__(self, **kwargs):
         """Bind the form to its values and draw no form element or button."""
@@ -134,6 +175,7 @@ class PartialDateStatesForm(forms.Form):
         super().__init__(sent, **kwargs)
         for field in self.fields.values():
             field.widget = self.widget()
+            field.limit_widget(field.widget)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
@@ -157,35 +199,53 @@ class ThreePartStatesForm(PartialDateStatesForm):
     widget = PartialDateInput
 
 
+class SelectStatesForm(PartialDateStatesForm):
+    """Each state drawn as three selects."""
+
+    widget = PartialDateSelect
+
+
 class PartialDateSizesForm(forms.Form):
-    """Both widgets at each size, and with a colour."""
+    """Each widget at each size, and with a colour."""
 
     masked_xs = PartialDateField(label=_("Extra small"), required=False)
     parts_xs = PartialDateField(label=_("Extra small"), required=False)
+    select_xs = PartialDateField(label=_("Extra small"), required=False)
     masked_sm = PartialDateField(label=_("Small"), required=False)
     parts_sm = PartialDateField(label=_("Small"), required=False)
+    select_sm = PartialDateField(label=_("Small"), required=False)
     masked_lg = PartialDateField(label=_("Large"), required=False)
     parts_lg = PartialDateField(label=_("Large"), required=False)
+    select_lg = PartialDateField(label=_("Large"), required=False)
     masked_primary = PartialDateField(label=_("Primary"), required=False)
     parts_primary = PartialDateField(label=_("Primary"), required=False)
+    select_primary = PartialDateField(label=_("Primary"), required=False)
 
     def __init__(self, *args, **kwargs):
         """Give each field its widget and state a choice for each."""
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
-            masked = name.startswith("masked")
-            field.widget = PartialDateMaskInput() if masked else PartialDateInput()
+            widgets = {
+                "masked": PartialDateMaskInput,
+                "parts": PartialDateInput,
+                "select": PartialDateSelect,
+            }
+            field.widget = widgets[name.split("_")[0]]()
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Choice("masked_xs", size="xs"),
             Choice("parts_xs", size="xs"),
+            Choice("select_xs", size="xs"),
             Choice("masked_sm", size="sm"),
             Choice("parts_sm", size="sm"),
+            Choice("select_sm", size="sm"),
             Choice("masked_lg", size="lg"),
             Choice("parts_lg", size="lg"),
+            Choice("select_lg", size="lg"),
             Choice("masked_primary", color="primary"),
             Choice("parts_primary", color="primary"),
+            Choice("select_primary", color="primary"),
         )
 
 

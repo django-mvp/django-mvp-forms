@@ -25,8 +25,21 @@ The code behind it is the plan's to keep, change or rebuild.
 - A field that cleans a year, a year and month, or a full date to padded ISO text, and reports a
   separate error for each way a value can be wrong: a bad year, a bad month, a day the month does
   not have, a month with no year, a day with no month, too coarse, too fine.
-- The field passes its finest precision to whichever widget it is given, so the widget never
-  states it a second time.
+- The field passes its finest precision and its earliest and latest dates to whichever widget it
+  is given. A widget takes none of them from the developer, so a field changes widget by changing
+  one name.
+- An earliest and a latest date on the field, each a partial date or a Python date. A value is
+  accepted when a day it could stand for lies on or between them, so `1998` passes an earliest
+  date of `1998-03-15` and `1998-02` does not. The error names the date that was crossed.
+- A third widget: the three parts with a select for the year. Its years run from the earliest
+  date's year to the latest's. Where one is not stated they end at this year and reach a hundred
+  years back. A year that was sent and is not on the list is still shown.
+- The masked input refuses a digit from which no allowed date could follow. With a latest date of
+  `2004-09`, typing `2004-1` keeps `2004-`.
+- In the three-part widgets a year outside the limits leaves the month closed, the months on
+  offer are those with an allowed day in the year, and the days on offer are the allowed days.
+  A month or day that a change of year puts outside the limits is cleared.
+- The element around the parts carries the earliest and latest dates for the script.
 - The masked input pads a single-digit month or day that can only be the whole part: typing `4`
   as a month gives `04`. A digit that could still start a valid part is left alone.
 - The masked input refuses a digit, and never corrects one. `13` as a month keeps the `1`.
@@ -49,7 +62,12 @@ The code behind it is the plan's to keep, change or rebuild.
 - When a masked input is drawn again holding a value the mask would refuse, such as `2021-02-30`,
   IMask shows as much as fits (`2021-02-0`) beside the field's error. Nothing was decided about
   this.
-- The field tells the widget its finest precision by calling a method on it if it has one.
+- The field tells the widget what was stated by setting three attributes on it, the way Django's
+  own fields set `is_required`. A widget swapped in after the form is built has to be told again,
+  which the demo does by hand.
+- The three-part widget with a typed year does nothing to a year outside the limits but keep the
+  month closed. The person learns why only from the field's error after sending.
+- The select widget's hundred years are counted from the server's date when the form is drawn.
 - Error wording is a first draft and has no translations.
 - The page has no version outside the django-mvp shell, which every other demo page has.
 - Nothing is in the README, the template list, the glossary or the decision records. Two tests
@@ -68,3 +86,12 @@ them.
 - A month or day that cannot be chosen yet is shown disabled. It is not hidden.
 - At a finest precision of month the day is not drawn at all, and at year only the year is drawn.
 - Days beyond the month's length are removed from the list. They are not shown greyed out.
+- Months and days outside the earliest and latest dates are removed in the same way.
+- The year select lists the latest year first.
+- The year select's empty option reads Year, as the other two name their parts.
+
+Rulings from the maintainer:
+
+- 2026-10-10: the first round "all looks pretty good". He asked for a select for the year, an
+  earliest and latest date followed by the field and the widgets, and confirmed that a field may
+  leave the day out altogether.

@@ -10,6 +10,8 @@ from demo.partial_date_forms import (
     PartialDateSizesForm,
     PlainPartialDateForm,
     SampleFormSet,
+    SelectPartialDateForm,
+    SelectStatesForm,
     ThreePartPartialDateForm,
     ThreePartStatesForm,
 )
@@ -40,6 +42,15 @@ class PartialDatesView(MVPTemplateView):
             "they are known. The days on offer follow the month and the year. "
             "It needs no IMask.",
             ThreePartPartialDateForm,
+        ),
+        (
+            "select",
+            "Year, month and day, all chosen",
+            "PartialDateSelect. The same three parts with the year as a select. "
+            "The years on offer run from the field's earliest date to its "
+            "latest, and reach a hundred years back from this year where one "
+            "is not stated.",
+            SelectPartialDateForm,
         ),
         (
             "plain",
@@ -81,6 +92,10 @@ class PartialDatesView(MVPTemplateView):
             states=[
                 ("One masked input", MaskedStatesForm(prefix="masked-states")),
                 ("Year, month and day", ThreePartStatesForm(prefix="parts-states")),
+                (
+                    "Year, month and day, all chosen",
+                    SelectStatesForm(prefix="select-states"),
+                ),
             ],
             sizes_form=PartialDateSizesForm(prefix="sizes"),
             lines=SampleFormSet(prefix="samples"),
