@@ -78,7 +78,6 @@ class PartialDateField(forms.CharField):
                 f"min_value must not be later than max_value, not "
                 f"{self.min_value!r} and {self.max_value!r}."
             )
-        self.limit_widget(self.widget)
 
     def limit(self, option, value):
         """Return an earliest or latest date as padded ISO text."""
@@ -91,11 +90,12 @@ class PartialDateField(forms.CharField):
                 f"{option} must be a partial date or a date, not {value!r}."
             ) from None
 
-    def limit_widget(self, widget):
-        """Tell a widget the resolution and the dates the field accepts."""
-        widget.resolution = self.resolution
-        widget.min_value = self.min_value
-        widget.max_value = self.max_value
+    def get_bound_field(self, form, field_name):
+        """Tell the widget the resolution and the dates the field accepts."""
+        self.widget.resolution = self.resolution
+        self.widget.min_value = self.min_value
+        self.widget.max_value = self.max_value
+        return super().get_bound_field(form, field_name)
 
     @staticmethod
     def span(value):
@@ -105,7 +105,9 @@ class PartialDateField(forms.CharField):
         return (year, month or 1, day or 1), (year, month or 12, day or 31)
 
     def prepare_value(self, value):
-        """Show a Python date as ISO text."""
+        """Show a Python date, or the date of a datetime, as ISO text."""
+        if isinstance(value, datetime.datetime):
+            value = value.date()
         if isinstance(value, datetime.date):
             return value.isoformat()
         return value

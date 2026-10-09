@@ -3,8 +3,10 @@
 import json
 
 import pytest
+from django.forms import formset_factory
 
 from mvp_forms.choices import FormChoices
+from mvp_forms.widgets import PartialDateInput, PartialDateMaskInput, PartialDateSelect
 from tests.forms import (
     PartialDateForm,
     PartialDateLineFormSet,
@@ -14,6 +16,7 @@ from tests.forms import (
     PartialDatePartsLineFormSet,
     PartialDateSelectLineFormSet,
     PartialDateSelectPartsForm,
+    partial_date_form,
 )
 
 SOURCES = [
@@ -287,3 +290,43 @@ class TestPartialDateSelect(ThreePartDateDrawn):
     form = PartialDateSelectPartsForm
     line_formset = PartialDateSelectLineFormSet
     year_tag = "select"
+
+
+class TestResolution:
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_masked_input_is_drawn_with_the_resolution_of_the_field(
+        self, draw, source
+    ):
+        form = partial_date_form(resolution="month", widget=PartialDateMaskInput())()
+
+        soup = draw(source, form=form)
+
+        assert (
+            json.loads(soup.find(id="id_born")["data-imask"])["resolution"] == "month"
+        )
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("widget", [PartialDateInput, PartialDateSelect])
+    def test_the_three_part_widgets_are_drawn_without_the_day_at_a_resolution_of_month(
+        self, draw, source, widget
+    ):
+        form = partial_date_form(resolution="month", widget=widget())()
+
+        soup = draw(source, form=form)
+
+        parts = soup.find_all(attrs={"data-partial-date-part": True})
+        assert [part["data-partial-date-part"] for part in parts] == ["year", "month"]
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    @pytest.mark.parametrize("widget", [PartialDateInput, PartialDateSelect])
+    def test_the_empty_form_of_a_formset_is_drawn_to_the_resolution_too(
+        self, draw, source, widget
+    ):
+        formset = formset_factory(
+            partial_date_form(resolution="year", widget=widget()), extra=1
+        )
+
+        soup = draw(source, form=formset().empty_form)
+
+        parts = soup.find_all(attrs={"data-partial-date-part": True})
+        assert [part["name"] for part in parts] == ["form-__prefix__-born_year"]

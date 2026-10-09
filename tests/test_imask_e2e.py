@@ -581,6 +581,16 @@ class TestPartialDateMaskedInput:
 
         assert f'"born": "{cleaned}"' in page.inner_text("body")
 
+    @pytest.mark.parametrize(
+        ("name", "shown"), [("born_month", "2021-03"), ("born_year", "2021")]
+    )
+    def test_nothing_finer_than_the_resolution_the_field_states_is_taken(
+        self, masked_page, name, shown
+    ):
+        page = masked_page()
+
+        assert type_into(page, name, "20210314") == shown
+
     def test_a_year_and_month_the_form_was_drawn_with_are_shown(self, masked_page):
         page = masked_page(born="2021-03")
 

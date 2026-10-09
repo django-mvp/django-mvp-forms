@@ -3,9 +3,11 @@
 import datetime
 
 import pytest
+from django import forms
 from django.core.exceptions import ValidationError
 
 from mvp_forms.fields import PartialDateField
+from mvp_forms.widgets import PartialDateInput, PartialDateMaskInput, PartialDateSelect
 from tests.forms import PartialDateForm, partial_date_form
 
 LEAP_YEAR = 2024
@@ -156,6 +158,19 @@ class TestPartialDateField:
 
         assert field.prepare_value(datetime.date(2021, 3, 4)) == "2021-03-04"
 
+    def test_a_datetime_is_shown_as_its_date_with_no_time(self):
+        field = PartialDateField()
+
+        assert (
+            field.prepare_value(datetime.datetime(2021, 3, 4, 10, 30)) == "2021-03-04"
+        )
+
+    def test_a_bound_field_with_an_initial_datetime_shows_its_date_and_cleans_it(self):
+        form = partial_date_form()(initial={"born": datetime.datetime(2021, 3, 4, 10)})
+
+        assert form["born"].value() == "2021-03-04"
+        assert form.fields["born"].clean(form["born"].value()) == "2021-03-04"
+
     def test_a_bound_field_with_an_initial_date_shows_it_as_iso_text(self):
         form = PartialDateForm(initial={"born": datetime.date(2021, 3, 4)})
 
@@ -182,3 +197,97 @@ class TestPartialDateField:
         form = submit("2021-13", error_messages={"month": "Pick a real month."})
 
         assert form.errors["born"] == ["Pick a real month."]
+
+    @pytest.mark.parametrize(
+        ("options", "typed", "code"),
+        [
+            ({"coarsest": "month"}, "2021", "needs_month"),
+            ({"coarsest": "day"}, "2021", "needs_day"),
+            ({"coarsest": "day"}, "2021-03", "needs_day"),
+            ({"resolution": "month"}, "2021-03-04", "too_fine_day"),
+            ({"resolution": "year"}, "2021-03", "too_fine_month"),
+            ({"resolution": "year"}, "2021-03-04", "too_fine_month"),
+        ],
+    )
+    def test_a_value_outside_the_precisions_stated_is_refused_with_its_own_code(
+        self, options, typed, code
+    ):
+        form = submit(typed, **options)
+
+        assert codes(form) == [code]
+
+    @pytest.mark.parametrize(
+        ("options", "typed"),
+        [
+            ({"coarsest": "month"}, "2021-03"),
+            ({"coarsest": "month"}, "2021-03-04"),
+            ({"coarsest": "day"}, "2021-03-04"),
+            ({"resolution": "month"}, "2021"),
+            ({"resolution": "month"}, "2021-03"),
+            ({"resolution": "year"}, "2021"),
+            ({"coarsest": "month", "resolution": "month"}, "2021-03"),
+        ],
+    )
+    def test_a_value_inside_the_precisions_stated_is_cleaned(self, options, typed):
+        form = submit(typed, **options)
+
+        assert form.is_valid()
+        assert form.cleaned_data["born"] == typed
+
+    def test_a_value_that_is_not_a_date_is_refused_before_its_precision_is_checked(
+        self,
+    ):
+        form = submit("2021-02-30", coarsest="day", resolution="day")
+
+        assert codes(form) == ["day"]
+
+    @pytest.mark.parametrize(
+        ("options", "named"),
+        [
+            ({"coarsest": "week"}, ["coarsest"]),
+            ({"resolution": "hour"}, ["resolution"]),
+            ({"coarsest": "day", "resolution": "month"}, ["coarsest", "resolution"]),
+            ({"coarsest": "month", "resolution": "year"}, ["coarsest", "resolution"]),
+        ],
+    )
+    def test_a_precision_that_cannot_be_held_raises_when_the_form_is_defined(
+        self, options, named
+    ):
+        with pytest.raises(ValueError) as raised:
+            partial_date_form(**options)
+
+        assert all(option in str(raised.value) for option in named)
+
+    @pytest.mark.parametrize(
+        "widget", [PartialDateMaskInput, PartialDateInput, PartialDateSelect]
+    )
+    def test_the_field_tells_each_widget_the_resolution(self, widget):
+        form = partial_date_form(resolution="month", widget=widget())()
+
+        assert form["born"].field.widget.resolution == "month"
+
+    def test_a_widget_replaced_in_the_forms_init_is_told_the_resolution(self):
+        class Form(forms.Form):
+            born = PartialDateField(resolution="month")
+
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.fields["born"].widget = PartialDateSelect()
+
+        form = Form()
+
+        assert form["born"].field.widget.resolution == "month"
+
+    def test_two_forms_of_one_class_with_different_widgets_do_not_affect_each_other(
+        self,
+    ):
+        class Form(forms.Form):
+            born = PartialDateField(resolution="month", widget=PartialDateMaskInput())
+
+        masked, parts = Form(), Form()
+        parts.fields["born"].widget = PartialDateInput()
+
+        assert masked["born"].field.widget.resolution == "month"
+        assert parts["born"].field.widget.resolution == "month"
+        assert isinstance(masked.fields["born"].widget, PartialDateMaskInput)
+        assert Form.base_fields["born"].widget.resolution == "day"

@@ -774,6 +774,30 @@ class TestPartialDateMaskInput:
         with pytest.raises(TypeError, match="resolution"):
             PartialDateMaskInput(resolution="month")
 
+    @pytest.mark.parametrize("resolution", ["year", "month", "day"])
+    def test_it_writes_the_resolution_the_field_tells_it(self, resolution):
+        class Form(forms.Form):
+            born = PartialDateField(
+                resolution=resolution, widget=PartialDateMaskInput()
+            )
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        assert json.loads(soup.input["data-imask"]) == {
+            "kind": "partial-date",
+            "resolution": resolution,
+        }
+
+    def test_it_keeps_a_resolution_of_day_on_a_field_that_is_not_a_partial_date_field(
+        self,
+    ):
+        class Form(forms.Form):
+            born = forms.CharField(widget=PartialDateMaskInput())
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        assert json.loads(soup.input["data-imask"])["resolution"] == "day"
+
     def test_it_names_the_script_in_its_media(self):
         assert "mvp_forms/imask.js" in str(PartialDateMaskInput().media)
 
@@ -957,6 +981,46 @@ class ThreePartWidget:
 
         assert len(soup.find_all(attrs={"data-partial-date": True})) == 1
         assert len(group.find_all(attrs={"data-partial-date-part": True})) == 3
+
+    @pytest.mark.parametrize(
+        ("resolution", "expected"),
+        [
+            ("year", ["year"]),
+            ("month", ["year", "month"]),
+            ("day", ["year", "month", "day"]),
+        ],
+    )
+    def test_it_draws_no_part_finer_than_the_resolution_the_field_tells_it(
+        self, resolution, expected
+    ):
+        class Form(forms.Form):
+            born = PartialDateField(resolution=resolution, widget=self.widget())
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        parts = soup.find_all(attrs={"data-partial-date-part": True})
+        assert [part["data-partial-date-part"] for part in parts] == expected
+
+    def test_it_draws_every_part_on_a_field_that_is_not_a_partial_date_field(self):
+        class Form(forms.Form):
+            born = forms.CharField(widget=self.widget())
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        parts = soup.find_all(attrs={"data-partial-date-part": True})
+        assert [part["data-partial-date-part"] for part in parts] == [
+            "year",
+            "month",
+            "day",
+        ]
+
+    def test_a_part_the_resolution_leaves_out_is_refused_if_it_is_sent_anyway(self):
+        class Form(forms.Form):
+            born = PartialDateField(resolution="month", widget=self.widget())
+
+        form = Form({"born_year": "2021", "born_month": "03", "born_day": "14"})
+
+        assert form.has_error("born", code="too_fine_day")
 
     def test_only_the_year_is_required(self):
         class Form(forms.Form):

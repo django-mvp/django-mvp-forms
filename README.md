@@ -1517,7 +1517,7 @@ The field takes `CharField`'s own arguments, and `required`, `disabled`, `valida
 
 A value is a year of four digits, then a month, then a day, each part joined to the last by a hyphen. A month or a day of one digit is padded to two. Space around the value is dropped, and so is one trailing hyphen. A part is only ever left out from the right: a month with no year and a day with no month are refused. Every part is made of the digits 0 to 9, so a year written in the digits of another script is refused. A date has to exist: `2023-02-29` is refused and `2024-02-29` is not, and the Gregorian rules apply to every year from 0001.
 
-The field returns text, as a `CharField` does, and never a `datetime.date`, since a year alone is no date. A `datetime.date` given as the field's `initial` is shown as its ISO text. A model's `CharField` with `max_length=10` takes the value as it is, and so does a model field of your own that stores a partial date. How a project stores it is the project's.
+The field returns text, as a `CharField` does, and never a `datetime.date`, since a year alone is no date. A `datetime.date` given as the field's `initial` is shown as its ISO text, and so is the date of a `datetime.datetime`, with no time. A model's `CharField` with `max_length=10` takes the value as it is, and so does a model field of your own that stores a partial date. How a project stores it is the project's.
 
 #### Error codes
 
@@ -1532,8 +1532,48 @@ Every error is raised with a `code`, so a test or a form's `has_error` can name 
 | `day` | has a day the month does not have, including 29 February in a year that is not a leap year, or a day of `0` or `00` |
 | `no_year` | has a month or a day and no year |
 | `no_month` | has a day and no month |
+| `needs_month` | is a year alone, on a field whose `coarsest` is `"month"` |
+| `needs_day` | is a year alone or a year and a month, on a field whose `coarsest` is `"day"` |
+| `too_fine_month` | has a month or a day, on a field whose `resolution` is `"year"` |
+| `too_fine_day` | has a day, on a field whose `resolution` is `"month"` |
 
 A value cut off inside a part cannot be told from a part of one digit, so `2021-0` is a month of zero and `202` is a year of three digits.
+
+#### How precise a date must be
+
+`coarsest` is the least precise value a field accepts and `resolution` is the most precise. Each is one of `"year"`, `"month"` or `"day"`. With nothing stated a field accepts all three, as `coarsest="year"` and `resolution="day"`.
+
+```python
+class SampleForm(forms.Form):
+    analysed = PartialDateField(coarsest="month")  # a year alone is refused
+    published = PartialDateField(resolution="month")  # a day is refused
+    founded = PartialDateField(resolution="year")  # a year and nothing else
+```
+
+The field refuses a value coarser than `coarsest` or finer than `resolution` with the code that names what is missing or not allowed, `needs_month`, `needs_day`, `too_fine_month` or `too_fine_day`. A value that is not a date is refused with its own code first, whatever the precisions.
+
+A precision that is not one of the three, and a `resolution` coarser than `coarsest`, raise `ValueError` when the form class is defined. The message names the option at fault, and both options when the `resolution` is coarser than the `coarsest`.
+
+Every widget follows the `resolution`, and you state it nowhere but on the field, so changing a widget is changing one name:
+
+- `PartialDateMaskInput` writes the resolution in its `data-imask`, so at `"month"` the input takes a year and a month and no day, and at `"year"` it takes the year alone.
+- `PartialDateInput` and `PartialDateSelect` draw no part finer than the resolution: at `"month"` a year and a month, at `"year"` the year alone. A day sent to a field of that resolution anyway is refused with `too_fine_day`.
+- A widget on a field that is not a `PartialDateField` has no resolution stated and keeps `"day"`: the masked input takes a full date and the other two draw all three parts.
+
+The field tells its widget the first time its form reads the field, so a widget your form's `__init__` puts in its place is told as well, and two forms of one class never share a widget.
+
+```python
+class SampleForm(forms.Form):
+    published = PartialDateField(resolution="month")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["published"].widget = PartialDateSelect()
+```
+
+A widget is swapped before the form is first drawn or validated, since a form keeps the bound field it first made.
+
+`coarsest` is checked by the field alone. A three-part widget still draws every part up to the resolution, and a masked input still takes a year alone, so a value too coarse comes back from the field with `needs_month` or `needs_day`.
 
 #### The masked input
 
@@ -1550,7 +1590,7 @@ class SampleForm(forms.Form):
     )
 ```
 
-`PartialDateMaskInput(attrs=None)` takes HTML attributes and nothing else. Every option is a keyword of the field. The input is drawn with the field's name and id, with `inputmode="numeric"` so a touch device offers a numeric keypad unless your `attrs` state an `inputmode`, and with every other attribute you gave kept. Its `data-imask` holds `{"kind": "partial-date", "resolution": "day"}`. In the pack it is an `input`, takes the size, colour and variant stated for the form, and is drawn the same way through Django's own rendering.
+`PartialDateMaskInput(attrs=None)` takes HTML attributes and nothing else. Every option is a keyword of the field. The input is drawn with the field's name and id, with `inputmode="numeric"` so a touch device offers a numeric keypad unless your `attrs` state an `inputmode`, and with every other attribute you gave kept. Its `data-imask` holds `{"kind": "partial-date", "resolution": "day"}`, with the field's `resolution` in place of `"day"` when the field states one. In the pack it is an `input`, takes the size, colour and variant stated for the form, and is drawn the same way through Django's own rendering.
 
 The page has to load what a page loads for any mask widget: IMask and the form's media, which names `mvp_forms/imask.js`. [What to load](https://github.com/django-mvp/django-mvp-forms#what-to-load) says how, and how a page's Content Security Policy and a project's bundler are met.
 

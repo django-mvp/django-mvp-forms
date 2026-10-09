@@ -75,7 +75,6 @@ class PartialDateForm(forms.Form):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget = self.widget()
-            field.limit_widget(field.widget)
         self.helper = FormHelper(self)
         self.helper.attrs = {"novalidate": True}
         if posts:
@@ -175,7 +174,6 @@ class PartialDateStatesForm(forms.Form):
         super().__init__(sent, **kwargs)
         for field in self.fields.values():
             field.widget = self.widget()
-            field.limit_widget(field.widget)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
