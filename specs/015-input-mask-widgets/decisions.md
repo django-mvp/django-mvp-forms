@@ -115,7 +115,8 @@ window of FS-013 is unchanged.
 
 **Why:** the window promises that every version it names is tested. The package installs nothing
 of IMask's and the suite has no browser, so a version named there would be a promise nothing
-checks. If planning gives the suite a browser, this can be revisited then.
+checks. The browser tests of D12 run against one copy of IMask, 7.6.1, and that is what the
+README names.
 
 **ADR:** no.
 
@@ -184,3 +185,22 @@ read back as `12345` on a page without IMask. Written as `1234,5` it round-trips
 IMask, and the script needs no special case for numbers.
 
 **ADR:** none. Local to the number widget.
+
+## D15. What the design review changed
+
+One reviewer read the plan before any of it was built. Everything it found was taken:
+
+- A thousands separator equal to the decimal mark in force is refused, including a comma stated
+  with no `radix`, where IMask's default mark is also a comma. An initial 1234.5 would otherwise
+  be saved as 12345.
+- The form's data is corrected for every masked input and not only where a display character is
+  seen, because a pattern inside `DynamicMaskInput` hides its display character from the outer
+  mask.
+- IMask's built-in definitions are read from `IMask.MaskedPattern.InputDefinition`.
+- The first task also moves the demo's forms, so the suite is green at its end.
+- One test module, `tests/test_widgets.py`, as the testing standard asks for one source module.
+- A page under a policy that forbids inline script is one of the browser tests.
+- The number bounds take an `int`, a `float` or a `Decimal`.
+- The demo and the README load an exact version of IMask with an integrity value.
+
+**ADR:** none. Each is a correction to the plan and is recorded where it applies.

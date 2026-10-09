@@ -61,7 +61,7 @@ a `placeholderChar` of its own, and that overrides the pattern's. Checked agains
 `aa-####`. `placeholder_char` therefore accepts either one character for the whole pattern or a
 mapping from a definition's character to its placeholder character:
 `placeholder_char={"0": "#", "a": "a"}`. For one of IMask's three built-in definitions the script
-reads the expression from `IMask.PatternInputDefinition.DEFAULT_DEFINITIONS`, so the package never
+reads the expression from `IMask.MaskedPattern.InputDefinition.DEFAULT_DEFINITIONS`, which is where the build a page loads keeps them, so the package never
 copies IMask's own expressions. No blocks are needed. A block keeps a `placeholder_char` of its
 own, which the date example uses.
 
@@ -100,9 +100,12 @@ IMask, so the script waits for the document to finish loading before it looks fo
 Answers "a field with a display character submits what was typed".
 
 IMask writes the display characters into the input, so the browser would submit them. The script
-listens for the form's `formdata` event and sets the field's entry to the mask's value. The event
+listens for the form's `formdata` event and sets the field's entry to the mask's value. The listener is attached for every masked input that has a form, with no test for a display
+character: a mask's value equals what the input shows unless a display character is in play, and
+a pattern inside a list of masks hides its display character from the outer mask. The event
 fires for a native submit and for any script that builds a `FormData` from the form, which is how
-htmx reads a form. A disabled input is left out, as the browser leaves it out.
+htmx 2 reads a form. The listener acts only while the input still belongs to that form and is
+not disabled.
 
 ## R8. Inputs added later
 
@@ -121,7 +124,9 @@ Answers the specification's open assumption.
 convention: tests marked `e2e` in files named `*_e2e.py`, skipped where no browser is found and
 failing in CI. This repository's test workflow does not ask for Playwright's browsers and the
 workflow is not this feature's to change. The tests launch the installed Chrome
-(`channel="chrome"`), which GitHub's Ubuntu runners carry and which is present locally.
+(`channel="chrome"`), which GitHub's Ubuntu runners carry and which is present locally. The
+check that decides whether to skip tries that launch, since django-mvp's looks for Playwright's
+own download and cannot be copied.
 
 The tests open pages of the test project through pytest-django's `live_server`. IMask is served
 to them from a copy under `tests/data/`, by intercepting the request for it, so no test needs the
@@ -132,6 +137,12 @@ What the browser tests assert is this package's script: that a mask is applied w
 written on the input, once, to inputs present and added later, that nothing happens without
 IMask, that the event is sent, and that a display character's field submits what was typed. They
 do not test IMask's own masking rules beyond one keystroke that shows the options arrived.
+
+## R9a. The demo loads an exact version
+
+Answers "the demo page loads IMask from jsDelivr at `imask@7`, unpinned". The demo pages and the
+README's example load `imask@7.6.1`, the version the tests use, with `integrity` and
+`crossorigin`. A floating tag would run whatever the CDN serves for it.
 
 ## R10. What changes in the existing suite
 

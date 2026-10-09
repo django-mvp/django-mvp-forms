@@ -54,8 +54,10 @@ What is refused, each with a `ValueError` naming the option:
   than true, false, `"append"` or `"remove"`
 - regular expression: an empty or non-text `mask`, which refuses a compiled Python pattern;
   `flags` holding a character JavaScript does not have
-- number: a negative `scale`; a `thousands_separator` or `radix` longer than one character; the
-  two being the same character; `min_value` above `max_value`
+- number: a negative `scale`; a `thousands_separator` or `radix` longer than one character; a
+  `thousands_separator` equal to the decimal mark in force, which is a comma when `radix` is not
+  stated; a `min_value` or `max_value` that is not an `int`, a `float` or a `Decimal`;
+  `min_value` above `max_value`
 - dynamic: an empty list; an item that is not one of the other three widgets
 - range block: `minimum` above `maximum`. Enum block: an empty list
 
@@ -68,20 +70,21 @@ R5 describes.
 One immediately invoked function. In order: return if the flag on `window` is set, and set it;
 wait for the document; apply to every `input[data-imask]`; watch for added nodes. Applying to an
 input: return if IMask is absent or the input already has a mask; build IMask's options from the
-JSON; create the mask; attach the `formdata` listener when the mask has a display character and
-the input has a form; send `mvp-forms:imask` from the input, bubbling, with the mask in
+JSON; create the mask; where the input has a form, attach a `formdata` listener that sets the
+field's entry to the mask's value while the input still belongs to that form and is enabled; send `mvp-forms:imask` from the input, bubbling, with the mask in
 `detail.mask`. No inline script, no `eval`, no network.
 
 ## The tests
 
-- `tests/test_widgets/`, mirroring `mvp_forms/widgets.py`: one module for each widget and one for
-  the blocks. They assert the attribute's JSON, the media, `attrs` kept, what is refused, and the
+- `tests/test_widgets.py`, mirroring `mvp_forms/widgets.py`, with a class for each widget and
+  each block. They assert the attribute's JSON, the media, `attrs` kept, what is refused, and the
   number widget's two overrides against a `DecimalField` and an `IntegerField`.
 - `tests/test_pack/test_masked_inputs.py`: a masked input drawn through the pack, with a choice
   applied, in a formset's empty form, and through `|crispy`, `{% crispy %}` and plain Django.
 - `tests/test_imask_e2e.py`, marked `e2e`: the script in Chrome, against pages of the test
   project. Fixtures in `tests/conftest.py` skip the module where Chrome is absent and fail it in
-  CI, and serve IMask from `tests/data/`.
+  CI, and serve IMask from `tests/data/`. The module is declared in `non-mirror-paths`, since its
+  subject is a script.
 - `tests/test_demo.py`: the demo page answers, the sidebar links it, each widget's section is
   present and a post returns what each field received. No wording is asserted.
 - `tests/test_pack/test_independence.py`: the static directory holds the stylesheet and the
@@ -94,7 +97,8 @@ to the final interface. The reference field and the formset's article field stat
 character for each definition and no longer need blocks, so their help text states the pattern
 `aa-0000` directly. That is the one place the page differs from the prototype, and it is shown at
 the walkthrough. A standalone page without django-mvp is added, as every other demo page has.
-The page's own inline script stays in the demo.
+The page's own inline script stays in the demo. Both pages load IMask at an exact version with
+an integrity value.
 
 ## Documentation
 
@@ -102,7 +106,8 @@ The page's own inline script stays in the demo.
   its options, loading IMask and the form's media, what the form receives, the event, a page
   without IMask, what is not supported, and the two cautions the specification names. Written in
   the task that introduces each part.
-- ADR 0041 edited to say the pack's templates need no script. New records at convergence.
+- ADR 0014 and ADR 0041 each say the pack ships no script file. Both sentences are edited to say
+  the pack's templates need none. New records at convergence.
 - `CONTEXT.md`: the terms under Key Entities.
 - CHANGELOG entry.
 
