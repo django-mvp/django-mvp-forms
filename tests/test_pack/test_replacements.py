@@ -32,7 +32,7 @@ from tests.test_pack.test_independence import STATES
 MARKER = "@@replaced@@"
 TEMPLATE_PATHS = sorted(
     path.relative_to(PACK_TEMPLATES).as_posix()
-    for path in PACK_TEMPLATES.rglob("*.html")
+    for path in (PACK_TEMPLATES / "daisyui").rglob("*.html")
 )
 NEVER_DRAWN = {"daisyui/layout/tab-link.html"}
 CRISPY_TEMPLATES_KEPT_IN_MEMORY = (

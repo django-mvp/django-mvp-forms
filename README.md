@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table. Nothing is published to PyPI. The versions of Django, django-crispy-forms and daisyUI it supports are in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions).
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table, and it draws the select controls of django-tomselect. Nothing is published to PyPI. The versions of Django, django-crispy-forms and daisyUI it supports are in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions).
 
 ## Why
 
@@ -24,7 +24,7 @@ The pack's templates are plain Django templates. They do not use [django-cotton]
 
 Fields and widgets are collected as real projects need them. They are not planned ahead and do not appear on the roadmap, so the set grows unevenly and that is intended. The package is complete without any of them, and each one has to fit the pack without changing what the pack promises.
 
-Widgets from popular third-party Django packages may get templates here so they sit properly in a daisyUI form. Which packages are supported is the maintainers' call, and none of them becomes a dependency.
+Widgets from popular third-party Django packages may get templates here so they sit properly in a daisyUI form. Which packages are supported is the maintainers' call, and none of them becomes a dependency. A supported package whose controls are built by script, as django-tomselect's are, may also get one optional stylesheet that the host project loads. The pack's own templates define no class and need no stylesheet, and there is never one stylesheet for several packages.
 
 When two reasonable designs conflict, stock daisyUI markup wins over custom styling, and matching crispy-forms' documented behaviour wins over inventing a new one.
 
@@ -46,7 +46,7 @@ INSTALLED_APPS = [
 ]
 ```
 
-The host project supplies daisyUI itself. This package ships markup, not a stylesheet. Pages that draw these forms must load daisyUI 5, from the minor release named in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions) upward. Its CDN build needs no build step, so daisyUI's own CDN install in the page's `<head>` is enough:
+The host project supplies daisyUI itself. The pack's templates are markup and need no stylesheet of ours; the package's one stylesheet, for django-tomselect's controls, is optional and is described under [django-tomselect](https://github.com/django-mvp/django-mvp-forms#django-tomselect). Pages that draw these forms must load daisyUI 5, from the minor release named in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions) upward. Its CDN build needs no build step, so daisyUI's own CDN install in the page's `<head>` is enough:
 
 ```html
 <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
@@ -1067,6 +1067,14 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 
+#### A supported package's templates
+
+A template under `django_tomselect/` is a template of django-tomselect that the pack extends. It is not a replacement for one of the pack's own, and it has no `Handed` column because it reads nothing of its own: it extends django-tomselect's template of the same path and adds to a block of it.
+
+| Template | Draws | Found by |
+|---|---|---|
+| `django_tomselect/tomselect.html` | django-tomselect's own template with one block added: an option that carries an `optgroup` key is listed under a heading of that name. | Application directories: list `mvp_forms` before `django_tomselect` in `INSTALLED_APPS`, since the first app that has the template supplies it and the other is never used. |
+
 #### When a listed template changes
 
 A listed path, and the names a template is handed, change only through one minor version in which the old one still works. For that version a replacement at the old path is still drawn, and it raises a `DeprecationWarning` naming the old path and what replaces it. A project with nothing at the old path sees no warning. Python shows a `DeprecationWarning` under a test runner, or when you run with `python -W default`, as it does Django's own, so run your tests to find a replacement that needs moving. A name a template is handed that is renamed or withdrawn keeps its value under the old name for that version. The CHANGELOG entry of that release says what changed and what replaces it. The pack records the paths it has moved away from in `mvp_forms.deprecation.WITHDRAWN` and asks `mvp_forms.deprecation.host_template` whether your project has a template at one, so you call neither.
@@ -1074,6 +1082,176 @@ A listed path, and the names a template is handed, change only through one minor
 A path on its way out stays a row of the table for as long as it is honoured, with what replaces it said in its `Draws` cell. The paths django-crispy-forms itself chooses, such as `daisyui/field.html`, change only if django-crispy-forms changes them.
 
 The markup and the class names inside a template of the pack are not part of this promise and can change in any release. A replacement that copied the old markup keeps drawing it until its owner updates it.
+
+### django-tomselect
+
+The pack draws the select widgets of [django-tomselect](https://github.com/OmenApps/django-tomselect) so that they sit in a daisyUI form as a stock select does. It covers the single and the multiple widget, over a model and over a list of choices: `TomSelectModelWidget`, `TomSelectModelMultipleWidget`, `TomSelectIterablesWidget` and `TomSelectIterablesMultipleWidget`, which `TomSelectModelChoiceField`, `TomSelectModelMultipleChoiceField`, `TomSelectChoiceField` and `TomSelectMultipleChoiceField` build. django-tomselect is not a dependency of the package and no module of the package imports it, so a project without it is drawn as before.
+
+`{{ form|crispy }}` and `{% crispy form %}` write nothing new for these widgets. They write daisyUI's `select` class on the `<select>` with `w-full`, the size, the colour and the variant stated for the form or for the field, and `select-error` in place of the colour on a field in error, exactly as for a stock select. A disabled field carries the `disabled` attribute and its label is tied to the select. Tom Select copies the classes of the element it replaces to the wrapper it builds, so the wrapper is a daisyUI select, and the dropdown sits inside it and takes its size from it. The package ships one stylesheet, `mvp_forms/tomselect.css`, that fits Tom Select's own parts, its tags, its dropdown and its clear button, inside them. Every colour, radius and size in it comes from the daisyUI theme, so a control follows the theme as a stock select does, and the stylesheet styles nothing outside a control. The pack never writes a link to the stylesheet. Load it yourself, once.
+
+#### What to install and load
+
+1. Install django-tomselect and set it up as its documentation says. A model-backed widget reads the current request, so `django_tomselect.middleware.TomSelectMiddleware` is in `MIDDLEWARE`.
+2. List `mvp_forms` in `INSTALLED_APPS`, as above, so that Django's static files finder serves `mvp_forms/tomselect.css`.
+3. On every page that draws a django-tomselect select, load django-tomselect's two stylesheets, `mvp_forms/tomselect.css` and django-tomselect's script:
+
+```django
+{% load static %}
+<link rel="stylesheet" href="{% static 'django_tomselect/vendor/tom-select/css/tom-select.default.css' %}" />
+<link rel="stylesheet" href="{% static 'django_tomselect/css/django-tomselect.css' %}" />
+<link rel="stylesheet" href="{% static 'mvp_forms/tomselect.css' %}" />
+<script src="{% static 'django_tomselect/js/django-tomselect.min.js' %}"></script>
+```
+
+The stylesheets can be loaded in either order. django-tomselect's also arrive with a form's media, which `{% crispy form %}` writes beside the form, after anything in the page's head, and `mvp_forms/tomselect.css` is written to win either way. Without `mvp_forms/tomselect.css` the control still works and is drawn by django-tomselect alone, but daisyUI hides whatever overflows a select, so the dropdown, which Tom Select builds inside the wrapper, is cut off. A page that loads the stylesheet and draws no django-tomselect select is drawn as before.
+
+On Django 6.1, django-tomselect's `{% tomselect_media %}` tag writes no links and logs an error, because form media holds objects where it expects strings. Load the files by path, as above, or through form media, which `{% crispy form %}` writes beside the form. The controls work on Django 6.1 when their files are loaded.
+
+The package also distributes one template of its own for django-tomselect, `django_tomselect/tomselect.html`, which extends django-tomselect's template of the same path. It is listed with the other templates, under [a supported package's templates](https://github.com/django-mvp/django-mvp-forms#a-supported-packages-templates), and Django finds it ahead of django-tomselect's own only when `mvp_forms` is listed before `django_tomselect` in `INSTALLED_APPS`.
+
+#### One look
+
+The look that is supported is django-tomselect's `default`, which is what its `css_framework` setting holds unless you change it. The Bootstrap 4 and Bootstrap 5 looks are not supported: leave `DEFAULT_CSS_FRAMEWORK` out of the `TOMSELECT` setting or set it to `default`.
+
+#### Size, colour, variant and state
+
+A control takes the size, the colour and the variant stated for the form or for the field by the rules of [Size, colour and variant](https://github.com/django-mvp/django-mvp-forms#size-colour-and-variant), with the names a stock select takes. State them as for any other field:
+
+```python
+from crispy_forms.helper import FormHelper
+from django import forms
+from django_tomselect.app_settings import PluginClearButton, TomSelectConfig
+from django_tomselect.forms import TomSelectChoiceField
+
+from mvp_forms.choices import FormChoices
+
+
+class TripForm(forms.Form):
+    country = TomSelectChoiceField(
+        config=TomSelectConfig(
+            url="country-autocomplete",
+            value_field="value",
+            label_field="label",
+            plugin_clear_button=PluginClearButton(),
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(size="sm", color="primary")
+```
+
+A control is drawn at rest, focused, in error, disabled and open. A control in error is drawn with the error state and none of the colour stated. The label, the required marker, the help text and the errors are tied to the select as they are to a stock select.
+
+#### Plugins
+
+The clear button, `PluginClearButton`, and the remove button on each tag of a multiple control, `PluginRemoveButton`, are drawn. Another plugin works and keeps django-tomselect's own look. Support for another is added when a project asks for it.
+
+#### Tagging
+
+Tagging is a multiple control that offers to add what was typed. Each value is a tag with a remove button, and when the typed text matches no option the dropdown begins with a line to add it, set apart from the options below by a rule. Turn it on with `create=True` in the `TomSelectConfig` of a multiple control that has `PluginRemoveButton`, and the stylesheet draws the tags, the tag the keyboard is on and the line that offers to add a value.
+
+The pack draws the control and nothing more. Saving a new value is yours: django-tomselect posts it as it posts any other, and what your view does with it is up to you. The field has to accept it first, and django-tomselect's stock fields do not. `TomSelectMultipleChoiceField` and `TomSelectModelMultipleChoiceField` reject a value that is not among their choices, so a form with a new tag comes back in error. Write a field of your own that accepts any value, as the demo's `TagsField` does:
+
+```python
+from django import forms
+from django_tomselect.app_settings import PluginRemoveButton, TomSelectConfig
+from django_tomselect.forms import TomSelectMultipleChoiceField
+
+
+class TagsField(TomSelectMultipleChoiceField):
+    def clean(self, value):
+        if self.required and not value:
+            raise forms.ValidationError(
+                self.error_messages["required"], code="required"
+            )
+        return list(value or [])
+
+
+class ArticleForm(forms.Form):
+    keywords = TagsField(
+        config=TomSelectConfig(
+            url="keyword-autocomplete",
+            value_field="value",
+            label_field="label",
+            create=True,
+            plugin_remove_button=PluginRemoveButton(),
+        ),
+        required=False,
+    )
+```
+
+`cleaned_data["keywords"]` is then a list of strings, whether or not each is among the options, and your view decides which of them to save.
+
+#### Grouping
+
+An option can be listed under a heading. Give the option an `optgroup` key whose value is the heading, and every option that carries the same value is listed under it. An option with no `optgroup` key, or an empty one, is listed with no heading. django-tomselect draws the headings and has no setting that names an option's group, so the pack's `django_tomselect/tomselect.html` tells Tom Select to read the group from `optgroup`. You write no template.
+
+A value the control already holds when the page is drawn is added by django-tomselect with its value and label only. If you keep chosen options in the dropdown with `hide_selected=False`, that one is listed with no heading until it is fetched again.
+
+This works only when `mvp_forms` is listed before `django_tomselect` in `INSTALLED_APPS`, because Django uses the first template of a name that it finds. With the order reversed the control is still drawn, with its options in one flat list.
+
+A view names the group on each result. A view over a list of choices does it in `get_iterable`; a view over a model does it in `hook_prepare_results`, from a field it asked for in `value_fields`:
+
+```python
+from django_tomselect.autocompletes import (
+    AutocompleteIterablesView,
+    AutocompleteModelView,
+)
+
+from shop.models import Product
+
+ROCKS = {"Igneous": ["Basalt", "Granite"], "Sedimentary": ["Chalk", "Shale"]}
+
+
+class RockAutocomplete(AutocompleteIterablesView):
+    iterable = True
+
+    def get_iterable(self):
+        return [
+            {"value": rock, "label": rock, "optgroup": group}
+            for group, rocks in ROCKS.items()
+            for rock in rocks
+        ]
+
+
+class ProductAutocomplete(AutocompleteModelView):
+    model = Product
+    search_lookups = ["name__icontains"]
+    value_fields = ["id", "name", "category__name"]
+
+    def hook_prepare_results(self, results):
+        for result in results:
+            result["optgroup"] = result.pop("category__name")
+        return results
+```
+
+A project that has a `django_tomselect/tomselect.html` of its own keeps the grouping by extending the template of the same name: `{% extends "django_tomselect/tomselect.html" %}`. Django resolves that to the next template of that name, which is the pack's, and the pack's extends django-tomselect's.
+
+#### In a modal and in a table
+
+A control works inside a `Modal` layout object and inside a formset drawn as a table with no change to either. The stylesheet does two things for them. An open control is lifted above the controls after it, and the two boxes that would otherwise cut off its dropdown, daisyUI's modal box and the scroller around a table, show what overflows them for as long as a dropdown inside is open. A modal or a table that has been scrolled loses its scroll position while that lasts, because a box that shows its overflow does not scroll. Give a form in a modal a prefix, so that the ids and the button names inside it do not repeat those of the page. The formset's own prefix keeps the controls of each row apart.
+
+#### Loaded by htmx
+
+A form that htmx swaps into the page has its controls started as it arrives, provided `use_htmx` is on. Turn it on once, for every control, in the `TOMSELECT` setting:
+
+```python
+TOMSELECT = {"DEFAULT_CONFIG": {"use_htmx": True}}
+```
+
+Without it a control's script starts the control when the document finishes loading, and a swapped-in form is not a document load. The package changes nothing to make this automatic. Give each form you fetch a prefix of its own, such as one that counts the fetches, so that a second copy swapped in beside or over the first does not repeat its ids. The stylesheet needs nothing more, since it is already loaded by the page that fetches. A page reached by htmx navigation starts its controls in the same way.
+
+#### What is not supported
+
+- django-tomselect's token widget, `TomSelectTokenWidget`, which the stylesheet does not style.
+- django-tomselect's Bootstrap looks.
+- A floating label, text attached to a control, buttons joined to it and a joined group that holds it. The pack does not change what it draws when one is asked for.
+
+#### The release tested
+
+The support is tested against django-tomselect 2026.6.2, which the development dependencies name as the least release. That release declares Django up to 6.0, and its controls work on Django 6.1, apart from the `{% tomselect_media %}` tag above. Which releases of django-tomselect are supported is stated here and is not part of the [support window](https://github.com/django-mvp/django-mvp-forms#supported-versions), whose periods apply to Django, django-crispy-forms and daisyUI.
 
 ### Themes
 
@@ -1344,6 +1522,13 @@ Four more pages draw a formset of order lines, each with a delete input and an o
 
 - `/formset-stacked/` and `/formset-table/` draw the formset stacked and as a table, inside the django-mvp shell, and are reached from its sidebar.
 - `/formset-stacked/standalone/` and `/formset-table/standalone/` are the same pages styled by daisyUI's CDN build alone.
+
+One more page draws django-tomselect's controls. Its sidebar entry is in a group of its own, apart from the standard pages. The page holds a form to submit with a text input and a stock select beside a single control, a multiple control, a tagging control and a control whose options are listed under groups. Submitting it with no country comes back with the country's error, and submitting it with one shows the values the form cleaned to. Nothing is saved. The page also draws a stock select, a single control and a tagging control in a state each (holding a value, in error and disabled), and the same three controls at each size, at each colour and in the variant. It ends with controls in a modal and in a formset drawn as a table, a form that htmx fetches and a link to a second page that htmx navigation loads. The autocomplete views behind the controls answer from lists kept in the demo, so the page needs no data.
+
+- `/tomselect/` is the page inside the django-mvp shell, reached from its sidebar under "Third-party widgets" as "django-tomselect".
+- `/tomselect/standalone/` is the same page styled by daisyUI's CDN build alone, with django-tomselect's files and `mvp_forms/tomselect.css`.
+
+Every page inside the shell links `mvp_forms/tomselect.css`, because the demo's base template does.
 
 ## License
 

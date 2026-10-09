@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The select widgets of django-tomselect are drawn as daisyUI selects. The package now ships one optional stylesheet, `mvp_forms/tomselect.css`, that fits Tom Select's own parts, its tags, its dropdown and its clear button, inside a daisyUI select. The pack already wrote daisyUI's `select` class, with the size, colour and variant stated for the form or the field and `select-error` on a field in error, on a django-tomselect `<select>`, and Tom Select copies those classes to the wrapper it builds, so no form and no template changes. What you do is load the stylesheet on each page that draws such a select. The README's new section "django-tomselect" says what to load, the plugins covered (the clear button and the remove button), and what is not supported, which includes django-tomselect's Bootstrap looks and its token widget. Without the stylesheet daisyUI cuts the dropdown off. The pack does not write a link to it. On Django 6.1, django-tomselect's `{% tomselect_media %}` tag writes no links, so load its files by path or through form media. The support is tested against django-tomselect 2026.6.2. django-tomselect is not a dependency of the package, and a project without it, or a page with no such select, is drawn as before.
+- A template of the package for django-tomselect, `django_tomselect/tomselect.html`, which extends django-tomselect's template of the same path. Django finds it ahead of django-tomselect's own only when `mvp_forms` is listed before `django_tomselect` in `INSTALLED_APPS`. The README's template list records it in a second table, for a supported package's templates.
+- A demo page, "django-tomselect", at `/tomselect/` in the django-mvp shell, in a sidebar group of its own beside the standard pages, and the same page at `/tomselect/standalone/` on daisyUI's CDN build alone. It shows a form to submit that comes back with the country's error or with the values it cleaned to, a stock select beside the controls, each control holding a value, in error and disabled, and at each size, each colour and in the variant.
+
 ## [v0.2.1] - 2026-10-04
 
 ### Fixed

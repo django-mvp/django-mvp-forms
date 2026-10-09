@@ -1,2 +1,11 @@
 {% extends "mvp/base.html" %}
 {# The base django-mvp's page templates extend by name, and the place for project-wide overrides. #}
+{% load static %}
+{% block styles %}
+  {{ block.super }}
+  {# django-tomselect's own stylesheets and script, then the pack's stylesheet for its controls. #}
+  <link rel="stylesheet" href="{% static 'django_tomselect/vendor/tom-select/css/tom-select.default.css' %}" />
+  <link rel="stylesheet" href="{% static 'django_tomselect/css/django-tomselect.css' %}" />
+  <link rel="stylesheet" href="{% static 'mvp_forms/tomselect.css' %}" />
+  <script src="{% static 'django_tomselect/js/django-tomselect.min.js' %}"></script>
+{% endblock styles %}

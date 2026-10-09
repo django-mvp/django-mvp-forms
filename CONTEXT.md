@@ -29,9 +29,32 @@ _Avoid_: override, fork, theme, skin.
 
 **Template list**:
 The README's record of every template the pack distributes: its path, what it
-draws, the names it is handed and where a replacement is found. It is the
-statement of what is public, and a test fails when it and the package differ.
+draws, the names it is handed and where a replacement is found, and in a second
+table the templates it distributes for a supported package. It is the statement
+of what is public, and a test fails when it and the package differ.
 _Avoid_: registry, manifest.
+
+**Supported package**:
+A third-party Django package whose widgets the pack undertakes to draw well in a
+daisyUI form. Its templates, if the pack has any, are listed in the template
+list's second table. A supported package whose controls are built by script gets
+at most one optional stylesheet, which the host project loads, and never shares it
+with another package. django-tomselect is the first. A supported package is never
+a dependency.
+_Avoid_: integration, add-on.
+
+**Tagging**:
+A multiple django-tomselect control that offers to add what was typed, each value
+shown as a tag with a remove button. The pack draws it. Saving a new value is the
+developer's, and the field must accept a value that is not among its choices.
+_Avoid_: tags field (a field the developer writes, not a thing the pack ships).
+
+**Option group**:
+The heading a django-tomselect dropdown lists a set of options under. An option
+joins a group by carrying an `optgroup` key whose value is the heading. The pack's
+template for django-tomselect reads that key, which needs `mvp_forms` listed before
+`django_tomselect` in `INSTALLED_APPS`.
+_Avoid_: category, optgroup (that is the key and the HTML element, not the term).
 
 **Layout object**:
 A django-crispy-forms Python class placed in a form's `Layout` to say how part

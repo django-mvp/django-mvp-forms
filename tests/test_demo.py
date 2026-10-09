@@ -12,7 +12,10 @@ from django.shortcuts import resolve_url
 from django.template.loader import get_template
 from django.urls import reverse
 
+from demo.autocompletes import ROCKS, UNGROUPED_ROCKS
 from demo.forms import DAISYUI_VERSION, THEME_NAMES
+from demo.tomselect_forms import SampleFormSet, country_field
+from demo.tomselect_views import TomSelectMixin
 from mvp_forms.choices import Modifiers
 from tests.forms import ruled_data
 from tests.legibility.catalogue import Catalogue
@@ -3214,3 +3217,246 @@ class TestStandaloneJoinedGroupsPage(JoinedGroupsPageContract):
 
     def test_it_links_back_to_the_shell_page(self, page):
         assert page.find("a", href=reverse("joined-groups")) is not None
+
+
+TOMSELECT_PREFIX = "tomselect"
+TOMSELECT_STYLESHEET = "mvp_forms/tomselect.css"
+TOMSELECT_SUBMIT = {f"{TOMSELECT_PREFIX}-submit": "Submit"}
+TOMSELECT_WITH_COUNTRY = {**TOMSELECT_SUBMIT, f"{TOMSELECT_PREFIX}-country": "Germany"}
+TOMSELECT_CONTROLS_OF_A_LINE = ("country", "rock", "keywords")
+TOMSELECT_NEW_KEYWORD = "a-keyword-no-option-holds"
+TOMSELECT_WITH_NEW_KEYWORD = {
+    **TOMSELECT_WITH_COUNTRY,
+    f"{TOMSELECT_PREFIX}-keywords": [TOMSELECT_NEW_KEYWORD],
+}
+# The prefix of each form the page draws in a state, a size, a colour and a variant.
+TOMSELECT_SECTIONS = [
+    *(f"state-{state}" for state, _ in TomSelectMixin.states),
+    *(f"size-{name}" for name in Modifiers.names("size", "select")),
+    *(f"color-{name}" for name in Modifiers.names("color", "select")),
+    *(f"variant-{name}" for name in Modifiers.names("variant", "select")),
+]
+
+
+def links_the_tomselect_stylesheet(page):
+    return any(
+        TOMSELECT_STYLESHEET in link["href"]
+        for link in page.find_all("link", rel="stylesheet")
+    )
+
+
+class TomSelectPageContract:
+    url_name = ""
+
+    @pytest.fixture(params=["get", "post"])
+    def page(self, request, open_page):
+        data = TOMSELECT_WITH_COUNTRY if request.param == "post" else None
+        return open_page(self.url_name, data)
+
+    def test_it_links_the_stylesheet_for_the_controls(self, open_page):
+        assert links_the_tomselect_stylesheet(open_page(self.url_name))
+
+    def test_the_form_draws_a_select_for_each_of_its_controls(self, open_page):
+        page = open_page(self.url_name)
+
+        for name in ("plan", "country", "spoken", "languages", "keywords", "rock"):
+            assert page.find("select", id=f"id_{TOMSELECT_PREFIX}-{name}") is not None
+
+    def test_each_state_size_colour_and_variant_is_drawn(self, open_page):
+        page = open_page(self.url_name)
+
+        missing = [
+            prefix
+            for prefix in TOMSELECT_SECTIONS
+            if page.find("select", id=f"id_{prefix}-country") is None
+        ]
+
+        assert missing == []
+
+    def test_a_get_shows_nothing_cleaned(self, open_page):
+        assert open_page(self.url_name).find(id=f"{TOMSELECT_PREFIX}-cleaned") is None
+
+    def test_a_post_with_a_country_shows_what_the_form_cleaned_to(self, open_page):
+        page = open_page(self.url_name, TOMSELECT_WITH_COUNTRY)
+
+        shown = page.find(id=f"{TOMSELECT_PREFIX}-cleaned-country")
+        assert shown.get_text(strip=True) == "Germany"
+
+    def test_a_post_with_a_keyword_that_is_not_an_option_shows_it_cleaned(
+        self, open_page
+    ):
+        page = open_page(self.url_name, TOMSELECT_WITH_NEW_KEYWORD)
+
+        shown = page.find(id=f"{TOMSELECT_PREFIX}-cleaned-keywords")
+        assert TOMSELECT_NEW_KEYWORD in shown.get_text()
+
+    def test_the_modal_holds_its_three_controls_and_no_other_modal_control_is_outside(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        dialog = page.find("dialog", id="modal-dialog")
+        inside = {select["id"] for select in dialog.find_all("select")}
+        everywhere = {
+            select["id"]
+            for select in page.find_all("select", id=re.compile("^id_modal-"))
+        }
+        expected = {f"id_modal-{name}" for name in TOMSELECT_CONTROLS_OF_A_LINE}
+        assert inside == everywhere == expected
+
+    def test_the_table_draws_a_control_in_every_row(self, open_page):
+        page = open_page(self.url_name)
+
+        rows = [
+            row
+            for row in page.find("table").find_all("tr")
+            if row.find("select") is not None
+        ]
+        assert [
+            {select["id"] for select in row.find_all("select")} for row in rows
+        ] == [
+            {f"id_samples-{line}-{name}" for name in TOMSELECT_CONTROLS_OF_A_LINE}
+            for line in range(SampleFormSet.extra)
+        ]
+
+    def test_a_post_without_a_country_comes_back_in_error(self, open_page):
+        page = open_page(self.url_name, TOMSELECT_SUBMIT)
+
+        country = page.find(id=f"id_{TOMSELECT_PREFIX}-country")
+        assert country["aria-invalid"] == "true"
+        assert page.find(id=f"{country['id']}_error") is not None
+        assert page.find(id=f"{TOMSELECT_PREFIX}-cleaned") is None
+
+    def test_no_id_repeats(self, page):
+        ids = [element["id"] for element in page.find_all(id=True)]
+
+        assert len(ids) == len(set(ids))
+
+
+class TestTomSelectPage(TomSelectPageContract):
+    url_name = "tomselect"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_lists_it_under_a_group_apart_from_the_standard_pages(
+        self, open_page
+    ):
+        nav = open_page("overview").find(attrs={"aria-label": "Main navigation"})
+        entries = [
+            link["href"] if (link := item.find("a")) else None
+            for item in nav.find_all("li", recursive=False)
+        ]
+        mine = entries.index(reverse("tomselect"))
+        standard = [
+            position
+            for position, href in enumerate(entries)
+            if href and href != reverse("tomselect")
+        ]
+
+        assert max(standard) < mine
+        assert not any(entries[max(standard) + 1 : mine])
+        assert mine - max(standard) > 1
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("tomselect-standalone")) is not None
+
+
+class TestStandaloneTomSelectPage(TomSelectPageContract):
+    url_name = "tomselect-standalone"
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("tomselect")) is not None
+
+
+class TestTheFormHtmxFetches:
+    def fetched(self, client, parse, count):
+        response = client.get(reverse("tomselect-fetched"), {"count": count})
+        assert response.status_code == 200
+        return parse(response.content.decode())
+
+    @pytest.mark.parametrize("count", ["1", "2", "7"])
+    def test_its_controls_carry_a_prefix_that_follows_the_count_asked_for(
+        self, client, db, parse, count
+    ):
+        page = self.fetched(client, parse, count)
+
+        ids = {select["id"] for select in page.find_all("select")}
+        assert ids == {f"id_fetched-{count}-{name}" for name in ("country", "keywords")}
+
+    def test_its_ids_collide_with_none_on_the_page_and_none_of_another_fetch(
+        self, client, db, open_page, parse
+    ):
+        page = open_page("tomselect")
+        first = self.fetched(client, parse, "2")
+        second = self.fetched(client, parse, "3")
+
+        on_the_page, one, other = (
+            {element["id"] for element in soup.find_all(id=True)}
+            for soup in (page, first, second)
+        )
+        assert not on_the_page & one
+        assert not one & other
+
+
+class TestThePageHtmxNavigationLoads:
+    def test_it_responds_and_draws_the_form_with_its_controls(self, open_page):
+        page = open_page("tomselect-boosted")
+
+        for name in ("country", "keywords", "rock"):
+            assert page.find("select", id=f"id_{TOMSELECT_PREFIX}-{name}") is not None
+
+
+class TestTheDemosHtmxSetting:
+    def test_use_htmx_is_set_in_the_default_configuration(self, settings):
+        assert settings.TOMSELECT["DEFAULT_CONFIG"]["use_htmx"] is True
+
+    def test_a_control_of_the_demo_reads_it(self):
+        assert country_field().widget.use_htmx is True
+
+
+class TestTheRocksEndpoint:
+    @pytest.fixture
+    def results(self, client, db):
+        response = client.get(reverse("ac-rocks"))
+        assert response.status_code == 200
+        return response.json()["results"]
+
+    def test_a_grouped_rock_names_its_group(self, results):
+        groups = {rock: group for group, rocks in ROCKS.items() for rock in rocks}
+        grouped = {
+            result["value"]: result["optgroup"]
+            for result in results
+            if "optgroup" in result
+        }
+
+        assert grouped == groups
+
+    def test_the_rocks_that_have_no_group_carry_no_optgroup_key(self, results):
+        ungrouped = {result["value"] for result in results if "optgroup" not in result}
+
+        assert ungrouped == set(UNGROUPED_ROCKS)
+
+
+class TestEveryShellPage:
+    def test_every_page_the_sidebar_lists_links_the_stylesheet(
+        self, client, db, overview_page, parse
+    ):
+        nav = parse(overview_page).find(attrs={"aria-label": "Main navigation"})
+        hrefs = [link["href"] for link in nav.find_all("a", href=True)]
+
+        unlinked = [
+            href
+            for href in hrefs
+            if not links_the_tomselect_stylesheet(parse(client.get(href).content))
+        ]
+
+        assert reverse("tomselect") in hrefs
+        assert unlinked == []

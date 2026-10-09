@@ -2,6 +2,18 @@
 
 from django.urls import include, path
 
+from demo.autocompletes import (
+    CountryAutocomplete,
+    KeywordAutocomplete,
+    LanguageAutocomplete,
+    RockAutocomplete,
+)
+from demo.tomselect_views import (
+    StandaloneTomSelectView,
+    TomSelectBoostedView,
+    TomSelectFetchedView,
+    TomSelectView,
+)
 from demo.views import (
     AccordionView,
     AlertView,
@@ -136,6 +148,24 @@ urlpatterns = [
         StandaloneThemesView.as_view(),
         name="themes-standalone",
     ),
+    path("tomselect/", TomSelectView.as_view(), name="tomselect"),
+    path(
+        "tomselect/standalone/",
+        StandaloneTomSelectView.as_view(),
+        name="tomselect-standalone",
+    ),
+    path(
+        "tomselect/fetched/", TomSelectFetchedView.as_view(), name="tomselect-fetched"
+    ),
+    path(
+        "tomselect/boosted/", TomSelectBoostedView.as_view(), name="tomselect-boosted"
+    ),
+    path("autocomplete/countries/", CountryAutocomplete.as_view(), name="ac-countries"),
+    path(
+        "autocomplete/languages/", LanguageAutocomplete.as_view(), name="ac-languages"
+    ),
+    path("autocomplete/keywords/", KeywordAutocomplete.as_view(), name="ac-keywords"),
+    path("autocomplete/rocks/", RockAutocomplete.as_view(), name="ac-rocks"),
     # django-mvp's Account Center, with a development sign-in and sign-out
     # until an account app such as allauth is installed.
     path("", include("mvp.urls")),

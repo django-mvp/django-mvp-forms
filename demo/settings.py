@@ -36,6 +36,9 @@ INSTALLED_APPS = [
     "crispy_forms",
     "flex_menu",
     "django_cotton",
+    # A supported third-party package, for the pages that show its widgets. The
+    # package itself never depends on it.
+    "django_tomselect",
     # Reloads the browser on a change to a template, a stylesheet or Python. It
     # arrives with the shared development bundle rather than a pin of its own,
     # and its middleware removes itself from the chain unless DEBUG is on.
@@ -55,6 +58,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Hands the request to django-tomselect's widgets, which read it to find
+    # their autocomplete view.
+    "django_tomselect.middleware.TomSelectMiddleware",
     # Last, because it rewrites the response body to insert its script tag and
     # anything that encodes or compresses the body has to run after it.
     "django_browser_reload.middleware.BrowserReloadMiddleware",
@@ -73,6 +79,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django_tomselect.context_processors.tomselect",
                 "mvp.context_processors.mvp_config",
             ],
         },
@@ -141,6 +148,7 @@ EASY_ICONS = {
             "formset-table": "bi bi-table",
             "input-masks": "bi bi-123",
             "themes": "bi bi-brush",
+            "tomselect": "bi bi-menu-button-wide",
         },
     },
 }
@@ -158,6 +166,10 @@ MVP_CONFIG = {
         "choices": ["light", "dark", "corporate", "dracula"],
     },
 }
+
+# Start a control as soon as its markup arrives, and not only when a full page
+# has loaded, so that one in content htmx swaps in starts up too.
+TOMSELECT = {"DEFAULT_CONFIG": {"use_htmx": True}}
 
 STATIC_URL = "/static/"
 

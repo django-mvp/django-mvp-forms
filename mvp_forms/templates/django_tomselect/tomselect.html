@@ -1,0 +1,15 @@
+{% extends "django_tomselect/tomselect.html" %}
+{% comment %}
+  An option that carries an "optgroup" key is listed under a heading of that name.
+  django-tomselect draws group headings and has no setting that names an option's group.
+{% endcomment %}
+{% block tomselect_render %}
+    optgroupField: 'optgroup',
+    optionGroupRegister: function(value) {
+        if (!value) {
+            return null;
+        }
+        return {value: value, label: value};
+    },
+    {{ block.super }}
+{% endblock tomselect_render %}
