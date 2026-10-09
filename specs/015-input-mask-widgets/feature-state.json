@@ -99,8 +99,22 @@
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py -q",
+              "uv run pytest -n auto -q"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:1",
+              "tests/test_imask_e2e.py:1",
+              "tests/conftest.py:221"
+            ]
+          }
         },
         {
           "id": "T003",

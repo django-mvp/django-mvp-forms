@@ -230,3 +230,26 @@ caller catching it should not need two.
 
 **Revisit if:** the maintainer prefers Python's `TypeError` for a wrong type, which is a change
 in that helper alone.
+
+## D18. The script keeps only the pattern kind, the observer and the event until their own tasks
+
+**Decision:** the rewritten script has no branch for a regular expression, a number or a list of
+masks, and nothing that reads a number's plain value. It keeps the observer of added nodes and
+the event, which the pattern tests do not exercise on their own.
+
+**Why:** the three kinds are rebuilt test-first by the stories that bring their widgets, and a
+branch with no widget and no test would be untested code on the branch. The observer and the
+event are the script's own shape, and their stories take the red step by removing them.
+
+**Revisit if:** a story needs the script to carry a kind before its widget exists.
+
+## D19. The browser tests count masks through the event
+
+**Decision:** the test that a page holding the script three times gives each input one mask
+counts the `mvp-forms:imask` events the script sends, and compares them with the inputs that
+carry `data-imask`.
+
+**Why:** IMask keeps no handle on the input, so the event is the one place a count can be read
+from. Every mask the script applies sends one.
+
+**Revisit if:** the event is dropped or sent more than once for an input by design.

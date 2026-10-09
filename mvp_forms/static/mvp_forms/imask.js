@@ -12,38 +12,35 @@
   const EVENT = "mvp-forms:imask";
   const masked = new WeakMap();
 
-  function block(options) {
-    const { kind, ...rest } = options;
+  // A definition is an expression written as text, or an object holding the
+  // expression and a placeholder character. A built-in definition has no
+  // expression written, and IMask holds it.
+  function definition(character, written) {
+    const { mask, ...rest } = typeof written === "string" ? { mask: written } : written;
+    const builtIn = window.IMask.MaskedPattern.InputDefinition.DEFAULT_DEFINITIONS;
+    return { ...rest, mask: mask === undefined ? builtIn[character] : new RegExp(mask) };
+  }
+
+  function block(written) {
+    const { kind, ...rest } = written;
     if (kind === "range") return { mask: window.IMask.MaskedRange, ...rest };
     if (kind === "enum") return { mask: window.IMask.MaskedEnum, ...rest };
     return rest;
   }
 
-  function build(options) {
-    const { kind, ...rest } = options;
-    if (kind === "regex") {
-      return { mask: new RegExp(rest.mask, rest.flags || "") };
-    }
-    if (kind === "number") {
-      return { mask: Number, ...rest };
-    }
-    if (kind === "dynamic") {
-      return { mask: rest.mask.map(build) };
-    }
-    if (rest.definitions) {
+  function build(written) {
+    const { kind, definitions, blocks, ...rest } = written;
+    if (definitions) {
       rest.definitions = Object.fromEntries(
-        Object.entries(rest.definitions).map(([char, source]) => [
-          char,
-          new RegExp(source),
+        Object.entries(definitions).map(([character, value]) => [
+          character,
+          definition(character, value),
         ]),
       );
     }
-    if (rest.blocks) {
+    if (blocks) {
       rest.blocks = Object.fromEntries(
-        Object.entries(rest.blocks).map(([name, options]) => [
-          name,
-          block(options),
-        ]),
+        Object.entries(blocks).map(([name, value]) => [name, block(value)]),
       );
     }
     return rest;
@@ -51,16 +48,17 @@
 
   function apply(input) {
     if (!window.IMask || masked.has(input)) return;
-    const options = JSON.parse(input.dataset.imask);
-    const plain = input.value;
-    const mask = window.IMask(input, build(options));
-    if (options.kind === "number" && plain) mask.unmaskedValue = plain;
+    const mask = window.IMask(input, build(JSON.parse(input.dataset.imask)));
     masked.set(input, mask);
-    // A mask with a display character shows something other than its value, so
-    // the form is given the value and not what is shown.
-    if (mask.masked.displayChar && input.form) {
-      input.form.addEventListener("formdata", function (event) {
-        if (input.name && !input.disabled) event.formData.set(input.name, mask.value);
+    // What the input shows is not always what the form should receive: a
+    // display character hides the digits typed, and a pattern inside a list of
+    // masks hides its display character from the outer mask.
+    const form = input.form;
+    if (form) {
+      form.addEventListener("formdata", function (event) {
+        if (input.form === form && input.name && !input.disabled) {
+          event.formData.set(input.name, mask.value);
+        }
       });
     }
     input.dispatchEvent(

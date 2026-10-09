@@ -206,3 +206,33 @@ def template_surface(tmp_path):
         return TemplateSurface(readme, tmp_path)
 
     return surface_of
+
+
+def chrome_may_be_missing(environ):
+    """Say whether a Chrome that cannot be launched skips the test and not fails it.
+
+    Locally a missing Chrome is ordinary. In CI it is a failure, since the runner
+    carries one and a skip would read as a pass.
+    """
+    return environ.get("CI", "").lower() not in {"1", "true"}
+
+
+@pytest.fixture(scope="session")
+def chrome(playwright):
+    """The installed Chrome, which the browser tests launch by its channel."""
+    try:
+        browser = playwright.chromium.launch(channel="chrome")
+    except Exception as error:
+        message = f"Chrome cannot be launched: {error}"
+        if chrome_may_be_missing(os.environ):
+            pytest.skip(message)
+        pytest.fail(message)
+    yield browser
+    browser.close()
+
+
+@pytest.fixture
+def page(chrome):
+    context = chrome.new_context()
+    yield context.new_page()
+    context.close()

@@ -25,7 +25,7 @@ from django_tomselect.forms import (
 )
 
 from mvp_forms.layout import Join
-from mvp_forms.widgets import PatternMaskInput
+from mvp_forms.widgets import EnumBlock, PatternBlock, PatternMaskInput, RangeBlock
 
 
 class TextInputsForm(forms.Form):
@@ -1087,3 +1087,38 @@ class MaskedLineForm(forms.Form):
 
 
 MaskedLineFormSet = formset_factory(MaskedLineForm, extra=2)
+
+
+class MaskedPageForm(forms.Form):
+    phone = forms.CharField(
+        required=False, widget=PatternMaskInput("+{49} 000 0000000")
+    )
+    postcode = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("00000", lazy=False, placeholder_char="#"),
+    )
+    reference = forms.CharField(
+        required=False,
+        widget=PatternMaskInput(
+            "aa-0000", lazy=False, placeholder_char={"0": "#", "a": "a"}
+        ),
+    )
+    shelf = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("S-00", definitions={"S": "[1-6]"}),
+    )
+    day = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("d", blocks={"d": RangeBlock(1, 31, max_length=2)}),
+    )
+    resolution = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("Q", blocks={"Q": EnumBlock(["HD", "TV"])}),
+    )
+    serial = forms.CharField(
+        required=False,
+        widget=PatternMaskInput("N", blocks={"N": PatternBlock("0", repeat=3)}),
+    )
+    pin = forms.CharField(
+        required=False, widget=PatternMaskInput("0000", display_char="•")
+    )
