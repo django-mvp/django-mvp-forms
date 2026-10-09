@@ -6,6 +6,7 @@ script named in its media hands them to IMask. The host project loads IMask.
 
 import json
 from collections.abc import Mapping
+from decimal import Decimal
 
 from django import forms
 
@@ -79,6 +80,41 @@ class Check:
         """
         if not any(type(value) is type(each) and value == each for each in allowed):
             raise ValueError(f"{option} must be one of {allowed!r}, not {value!r}.")
+
+    @staticmethod
+    def separator(option, value):
+        """Refuse a value that is not one character of text, or no character.
+
+        Args:
+            option: The option's name, for the message.
+            value: What was stated.
+
+        Raises:
+            ValueError: The value is not text of at most one character.
+        """
+        if not isinstance(value, str) or len(value) > 1:
+            raise ValueError(f"{option} must be one character or empty, not {value!r}.")
+
+    @staticmethod
+    def number(option, value):
+        """Refuse a value that is not a finite ``int``, ``float`` or ``Decimal``.
+
+        Args:
+            option: The option's name, for the message.
+            value: What was stated.
+
+        Raises:
+            ValueError: The value is not a number, or is not finite, which JSON
+                cannot write.
+        """
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, int | float | Decimal)
+            or not Decimal(value).is_finite()
+        ):
+            raise ValueError(
+                f"{option} must be an int, a float or a Decimal, not {value!r}."
+            )
 
 
 class MaskBlock:
@@ -378,3 +414,118 @@ class RegexMaskInput(MaskInput):
                         f"{self.javascript_flags!r}."
                     )
         super().__init__(attrs, mask=mask, flags=flags)
+
+
+class NumberMaskInput(MaskInput):
+    """A mask that formats a number, and hands the field a plain one."""
+
+    kind = "number"
+    default_radix = ","
+
+    def __init__(
+        self,
+        attrs=None,
+        *,
+        scale=None,
+        thousands_separator=None,
+        radix=None,
+        map_to_radix=None,
+        pad_fractional_zeros=None,
+        normalize_zeros=None,
+        min_value=None,
+        max_value=None,
+        autofix=None,
+    ):
+        """State how the number is shown and bounded.
+
+        Where the thousands separator and the decimal mark are not stated they
+        are IMask's own: no separator, and a comma.
+
+        Args:
+            attrs: HTML attributes for the input. An ``inputmode`` stated here
+                replaces the one the widget chooses.
+            scale: The number of decimal places.
+            thousands_separator: The character between groups of three digits,
+                or an empty string for none.
+            radix: The decimal mark.
+            map_to_radix: Other characters to read as the decimal mark.
+            pad_fractional_zeros: Pad the decimal places with zeros.
+            normalize_zeros: Trim needless zeros.
+            min_value: The smallest value, an ``int``, a ``float`` or a
+                ``Decimal``.
+            max_value: The largest value, of the same kinds.
+            autofix: Correct a value outside the bounds to the nearest one.
+
+        Raises:
+            ValueError: An option holds a value that cannot be right. The
+                message names the option.
+        """
+        if scale is not None:
+            Check.of_type("scale", scale, int, "a whole number")
+            if scale < 0:
+                raise ValueError(f"scale must not be negative, not {scale!r}.")
+        if radix is not None:
+            Check.character("radix", radix)
+        if thousands_separator is not None:
+            Check.separator("thousands_separator", thousands_separator)
+            if thousands_separator == (radix or self.default_radix):
+                raise ValueError(
+                    "thousands_separator must not be the decimal mark, "
+                    f"{radix or self.default_radix!r}."
+                )
+        for option, value in (("min_value", min_value), ("max_value", max_value)):
+            if value is not None:
+                Check.number(option, value)
+        if min_value is not None and max_value is not None and min_value > max_value:
+            raise ValueError(
+                "min_value must not be above max_value, "
+                f"not {min_value!r} and {max_value!r}."
+            )
+        self.thousands_separator = thousands_separator or ""
+        self.radix = radix or self.default_radix
+        super().__init__(
+            {"inputmode": "numeric" if scale == 0 else "decimal", **(attrs or {})},
+            scale=scale,
+            thousandsSeparator=thousands_separator,
+            radix=radix,
+            mapToRadix=map_to_radix,
+            padFractionalZeros=pad_fractional_zeros,
+            normalizeZeros=normalize_zeros,
+            min=self.write_bound(min_value),
+            max=self.write_bound(max_value),
+            autofix=autofix,
+        )
+
+    @staticmethod
+    def write_bound(bound):
+        """Return a bound as a number JSON can write.
+
+        Args:
+            bound: An ``int``, a ``float``, a ``Decimal`` or ``None``.
+
+        Returns:
+            The bound, with a ``Decimal`` as a ``float``.
+        """
+        return float(bound) if isinstance(bound, Decimal) else bound
+
+    def value_from_datadict(self, data, files, name):
+        """Return the number with no thousands separator and a full stop."""
+        value = super().value_from_datadict(data, files, name)
+        if not value or not isinstance(value, str):
+            return value
+        if self.thousands_separator:
+            value = value.replace(self.thousands_separator, "")
+        return value.replace(self.radix, ".")
+
+    def format_value(self, value):
+        """Write the number with the decimal mark and no thousands separator.
+
+        The number is not localised, since the widget's own options say how it
+        is written. IMask adds the separators, and without IMask the text reads
+        back as the same number.
+        """
+        if value is None or value == "":
+            return None
+        if isinstance(value, Decimal | float):
+            value = format(Decimal(str(value)), "f")
+        return str(value).replace(".", self.radix)

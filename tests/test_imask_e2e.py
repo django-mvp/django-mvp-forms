@@ -120,6 +120,36 @@ class TestRegexMaskedInputs:
         assert type_into(page, "colour", "#AbC") == "#AbC"
 
 
+class TestNumberMaskedInputs:
+    def test_a_typed_number_gains_its_separators(self, masked_page):
+        page = masked_page()
+
+        assert type_into(page, "amount", "1234567,5") == "1 234 567,5"
+
+    def test_an_initial_value_is_shown_with_its_separators(self, masked_page):
+        page = masked_page(amount="1234567.5")
+
+        assert page.locator("#id_amount").input_value() == "1 234 567,5"
+
+    def test_a_post_returns_the_plain_number(self, masked_page):
+        page = masked_page("masked-cleaned")
+        type_into(page, "amount", "1234567,5")
+
+        with page.expect_navigation():
+            page.click("button[type=submit]")
+
+        assert '"amount": "1234567.5"' in page.inner_text("body")
+
+    def test_a_page_without_imask_posts_the_plain_number_too(self, masked_page):
+        page = masked_page("masked-bare-cleaned", amount="1234567.5")
+
+        assert page.locator("#id_amount").input_value() == "1234567,5"
+        with page.expect_navigation():
+            page.click("button[type=submit]")
+
+        assert '"amount": "1234567.5"' in page.inner_text("body")
+
+
 class TestOneMaskForEachInput:
     def test_every_input_is_masked_once_when_the_script_is_on_the_page_once(
         self, masked_page

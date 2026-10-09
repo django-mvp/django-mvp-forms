@@ -27,6 +27,7 @@ from django_tomselect.forms import (
 from mvp_forms.layout import Join
 from mvp_forms.widgets import (
     EnumBlock,
+    NumberMaskInput,
     PatternBlock,
     PatternMaskInput,
     RangeBlock,
@@ -1131,4 +1132,8 @@ class MaskedPageForm(forms.Form):
     customer = forms.CharField(required=False, widget=RegexMaskInput(r"^\d{0,8}$"))
     colour = forms.CharField(
         required=False, widget=RegexMaskInput("^#[0-9a-f]{0,6}$", flags="i")
+    )
+    amount = forms.DecimalField(
+        required=False,
+        widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=","),
     )

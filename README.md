@@ -1261,6 +1261,7 @@ This is the public surface:
 
 - `mvp_forms.widgets.PatternMaskInput`, with the three blocks it takes, `RangeBlock`, `EnumBlock` and `PatternBlock`, from the same module
 - `mvp_forms.widgets.RegexMaskInput`
+- `mvp_forms.widgets.NumberMaskInput`
 - the attribute `data-imask`, which holds a widget's options as JSON on its `<input>`
 - the script `mvp_forms/imask.js`, which each widget names in its media
 
@@ -1372,9 +1373,53 @@ An empty or non-text `mask`, which includes a compiled Python pattern, and a fla
 
 IMask tests the value after every keystroke, so the expression has to accept every partial value on the way to a whole one. An expression that matches only a finished value, such as `^\d{5}$`, accepts no first character and the field cannot be typed into. Write `^\d{0,5}$` instead, and let the field's own validation decide that five digits were required.
 
+#### `NumberMaskInput`
+
+A [number mask](https://imask.js.org/guide.html#masked-number) writes the separators as a number is typed: `1 234 567,5` appears as `1234567,5` is keyed in. The field receives the plain number, so a `DecimalField` or an `IntegerField` needs no cleaning code.
+
+```python
+from django import forms
+
+from mvp_forms.widgets import NumberMaskInput
+
+
+class InvoiceForm(forms.Form):
+    amount = forms.DecimalField(
+        widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=",")
+    )
+    quantity = forms.IntegerField(
+        widget=NumberMaskInput(scale=0, min_value=0, max_value=100, autofix=True)
+    )
+```
+
+`NumberMaskInput(attrs=None, *, scale=None, thousands_separator=None, radix=None, map_to_radix=None, pad_fractional_zeros=None, normalize_zeros=None, min_value=None, max_value=None, autofix=None)`. An option you do not state is not written, so IMask's default applies: two decimal places, no thousands separator and a comma as the decimal mark.
+
+| Option | IMask's name | What it does |
+|---|---|---|
+| `scale` | `scale` | The number of decimal places. `0` takes whole numbers only |
+| `thousands_separator` | `thousandsSeparator` | The character between groups of three digits, or `""` for none |
+| `radix` | `radix` | The decimal mark, one character |
+| `map_to_radix` | `mapToRadix` | A list of other characters to read as the decimal mark |
+| `pad_fractional_zeros` | `padFractionalZeros` | `True` pads the decimal places with zeros |
+| `normalize_zeros` | `normalizeZeros` | `False` keeps needless zeros |
+| `min_value` | `min` | The smallest value, an `int`, a `float` or a `Decimal`, written as a JSON number |
+| `max_value` | `max` | The largest value, of the same kinds |
+| `autofix` | `autofix` | `True` corrects a value outside the bounds to the nearest one |
+
+A value that cannot be right raises `ValueError` when the form class is defined, and its message names the option: a negative `scale`, a `thousands_separator` or `radix` that is more than one character, a `thousands_separator` that is the decimal mark (a comma when you state no `radix`, so `NumberMaskInput(thousands_separator=",")` is refused until you state `radix="."`), a `min_value` or `max_value` that is not a finite number, and a `min_value` above the `max_value`.
+
+The input is a text input, since IMask masks no other type, and it asks a touch device for a decimal keypad, or a numeric one when `scale=0`. An `inputmode` in your `attrs` replaces that.
+
+The widget reads and writes the number by one rule, with IMask on the page or not:
+
+- A submitted value has its thousands separator removed and its decimal mark written as a full stop, so `1 234 567,5` reaches the field as `1234567.5`, a negative keeps its sign, and an empty value stays empty.
+- A value the form is drawn with, a `Decimal`, a number or a plain string such as `"1234.5"`, is written with the widget's decimal mark and no thousands separator: `1234,5`. IMask adds the separators when it applies the mask, and without IMask the same text reads back as the same number. The widget does not localise the value, whatever the field's `localize` says, because its own options say how the number is written.
+
+A page that does not load IMask shows the number as the widget wrote it, with no separators, and the field still reads what is typed by the rule above. A person who types `1234.56` where the decimal mark is a comma and the thousands separator a full stop therefore submits `123456`, since the full stop is dropped as a separator. The field's own validation is what catches a number that is not what was meant.
+
 #### What the form receives
 
-The field receives the text as the person saw it, fixed characters included, and cleans it as it would any text. A pattern submitted half filled in reaches the field half filled in, and whether that is acceptable is the field's validation to decide: add a validator to a field that must match a shape.
+A pattern, a regular expression or a list of masks hands the field the text as the person saw it, fixed characters included, and the field cleans it as it would any text. A number mask hands it the plain number, as described above. A pattern submitted half filled in reaches the field half filled in, and whether that is acceptable is the field's validation to decide: add a validator to a field that must match a shape.
 
 A field with a `display_char` shows that character, and the form receives what was typed. The script sets the field's entry in the form's data to the mask's value when the form's data is read, which covers a native submit and a script that builds a `FormData` from the form, as htmx 2 does. A masked input that has been removed from its form, is disabled or has no name adds no entry.
 

@@ -14,7 +14,13 @@ from django.template.loader import get_template
 from django.urls import reverse
 
 from demo.autocompletes import ROCKS, UNGROUPED_ROCKS
-from demo.forms import DAISYUI_VERSION, THEME_NAMES, PatternMaskForm, RegexMaskForm
+from demo.forms import (
+    DAISYUI_VERSION,
+    THEME_NAMES,
+    NumberMaskForm,
+    PatternMaskForm,
+    RegexMaskForm,
+)
 from demo.tomselect_forms import SampleFormSet, country_field
 from demo.tomselect_views import TomSelectMixin
 from mvp_forms.choices import Modifiers
@@ -3476,6 +3482,15 @@ PATTERN_POST = {
 }
 REGEX_PREFIX = "regex"
 REGEX_POST = {"digits": "12345678", "colour": "#A0b", "username": "ab_1"}
+NUMBER_PREFIX = "number"
+NUMBER_POST = {
+    "amount": "1 234 567,5",
+    "quantity": "42",
+    "price": "1.234,5",
+    "weight": "1,234.567",
+}
+NUMBER_RECEIVED = ["1234567.5", "42", "1234.5", "1234.567"]
+NUMBER_OPTIONS = {"kind": "number", "scale": 2, "thousandsSeparator": " ", "radix": ","}
 REFERENCE_OPTIONS = {
     "kind": "pattern",
     "mask": "aa-0000",
@@ -3539,6 +3554,57 @@ class InputMasksPageContract:
         rows = page.find(id=REGEX_PREFIX).find("table").find("tbody").find_all("tr")
         received = [row.find_all("code")[1].get_text() for row in rows]
         assert received == list(REGEX_POST.values())
+
+    def test_the_number_section_holds_a_masked_input_for_each_field(self, page):
+        section = page.find(id=NUMBER_PREFIX)
+
+        masked = section.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {
+            f"{NUMBER_PREFIX}-{name}" for name in NumberMaskForm.base_fields
+        }
+
+    def test_the_quantity_states_its_bounds_under_imasks_names(self, page):
+        options = json.loads(page.find(id=f"id_{NUMBER_PREFIX}-quantity")["data-imask"])
+
+        assert options == {
+            "kind": "number",
+            "scale": 0,
+            "min": 0,
+            "max": 100,
+            "autofix": True,
+        }
+
+    def test_the_price_is_drawn_with_its_initial_value_in_the_widgets_decimal_mark(
+        self, page
+    ):
+        price = page.find(id=f"id_{NUMBER_PREFIX}-price")
+
+        assert price["value"] == "1234,5"
+
+    def test_a_post_of_the_number_form_returns_what_each_field_received(
+        self, open_page
+    ):
+        data = {f"{NUMBER_PREFIX}-{name}": v for name, v in NUMBER_POST.items()}
+        data[f"{NUMBER_PREFIX}-submit"] = ""
+
+        page = open_page(self.url_name, data)
+
+        rows = page.find(id=NUMBER_PREFIX).find("table").find("tbody").find_all("tr")
+        received = [row.find_all("code")[1].get_text() for row in rows]
+        assert received == NUMBER_RECEIVED
+
+    def test_the_disabled_field_of_the_states_form_is_a_disabled_number(self, page):
+        disabled = page.find(id="id_states-disabled")
+
+        assert json.loads(disabled["data-imask"]) == NUMBER_OPTIONS
+        assert disabled.has_attr("disabled")
+        assert disabled["value"] == "98765,4"
+
+    def test_the_price_of_the_formset_is_a_number(self, page):
+        options = json.loads(page.find(id="id_lines-0-price")["data-imask"])
+
+        assert options == NUMBER_OPTIONS
 
     def test_the_reference_states_a_placeholder_character_for_each_definition(
         self, page

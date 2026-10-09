@@ -45,6 +45,7 @@ from mvp_forms.choices import Choice, FormChoices, Modifiers
 from mvp_forms.layout import Join
 from mvp_forms.widgets import (
     EnumBlock,
+    NumberMaskInput,
     PatternMaskInput,
     RangeBlock,
     RegexMaskInput,
@@ -1836,6 +1837,45 @@ class RegexMaskForm(MaskForm):
     )
 
 
+class NumberMaskForm(MaskForm):
+    """The number widget and each of its options."""
+
+    amount = forms.DecimalField(
+        label=_("Amount"),
+        help_text=_('scale=2, thousands_separator=" ", radix=","'),
+        required=False,
+        max_digits=12,
+        decimal_places=2,
+        widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=","),
+    )
+    quantity = forms.IntegerField(
+        label=_("Quantity"),
+        help_text=_("scale=0, min=0, max=100, autofix=True"),
+        required=False,
+        widget=NumberMaskInput(scale=0, min_value=0, max_value=100, autofix=True),
+    )
+    price = forms.DecimalField(
+        label=_("Price"),
+        help_text=_(
+            'scale=2, thousands_separator=".", radix=",", '
+            "pad_fractional_zeros=True, with an initial value of 1234.5"
+        ),
+        required=False,
+        initial="1234.5",
+        widget=NumberMaskInput(
+            scale=2, thousands_separator=".", radix=",", pad_fractional_zeros=True
+        ),
+    )
+    weight = forms.DecimalField(
+        label=_("Weight"),
+        help_text=_('scale=3, thousands_separator=",", radix=".", map_to_radix=[","]'),
+        required=False,
+        widget=NumberMaskInput(
+            scale=3, thousands_separator=",", radix=".", map_to_radix=[","]
+        ),
+    )
+
+
 class MaskStatesForm(forms.Form):
     """A masked field in each state: filled, disabled, read-only and invalid."""
 
@@ -1844,6 +1884,17 @@ class MaskStatesForm(forms.Form):
         help_text=_("Pattern: +{49} 000 0000000"),
         required=False,
         widget=PatternMaskInput(PHONE),
+    )
+    disabled = forms.DecimalField(
+        label=_("Disabled"),
+        help_text=_(
+            'A number: scale=2, thousands_separator=" ", radix=",", with an '
+            "initial value of 98765.4"
+        ),
+        initial="98765.4",
+        disabled=True,
+        required=False,
+        widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=","),
     )
     read_only = forms.CharField(
         label=_("Read-only"),
@@ -1891,13 +1942,19 @@ class MaskSizesForm(forms.Form):
 
 
 class MaskedLineForm(forms.Form):
-    """One line of a price list: an article number, masked."""
+    """One line of a price list: an article number and a price, both masked."""
 
     article = forms.CharField(
         label=_("Article"),
         widget=PatternMaskInput(
             "aa-0000", lazy=False, placeholder_char={"0": "#", "a": "a"}
         ),
+    )
+    price = forms.DecimalField(
+        label=_("Price"),
+        max_digits=10,
+        decimal_places=2,
+        widget=NumberMaskInput(scale=2, thousands_separator=" ", radix=","),
     )
 
 

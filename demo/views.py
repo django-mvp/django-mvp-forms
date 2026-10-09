@@ -50,6 +50,7 @@ from demo.forms import (
     MaskStatesForm,
     ModalForm,
     MultiWidgetFieldForm,
+    NumberMaskForm,
     OrderLineFormSet,
     OverrideForm,
     PairForm,
@@ -1681,6 +1682,16 @@ class InputMasksMixin:
             RegexMaskForm,
             "https://imask.js.org/guide.html#masked-base",
             "Regular expression mask in the IMask guide",
+        ),
+        (
+            "number",
+            "NumberMaskInput",
+            "A mask that formats a number as it is typed. The field receives "
+            "the number with no thousands separator and a full stop as its "
+            "decimal mark.",
+            NumberMaskForm,
+            "https://imask.js.org/guide.html#masked-number",
+            "Number mask in the IMask guide",
         ),
     ]
 

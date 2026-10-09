@@ -34,6 +34,7 @@ class MaskedPage(TemplateView):
     imask = True
     copies = 1
     policy = ""
+    cleaned = False
 
     def get_context_data(self, **kwargs):
         """Draw the form, with its initial values taken from the query string."""
@@ -53,7 +54,13 @@ class MaskedPage(TemplateView):
         return response
 
     def post(self, request, *args, **kwargs):
-        """Return each entry of the post as JSON."""
+        """Return each entry of the post as JSON, or what each field cleaned to."""
+        if self.cleaned:
+            form = MaskedPageForm(request.POST)
+            form.full_clean()
+            return JsonResponse(
+                {name: str(value) for name, value in form.cleaned_data.items()}
+            )
         return JsonResponse({name: request.POST.getlist(name) for name in request.POST})
 
 
@@ -62,7 +69,13 @@ urlpatterns = [
     path("autocomplete/groups/", GroupAutocomplete.as_view(), name="ac-groups"),
     path("masked/", MaskedPage.as_view(), name="masked"),
     path("masked/three-copies/", MaskedPage.as_view(copies=3), name="masked-copies"),
+    path("masked/cleaned/", MaskedPage.as_view(cleaned=True), name="masked-cleaned"),
     path("masked/without-imask/", MaskedPage.as_view(imask=False), name="masked-bare"),
+    path(
+        "masked/without-imask/cleaned/",
+        MaskedPage.as_view(imask=False, cleaned=True),
+        name="masked-bare-cleaned",
+    ),
     path(
         "masked/strict-policy/",
         MaskedPage.as_view(policy=f"script-src 'self' {IMASK_ORIGIN}"),

@@ -302,3 +302,39 @@ to draw. `demo/forms.py` is not among the files `tasks.md` names for this task, 
 names the restoration of the form as part of it.
 
 **Revisit if:** none.
+
+## D24. A number bound is a finite number, never a boolean, and a Decimal is written as a float
+
+**Decision:** `min_value` and `max_value` are refused, naming the option, unless they are an `int`,
+a `float` or a `Decimal` that is finite. A `bool` is refused although it is an `int`, and so are
+`nan` and the infinities. A `Decimal` is written as a `float`, an `int` or a `float` as it is.
+
+**Why:** JSON has no `NaN` or infinity, and a page whose attribute held one would not parse in
+the script. IMask's bounds are JavaScript numbers, so a `Decimal` gains nothing by being written
+with more digits than a `float` keeps.
+
+**Revisit if:** a bound needs more digits than a double holds. IMask would need to be given text.
+
+## D25. The quantity's help text still says min and max
+
+**Decision:** the Quantity field of the demo's number section is restored with `min_value` and
+`max_value`, and its help text keeps "scale=0, min=0, max=100, autofix=True" as approved.
+
+**Why:** the brief forbids rewording a label or help text on the approved page, and the only
+change it names for the number section is the two option names in code. The text now names two
+options the widget does not have.
+
+**Revisit if:** the maintainer wants the help text to name `min_value` and `max_value`. That is a
+one-line edit to the field's help text.
+
+## D26. The test project's masked page can answer a post with what each field cleaned to
+
+**Decision:** `MaskedPage` gains a `cleaned` switch and two routes that use it. A post to either
+returns what each field of the form cleaned to, as JSON, instead of the raw entries.
+
+**Why:** the number widget's work is on the server's side of the post, and the raw entries the
+existing routes return cannot show that a browser's `1 234 567,5` reached the field as
+`1234567.5`.
+
+**Revisit if:** a second widget needs its cleaned value read in a browser test. The routes then
+carry that field too.
