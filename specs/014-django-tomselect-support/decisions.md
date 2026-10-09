@@ -173,3 +173,18 @@ It joins the behaviours of D11 as an issue in this repository.
 **Why:** the attribute is django-tomselect's to write.
 
 **ADR:** none.
+
+## D15. A floating label is left as it is, like attached text
+
+**What was found:** the specification said a floating label stated for the form is passed over
+for these controls. The pack floats a label on any select, and it cannot tell a django-tomselect
+select from another without either importing django-tomselect or changing the rule for every
+widget that names a template of its own.
+
+**Chosen:** the edge case is brought into line with D4. A floating label is not supported for
+these controls, the README says so, and the pack draws what it drew before.
+
+**Why:** the maintainer ruled floating labels out of this feature. A pack-wide change to which
+widgets float would reach projects that have nothing to do with django-tomselect.
+
+**ADR:** none. The README's list of what is not supported is the record.

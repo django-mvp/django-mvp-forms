@@ -77,23 +77,70 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_tomselect_stylesheet.py::TestTheScopeOfTheStylesheet",
+              "tests/test_pack/test_independence.py::TestDistributedFiles",
+              "tests/test_pack/test_template_list.py"
+            ],
+            "commands": [
+              "uv run pytest -n auto -q (exit 0, 5098 passed)"
+            ],
+            "code": [
+              "tests/tomselect_stylesheet.py:1"
+            ]
+          }
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_tomselect.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_tomselect.py -q (exit 0, 50 passed)"
+            ],
+            "code": [
+              "tests/test_pack/test_tomselect.py:1"
+            ]
+          }
         },
         {
           "id": "T003",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_tomselect_stylesheet.py::TestTheLegibilityOfTheStylesheet"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_tomselect_stylesheet.py -q (exit 0, 80 passed)"
+            ],
+            "code": [
+              "tests/test_pack/test_tomselect_stylesheet.py:1"
+            ]
+          }
         },
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest -n auto -q (exit 0, 5098 passed)",
+              "uv run pre-commit run --all-files (exit 0)"
+            ],
+            "code": [
+              "README.md:1"
+            ]
+          }
         }
       ]
     },

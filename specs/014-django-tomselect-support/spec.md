@@ -202,9 +202,8 @@ page and use the control there.
 
 ### Edge Cases
 
-- A floating label stated for the form is passed over for a django-tomselect control, as it is
-  for every field that cannot take one. Stated for the field itself, it raises as it does for
-  those fields.
+- A floating label is not supported for a django-tomselect control. The README says so, and this
+  feature does not change what the pack draws when one is stated.
 - Text attached to the control, buttons joined to it and a joined group that holds it are not
   supported. The README says so, and this feature does not change what the pack draws when one is
   asked for.
