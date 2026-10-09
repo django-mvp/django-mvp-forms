@@ -231,8 +231,26 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_fields.py::TestPartialDateField",
+              "tests/test_widgets.py::TestPartialDateMaskInput",
+              "tests/test_widgets.py::TestPartialDateInput",
+              "tests/test_widgets.py::TestPartialDateSelect",
+              "tests/test_pack/test_partial_dates.py::TestLimits"
+            ],
+            "commands": [
+              "uv run pytest tests/test_fields.py tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_pack/test_template_list.py -q"
+            ],
+            "code": [
+              "mvp_forms/fields.py:132",
+              "mvp_forms/widgets.py:624",
+              "mvp_forms/widgets.py:694",
+              "mvp_forms/widgets.py:740"
+            ]
+          }
         },
         {
           "id": "T008",
