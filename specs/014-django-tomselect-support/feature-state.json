@@ -1,163 +1,168 @@
 {
- "feature": "014-django-tomselect-support",
- "branch": "014-django-tomselect-support",
- "repo": "django-mvp/django-mvp-forms",
- "state": "DESIGN_REVIEW",
- "state_history": [
-  {
-   "state": "QUEUED",
-   "at": "2026-10-09T08:13:34Z",
-   "note": "specification approved by Sam in the session at commit 01553b743ffcf812762714a627ac02e55b514962, on pull request #139; epic #138, stories #140 to #143"
-  },
-  {
-   "state": "PLAN",
-   "at": "2026-10-09T10:51:10Z",
-   "note": "research.md, plan.md, tasks.md: 4 stories, 7 tasks; continues on pull request #139 from the approved sketch"
-  },
-  {
-   "state": "DESIGN_REVIEW",
-   "at": "2026-10-09T10:51:39Z",
-   "note": "one reviewer, three lenses"
-  }
- ],
- "gates": {
-  "spec": {
-   "approved_by": "Sam",
-   "at": "2026-10-09T08:13:34Z",
-   "self_resolved": [
-    "approved in the session at commit 01553b743ffcf812762714a627ac02e55b514962 (pull request #139); he cut the plugins story to the clear and remove buttons"
-   ]
-  },
-  "sketch": {
-   "approved_by": "Sam",
-   "at": "2026-10-09T10:45:41Z",
-   "self_resolved": [
-    "round 2: an open dropdown was drawn under later controls; the open control is lifted",
-    "round 2: a stock multiple select shown beside the multiple control, tag radius and text size matched to its options",
-    "round 3: group headings read as an option; now small capitals with options set in and a stronger line between groups"
-   ]
-  },
-  "plan": {
-   "approved_by": "open",
-   "at": "2026-10-09T11:01:41Z"
-  },
-  "merge": {
-   "approved_by": null,
-   "at": null
-  },
-  "design_review": {
-   "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
-   "at": "2026-10-09T11:01:41Z",
-   "self_resolved": [
-    "ARCH-001 (medium) a table of states and selectors is a change detector: dropped from T003, T005, T006 and T007 (D12)",
-    "SPEC-001 (medium) narrowing the template checks must still fail a template anywhere else: stated in T001",
-    "SPEC-002 (medium) tomselect_media writes nothing on Django 6.1, it does not raise: research R8 and T004 corrected",
-    "SPEC-003 (low) legibility pairings named as ink and surface, opacity-made ones listed, placeholder and disabled not held: plan and T003, T005",
-    "SPEC-004 (low) no drawn form names tomselect.css: added to T002",
-    "SPEC-005 (low) FR-004 radius and border width read as the frame's: D13",
-    "SPEC-006 (low) a tagging field must accept a value outside its choices: README bullet in T005",
-    "SPEC-007 (low) model-backed widgets drawn with a request; aria-describedby asserted only with help or errors; attrs compared, not template_name: T002, T006, D14",
-    "ARCH-002 (low) one stylesheet reader under tests/: T001, T003"
-   ]
-  }
- },
- "stories": [
-  {
-   "id": "US1",
-   "priority": "P1",
-   "issue": 140,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
+  "feature": "014-django-tomselect-support",
+  "branch": "014-django-tomselect-support",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "IMPLEMENT",
+  "state_history": [
     {
-     "id": "T001",
-     "status": "todo",
-     "attempts": 0
+      "state": "QUEUED",
+      "at": "2026-10-09T08:13:34Z",
+      "note": "specification approved by Sam in the session at commit 01553b743ffcf812762714a627ac02e55b514962, on pull request #139; epic #138, stories #140 to #143"
     },
     {
-     "id": "T002",
-     "status": "todo",
-     "attempts": 0
+      "state": "PLAN",
+      "at": "2026-10-09T10:51:10Z",
+      "note": "research.md, plan.md, tasks.md: 4 stories, 7 tasks; continues on pull request #139 from the approved sketch"
     },
     {
-     "id": "T003",
-     "status": "todo",
-     "attempts": 0
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-09T10:51:39Z",
+      "note": "one reviewer, three lenses"
     },
     {
-     "id": "T004",
-     "status": "todo",
-     "attempts": 0
+      "state": "IMPLEMENT",
+      "at": "2026-10-09T11:03:11Z",
+      "note": "plan gate open; US1 dispatched"
     }
-   ]
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "Sam",
+      "at": "2026-10-09T08:13:34Z",
+      "self_resolved": [
+        "approved in the session at commit 01553b743ffcf812762714a627ac02e55b514962 (pull request #139); he cut the plugins story to the clear and remove buttons"
+      ]
+    },
+    "sketch": {
+      "approved_by": "Sam",
+      "at": "2026-10-09T10:45:41Z",
+      "self_resolved": [
+        "round 2: an open dropdown was drawn under later controls; the open control is lifted",
+        "round 2: a stock multiple select shown beside the multiple control, tag radius and text size matched to its options",
+        "round 3: group headings read as an option; now small capitals with options set in and a stronger line between groups"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-09T11:01:41Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: approve, findings applied",
+      "at": "2026-10-09T11:01:41Z",
+      "self_resolved": [
+        "ARCH-001 (medium) a table of states and selectors is a change detector: dropped from T003, T005, T006 and T007 (D12)",
+        "SPEC-001 (medium) narrowing the template checks must still fail a template anywhere else: stated in T001",
+        "SPEC-002 (medium) tomselect_media writes nothing on Django 6.1, it does not raise: research R8 and T004 corrected",
+        "SPEC-003 (low) legibility pairings named as ink and surface, opacity-made ones listed, placeholder and disabled not held: plan and T003, T005",
+        "SPEC-004 (low) no drawn form names tomselect.css: added to T002",
+        "SPEC-005 (low) FR-004 radius and border width read as the frame's: D13",
+        "SPEC-006 (low) a tagging field must accept a value outside its choices: README bullet in T005",
+        "SPEC-007 (low) model-backed widgets drawn with a request; aria-describedby asserted only with help or errors; attrs compared, not template_name: T002, T006, D14",
+        "ARCH-002 (low) one stylesheet reader under tests/: T001, T003"
+      ]
+    }
   },
-  {
-   "id": "US2",
-   "priority": "P2",
-   "issue": 141,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
+  "stories": [
     {
-     "id": "T005",
-     "status": "todo",
-     "attempts": 0
+      "id": "US1",
+      "priority": "P1",
+      "issue": 140,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T002",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T003",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T004",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P2",
+      "issue": 141,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T005",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 142,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T006",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P3",
+      "issue": 143,
+      "worktree": null,
+      "status": "todo",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "todo",
+          "attempts": 0
+        }
+      ]
     }
-   ]
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 0,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 0,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 0,
+      "max": 120
+    }
   },
-  {
-   "id": "US3",
-   "priority": "P2",
-   "issue": 142,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T006",
-     "status": "todo",
-     "attempts": 0
-    }
-   ]
-  },
-  {
-   "id": "US4",
-   "priority": "P3",
-   "issue": 143,
-   "worktree": null,
-   "status": "todo",
-   "replans": 0,
-   "tasks": [
-    {
-     "id": "T007",
-     "status": "todo",
-     "attempts": 0
-    }
-   ]
+  "pr": {
+    "number": 139,
+    "draft": true
   }
- ],
- "budgets": {
-  "converge_cycles": {
-   "used": 0,
-   "max": 2
-  },
-  "review_cycles": {
-   "used": 0,
-   "max": 1
-  },
-  "design_review_cycles": {
-   "used": 1,
-   "max": 1
-  },
-  "tokens": {
-   "used": 0,
-   "max": 120
-  }
- },
- "pr": {
-  "number": 139,
-  "draft": true
- }
 }
