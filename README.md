@@ -1265,6 +1265,7 @@ This is the public surface:
 - `mvp_forms.widgets.DynamicMaskInput`
 - the attribute `data-imask`, which holds a widget's options as JSON on its `<input>`
 - the script `mvp_forms/imask.js`, which each widget names in its media
+- the event `mvp-forms:imask`, which the script sends from each input once its mask is applied, with the IMask instance in `event.detail.mask`
 
 The widgets are written for IMask 7, and the package's tests run against 7.6.1. IMask is not a dependency of the package and the package does not distribute it.
 
@@ -1449,6 +1450,21 @@ The script applies a mask to each masked input on the page when it loads, and th
 A formset's `empty_form`, the template a script clones to add a row, is drawn through the same widget, so it carries the same `data-imask` as the rows beside it.
 
 A disabled or a read-only masked input shows its value under the mask and stays disabled or read-only. A disabled input adds no entry to the form's data, as for any input.
+
+#### The event
+
+An option that is a JavaScript function, or any other option the widgets do not carry, is set in a few lines of your own script. The script sends the event `mvp-forms:imask` from each input once its mask is applied. The event bubbles, so a listener on the document hears every input, including one added after the page loaded, and `event.detail.mask` is the [IMask instance](https://imask.js.org/guide.html). Change an option on it with `updateOptions` and it applies to what is typed next.
+
+```js
+document.addEventListener("mvp-forms:imask", (event) => {
+  if (event.target.id !== "id_reference") return;
+  event.detail.mask.updateOptions({
+    prepareChar: (char) => char.toUpperCase(),
+  });
+});
+```
+
+Register the listener before the script runs, so that it hears the inputs that are already on the page: write it in a script that comes before the form's media. Where the page's Content Security Policy forbids inline script, the listener goes in a file or carries a nonce, like any other script.
 
 #### What the form receives
 

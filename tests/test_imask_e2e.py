@@ -34,6 +34,23 @@ const holder = document.createElement("div");
 document.getElementById("masked").append(holder);
 holder.append(document.getElementById("id_phone"));
 """
+# Records each event the script sends, and whether it carries an IMask instance.
+LISTEN = """
+window.heard = [];
+document.addEventListener("mvp-forms:imask", (event) =>
+  window.heard.push({
+    id: event.target.id,
+    instance: event.detail.mask instanceof window.IMask.InputMask,
+  }));
+"""
+# A listener that sets an option the widgets do not carry, on one input only.
+UPPERCASE = """
+document.addEventListener("mvp-forms:imask", (event) => {
+  if (event.target.id === "id_reference") {
+    event.detail.mask.updateOptions({ prepareChar: (char) => char.toUpperCase() });
+  }
+});
+"""
 MASKS_OF = "(id) => window.masked.filter((each) => each === id).length"
 ENTRIES = "Object.fromEntries(new FormData(document.getElementById('masked')))"
 
@@ -281,6 +298,41 @@ class TestDisabledAndReadOnlyInputs:
         assert field.input_value() == "654-321"
         assert field.get_attribute("readonly") is not None
         assert not field.is_editable()
+
+
+class TestTheEvent:
+    def test_a_listener_on_the_document_hears_each_input_with_its_mask(
+        self, page, masked_page
+    ):
+        page.add_init_script(LISTEN)
+        masked_page()
+
+        inputs = page.locator("input[data-imask]").evaluate_all(
+            "(nodes) => nodes.map((node) => node.id)"
+        )
+        heard = page.evaluate("window.heard")
+
+        assert sorted(each["id"] for each in heard) == sorted(inputs)
+        assert all(each["instance"] for each in heard)
+
+    def test_an_input_added_later_sends_it_too(self, page, masked_page):
+        page.add_init_script(LISTEN)
+        masked_page()
+
+        page.evaluate(INSERT_INPUT, {"kind": "pattern", "mask": "000"})
+
+        later = [
+            each for each in page.evaluate("window.heard") if "later" in each["id"]
+        ]
+        assert later == [{"id": "id_later", "instance": True}]
+
+    def test_options_updated_from_the_listener_apply_to_what_is_typed_next(
+        self, page, masked_page
+    ):
+        page.add_init_script(UPPERCASE)
+        masked_page()
+
+        assert type_into(page, "reference", "ab1234") == "AB-1234"
 
 
 class TestAPageWithoutIMask:

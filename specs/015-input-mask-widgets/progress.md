@@ -48,3 +48,10 @@ Did: Tested what the script already did for inputs that arrive after the page lo
 Verified: uv run pytest tests/test_imask_e2e.py, 32 passed in Chrome. Red by probe: with the observer removed the two insertion tests failed; with the already-masked check removed the moved-input test failed. The formset's empty form: the US1 pack test failed when the attribute was left off for the __prefix__ form. uv run pytest tests/test_demo.py -k InputMasks, 52 passed. uv run pre-commit run --all-files green. uv run pytest -n auto -q: 5395 passed.
 Next: T008, the event.
 Watch: the Modal's input is masked when the page loads, as the observer is not needed for it, so the test shows the mask works once the dialog is open and not that it was applied on opening.
+
+## 2026-10-09T19:59:48Z · Implementer US6 · T008
+
+Did: Tested the event the script already sent. tests/test_imask_e2e.py gains a class that registers a listener on the document before the page loads and checks that each masked input is heard once with an IMask instance in detail.mask, that an input inserted later is heard too, and that options updated on the instance from the listener (prepareChar) apply to what is typed next. README: the event in the public surface and a section on the event with one example that sets prepareChar. No change to the script.
+Verified: uv run pytest tests/test_imask_e2e.py, 35 passed in Chrome. Red by probe: with the dispatch removed the three event tests failed, and so did the tests that count masks through the event. uv run pre-commit run --all-files green. uv run pytest -n auto -q: 5398 passed.
+Next: report.
+Watch: CHANGELOG.md still describes only PatternMaskInput and its blocks. It is not in any of the later stories' files, so it is left for the convergence.

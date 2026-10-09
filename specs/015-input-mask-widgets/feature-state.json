@@ -291,8 +291,22 @@
       "tasks": [
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestTheEvent"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py -q",
+              "uv run pytest -n auto -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:67",
+              "tests/test_imask_e2e.py:303"
+            ]
+          }
         }
       ]
     }

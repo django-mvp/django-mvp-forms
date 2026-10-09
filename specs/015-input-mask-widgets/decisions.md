@@ -376,3 +376,15 @@ is the evidence that it is exercised.
 
 **Revisit if:** the script is changed to find inputs another way. The probes then name the new
 mechanism.
+
+## D30. The README's event example sets `prepareChar`, and says to register the listener first
+
+**Decision:** the one example sets `prepareChar` to turn typed letters to upper case, an option
+the widgets do not carry because it is a function. The text tells a developer to register the
+listener in a script that comes before the form's media.
+
+**Why:** the script applies masks when the document has loaded, or at once if it has, and an
+event sent before a listener exists is not replayed. The same listener is the one the Chrome test
+uses, so the example is what the test runs.
+
+**Revisit if:** the script ever replays the event for a listener added late.
