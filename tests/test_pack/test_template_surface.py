@@ -146,6 +146,7 @@ class TestRendererRoute:
             "daisyui/widgets/select_date.html",
             "daisyui/widgets/clearable_file_input.html",
             "daisyui/widgets/rating.html",
+            "mvp_forms/widgets/partial_date.html",
         }
 
     def test_an_include_by_a_name_is_not_followed(self, template_surface):

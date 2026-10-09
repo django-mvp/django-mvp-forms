@@ -177,3 +177,15 @@ class is defined. Whether a limit could be a callable is a question for the main
 not built.
 
 **ADR:** none — a record of the review.
+
+## D15. The template-list check learns the package's own widget template
+
+**Decision:** `tests/template_surface.py` takes `mvp_forms/` beside `daisyui/` as a directory of
+the package's templates, and counts `PartialDateInput.template_name` among those the form
+renderer loads. Made directly at the end of US1, with no dispatch: three lines in a test helper
+and one in its test.
+
+**Why:** the check refused any distributed template outside `daisyui/` and
+`django_tomselect/`, and this is the first widget of the package that names a template.
+
+**ADR:** none — a test helper following the code.
