@@ -1067,6 +1067,14 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 
+#### A supported package's templates
+
+A template under `django_tomselect/` is a template of django-tomselect that the pack extends. It is not a replacement for one of the pack's own, and it has no `Handed` column because it reads nothing of its own: it extends django-tomselect's template of the same path and adds to a block of it.
+
+| Template | Draws | Found by |
+|---|---|---|
+| `django_tomselect/tomselect.html` | django-tomselect's own template with one block added: an option that carries an `optgroup` key is listed under a heading of that name. | Application directories: list `mvp_forms` before `django_tomselect` in `INSTALLED_APPS`, since the first app that has the template supplies it and the other is never used. |
+
 #### When a listed template changes
 
 A listed path, and the names a template is handed, change only through one minor version in which the old one still works. For that version a replacement at the old path is still drawn, and it raises a `DeprecationWarning` naming the old path and what replaces it. A project with nothing at the old path sees no warning. Python shows a `DeprecationWarning` under a test runner, or when you run with `python -W default`, as it does Django's own, so run your tests to find a replacement that needs moving. A name a template is handed that is renamed or withdrawn keeps its value under the old name for that version. The CHANGELOG entry of that release says what changed and what replaces it. The pack records the paths it has moved away from in `mvp_forms.deprecation.WITHDRAWN` and asks `mvp_forms.deprecation.host_template` whether your project has a template at one, so you call neither.

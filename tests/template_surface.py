@@ -24,10 +24,14 @@ from django.template.loader_tags import IncludeNode
 from mvp_forms.templatetags.daisyui import FieldInput
 
 LIST_HEADING = "### Replacing one template"
+SUPPORTED_HEADING = "#### A supported package's templates"
+PACK_DIRECTORY = "daisyui/"
+SUPPORTED_DIRECTORIES = ("django_tomselect/",)
 LITERAL_NAMES = {"True", "False", "None"}
 PACKS_OWN_OBJECTS = {"drawn", "table"}
 BACKTICKED = re.compile(r"`([^`]*)`")
 TABLE_COLUMNS = 4
+SUPPORTED_COLUMNS = 3
 RENDERER_ROUTE = "FORM_RENDERER"
 ENGINE_ROUTE = "TEMPLATES"
 # Tags that read no name themselves. What they hold is read.
@@ -142,15 +146,8 @@ class TemplateSurface:
             set of names) and ``route``, taken from the table in the README's
             section on replacing one template.
         """
-        section = self.readme.split(LIST_HEADING, 1)[1]
-        section = re.split(r"^#{1,3} ", section, maxsplit=1, flags=re.M)[0]
         rows = []
-        for line in section.splitlines():
-            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-            if not line.startswith("|") or len(cells) != TABLE_COLUMNS:
-                continue
-            if not BACKTICKED.fullmatch(cells[0]):
-                continue
+        for cells in self.table_rows(TABLE_COLUMNS):
             rows.append(
                 {
                     "path": cells[0].strip("`"),
@@ -161,25 +158,74 @@ class TemplateSurface:
             )
         return rows
 
+    def listed_supported(self) -> list[dict[str, Any]]:
+        """Return the rows of the README's table of a supported package's templates.
+
+        Returns:
+            One dict per row, in order, with ``path``, ``draws`` and ``found``,
+            taken from the table under the heading that follows the pack's own.
+        """
+        section = self.readme.split(LIST_HEADING, 1)[1]
+        if SUPPORTED_HEADING not in section:
+            return []
+        section = section.split(SUPPORTED_HEADING, 1)[1]
+        section = re.split(r"^#{1,4} ", section, maxsplit=1, flags=re.M)[0]
+        return [
+            {"path": cells[0].strip("`"), "draws": cells[1], "found": cells[2]}
+            for cells in self.table_rows(SUPPORTED_COLUMNS, section)
+        ]
+
+    def table_rows(self, columns: int, section: str | None = None) -> list[list[str]]:
+        """Return the cells of each table row that begins with a template path.
+
+        Args:
+            columns: The number of cells a row has.
+            section: The text to read. By default, the README's section on
+                replacing one template, up to the next heading of the third
+                level or above.
+
+        Returns:
+            The cells of each row, in order.
+        """
+        if section is None:
+            section = self.readme.split(LIST_HEADING, 1)[1]
+            section = re.split(r"^#{1,3} ", section, maxsplit=1, flags=re.M)[0]
+        rows = []
+        for line in section.splitlines():
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if not line.startswith("|") or len(cells) != columns:
+                continue
+            if BACKTICKED.fullmatch(cells[0]):
+                rows.append(cells)
+        return rows
+
     def disagreements(self) -> list[tuple[str, ...]]:
         """Return every way the list and the package differ.
 
         A name the list gives a template that the template does not read is not a
-        disagreement, and a withdrawn path is listed without being distributed.
+        disagreement, and a withdrawn path is listed without being distributed. A
+        template of a supported package is listed in a table of its own and is not
+        read for the names it is handed, since it extends the supported package's
+        template and reads nothing itself.
 
         Returns:
             Tuples naming the kind and the path, and the name for a name left out
             of a row: ``("not listed", path)``, ``("not distributed", path)``,
             ``("listed twice", path)``, ``("withdrawn not listed", path)``,
             ``("withdrawn still distributed", path)``,
-            ``("name not listed", path, name)`` and ``("wrong route", path)``.
+            ``("name not listed", path, name)``, ``("wrong route", path)``,
+            ``("wrong table", path)`` and ``("outside the directories", path)``.
         """
-        listed = [row["path"] for row in self.listed()]
-        rows = {row["path"]: row for row in self.listed()}
+        pack_rows = {row["path"]: row for row in self.listed()}
+        supported = [row["path"] for row in self.listed_supported()]
+        listed = [row["path"] for row in self.listed()] + supported
+        rows = {*pack_rows, *supported}
         distributed = self.distributed()
         route = self.renderer_route()
         found: list[tuple[str, ...]] = []
-        found.extend(("listed twice", path) for path in rows if listed.count(path) > 1)
+        found.extend(
+            ("listed twice", path) for path in sorted(rows) if listed.count(path) > 1
+        )
         found.extend(
             ("withdrawn still distributed", path)
             for path in distributed
@@ -188,7 +234,7 @@ class TemplateSurface:
         found.extend(("not listed", path) for path in distributed if path not in rows)
         found.extend(
             ("not distributed", path)
-            for path in rows
+            for path in sorted(rows)
             if path not in distributed and path not in self.withdrawn
         )
         found.extend(
@@ -197,16 +243,24 @@ class TemplateSurface:
             if path not in rows
         )
         for path in distributed:
-            if path not in rows:
+            if path.startswith(PACK_DIRECTORY):
+                if path in supported:
+                    found.append(("wrong table", path))
+            elif path.startswith(SUPPORTED_DIRECTORIES):
+                if path in pack_rows:
+                    found.append(("wrong table", path))
+            else:
+                found.append(("outside the directories", path))
+            if path not in pack_rows or not path.startswith(PACK_DIRECTORY):
                 continue
-            handed = rows[path]["handed"]
+            handed = pack_rows[path]["handed"]
             source = (self.templates_directory / path).read_text()
             found.extend(
                 ("name not listed", path, name)
                 for name in sorted(self.names_read(source) - handed)
             )
             expected = RENDERER_ROUTE if path in route else ENGINE_ROUTE
-            if rows[path]["route"] != expected:
+            if pack_rows[path]["route"] != expected:
                 found.append(("wrong route", path))
         return found
 
