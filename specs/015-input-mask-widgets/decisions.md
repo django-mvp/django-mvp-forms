@@ -21,7 +21,7 @@ same way.
 
 **Confirmed by the maintainer.**
 
-**ADR:** yes.
+**ADR:** docs/adr/0047-one-mask-widget-for-each-kind-of-mask.md
 
 ## D2. What is supported is what can be written as data
 
@@ -38,7 +38,7 @@ data alone, and Django's `DateField` reads the result through `input_formats`.
 
 **Confirmed by the maintainer.**
 
-**ADR:** yes, with D1.
+**ADR:** docs/adr/0047-one-mask-widget-for-each-kind-of-mask.md
 
 ## D3. A pattern submits what is shown, and a number submits a number
 
@@ -60,7 +60,7 @@ page with no IMask, a person must type the number the way the widget would have 
 
 **Stated to the maintainer as the assumption he was most likely to correct. He did not.**
 
-**ADR:** yes.
+**ADR:** docs/adr/0047-one-mask-widget-for-each-kind-of-mask.md
 
 ## D4. The package ships a script, and the pack still needs none
 
@@ -76,7 +76,7 @@ that uses none never loads it.
 A file was chosen over inline script so that a strict Content Security Policy needs no exception,
 which is the limit ADR 0041 had to accept for the modal and the alert.
 
-**ADR:** yes.
+**ADR:** docs/adr/0045-mask-widgets-bring-one-script-that-acts-once.md
 
 ## D5. No server validation
 
@@ -87,7 +87,7 @@ in Python, or read IMask's pattern language, and either would sometimes disagree
 browser. A developer who needs the shape enforced writes a validator in the dialect the server
 runs.
 
-**ADR:** no. The README states it.
+**ADR:** docs/adr/0047-one-mask-widget-for-each-kind-of-mask.md
 
 ## D6. An event carries the IMask instance
 
@@ -97,7 +97,7 @@ runs.
 was put to the maintainer as a suggestion and he neither took nor refused it, so it is included as
 the lowest-priority story, where it can be cut without touching the others.
 
-**ADR:** no.
+**ADR:** none — one event, documented in the README and named in ADR 0047.
 
 ## D7. No widgets for particular formats
 
@@ -106,7 +106,7 @@ the lowest-priority story, where it can be cut without touching the others.
 **Why:** each is one line with the pattern widget, and the right pattern depends on the country.
 Recommended to the maintainer, who did not object.
 
-**ADR:** no.
+**ADR:** none — a thing not built, which the README's list of what is not supported records.
 
 ## D8. IMask is not added to the support window
 
@@ -118,7 +118,7 @@ of IMask's and the suite has no browser, so a version named there would be a pro
 checks. The browser tests of D12 run against one copy of IMask, 7.6.1, and that is what the
 README names.
 
-**ADR:** no.
+**ADR:** none — a statement about the README, which nothing downstream inherits.
 
 ## D9. The script acts once, however often a page includes it
 
@@ -142,7 +142,7 @@ definition's character to the character shown for it.
 takes, and a row of dots or underscores does not. IMask allows it on a definition, so it costs no
 blocks. FR-006 and a scenario of US-1 were edited.
 
-**ADR:** none. It is one option of one widget, described in the README.
+**ADR:** none — It is one option of one widget, described in the README.
 
 ## D11. A display character's field submits what was typed
 
@@ -174,7 +174,7 @@ workflow does not download Playwright's own browsers and the workflow is outside
 **Why:** a block has options that should be named and checked as a widget's are, and `from`
 cannot be a Python argument. The widget names follow Django's `...Input`.
 
-**ADR:** none. The README is the record of the names.
+**ADR:** none — The README is the record of the names.
 
 ## D14. An initial number is written in the widget's own format
 
@@ -184,7 +184,7 @@ cannot be a Python argument. The widget names follow Django's `...Input`.
 read back as `12345` on a page without IMask. Written as `1234,5` it round-trips with or without
 IMask, and the script needs no special case for numbers.
 
-**ADR:** none. Local to the number widget.
+**ADR:** none — Local to the number widget.
 
 ## D15. What the design review changed
 
@@ -203,7 +203,7 @@ One reviewer read the plan before any of it was built. Everything it found was t
 - The number bounds take an `int`, a `float` or a `Decimal`.
 - The demo and the README load an exact version of IMask with an integrity value.
 
-**ADR:** none. Each is a correction to the plan and is recorded where it applies.
+**ADR:** none — Each is a correction to the plan and is recorded where it applies.
 
 ## D16. A definition is written as text, or as an object when it carries a placeholder character
 
