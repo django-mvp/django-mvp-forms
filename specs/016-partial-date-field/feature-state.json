@@ -81,8 +81,21 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_fields.py",
+              "tests/test_pack/test_partial_dates.py",
+              "tests/test_pack/test_template_surface.py::TestRendererRoute"
+            ],
+            "commands": [
+              "uv run pytest -n auto -q"
+            ],
+            "code": [
+              "mvp_forms/fields.py:14"
+            ]
+          }
         }
       ]
     },
