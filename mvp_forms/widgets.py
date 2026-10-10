@@ -703,8 +703,14 @@ class PartialDateInput(forms.MultiWidget):
         return [year, *(part.zfill(2) if part else "" for part in rest)]
 
     def value_from_datadict(self, data, files, name):
-        """Join what the parts hold, dropping empty parts from the right."""
+        """Join what the parts hold, dropping empty parts from the right.
+
+        A part holding a hyphen would be read as two, so the parts are returned
+        as sent and the field refuses them.
+        """
         parts = super().value_from_datadict(data, files, name)
+        if any("-" in (part or "") for part in parts):
+            return parts
         return "-".join((part or "").strip() for part in parts).rstrip("-")
 
     def get_context(self, name, value, attrs):

@@ -190,7 +190,9 @@ class ThreePartDateDrawn:
             "month",
             "day",
         ]
-        assert all(part["aria-label"] for part in parts)
+        names = [part["aria-label"] for part in parts]
+        assert all(names)
+        assert len(set(names)) == len(names)
 
     @pytest.mark.parametrize("source", FORM_WIDE)
     def test_only_the_year_is_required(self, draw, source):

@@ -69,6 +69,7 @@
           <div id="{{ lines.prefix }}-formset">
             {% crispy lines lines_helper %}
           </div>
+          <template id="{{ lines.prefix }}-line">{% crispy line lines_helper %}</template>
           <button type="button" class="btn" data-add-line="{{ lines.prefix }}">Add a sample</button>
         </div>
       </section>
@@ -88,18 +89,13 @@
         const prefix = button.dataset.addLine;
         const total = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
         const rows = document.querySelectorAll("#" + prefix + "-formset tbody tr");
-        const last = rows[rows.length - 1];
-        const row = last.cloneNode(true);
-        const from = new RegExp(prefix + "-\\d+-", "g");
+        const row = document.getElementById(prefix + "-line").content.querySelector("tbody tr").cloneNode(true);
         row.querySelectorAll("*").forEach(function (node) {
-          ["id", "name", "for", "aria-describedby"].forEach(function (attribute) {
-            if (node.hasAttribute(attribute)) {
-              node.setAttribute(attribute, node.getAttribute(attribute).replace(from, prefix + "-" + total.value + "-"));
-            }
+          Array.from(node.attributes).forEach(function (attribute) {
+            attribute.value = attribute.value.replace("__prefix__", total.value);
           });
-          if (node.matches("input, select")) node.value = "";
         });
-        last.after(row);
+        rows[rows.length - 1].after(row);
         total.value = Number(total.value) + 1;
       });
     </script>

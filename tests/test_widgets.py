@@ -991,6 +991,30 @@ class ThreePartWidget:
             chosen(parts["day"]) or None,
         ) == expected
 
+    @pytest.mark.parametrize(
+        ("sent", "expected"),
+        [
+            ({"year": "20-21", "month": "03", "day": "14"}, ("20-21", "03", "14")),
+            ({"year": "2021-03", "month": "", "day": ""}, ("2021-03", None, None)),
+        ],
+        ids=["hyphen inside the year", "month written into the year"],
+    )
+    def test_a_part_holding_a_hyphen_is_refused_and_drawn_again_as_it_was_sent(
+        self, sent, expected
+    ):
+        form = cleaned(self.widget(), **sent)
+
+        parts = drawn(self.widget(), form["born"].value())
+
+        year = parts["year"]
+        shown = year.get("value") if year.name == "input" else chosen(year)
+        assert form.has_error("born", code="invalid")
+        assert (
+            shown or None,
+            chosen(parts["month"]) or None,
+            chosen(parts["day"]) or None,
+        ) == expected
+
     def test_the_month_options_carry_the_names_of_the_active_language(self):
         widget = self.widget()
 
@@ -1024,7 +1048,9 @@ class ThreePartWidget:
             "month": "month",
             "day": "day",
         }
-        assert all(part["aria-label"] for part in parts.values())
+        names = [part["aria-label"] for part in parts.values()]
+        assert all(names)
+        assert len(set(names)) == len(names)
 
     def test_the_parts_are_drawn_inside_one_element_that_marks_the_group(self):
         soup = BeautifulSoup(self.widget().render("born", None), "html.parser")

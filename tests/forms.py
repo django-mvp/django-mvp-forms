@@ -1269,6 +1269,12 @@ PartialDateSelectLineFormSet = formset_factory(PartialDateSelectLineForm, extra=
 
 
 class PartialDatePageForm(forms.Form):
+    month_typed = PartialDateField(
+        required=False, resolution="month", widget=PartialDateInput()
+    )
+    year_typed = PartialDateField(
+        required=False, resolution="year", widget=PartialDateInput()
+    )
     typed = PartialDateField(required=False, widget=PartialDateInput())
     listed = PartialDateField(required=False, widget=PartialDateSelect())
     limited_typed = PartialDateField(

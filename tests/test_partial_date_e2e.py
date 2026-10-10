@@ -1,14 +1,19 @@
 """The script that keeps a three-part date in step, run in Chrome with no IMask."""
 
 import json
+from pathlib import Path
 
 import pytest
 from django.urls import reverse
 from playwright.sync_api import expect
 
+from tests.urls import IMASK_URL
+
 pytestmark = pytest.mark.e2e
 
+IMASK = Path(__file__).parent / "data" / "imask-7.6.1.min.js"
 FIELDS = ["typed", "listed"]
+DEMO_PAGES = ["partial-dates", "partial-dates-standalone"]
 LIMITED = ["limited_typed", "limited_listed"]
 # Records each listener for the events the script reacts to, and each observer.
 RECORD_REGISTRATIONS = """
@@ -332,6 +337,30 @@ class TestPartialDateScript:
         part(page, field, "month", prefix).select_option("02")
         assert offered(page, field, "day", prefix)[-1] == "28"
 
+    def test_a_page_with_groups_of_a_month_and_of_a_year_raises_no_error(
+        self, dates_page, page_errors
+    ):
+        dates_page()
+
+        assert page_errors == []
+
+    def test_a_year_opens_the_month_of_a_group_that_ends_at_the_month(self, dates_page):
+        page = dates_page()
+
+        expect(part(page, "month_typed", "month")).to_be_disabled()
+
+        enter_year(page, "month_typed", "2021")
+
+        expect(part(page, "month_typed", "month")).to_be_enabled()
+
+    def test_a_group_after_coarser_ones_still_follows_the_calendar(self, dates_page):
+        page = dates_page()
+        enter_year(page, "typed", "2021")
+
+        part(page, "typed", "month").select_option("02")
+
+        assert offered(page, "typed", "day")[-1] == "28"
+
     def test_the_script_included_more_than_once_acts_once(self, dates_page, page):
         page.add_init_script(RECORD_REGISTRATIONS)
         dates_page("dates")
@@ -612,3 +641,23 @@ class TestPartialDateScriptLimits:
         answer = submit(page)
 
         assert answer["errors"] == {field: ["min_value"]}
+
+
+class TestPartialDateDemoPages:
+    @pytest.mark.parametrize("name", DEMO_PAGES)
+    def test_a_sample_added_after_february_was_chosen_offers_the_days_of_march(
+        self, dates_page, page, name
+    ):
+        page.route(
+            IMASK_URL,
+            lambda route: route.fulfill(path=IMASK, content_type="text/javascript"),
+        )
+        page = dates_page(name)
+        enter_year(page, "collected", "2021", "samples-1-")
+        part(page, "collected", "month", "samples-1-").select_option("02")
+
+        page.click("[data-add-line]")
+        enter_year(page, "collected", "2021", "samples-2-")
+        part(page, "collected", "month", "samples-2-").select_option("03")
+
+        assert len(offered(page, "collected", "day", "samples-2-")) == 31

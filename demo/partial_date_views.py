@@ -80,6 +80,9 @@ class PartialDatesMixin:
                     "received": received,
                 }
             )
+        # The row "Add a sample" copies: the formset's empty form, drawn alone.
+        line = SampleFormSet(prefix="samples")
+        line.forms = [line.empty_form]
         lines_helper = FormHelper()
         lines_helper.form_tag = False
         lines_helper.template = "daisyui/table_inline_formset.html"
@@ -95,6 +98,7 @@ class PartialDatesMixin:
             ],
             sizes_form=PartialDateSizesForm(prefix="sizes"),
             lines=SampleFormSet(prefix="samples"),
+            line=line,
             lines_helper=lines_helper,
             modal_form=PartialDateModalForm(prefix="dates"),
         )
