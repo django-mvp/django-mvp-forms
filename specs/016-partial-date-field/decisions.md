@@ -226,3 +226,19 @@ padded or not. Probed with the branch restored: every browser case gave the same
 or the maintainer wants selecting a part and typing a new one to work in the middle of a value.
 
 **ADR:** none — a script detail inside the mask the earlier decision already covers.
+
+## D18. The demo pages draw the formset's empty form once, as a row, from the view
+
+**Decision:** `PartialDatesMixin` puts a second `SampleFormSet` in the context as `line`, whose
+only form is the formset's `empty_form`, and both demo templates draw it with the table helper
+inside a `<template>`. "Add a sample" copies that template's row and replaces `__prefix__` with the
+form count. `demo/partial_date_views.py` is the one file outside the task's list that changes.
+
+**Why:** the table template lays out a formset's `forms`, and a template cannot hand it a single
+form. Drawing the empty form through the same helper keeps the row's markup the same as the
+rows already on the page, so what the page shows does not change, and a pristine row holds every
+option, which the script takes for the full list.
+
+**Revisit if:** the table helper learns to draw an empty form directly.
+
+**ADR:** none — a demo page detail.

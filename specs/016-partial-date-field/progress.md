@@ -72,3 +72,10 @@ Did: T010 (COR-003). PartialDateField.has_changed compares prepare_value(initial
 Verified: uv run pytest tests/test_fields.py: 168 passed. pre-commit on both files: passed.
 Next: T011.
 Watch: none.
+
+## 2026-10-10T00:35:38Z · Implementer FIX-1 · T011
+
+Did: T011 (COR-004, COR-005, COR-006, COR-008). Both demo pages build the added row from the formset empty form held in a template, in place of cloning the last row; PartialDatesMixin gains a context entry for it. PartialDatePageForm gains month_typed and year_typed before the other fields. The two part-name tests assert the three names differ. PartialDateInput.value_from_datadict returns the parts as sent when any holds a hyphen. README: what the script does (rows come from the empty form, never cloned) and the hyphen case.
+Verified: red first on the code as it stood: the demo page test on both pages (28 days for March) and the four hyphen cases failed; the new coarse-group tests pass on arrival and fail under mutation: either guard in partial-date.js replaced by if (true) fails them (and the older script tests), and the month part labelled Day fails both name tests. uv run pytest on test_partial_date_e2e.py, test_widgets.py, test_pack/test_partial_dates.py, test_demo.py, test_fields.py: 2222 passed. pre-commit on the files touched: passed.
+Next: T012.
+Watch: demo/partial_date_views.py is outside the files the task lists; one context entry added (D18).
