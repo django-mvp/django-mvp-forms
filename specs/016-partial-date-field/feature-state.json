@@ -254,8 +254,26 @@
         },
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInputLimits",
+              "tests/test_partial_date_e2e.py::TestPartialDateScriptLimits",
+              "tests/test_demo.py::TestPartialDatesPage",
+              "tests/test_demo.py::TestStandalonePartialDatesPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py tests/test_partial_date_e2e.py -q",
+              "uv run pytest tests/test_demo.py -q -k PartialDates"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:98",
+              "mvp_forms/static/mvp_forms/partial-date.js:57",
+              "demo/partial_date_views.py:92",
+              "demo/urls.py:148"
+            ]
+          }
         }
       ]
     }
