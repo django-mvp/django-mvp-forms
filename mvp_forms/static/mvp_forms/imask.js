@@ -13,8 +13,6 @@
   const masked = new WeakMap();
   // Inputs left unmasked, holding a value their mask would change.
   const waiting = new WeakSet();
-  // Partial date masks being given back a value they held, which is not a paste.
-  const putting = new WeakSet();
 
   // A definition is an expression written as text, or an object holding the
   // expression and a placeholder character. A built-in definition has no
@@ -91,16 +89,19 @@
     const latest = max ? limit(max, true) : Infinity;
     return {
       mask: { year: "Y", month: "Y-M", day: "Y-M-D" }[resolution || "day"],
+      lazy: false,
+      overwrite: true,
       blocks: {
-        Y: { mask: Range, from: 1, to: 9999, maxLength: 4 },
-        M: { mask: paddedRange("2"), from: 1, to: 12, maxLength: 2 },
-        D: { mask: paddedRange("4"), from: 1, to: 31, maxLength: 2 },
+        Y: { mask: Range, from: 1, to: 9999, maxLength: 4, placeholderChar: "Y" },
+        M: { mask: paddedRange("2"), from: 1, to: 12, maxLength: 2, placeholderChar: "M" },
+        D: { mask: paddedRange("4"), from: 1, to: 31, maxLength: 2, placeholderChar: "D" },
       },
-      prepare: function (text, masked) {
-        return putting.has(masked) ? text : padPasted(text);
-      },
+      prepare: padPasted,
       validate: function (value) {
-        const [year, month, day] = value.split("-");
+        const parts = value.split("-");
+        // A part with an open position before a digit is still being filled in.
+        if (parts.some((part) => /[YMD][0-9]/.test(part))) return true;
+        const [year, month, day] = parts.map((part) => part.replace(/[YMD]/g, ""));
         const years = reach(year, 4, 1, 9999);
         const months = reach(month, 2, 1, 12);
         const length = month && month.length === 2 ? daysIn(Number(year), Number(month)) : 31;
@@ -147,44 +148,81 @@
     return mask.value === input.value ? undefined : mask.value;
   }
 
+  // A partial date as it is sent: open positions are left off, and so are the
+  // parts nothing was typed into.
+  function bare(shown) {
+    return shown
+      .split("-")
+      .map((part) => part.replace(/[YMD]/g, ""))
+      .join("-")
+      .replace(/-+$/, "");
+  }
+
   // Whether the mask keeps what the input holds as it is.
   function takes(options, value) {
     const tried = window.IMask.createMask(options);
     tried.resolve(value);
-    return tried.value === value;
+    return bare(tried.value) === value;
   }
 
   // A change inside a partial date never alters a part the person did not
-  // touch. When IMask leaves the text after the edited range different from
-  // what it was, the input goes back to the value and selection it held. The
-  // text after the range is read from the browser's own edit, in a capturing
-  // listener that runs before IMask's.
+  // touch. Typing writes over the positions it reaches and removes nothing.
+  // When the text outside the range an edit may touch is different from what
+  // it was, as after a deletion that would move a digit into another part,
+  // the mask goes back to the state and selection it held.
   function hold(input, mask) {
     let held = null;
-    let after = "";
-    input.addEventListener("beforeinput", function () {
+    input.addEventListener("beforeinput", function (event) {
+      const selection = [input.selectionStart, input.selectionEnd];
+      let [start, end] = selection;
+      const deleting = event.inputType.startsWith("delete");
+      if (deleting && start === end) {
+        // A deletion beside a hyphen reaches the digit on the far side of it.
+        if (event.inputType.endsWith("Backward")) start -= 2;
+        else end += 2;
+      } else if (!deleting) {
+        // Typing over a selection that stops short of the end writes over it
+        // from its start, one position at a time, and removes nothing.
+        if (start !== end && end < input.value.length && event.data) {
+          mask.cursorPos = start;
+          end = start;
+        }
+        // The edit may also skip a hyphen and pad a digit.
+        end = Math.max(end, start + (event.data ? event.data.length : 1) + 2);
+      }
       held = {
         value: input.value,
-        start: input.selectionStart,
-        end: input.selectionEnd,
+        state: mask.masked.state,
+        selection: selection,
+        start: start,
+        end: end,
       };
     });
-    input.addEventListener(
-      "input",
-      function () {
-        after = input.value.slice(input.selectionStart);
-      },
-      { capture: true },
-    );
     input.addEventListener("input", function () {
       const before = held;
       held = null;
-      if (!before || input.value.endsWith(after)) return;
-      putting.add(mask.masked);
-      mask.value = before.value;
-      putting.delete(mask.masked);
-      input.setSelectionRange(before.start, before.end);
+      if (!before) return;
+      const now = input.value;
+      const same = function (from, to) {
+        return before.value.slice(from, to) === now.slice(from, to);
+      };
+      if (same(0, Math.max(before.start, 0)) && same(before.end)) return;
+      mask.masked.state = before.state;
+      mask.updateControl();
+      input.setSelectionRange(...before.selection);
     });
+    // The open positions are shown while the person is in the input, and the
+    // caret waits at the first of them. Outside the input it holds the partial
+    // date alone, so an empty one is empty.
+    input.addEventListener("focus", function () {
+      mask.updateOptions({ lazy: false });
+      const open = input.value.search(/[YMD]/);
+      if (open !== -1) mask.cursorPos = open;
+    });
+    input.addEventListener("blur", function () {
+      mask.updateOptions({ lazy: true });
+    });
+    mask.updateOptions({ lazy: document.activeElement !== input });
   }
 
   // A partial date mask cuts a value it does not take, such as 2021-02-30, down
@@ -205,15 +243,17 @@
   function apply(input) {
     if (!window.IMask || masked.has(input) || waiting.has(input)) return;
     let mask;
+    let partial = false;
     try {
       const written = JSON.parse(input.dataset.imask);
       const options = build(written);
-      if (written.kind === "partial-date" && !takes(options, input.value)) {
+      partial = written.kind === "partial-date";
+      if (partial && !takes(options, input.value)) {
         wait(input);
         return;
       }
       mask = window.IMask(input, options);
-      if (written.kind === "partial-date") hold(input, mask);
+      if (partial) hold(input, mask);
     } catch (error) {
       // Options IMask refuses cost this input its mask and no other input.
       console.error(input, error);
@@ -224,7 +264,8 @@
     if (form) {
       form.addEventListener("formdata", function (event) {
         if (input.form !== form || !input.name || input.matches(":disabled")) return;
-        const value = entry(input, mask);
+        // A partial date is sent without the open positions it shows.
+        const value = partial ? bare(input.value) : entry(input, mask);
         if (value !== undefined) event.formData.set(input.name, value);
       });
     }

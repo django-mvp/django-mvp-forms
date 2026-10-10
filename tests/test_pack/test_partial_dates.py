@@ -310,6 +310,22 @@ class TestResolution:
         )
 
     @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize(
+        ("max_resolution", "shape"),
+        [("year", "YYYY"), ("month", "YYYY-MM"), ("day", "YYYY-MM-DD")],
+    )
+    def test_the_masked_input_is_drawn_with_the_shape_of_the_date_as_its_placeholder(
+        self, draw, source, max_resolution, shape
+    ):
+        form = partial_date_form(
+            max_resolution=max_resolution, widget=PartialDateMaskInput()
+        )()
+
+        soup = draw(source, form=form)
+
+        assert soup.find(id="id_born")["placeholder"] == shape
+
+    @pytest.mark.parametrize("source", SOURCES)
     @pytest.mark.parametrize("widget", [PartialDateInput, PartialDateSelect])
     def test_the_three_part_widgets_are_drawn_without_the_day_at_a_resolution_of_month(
         self, draw, source, widget

@@ -774,6 +774,43 @@ class TestPartialDateMaskInput:
         with pytest.raises(TypeError, match="max_resolution"):
             PartialDateMaskInput(max_resolution="month")
 
+    @pytest.mark.parametrize(
+        ("max_resolution", "shape"),
+        [("year", "YYYY"), ("month", "YYYY-MM"), ("day", "YYYY-MM-DD")],
+    )
+    def test_it_shows_the_shape_of_the_date_its_field_accepts_as_a_placeholder(
+        self, max_resolution, shape
+    ):
+        class Form(forms.Form):
+            born = PartialDateField(
+                max_resolution=max_resolution, widget=PartialDateMaskInput()
+            )
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        assert soup.input["placeholder"] == shape
+
+    def test_a_field_that_is_not_a_partial_date_field_shows_a_full_date_placeholder(
+        self,
+    ):
+        class Form(forms.Form):
+            born = forms.CharField(widget=PartialDateMaskInput())
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        assert soup.input["placeholder"] == "YYYY-MM-DD"
+
+    def test_a_placeholder_the_developer_states_is_kept_at_every_resolution(self):
+        class Form(forms.Form):
+            born = PartialDateField(
+                max_resolution="month",
+                widget=PartialDateMaskInput(attrs={"placeholder": "Born"}),
+            )
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        assert soup.input["placeholder"] == "Born"
+
     @pytest.mark.parametrize("resolution", ["year", "month", "day"])
     def test_it_writes_the_max_resolution_the_field_tells_it(self, resolution):
         class Form(forms.Form):

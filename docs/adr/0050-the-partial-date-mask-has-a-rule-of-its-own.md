@@ -13,9 +13,11 @@ The month and day blocks subclass `IMask.MaskedRange` and override `_appendCharR
 single digit that can only be the whole part is given its leading zero. IMask's `prepare` option
 pads only a pasted date.
 
-A change inside a value that would alter a part the person did not touch is put back: the input
-keeps the value it held. A person changes an earlier part by clearing back to it from the end, or
-by typing over the month.
+Typing writes over the positions it reaches and moves nothing, so a person changes any part by
+typing over it. The open positions are shown while the input has focus, and the input holds the
+partial date alone when it does not. A deletion that would move a digit of another part into its
+place is not applied: the input goes back to the state it held. A digit is corrected by typing
+over it.
 
 An input drawn holding a value the mask would cut is left unmasked, showing the value whole,
 until the person has changed it to one the mask takes.

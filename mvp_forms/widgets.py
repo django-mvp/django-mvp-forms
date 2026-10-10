@@ -599,6 +599,9 @@ class DynamicMaskInput(MaskInput):
         super().__init__(attrs, mask=[each.mask_options() for each in masks])
 
 
+SHAPES = {"year": "YYYY", "month": "YYYY-MM", "day": "YYYY-MM-DD"}
+
+
 class PartialDateMaskInput(MaskInput):
     """One text input masked as a year, a year and month, or a full date.
 
@@ -627,6 +630,12 @@ class PartialDateMaskInput(MaskInput):
             "resolution": self.max_resolution,
             **{name: value for name, value in limits.items() if value},
         }
+
+    def build_attrs(self, base_attrs, extra_attrs=None):
+        """Show the shape of the date the field accepts, unless attrs state one."""
+        attrs = super().build_attrs(base_attrs, extra_attrs)
+        attrs.setdefault("placeholder", SHAPES[self.max_resolution])
+        return attrs
 
 
 class PartialDateInput(forms.MultiWidget):
