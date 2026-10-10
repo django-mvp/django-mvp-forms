@@ -25,11 +25,15 @@ from django_tomselect.forms import (
     TomSelectMultipleChoiceField,
 )
 
+from mvp_forms.fields import PartialDateField
 from mvp_forms.layout import Join
 from mvp_forms.widgets import (
     DynamicMaskInput,
     EnumBlock,
     NumberMaskInput,
+    PartialDateInput,
+    PartialDateMaskInput,
+    PartialDateSelect,
     PatternBlock,
     PatternMaskInput,
     RangeBlock,
@@ -1183,4 +1187,115 @@ class MaskedPageForm(forms.Form):
                 PatternMaskInput("000000", display_char="•"),
             ]
         ),
+    )
+    born = PartialDateField(required=False, widget=PartialDateMaskInput())
+    born_month = PartialDateField(
+        required=False, max_resolution="month", widget=PartialDateMaskInput()
+    )
+    born_year = PartialDateField(
+        required=False, max_resolution="year", widget=PartialDateMaskInput()
+    )
+    born_limited = PartialDateField(
+        required=False,
+        min_value="1998-03-15",
+        max_value="2004-09",
+        widget=PartialDateMaskInput(),
+    )
+
+
+class PartialDateForm(forms.Form):
+    born = PartialDateField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class PartialDateLineForm(forms.Form):
+    born = PartialDateField()
+
+
+PartialDateLineFormSet = formset_factory(PartialDateLineForm, extra=2)
+
+
+class PartialDateMaskForm(forms.Form):
+    born = PartialDateField(
+        required=False, widget=PartialDateMaskInput(attrs={"placeholder": "Born"})
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class PartialDateMaskLineForm(forms.Form):
+    born = PartialDateField(widget=PartialDateMaskInput())
+
+
+PartialDateMaskLineFormSet = formset_factory(PartialDateMaskLineForm, extra=2)
+
+
+class PartialDatePartsForm(forms.Form):
+    born = PartialDateField(
+        help_text="Known to the year, the month or the day.",
+        widget=PartialDateInput(attrs={"data-note": "kept"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class PartialDateSelectPartsForm(PartialDatePartsForm):
+    born = PartialDateField(
+        help_text="Known to the year, the month or the day.",
+        widget=PartialDateSelect(attrs={"data-note": "kept"}),
+    )
+
+
+class PartialDatePartsLineForm(forms.Form):
+    born = PartialDateField(widget=PartialDateInput())
+
+
+class PartialDateSelectLineForm(forms.Form):
+    born = PartialDateField(widget=PartialDateSelect())
+
+
+PartialDatePartsLineFormSet = formset_factory(PartialDatePartsLineForm, extra=2)
+PartialDateSelectLineFormSet = formset_factory(PartialDateSelectLineForm, extra=2)
+
+
+class PartialDatePageForm(forms.Form):
+    month_typed = PartialDateField(
+        required=False, max_resolution="month", widget=PartialDateInput()
+    )
+    year_typed = PartialDateField(
+        required=False, max_resolution="year", widget=PartialDateInput()
+    )
+    typed = PartialDateField(required=False, widget=PartialDateInput())
+    listed = PartialDateField(required=False, widget=PartialDateSelect())
+    limited_typed = PartialDateField(
+        required=False,
+        min_value="1998-03-15",
+        max_value="2004-09",
+        widget=PartialDateInput(),
+    )
+    limited_listed = PartialDateField(
+        required=False,
+        min_value="1998-03-15",
+        max_value="2004-09",
+        widget=PartialDateSelect(),
+    )
+
+
+PartialDatePageLineFormSet = formset_factory(PartialDatePageForm, extra=1)
+
+
+def partial_date_form(**options):
+    """Return a form class holding one partial date field built from the options."""
+    return type(
+        "PartialDateOptionsForm", (forms.Form,), {"born": PartialDateField(**options)}
     )

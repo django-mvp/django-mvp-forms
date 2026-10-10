@@ -1,0 +1,104 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Partial dates</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">Partial dates</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and IMask.
+        <a class="link" href="{% url 'partial-dates' %}">The same page inside the django-mvp shell</a>
+      </p>
+      {% for group in groups %}
+        <section class="card card-border bg-base-100" id="{{ group.id }}">
+          <div class="card-body">
+            <h2 class="card-title">{{ group.name }}</h2>
+            <p>{{ group.text }}</p>
+            {% crispy group.form %}
+            {% if group.received %}
+              <div class="overflow-x-auto">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Field</th>
+                      <th>Received by the form</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for label, value in group.received %}
+                      <tr>
+                        <td>{{ label }}</td>
+                        <td><code>{{ value|default:"empty" }}</code></td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% endif %}
+          </div>
+        </section>
+      {% endfor %}
+      {% for name, form in states %}
+        <section class="card card-border bg-base-100">
+          <div class="card-body">
+            <h2 class="card-title">{{ name }}, in each state</h2>
+            {% crispy form %}
+          </div>
+        </section>
+      {% endfor %}
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Each widget, with a size and a colour</h2>
+          {% crispy sizes_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Both widgets, in a formset</h2>
+          <p>
+            Collected is a PartialDateInput and Analysed is a PartialDateMaskInput. A
+            sample added in the browser behaves as the others do, with no script
+            written for it.
+          </p>
+          <div id="{{ lines.prefix }}-formset">
+            {% crispy lines lines_helper %}
+          </div>
+          <template id="{{ lines.prefix }}-line">{% crispy line lines_helper %}</template>
+          <button type="button" class="btn" data-add-line="{{ lines.prefix }}">Add a sample</button>
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Both widgets, in a modal</h2>
+          <button type="button" class="btn" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()">Edit the dates</button>
+          {% crispy modal_form %}
+        </div>
+      </section>
+    </main>
+    <script>
+      // This page's own "Add a sample" button.
+      document.addEventListener("click", function (event) {
+        const button = event.target.closest("[data-add-line]");
+        if (!button) return;
+        const prefix = button.dataset.addLine;
+        const total = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
+        const rows = document.querySelectorAll("#" + prefix + "-formset tbody tr");
+        const row = document.getElementById(prefix + "-line").content.querySelector("tbody tr").cloneNode(true);
+        row.querySelectorAll("*").forEach(function (node) {
+          Array.from(node.attributes).forEach(function (attribute) {
+            attribute.value = attribute.value.replace("__prefix__", total.value);
+          });
+        });
+        rows[rows.length - 1].after(row);
+        total.value = Number(total.value) + 1;
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js" integrity="sha384-UO8YwPv//GjwHj93ZlwXcDNjv3BSxdBFUB2jtiOuL3d/a0kS9E8sYvHjTBkQI8u8" crossorigin="anonymous"></script>
+  </body>
+</html>

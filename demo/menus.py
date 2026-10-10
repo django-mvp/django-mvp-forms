@@ -129,6 +129,20 @@ AppMenu.extend(
             extra_context={"label": "Themes", "icon": "themes"},
         ),
         MenuGroup(
+            name="custom-fields",
+            extra_context={"label": "Custom fields"},
+            children=[
+                MenuItem(
+                    name="partial-dates",
+                    view_name="partial-dates",
+                    extra_context={
+                        "label": "Partial dates",
+                        "icon": "partial-dates",
+                    },
+                ),
+            ],
+        ),
+        MenuGroup(
             name="third-party",
             extra_context={"label": "Third-party widgets"},
             children=[

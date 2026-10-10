@@ -25,6 +25,11 @@ from demo.forms import (
     PatternMaskForm,
     RegexMaskForm,
 )
+from demo.partial_date_forms import (
+    MaskedPartialDateForm,
+    PartialDateModalForm,
+    PartialDateSizesForm,
+)
 from demo.tomselect_forms import SampleFormSet, country_field
 from demo.tomselect_views import TomSelectMixin
 from mvp_forms.choices import Modifiers
@@ -3752,3 +3757,195 @@ class TestStandaloneInputMasksPage(InputMasksPageContract):
 
     def test_it_links_back_to_the_shell_page(self, page):
         assert page.find("a", href=reverse("input-masks")) is not None
+
+
+PARTIAL_DATE_FIELDS = list(MaskedPartialDateForm.base_fields)
+PARTIAL_DATE_POST = {
+    "any_resolution": ("2021-3-4", "2021-03-04"),
+    "at_least_month": ("2021-5", "2021-05"),
+    "no_day": ("2000-9", "2000-09"),
+    "year_only": ("1987", "1987"),
+    "in_range": ("1998-03-15", "1998-03-15"),
+    "in_range_no_day": ("2004-09", "2004-09"),
+}
+
+
+def posted_partial_dates(prefix):
+    """Return the post of one partial date form, as the widget's inputs send it."""
+    data = {f"{prefix}-submit": ""}
+    for name, (entered, _received) in PARTIAL_DATE_POST.items():
+        if prefix != "masked":
+            year, *rest = [*entered.split("-"), "", ""][:3]
+            data[f"{prefix}-{name}_year"] = year
+            data[f"{prefix}-{name}_month"] = rest[0]
+            data[f"{prefix}-{name}_day"] = rest[1]
+        else:
+            data[f"{prefix}-{name}"] = entered
+    return data
+
+
+class PartialDatesPageContract:
+    url_name = ""
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    def test_the_masked_section_holds_a_masked_input_for_each_field(self, page):
+        section = page.find(id="masked")
+
+        masked = section.find_all("input", attrs={"data-imask": True})
+
+        assert {tag["name"] for tag in masked} == {
+            f"masked-{name}" for name in PARTIAL_DATE_FIELDS
+        }
+        assert {json.loads(tag["data-imask"])["kind"] for tag in masked} == {
+            "partial-date"
+        }
+
+    @pytest.mark.parametrize("prefix", ["parts", "select"])
+    def test_a_three_part_section_holds_a_group_for_each_field(self, page, prefix):
+        section = page.find(id=prefix)
+
+        groups = section.find_all(attrs={"data-partial-date": True})
+
+        assert len(groups) == len(PARTIAL_DATE_FIELDS)
+        assert {
+            part["name"]
+            for part in section.find_all(attrs={"data-partial-date-part": "year"})
+        } == {f"{prefix}-{name}_year" for name in PARTIAL_DATE_FIELDS}
+
+    def test_the_select_section_draws_the_year_as_a_select(self, page):
+        years = page.find(id="select").find_all(
+            attrs={"data-partial-date-part": "year"}
+        )
+
+        assert {tag.name for tag in years} == {"select"}
+
+    def test_the_plain_section_holds_a_text_input_with_no_script(self, page):
+        collected = page.find(id="plain").find(id="id_plain-collected")
+
+        assert collected.name == "input"
+        assert not collected.has_attr("data-imask")
+
+    def test_the_limits_of_a_field_are_in_what_each_widget_draws(self, page):
+        masked = json.loads(page.find(id="id_masked-in_range_no_day")["data-imask"])
+        group = (
+            page.find(id="parts")
+            .find(attrs={"name": "parts-in_range_no_day_year"})
+            .find_parent(attrs={"data-partial-date": True})
+        )
+
+        assert masked == {
+            "kind": "partial-date",
+            "resolution": "month",
+            "min": "1998-03",
+            "max": "2004-09",
+        }
+        assert group["data-partial-date-min"] == "1998-03"
+        assert group["data-partial-date-max"] == "2004-09"
+
+    def test_the_year_select_of_a_field_with_limits_lists_only_those_years(self, page):
+        year = page.find(id="select").find(
+            attrs={"name": "select-in_range_no_day_year"}
+        )
+
+        values = [option["value"] for option in year("option") if option["value"]]
+
+        assert values == [f"{n}" for n in range(2004, 1997, -1)]
+
+    @pytest.mark.parametrize("widget", ["masked", "parts", "select"])
+    def test_a_post_of_a_form_returns_what_each_field_received(self, open_page, widget):
+        page = open_page(self.url_name, posted_partial_dates(widget))
+
+        rows = page.find(id=widget).find("table").find("tbody").find_all("tr")
+        received = [row.find_all("code")[0].get_text() for row in rows]
+
+        assert received == [
+            expected for _entered, expected in PARTIAL_DATE_POST.values()
+        ]
+
+    def test_a_post_of_the_plain_form_returns_what_the_field_received(self, open_page):
+        page = open_page(
+            self.url_name, {"plain-collected": "2021-3", "plain-submit": ""}
+        )
+
+        rows = page.find(id="plain").find("table").find("tbody").find_all("tr")
+        assert [row.find_all("code")[0].get_text() for row in rows] == ["2021-03"]
+
+    def test_a_post_with_a_date_outside_the_limits_returns_no_received_table(
+        self, open_page
+    ):
+        data = posted_partial_dates("masked")
+        data["masked-in_range"] = "1997-12-31"
+
+        page = open_page(self.url_name, data)
+
+        assert page.find(id="masked").find("table") is None
+        assert page.find(id="masked").find(id="id_masked-in_range")["value"] == (
+            "1997-12-31"
+        )
+
+    def test_the_sizes_section_draws_every_field_of_its_form(self, page):
+        drawn = {
+            name
+            for name in PartialDateSizesForm.base_fields
+            if page.find(attrs={"name": re.compile(rf"^sizes-{name}(_year)?$")})
+        }
+
+        assert drawn == set(PartialDateSizesForm.base_fields)
+
+    def test_each_line_of_the_formset_holds_a_group_and_a_masked_input(self, page):
+        lines = page.find(id="samples-formset")
+
+        groups = lines.find_all(attrs={"data-partial-date": True})
+        masked = lines.find_all("input", attrs={"data-imask": True})
+
+        assert len(groups) == 2
+        assert {tag["name"] for tag in masked} == {
+            "samples-0-analysed",
+            "samples-1-analysed",
+        }
+
+    def test_the_modal_holds_both_widgets_inside_the_dialog(self, page):
+        dialog = page.find(id=PartialDateModalForm(prefix="dates").dialog_id)
+
+        assert dialog.find(attrs={"data-partial-date": True}) is not None
+        assert dialog.find("input", attrs={"data-imask": True}) is not None
+
+    def test_it_loads_an_exact_version_of_imask_with_an_integrity_value(self, page):
+        scripts = page.find_all("script", src=re.compile(r"^https://.*imask"))
+
+        assert len(scripts) == 1
+        assert "imask@7.6.1/" in scripts[0]["src"]
+        assert scripts[0]["integrity"].startswith("sha384-")
+
+
+class TestPartialDatesPage(PartialDatesPageContract):
+    url_name = "partial-dates"
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("partial-dates")}"' in sidebar
+
+    def test_it_links_the_standalone_page(self, page):
+        assert page.find("a", href=reverse("partial-dates-standalone")) is not None
+
+
+class TestStandalonePartialDatesPage(PartialDatesPageContract):
+    url_name = "partial-dates-standalone"
+
+    def test_it_carries_none_of_the_shells_navigation(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_draws_no_cotton_component(self):
+        source = get_template("demo/partial_dates_standalone.html").template.source
+        assert "<c-" not in source
+        assert "cotton" not in source
+
+    def test_it_links_back_to_the_shell_page(self, page):
+        assert page.find("a", href=reverse("partial-dates")) is not None

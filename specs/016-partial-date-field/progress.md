@@ -1,0 +1,106 @@
+
+## 2026-10-09T22:47:14Z · Orchestrator · plan
+
+Research, plan and task list written from the approved sketch: 5 stories, 8 tasks. The option finest is renamed resolution in the prototype.
+
+## 2026-10-09T23:03:53Z · Implementer US1 · T001
+
+Did: tests/test_fields.py (78 cases) and tests/test_pack/test_partial_dates.py (15) written first. Red against the prototype: 6 cases, the three non-ASCII digit forms and `2021--`, `2021---`, `2021-03--`; the rest probed by stubbing parse and prepare_value (67 of 78 failed) and by giving the field the three-part widget (all 15 pack cases failed). parse now drops one trailing hyphen with removesuffix, refuses an empty last part, and matches [0-9]. Static-directory test widened to both scripts. README: section "Partial dates" (values, codes, hand-off to a model), template row, the two route bullets name mvp_forms/widgets/. CHANGELOG entry, CONTEXT.md partial date / precision / part, English catalogue regenerated with makemessages. No other page under docs/ describes what this task touched; ADR 0047 is T003's.
+Verified: uv run pytest tests/test_fields.py tests/test_pack/test_partial_dates.py -q: 93 passed. uv run pytest -n auto -q: 5507 passed, 1 failed. uv run pre-commit run --all-files: all hooks passed.
+Next: the one red test is tests/test_pack/test_template_list.py::TestTheListMatchesThePackage::test_the_list_and_the_package_do_not_differ, which now reports only ('outside the directories', 'mvp_forms/widgets/partial_date.html'). tests/template_surface.py accepts only daisyui/ and django_tomselect/. The README row is in; the helper and its own test in tests/test_pack/test_template_surface.py (TestRendererRoute pins the exact route set) are not named by T001, so T001 is reported blocked on that, and nothing was changed there.
+Watch: widening the helper needs PACK_DIRECTORY to take mvp_forms/ and renderer_route() to include PartialDateInput.template_name so the row's FORM_RENDERER is the expected route; a scratch run of exactly that turned the list test green and made TestRendererRoute fail until its expected set gains the template.
+
+## 2026-10-09T23:09:14Z · Implementer US2 · T002
+
+Did: TestPartialDateMaskInput in tests/test_widgets.py (7 cases) and in tests/test_pack/test_partial_dates.py (kind and resolution drawn through all four sources, attrs and keypad, the pack's input class, size/colour/variant, the formset's empty form, the form's media); PartialDateMaskForm and a line formset in tests/forms.py. The prototype widget already matches the plan, so the cases passed on first run. Probed by swapping the class for a plain TextInput subclass: 14 of 26 failed (kind, keypad, media, data-imask in every source). Widget restored unchanged. README: "The masked input" under Partial dates, the widget in the surface list.
+Verified: uv run pytest tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_pack/test_documented_examples.py tests/test_pack/test_template_list.py -q: 319 passed. uv run pre-commit run --all-files: all hooks passed.
+Next: T003. The prototype's partial-date kind in imask.js has no pasted-date padding and no FR-042 hold-off; both are built test-first there.
+Watch: the field still tells its widget in __init__ (limit_widget). Moving that to get_bound_field is T006's.
+
+## 2026-10-09T23:15:44Z · Implementer US2 · T003
+
+Did: TestPartialDateMaskedInput in tests/test_imask_e2e.py (27 cases in Chrome): hyphens placed, months and days refused with the leap-year rule, single digits padded, pasted dates padded, change in the middle keeps the rest, a change that leaves the day without a date is refused, stopping after year or month submits a valid form, initial 2021-03 shown, 2021-02-30 shown whole, a second scan leaves a waiting input alone, it is masked once edited to a value the mask takes, an added input masked once, a page without IMask raises nothing and submits. A born field on MaskedPageForm (tests/forms.py). imask.js: prepare pads a pasted whole date (not text put back after the cursor); a partial date input holding a value the mask would change is left unmasked and recorded in a WeakSet until the person's input makes one it takes (createMask, resolve, compare). The padded range subclass is unchanged. Probed by breaking each mechanism: prepare removed (paste 2021-1-4 fails), validate always true (6 fail), plain ranges in place of the padded subclass (5 fail), hold-off removed (3 fail), the record removed (the scan-again case fails). FS-015's spec (clarification, Out of scope), ADR 0047 (decision, in place) and the README's Input masks "What is not supported" say the four widgets take no function and name the partial date widget, with an absolute link. README "What the mask does" under Partial dates, naming IMask 7.6.1.
+Verified: uv run pytest tests/test_imask_e2e.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py tests/test_pack/test_masked_inputs.py -q: 527 passed. uv run pre-commit run --all-files: all hooks passed.
+Next: the full suite and the lint gate once, then the report.
+Watch: IMask 7.6.1's resolve() returns nothing, so the value is read from the masked object after it. CHANGELOG.md is not named by T002 or T003 and says nothing of the masked widget yet.
+
+## 2026-10-09T23:22:33Z · Implementer US3 · T004
+
+Did: TestPartialDateInput and TestPartialDateSelect in tests/test_widgets.py (56 cases, one shared body) and in tests/test_pack/test_partial_dates.py (50 cases through the pack, the forms' media, Django's own rendering and a formset's empty form); four forms and two line formsets in tests/forms.py. The prototype widgets already match the plan, so the cases passed on first run and were probed by breaking each mechanism: the trailing-hyphen drop (4 fail), the padding of a sent part (2), the pop of required from month and day (6), the fixed month names (2), the year list's length (1), the held year (1), the script in media (2), attrs passed to the parts (2), the group marker in the template (6), a part's data-partial-date-part (46), the template's include (51). A month sent unpadded was added to the shown-as-sent cases because the padding probe had left everything green. README: "The year, the month and the day" under Partial dates, and both widgets, the template and the script in the surface list. CHANGELOG: the Unreleased entry names all three widgets. No other page under docs/ describes the widgets.
+Verified: uv run pytest tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_pack/test_template_list.py -q: 327 passed. uv run pre-commit run --all-files: all hooks passed.
+Next: T005, the script against Chrome. The prototype sets hidden and disabled on options and keeps a held option; research R4 asks for the list to be rebuilt instead.
+Watch: PartialDateSelect.get_context writes the year choices onto self.widgets[0] on each draw, which is per form instance because a field deep-copies its widget; the limits in years() are T007's.
+
+## 2026-10-09T23:31:43Z · Implementer US3 · T005
+
+Did: tests/test_partial_date_e2e.py (56 cases in Chrome, each run for the typed year and the listed year): month closed until a four-digit year, day closed until a month, days offered by month and year including 2000 and 2100, impossible days absent from the list, a 31st cleared when the month becomes February and a 29th of February when the year stops being leap, a day the new month still has kept, a group holding 2021-02-30 or a day with no month or a month with no year shown as sent until a part changes, a group added later, the script included three times registering what it registers once, either an input or a change event enough, a page without the script offering 12 months and 31 days and submitting, and a page that loads no IMask. A test page (PartialDatePage, tests/templates/tests/partial_date_page.html, three routes under /dates/) and PartialDatePageForm in tests/forms.py. pyproject.toml: the module in non-mirror-paths. partial-date.js: offer() keeps each select's full option list in a WeakMap and puts into the select only the options that can be chosen, in order, replacing hidden and disabled; a held option that cannot be chosen stays while the form is first shown. README: "What the script does" under the three-part widgets.
+Verified: red first, 19 of 55 failed against the prototype, all for options left in the list (the days offered, the absent 30th and 31st, a group added later, a page that loads no IMask). Then green. Probed by breaking each mechanism in the script: month open before year (7 fail), day open before month (2), once-guard removed (1), change listener removed (1), input listener removed (1), added nodes not scanned (2), keep always on (10), keep never on (6), held option dropped (2). uv run pytest tests/test_partial_date_e2e.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py tests/test_pack/test_template_list.py -q: all passed. uv run pre-commit run --all-files: all hooks passed.
+Next: the full suite and the lint gate once, then the report.
+Watch: the test page draws the form with form.as_div and not through the pack, because the pack's form drawing writes the form's media itself and would put the script on the page without it. The years of PartialDateSelect cover this year back a hundred, so the 2100 case is typed only.
+
+## 2026-10-09T23:39:26Z · Implementer US4 · T006
+
+Did: Wrote the T006 tests first: precision codes (needs_month, needs_day, too_fine_month, too_fine_day), ValueError at definition for a wrong precision and for a resolution coarser than coarsest, the field telling a widget in get_bound_field (each of the three widgets, a widget replaced in a form's __init__, two forms of one class), the masked input's data-imask and the three-part widgets drawing no part beyond the resolution, a widget on a CharField keeping day, the pack drawing each of them in four renderers and in a formset's empty form, and Chrome taking no day at a resolution of month and no month at year. Saw them fail: the datetime and widget-replaced tests failed on the prototype as it stood; with the precision checks, the ValueErrors, the part slicing, the data-imask resolution and the script's resolution broken the rest failed (40 failures in the new scope), and the prototype was restored. Then moved the widget telling out of __init__ into get_bound_field, dropped limit_widget and the demo's two calls to it, made prepare_value show a datetime as its date, and wrote the README section on precision, the four codes and the swap sentence, and the CHANGELOG sentence.
+Verified: uv run pytest tests/test_fields.py tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_imask_e2e.py tests/test_pack/test_template_list.py -q: 530 passed. uv run pre-commit run on the changed files: passed. The demo page at /partial-dates/ answers 200 on the dev server and draws resolution month and year in data-imask; the three-part forms draw 2 parts at month and 1 at year.
+Next: full suite and lint gate once, then the report.
+Watch: PartialDateInput.decompress still calls isoformat() on a datetime handed to the widget directly on a field that is not a PartialDateField; it is in widgets.py and outside what the task names. min_value and max_value are set on the widget by the same hook and are T007's to test.
+
+## 2026-10-09T23:45:51Z · Implementer US5 · T007
+
+Did: Wrote the tests for min_value and max_value on the field (each side of each limit at each precision, a limit given as a year, a year and month, a full date and a datetime.date, ValueError at definition, the field telling each widget), the widgets (data-imask min and max, data-partial-date-min and data-partial-date-max only where stated, the year list's three missing-limit cases, a refused date drawn again as sent), and the pack (all four renderers, formset empty form, refused submissions). Probed each by breaking the limit code in turn: the min and max comparisons, the month-end span, the telling in get_bound_field, the ValueError checks, the mask options, both template attributes, the year list's start, end and future case, and the held year. Each break failed a test. Fixed PartialDateInput.decompress to split a datetime by its date. README section "The earliest and latest date", error codes, CHANGELOG sentence, CONTEXT entries.
+Verified: uv run pytest tests/test_fields.py tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_pack/test_template_list.py -q: 578 passed. pre-commit on the changed files: all passed.
+Next: T008, the limits in Chrome and the demo.
+Watch: the limit code in the field and widgets was already on the branch from the prototype and matched the plan, so the only production change is decompress.
+
+## 2026-10-10T00:04:42Z · Implementer US5 · T008
+
+Did: Added browser tests in Chrome for the limits of 1998-03-15 and 2004-09: the masked input (1997 keeps 199, 19980314 keeps 1998-03-1, 19980315 whole, 200410 keeps 2004-0, plus the month-end of the latest limit and a value drawn outside the limits shown whole), and both three-part widgets (a typed year outside the limits leaves the month closed, March to December in 1998 with the 15th on, January to September in 2004, a month or day a change of year rules out is cleared, the year select holds 1998 to 2004, a group drawn holding a date outside the limits shows it as sent, and a page with no script leaves the field to refuse it). Added fields with limits to the two browser test forms. Probed the scripts by breaking each limit rule in turn (both validate comparisons, the month-end of the latest limit, the min option, the waiting input, both limit reads in partial-date.js, the day filter and the closed month); each break failed tests. Added the standalone partial dates demo page, its route and the link from the shell page, with the same forms through a shared view mixin. tests/test_demo.py covers both pages: sections present, limits drawn, year list, a post of each form, formset and modal. README: what each widget does with the limits, and the typed year note.
+Verified: uv run pytest tests/test_imask_e2e.py tests/test_partial_date_e2e.py: 169 passed. uv run pytest tests/test_demo.py -k PartialDates: 38 passed. pre-commit on the changed files: passed.
+Next: full suite and lint gate, then the report.
+Watch: the scripts already matched the plan, so T008 changed no production script. The demo page's only change is the link to the standalone page.
+
+## 2026-10-10T00:28:04Z · Implementer FIX-1 · T009
+
+Did: T009 (COR-001, COR-002, COR-009). imask.js, partial-date kind only: a capturing input listener reads the text after the caret before IMask runs; when IMask leaves the text after the edited range different, the value and selection recorded at beforeinput are put back, with prepare switched off for that assignment so a held 2021-1 is not padded to 2021-01. prepare returns nothing for text longer than one character that holds anything but digits and hyphens. The tail branch of prepare is removed. Seven browser cases added to TestPartialDateMaskedInput (the five edits, a paste of 14.03.2021, a held 2021-1 put back as held); six failed on the base code with the values the review gave, and the seventh failed once the put-back existed. README What the mask does states the rule, what works in the middle of a value and the paste.
+Verified: uv run pytest tests/test_imask_e2e.py -k TestPartialDateMasked: 50 passed. pre-commit on README.md, imask.js and the test file: passed.
+Next: T010.
+Watch: with the rule, typing 1 over a selected month is put back, so 10 to 12 are typed over a month by selecting from the month to the end. ADR 0050 line 28 and research.md R2 describe the mask before this rule; not edited (no ADR files).
+
+## 2026-10-10T00:29:05Z · Implementer FIX-1 · T010
+
+Did: T010 (COR-003). PartialDateField.has_changed compares prepare_value(initial) with the data sent. Two cases of TestPartialDateField: a date and a datetime sent back as the same ISO text are not a change; the same initials sent back as another day or a coarser value are. The first fails with the method removed (True is not False); the second passes on both, as it guards against an always-False answer.
+Verified: uv run pytest tests/test_fields.py: 168 passed. pre-commit on both files: passed.
+Next: T011.
+Watch: none.
+
+## 2026-10-10T00:35:38Z · Implementer FIX-1 · T011
+
+Did: T011 (COR-004, COR-005, COR-006, COR-008). Both demo pages build the added row from the formset empty form held in a template, in place of cloning the last row; PartialDatesMixin gains a context entry for it. PartialDatePageForm gains month_typed and year_typed before the other fields. The two part-name tests assert the three names differ. PartialDateInput.value_from_datadict returns the parts as sent when any holds a hyphen. README: what the script does (rows come from the empty form, never cloned) and the hyphen case.
+Verified: red first on the code as it stood: the demo page test on both pages (28 days for March) and the four hyphen cases failed; the new coarse-group tests pass on arrival and fail under mutation: either guard in partial-date.js replaced by if (true) fails them (and the older script tests), and the month part labelled Day fails both name tests. uv run pytest on test_partial_date_e2e.py, test_widgets.py, test_pack/test_partial_dates.py, test_demo.py, test_fields.py: 2222 passed. pre-commit on the files touched: passed.
+Next: T012.
+Watch: demo/partial_date_views.py is outside the files the task lists; one context entry added (D18).
+
+## 2026-10-10T00:36:01Z · Implementer FIX-1 · T012
+
+Did: T012 (COR-007). PartialDateSelect.years takes the first year as max(last - 100, 1). One case in TestPartialDateSelect: with max_value 0050 the list runs 0050 down to 0001. README names the stop at 0001.
+Verified: the case failed on the line as it stood (0000 and years below it extra); tests/test_widgets.py -k PartialDateSelect: 53 passed. pre-commit on the two files: passed.
+Next: full suite and lint gate once, then the report.
+Watch: none.
+
+## 2026-10-10T00:43:38Z · Orchestrator · ready
+
+Review closed with nothing open. Pull request description rewritten and the walkthrough laid out.
+
+## 2026-10-10T11:15:42Z · Implementer FIX-2 · T014
+
+Did: Renamed the field's options to min_resolution and max_resolution, the widget attribute to max_resolution, and the error codes to month_not_allowed and day_not_allowed. The data-imask key stays resolution. The demo's field any_precision is now any_resolution, and its help text names the new options. README, CHANGELOG, CONTEXT.md, ADRs 0048 and 0049, and spec.md use the new words; the glossary entry is Resolution. The English catalogue's location comments were regenerated.
+Verified: uv run pytest tests/test_fields.py tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_demo.py tests/test_partial_date_e2e.py tests/test_imask_e2e.py -q -n auto: 2314 passed. A search of the named paths for coarse, finest, finer, too_fine and precision finds nothing.
+Next: T013, the masked input's open positions and typing over in place.
+Watch: Existing tests were renamed to the new vocabulary, nothing weakened. The demo field any_precision became any_resolution, which changes the input's name attribute on the demo page and nothing the page shows.
+
+## 2026-10-10T11:26:10Z · Implementer FIX-2 · T013
+
+Did: The masked input shows its open positions while it has focus (YYYY-MM-DD, 19YY-MM-DD, 1998-0M-DD) and holds the partial date alone when focus leaves. The formdata listener sends the partial date alone for a partial-date input, so Enter in a focused input submits 1998-03. Typing writes over in place, and a typed-over selection that stops short of the end is written over from its start. A deletion that would move a digit of another part is not applied, which is now judged on the deleted character and the digit beside a hyphen, not on three positions. The widget gives its input a placeholder for its max_resolution through build_attrs.
+Verified: uv run pytest -n auto -q: 6038 passed. The new browser tests were run against the script at the base commit: 14 failed, 5 passed (the five are guards of behaviour that held before). uv run pre-commit run --all-files: all hooks passed.
+Next: Forge verifies independently.
+Watch: Three things differ from the spike. (1) The caret is set to the first open position on focus, because a person who tabs in has the caret at the end and nothing could be typed. (2) The held state is put back with the mask's own state and updateControl, not by assigning the shown text, because assigning "2021-1M-DD" came back as 2021-01 after blur. (3) The range an edit may touch is the length of what was written plus two, so a paste of a whole date is not put back, and a deletion no longer reaches into the next part: Delete between the digits of 2020-12-25's month had turned the day into 05. Existing tests were changed only where the new behaviour replaces the old: values read after focus leaves, two paste tests, one put-back test, one typed-over year test.

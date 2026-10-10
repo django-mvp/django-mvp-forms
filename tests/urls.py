@@ -9,7 +9,13 @@ from django.views.generic import TemplateView
 from django_tomselect.autocompletes import AutocompleteModelView
 
 from demo.urls import urlpatterns as demo_urlpatterns
-from tests.forms import MaskedDialogForm, MaskedLineFormSet, MaskedPageForm
+from tests.forms import (
+    MaskedDialogForm,
+    MaskedLineFormSet,
+    MaskedPageForm,
+    PartialDatePageForm,
+    PartialDatePageLineFormSet,
+)
 
 # Where the browser tests' pages ask for IMask. The tests answer the request from
 # a copy under tests/data/ and nothing is fetched.
@@ -66,10 +72,56 @@ class MaskedPage(TemplateView):
         return JsonResponse({name: request.POST.getlist(name) for name in request.POST})
 
 
+@method_decorator(csrf_exempt, name="dispatch")
+class PartialDatePage(TemplateView):
+    """A page of three-part dates, which answers a post with what the form made."""
+
+    template_name = "tests/partial_date_page.html"
+    script = True
+    copies = 1
+
+    def get_context_data(self, **kwargs):
+        """Draw the form, bound when the query string says it was sent."""
+        entries = self.request.GET.dict()
+        bound = entries.pop("bound", None)
+        form = PartialDatePageForm(entries) if bound else PartialDatePageForm()
+        if not bound:
+            form.initial = entries
+        return super().get_context_data(
+            form=form,
+            line=PartialDatePageLineFormSet().empty_form,
+            script=self.script,
+            copies=range(self.copies),
+            **kwargs,
+        )
+
+    def post(self, request, *args, **kwargs):
+        """Return the entries of the post, what the form cleaned and its error codes."""
+        form = PartialDatePageForm(request.POST)
+        form.full_clean()
+        return JsonResponse(
+            {
+                "entries": {name: request.POST.getlist(name) for name in request.POST},
+                "cleaned": {name: str(v) for name, v in form.cleaned_data.items()},
+                "errors": {
+                    name: [error.code for error in errors]
+                    for name, errors in form.errors.as_data().items()
+                },
+            }
+        )
+
+
 urlpatterns = [
     *demo_urlpatterns,
     path("autocomplete/groups/", GroupAutocomplete.as_view(), name="ac-groups"),
     path("masked/", MaskedPage.as_view(), name="masked"),
+    path("dates/", PartialDatePage.as_view(), name="dates"),
+    path("dates/three-copies/", PartialDatePage.as_view(copies=3), name="dates-copies"),
+    path(
+        "dates/without-script/",
+        PartialDatePage.as_view(script=False),
+        name="dates-bare",
+    ),
     path("masked/three-copies/", MaskedPage.as_view(copies=3), name="masked-copies"),
     path("masked/cleaned/", MaskedPage.as_view(cleaned=True), name="masked-cleaned"),
     path("masked/without-imask/", MaskedPage.as_view(imask=False), name="masked-bare"),

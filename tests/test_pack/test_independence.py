@@ -970,7 +970,7 @@ class TestDistributedFiles:
     def test_no_module_imports_django_mvp_or_cotton(self, path):
         assert not imported_modules(path) & FORBIDDEN_MODULES
 
-    def test_the_package_static_directory_holds_only_the_stylesheet_and_the_script(
+    def test_the_package_static_directory_holds_only_the_stylesheet_and_the_scripts(
         self,
     ):
         files = sorted(
@@ -979,7 +979,11 @@ class TestDistributedFiles:
             if path.is_file()
         )
 
-        assert files == ["mvp_forms/imask.js", "mvp_forms/tomselect.css"]
+        assert files == [
+            "mvp_forms/imask.js",
+            "mvp_forms/partial-date.js",
+            "mvp_forms/tomselect.css",
+        ]
         assert [path for path in PACKAGE.rglob("static") if path.is_dir()] == [
             PACKAGE / "static"
         ]

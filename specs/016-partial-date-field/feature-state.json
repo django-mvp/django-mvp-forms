@@ -1,0 +1,478 @@
+{
+  "feature": "016-partial-date-field",
+  "branch": "016-partial-date-field",
+  "repo": "django-mvp/django-mvp-forms",
+  "state": "PR_READY",
+  "state_history": [
+    {
+      "state": "QUEUED",
+      "at": "2026-10-09T21:38:16Z",
+      "note": "specification approved on Sam's words in the session at commit fc2cbd6951feabc9d32befde2b137424240204a6, on pull request #159; epic #132, stories #160 to #164"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-09T22:47:14Z",
+      "note": "research.md, plan.md, tasks.md: 5 stories, 8 tasks; continues on pull request #159 from the approved sketch"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-09T22:47:24Z",
+      "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-09T22:58:02Z",
+      "note": "plan gate open; US1 dispatched"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-10T00:08:59Z",
+      "note": "all five stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-10T00:11:16Z",
+      "note": "one reviewer, correctness and spec"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-10T00:43:23Z",
+      "note": "review closed with nothing open; walkthrough laid out"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-10T11:11:21Z",
+      "note": "the maintainer asked for changes at the merge gate: placeholders in place in the masked input, and min_resolution and max_resolution"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-10T11:31:27Z",
+      "note": "merge gate changes built and verified"
+    }
+  ],
+  "gates": {
+    "spec": {
+      "approved_by": "Sam",
+      "at": "2026-10-09T21:38:16Z",
+      "self_resolved": [
+        "spec gate opened on his words: \"Looks good. Take this through to sketch gate\", at commit fc2cbd6951feabc9d32befde2b137424240204a6 (pull request #159)",
+        "2026-10-10, at his request in sketch review: User Story 5 and FR-034 to FR-041 added (earliest and latest date, a select for the year, every option on the field)",
+        "2026-10-10, self-resolved: FR-042, a masked input shows a refused value whole"
+      ]
+    },
+    "sketch": {
+      "approved_by": "Sam",
+      "at": "2026-10-09T22:42:42Z",
+      "self_resolved": [
+        "A select for the year: added as a third widget, PartialDateSelect",
+        "An earliest and latest date followed by the field and the widgets: min_value and max_value on the field",
+        "A field that leaves the day out: already there as the finest precision of month",
+        "One field with a swappable widget: every option is stated on the field and none on a widget",
+        "The option finest renamed resolution: done in the build"
+      ]
+    },
+    "plan": {
+      "approved_by": "open",
+      "at": "2026-10-09T22:57:31Z"
+    },
+    "merge": {
+      "approved_by": null,
+      "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: changes requested, every finding applied",
+      "at": "2026-10-09T22:57:31Z",
+      "self_resolved": [
+        "SPEC-001 (high) padding through IMask's prepare loses the rest of a value changed in the middle; the range block subclass stays, research R1 rewritten, two cases added to T003",
+        "SPEC-002 (medium) a change that would leave the day without a date is refused by the page: T003",
+        "SEC-001 (medium) digits that are not 0 to 9 are refused: plan and T001",
+        "ARCH-001 (low) the hook runs once for each form: research R3, README sentence in T006",
+        "SPEC-003 (low) month names under another language: T004",
+        "SPEC-004 (low) a held value outside the limits is shown in the browser: T008",
+        "SPEC-005 (low) a waiting input is recorded so a second scan leaves it alone: T003",
+        "SPEC-006 (low) the year list with an earliest date in the future: decisions D11",
+        "SPEC-007 (low) a limit is fixed when the form class is defined: README sentence in T007"
+      ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer: changes requested, every finding fixed and each fix checked",
+      "at": "2026-10-10T00:40:21Z",
+      "self_resolved": [
+        "COR-001 (high) a change inside a masked date could alter another part: such a change is put back; five browser tests; checked in Chrome on the demo page",
+        "COR-002 (medium) a paste that is not a partial date is not taken",
+        "COR-003 (medium) has_changed compares the prepared initial value; test fails with the method removed",
+        "COR-004 (medium) the demo adds a row from the formset's empty form; a new row offers 31 days for March",
+        "COR-005 (medium) groups at a resolution of month and year on the browser page",
+        "COR-006 (low) the parts' names are asserted to differ; test fails with two labels the same",
+        "COR-007 (low) the year list stops at 0001; test fails with the line as it stood",
+        "COR-008 (low) a part holding a hyphen is refused and drawn again as sent",
+        "COR-009 (low) the unreachable branch of prepare is removed"
+      ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-10T11:31:29Z",
+      "self_resolved": []
+    }
+  },
+  "stories": [
+    {
+      "id": "US1",
+      "priority": "P1",
+      "issue": 160,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T001",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_fields.py",
+              "tests/test_pack/test_partial_dates.py",
+              "tests/test_pack/test_template_surface.py::TestRendererRoute"
+            ],
+            "commands": [
+              "uv run pytest -n auto -q"
+            ],
+            "code": [
+              "mvp_forms/fields.py:14"
+            ]
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_fields.py::TestPartialDateField::test_an_initial_date_sent_back_as_the_same_iso_text_is_not_a_change",
+              "tests/test_fields.py::TestPartialDateField::test_an_initial_date_sent_back_as_another_value_is_a_change"
+            ],
+            "commands": [
+              "uv run pytest tests/test_fields.py"
+            ],
+            "code": [
+              "mvp_forms/fields.py:115"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US2",
+      "priority": "P1",
+      "issue": 161,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T002",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestPartialDateMaskInput",
+              "tests/test_pack/test_partial_dates.py::TestPartialDateMaskInput"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_pack/test_documented_examples.py tests/test_pack/test_template_list.py -q"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:602"
+            ]
+          }
+        },
+        {
+          "id": "T003",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py tests/test_pack/test_documented_examples.py tests/test_pack/test_independence.py tests/test_pack/test_masked_inputs.py -q"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:147"
+            ]
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_typing_a_year_over_the_selected_year_leaves_the_month_and_day",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_deleting_back_over_the_year_leaves_the_month_and_day",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_deleting_back_over_the_month_leaves_the_year_and_day",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_deleting_forward_inside_the_year_leaves_the_month_and_day",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_typing_over_a_month_the_day_does_not_fit_leaves_the_year_and_day",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_a_value_put_back_is_put_back_as_it_was_held",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_a_pasted_text_that_is_not_a_partial_date_is_not_taken"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py -k TestPartialDateMasked"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:76",
+              "mvp_forms/static/mvp_forms/imask.js:162",
+              "mvp_forms/static/mvp_forms/imask.js:216"
+            ]
+          }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_partial_dates.py::TestResolution"
+            ],
+            "commands": [
+              "uv run pytest -n auto -q"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:626"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US3",
+      "priority": "P2",
+      "issue": 162,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T004",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestPartialDateInput",
+              "tests/test_widgets.py::TestPartialDateSelect",
+              "tests/test_pack/test_partial_dates.py::TestPartialDateInput",
+              "tests/test_pack/test_partial_dates.py::TestPartialDateSelect"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_pack/test_template_list.py -q"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:632",
+              "mvp_forms/templates/mvp_forms/widgets/partial_date.html:1"
+            ]
+          }
+        },
+        {
+          "id": "T005",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_partial_date_e2e.py::TestPartialDateScript"
+            ],
+            "commands": [
+              "uv run pytest tests/test_partial_date_e2e.py -q"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/partial-date.js:36"
+            ]
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_partial_date_e2e.py::TestPartialDateDemoPages::test_a_sample_added_after_february_was_chosen_offers_the_days_of_march",
+              "tests/test_partial_date_e2e.py::TestPartialDateScript::test_a_page_with_groups_of_a_month_and_of_a_year_raises_no_error",
+              "tests/test_partial_date_e2e.py::TestPartialDateScript::test_a_year_opens_the_month_of_a_group_that_ends_at_the_month",
+              "tests/test_partial_date_e2e.py::TestPartialDateScript::test_a_group_after_coarser_ones_still_follows_the_calendar",
+              "tests/test_widgets.py::ThreePartWidget::test_each_part_says_which_part_it_is",
+              "tests/test_pack/test_partial_dates.py::TestPartialDateInput::test_the_parts_are_inside_one_element_that_marks_the_group",
+              "tests/test_widgets.py::ThreePartWidget::test_a_part_holding_a_hyphen_is_refused_and_drawn_again_as_it_was_sent"
+            ],
+            "commands": [
+              "uv run pytest tests/test_partial_date_e2e.py tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_demo.py tests/test_fields.py -n auto"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:705",
+              "demo/partial_date_views.py:85",
+              "demo/templates/demo/partial_dates.html:47",
+              "demo/templates/demo/partial_dates_standalone.html:72"
+            ]
+          }
+        },
+        {
+          "id": "T015",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -n auto -q"
+            ],
+            "code": [
+              "demo/menus.py:138"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US4",
+      "priority": "P3",
+      "issue": 163,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T006",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_fields.py::TestPartialDateField",
+              "tests/test_widgets.py::TestPartialDateMaskInput",
+              "tests/test_widgets.py::TestPartialDateInput",
+              "tests/test_widgets.py::TestPartialDateSelect",
+              "tests/test_pack/test_partial_dates.py::TestResolution",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_nothing_finer_than_the_resolution_the_field_states_is_taken"
+            ],
+            "commands": [
+              "uv run pytest tests/test_fields.py tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_imask_e2e.py -q"
+            ],
+            "code": [
+              "mvp_forms/fields.py:93",
+              "mvp_forms/fields.py:107",
+              "demo/partial_date_forms.py:75"
+            ]
+          }
+        },
+        {
+          "id": "T014",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_partial_dates.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_fields.py tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_demo.py tests/test_partial_date_e2e.py tests/test_imask_e2e.py -q -n auto"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:610"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US5",
+      "priority": "P3",
+      "issue": 164,
+      "worktree": null,
+      "status": "done",
+      "replans": 0,
+      "tasks": [
+        {
+          "id": "T007",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_fields.py::TestPartialDateField",
+              "tests/test_widgets.py::TestPartialDateMaskInput",
+              "tests/test_widgets.py::TestPartialDateInput",
+              "tests/test_widgets.py::TestPartialDateSelect",
+              "tests/test_pack/test_partial_dates.py::TestLimits"
+            ],
+            "commands": [
+              "uv run pytest tests/test_fields.py tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_pack/test_template_list.py -q"
+            ],
+            "code": [
+              "mvp_forms/fields.py:132",
+              "mvp_forms/widgets.py:624",
+              "mvp_forms/widgets.py:694",
+              "mvp_forms/widgets.py:740"
+            ]
+          }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInputLimits",
+              "tests/test_partial_date_e2e.py::TestPartialDateScriptLimits",
+              "tests/test_demo.py::TestPartialDatesPage",
+              "tests/test_demo.py::TestStandalonePartialDatesPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py tests/test_partial_date_e2e.py -q",
+              "uv run pytest tests/test_demo.py -q -k PartialDates"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:99",
+              "mvp_forms/static/mvp_forms/partial-date.js:68",
+              "demo/partial_date_views.py:117",
+              "demo/urls.py:148"
+            ]
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestPartialDateSelect::test_with_a_latest_date_in_the_first_hundred_years_the_years_stop_at_0001"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py -k PartialDateSelect"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:754"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "budgets": {
+    "converge_cycles": {
+      "used": 1,
+      "max": 2
+    },
+    "review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "design_review_cycles": {
+      "used": 1,
+      "max": 1
+    },
+    "tokens": {
+      "used": 28.78,
+      "max": 120
+    }
+  },
+  "pr": {
+    "number": 159,
+    "draft": true
+  }
+}

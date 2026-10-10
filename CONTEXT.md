@@ -275,6 +275,31 @@ A character of a pattern that IMask writes and the person does not type, such as
 the hyphen in `aa-0000`.
 _Avoid_: literal, separator, constant.
 
+**Partial date**:
+A date known to the year, to the month or to the day, written as ISO text:
+`2021`, `2021-03` or `2021-03-14`. A part is only ever left out from the right,
+so a month with no year is not one. `PartialDateField` cleans to it.
+_Avoid_: incomplete date, fuzzy date, date range (a partial date is one date,
+known only so far).
+
+**Resolution**:
+How much of a partial date is given: one of year, month and day, from lowest
+to highest. `2021-03` has the resolution month. A developer states two options
+on the field: `min_resolution`, the lowest resolution it accepts, and
+`max_resolution`, the highest.
+_Avoid_: granularity, accuracy, format.
+
+**Earliest date** and **latest date**:
+The limits a field accepts, stated as `min_value` and `max_value`, each a
+partial date or a `datetime.date`. A partial value is inside them when any day
+it could be is, and a limit given to the month stands for the whole month.
+_Avoid_: minimum, maximum, bounds, range.
+
+**Part**:
+The year, the month or the day of a partial date. In the three-part widget each
+is one widget of a multi-widget field.
+_Avoid_: segment, unit, field (the field is the whole partial date).
+
 ## Terms deliberately not used
 
 **Component**:

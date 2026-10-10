@@ -147,6 +147,7 @@ EASY_ICONS = {
             "formset-stacked": "bi bi-card-list",
             "formset-table": "bi bi-table",
             "input-masks": "bi bi-123",
+            "partial-dates": "bi bi-calendar3",
             "themes": "bi bi-brush",
             "tomselect": "bi bi-menu-button-wide",
         },

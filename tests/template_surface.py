@@ -22,10 +22,11 @@ from django.template.library import SimpleNode
 from django.template.loader_tags import IncludeNode
 
 from mvp_forms.templatetags.daisyui import FieldInput
+from mvp_forms.widgets import PartialDateInput
 
 LIST_HEADING = "### Replacing one template"
 SUPPORTED_HEADING = "#### A supported package's templates"
-PACK_DIRECTORY = "daisyui/"
+PACK_DIRECTORY = ("daisyui/", "mvp_forms/")
 SUPPORTED_DIRECTORIES = ("django_tomselect/",)
 LITERAL_NAMES = {"True", "False", "None"}
 PACKS_OWN_OBJECTS = {"drawn", "table"}
@@ -116,7 +117,8 @@ class TemplateSurface:
         """Return the paths the form renderer loads, not Django's template engine.
 
         These are the templates ``FieldInput`` names for a widget or for a
-        rating, and every template those include, by a literal name, however
+        rating, the template a widget of the package names for itself, and
+        every template those include, by a literal name, however
         deep.
 
         Returns:
@@ -127,6 +129,7 @@ class TemplateSurface:
             *FieldInput.templates.values(),
             *FieldInput.inline_templates.values(),
             FieldInput.rating_template,
+            PartialDateInput.template_name,
         ]
         while pending:
             path = pending.pop()

@@ -995,8 +995,8 @@ A host project replaces one template of the pack by putting a file at the same p
 
 A replacement is found by one of two routes, and the last column of the list below says which:
 
-- The templates outside `daisyui/widgets/` are found through `TEMPLATES`. Put the replacement in a directory listed in `DIRS`, or in the `templates` directory of an app listed in `INSTALLED_APPS` before `mvp_forms`.
-- The templates under `daisyui/widgets/` are loaded by the form renderer, and Django's default renderer does not read `TEMPLATES`. It looks in Django's own form templates and then in the `templates` directory of each installed app, in order, so with the default renderer a replacement is found only in an app listed before `mvp_forms`. A project that keeps it in a `DIRS` directory sets `FORM_RENDERER = "django.forms.renderers.TemplatesSetting"` and adds `"django.forms"` to `INSTALLED_APPS`, so Django's own widget templates are still found.
+- The templates outside `daisyui/widgets/` and `mvp_forms/widgets/` are found through `TEMPLATES`. Put the replacement in a directory listed in `DIRS`, or in the `templates` directory of an app listed in `INSTALLED_APPS` before `mvp_forms`.
+- The templates under `daisyui/widgets/` and `mvp_forms/widgets/` are loaded by the form renderer, and Django's default renderer does not read `TEMPLATES`. It looks in Django's own form templates and then in the `templates` directory of each installed app, in order, so with the default renderer a replacement is found only in an app listed before `mvp_forms`. A project that keeps it in a `DIRS` directory sets `FORM_RENDERER = "django.forms.renderers.TemplatesSetting"` and adds `"django.forms"` to `INSTALLED_APPS`, so Django's own widget templates are still found.
 
 An app listed after `mvp_forms` is never used. Once django-crispy-forms has loaded `daisyui/field.html`, `daisyui/uni_form.html`, `daisyui/uni_formset.html`, `daisyui/whole_uni_form.html` or `daisyui/whole_uni_formset.html` it keeps it in memory, so restart the development server after you add or edit a replacement for one of those five.
 
@@ -1064,6 +1064,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/widgets/group_options.html` | The options of a radio group or a checkbox group, each an input in a label of its own, under a nested fieldset where the choices have group names, which the two group templates include. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/rating.html` | A field drawn as a rating: the element that holds the stars and one radio input for each choice, where `widget` also holds `rating_class`, the classes of that element, and `inputs`, the choices in the order they are drawn, the one that clears the rating first. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/select_date.html` | A date drawn by `SelectDateWidget`: a select for each part of the date, side by side. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/partial_date.html` | A partial date drawn by `PartialDateInput` or `PartialDateSelect`: one element that holds a year, a month and a day side by side, each a part of one field. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 
@@ -1476,7 +1477,240 @@ Options IMask refuses, such as a regular expression JavaScript cannot compile, l
 
 #### What is not supported
 
-An option whose value is a JavaScript function cannot be written in Python and is not supported: function masks, `prepare`, `prepareChar`, `commit`, `validate`, `dispatch`, `format` and `parse`. IMask's date mask needs two of them for any format but its default, so there is no date widget. There are no widgets for one particular format, such as a phone number or an IBAN, because the pattern differs by country and each is one line with `PatternMaskInput`. IMask's pipes, which format a value with no input, are not covered.
+An option whose value is a JavaScript function cannot be written in Python and is not supported: function masks, `prepare`, `prepareChar`, `commit`, `validate`, `dispatch`, `format` and `parse`. IMask's date mask needs two of them for any format but its default, so none of the four widgets is a date widget: a date is a pattern of range blocks, and a partial date has a widget of its own, [`PartialDateMaskInput`](https://github.com/django-mvp/django-mvp-forms#partial-dates). There are no widgets for one particular format, such as a phone number or an IBAN, because the pattern differs by country and each is one line with `PatternMaskInput`. IMask's pipes, which format a value with no input, are not covered.
+
+### Partial dates
+
+A partial date is a date known to the year, to the month or to the day: a letter dated 1894, a sample collected in March 2021, a birth on 14 March 2021. `PartialDateField` takes one from a form, checks it against the calendar and hands the form `cleaned_data` ISO text.
+
+This is the public surface:
+
+- `mvp_forms.fields.PartialDateField`
+- `mvp_forms.widgets.PartialDateMaskInput`
+- `mvp_forms.widgets.PartialDateInput`
+- `mvp_forms.widgets.PartialDateSelect`
+- the template `mvp_forms/widgets/partial_date.html` and the script `mvp_forms/partial-date.js`
+
+#### The field
+
+```python
+from django import forms
+
+from mvp_forms.fields import PartialDateField
+
+
+class SampleForm(forms.Form):
+    collected = PartialDateField(required=False)
+```
+
+The field takes `CharField`'s own arguments, and `required`, `disabled`, `validators`, `error_messages`, `label`, `help_text` and `initial` behave as they do there. With no widget named it is drawn as a text input, in the pack's `input` class with the size, colour and variant stated for the form, and its form's media names no script.
+
+| Entered | `cleaned_data` |
+|---|---|
+| `2021` | `"2021"` |
+| `2021-03` | `"2021-03"` |
+| `2021-3` | `"2021-03"` |
+| `2021-03-14` | `"2021-03-14"` |
+| `2021-3-4` | `"2021-03-04"` |
+| `2021-` | `"2021"` |
+| nothing, or only space | `""` |
+
+A value is a year of four digits, then a month, then a day, each part joined to the last by a hyphen. A month or a day of one digit is padded to two. Space around the value is dropped, and so is one trailing hyphen. A part is only ever left out from the right: a month with no year and a day with no month are refused. Every part is made of the digits 0 to 9, so a year written in the digits of another script is refused. A date has to exist: `2023-02-29` is refused and `2024-02-29` is not, and the Gregorian rules apply to every year from 0001.
+
+The field returns text, as a `CharField` does, and never a `datetime.date`, since a year alone is no date. A `datetime.date` given as the field's `initial` is shown as its ISO text, and so is the date of a `datetime.datetime`, with no time. A model's `CharField` with `max_length=10` takes the value as it is, and so does a model field of your own that stores a partial date. How a project stores it is the project's.
+
+#### Error codes
+
+Every error is raised with a `code`, so a test or a form's `has_error` can name it, and each message can be replaced through `error_messages`:
+
+| Code | The value |
+|---|---|
+| `required` | is empty on a required field |
+| `invalid` | is not a date written with hyphens: it holds anything but the digits 0 to 9 and hyphens, has more than three parts, an empty part at its end, or more than one trailing hyphen |
+| `year` | has a year of fewer or more than four digits, or the year `0000` |
+| `month` | has a month above 12, or a month of `0` or `00` |
+| `day` | has a day the month does not have, including 29 February in a year that is not a leap year, or a day of `0` or `00` |
+| `no_year` | has a month or a day and no year |
+| `no_month` | has a day and no month |
+| `needs_month` | is a year alone, on a field whose `min_resolution` is `"month"` |
+| `needs_day` | is a year alone or a year and a month, on a field whose `min_resolution` is `"day"` |
+| `month_not_allowed` | has a month or a day, on a field whose `max_resolution` is `"year"` |
+| `day_not_allowed` | has a day, on a field whose `max_resolution` is `"month"` |
+| `min_value` | is before the field's `min_value`. The limit is in the error's `params` as `limit` |
+| `max_value` | is after the field's `max_value`. The limit is in the error's `params` as `limit` |
+
+A value cut off inside a part cannot be told from a part of one digit, so `2021-0` is a month of zero and `202` is a year of three digits.
+
+#### How much of a date must be given
+
+`min_resolution` is the lowest resolution a field accepts and `max_resolution` is the highest. Each is one of `"year"`, `"month"` or `"day"`. With nothing stated a field accepts all three, as `min_resolution="year"` and `max_resolution="day"`.
+
+```python
+class SampleForm(forms.Form):
+    analysed = PartialDateField(min_resolution="month")  # a year alone is refused
+    published = PartialDateField(max_resolution="month")  # a day is refused
+    founded = PartialDateField(max_resolution="year")  # a year and nothing else
+```
+
+The field refuses a value lower than `min_resolution` or higher than `max_resolution` with the code that names what is missing or not allowed, `needs_month`, `needs_day`, `month_not_allowed` or `day_not_allowed`. A value that is not a date is refused with its own code first, whatever the resolutions.
+
+A resolution that is not one of the three, and a `max_resolution` lower than `min_resolution`, raise `ValueError` when the form class is defined. The message names the option at fault, and both options when the `max_resolution` is lower than the `min_resolution`.
+
+Every widget follows the `max_resolution`, and you state it nowhere but on the field, so changing a widget is changing one name:
+
+- `PartialDateMaskInput` writes the resolution in its `data-imask`, so at `"month"` the input takes a year and a month and no day, and at `"year"` it takes the year alone.
+- `PartialDateInput` and `PartialDateSelect` draw no part higher than the maximum resolution: at `"month"` a year and a month, at `"year"` the year alone. A day sent to a field of that resolution anyway is refused with `day_not_allowed`.
+- A widget on a field that is not a `PartialDateField` has no maximum resolution stated and keeps `"day"`: the masked input takes a full date and the other two draw all three parts.
+
+The field tells its widget the first time its form reads the field, so a widget your form's `__init__` puts in its place is told as well, and two forms of one class never share a widget.
+
+```python
+class SampleForm(forms.Form):
+    published = PartialDateField(max_resolution="month")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["published"].widget = PartialDateSelect()
+```
+
+A widget is swapped before the form is first drawn or validated, since a form keeps the bound field it first made.
+
+`min_resolution` is checked by the field alone. A three-part widget still draws every part up to the maximum resolution, and a masked input still takes a year alone, so a value of too low a resolution comes back from the field with `needs_month` or `needs_day`.
+
+#### The earliest and latest date
+
+`min_value` is the earliest date a field accepts and `max_value` the latest. Each takes a partial date as text, in any of the three resolutions, or a `datetime.date`. With neither stated the field accepts any date.
+
+```python
+import datetime
+
+
+class SampleForm(forms.Form):
+    letter = PartialDateField(min_value="1850", max_value="1899")
+    sample = PartialDateField(min_value="1998-03-15", max_value="2004-09")
+    filed = PartialDateField(min_value=datetime.date(2010, 1, 1))
+```
+
+A value outside the limits is refused with the code `min_value` or `max_value`, and the limit, padded to ISO text, is in the error's `params` as `limit`. A value that is not a date is refused with its own code first, and a value higher or lower than the field allows is refused for its resolution before the limits are looked at.
+
+A partial value is inside the limits when any day it could be is. The comparison is of the first and last day each value covers:
+
+- A value is refused by `min_value` when its last possible day is before the first day of `min_value`.
+- A value is refused by `max_value` when its first possible day is after the last day of `max_value`.
+- A limit given to the year or to the month stands for the whole of it. As an earliest date `1998-03` means 1 March 1998, and as a latest date it means 31 March 1998.
+
+With `min_value="1998-03-15"`, `1998`, `1998-03` and `1998-03-15` are accepted, because each of them holds a day on or after the 15th of March, and `1997`, `1998-02` and `1998-03-14` are refused. With `max_value="1998-03-15"` the same three are accepted and `1999`, `1998-04` and `1998-03-16` are refused.
+
+A limit that is not a partial date, and a `min_value` later than the `max_value`, raise `ValueError` when the form class is defined. The message names the option at fault, and both options when the earliest date is the later one.
+
+A limit is fixed when the form class is defined, and a class body runs once, when the module is imported. A limit that follows today's date, such as a sample that cannot be dated in the future, is given by declaring the field in the form's `__init__`, which runs for every form:
+
+```python
+class SampleForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["collected"] = PartialDateField(
+            max_value=datetime.date.today(), required=False
+        )
+```
+
+Every widget is told the limits by the field, as it is told the resolution, and you state them nowhere else:
+
+- `PartialDateMaskInput` writes `min` and `max` in its `data-imask`, as padded ISO text, for each limit the field states and for no other.
+- `PartialDateInput` and `PartialDateSelect` write `data-partial-date-min` and `data-partial-date-max` on the element that holds the parts, again for each limit stated and for no other.
+- `PartialDateSelect` lists the years from the year of `max_value` back to the year of `min_value`, latest first. With no `max_value` the list starts this year, or a hundred years on from the year of `min_value` when that year is still to come. With no `min_value` it reaches a hundred years back from where it starts. A year the form already holds that is outside the limits is still put first, so a refused date is drawn as it was sent.
+- A widget on a field that is not a `PartialDateField` is told no limits and writes none.
+
+A date outside the limits that was sent is drawn again as it was sent, in every widget, with the field's error.
+
+How a person is kept inside the limits depends on the widget:
+
+- `PartialDateMaskInput` refuses the digit that would leave no date inside the limits, as [What the mask does](#what-the-mask-does) describes.
+- `PartialDateInput` and `PartialDateSelect` offer only the months and days inside the limits, as [What the script does](#what-the-script-does) describes.
+- With `PartialDateInput` the year is typed, and a text input has no minimum. A typed year outside the limits keeps the month closed, and the field's error says which limit was crossed once the form is sent. Nothing else in the browser says so. `PartialDateSelect` offers only the years inside the limits, so a person cannot choose one outside them.
+
+#### The masked input
+
+`PartialDateMaskInput` draws one text input and has IMask put the hyphens in as a person types.
+
+```python
+from mvp_forms.widgets import PartialDateMaskInput
+
+
+class SampleForm(forms.Form):
+    collected = PartialDateField(
+        required=False,
+        widget=PartialDateMaskInput(attrs={"placeholder": "2021-03-14"}),
+    )
+```
+
+`PartialDateMaskInput(attrs=None)` takes HTML attributes and nothing else. Every option is a keyword of the field. The input is drawn with the field's name and id, with `inputmode="numeric"` so a touch device offers a numeric keypad unless your `attrs` state an `inputmode`, and with every other attribute you gave kept. Its `data-imask` holds `{"kind": "partial-date", "resolution": "day"}`, with the field's `max_resolution` in place of `"day"` when the field states one, and `min` and `max` when the field states a limit. It carries a `placeholder` of `YYYY-MM-DD`, `YYYY-MM` or `YYYY` for the field's `max_resolution`, unless your `attrs` state one. In the pack it is an `input`, takes the size, colour and variant stated for the form, and is drawn the same way through Django's own rendering.
+
+The page has to load what a page loads for any mask widget: IMask and the form's media, which names `mvp_forms/imask.js`. [What to load](https://github.com/django-mvp/django-mvp-forms#what-to-load) says how, and how a page's Content Security Policy and a project's bundler are met.
+
+A page that does not load IMask draws the input as an ordinary text input. Nothing is masked, no error is raised in the browser, and the form submits what was typed to the field, which checks it as it does any value.
+
+The widget on a field that is not a `PartialDateField` is a text input that submits what was typed.
+
+##### What the mask does
+
+The year is four digits, then a hyphen, a month and a hyphen, a day, and the hyphens are placed as the digits are typed.
+
+- While the input has focus its open positions are shown in place: `YYYY-MM-DD` when it is empty, `19YY-MM-DD` after `19`, and `1998-0M-DD` after `19980`. A field whose `max_resolution` is `"month"` shows `YYYY-MM` and one whose `max_resolution` is `"year"` shows `YYYY`. The caret waits at the first open position. When focus leaves, the input holds the partial date alone, `1998-03`, and an empty input is empty. The form is sent the same text whether or not the input has focus at that moment: `199803` typed and Enter pressed submits `1998-03`.
+- A digit that would make the month `00` or above 12 is not accepted. A digit that would make a day the typed month does not have is not accepted, and February takes the 29th only in a leap year. A change to the year or the month that would leave the day with no date is not accepted either: the input keeps the date it held.
+- With limits stated, a digit is also refused when no date inside the limits could follow from what has been typed. With `min_value="1998-03-15"` and `max_value="2004-09"`, `1997` keeps `199`, `19980314` keeps `1998-03-1`, `19980315` is taken whole, and `200410` keeps `2004-0`. The mask works out the first and the last day the typed text could still become, the way the field does, so a year or a month alone is taken while a date inside the limits remains.
+- A first digit that can only be the whole month, 2 to 9, or the whole day, 4 to 9, is padded with a zero as it is typed: `202145` gives `2021-04-05`. A pasted date is padded in the same way: `2021-3-4` gives `2021-03-04`.
+- Typing writes over the positions it reaches and moves nothing. With `2020-12-25` in the input, `1999` typed with the caret at the start gives `1999-12-25`, and so does selecting the year and typing `1999`. Selecting the month and typing `03` gives `2020-03-25`, and selecting everything and typing `19980304` gives `1998-03-04`. A digit that is refused for the month, the day or the limits is refused when it is typed over a digit too.
+- A change inside a value never alters a part you did not touch. Delete deletes the digit after the caret and Backspace the one before it, and the digit is not taken out of its part: deleting the `1` of the month in `2020-12-25` gives `2020-02-25`, and typing `1` writes it back. A deletion that would move a digit of another part into its place is not applied, and the input keeps the value it held, and the selection with it. Backspace or Delete inside the year of `2020-12-25`, and Delete between the digits of the month, leave `2020-12-25`. A digit is corrected by typing over it.
+- Pasted text that is longer than one character and holds anything but digits and hyphens, such as `14.03.2021`, is not taken: nothing of it is inserted.
+- A person may stop after the year or after the month. `2021` and `2021-03` are submitted as they stand, and the field accepts them.
+- A value the form was drawn with is shown under the mask, `2021-03` as `2021-03`. A value the mask would cut, such as `2021-02-30`, or `1997-03-14` where the earliest date is `1998-03-15`, held in a form's `initial` or in a bound form that failed, is shown whole so that the person sees what was sent. The mask is put on the input once the person has changed it to a value the mask takes.
+
+The mask refuses the digits a calendar cannot have and nothing more. The field is what checks the value.
+
+The padding is done by a subclass of IMask's range block that overrides `_appendCharRaw`, a method that IMask's guide does not document, because the two options the guide does document for changing typed text lose the rest of a value that is changed in the middle. The widget is tested against IMask 7.6.1, and a newer release needs the browser tests run against it before it is relied on.
+
+#### The year, the month and the day
+
+`PartialDateInput` draws a year, a month and a day as three parts that make one value, and `PartialDateSelect` is the same with the year chosen from a list.
+
+```python
+from mvp_forms.widgets import PartialDateInput, PartialDateSelect
+
+
+class SampleForm(forms.Form):
+    collected = PartialDateField(required=False, widget=PartialDateInput())
+    born = PartialDateField(required=False, widget=PartialDateSelect())
+```
+
+Both take `attrs` and nothing else, and every option is a keyword of the field. The attributes you give reach every part. The parts are one joined group in a single element that carries `data-partial-date`:
+
+- The year is a text input of four digits with a numeric keypad, or, in `PartialDateSelect`, a select of years.
+- The month is a select of the twelve months, named in the active language.
+- The day is a select of 1 to 31.
+
+Each part carries an `aria-label` that says which part it is and `data-partial-date-part` set to `year`, `month` or `day`. The parts submit under the field's name followed by `_year`, `_month` and `_day`, so a field named `collected` is posted as `collected_year`, `collected_month` and `collected_day`. In the pack the parts are drawn in one fieldset whose legend is the label, with one help text and one set of errors, and each part takes the size, colour and variant stated for the form. Only the year carries `required`, because a month and a day may be left out. Through Django's own rendering the same three controls are drawn.
+
+The widget joins the parts with hyphens and leaves out the empty ones from the right, so the field receives `2021`, `2021-03` or `2021-03-14`. A day with no month and a month with no year reach the field and are refused with `no_month` and `no_year`. A part holding a hyphen is not joined to the others: the form is refused with `invalid`. A form drawn again after a refused submission shows each part as it was sent, including `2021-02-30`, a day with no month and a part holding a hyphen. An `initial` value, as text or as a `datetime.date`, fills the parts it has and leaves the rest empty.
+
+`PartialDateSelect` lists the years from this year back a hundred years, latest first, or the years between the field's limits when it states them. The list stops at the year `0001`. A year the form already holds that is not on the list is still an option, so a stored `1850` is shown and not lost.
+
+The widgets name `mvp_forms/partial-date.js` in the form's media. The script needs no IMask, and a page that loads the form's media is all it asks for.
+
+##### What the script does
+
+The script keeps the three parts in step with the calendar as the person fills them in.
+
+- No month can be chosen until the year has four digits, and no day can be chosen until a month is chosen. The parts that cannot be used yet are disabled, and so are not submitted.
+- The days on offer are the days the chosen month has in the entered year, and February offers the 29th only in a leap year. A day the month does not have is not in the list at all, so nothing greyed out is left to puzzle over.
+- The limits narrow the same lists. Under a year the limits leave no date in, no month can be chosen. In the first year only the months from the earliest date on are offered, and in the last year only the months up to the latest. The days of a month the limit falls in are cut the same way: with an earliest date of `1998-03-15`, March 1998 offers the 15th onward.
+- A month or a day the change has made impossible is cleared and never moved to another one. A chosen 31st is cleared when the month becomes February, and a chosen 29th of February is cleared when the year stops being a leap year. A day the new month still has is kept. A month the new year puts outside the limits, such as February when the year changes to the earliest one, is cleared, and so is a day a limit now rules out.
+- A form drawn holding a value that is not a date, such as `2021-02-30`, a day with no month, or a date outside the limits, shows what was sent until the person changes a part. The person sees what the field refused, and the first change puts the parts back in step.
+- A group added to the page later, such as the extra form of a formset, behaves in the same way, and a page that holds the form's media several times has the script act once. Add a row from the formset's empty form, held in a `<template>` with `__prefix__` replaced by the form count, and never clone a row in use: a clone of a row whose month was cut down to February offers only the days February has, because the script takes the options a select holds when it first meets it for its full list.
+
+The script writes no inline script and no inline handler, and it makes no request. It holds on to the full list of a part's options the first time it meets it, and puts back into the select only those that can be chosen.
+
+A page that does not load the script draws the same three parts with every option: twelve months and the days 1 to 31, each part enabled. The form submits, and the field refuses a combination that is not a date, so a day with no month comes back as `no_month` and a date such as `2021-02-30` as `day`.
 
 ### Themes
 
