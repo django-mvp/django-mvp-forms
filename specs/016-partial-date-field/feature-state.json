@@ -109,8 +109,20 @@
         },
         {
           "id": "T010",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_fields.py::TestPartialDateField::test_an_initial_date_sent_back_as_the_same_iso_text_is_not_a_change",
+              "tests/test_fields.py::TestPartialDateField::test_an_initial_date_sent_back_as_another_value_is_a_change"
+            ],
+            "commands": [
+              "uv run pytest tests/test_fields.py"
+            ],
+            "code": [
+              "mvp_forms/fields.py:115"
+            ]
+          }
         }
       ]
     },
