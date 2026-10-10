@@ -383,3 +383,10 @@ Spec FR-043 to FR-045.
 - No name, message, docstring, comment or document says coarsest, finest, coarser, finer or
   precision of a partial date. The glossary's entry is Resolution.
 - The demo's help text states the options by their new names and changes in no other way.
+
+### T015 — The demo lists Partial dates under a menu group, "Custom fields" (US3)
+
+**Files**: `demo/menus.py`
+
+- The sidebar entry for Partial dates moves into a new group labelled "Custom fields", placed
+  before "Third-party widgets". A change to the demo's appearance, with no test of its own.
