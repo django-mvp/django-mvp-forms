@@ -567,6 +567,76 @@ class TestPartialDateMaskedInput:
 
         assert field.input_value() == "2020-02-29"
 
+    def test_typing_a_year_over_the_selected_year_leaves_the_month_and_day(
+        self, masked_page
+    ):
+        page = masked_page(born="2021-12-14")
+        field = select_in(page, "born", 0, 4)
+
+        page.keyboard.type("1999")
+
+        assert field.input_value().endswith("-12-14")
+
+    def test_deleting_back_over_the_year_leaves_the_month_and_day(self, masked_page):
+        page = masked_page(born="2021-12-14")
+        field = select_in(page, "born", 4, 4)
+
+        page.keyboard.press("Backspace")
+
+        assert field.input_value().endswith("-12-14")
+
+    def test_deleting_back_over_the_month_leaves_the_year_and_day(self, masked_page):
+        page = masked_page(born="2021-12-14")
+        field = select_in(page, "born", 7, 7)
+
+        page.keyboard.press("Backspace")
+
+        value = field.input_value()
+        assert value.startswith("2021-")
+        assert value.endswith("-14")
+
+    def test_deleting_forward_inside_the_year_leaves_the_month_and_day(
+        self, masked_page
+    ):
+        page = masked_page(born="2021-12-14")
+        field = select_in(page, "born", 2, 2)
+
+        page.keyboard.press("Delete")
+
+        assert field.input_value().endswith("-12-14")
+
+    def test_typing_over_a_month_the_day_does_not_fit_leaves_the_year_and_day(
+        self, masked_page
+    ):
+        page = masked_page(born="2021-03-31")
+        field = select_in(page, "born", 5, 7)
+
+        page.keyboard.type("4")
+
+        value = field.input_value()
+        assert value.startswith("2021-")
+        assert value.endswith("-31")
+
+    def test_a_value_put_back_is_put_back_as_it_was_held(self, masked_page):
+        page = masked_page()
+        field = page.locator("#id_born")
+        field.click()
+        field.press_sequentially("20211")
+        field.press("Home")
+
+        page.keyboard.type("1")
+
+        assert field.input_value() == "2021-1"
+
+    def test_a_pasted_text_that_is_not_a_partial_date_is_not_taken(self, masked_page):
+        page = masked_page()
+        field = page.locator("#id_born")
+        field.focus()
+
+        page.keyboard.insert_text("14.03.2021")
+
+        assert field.input_value() == ""
+
     @pytest.mark.parametrize(
         ("typed", "cleaned"), [("2021", "2021"), ("202103", "2021-03")]
     )

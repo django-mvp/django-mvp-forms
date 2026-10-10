@@ -13,6 +13,8 @@
   const masked = new WeakMap();
   // Inputs left unmasked, holding a value their mask would change.
   const waiting = new WeakSet();
+  // Partial date masks being given back a value they held, which is not a paste.
+  const putting = new WeakSet();
 
   // A definition is an expression written as text, or an object holding the
   // expression and a placeholder character. A built-in definition has no
@@ -69,9 +71,10 @@
   }
 
   // A pasted date whose month or day is one digit, given its leading zeros.
-  // Text typed or put back after the cursor is never a whole date, so a change
-  // in the middle of a value is left to the padded range blocks.
+  // Text that is more than one character and is not made of digits and hyphens
+  // is not a date in any notation the mask knows, and none of it is taken.
   function padPasted(text) {
+    if (text.length > 1 && !/^[0-9-]+$/.test(text)) return "";
     if (!/^[0-9]{4}-[0-9]{1,2}(-[0-9]{1,2})?$/.test(text)) return text;
     return text
       .split("-")
@@ -93,8 +96,8 @@
         M: { mask: paddedRange("2"), from: 1, to: 12, maxLength: 2 },
         D: { mask: paddedRange("4"), from: 1, to: 31, maxLength: 2 },
       },
-      prepare: function (text, masked, flags) {
-        return flags && flags.tail ? text : padPasted(text);
+      prepare: function (text, masked) {
+        return putting.has(masked) ? text : padPasted(text);
       },
       validate: function (value) {
         const [year, month, day] = value.split("-");
@@ -151,6 +154,39 @@
     return tried.value === value;
   }
 
+  // A change inside a partial date never alters a part the person did not
+  // touch. When IMask leaves the text after the edited range different from
+  // what it was, the input goes back to the value and selection it held. The
+  // text after the range is read from the browser's own edit, in a capturing
+  // listener that runs before IMask's.
+  function hold(input, mask) {
+    let held = null;
+    let after = "";
+    input.addEventListener("beforeinput", function () {
+      held = {
+        value: input.value,
+        start: input.selectionStart,
+        end: input.selectionEnd,
+      };
+    });
+    input.addEventListener(
+      "input",
+      function () {
+        after = input.value.slice(input.selectionStart);
+      },
+      { capture: true },
+    );
+    input.addEventListener("input", function () {
+      const before = held;
+      held = null;
+      if (!before || input.value.endsWith(after)) return;
+      putting.add(mask.masked);
+      mask.value = before.value;
+      putting.delete(mask.masked);
+      input.setSelectionRange(before.start, before.end);
+    });
+  }
+
   // A partial date mask cuts a value it does not take, such as 2021-02-30, down
   // to what it does. The input shows the whole value until the person has
   // changed it to one the mask takes, and no scan of the page masks it before.
@@ -177,6 +213,7 @@
         return;
       }
       mask = window.IMask(input, options);
+      if (written.kind === "partial-date") hold(input, mask);
     } catch (error) {
       // Options IMask refuses cost this input its mask and no other input.
       console.error(input, error);
