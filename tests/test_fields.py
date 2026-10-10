@@ -176,6 +176,27 @@ class TestPartialDateField:
 
         assert form["born"].value() == "2021-03-04"
 
+    @pytest.mark.parametrize(
+        "initial",
+        [datetime.date(2021, 3, 4), datetime.datetime(2021, 3, 4, 10, 30)],
+    )
+    def test_an_initial_date_sent_back_as_the_same_iso_text_is_not_a_change(
+        self, initial
+    ):
+        field = PartialDateField(required=False)
+
+        assert field.has_changed(initial, "2021-03-04") is False
+
+    @pytest.mark.parametrize(
+        "initial",
+        [datetime.date(2021, 3, 4), datetime.datetime(2021, 3, 4, 10, 30)],
+    )
+    def test_an_initial_date_sent_back_as_another_value_is_a_change(self, initial):
+        field = PartialDateField(required=False)
+
+        assert field.has_changed(initial, "2021-03-05") is True
+        assert field.has_changed(initial, "2021-03") is True
+
     def test_a_disabled_field_keeps_its_initial_value(self):
         form = partial_date_form(disabled=True)(
             {"born": "1999"}, initial={"born": datetime.date(2021, 3, 4)}

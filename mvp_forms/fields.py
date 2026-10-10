@@ -112,6 +112,10 @@ class PartialDateField(forms.CharField):
             return value.isoformat()
         return value
 
+    def has_changed(self, initial, data):
+        """Compare the initial value as the field shows it with what was sent."""
+        return super().has_changed(self.prepare_value(initial), data)
+
     def fail(self, code, **params):
         """Raise the field's error of this code."""
         raise ValidationError(self.error_messages[code], code=code, params=params)
