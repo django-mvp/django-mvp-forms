@@ -2,7 +2,7 @@
   "feature": "016-partial-date-field",
   "branch": "016-partial-date-field",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PR_READY",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "QUEUED",
@@ -38,6 +38,11 @@
       "state": "PR_READY",
       "at": "2026-10-10T00:43:23Z",
       "note": "review closed with nothing open; walkthrough laid out"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-10T11:11:21Z",
+      "note": "the maintainer asked for changes at the merge gate: placeholders in place in the masked input, and min_resolution and max_resolution"
     }
   ],
   "gates": {
@@ -215,6 +220,11 @@
               "mvp_forms/static/mvp_forms/imask.js:216"
             ]
           }
+        },
+        {
+          "id": "T013",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
@@ -319,6 +329,11 @@
               "demo/partial_date_forms.py:75"
             ]
           }
+        },
+        {
+          "id": "T014",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
