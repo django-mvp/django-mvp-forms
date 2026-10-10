@@ -32,7 +32,7 @@ form, and the field checks again on the server.
 ### Session 2026-10-09
 
 The maintainer confirmed the reading of the feature before this was written: a field that returns
-ISO text, two widgets, precision that only drops from the right, checks in the browser backed by
+ISO text, two widgets, a resolution that only drops from the right, checks in the browser backed by
 the same checks on the server, and no dependency on any partial date package. The coverage scan
 then found five ambiguities. Each was resolved from that conversation, the goals, the constitution
 and the decision records. Longer rationale is in `decisions.md`.
@@ -91,11 +91,11 @@ should be shaped.
 
 - **Q: Where does a developer state the options: on the field or on the widget?**
   A: On the field, all of them. There is one field, and a widget is named and nothing more. The
-  field tells whichever widget it has the finest precision and the earliest and latest dates, so a
+  field tells whichever widget it has the maximum resolution and the earliest and latest dates, so a
   developer changes from one widget to another by changing one name. Recorded as FR-041.
 
 - **Q: Can a developer leave the day out altogether?**
-  A: Yes, and this was already so: a finest precision of month. It is User Story 4.
+  A: Yes, and this was already so: a maximum resolution of month. It is User Story 4.
 
 - **Q: A masked input is drawn again holding a date its mask refuses, such as `2021-02-30` sent
   from a page with no script. What does it show?**
@@ -104,17 +104,16 @@ should be shaped.
   the person a date they did not send. Self-resolved after the question was put to the maintainer
   twice with the prototype and left open. Recorded as FR-042.
 
-- **Q: What is the option for the finest precision called?**
-  A: `resolution`. The maintainer named it when he approved the prototype.
+- **Q: What is the option for the highest resolution called?**
+  A: `max_resolution`. The maintainer named the option when he approved the prototype.
 
 ### Session 2026-10-10, at the merge gate
 
 The maintainer walked the finished pages and asked for three things.
 
 - **Q: What are the two options that state how much of a date a field takes called?**
-  A: `min_resolution` and `max_resolution`. The words coarsest and finest do not read as words
-  about dates. A date has a resolution of year, month or day, and the field states the least and
-  the most it accepts.
+  A: `min_resolution` and `max_resolution`. A date has a resolution of year, month or day, and
+  the field states the lowest and the highest it accepts.
 
 - **Q: Does the masked input show the shape of a date?**
   A: Yes. While a person is in the input its open positions are shown in place as `YYYY-MM-DD`,
@@ -192,7 +191,7 @@ and type into the input in a browser.
 4. **Given** such a page, **When** a person stops after the year or after the month and submits,
    **Then** the form receives the year or the year and month, and it is valid.
 5. **Given** a bound form or an initial value holding a partial date, **When** the form is drawn
-   on such a page, **Then** the value is shown under the mask at the precision it has.
+   on such a page, **Then** the value is shown under the mask at the resolution it has.
 6. **Given** a page that loads the form's media and not IMask, **When** a person types and
    submits, **Then** the input behaves as a plain text input, no error is raised in the browser,
    and the field validates what was sent.
@@ -252,30 +251,30 @@ the three parts in a browser. Submit with one, two and three parts filled.
 ### User Story 4 - A developer sets how precise a partial date must be (Priority: P3)
 
 A developer has a field that must be known at least to the month, or one that is never recorded
-to the day. They state the coarsest precision the field accepts and the finest. Both widgets
+to the day. They state the minimum resolution the field accepts and the maximum. Both widgets
 follow what was stated, and the field enforces it.
 
-**Why this priority**: The first three stories cover a date of any precision, which is the common
+**Why this priority**: The first three stories cover a date of any resolution, which is the common
 case. This narrows it for the fields that need it.
 
-**Independent Test**: Define fields with a coarsest precision of month and with a finest
-precision of month, submit values at each precision, and draw each field with both widgets.
+**Independent Test**: Define fields with a minimum resolution of month and with a maximum
+resolution of month, submit values at each resolution, and draw each field with both widgets.
 
 **Acceptance Scenarios**:
 
-1. **Given** a field whose coarsest precision is month, **When** it is submitted with a year
+1. **Given** a field whose minimum resolution is month, **When** it is submitted with a year
    alone, **Then** the field reports an error on the missing month.
-2. **Given** a field whose finest precision is month, **When** it is submitted with a full date,
+2. **Given** a field whose maximum resolution is month, **When** it is submitted with a full date,
    **Then** the field reports an error.
-3. **Given** a field whose finest precision is month, **When** it is drawn with the masked
+3. **Given** a field whose maximum resolution is month, **When** it is drawn with the masked
    widget, **Then** the input accepts no day. **When** it is drawn with the three-part widget,
    **Then** no day part is drawn.
-4. **Given** a field whose finest precision is year, **When** it is drawn with either widget,
+4. **Given** a field whose maximum resolution is year, **When** it is drawn with either widget,
    **Then** only a year can be entered.
-5. **Given** a field stated with a finest precision coarser than its coarsest, **When** the form
+5. **Given** a field stated with a maximum resolution lower than its minimum, **When** the form
    class is defined, **Then** an error is raised that names the two options.
 6. **Given** a field with nothing stated, **When** it is submitted at any of the three
-   precisions, **Then** it is accepted.
+   resolutions, **Then** it is accepted.
 
 ---
 
@@ -290,7 +289,7 @@ date outside them.
 limit after the form is sent. It is last because every other story works without it.
 
 **Independent Test**: Define a field with an earliest and a latest date, submit values at each
-precision on both sides of each limit, and draw the field with each widget.
+resolution on both sides of each limit, and draw the field with each widget.
 
 **Acceptance Scenarios**:
 
@@ -439,15 +438,15 @@ precision on both sides of each limit, and draw the field with each widget.
 - **FR-022**: A form drawn again after a failed submission MUST show in each part what the person
   entered, including a combination the field rejected.
 
-#### Precision
+#### Resolution
 
-- **FR-023**: The field MUST let a developer state the coarsest precision it accepts and the
-  finest, each one of year, month and day. With nothing stated it accepts all three.
-- **FR-024**: The field MUST reject a value coarser than the coarsest or finer than the finest,
+- **FR-023**: The field MUST let a developer state the minimum resolution it accepts and the
+  maximum, each one of year, month and day. With nothing stated it accepts all three.
+- **FR-024**: The field MUST reject a value lower than the minimum or higher than the maximum,
   with an error that identifies the part that is needed or not allowed.
-- **FR-025**: Every widget MUST follow the finest precision stated on the field: the masked input
+- **FR-025**: Every widget MUST follow the maximum resolution stated on the field: the masked input
   accepts nothing beyond it, and a three-part widget draws no part beyond it.
-- **FR-026**: A finest precision coarser than the coarsest MUST raise an error when the form
+- **FR-026**: A maximum resolution lower than the minimum MUST raise an error when the form
   class is defined, naming both options.
 
 #### The earliest and latest date
@@ -479,7 +478,7 @@ precision on both sides of each limit, and draw the field with each widget.
 
 #### One field, any widget
 
-- **FR-041**: Every option MUST be stated on the field: the precisions and the earliest and
+- **FR-041**: Every option MUST be stated on the field: the resolutions and the earliest and
   latest dates. A widget MUST take none of them from the developer. The field MUST tell whichever
   widget it is given what was stated, so that changing a field from one widget to another is a
   change of the widget's name and nothing else.
@@ -496,13 +495,13 @@ precision on both sides of each limit, and draw the field with each widget.
 #### Shipping it
 
 - **FR-030**: The README MUST gain a section on the field and its widgets: the values accepted
-  and returned, the precision options, what each widget needs the page to load, what each does on
+  and returned, the resolution options, what each widget needs the page to load, what each does on
   a page without its script, and how the text is handed to a model. The field and every widget
   MUST appear in the README's public surface, and any template the feature adds MUST appear in
   the template list.
 - **FR-031**: The specification of FS-015 and the README's section on mask widgets MUST be
   brought up to date where they say the package has no date widget.
-- **FR-032**: The demo MUST gain a page showing the field with each widget at each precision,
+- **FR-032**: The demo MUST gain a page showing the field with each widget at each resolution,
   with an earliest and a latest date, with initial values, in an invalid state, in a formset whose rows can be added, and in a modal.
 - **FR-033**: `CONTEXT.md` MUST gain the terms under Key Entities.
 
@@ -520,8 +519,8 @@ precision on both sides of each limit, and draw the field with each widget.
 
 - **Partial date**: a date known to the year, to the month or to the day, written as ISO text:
   `2021`, `2021-03` or `2021-03-14`. A part is only ever left out from the right.
-- **Precision**: how much of a partial date is given. One of year, month and day, from coarsest
-  to finest.
+- **Resolution**: how much of a partial date is given. One of year, month and day, from lowest
+  to highest.
 - **Part**: the year, the month or the day of a partial date. In the three-part widget each is
   one widget of a multi-widget field, which is what the glossary already calls a part.
 

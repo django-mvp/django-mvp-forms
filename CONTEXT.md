@@ -282,11 +282,11 @@ so a month with no year is not one. `PartialDateField` cleans to it.
 _Avoid_: incomplete date, fuzzy date, date range (a partial date is one date,
 known only so far).
 
-**Precision**:
-How much of a partial date is given: one of year, month and day, from coarsest
-to finest. `2021-03` has the precision month. A developer states two options on
-the field: `coarsest`, the least precise value it accepts, and `resolution`,
-the most precise.
+**Resolution**:
+How much of a partial date is given: one of year, month and day, from lowest
+to highest. `2021-03` has the resolution month. A developer states two options
+on the field: `min_resolution`, the lowest resolution it accepts, and
+`max_resolution`, the highest.
 _Avoid_: granularity, accuracy, format.
 
 **Earliest date** and **latest date**:

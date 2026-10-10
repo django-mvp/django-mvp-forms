@@ -1532,41 +1532,41 @@ Every error is raised with a `code`, so a test or a form's `has_error` can name 
 | `day` | has a day the month does not have, including 29 February in a year that is not a leap year, or a day of `0` or `00` |
 | `no_year` | has a month or a day and no year |
 | `no_month` | has a day and no month |
-| `needs_month` | is a year alone, on a field whose `coarsest` is `"month"` |
-| `needs_day` | is a year alone or a year and a month, on a field whose `coarsest` is `"day"` |
-| `too_fine_month` | has a month or a day, on a field whose `resolution` is `"year"` |
-| `too_fine_day` | has a day, on a field whose `resolution` is `"month"` |
+| `needs_month` | is a year alone, on a field whose `min_resolution` is `"month"` |
+| `needs_day` | is a year alone or a year and a month, on a field whose `min_resolution` is `"day"` |
+| `month_not_allowed` | has a month or a day, on a field whose `max_resolution` is `"year"` |
+| `day_not_allowed` | has a day, on a field whose `max_resolution` is `"month"` |
 | `min_value` | is before the field's `min_value`. The limit is in the error's `params` as `limit` |
 | `max_value` | is after the field's `max_value`. The limit is in the error's `params` as `limit` |
 
 A value cut off inside a part cannot be told from a part of one digit, so `2021-0` is a month of zero and `202` is a year of three digits.
 
-#### How precise a date must be
+#### How much of a date must be given
 
-`coarsest` is the least precise value a field accepts and `resolution` is the most precise. Each is one of `"year"`, `"month"` or `"day"`. With nothing stated a field accepts all three, as `coarsest="year"` and `resolution="day"`.
+`min_resolution` is the lowest resolution a field accepts and `max_resolution` is the highest. Each is one of `"year"`, `"month"` or `"day"`. With nothing stated a field accepts all three, as `min_resolution="year"` and `max_resolution="day"`.
 
 ```python
 class SampleForm(forms.Form):
-    analysed = PartialDateField(coarsest="month")  # a year alone is refused
-    published = PartialDateField(resolution="month")  # a day is refused
-    founded = PartialDateField(resolution="year")  # a year and nothing else
+    analysed = PartialDateField(min_resolution="month")  # a year alone is refused
+    published = PartialDateField(max_resolution="month")  # a day is refused
+    founded = PartialDateField(max_resolution="year")  # a year and nothing else
 ```
 
-The field refuses a value coarser than `coarsest` or finer than `resolution` with the code that names what is missing or not allowed, `needs_month`, `needs_day`, `too_fine_month` or `too_fine_day`. A value that is not a date is refused with its own code first, whatever the precisions.
+The field refuses a value lower than `min_resolution` or higher than `max_resolution` with the code that names what is missing or not allowed, `needs_month`, `needs_day`, `month_not_allowed` or `day_not_allowed`. A value that is not a date is refused with its own code first, whatever the resolutions.
 
-A precision that is not one of the three, and a `resolution` coarser than `coarsest`, raise `ValueError` when the form class is defined. The message names the option at fault, and both options when the `resolution` is coarser than the `coarsest`.
+A resolution that is not one of the three, and a `max_resolution` lower than `min_resolution`, raise `ValueError` when the form class is defined. The message names the option at fault, and both options when the `max_resolution` is lower than the `min_resolution`.
 
-Every widget follows the `resolution`, and you state it nowhere but on the field, so changing a widget is changing one name:
+Every widget follows the `max_resolution`, and you state it nowhere but on the field, so changing a widget is changing one name:
 
 - `PartialDateMaskInput` writes the resolution in its `data-imask`, so at `"month"` the input takes a year and a month and no day, and at `"year"` it takes the year alone.
-- `PartialDateInput` and `PartialDateSelect` draw no part finer than the resolution: at `"month"` a year and a month, at `"year"` the year alone. A day sent to a field of that resolution anyway is refused with `too_fine_day`.
-- A widget on a field that is not a `PartialDateField` has no resolution stated and keeps `"day"`: the masked input takes a full date and the other two draw all three parts.
+- `PartialDateInput` and `PartialDateSelect` draw no part higher than the maximum resolution: at `"month"` a year and a month, at `"year"` the year alone. A day sent to a field of that resolution anyway is refused with `day_not_allowed`.
+- A widget on a field that is not a `PartialDateField` has no maximum resolution stated and keeps `"day"`: the masked input takes a full date and the other two draw all three parts.
 
 The field tells its widget the first time its form reads the field, so a widget your form's `__init__` puts in its place is told as well, and two forms of one class never share a widget.
 
 ```python
 class SampleForm(forms.Form):
-    published = PartialDateField(resolution="month")
+    published = PartialDateField(max_resolution="month")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1575,11 +1575,11 @@ class SampleForm(forms.Form):
 
 A widget is swapped before the form is first drawn or validated, since a form keeps the bound field it first made.
 
-`coarsest` is checked by the field alone. A three-part widget still draws every part up to the resolution, and a masked input still takes a year alone, so a value too coarse comes back from the field with `needs_month` or `needs_day`.
+`min_resolution` is checked by the field alone. A three-part widget still draws every part up to the maximum resolution, and a masked input still takes a year alone, so a value of too low a resolution comes back from the field with `needs_month` or `needs_day`.
 
 #### The earliest and latest date
 
-`min_value` is the earliest date a field accepts and `max_value` the latest. Each takes a partial date as text, in any of the three precisions, or a `datetime.date`. With neither stated the field accepts any date.
+`min_value` is the earliest date a field accepts and `max_value` the latest. Each takes a partial date as text, in any of the three resolutions, or a `datetime.date`. With neither stated the field accepts any date.
 
 ```python
 import datetime
@@ -1591,7 +1591,7 @@ class SampleForm(forms.Form):
     filed = PartialDateField(min_value=datetime.date(2010, 1, 1))
 ```
 
-A value outside the limits is refused with the code `min_value` or `max_value`, and the limit, padded to ISO text, is in the error's `params` as `limit`. A value that is not a date is refused with its own code first, and a value finer or coarser than the field allows is refused for its precision before the limits are looked at.
+A value outside the limits is refused with the code `min_value` or `max_value`, and the limit, padded to ISO text, is in the error's `params` as `limit`. A value that is not a date is refused with its own code first, and a value higher or lower than the field allows is refused for its resolution before the limits are looked at.
 
 A partial value is inside the limits when any day it could be is. The comparison is of the first and last day each value covers:
 

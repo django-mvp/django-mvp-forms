@@ -4,7 +4,7 @@
 
 ## Decision
 
-`PartialDateField` overrides `get_bound_field`, sets `resolution`, `min_value` and `max_value` as
+`PartialDateField` overrides `get_bound_field`, sets `max_resolution`, `min_value` and `max_value` as
 plain attributes on its widget, and returns what Django returns. Nothing is set in the field's
 `__init__`. Each widget carries class defaults for the three attributes, so a widget used on
 another field draws to the day with no limits.

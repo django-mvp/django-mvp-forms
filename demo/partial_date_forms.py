@@ -19,33 +19,37 @@ from mvp_forms.widgets import (
 
 
 class PartialDateForm(forms.Form):
-    """One field for each precision option. It must be given a prefix.
+    """One field for each resolution option. It must be given a prefix.
 
     A subclass names the widget every field is drawn with.
     """
 
     widget: type[forms.Widget] = forms.TextInput
 
-    any_precision = PartialDateField(
+    any_resolution = PartialDateField(
         label=_("Collected"),
         help_text=_("PartialDateField(): a year, a year and month, or a full date."),
     )
     at_least_month = PartialDateField(
         label=_("Analysed"),
-        help_text=_('PartialDateField(coarsest="month"): a year alone is refused.'),
-        coarsest="month",
+        help_text=_(
+            'PartialDateField(min_resolution="month"): a year alone is refused.'
+        ),
+        min_resolution="month",
         required=False,
     )
     no_day = PartialDateField(
         label=_("Published"),
-        help_text=_('PartialDateField(resolution="month"): no day can be entered.'),
-        resolution="month",
+        help_text=_('PartialDateField(max_resolution="month"): no day can be entered.'),
+        max_resolution="month",
         required=False,
     )
     year_only = PartialDateField(
         label=_("Founded"),
-        help_text=_('PartialDateField(resolution="year"): a year and nothing else.'),
-        resolution="year",
+        help_text=_(
+            'PartialDateField(max_resolution="year"): a year and nothing else.'
+        ),
+        max_resolution="year",
         required=False,
     )
     in_range = PartialDateField(
@@ -62,11 +66,11 @@ class PartialDateForm(forms.Form):
         label=_("Reported"),
         help_text=_(
             'PartialDateField(min_value="1998-03", max_value="2004-09", '
-            'resolution="month"): a range of months, with no day.'
+            'max_resolution="month"): a range of months, with no day.'
         ),
         min_value="1998-03",
         max_value="2004-09",
-        resolution="month",
+        max_resolution="month",
         required=False,
     )
 
@@ -118,7 +122,7 @@ class PlainPartialDateForm(forms.Form):
 
 
 class PartialDateStatesForm(forms.Form):
-    """A partial date at each precision, disabled, and in error.
+    """A partial date at each resolution, disabled, and in error.
 
     A subclass names the widget every field is drawn with.
     """

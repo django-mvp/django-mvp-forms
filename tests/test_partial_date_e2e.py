@@ -353,7 +353,7 @@ class TestPartialDateScript:
 
         expect(part(page, "month_typed", "month")).to_be_enabled()
 
-    def test_a_group_after_coarser_ones_still_follows_the_calendar(self, dates_page):
+    def test_a_group_after_lower_ones_still_follows_the_calendar(self, dates_page):
         page = dates_page()
         enter_year(page, "typed", "2021")
 

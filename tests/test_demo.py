@@ -3761,7 +3761,7 @@ class TestStandaloneInputMasksPage(InputMasksPageContract):
 
 PARTIAL_DATE_FIELDS = list(MaskedPartialDateForm.base_fields)
 PARTIAL_DATE_POST = {
-    "any_precision": ("2021-3-4", "2021-03-04"),
+    "any_resolution": ("2021-3-4", "2021-03-04"),
     "at_least_month": ("2021-5", "2021-05"),
     "no_day": ("2000-9", "2000-09"),
     "year_only": ("1987", "1987"),

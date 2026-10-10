@@ -654,7 +654,7 @@ class TestPartialDateMaskedInput:
     @pytest.mark.parametrize(
         ("name", "shown"), [("born_month", "2021-03"), ("born_year", "2021")]
     )
-    def test_nothing_finer_than_the_resolution_the_field_states_is_taken(
+    def test_nothing_higher_than_the_max_resolution_the_field_states_is_taken(
         self, masked_page, name, shown
     ):
         page = masked_page()

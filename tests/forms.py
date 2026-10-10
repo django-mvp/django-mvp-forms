@@ -1190,10 +1190,10 @@ class MaskedPageForm(forms.Form):
     )
     born = PartialDateField(required=False, widget=PartialDateMaskInput())
     born_month = PartialDateField(
-        required=False, resolution="month", widget=PartialDateMaskInput()
+        required=False, max_resolution="month", widget=PartialDateMaskInput()
     )
     born_year = PartialDateField(
-        required=False, resolution="year", widget=PartialDateMaskInput()
+        required=False, max_resolution="year", widget=PartialDateMaskInput()
     )
     born_limited = PartialDateField(
         required=False,
@@ -1270,10 +1270,10 @@ PartialDateSelectLineFormSet = formset_factory(PartialDateSelectLineForm, extra=
 
 class PartialDatePageForm(forms.Form):
     month_typed = PartialDateField(
-        required=False, resolution="month", widget=PartialDateInput()
+        required=False, max_resolution="month", widget=PartialDateInput()
     )
     year_typed = PartialDateField(
-        required=False, resolution="year", widget=PartialDateInput()
+        required=False, max_resolution="year", widget=PartialDateInput()
     )
     typed = PartialDateField(required=False, widget=PartialDateInput())
     listed = PartialDateField(required=False, widget=PartialDateSelect())

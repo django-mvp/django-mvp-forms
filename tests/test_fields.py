@@ -222,15 +222,15 @@ class TestPartialDateField:
     @pytest.mark.parametrize(
         ("options", "typed", "code"),
         [
-            ({"coarsest": "month"}, "2021", "needs_month"),
-            ({"coarsest": "day"}, "2021", "needs_day"),
-            ({"coarsest": "day"}, "2021-03", "needs_day"),
-            ({"resolution": "month"}, "2021-03-04", "too_fine_day"),
-            ({"resolution": "year"}, "2021-03", "too_fine_month"),
-            ({"resolution": "year"}, "2021-03-04", "too_fine_month"),
+            ({"min_resolution": "month"}, "2021", "needs_month"),
+            ({"min_resolution": "day"}, "2021", "needs_day"),
+            ({"min_resolution": "day"}, "2021-03", "needs_day"),
+            ({"max_resolution": "month"}, "2021-03-04", "day_not_allowed"),
+            ({"max_resolution": "year"}, "2021-03", "month_not_allowed"),
+            ({"max_resolution": "year"}, "2021-03-04", "month_not_allowed"),
         ],
     )
-    def test_a_value_outside_the_precisions_stated_is_refused_with_its_own_code(
+    def test_a_value_outside_the_resolutions_stated_is_refused_with_its_own_code(
         self, options, typed, code
     ):
         form = submit(typed, **options)
@@ -240,38 +240,44 @@ class TestPartialDateField:
     @pytest.mark.parametrize(
         ("options", "typed"),
         [
-            ({"coarsest": "month"}, "2021-03"),
-            ({"coarsest": "month"}, "2021-03-04"),
-            ({"coarsest": "day"}, "2021-03-04"),
-            ({"resolution": "month"}, "2021"),
-            ({"resolution": "month"}, "2021-03"),
-            ({"resolution": "year"}, "2021"),
-            ({"coarsest": "month", "resolution": "month"}, "2021-03"),
+            ({"min_resolution": "month"}, "2021-03"),
+            ({"min_resolution": "month"}, "2021-03-04"),
+            ({"min_resolution": "day"}, "2021-03-04"),
+            ({"max_resolution": "month"}, "2021"),
+            ({"max_resolution": "month"}, "2021-03"),
+            ({"max_resolution": "year"}, "2021"),
+            ({"min_resolution": "month", "max_resolution": "month"}, "2021-03"),
         ],
     )
-    def test_a_value_inside_the_precisions_stated_is_cleaned(self, options, typed):
+    def test_a_value_inside_the_resolutions_stated_is_cleaned(self, options, typed):
         form = submit(typed, **options)
 
         assert form.is_valid()
         assert form.cleaned_data["born"] == typed
 
-    def test_a_value_that_is_not_a_date_is_refused_before_its_precision_is_checked(
+    def test_a_value_that_is_not_a_date_is_refused_before_its_resolution_is_checked(
         self,
     ):
-        form = submit("2021-02-30", coarsest="day", resolution="day")
+        form = submit("2021-02-30", min_resolution="day", max_resolution="day")
 
         assert codes(form) == ["day"]
 
     @pytest.mark.parametrize(
         ("options", "named"),
         [
-            ({"coarsest": "week"}, ["coarsest"]),
-            ({"resolution": "hour"}, ["resolution"]),
-            ({"coarsest": "day", "resolution": "month"}, ["coarsest", "resolution"]),
-            ({"coarsest": "month", "resolution": "year"}, ["coarsest", "resolution"]),
+            ({"min_resolution": "week"}, ["min_resolution"]),
+            ({"max_resolution": "hour"}, ["max_resolution"]),
+            (
+                {"min_resolution": "day", "max_resolution": "month"},
+                ["min_resolution", "max_resolution"],
+            ),
+            (
+                {"min_resolution": "month", "max_resolution": "year"},
+                ["min_resolution", "max_resolution"],
+            ),
         ],
     )
-    def test_a_precision_that_cannot_be_held_raises_when_the_form_is_defined(
+    def test_a_resolution_that_cannot_be_held_raises_when_the_form_is_defined(
         self, options, named
     ):
         with pytest.raises(ValueError) as raised:
@@ -282,14 +288,14 @@ class TestPartialDateField:
     @pytest.mark.parametrize(
         "widget", [PartialDateMaskInput, PartialDateInput, PartialDateSelect]
     )
-    def test_the_field_tells_each_widget_the_resolution(self, widget):
-        form = partial_date_form(resolution="month", widget=widget())()
+    def test_the_field_tells_each_widget_the_max_resolution(self, widget):
+        form = partial_date_form(max_resolution="month", widget=widget())()
 
-        assert form["born"].field.widget.resolution == "month"
+        assert form["born"].field.widget.max_resolution == "month"
 
-    def test_a_widget_replaced_in_the_forms_init_is_told_the_resolution(self):
+    def test_a_widget_replaced_in_the_forms_init_is_told_the_max_resolution(self):
         class Form(forms.Form):
-            born = PartialDateField(resolution="month")
+            born = PartialDateField(max_resolution="month")
 
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
@@ -297,21 +303,23 @@ class TestPartialDateField:
 
         form = Form()
 
-        assert form["born"].field.widget.resolution == "month"
+        assert form["born"].field.widget.max_resolution == "month"
 
     def test_two_forms_of_one_class_with_different_widgets_do_not_affect_each_other(
         self,
     ):
         class Form(forms.Form):
-            born = PartialDateField(resolution="month", widget=PartialDateMaskInput())
+            born = PartialDateField(
+                max_resolution="month", widget=PartialDateMaskInput()
+            )
 
         masked, parts = Form(), Form()
         parts.fields["born"].widget = PartialDateInput()
 
-        assert masked["born"].field.widget.resolution == "month"
-        assert parts["born"].field.widget.resolution == "month"
+        assert masked["born"].field.widget.max_resolution == "month"
+        assert parts["born"].field.widget.max_resolution == "month"
         assert isinstance(masked.fields["born"].widget, PartialDateMaskInput)
-        assert Form.base_fields["born"].widget.resolution == "day"
+        assert Form.base_fields["born"].widget.max_resolution == "day"
 
     @pytest.mark.parametrize(
         ("limit", "typed"),

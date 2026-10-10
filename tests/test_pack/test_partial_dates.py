@@ -299,7 +299,9 @@ class TestResolution:
     def test_the_masked_input_is_drawn_with_the_resolution_of_the_field(
         self, draw, source
     ):
-        form = partial_date_form(resolution="month", widget=PartialDateMaskInput())()
+        form = partial_date_form(
+            max_resolution="month", widget=PartialDateMaskInput()
+        )()
 
         soup = draw(source, form=form)
 
@@ -312,7 +314,7 @@ class TestResolution:
     def test_the_three_part_widgets_are_drawn_without_the_day_at_a_resolution_of_month(
         self, draw, source, widget
     ):
-        form = partial_date_form(resolution="month", widget=widget())()
+        form = partial_date_form(max_resolution="month", widget=widget())()
 
         soup = draw(source, form=form)
 
@@ -325,7 +327,7 @@ class TestResolution:
         self, draw, source, widget
     ):
         formset = formset_factory(
-            partial_date_form(resolution="year", widget=widget()), extra=1
+            partial_date_form(max_resolution="year", widget=widget()), extra=1
         )
 
         soup = draw(source, form=formset().empty_form)

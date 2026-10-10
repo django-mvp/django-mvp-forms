@@ -747,7 +747,7 @@ class TestDynamicMaskInput:
 
 
 class TestPartialDateMaskInput:
-    def test_it_writes_its_kind_and_the_finest_precision_a_form_may_hold(self):
+    def test_it_writes_its_kind_and_the_highest_resolution_a_form_may_hold(self):
         assert written(PartialDateMaskInput()) == {
             "kind": "partial-date",
             "resolution": "day",
@@ -771,14 +771,14 @@ class TestPartialDateMaskInput:
         assert drawn["type"] == "text"
 
     def test_an_option_it_does_not_have_is_refused(self):
-        with pytest.raises(TypeError, match="resolution"):
-            PartialDateMaskInput(resolution="month")
+        with pytest.raises(TypeError, match="max_resolution"):
+            PartialDateMaskInput(max_resolution="month")
 
     @pytest.mark.parametrize("resolution", ["year", "month", "day"])
-    def test_it_writes_the_resolution_the_field_tells_it(self, resolution):
+    def test_it_writes_the_max_resolution_the_field_tells_it(self, resolution):
         class Form(forms.Form):
             born = PartialDateField(
-                resolution=resolution, widget=PartialDateMaskInput()
+                max_resolution=resolution, widget=PartialDateMaskInput()
             )
 
         soup = BeautifulSoup(str(Form()["born"]), "html.parser")
@@ -903,8 +903,8 @@ class ThreePartWidget:
         assert all(parts.values())
 
     def test_an_option_it_does_not_have_is_refused(self):
-        with pytest.raises(TypeError, match="resolution"):
-            self.widget(resolution="month")
+        with pytest.raises(TypeError, match="max_resolution"):
+            self.widget(max_resolution="month")
 
     def test_it_names_the_script_in_its_media(self):
         assert "mvp_forms/partial-date.js" in str(self.widget().media)
@@ -1068,11 +1068,11 @@ class ThreePartWidget:
             ("day", ["year", "month", "day"]),
         ],
     )
-    def test_it_draws_no_part_finer_than_the_resolution_the_field_tells_it(
+    def test_it_draws_no_part_higher_than_the_max_resolution_the_field_tells_it(
         self, resolution, expected
     ):
         class Form(forms.Form):
-            born = PartialDateField(resolution=resolution, widget=self.widget())
+            born = PartialDateField(max_resolution=resolution, widget=self.widget())
 
         soup = BeautifulSoup(str(Form()["born"]), "html.parser")
 
@@ -1174,13 +1174,13 @@ class ThreePartWidget:
             "14",
         )
 
-    def test_a_part_the_resolution_leaves_out_is_refused_if_it_is_sent_anyway(self):
+    def test_a_part_the_max_resolution_leaves_out_is_refused_if_it_is_sent_anyway(self):
         class Form(forms.Form):
-            born = PartialDateField(resolution="month", widget=self.widget())
+            born = PartialDateField(max_resolution="month", widget=self.widget())
 
         form = Form({"born_year": "2021", "born_month": "03", "born_day": "14"})
 
-        assert form.has_error("born", code="too_fine_day")
+        assert form.has_error("born", code="day_not_allowed")
 
     def test_only_the_year_is_required(self):
         class Form(forms.Form):

@@ -6,7 +6,7 @@
 
 Where the package offers a value with rules of its own, a form field owns those rules and every
 option a developer states. `PartialDateField` is the first. It holds what a partial date is, the
-coarsest precision and the resolution, and the earliest and latest date, and it validates on the
+minimum and maximum resolution, and the earliest and latest date, and it validates on the
 server whatever drew the input.
 
 The widgets beside it, `PartialDateMaskInput`, `PartialDateInput` and `PartialDateSelect`, take
