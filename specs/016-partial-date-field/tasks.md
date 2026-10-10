@@ -328,3 +328,58 @@ review.
 **Files**: `tests/test_widgets.py`, `mvp_forms/widgets.py`
 
 - With `max_value="0050"` the list ends at `0001`.
+
+---
+
+## Changes asked for at the merge gate
+
+The maintainer walked the pages and asked for these. Each follows the same rules as the tasks
+above.
+
+### T013 — The masked input shows its open positions and is typed over in place (US2)
+
+**Files**: `tests/test_imask_e2e.py`, `tests/test_widgets.py`,
+`tests/test_pack/test_partial_dates.py`, `mvp_forms/static/mvp_forms/imask.js`,
+`mvp_forms/widgets.py`, `README.md`, `CHANGELOG.md`,
+`docs/adr/0050-the-partial-date-mask-has-a-rule-of-its-own.md`
+
+Spec FR-043 to FR-045.
+
+- While the input has focus the open positions are shown: empty is `YYYY-MM-DD`, `19` typed is
+  `19YY-MM-DD`, `19980` is `1998-0M-DD`. At a resolution of month the shape is `YYYY-MM`, and at
+  year `YYYY`.
+- When focus leaves, the input holds the partial date alone: `1998-03`, and an empty input is
+  empty. When focus returns the open positions are shown again.
+- The form receives the partial date alone, whether or not the input has focus when it is sent:
+  `199803` typed and Enter pressed sends `1998-03`.
+- Typing writes over in place. With `2020-12-25` held: the caret at the start and `1999` typed
+  gives `1999-12-25`; the year selected and `1999` typed gives the same; the month selected and
+  `03` typed gives `2020-03-25`; everything selected and `19980304` typed gives `1998-03-04`.
+- With `2020-12-25` held, Delete before the `1` of the month and then `1` typed gives
+  `2020-12-25` again.
+- A deletion that would move a digit of another part is not applied: with `2020-12-25` held,
+  Delete inside the year leaves `2020-12-25`.
+- Everything the mask refused before is still refused: the month, the day of the month, the
+  limits, and a change that would leave the day without a date.
+- The widget gives its input a `placeholder` of `YYYY-MM-DD`, `YYYY-MM` or `YYYY` for its
+  resolution, unless the developer's `attrs` state one.
+- An input drawn holding a value the mask would cut is still shown whole (FR-042), and one
+  holding `2021-03` is masked and shows `2021-03`.
+- README "What the mask does" and ADR 0050 say what the input does now.
+
+### T014 — The options are `min_resolution` and `max_resolution` (US4)
+
+**Files**: `tests/`, `mvp_forms/fields.py`, `mvp_forms/widgets.py`, `demo/partial_date_forms.py`,
+`mvp_forms/locale/en/LC_MESSAGES/django.po`, `README.md`, `CHANGELOG.md`, `CONTEXT.md`,
+`docs/adr/0048-a-field-owns-the-rule-and-every-option.md`,
+`docs/adr/0049-a-field-tells-its-widget-when-a-form-first-reads-it.md`,
+`specs/016-partial-date-field/spec.md`
+
+- `coarsest` becomes `min_resolution` and `resolution` becomes `max_resolution`, on the field and
+  in every `ValueError` that names them. The attribute the field sets on its widget is
+  `max_resolution`.
+- The error codes `too_fine_month` and `too_fine_day` become `month_not_allowed` and
+  `day_not_allowed`.
+- No name, message, docstring, comment or document says coarsest, finest, coarser, finer or
+  precision of a partial date. The glossary's entry is Resolution.
+- The demo's help text states the options by their new names and changes in no other way.

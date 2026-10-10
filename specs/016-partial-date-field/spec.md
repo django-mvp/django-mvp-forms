@@ -107,6 +107,27 @@ should be shaped.
 - **Q: What is the option for the finest precision called?**
   A: `resolution`. The maintainer named it when he approved the prototype.
 
+### Session 2026-10-10, at the merge gate
+
+The maintainer walked the finished pages and asked for three things.
+
+- **Q: What are the two options that state how much of a date a field takes called?**
+  A: `min_resolution` and `max_resolution`. The words coarsest and finest do not read as words
+  about dates. A date has a resolution of year, month or day, and the field states the least and
+  the most it accepts.
+
+- **Q: Does the masked input show the shape of a date?**
+  A: Yes. While a person is in the input its open positions are shown in place as `YYYY-MM-DD`,
+  and each is replaced as it is typed: `19YY-MM-DD`, `1998-0M-DD`. Outside the input it holds the
+  partial date alone, and an empty one shows the shape as an ordinary placeholder. Recorded as
+  FR-043 and FR-044.
+
+- **Q: A digit deleted from the middle of a masked date could not be typed again without clearing
+  the whole input. What should happen?**
+  A: A digit is typed over in place. Typing writes over the position at the caret and moves
+  nothing, so any digit of a date can be corrected where it stands, and typing over a selection
+  writes over it from its start. Recorded as FR-045.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A developer adds a partial date field to a form (Priority: P1)
@@ -386,6 +407,16 @@ precision on both sides of each limit, and draw the field with each widget.
 - **FR-042**: A masked input drawn holding a value its mask refuses MUST show that value whole,
   and MUST be masked from the moment the person changes it to a value the mask takes.
 
+- **FR-043**: While a person is in a masked input, each position not yet typed MUST be shown in
+  place as `Y`, `M` or `D`, with the hyphens. Outside the input it MUST hold the partial date
+  alone, and an input nothing was typed into MUST be empty. What the form receives MUST never
+  hold a position that was not typed.
+- **FR-044**: The masked widget MUST give its input a placeholder that shows the shape the
+  resolution allows: `YYYY-MM-DD`, `YYYY-MM` or `YYYY`.
+- **FR-045**: Typing a digit in a masked input MUST write over the position at the caret and MUST
+  NOT move any other digit. Typing over a selection that stops short of the end MUST write over
+  it from its start. A deletion that would move a digit of another part MUST NOT be applied.
+
 #### The three-part widget
 
 - **FR-015**: The package MUST provide a widget that draws a year, a month and a day as separate
@@ -480,7 +511,7 @@ precision on both sides of each limit, and draw the field with each widget.
 | Story | Requirements |
 |---|---|
 | US1: A developer adds a partial date field to a form | FR-001 to FR-010, FR-028 to FR-030, FR-033 |
-| US2: A person types a partial date into one masked input | FR-011 to FR-014, FR-027, FR-031, FR-032, FR-042 |
+| US2: A person types a partial date into one masked input | FR-011 to FR-014, FR-027, FR-031, FR-032, FR-042 to FR-045 |
 | US3: A person enters a partial date as a year, a month and a day | FR-015 to FR-022, FR-032, FR-039, FR-040 |
 | US4: A developer sets how precise a partial date must be | FR-023 to FR-026, FR-041 |
 | US5: A developer sets the earliest and latest date a field accepts | FR-034 to FR-038 |
