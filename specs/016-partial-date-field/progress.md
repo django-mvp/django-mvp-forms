@@ -86,3 +86,7 @@ Did: T012 (COR-007). PartialDateSelect.years takes the first year as max(last - 
 Verified: the case failed on the line as it stood (0000 and years below it extra); tests/test_widgets.py -k PartialDateSelect: 53 passed. pre-commit on the two files: passed.
 Next: full suite and lint gate once, then the report.
 Watch: none.
+
+## 2026-10-10T00:43:38Z · Orchestrator · ready
+
+Review closed with nothing open. Pull request description rewritten and the walkthrough laid out.

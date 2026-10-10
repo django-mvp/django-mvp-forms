@@ -2,7 +2,7 @@
   "feature": "016-partial-date-field",
   "branch": "016-partial-date-field",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-10T00:11:16Z",
       "note": "one reviewer, correctness and spec"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-10T00:43:23Z",
+      "note": "review closed with nothing open; walkthrough laid out"
     }
   ],
   "gates": {
@@ -93,6 +98,11 @@
         "COR-008 (low) a part holding a hyphen is refused and drawn again as sent",
         "COR-009 (low) the unreachable branch of prepare is removed"
       ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-10T00:43:25Z",
+      "self_resolved": []
     }
   },
   "stories": [
