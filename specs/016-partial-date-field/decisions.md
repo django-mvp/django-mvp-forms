@@ -242,3 +242,32 @@ option, which the script takes for the full list.
 **Revisit if:** the table helper learns to draw an empty form directly.
 
 **ADR:** none — a demo page detail.
+
+## D19. The options are `min_resolution` and `max_resolution`
+
+**Decision:** the least and most of a date a field accepts are `min_resolution` and
+`max_resolution`. The error codes for a part that is not allowed are `month_not_allowed` and
+`day_not_allowed`. No older name is kept as an alias, since nothing has been released.
+
+**Why:** the maintainer walked the pages and said coarsest and finest do not read as words about
+dates. The pair sits beside `min_value` and `max_value`.
+
+**Ruled by the maintainer**, 2026-10-10, as to the words. The pair of names and the two codes are
+self-resolved from what he proposed.
+
+**ADR:** docs/adr/0048-a-field-owns-the-rule-and-every-option.md
+
+## D20. The masked input shows its open positions and is typed over in place
+
+**Decision:** FR-043 to FR-045. While a person is in the input its open positions are shown as
+`Y`, `M` and `D`. Typing writes over the position at the caret and moves nothing. A deletion that
+would move a digit of another part is not applied. Outside the input it holds the partial date
+alone. The put-back restores the mask's own state and not the text shown, the caret goes to the
+first open position on focus, and the range an edit may touch is as long as what was written.
+
+**Why:** the maintainer asked for the placeholders, and found that a digit deleted from the
+middle of a date could not be typed back. Typing over in place answers both.
+
+**Revisit if:** a project needs the letters of the open positions in another language.
+
+**ADR:** docs/adr/0050-the-partial-date-mask-has-a-rule-of-its-own.md

@@ -2,7 +2,7 @@
   "feature": "016-partial-date-field",
   "branch": "016-partial-date-field",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "IMPLEMENT",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -43,6 +43,11 @@
       "state": "IMPLEMENT",
       "at": "2026-10-10T11:11:21Z",
       "note": "the maintainer asked for changes at the merge gate: placeholders in place in the masked input, and min_resolution and max_resolution"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-10T11:31:27Z",
+      "note": "merge gate changes built and verified"
     }
   ],
   "gates": {
@@ -106,7 +111,7 @@
     },
     "walkthrough": {
       "approved_by": null,
-      "at": "2026-10-10T00:43:25Z",
+      "at": "2026-10-10T11:31:29Z",
       "self_resolved": []
     }
   },
