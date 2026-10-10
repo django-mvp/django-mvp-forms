@@ -78,6 +78,21 @@
         "SPEC-006 (low) the year list with an earliest date in the future: decisions D11",
         "SPEC-007 (low) a limit is fixed when the form class is defined: README sentence in T007"
       ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer: changes requested, every finding fixed and each fix checked",
+      "at": "2026-10-10T00:40:21Z",
+      "self_resolved": [
+        "COR-001 (high) a change inside a masked date could alter another part: such a change is put back; five browser tests; checked in Chrome on the demo page",
+        "COR-002 (medium) a paste that is not a partial date is not taken",
+        "COR-003 (medium) has_changed compares the prepared initial value; test fails with the method removed",
+        "COR-004 (medium) the demo adds a row from the formset's empty form; a new row offers 31 days for March",
+        "COR-005 (medium) groups at a resolution of month and year on the browser page",
+        "COR-006 (low) the parts' names are asserted to differ; test fails with two labels the same",
+        "COR-007 (low) the year list stops at 0001; test fails with the line as it stood",
+        "COR-008 (low) a part holding a hyphen is refused and drawn again as sent",
+        "COR-009 (low) the unreachable branch of prepare is removed"
+      ]
     }
   },
   "stories": [

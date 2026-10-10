@@ -13,6 +13,10 @@ The month and day blocks subclass `IMask.MaskedRange` and override `_appendCharR
 single digit that can only be the whole part is given its leading zero. IMask's `prepare` option
 pads only a pasted date.
 
+A change inside a value that would alter a part the person did not touch is put back: the input
+keeps the value it held. A person changes an earlier part by clearing back to it from the end, or
+by typing over the month.
+
 An input drawn holding a value the mask would cut is left unmasked, showing the value whole,
 until the person has changed it to one the mask takes.
 
@@ -30,6 +34,10 @@ would leave the day without a date.
 
 `_appendCharRaw` is not in IMask's guide. The browser tests pin each behaviour that rests on it,
 and the README names the IMask version they run against.
+
+IMask re-flows the digits after a change through blocks that pad and refuse. Deleting one
+character of `2021-12-14` after the year gave `2021-02-14`, a date the field accepts and the
+person never entered. Putting the value back loses an edit. It never saves a wrong date.
 
 A value the field refused is shown beside its error. Cutting it to what the mask takes would
 show the person a date they did not send.
