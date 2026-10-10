@@ -239,8 +239,28 @@
         },
         {
           "id": "T011",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_partial_date_e2e.py::TestPartialDateDemoPages::test_a_sample_added_after_february_was_chosen_offers_the_days_of_march",
+              "tests/test_partial_date_e2e.py::TestPartialDateScript::test_a_page_with_groups_of_a_month_and_of_a_year_raises_no_error",
+              "tests/test_partial_date_e2e.py::TestPartialDateScript::test_a_year_opens_the_month_of_a_group_that_ends_at_the_month",
+              "tests/test_partial_date_e2e.py::TestPartialDateScript::test_a_group_after_coarser_ones_still_follows_the_calendar",
+              "tests/test_widgets.py::ThreePartWidget::test_each_part_says_which_part_it_is",
+              "tests/test_pack/test_partial_dates.py::TestPartialDateInput::test_the_parts_are_inside_one_element_that_marks_the_group",
+              "tests/test_widgets.py::ThreePartWidget::test_a_part_holding_a_hyphen_is_refused_and_drawn_again_as_it_was_sent"
+            ],
+            "commands": [
+              "uv run pytest tests/test_partial_date_e2e.py tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_demo.py tests/test_fields.py -n auto"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:705",
+              "demo/partial_date_views.py:85",
+              "demo/templates/demo/partial_dates.html:47",
+              "demo/templates/demo/partial_dates_standalone.html:72"
+            ]
+          }
         }
       ]
     },
