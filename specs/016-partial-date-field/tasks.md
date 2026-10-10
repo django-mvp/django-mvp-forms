@@ -269,3 +269,62 @@ Plan, *The scripts* and *The demo*; research R5.
   standalone version without django-mvp. `tests/test_demo.py`: both pages answer, each widget's
   section is present, and a post returns what each field received.
 - README: what each widget does with the limits, and the note on a typed year (research R5).
+
+---
+
+## Fixes from the code review
+
+One review of the finished diff, one fix cycle. Each task belongs to the story it corrects and
+follows the same rules as the tasks above. Each new test must fail on the code as it stood at the
+review.
+
+### T009 — A change inside a masked date never alters a part the person did not touch (US2)
+
+**Files**: `tests/test_imask_e2e.py`, `mvp_forms/static/mvp_forms/imask.js`, `README.md`
+
+- For the partial date mask only: when a change leaves the text to the right of the edited range
+  different from what it was, the input goes back to the value it held.
+- One browser test for each, with `2021-12-14` held unless stated: selecting the year and typing
+  `1999`; the caret after the year and Backspace; the caret after the month and Backspace; the
+  caret at position 2 and Delete; and with `2021-03-31` held, selecting the month and typing `4`.
+  Each asserts the parts the person did not touch read as before, or the whole value is
+  unchanged.
+- If selecting the year and typing a new one cannot be made to work under that rule, the README's
+  "What the mask does" says what the input does in place of what it says now.
+- A paste that is not a partial date, such as `14.03.2021`, leaves the input as it was. `prepare`
+  takes nothing from text longer than one character that holds anything but the digits 0 to 9
+  and hyphens.
+- The branch of `prepare` that passes a tail on unchanged gets the browser case that goes wrong
+  without it, or is removed if none exists.
+
+### T010 — A date given as the initial value is not a change (US1)
+
+**Files**: `tests/test_fields.py`, `mvp_forms/fields.py`
+
+- `has_changed` compares what `prepare_value` makes of the initial value. A `datetime.date` and
+  a `datetime.datetime` sent back as the same ISO text are not a change, and a different value
+  is.
+
+### T011 — The three-part widgets: rows, coarser groups, part names and a hyphen in a part (US3)
+
+**Files**: `tests/test_partial_date_e2e.py`, `tests/test_widgets.py`,
+`tests/test_pack/test_partial_dates.py`, `tests/forms.py`, `mvp_forms/widgets.py`,
+`demo/templates/demo/partial_dates.html`, `demo/templates/demo/partial_dates_standalone.html`,
+`README.md`
+
+- Both demo pages add a row from the formset's empty form held in a `<template>`, and no longer
+  clone the last row. A row added after February was chosen in the last row offers 31 days for
+  March. The README's "What the script does" says a row is added from the empty form and never
+  cloned from a row in use.
+- The browser page gains a group at a resolution of month and one at year, before the others.
+  The page raises no error, a year opens the month of the month group, and a later group still
+  offers 28 days for February 2021.
+- The two tests of the parts' names assert that the three names differ from one another.
+- A part sent holding a hyphen is not folded into the others: `value_from_datadict` returns the
+  parts as sent, the form is refused with `invalid`, and each part is drawn again as sent.
+
+### T012 — The year list stops at the year 0001 (US5)
+
+**Files**: `tests/test_widgets.py`, `mvp_forms/widgets.py`
+
+- With `max_value="0050"` the list ends at `0001`.
