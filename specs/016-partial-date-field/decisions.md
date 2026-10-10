@@ -189,3 +189,19 @@ and one in its test.
 `django_tomselect/`, and this is the first widget of the package that names a template.
 
 **ADR:** none — a test helper following the code.
+
+## D16. The limits are tested on the existing browser pages
+
+**Decision:** the two browser-test forms, `MaskedPageForm` and `PartialDatePageForm`, each gain
+fields with limits of `1998-03-15` and `2004-09` (`born_limited`, `limited_typed`,
+`limited_listed`), and the limits tests use those. No new page or route.
+
+**Why:** the pages already answer a post, carry initial values and bound entries through the
+query string, and give the formset's empty form. A second page would repeat all of that for
+three fields. The new fields are optional, so no existing test's post or error expectations
+change.
+
+**Revisit if:** a limits test needs a form the existing pages cannot draw, such as a resolution
+of month with limits and a formset of its own.
+
+**ADR:** none — a test fixture.
