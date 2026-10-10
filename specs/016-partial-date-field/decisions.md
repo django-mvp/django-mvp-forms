@@ -204,3 +204,25 @@ change.
 of month with limits and a formset of its own.
 
 **ADR:** none — a test fixture.
+
+## D17. A change inside a masked date is put back, and a value put back is not padded
+
+**Decision:** for the partial date kind only, `imask.js` reads the text after the caret in a
+capturing `input` listener, before IMask's own listener runs. When IMask's result no longer
+ends with that text, the value and selection recorded at `beforeinput` are given back. The value
+is given back with the padding of `prepare` switched off for that one assignment, recorded in a
+`WeakSet` keyed by the Masked instance that `prepare` receives. The branch of `prepare` that
+passed a tail on unchanged is removed.
+
+**Why:** IMask drops a typed character when the digits after it no longer fit and re-flows the
+rest through blocks that pad and refuse, so an edit in the middle turned one date into another
+that exists. Put back through `prepare` as it stood, a held `2021-1` was padded to `2021-01`,
+which changed a part the person had not touched. The tail branch is unreachable under the rule:
+a tail is a whole date with a one-digit part only for an edit at position 0, and the result then
+cannot end with the text the edit left after it, so the value is put back whether the tail was
+padded or not. Probed with the branch restored: every browser case gave the same value.
+
+**Revisit if:** a newer IMask changes the order of its `input` listener against a capturing one,
+or the maintainer wants selecting a part and typing a new one to work in the middle of a value.
+
+**ADR:** none — a script detail inside the mask the earlier decision already covers.

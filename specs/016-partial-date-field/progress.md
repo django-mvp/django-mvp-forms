@@ -58,3 +58,10 @@ Did: Added browser tests in Chrome for the limits of 1998-03-15 and 2004-09: the
 Verified: uv run pytest tests/test_imask_e2e.py tests/test_partial_date_e2e.py: 169 passed. uv run pytest tests/test_demo.py -k PartialDates: 38 passed. pre-commit on the changed files: passed.
 Next: full suite and lint gate, then the report.
 Watch: the scripts already matched the plan, so T008 changed no production script. The demo page's only change is the link to the standalone page.
+
+## 2026-10-10T00:28:04Z · Implementer FIX-1 · T009
+
+Did: T009 (COR-001, COR-002, COR-009). imask.js, partial-date kind only: a capturing input listener reads the text after the caret before IMask runs; when IMask leaves the text after the edited range different, the value and selection recorded at beforeinput are put back, with prepare switched off for that assignment so a held 2021-1 is not padded to 2021-01. prepare returns nothing for text longer than one character that holds anything but digits and hyphens. The tail branch of prepare is removed. Seven browser cases added to TestPartialDateMaskedInput (the five edits, a paste of 14.03.2021, a held 2021-1 put back as held); six failed on the base code with the values the review gave, and the seventh failed once the put-back existed. README What the mask does states the rule, what works in the middle of a value and the paste.
+Verified: uv run pytest tests/test_imask_e2e.py -k TestPartialDateMasked: 50 passed. pre-commit on README.md, imask.js and the test file: passed.
+Next: T010.
+Watch: with the rule, typing 1 over a selected month is put back, so 10 to 12 are typed over a month by selecting from the month to the end. ADR 0050 line 28 and research.md R2 describe the mask before this rule; not edited (no ADR files).
