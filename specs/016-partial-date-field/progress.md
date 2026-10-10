@@ -65,3 +65,10 @@ Did: T009 (COR-001, COR-002, COR-009). imask.js, partial-date kind only: a captu
 Verified: uv run pytest tests/test_imask_e2e.py -k TestPartialDateMasked: 50 passed. pre-commit on README.md, imask.js and the test file: passed.
 Next: T010.
 Watch: with the rule, typing 1 over a selected month is put back, so 10 to 12 are typed over a month by selecting from the month to the end. ADR 0050 line 28 and research.md R2 describe the mask before this rule; not edited (no ADR files).
+
+## 2026-10-10T00:29:05Z · Implementer FIX-1 · T010
+
+Did: T010 (COR-003). PartialDateField.has_changed compares prepare_value(initial) with the data sent. Two cases of TestPartialDateField: a date and a datetime sent back as the same ISO text are not a change; the same initials sent back as another day or a coarser value are. The first fails with the method removed (True is not False); the second passes on both, as it guards against an always-False answer.
+Verified: uv run pytest tests/test_fields.py: 168 passed. pre-commit on both files: passed.
+Next: T011.
+Watch: none.
