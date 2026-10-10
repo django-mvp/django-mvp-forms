@@ -751,7 +751,7 @@ class PartialDateSelect(PartialDateInput):
         if last is None:
             last = today if first is None or first <= today else first + 100
         if first is None:
-            first = last - 100
+            first = max(last - 100, 1)
         years = [f"{year:04}" for year in range(last, first - 1, -1)]
         if held and held not in years:
             years.insert(0, held)

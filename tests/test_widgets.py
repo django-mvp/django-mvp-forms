@@ -1268,6 +1268,18 @@ class TestPartialDateSelect(ThreePartWidget):
             f"{year}" for year in range(2004, 1903, -1)
         ]
 
+    def test_with_a_latest_date_in_the_first_hundred_years_the_years_stop_at_0001(
+        self,
+    ):
+        class Form(forms.Form):
+            born = PartialDateField(max_value="0050", widget=PartialDateSelect())
+
+        soup = BeautifulSoup(str(Form()["born"]), "html.parser")
+
+        years = soup.find(attrs={"data-partial-date-part": "year"})("option")
+        values = [option["value"] for option in years if option["value"]]
+        assert values == [f"{year:04}" for year in range(50, 0, -1)]
+
     def test_with_no_latest_date_the_years_start_this_year(self):
         this_year = datetime.date.today().year
 

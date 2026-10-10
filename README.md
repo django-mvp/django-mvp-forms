@@ -1691,7 +1691,7 @@ Each part carries an `aria-label` that says which part it is and `data-partial-d
 
 The widget joins the parts with hyphens and leaves out the empty ones from the right, so the field receives `2021`, `2021-03` or `2021-03-14`. A day with no month and a month with no year reach the field and are refused with `no_month` and `no_year`. A part holding a hyphen is not joined to the others: the form is refused with `invalid`. A form drawn again after a refused submission shows each part as it was sent, including `2021-02-30`, a day with no month and a part holding a hyphen. An `initial` value, as text or as a `datetime.date`, fills the parts it has and leaves the rest empty.
 
-`PartialDateSelect` lists the years from this year back a hundred years, latest first, or the years between the field's limits when it states them. A year the form already holds that is not on the list is still an option, so a stored `1850` is shown and not lost.
+`PartialDateSelect` lists the years from this year back a hundred years, latest first, or the years between the field's limits when it states them. The list stops at the year `0001`. A year the form already holds that is not on the list is still an option, so a stored `1850` is shown and not lost.
 
 The widgets name `mvp_forms/partial-date.js` in the form's media. The script needs no IMask, and a page that loads the form's media is all it asks for.
 
