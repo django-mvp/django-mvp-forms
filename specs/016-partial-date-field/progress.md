@@ -79,3 +79,10 @@ Did: T011 (COR-004, COR-005, COR-006, COR-008). Both demo pages build the added 
 Verified: red first on the code as it stood: the demo page test on both pages (28 days for March) and the four hyphen cases failed; the new coarse-group tests pass on arrival and fail under mutation: either guard in partial-date.js replaced by if (true) fails them (and the older script tests), and the month part labelled Day fails both name tests. uv run pytest on test_partial_date_e2e.py, test_widgets.py, test_pack/test_partial_dates.py, test_demo.py, test_fields.py: 2222 passed. pre-commit on the files touched: passed.
 Next: T012.
 Watch: demo/partial_date_views.py is outside the files the task lists; one context entry added (D18).
+
+## 2026-10-10T00:36:01Z · Implementer FIX-1 · T012
+
+Did: T012 (COR-007). PartialDateSelect.years takes the first year as max(last - 100, 1). One case in TestPartialDateSelect: with max_value 0050 the list runs 0050 down to 0001. README names the stop at 0001.
+Verified: the case failed on the line as it stood (0000 and years below it extra); tests/test_widgets.py -k PartialDateSelect: 53 passed. pre-commit on the two files: passed.
+Next: full suite and lint gate once, then the report.
+Watch: none.
