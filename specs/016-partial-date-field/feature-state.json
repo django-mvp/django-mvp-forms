@@ -2,7 +2,7 @@
   "feature": "016-partial-date-field",
   "branch": "016-partial-date-field",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "IMPLEMENT",
+  "state": "CONVERGE",
   "state_history": [
     {
       "state": "QUEUED",
@@ -23,6 +23,11 @@
       "state": "IMPLEMENT",
       "at": "2026-10-09T22:58:02Z",
       "note": "plan gate open; US1 dispatched"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-10T00:08:59Z",
+      "note": "all five stories accepted"
     }
   ],
   "gates": {
@@ -226,7 +231,7 @@
       "priority": "P3",
       "issue": 164,
       "worktree": null,
-      "status": "todo",
+      "status": "done",
       "replans": 0,
       "tasks": [
         {
@@ -280,7 +285,7 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {
@@ -292,7 +297,7 @@
       "max": 1
     },
     "tokens": {
-      "used": 22.47,
+      "used": 28.78,
       "max": 120
     }
   },
