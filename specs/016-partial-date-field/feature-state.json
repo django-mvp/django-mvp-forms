@@ -223,8 +223,19 @@
         },
         {
           "id": "T013",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_partial_dates.py::TestResolution"
+            ],
+            "commands": [
+              "uv run pytest -n auto -q"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:626"
+            ]
+          }
         }
       ]
     },
