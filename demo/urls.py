@@ -8,7 +8,7 @@ from demo.autocompletes import (
     LanguageAutocomplete,
     RockAutocomplete,
 )
-from demo.partial_date_views import PartialDatesView
+from demo.partial_date_views import PartialDatesView, StandalonePartialDatesView
 from demo.tomselect_views import (
     StandaloneTomSelectView,
     TomSelectBoostedView,
@@ -145,6 +145,11 @@ urlpatterns = [
     ),
     path("input-masks/", InputMasksView.as_view(), name="input-masks"),
     path("partial-dates/", PartialDatesView.as_view(), name="partial-dates"),
+    path(
+        "partial-dates/standalone/",
+        StandalonePartialDatesView.as_view(),
+        name="partial-dates-standalone",
+    ),
     path(
         "input-masks/standalone/",
         StandaloneInputMasksView.as_view(),

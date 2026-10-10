@@ -1,6 +1,7 @@
 """The demo's partial date page."""
 
 from crispy_forms.helper import FormHelper
+from django.views.generic import TemplateView
 from mvp.views import MVPTemplateView
 
 from demo.partial_date_forms import (
@@ -17,13 +18,8 @@ from demo.partial_date_forms import (
 )
 
 
-class PartialDatesView(MVPTemplateView):
-    """The partial date field with each widget, inside the application shell."""
-
-    template_name = "demo/partial_dates.html"
-    page_title = "Partial dates"
-    page_subtitle = "A date known to the year, the month or the day"
-    breadcrumbs = [{"text": "Partial dates"}]
+class PartialDatesMixin:
+    """The forms both partial date pages draw: each widget in a group, then each place."""
 
     widgets = [
         (
@@ -107,3 +103,18 @@ class PartialDatesView(MVPTemplateView):
     def post(self, request, *args, **kwargs):
         """Draw the page again with what the posted form's fields received."""
         return self.render_to_response(self.get_context_data(posted=request.POST))
+
+
+class PartialDatesView(PartialDatesMixin, MVPTemplateView):
+    """The partial date field with each widget, inside the application shell."""
+
+    template_name = "demo/partial_dates.html"
+    page_title = "Partial dates"
+    page_subtitle = "A date known to the year, the month or the day"
+    breadcrumbs = [{"text": "Partial dates"}]
+
+
+class StandalonePartialDatesView(PartialDatesMixin, TemplateView):
+    """The same page for a host project that has neither django-mvp nor Cotton."""
+
+    template_name = "demo/partial_dates_standalone.html"

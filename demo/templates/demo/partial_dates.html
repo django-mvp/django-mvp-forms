@@ -50,6 +50,9 @@
     <c-button type="button" text="Edit the dates" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()" />
     {% crispy modal_form %}
   </c-section>
+  <c-text>
+    <c-link href="{% url 'partial-dates-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
 {% endblock page.content %}
 {% block extra_js %}
   {{ block.super }}

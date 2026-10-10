@@ -646,3 +646,47 @@ class TestPartialDateMaskedInput:
 
         assert page_errors == []
         assert '"born": ["2021-03"]' in page.inner_text("body")
+
+
+class TestPartialDateMaskedInputLimits:
+    @pytest.mark.parametrize(
+        ("typed", "shown"),
+        [
+            ("1997", "199"),
+            ("19980314", "1998-03-1"),
+            ("19980315", "1998-03-15"),
+            ("200410", "2004-0"),
+            ("20040930", "2004-09-30"),
+            ("20040931", "2004-09-3"),
+            ("199803", "1998-03"),
+            ("199802", "1998-0"),
+        ],
+    )
+    def test_a_digit_that_leaves_no_date_inside_the_limits_is_refused(
+        self, masked_page, typed, shown
+    ):
+        page = masked_page()
+
+        assert type_into(page, "born_limited", typed) == shown
+
+    @pytest.mark.parametrize("initial", ["1997-03-14", "2004-10-01", "1990", "2005-02"])
+    def test_a_date_outside_the_limits_the_form_was_drawn_with_is_shown_whole(
+        self, masked_page, initial
+    ):
+        page = masked_page(born_limited=initial)
+
+        assert page.locator("#id_born_limited").input_value() == initial
+        assert page.evaluate(MASKS_OF, "id_born_limited") == 0
+
+    def test_a_value_inside_the_limits_the_form_was_drawn_with_is_masked(
+        self, masked_page
+    ):
+        page = masked_page(born_limited="1998-03-15")
+
+        assert page.locator("#id_born_limited").input_value() == "1998-03-15"
+        assert page.evaluate(MASKS_OF, "id_born_limited") == 1
+
+    def test_a_field_with_no_limits_is_not_held_to_any(self, masked_page):
+        page = masked_page()
+
+        assert type_into(page, "born", "1997") == "1997"

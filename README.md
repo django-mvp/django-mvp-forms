@@ -1623,6 +1623,12 @@ Every widget is told the limits by the field, as it is told the resolution, and 
 
 A date outside the limits that was sent is drawn again as it was sent, in every widget, with the field's error.
 
+How a person is kept inside the limits depends on the widget:
+
+- `PartialDateMaskInput` refuses the digit that would leave no date inside the limits, as [What the mask does](#what-the-mask-does) describes.
+- `PartialDateInput` and `PartialDateSelect` offer only the months and days inside the limits, as [What the script does](#what-the-script-does) describes.
+- With `PartialDateInput` the year is typed, and a text input has no minimum. A typed year outside the limits keeps the month closed, and the field's error says which limit was crossed once the form is sent. Nothing else in the browser says so. `PartialDateSelect` offers only the years inside the limits, so a person cannot choose one outside them.
+
 #### The masked input
 
 `PartialDateMaskInput` draws one text input and has IMask put the hyphens in as a person types.
@@ -1651,10 +1657,11 @@ The widget on a field that is not a `PartialDateField` is a text input that subm
 The year is four digits, then a hyphen, a month and a hyphen, a day, and the hyphens are placed as the digits are typed.
 
 - A digit that would make the month `00` or above 12 is not accepted. A digit that would make a day the typed month does not have is not accepted, and February takes the 29th only in a leap year. A change to the year or the month that would leave the day with no date is not accepted either: the input keeps the date it held.
+- With limits stated, a digit is also refused when no date inside the limits could follow from what has been typed. With `min_value="1998-03-15"` and `max_value="2004-09"`, `1997` keeps `199`, `19980314` keeps `1998-03-1`, `19980315` is taken whole, and `200410` keeps `2004-0`. The mask works out the first and the last day the typed text could still become, the way the field does, so a year or a month alone is taken while a date inside the limits remains.
 - A first digit that can only be the whole month, 2 to 9, or the whole day, 4 to 9, is padded with a zero as it is typed: `202145` gives `2021-04-05`. A pasted date is padded in the same way: `2021-3-4` gives `2021-03-04`.
 - A change in the middle of a value keeps the rest of it. With `2021-12-14` in the input, selecting the month and typing `4` gives `2021-04-14`.
 - A person may stop after the year or after the month. `2021` and `2021-03` are submitted as they stand, and the field accepts them.
-- A value the form was drawn with is shown under the mask, `2021-03` as `2021-03`. A value the mask would cut, such as `2021-02-30` held in a form's `initial` or in a bound form that failed, is shown whole so that the person sees what was sent. The mask is put on the input once the person has changed it to a value the mask takes.
+- A value the form was drawn with is shown under the mask, `2021-03` as `2021-03`. A value the mask would cut, such as `2021-02-30`, or `1997-03-14` where the earliest date is `1998-03-15`, held in a form's `initial` or in a bound form that failed, is shown whole so that the person sees what was sent. The mask is put on the input once the person has changed it to a value the mask takes.
 
 The mask refuses the digits a calendar cannot have and nothing more. The field is what checks the value.
 
@@ -1693,8 +1700,9 @@ The script keeps the three parts in step with the calendar as the person fills t
 
 - No month can be chosen until the year has four digits, and no day can be chosen until a month is chosen. The parts that cannot be used yet are disabled, and so are not submitted.
 - The days on offer are the days the chosen month has in the entered year, and February offers the 29th only in a leap year. A day the month does not have is not in the list at all, so nothing greyed out is left to puzzle over.
-- A day the change has made impossible is cleared and never moved to another one. A chosen 31st is cleared when the month becomes February, and a chosen 29th of February is cleared when the year stops being a leap year. A day the new month still has is kept.
-- A form drawn holding a value that is not a date, such as `2021-02-30`, or a day with no month, shows what was sent until the person changes a part. The person sees what the field refused, and the first change puts the parts back in step.
+- The limits narrow the same lists. Under a year the limits leave no date in, no month can be chosen. In the first year only the months from the earliest date on are offered, and in the last year only the months up to the latest. The days of a month the limit falls in are cut the same way: with an earliest date of `1998-03-15`, March 1998 offers the 15th onward.
+- A month or a day the change has made impossible is cleared and never moved to another one. A chosen 31st is cleared when the month becomes February, and a chosen 29th of February is cleared when the year stops being a leap year. A day the new month still has is kept. A month the new year puts outside the limits, such as February when the year changes to the earliest one, is cleared, and so is a day a limit now rules out.
+- A form drawn holding a value that is not a date, such as `2021-02-30`, a day with no month, or a date outside the limits, shows what was sent until the person changes a part. The person sees what the field refused, and the first change puts the parts back in step.
 - A group added to the page later, such as the extra form of a formset, behaves in the same way, and a page that holds the form's media several times has the script act once.
 
 The script writes no inline script and no inline handler, and it makes no request. It holds on to the full list of a part's options the first time it meets it, and puts back into the select only those that can be chosen.
