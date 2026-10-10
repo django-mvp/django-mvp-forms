@@ -353,8 +353,19 @@
         },
         {
           "id": "T012",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestPartialDateSelect::test_with_a_latest_date_in_the_first_hundred_years_the_years_stop_at_0001"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py -k PartialDateSelect"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:754"
+            ]
+          }
         }
       ]
     }
