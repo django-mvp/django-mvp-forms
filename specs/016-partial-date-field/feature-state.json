@@ -332,8 +332,19 @@
         },
         {
           "id": "T014",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_partial_dates.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_fields.py tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_demo.py tests/test_partial_date_e2e.py tests/test_imask_e2e.py -q -n auto"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:610"
+            ]
+          }
         }
       ]
     },

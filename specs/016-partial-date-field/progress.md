@@ -90,3 +90,10 @@ Watch: none.
 ## 2026-10-10T00:43:38Z · Orchestrator · ready
 
 Review closed with nothing open. Pull request description rewritten and the walkthrough laid out.
+
+## 2026-10-10T11:15:42Z · Implementer FIX-2 · T014
+
+Did: Renamed the field's options to min_resolution and max_resolution, the widget attribute to max_resolution, and the error codes to month_not_allowed and day_not_allowed. The data-imask key stays resolution. The demo's field any_precision is now any_resolution, and its help text names the new options. README, CHANGELOG, CONTEXT.md, ADRs 0048 and 0049, and spec.md use the new words; the glossary entry is Resolution. The English catalogue's location comments were regenerated.
+Verified: uv run pytest tests/test_fields.py tests/test_widgets.py tests/test_pack/test_partial_dates.py tests/test_demo.py tests/test_partial_date_e2e.py tests/test_imask_e2e.py -q -n auto: 2314 passed. A search of the named paths for coarse, finest, finer, too_fine and precision finds nothing.
+Next: T013, the masked input's open positions and typing over in place.
+Watch: Existing tests were renamed to the new vocabulary, nothing weakened. The demo field any_precision became any_resolution, which changes the input's name attribute on the demo page and nothing the page shows.
