@@ -20,7 +20,7 @@ stays a choice the developer makes knowing the page must load IMask.
 **Confirmed by the maintainer** as to the field and the two widgets. The plain default is
 self-resolved.
 
-**ADR:** expected. It is the package's first field and sets where validation lives.
+**ADR:** docs/adr/0048-a-field-owns-the-rule-and-every-option.md
 
 ## D2. The masked date input does not reopen FS-015
 
@@ -35,7 +35,7 @@ existing widgets are untouched and still take plain data only.
 **Self-resolved.** The maintainer asked for the behaviour: no month over 12, days that follow
 the month.
 
-**ADR:** expected, amending ADR 0047 or standing beside it.
+**ADR:** docs/adr/0050-the-partial-date-mask-has-a-rule-of-its-own.md
 
 ## D3. One-digit months and days are accepted and padded
 
@@ -85,8 +85,7 @@ the widget would let the two disagree.
 **Confirmed by the maintainer** as to a minimum precision and turning off the day. Where the
 options live is self-resolved.
 
-**ADR:** none expected, unless the plan finds the field has to configure its widget in a way the
-package has not done before.
+**ADR:** docs/adr/0048-a-field-owns-the-rule-and-every-option.md
 
 ## D7. The three-part widget brings its own small script and does not need IMask
 
@@ -98,7 +97,7 @@ templates still need none.
 
 **Self-resolved.**
 
-**ADR:** expected, beside ADR 0045.
+**ADR:** docs/adr/0051-the-three-part-widgets-bring-a-script-that-needs-no-imask.md
 
 ## D8. Every option on the field, and three widgets that take none
 
@@ -112,7 +111,7 @@ a change of one name.
 
 **Ruled by the maintainer**, 2026-10-10, including the name `resolution`.
 
-**ADR:** expected, with D9.
+**ADR:** docs/adr/0048-a-field-owns-the-rule-and-every-option.md
 
 ## D9. The field tells its widget through `get_bound_field`
 
@@ -124,7 +123,7 @@ nothing. Research R3.
 
 **Revisit if:** a project needs to swap a widget on a form that has already been validated.
 
-**ADR:** expected.
+**ADR:** docs/adr/0049-a-field-tells-its-widget-when-a-form-first-reads-it.md
 
 ## D10. A partial value is inside the limits when any day it could be is
 
@@ -156,7 +155,7 @@ person changes the middle of a date. Research R1 has the cases.
 **Revisit if:** IMask gains a published way to pad a range, or a new IMask version fails the
 browser tests that pin this.
 
-**ADR:** expected.
+**ADR:** docs/adr/0050-the-partial-date-mask-has-a-rule-of-its-own.md
 
 ## D13. A masked input shows a refused value whole
 
