@@ -157,8 +157,27 @@
         },
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_typing_a_year_over_the_selected_year_leaves_the_month_and_day",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_deleting_back_over_the_year_leaves_the_month_and_day",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_deleting_back_over_the_month_leaves_the_year_and_day",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_deleting_forward_inside_the_year_leaves_the_month_and_day",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_typing_over_a_month_the_day_does_not_fit_leaves_the_year_and_day",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_a_value_put_back_is_put_back_as_it_was_held",
+              "tests/test_imask_e2e.py::TestPartialDateMaskedInput::test_a_pasted_text_that_is_not_a_partial_date_is_not_taken"
+            ],
+            "commands": [
+              "uv run pytest tests/test_imask_e2e.py -k TestPartialDateMasked"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:76",
+              "mvp_forms/static/mvp_forms/imask.js:162",
+              "mvp_forms/static/mvp_forms/imask.js:216"
+            ]
+          }
         }
       ]
     },
