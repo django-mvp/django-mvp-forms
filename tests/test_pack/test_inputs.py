@@ -25,6 +25,9 @@ KINDS = [
     ("date", "input", "input"),
     ("time", "input", "input"),
     ("date_time", "input", "input"),
+    ("search", "input", "input"),
+    ("tel", "input", "input"),
+    ("color", "input", "input"),
     ("message", "textarea", "textarea"),
 ]
 
@@ -101,6 +104,9 @@ class TestBoundValues:
             "date": "2026-01-02",
             "time": "10:30",
             "date_time": "2026-01-02 10:30",
+            "search": "daisy",
+            "tel": "+49 30 1234567",
+            "color": "#3b82f6",
         }
 
         soup = draw("{{ form|crispy }}", form=TextInputsForm(data))
