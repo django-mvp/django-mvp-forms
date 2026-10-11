@@ -1449,3 +1449,29 @@ class TomSelectPageForm(forms.Form):
     optional = forms.ChoiceField(
         choices=[("", "None"), *FRUIT], widget=TomSelect, required=False
     )
+    placeheld = forms.MultipleChoiceField(
+        choices=FRUIT,
+        widget=TomSelectMultiple(placeholder="Pick fruit"),
+        required=False,
+    )
+    placeheld_single = forms.ChoiceField(
+        choices=[("", ""), *FRUIT],
+        widget=TomSelect(placeholder="Pick one fruit"),
+        required=False,
+    )
+    clearable = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple(clear_button=True), required=False
+    )
+    clearable_single = forms.ChoiceField(
+        choices=[("", "None"), *FRUIT],
+        widget=TomSelect(clear_button=True),
+        required=False,
+    )
+    removable = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple(remove_button=True), required=False
+    )
+    limited = forms.MultipleChoiceField(
+        choices=[*FRUIT, ("c", "Cherry")],
+        widget=TomSelectMultiple(max_items=2),
+        required=False,
+    )

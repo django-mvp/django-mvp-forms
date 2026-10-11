@@ -282,3 +282,68 @@ class TestASelectTomSelectRefuses:
         assert page.locator("#id_refused").is_visible()
         assert page.evaluate(STARTED, "id_fruit") is True
         assert page_errors == []
+
+
+class TestTheSettings:
+    def test_the_placeholder_is_the_controls_placeholder_while_it_is_empty(
+        self, choices_page
+    ):
+        page = choices_page()
+
+        multiple = page.locator("#id_placeheld-ts-control").get_attribute("placeholder")
+        single = page.locator("#id_placeheld_single-ts-control").get_attribute(
+            "placeholder"
+        )
+
+        assert multiple == "Pick fruit"
+        assert single == "Pick one fruit"
+
+    def test_the_clear_button_empties_a_control_holding_values(self, choices_page):
+        page = choices_page(clearable="a")
+        items = "document.getElementById('id_clearable').tomselect.items"
+        assert page.evaluate(items) == ["a"]
+
+        page.locator("#id_clearable + .ts-wrapper .clear-button").click()
+
+        assert page.evaluate(items) == []
+
+    def test_the_clear_button_empties_a_single_control(self, choices_page):
+        page = choices_page(clearable_single="b")
+        items = "document.getElementById('id_clearable_single').tomselect.items"
+        assert page.evaluate(items) == ["b"]
+
+        page.locator("#id_clearable_single + .ts-wrapper .clear-button").click()
+
+        assert page.evaluate(items) == []
+
+    def test_a_remove_button_removes_its_own_value_alone(self, choices_page):
+        page = choices_page()
+        pick(page, "removable", "Apple")
+        pick(page, "removable", "Banana")
+        items = "document.getElementById('id_removable').tomselect.items"
+        assert page.evaluate(items) == ["a", "b"]
+
+        page.locator(
+            '#id_removable + .ts-wrapper .item[data-value="a"] .remove'
+        ).click()
+
+        assert page.evaluate(items) == ["b"]
+
+    def test_no_more_than_the_largest_number_of_values_can_be_chosen(
+        self, choices_page
+    ):
+        page = choices_page()
+        items = "document.getElementById('id_limited').tomselect.items"
+        option = '#id_limited-ts-dropdown .option[data-value="{}"]'
+        page.locator("#id_limited + .ts-wrapper .ts-control").click()
+        page.locator(option.format("a")).click()
+        page.locator(option.format("b")).click()
+
+        assert page.evaluate(items) == ["a", "b"]
+        assert not page.locator(option.format("c")).is_visible()
+
+        page.keyboard.press("Backspace")
+        page.locator("#id_limited-ts-control").click()
+        page.locator(option.format("c")).click()
+
+        assert page.evaluate(items) == ["a", "c"]
