@@ -202,8 +202,27 @@
       "tasks": [
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_tomselect_e2e.py::TestGroupsAndUnavailableOptions::test_an_option_is_listed_under_the_heading_of_its_group",
+              "tests/test_tomselect_e2e.py::TestGroupsAndUnavailableOptions::test_an_option_drawn_disabled_is_listed_and_cannot_be_chosen",
+              "tests/test_demo.py::TestTomSelectWidgetsPage::test_the_groups_form_draws_grouped_options_and_one_unavailable_option",
+              "tests/test_pack/test_tom_select_widgets.py::TestTheReadmesGroupsExample::test_the_form_it_gives_draws_groups_and_one_disabled_option"
+            ],
+            "commands": [
+              "uv run pytest tests/test_tomselect_e2e.py -k GroupsAndUnavailable -q",
+              "uv run pytest tests/test_demo.py tests/test_pack/test_tom_select_widgets.py tests/test_widgets.py -k 'TomSelect or Readme' -q -n 4 --dist loadscope"
+            ],
+            "code": [
+              "tests/test_tomselect_e2e.py:352",
+              "tests/forms.py:1430",
+              "demo/tom_select_widgets_forms.py:40",
+              "demo/tom_select_widgets_forms.py:164",
+              "README.md:1334"
+            ]
+          }
         }
       ]
     },
