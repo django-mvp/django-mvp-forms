@@ -1,4 +1,4 @@
-<!doctype html>
+{% load crispy_forms_tags %}<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -9,8 +9,10 @@
       {% if refused %}<select id="id_refused" name="refused" data-tom-select='{"plugins": ["nowhere"]}'><option value="x">X</option></select>{% endif %}
       {{ form.as_div }}
       {% if foreign %}{{ foreign.as_div }}{% endif %}
+      {% crispy dialog %}
       <button type="submit">Send</button>
     </form>
+    <template id="line">{{ line.as_div }}</template>
     {% for copy in copies %}{{ form.media }}{% endfor %}
     {% if tomselect_url %}<script src="{{ tomselect_url }}"></script>{% endif %}
   </body>

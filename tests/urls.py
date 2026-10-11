@@ -15,7 +15,9 @@ from tests.forms import (
     MaskedPageForm,
     PartialDatePageForm,
     PartialDatePageLineFormSet,
+    TomSelectDialogForm,
     TomSelectForm,
+    TomSelectLineFormSet,
     TomSelectPageForm,
 )
 
@@ -136,6 +138,8 @@ class ChoicesPage(TemplateView):
         return super().get_context_data(
             form=TomSelectPageForm(initial=self.request.GET.dict()),
             foreign=TomSelectForm() if self.foreign else None,
+            line=TomSelectLineFormSet().empty_form,
+            dialog=TomSelectDialogForm(),
             tomselect_url=self.tomselect_url,
             copies=range(self.copies),
             refused=self.refused,

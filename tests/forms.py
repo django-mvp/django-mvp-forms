@@ -1485,3 +1485,30 @@ class TomSelectPageForm(forms.Form):
     unavailable = forms.MultipleChoiceField(
         choices=FRUIT, widget=DisablingTomSelectMultiple, required=False
     )
+
+
+class TomSelectLineForm(forms.Form):
+    fruit = forms.MultipleChoiceField(
+        choices=FRUIT,
+        widget=TomSelectMultiple(placeholder="Pick fruit", max_items=1),
+        required=False,
+        help_text="Pick one",
+    )
+
+
+TomSelectLineFormSet = formset_factory(TomSelectLineForm, extra=1)
+
+
+class TomSelectDialogForm(forms.Form):
+    nearby = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.include_media = False
+        self.helper.layout = Layout(
+            Modal("nearby", css_id="nearby-dialog", title="Nearby")
+        )

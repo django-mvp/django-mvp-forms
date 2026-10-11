@@ -22,6 +22,46 @@ STARTED = "(id) => document.getElementById(id).tomselect !== undefined"
 WRAPPERS = "document.querySelectorAll('.ts-wrapper').length"
 SELECTS = "document.querySelectorAll('select[data-tom-select]').length"
 ENTRIES = "Object.fromEntries(new FormData(document.getElementById('page')))"
+OPTIONS_OF = "(id) => Object.keys(document.getElementById(id).tomselect.options)"
+# A select a widget would draw, added on its own and then inside another element.
+INSERT_SELECT = """
+(id) => {
+  const select = document.createElement("select");
+  select.id = id;
+  select.name = id;
+  select.multiple = true;
+  select.dataset.tomSelect = JSON.stringify({ placeholder: "Pick later" });
+  select.add(new Option("Apple", "a"));
+  select.add(new Option("Banana", "b"));
+  return select;
+}
+"""
+ADD_SELECT = INSERT_SELECT.replace(
+    "return select;", 'document.getElementById("page").append(select);'
+)
+ADD_WRAPPED_SELECT = INSERT_SELECT.replace(
+    "return select;",
+    """const holder = document.createElement("div");
+  holder.append(select);
+  document.getElementById("page").append(holder);""",
+)
+# What the script of django-mvp does with a formset's empty form: replace the
+# prefix in the markup of the template and insert the result.
+ADD_ROW = """
+(number) => {
+  const markup = document.getElementById("line").innerHTML;
+  document
+    .getElementById("page")
+    .insertAdjacentHTML("beforeend", markup.replaceAll("__prefix__", number));
+}
+"""
+MOVE_FRUIT = """
+window.held = document.getElementById("id_fruit").tomselect;
+const holder = document.createElement("div");
+document.getElementById("page").append(holder);
+holder.append(document.getElementById("id_fruit"));
+"""
+IN_TEMPLATE = "(selector) => document.getElementById('line').content.querySelectorAll(selector).length"
 
 
 @pytest.fixture
@@ -377,3 +417,146 @@ class TestGroupsAndUnavailableOptions:
         assert page.evaluate(items) == []
         dropdown.locator('.option[data-value="a"]').click()
         assert page.evaluate(items) == ["a"]
+
+
+class TestSelectsAddedAfterThePageLoads:
+    def test_a_select_added_on_its_own_gets_one_control(
+        self, choices_page, page_errors, script_errors
+    ):
+        page = choices_page()
+        before = page.evaluate(WRAPPERS)
+
+        page.evaluate(ADD_SELECT, "id_later")
+
+        assert page.evaluate(STARTED, "id_later") is True
+        assert page.evaluate(WRAPPERS) == before + 1
+        assert page.evaluate(WRAPPERS) == page.evaluate(SELECTS)
+        assert page_errors == []
+        assert script_errors == []
+
+    def test_a_select_added_inside_another_element_gets_one_control(
+        self, choices_page, page_errors, script_errors
+    ):
+        page = choices_page()
+        before = page.evaluate(WRAPPERS)
+
+        page.evaluate(ADD_WRAPPED_SELECT, "id_later")
+
+        assert page.evaluate(STARTED, "id_later") is True
+        assert page.evaluate(WRAPPERS) == before + 1
+        assert page.evaluate(WRAPPERS) == page.evaluate(SELECTS)
+        assert page_errors == []
+        assert script_errors == []
+
+    def test_a_late_control_has_the_selects_settings_and_submits_its_value(
+        self, choices_page
+    ):
+        page = choices_page()
+        page.evaluate(ADD_SELECT, "id_later")
+
+        placeholder = page.locator("#id_later-ts-control").get_attribute("placeholder")
+        choose(page, "later", "b")
+        page.keyboard.press("Escape")
+        with page.expect_navigation():
+            page.click("button[type=submit]")
+
+        assert placeholder == "Pick later"
+        assert '"id_later": ["b"]' in page.inner_text("body")
+
+    def test_a_late_control_is_tied_to_the_help_text_of_its_select(self, choices_page):
+        page = choices_page()
+        page.evaluate(ADD_ROW, "2")
+
+        described = page.locator("#id_form-2-fruit-ts-control").get_attribute(
+            "aria-describedby"
+        )
+
+        assert "id_form-2-fruit_helptext" in described.split()
+
+
+class TestAFormsetRow:
+    def test_a_row_made_from_the_empty_form_holds_one_working_control(
+        self, choices_page, page_errors, script_errors
+    ):
+        page = choices_page()
+        before = page.evaluate(WRAPPERS)
+
+        page.evaluate(ADD_ROW, "2")
+
+        assert page.evaluate(STARTED, "id_form-2-fruit") is True
+        assert page.evaluate(WRAPPERS) == before + 1
+        assert page.evaluate(WRAPPERS) == page.evaluate(SELECTS)
+        assert page.evaluate(OPTIONS_OF, "id_form-2-fruit") == ["a", "b"]
+        placeholder = page.locator("#id_form-2-fruit-ts-control").get_attribute(
+            "placeholder"
+        )
+        assert placeholder == "Pick fruit"
+        assert page_errors == []
+        assert script_errors == []
+
+    def test_a_value_chosen_in_the_row_is_sent_under_the_name_of_the_row(
+        self, choices_page
+    ):
+        page = choices_page()
+        page.evaluate(ADD_ROW, "2")
+        choose(page, "form-2-fruit", "a")
+        page.keyboard.press("Escape")
+
+        with page.expect_navigation():
+            page.click("button[type=submit]")
+
+        assert '"form-2-fruit": ["a"]' in page.inner_text("body")
+
+    def test_the_select_inside_the_template_is_never_started(self, choices_page):
+        page = choices_page()
+        page.evaluate(ADD_ROW, "2")
+
+        assert page.evaluate(IN_TEMPLATE, "select[data-tom-select]") == 1
+        assert page.evaluate(IN_TEMPLATE, ".ts-wrapper") == 0
+        started = (
+            "document.getElementById('line').content.querySelector('select').tomselect"
+        )
+        assert page.evaluate(started) is None
+
+    def test_a_row_has_one_control_when_the_script_is_on_the_page_three_times(
+        self, choices_page, page_errors, script_errors
+    ):
+        page = choices_page("choices-page-copies")
+
+        page.evaluate(ADD_ROW, "2")
+
+        assert page.evaluate(STARTED, "id_form-2-fruit") is True
+        assert page.evaluate(WRAPPERS) == page.evaluate(SELECTS)
+        assert page_errors == []
+        assert script_errors == []
+
+
+class TestAMovedSelect:
+    def test_it_keeps_its_one_control(self, choices_page, page_errors, script_errors):
+        page = choices_page()
+        before = page.evaluate(WRAPPERS)
+
+        page.evaluate(MOVE_FRUIT)
+
+        assert page.evaluate(
+            "document.getElementById('id_fruit').tomselect === window.held"
+        )
+        assert page.evaluate(WRAPPERS) == before
+        assert page_errors == []
+        assert script_errors == []
+
+
+class TestAControlInAModal:
+    def test_it_is_started_while_the_modal_is_closed(self, choices_page):
+        page = choices_page()
+
+        assert page.evaluate(STARTED, "id_nearby") is True
+
+    def test_it_works_when_the_modal_is_opened(self, choices_page):
+        page = choices_page()
+        page.evaluate("document.getElementById('nearby-dialog').showModal()")
+
+        choose(page, "nearby", "b")
+
+        items = "document.getElementById('id_nearby').tomselect.items"
+        assert page.evaluate(items) == ["b"]

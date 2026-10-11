@@ -1,7 +1,8 @@
-// Starts a Tom Select control on every select a Tom Select widget draws. The
-// widget writes its settings on the select as JSON in data-tom-select. The
-// page loads Tom Select itself, and on a page without it this script does
-// nothing and each select stays a stock select.
+// Starts a Tom Select control on every select a Tom Select widget draws, on
+// the page as it loads and on each select added to it afterwards. The widget
+// writes its settings on the select as JSON in data-tom-select. The page loads
+// Tom Select itself, and on a page without it this script does nothing and
+// each select stays a stock select.
 (function () {
   "use strict";
 
@@ -40,9 +41,22 @@
     if (described) control.control_input.setAttribute("aria-describedby", described);
   }
 
+  // The nodes Tom Select adds as it starts a control hold no select of ours,
+  // so each costs one match and one search of its own children.
+  function scan(node) {
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    if (node.matches(SELECTOR)) apply(node);
+    node.querySelectorAll(SELECTOR).forEach(apply);
+  }
+
   function start() {
     if (typeof window.TomSelect !== "function") return;
     document.querySelectorAll(SELECTOR).forEach(apply);
+    new MutationObserver(function (records) {
+      records.forEach(function (record) {
+        record.addedNodes.forEach(scan);
+      });
+    }).observe(document.documentElement, { childList: true, subtree: true });
   }
 
   if (document.readyState === "complete") {
