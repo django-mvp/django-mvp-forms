@@ -347,3 +347,33 @@ class TestTheSettings:
         page.locator(option.format("c")).click()
 
         assert page.evaluate(items) == ["a", "c"]
+
+
+class TestGroupsAndUnavailableOptions:
+    def test_an_option_is_listed_under_the_heading_of_its_group(self, choices_page):
+        page = choices_page()
+        page.locator("#id_grouped + .ts-wrapper .ts-control").click()
+
+        listed = page.locator("#id_grouped-ts-dropdown .optgroup").evaluate_all(
+            """(groups) => groups.map((group) => [
+                group.querySelector('.optgroup-header').textContent,
+                [...group.querySelectorAll('.option')].map((o) => o.textContent),
+            ])"""
+        )
+
+        assert listed == [["Fruit", ["Apple", "Banana"]], ["Vegetable", ["Carrot"]]]
+
+    def test_an_option_drawn_disabled_is_listed_and_cannot_be_chosen(
+        self, choices_page
+    ):
+        page = choices_page()
+        items = "document.getElementById('id_unavailable').tomselect.items"
+        page.locator("#id_unavailable + .ts-wrapper .ts-control").click()
+        dropdown = page.locator("#id_unavailable-ts-dropdown")
+
+        assert dropdown.locator('.option[data-value="b"]').inner_text() == "Banana"
+        dropdown.locator('.option[data-value="b"]').click(force=True)
+
+        assert page.evaluate(items) == []
+        dropdown.locator('.option[data-value="a"]').click()
+        assert page.evaluate(items) == ["a"]

@@ -1427,6 +1427,10 @@ TomSelectSettingsFormSet = formset_factory(TomSelectSettingsForm, extra=1)
 CITIES = [(f"c{number:03}", f"City {number:03}") for number in range(1, 121)]
 
 
+class DisablingTomSelectMultiple(SecondOptionDisabled, TomSelectMultiple):
+    pass
+
+
 class TomSelectPageForm(forms.Form):
     fruit = forms.MultipleChoiceField(
         choices=FRUIT, widget=TomSelectMultiple, required=False, help_text="Pick some"
@@ -1474,4 +1478,10 @@ class TomSelectPageForm(forms.Form):
         choices=[*FRUIT, ("c", "Cherry")],
         widget=TomSelectMultiple(max_items=2),
         required=False,
+    )
+    grouped = forms.MultipleChoiceField(
+        choices=GROUPED, widget=TomSelectMultiple, required=False
+    )
+    unavailable = forms.MultipleChoiceField(
+        choices=FRUIT, widget=DisablingTomSelectMultiple, required=False
     )
