@@ -24,8 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Django's `SearchInput`, `TelInput` and `ColorInput` are drawn as daisyUI inputs. A field using one of them was drawn with its label, help text and errors but with no daisyUI class on the input, so it looked unstyled beside the other fields. Each now carries `input` and fills the width of its field, takes the size, colour and variant stated for the form or the field, and carries `input-error` when its field is in error, as a text input does. Each can be a member of a `Join` and can take a floating label. Nothing changes on the form. A project that wrote `input` on one of these widgets by hand can remove it. The demo's "Text inputs" page shows the three in every state.
 - A README section, "django-countries", stating which fields of django-countries the pack draws and the release the support is tested against, 9.1.0. A country field and a multiple country field were already drawn as daisyUI selects, with the size, colour and variant stated for the form or the field and `select-error` on a field in error. They are now tested. The select of django-countries' flag widget, `CountrySelectWidget`, is drawn the same way, and its flag is placed by django-countries' own `layout` argument: the README gives the layout that sits the flag beside the select. django-countries is not a dependency of the package, and a project without it is drawn as before.
 - A demo page, "django-countries", at `/countries/` in the django-mvp shell, beside django-tomselect's in the sidebar, and the same page at `/countries/standalone/` on daisyUI's CDN build alone.
+
+### Fixed
+
+- The dismiss button of an `Alert` now sits at the end of the alert, the right under left-to-right text and the left under right-to-left. It was drawn straight after the content, wherever the last word ended. The button also carries Tailwind's `ms-auto` utility, after `btn` and its size. A page that loads daisyUI's CDN build with Tailwind's browser build needs nothing, and neither does a django-mvp project, whose stylesheet already holds the utility. A host project with its own Tailwind build gets it on its next build, as long as that build scans the installed `mvp_forms` package. A project that replaced `daisyui/layout/alert.html` adds `ms-auto` to the button in its own copy. The button's `onclick` is unchanged, so a Content Security Policy that allows it by its hash needs no new hash.
 
 ## [v0.3.0] - 2026-10-10
 

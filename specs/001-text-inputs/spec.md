@@ -22,7 +22,7 @@ This is the first feature of the pack. It also settles the things every later fe
 
 ### What this feature covers
 
-- Text, email, URL, number and password inputs, date, time and date-time inputs, and textareas. These are the widgets Django ships for them, whichever field uses the widget.
+- Text, email, URL, number and password inputs, date, time and date-time inputs, search, telephone and colour inputs, and textareas. These are the widgets Django ships for them, whichever field uses the widget.
 - The frame around each field: label, required marker, help text, errors, and the links between them.
 - Errors that belong to the form as a whole.
 - The form element itself when django-crispy-forms is asked to draw it, including the CSRF token.
@@ -57,6 +57,7 @@ A developer adds the package to a project that already loads daisyUI, selects th
 5. **Given** a widget that the developer has given attributes of their own, such as a placeholder, an extra class, a different input type or a row count, **When** the field is drawn, **Then** those attributes are all present on the input alongside what the pack adds.
 6. **Given** a template that asks django-crispy-forms to draw a single field of a form, **When** it renders, **Then** that one field is drawn exactly as it would be inside the whole form.
 7. **Given** a form that also holds a field whose widget this feature does not cover, **When** the form is drawn, **Then** that field still appears with its label, help text and errors, in the same position, and nothing raises.
+8. **Given** a form holding a field that uses Django's search input, one that uses its telephone input and one that uses its colour input, **When** the form is drawn, **Then** each of the three is drawn as a daisyUI input, keeps the input type its widget declares, and holds the value Django would have put in it.
 
 ---
 
@@ -166,7 +167,7 @@ A developer deciding whether to use the pack opens the README and finds how to i
 
 #### Inputs
 
-- **FR-005**: The pack MUST draw each of these as a daisyUI input: text, email, URL, number and password inputs, and date, time and date-time inputs.
+- **FR-005**: The pack MUST draw each of these as a daisyUI input: text, email, URL, number and password inputs, date, time and date-time inputs, and search, telephone and colour inputs.
 - **FR-006**: The pack MUST draw a textarea as a daisyUI textarea.
 - **FR-007**: The pack MUST keep every attribute the widget carries, including a class, a placeholder and an input type set by the developer, and add its own classes beside them.
 - **FR-008**: The pack MUST leave the value, name and id of each input as Django produces them.
@@ -231,7 +232,7 @@ A developer deciding whether to use the pack opens the README and finds how to i
 ### Measurable Outcomes
 
 - **SC-001**: A host project draws a form of text-like fields as daisyUI inputs after adding the package and selecting the pack, with no line of layout, helper or per-field code.
-- **SC-002**: Every one of the nine covered input kinds (text, email, URL, number, password, date, time, date-time, textarea) is drawn as its daisyUI counterpart.
+- **SC-002**: Every one of the twelve covered input kinds (text, email, URL, number, password, date, time, date-time, search, telephone, colour, textarea) is drawn as its daisyUI counterpart.
 - **SC-003**: For every covered input kind, the label, the required state, the help text and each error are announced with the field by assistive technology. An automated accessibility check of the demo page reports no missing label, no missing description and no duplicate id.
 - **SC-004**: A form that fails for a form-wide reason always shows that reason. No invalid submission comes back with nothing drawn to explain it.
 - **SC-005**: Every class the pack emits is one daisyUI's documented CDN install styles, so a page that loads that install and has no build step shows the form fully styled.
@@ -249,6 +250,10 @@ A developer deciding whether to use the pack opens the README and finds how to i
 - Q: Which django-crispy-forms helper settings does a form with no layout have to honour? → A: Those that govern the form element, the CSRF token, labels, errors, and the label and field classes. The settings that place help text and errors inline are a matter of appearance and change nothing. A horizontal form is left as an open question in [#14](https://github.com/django-mvp/django-mvp-forms/issues/14). (FR-022 to FR-025, Edge cases)
 - Q: What happens to a field whose widget belongs to a later feature? → A: It is still drawn with the same frame, in place, and nothing raises. A form never loses a field because the pack is incomplete. (FR-009)
 - Q: Does "daisyUI's CDN build" mean the stylesheet alone? → A: No. It means daisyUI's documented CDN install: the stylesheet together with Tailwind's browser build. Components use daisyUI's classes, and a Tailwind utility is allowed for layout only where daisyUI has none. (User Story 4, FR-026, FR-033, SC-005)
+
+### Session 2026-10-11
+
+- Q: Django also ships search, telephone and colour inputs. Does the pack draw them? → A: Yes, all three as a daisyUI input, like any other text input. They were first left with no daisyUI class, which made them look unstyled beside their neighbours ([#70](https://github.com/django-mvp/django-mvp-forms/issues/70)). The colour input takes the same class as the other two. (User Story 1 scenario 8, FR-005, SC-002)
 
 ## Assumptions
 

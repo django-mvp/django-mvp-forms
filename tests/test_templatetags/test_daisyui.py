@@ -71,6 +71,9 @@ KINDS = [
     ("date", "input"),
     ("time", "input"),
     ("date_time", "input"),
+    ("search", "input"),
+    ("tel", "input"),
+    ("color", "input"),
     ("message", "textarea"),
 ]
 
