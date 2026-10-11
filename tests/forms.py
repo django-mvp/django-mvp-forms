@@ -40,6 +40,7 @@ from mvp_forms.widgets import (
     PatternMaskInput,
     RangeBlock,
     RegexMaskInput,
+    TomSelectMultiple,
 )
 
 
@@ -1317,3 +1318,47 @@ def partial_date_form(**options):
     return type(
         "PartialDateOptionsForm", (forms.Form,), {"born": PartialDateField(**options)}
     )
+
+
+class TomSelectMultipleForm(forms.Form):
+    fruit = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, help_text="Pick some"
+    )
+    grouped = forms.MultipleChoiceField(
+        choices=GROUPED, widget=TomSelectMultiple, required=False
+    )
+    own = forms.MultipleChoiceField(
+        choices=FRUIT,
+        required=False,
+        widget=TomSelectMultiple(attrs={"class": "mine", "data-role": "picker"}),
+    )
+    off = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, required=False, disabled=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class StockMultipleForm(forms.Form):
+    fruit = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.SelectMultiple, help_text="Pick some"
+    )
+    grouped = forms.MultipleChoiceField(
+        choices=GROUPED, widget=forms.SelectMultiple, required=False
+    )
+    own = forms.MultipleChoiceField(
+        choices=FRUIT,
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "mine", "data-role": "picker"}),
+    )
+    off = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.SelectMultiple, required=False, disabled=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False

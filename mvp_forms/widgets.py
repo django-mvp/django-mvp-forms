@@ -776,3 +776,21 @@ class PartialDateSelect(PartialDateInput):
             *((year, year) for year in self.years(held)),
         ]
         return super().get_context(name, value, attrs)
+
+
+class TomSelectMultiple(forms.SelectMultiple):
+    """A multiple select the script turns into a Tom Select control.
+
+    The select is drawn as Django draws it, holding every choice of its field.
+    The attribute ``data-tom-select`` marks it for the script named in the
+    media, and holds the settings written for Tom Select as JSON.
+    """
+
+    class Media:
+        js = ["mvp_forms/tomselect.js"]
+
+    def build_attrs(self, base_attrs, extra_attrs=None):
+        """Add the settings to the select's attributes."""
+        attrs = super().build_attrs(base_attrs, extra_attrs)
+        attrs["data-tom-select"] = json.dumps({})
+        return attrs

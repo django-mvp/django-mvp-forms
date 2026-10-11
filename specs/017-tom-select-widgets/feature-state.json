@@ -65,8 +65,21 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestTomSelectMultiple",
+              "tests/test_widgets.py::TestWhatTheTomSelectMultipleFieldReceives",
+              "tests/test_pack/test_tom_select_widgets.py::TestTomSelectMultiple"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_pack/test_tom_select_widgets.py -q"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:781"
+            ]
+          }
         },
         {
           "id": "T002",
