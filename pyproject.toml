@@ -154,7 +154,7 @@ DEP002 = ["django-crispy-forms"]
 [tool.forge.conformance]
 # None has a module under mvp_forms/ to mirror: the first covers the app
 # registry, the second the undistributed demo project, the third the pack's
-# templates, and the fifth the script, which runs in a browser.
+# templates, and the fifth to the seventh the scripts, which run in a browser.
 non-mirror-paths = [
   "tests/test_smoke.py",
   "tests/test_demo.py",
@@ -162,4 +162,5 @@ non-mirror-paths = [
   "tests/test_legibility/",
   "tests/test_imask_e2e.py",
   "tests/test_partial_date_e2e.py",
+  "tests/test_tomselect_e2e.py",
 ]

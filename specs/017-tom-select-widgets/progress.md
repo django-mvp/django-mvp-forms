@@ -22,3 +22,10 @@ Did: Added the README section "Tom Select widgets", the CHANGELOG entries, four 
 Verified: uv run pytest tests/test_pack tests/test_widgets.py tests/test_demo.py -q -n 4 --dist loadscope, 4627 passed. Red seen first as a missing demo module. Both pages answer 200 and hold the widget's select, once each of the form's script. A test runs the README's python example and draws it.
 Next: full verify, then the report.
 Watch: the README says a select added after the page loads is left as a stock select, which T007's observer will change. The sidebar entry sits after django-countries, because an existing test pins django-countries directly after django-tomselect.
+
+## 2026-10-11T22:37:17Z · Implementer US1 · T002
+
+Did: Full verify found one red step. Conformance refused tests/test_tomselect_e2e.py as a test that mirrors no source module. Listed it beside the other two browser test files under [tool.forge.conformance] non-mirror-paths in pyproject.toml, as the standard says to declare such a path.
+Verified: forge verify, all six steps on the three task commits: lint, typecheck, test (63 s), build and docs passed, conformance failed on that one line. After the change, forge verify --steps conformance passed and pre-commit passed.
+Next: report.
+Watch: pyproject.toml is outside the brief's file list for T002.
