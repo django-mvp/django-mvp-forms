@@ -2,12 +2,22 @@
   "feature": "017-tom-select-widgets",
   "branch": "017-tom-select-widgets",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "QUEUED",
+  "state": "DESIGN_REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
       "at": "2026-10-11T22:02:02Z",
       "note": "specification approved by Sam in the session at commit 2b4912b57d7963027ad19478319d69167bb8b367, on pull request #171; epic #170, stories #172 to #177"
+    },
+    {
+      "state": "PLAN",
+      "at": "2026-10-11T22:06:35Z",
+      "note": "research.md, plan.md, tasks.md: 6 stories, 8 tasks; no sketch; continues on pull request #171"
+    },
+    {
+      "state": "DESIGN_REVIEW",
+      "at": "2026-10-11T22:06:46Z",
+      "note": "one reviewer, three lenses"
     }
   ],
   "gates": {
@@ -139,7 +149,7 @@
       "max": 1
     },
     "design_review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "tokens": {

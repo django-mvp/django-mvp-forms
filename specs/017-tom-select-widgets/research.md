@@ -12,7 +12,7 @@ error. The pack needs no change for the two widgets to be drawn as its own.
 
 ## R2. Tom Select builds the control the stylesheet already styles
 
-The copy django-tomselect 2026.6.2 carries is Tom Select 2.5.2. Tom Select copies the classes of
+The stylesheets django-tomselect 2026.6.2 carries are Tom Select 2.5.2's. Tom Select copies the classes of
 the select it replaces to the wrapper it builds, and does not copy them to the dropdown
 (`copyClassesToDropdown` is off by default). Every selector in `mvp_forms/tomselect.css` is
 written against `.ts-wrapper`, `.ts-control` and `.ts-dropdown`, with three named exceptions, and
@@ -65,16 +65,18 @@ Select's own behaviour beyond what shows the settings arrived.
 
 Article XIV allows one optional stylesheet for a supported package, which "styles that package's
 controls and nothing else". The maintainer approved drawing these widgets with the same file.
-The controls it styles are Tom Select's in both cases, so the article gains one sentence saying
-the package's own Tom Select widgets are drawn by the stylesheet shipped for django-tomselect,
-and ADR 0042 is rewritten to match. No second stylesheet exists and no project pays for a file
+The controls it styles are Tom Select's in both cases. The constitution is amended in a pull
+request of its own and never in the middle of the work it affects, so the one sentence saying
+the package's own Tom Select widgets are drawn by the stylesheet shipped for django-tomselect
+goes to the maintainer separately and merges before this feature. ADR 0042 is rewritten here to
+match. No second stylesheet exists and no project pays for a file
 it does not use, which is what the article protects.
 
 ## R8. Guards already in the suite that this feature meets
 
 - `tests/test_pack/test_independence.py` fails if a module of the package imports
   django-tomselect.
-- A test lists the package's static files, and one lists its public names against the README.
+- `tests/test_pack/test_independence.py` lists the package's static files.
 - `tests/test_pack/test_documented_examples.py` runs the README's examples.
 - `tests/tomselect_stylesheet.py` and the legibility tests read `mvp_forms/tomselect.css`.
 

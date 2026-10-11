@@ -99,3 +99,23 @@ requires these controls to match it. The demo page is new but shows nothing that
 seen.
 
 **Confirmed by the maintainer.**
+
+## D8. Design review, before any code
+
+One reviewer read the plan through three lenses. Verdict: changes requested. Every finding was
+applied to `plan.md`, `tasks.md` and `research.md`.
+
+- **ARCH-001 (high).** The plan amended Article XIV inside this pull request. The constitution
+  says a rule is changed in a pull request of its own, before the work it affects. The amendment
+  was taken out of the plan and opened as its own pull request, which merges first.
+- **SPEC-001 (medium).** The module's text check refuses a lazy translation. The placeholder
+  accepts one and it is turned into text when the widget is drawn.
+- **SPEC-002 (medium).** Tom Select does not carry `aria-describedby` to the input that takes
+  focus. The script copies it.
+- **SEC-001 (low).** The script passes Tom Select only the three settings it knows from the
+  attribute.
+- **ARCH-002 (low).** The browser tests for groups and unavailable options were cut to two.
+- **SPEC-003, SPEC-004 (low).** A missing glossary term and a clearer README sentence about the
+  empty form.
+
+**ADR:** none — a record of a review, nothing downstream inherits it.

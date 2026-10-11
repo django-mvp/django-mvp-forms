@@ -22,8 +22,7 @@ the argument at fault.
 ## Decision records
 
 Written at convergence, after the last story, with numbers read from `origin/main` at that
-moment. No task writes one. T003 edits `CONSTITUTION.md` Article XIV and the README's
-django-tomselect section.
+moment. No task writes one. `CONSTITUTION.md` does not change on this branch.
 
 ## Order
 
@@ -61,7 +60,7 @@ Plan, *The widgets*; research R1.
 ### T002 — The script, tested in Chrome
 
 **Files**: `tests/test_tomselect_e2e.py` (new), `tests/urls.py`, `tests/templates/tests/`,
-`tests/data/tom-select-2.5.2.complete.min.js` (new, copied from `/tmp/tom-select.complete.min.js`),
+`tests/data/tom-select-2.5.2.complete.min.js` (new; the complete build of Tom Select 2.5.2 as npm publishes it),
 `mvp_forms/static/mvp_forms/tomselect.js` (new), the test that lists the package's static files
 
 Plan, *The script*; research R3, R4, R6. ADR 0046 for how the tests are built.
@@ -74,6 +73,8 @@ Plan, *The script*; research R3, R4, R6. ADR 0046 for how the tests are built.
 - Initial values are held by the control when it starts.
 - The control of a disabled field is disabled.
 - Activating the field's label moves focus into the control.
+- On a field with help text, the element that takes focus names the help text's id in
+  `aria-describedby`.
 - An option whose label holds markup is shown as text, in the dropdown and once chosen.
 - A stock select on the page, and a select drawn by a django-tomselect widget, get nothing from
   this script.
@@ -88,22 +89,25 @@ Plan, *The script*; research R3, R4, R6. ADR 0046 for how the tests are built.
 
 ### T003 — The documents and the demo page
 
-**Files**: `README.md`, `CHANGELOG.md`, `CONTEXT.md`, `CONSTITUTION.md`, `demo/` (forms, views,
+**Files**: `README.md`, `CHANGELOG.md`, `CONTEXT.md`, `mvp_forms/static/mvp_forms/tomselect.css` (its opening comment only), `mvp_forms/widgets.py` (its module docstring only), `demo/` (forms, views,
 urls, menus, two templates), `tests/test_demo.py`, the README's example and surface tests
 
 Plan, *The demo* and *Documents*; research R7.
 
 - README gains "Tom Select widgets": what the widgets are for, what the host project loads and
   in which order with and without django-tomselect, the major version of Tom Select and the
-  release tested, the attribute and the script as public surface, what a page without Tom Select
+  release tested, the attribute, which holds `placeholder`, `maxItems` and `plugins`, and the script as public
+  surface, that the two button settings need Tom Select's complete build or django-tomselect's
+  script, what a page without Tom Select
   or without `mvp_forms/tomselect.css` does, which lists the widgets suit and when to use
-  django-tomselect, that a formset row is added from the empty form and never by copying a
-  started row, and what is not supported. `TomSelectMultiple` joins the public surface.
+  django-tomselect, that a formset row is added from an empty form kept in a `<template>` element, since an empty
+  form drawn into the page is itself started, and never by copying a started row, and what is not supported. `TomSelectMultiple` joins the public surface.
 - The django-tomselect section describes `mvp_forms/tomselect.css` as drawing Tom Select
   controls, from django-tomselect or from this package's widgets.
-- Article XIV gains one sentence: the package's own Tom Select widgets are drawn by the
-  stylesheet shipped for django-tomselect.
-- CONTEXT.md gains "Tom Select control", "Options that come with the form" and "Chosen value",
+- The comment at the head of `mvp_forms/tomselect.css` and the module docstring of
+  `mvp_forms/widgets.py` read true beside the new widgets. No rule of the stylesheet changes.
+- CONTEXT.md gains "Tom Select control", "Options that come with the form", "Chosen value" and
+  "Form's media",
   and "Option group" covers a group written as Django's grouped choices.
 - CHANGELOG, under Unreleased, Added.
 - The demo page exists in both forms with the multiple widget: a form that submits and shows
@@ -150,10 +154,12 @@ Plan, *The widgets*.
 - `placeholder` and `clear_button` on both widgets, `remove_button` and `max_items` on the
   multiple one, keyword-only, written under Tom Select's names as the plan says. A setting not
   stated is not written.
-- A lazy translation as a placeholder is written as its text.
+- A lazy translation as a placeholder is accepted and is written in the language active when
+  the widget is drawn: the test draws it under `translation.override`.
 - Refused with a `ValueError` naming the argument: a placeholder that is not text or is empty, a
   button setting that is not `True` or `False`, a `max_items` that is a boolean, not a whole
-  number, or below one. `TomSelect` given `remove_button` or `max_items` raises `TypeError`.
+  number, or below one. The README says that `max_items=1` makes Tom Select draw the control as
+  a single one while the form still receives a list. `TomSelect` given `remove_button` or `max_items` raises `TypeError`.
 - The settings are the same in every way of drawing the form, and in a formset's empty form.
 - In Chrome: the placeholder is the control's placeholder while it is empty, the clear button
   empties a control holding values, a remove button removes its own value alone, and with
@@ -173,12 +179,10 @@ Issue: #175. Delivers FR-011, FR-014.
 Research R3. Expected to need no change to the package's code. The tests are proved as the
 header says, and the report states what was broken to see each fail.
 
-- In Chrome: a field with grouped choices lists each option under its group's heading in the
-  order written, an option is still found under its heading when typed for, and a field mixing
-  grouped and ungrouped choices offers all of them.
-- An option drawn with `disabled` by a subclass is listed and cannot be chosen by clicking or
-  from the keyboard.
-- A group's label holding markup is shown as text.
+- In Chrome, two tests, each of which fails if the select stops reaching Tom Select intact: a
+  field with grouped choices lists an option under its group's heading, and an option drawn
+  with `disabled` by a subclass cannot be chosen. Groups, search and escaping are Tom Select's
+  own and get no further test.
 - README says how groups are written and how a subclass marks an option unavailable. The demo
   page gains a section with both.
 

@@ -22,7 +22,7 @@ with the Tom Select the page provides. Nothing in the pack's templates or templa
 | Article | How the plan meets it |
 |---|---|
 | I, test first | Every task writes its tests first and sees them fail |
-| XIV, stock daisyUI | The select carries daisyUI's `select`, and the control is drawn by the one stylesheet already shipped. The article gains one sentence (research R7) |
+| XIV, stock daisyUI | The select carries daisyUI's `select`, and the control is drawn by the one stylesheet already shipped. The article is amended in a pull request of its own, which merges before this one (research R7) |
 | XV, fields and widgets | Both widgets arrive complete in this pull request: class, tests, README surface |
 | Quality bar | README and CHANGELOG change in the task that adds each public name |
 
@@ -45,7 +45,8 @@ class TomSelectMultiple(forms.SelectMultiple):
   `placeholder`, `maxItems`, and `plugins` as a list holding `clear_button` and `remove_button`
   when asked for. Nothing stated writes `{}`. The attribute is always present, because it is how
   the script finds the select.
-- A lazy translation given as a placeholder is written as its text.
+- A lazy translation given as a placeholder passes the check as it is, and is turned into text
+  in `build_attrs`, when the attribute is written, so it is read in the language of the request.
 - The attribute is added in `build_attrs`, so the developer's own `attrs` are kept and the
   select is drawn the same through the pack, another pack, or Django's own rendering.
 - Both name `mvp_forms/tomselect.js` in `Media`. Neither names a stylesheet.
@@ -59,7 +60,10 @@ class TomSelectMultiple(forms.SelectMultiple):
 - It waits for the document to finish loading, then, if `window.TomSelect` is a function, starts
   a control on each `select[data-tom-select]` that has no `tomselect` property. Without Tom
   Select it does nothing.
-- Settings passed: the JSON written on the select, and `maxOptions: null`.
+- The script reads `placeholder`, `maxItems` and `plugins` from the JSON written on the select
+  and passes those and `maxOptions: null` to Tom Select. Nothing else in the attribute is passed.
+- After a control starts, the script copies the select's `aria-describedby` to the control's own
+  input, so help text and errors stay tied to what takes focus (FR-015).
 - A select that Tom Select refuses is left as it is and the script goes on to the next.
 - After a control starts it sends `mvp-forms:tomselect` from the select, bubbling, with the
   instance in `event.detail.tomselect`.
@@ -103,7 +107,9 @@ in the sidebar, and at `/tom-select-widgets/standalone/` on daisyUI's CDN build.
   surface, and the django-tomselect section's sentences about the stylesheet reworded so the
   file is described as drawing Tom Select controls.
 - CHANGELOG, under Unreleased. CONTEXT.md gains the terms and widens "Option group".
-- `CONSTITUTION.md` Article XIV gains one sentence (research R7).
+- `CONSTITUTION.md` does not change in this pull request. Article XIV is amended in its own.
+- The comment at the head of `mvp_forms/tomselect.css` and the module docstring of
+  `mvp_forms/widgets.py` are reworded to read true beside the new widgets.
 - Decision records, written at convergence: one for the script, and ADR 0042 rewritten.
 
 ## Risks
