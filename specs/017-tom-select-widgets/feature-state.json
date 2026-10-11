@@ -29,12 +29,24 @@
       ]
     },
     "plan": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "open",
+      "at": "2026-10-11T22:14:13Z"
     },
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "design_review": {
+      "approved_by": "design review, one reviewer, three lenses: changes requested, every finding applied",
+      "at": "2026-10-11T22:14:13Z",
+      "self_resolved": [
+        "ARCH-001 (high) the plan amended Article XIV inside this pull request: taken out of the plan and opened as pull request #178, which merges first",
+        "SPEC-001 (medium) a lazy translation would fail the text check: the placeholder accepts one and it becomes text when drawn",
+        "SPEC-002 (medium) aria-describedby does not reach the input that takes focus: the script copies it, one browser test added",
+        "SEC-001 (low) the script passes only placeholder, maxItems and plugins",
+        "ARCH-002 (low) T006's browser tests cut to two",
+        "SPEC-003, SPEC-004 (low) a glossary term and a README sentence"
+      ]
     }
   },
   "stories": [
