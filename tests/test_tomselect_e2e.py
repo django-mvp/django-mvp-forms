@@ -1,5 +1,6 @@
 """The script that starts Tom Select, run in Chrome against pages of the test project."""
 
+import re
 from pathlib import Path
 
 import django_tomselect
@@ -18,6 +19,7 @@ DJANGO_TOMSELECT = (
     / "js"
     / "django-tomselect.min.js"
 )
+README = Path(__file__).parents[1] / "README.md"
 STARTED = "(id) => document.getElementById(id).tomselect !== undefined"
 WRAPPERS = "document.querySelectorAll('.ts-wrapper').length"
 SELECTS = "document.querySelectorAll('select[data-tom-select]').length"
@@ -657,3 +659,18 @@ class TestTheEvent:
         choose(page, "fruit", "z")
         items = "document.getElementById('id_fruit').tomselect.items"
         assert page.evaluate(items) == ["z"]
+
+    def test_the_readmes_listener_changes_the_control_it_names(
+        self, page, choices_page
+    ):
+        widgets = re.search(
+            r"^### Tom Select widgets$(.*?)^### ", README.read_text(), re.M | re.S
+        ).group(1)
+        section = re.search(r"^#### The event$(.*?)^#", widgets, re.M | re.S).group(1)
+        source = re.search(r"```js\n(.*?)```", section, re.S).group(1)
+        source = source.replace("id_topics", "id_fruit").replace("geology", "a")
+        page.add_init_script(source)
+        page = choices_page()
+
+        items = "document.getElementById('id_fruit').tomselect.items"
+        assert page.evaluate(items) == ["a"]

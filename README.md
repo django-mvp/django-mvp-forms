@@ -1265,6 +1265,7 @@ This is the public surface:
 - `mvp_forms.widgets.TomSelectMultiple`, for a field where a person picks several values
 - the attribute `data-tom-select`, which holds the settings the script reads as JSON on the widget's `<select>`
 - the script `mvp_forms/tomselect.js`, which the widget names in its media
+- the event `mvp-forms:tomselect`, which the script sends from each select once its control has started, with the Tom Select instance in `event.detail.tomselect`
 
 ```python
 from django import forms
@@ -1430,6 +1431,19 @@ A formset's empty form drawn into the page is itself a select the script starts,
 
 The row's select is submitted under the name of its row, and the control has the field's options and the settings its widget was given.
 
+#### The event
+
+A Tom Select setting the widgets do not carry, or one that is a JavaScript function, is set in a few lines of your own script. The script sends the event `mvp-forms:tomselect` from each select once its control has started. The event bubbles, so a listener on the document hears every select, including one added after the page loaded, and `event.detail.tomselect` is the [Tom Select instance](https://tom-select.js.org/docs/api/). Call a method on it and the control changes.
+
+```js
+document.addEventListener("mvp-forms:tomselect", (event) => {
+  if (event.target.id !== "id_topics") return;
+  event.detail.tomselect.setValue(["geology"]);
+});
+```
+
+The event is sent once for each select, and never for a select Tom Select refused. Register the listener while the page loads, in a script that comes before or after the form's media, and it hears the controls that are already on the page. A listener registered later hears only the controls started after it, and a control already started is reached through its select: `document.getElementById("id_topics").tomselect`. Where the page's Content Security Policy forbids inline script, the listener goes in a file or carries a nonce, like any other script.
+
 #### Which lists the widgets suit
 
 Every option of the field is written into the page each time the form is drawn. The widgets suit a list short enough to send with the page: the days a shop opens, the topics of an article, the members of a small team. A `ModelMultipleChoiceField` over a large table writes every row, and nothing stops it. For a long list, use [django-tomselect](https://github.com/django-mvp/django-mvp-forms#django-tomselect), whose controls fetch their options from a view as a person types.
@@ -1438,7 +1452,7 @@ Every option of the field is written into the page each time the form is drawn. 
 
 - Adding a value that is not among the field's choices. The field would reject it.
 - Options loaded from a view. That is django-tomselect's.
-- A Tom Select setting other than `placeholder`, `maxItems` and `plugins`, including every setting that is a JavaScript function.
+- A Tom Select setting other than `placeholder`, `maxItems` and `plugins`, including every setting that is a JavaScript function. The event `mvp-forms:tomselect` is the way to reach those.
 - Tom Select itself. The package does not distribute it or name a CDN outside this README and the demo.
 
 ### django-countries
