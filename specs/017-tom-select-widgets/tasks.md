@@ -228,3 +228,38 @@ Issue: #177. Delivers FR-022, FR-030.
 - It is sent once for each select, and from a select added later.
 - A listener that calls a method of the instance changes the control.
 - README documents the event with an example, and it joins the public surface.
+
+---
+
+## After the code review
+
+The review approved the branch with one medium and five low findings. These tasks close the ones
+worth closing before the merge.
+
+### T009 — A test that the script passes only the three settings (US5, finding COR-001)
+
+**Files**: `tests/test_tomselect_e2e.py`
+
+- In Chrome: a select added with `data-tom-select` holding `{"create": true, "placeholder":
+  "Pick later"}` gets a control whose settings do not have `create` on, and whose placeholder
+  arrived. The test fails when the script copies every key of the attribute into the settings.
+
+### T010 — One way to choose an option in the browser tests (US1, findings COR-002 and COR-004)
+
+**Files**: `tests/test_tomselect_e2e.py`, `tests/test_demo.py`
+
+- The helper `pick`, which presses Enter before Tom Select has filtered its list, is removed. Its
+  three users call `choose`, which clicks the option by its value.
+- The demo test that accepts any integrity value starting `sha384-` for the stylesheet no longer
+  asserts on the value. The value on the page was checked by hand against the file the CDN serves.
+
+### T011 — A tab and an accordion group on the demo page, and three small corrections (US5, finding COR-003)
+
+**Files**: `demo/`, `tests/test_demo.py`, `mvp_forms/static/mvp_forms/tomselect.js` (one comment),
+`specs/017-tom-select-widgets/plan.md`, `specs/017-tom-select-widgets/spec.md`
+
+- The demo's "In a modal" section becomes "In a modal, a tab and an accordion", with one control
+  in a `TabHolder` and one in an `Accordion` beside the modal, on both pages.
+- The comment about every option being offered sits on the `maxOptions` line.
+- `plan.md` shows `TomSelectMultiple(TomSelect, forms.SelectMultiple)`, as built. `spec.md` reads
+  `Status: Approved`.

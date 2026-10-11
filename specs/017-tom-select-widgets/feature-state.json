@@ -131,6 +131,11 @@
               "demo/tom_select_widgets_forms.py:27"
             ]
           }
+        },
+        {
+          "id": "T010",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
@@ -269,6 +274,16 @@
               "README.md:1408"
             ]
           }
+        },
+        {
+          "id": "T009",
+          "status": "todo",
+          "attempts": 0
+        },
+        {
+          "id": "T011",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
