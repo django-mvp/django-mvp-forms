@@ -81,10 +81,14 @@
       </section>
       <section class="card card-border bg-base-100">
         <div class="card-body">
-          <h2 class="card-title">In a modal</h2>
-          <p>The controls are started while the modal is closed and work once it is open.</p>
+          <h2 class="card-title">In a modal, a tab and an accordion</h2>
+          <p>
+            The controls are started while the modal is closed, while the tab is not the
+            one shown and while the group is shut, and they work once they are in view.
+          </p>
           <button type="button" class="btn btn-primary" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()">Open the modal</button>
           {% crispy modal_form %}
+          {% crispy containers_form %}
         </div>
       </section>
       <section class="card card-border bg-base-100">

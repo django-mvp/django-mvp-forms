@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-11
 
-**Status**: Draft
+**Status**: Approved
 
 **Serves**: G11 (the package offers its own fields and widgets, each looking native beside the
 pack's own inputs) and G4 (the variant, colour and size of any form component can be set from

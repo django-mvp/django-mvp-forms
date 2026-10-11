@@ -17,10 +17,9 @@
   // through the control itself.
   const SETTINGS = ["placeholder", "maxItems", "plugins"];
 
-  // Every option of the field is offered, however many there are.
   function settings(select) {
     const written = JSON.parse(select.dataset.tomSelect);
-    const given = { maxOptions: null };
+    const given = { maxOptions: null }; // Offer every option, however many there are.
     SETTINGS.forEach(function (name) {
       if (name in written) given[name] = written[name];
     });

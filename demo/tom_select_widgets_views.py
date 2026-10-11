@@ -8,6 +8,7 @@ from mvp.views import MVPTemplateView
 from demo.tom_select_widgets_forms import (
     TomSelectWidgetsChosenForm,
     TomSelectWidgetsComparisonForm,
+    TomSelectWidgetsContainersForm,
     TomSelectWidgetsForm,
     TomSelectWidgetsGroupsForm,
     TomSelectWidgetsLineFormSet,
@@ -70,6 +71,7 @@ class TomSelectWidgetsMixin:
             line=line,
             lines_helper=lines_helper,
             modal_form=TomSelectWidgetsModalForm(prefix="modal"),
+            containers_form=TomSelectWidgetsContainersForm(prefix="containers"),
             states=[
                 {
                     "title": title,

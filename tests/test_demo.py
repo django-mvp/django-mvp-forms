@@ -4236,6 +4236,22 @@ class TomSelectWidgetsPageContract:
 
         assert dialog.find("select", id="id_modal-topics").has_attr("data-tom-select")
 
+    def test_a_tab_holds_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        tabs = page.find(id="containers-tabs")
+
+        assert tabs.find("select", id="id_containers-topic").has_attr("data-tom-select")
+
+    def test_an_accordion_group_holds_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        groups = page.find(id="containers-groups")
+
+        assert groups.find("select", id="id_containers-topics").has_attr(
+            "data-tom-select"
+        )
+
     def test_no_id_repeats(self, open_page):
         page = open_page(self.url_name)
         ids = [element["id"] for element in page.find_all(id=True)]

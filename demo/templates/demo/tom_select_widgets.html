@@ -59,12 +59,14 @@
     <template id="{{ lines.prefix }}-line">{% crispy line lines_helper %}</template>
     <c-button type="button" text="Add a sample" data-add-line="{{ lines.prefix }}" />
   </c-section>
-  <c-section title="In a modal" level="3">
+  <c-section title="In a modal, a tab and an accordion" level="3">
     <c-text>
-      The controls are started while the modal is closed and work once it is open.
+      The controls are started while the modal is closed, while the tab is not the one
+      shown and while the group is shut, and they work once they are in view.
     </c-text>
     <c-button type="button" text="Open the modal" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()" />
     {% crispy modal_form %}
+    {% crispy containers_form %}
   </c-section>
   <c-section title="In every state" level="3">
     <c-text>

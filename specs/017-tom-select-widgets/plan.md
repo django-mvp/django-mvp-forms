@@ -5,10 +5,11 @@
 ## Summary
 
 Two widgets in `mvp_forms/widgets.py`, `TomSelect(forms.Select)` and
-`TomSelectMultiple(forms.SelectMultiple)`, and one script, `mvp_forms/tomselect.js`. Each widget
-draws Django's own select, writes its settings on it as JSON in `data-tom-select`, and names the
-script in its media. The script starts a Tom Select control on every `select[data-tom-select]`,
-with the Tom Select the page provides. Nothing in the pack's templates or template tags changes.
+`TomSelectMultiple(TomSelect, forms.SelectMultiple)`, and one script, `mvp_forms/tomselect.js`.
+Each widget draws Django's own select, writes its settings on it as JSON in `data-tom-select`,
+and names the script in its media. The script starts a Tom Select control on every
+`select[data-tom-select]`, with the Tom Select the page provides. Nothing in the pack's templates
+or template tags changes.
 
 ## Technical context
 
@@ -32,7 +33,7 @@ with the Tom Select the page provides. Nothing in the pack's templates or templa
 class TomSelect(forms.Select):
     def __init__(self, attrs=None, choices=(), *, placeholder=None, clear_button=None): ...
 
-class TomSelectMultiple(forms.SelectMultiple):
+class TomSelectMultiple(TomSelect, forms.SelectMultiple):
     def __init__(self, attrs=None, choices=(), *, placeholder=None, clear_button=None,
                  remove_button=None, max_items=None): ...
 ```

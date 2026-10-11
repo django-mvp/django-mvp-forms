@@ -1,6 +1,6 @@
 """The forms the Tom Select widgets page draws."""
 
-from crispy_forms.bootstrap import Modal
+from crispy_forms.bootstrap import Accordion, AccordionGroup, Modal, Tab, TabHolder
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit
 from django import forms
@@ -274,3 +274,36 @@ class TomSelectWidgetsModalForm(forms.Form):
     def dialog_id(self):
         """The id of the modal's dialog, for the button that opens it."""
         return f"{self.prefix}-dialog"
+
+
+class TomSelectWidgetsContainersForm(forms.Form):
+    """A control in a tab that is not shown and in an accordion group that is shut.
+
+    Each is the second of two, so both sit out of sight when the page loads. The
+    form is drawn without a form element and must be given a prefix.
+    """
+
+    name = forms.CharField(label=_("Sample"), required=False)
+    topic = topic_field(choices=OPTIONAL_TOPICS, required=False)
+    note = forms.CharField(label=_("Note"), required=False)
+    topics = topics_field(required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id."""
+        super().__init__(*args, **kwargs)
+        prefix = self.prefix
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.include_media = False
+        self.helper.layout = Layout(
+            TabHolder(
+                Tab(_("Sample"), "name", css_id=f"{prefix}-sample"),
+                Tab(_("Topic"), "topic", css_id=f"{prefix}-topic"),
+                css_id=f"{prefix}-tabs",
+            ),
+            Accordion(
+                AccordionGroup(_("Note"), "note", css_id=f"{prefix}-note"),
+                AccordionGroup(_("Topics"), "topics", css_id=f"{prefix}-topics"),
+                css_id=f"{prefix}-groups",
+            ),
+        )
