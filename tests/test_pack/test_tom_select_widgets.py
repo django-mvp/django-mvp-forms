@@ -355,3 +355,24 @@ class TestTheReadmesExample:
         drawn = soup.find("select", attrs={"data-tom-select": True})
         assert drawn is not None
         assert drawn.has_attr("multiple")
+
+
+class TestTheReadmesGroupsExample:
+    def test_the_form_it_gives_draws_groups_and_one_disabled_option(self, draw):
+        section = re.search(
+            r"^#### Groups and unavailable options$(.*?)^#",
+            README.read_text(),
+            re.M | re.S,
+        ).group(1)
+        source = re.search(r"```python\n(.*?)```", section, re.S).group(1)
+        names = {}
+
+        exec(source, names)  # noqa: S102
+        soup = draw("{{ form.as_div }}", form=names["OfficesForm"]())
+
+        drawn = soup.find("select", id="id_offices")
+        assert [group["label"] for group in drawn.find_all("optgroup")] == [
+            "Germany",
+            "France",
+        ]
+        assert [o["value"] for o in drawn.find_all("option", disabled=True)] == ["lyon"]

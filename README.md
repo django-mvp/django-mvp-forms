@@ -1331,6 +1331,41 @@ A widget refuses a setting that cannot be right when the form class is defined, 
 
 Tom Select does not search a single control by typing while it holds a value, so a person clears it or clicks an option, and the clear button makes that visible. `max_items=1` makes Tom Select draw the control as a single one while the form still receives a list. The two buttons are Tom Select plugins, so the page needs the complete build or django-tomselect's script, as [What to load](https://github.com/django-mvp/django-mvp-forms#what-to-load) says.
 
+#### Groups and unavailable options
+
+Write choices in groups as Django does, with a heading and a list of options as each pair. The control lists each option under its heading, in the order you wrote, and an option written outside every group is listed with no heading. The widget draws Django's own `<optgroup>` elements and Tom Select reads the headings from them, so there is nothing to set.
+
+No argument of the widget marks an option unavailable. A subclass does it the way it is done for a stock select, by overriding `create_option` and giving the option the `disabled` attribute. Tom Select lists such an option and does not let a person choose it.
+
+```python
+from django import forms
+
+from mvp_forms.widgets import TomSelectMultiple
+
+
+class ClosedOfficeSelectMultiple(TomSelectMultiple):
+    closed = "lyon"
+
+    def create_option(self, name, value, *args, **kwargs):
+        option = super().create_option(name, value, *args, **kwargs)
+        if value == self.closed:
+            option["attrs"]["disabled"] = True
+        return option
+
+
+class OfficesForm(forms.Form):
+    offices = forms.MultipleChoiceField(
+        choices=[
+            ("Germany", [("berlin", "Berlin"), ("hamburg", "Hamburg")]),
+            ("France", [("paris", "Paris"), ("lyon", "Lyon")]),
+            ("remote", "Remote"),
+        ],
+        widget=ClosedOfficeSelectMultiple,
+    )
+```
+
+The same override works on `TomSelect`. The attribute is for the browser. The field still checks a posted value against its choices and does not look at the attribute, as it does for a stock select, so a value that must never be accepted is refused in the field's `clean`.
+
 #### What to load
 
 Tom Select is not a dependency of the package and the package does not distribute it. The widgets are written for Tom Select 2, and the package's tests run against 2.5.2. Three things have to be on a page that draws one of them: Tom Select, the pack's stylesheet and the form's media.
