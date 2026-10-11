@@ -2,7 +2,8 @@
 // the page as it loads and on each select added to it afterwards. The widget
 // writes its settings on the select as JSON in data-tom-select. The page loads
 // Tom Select itself, and on a page without it this script does nothing and
-// each select stays a stock select.
+// each select stays a stock select. Once a control has started, the select
+// sends mvp-forms:tomselect, which carries the Tom Select instance.
 (function () {
   "use strict";
 
@@ -11,6 +12,7 @@
   window.mvpFormsTomselect = true;
 
   const SELECTOR = "select[data-tom-select]";
+  const EVENT = "mvp-forms:tomselect";
   // The only settings read from the attribute. Everything else is reached
   // through the control itself.
   const SETTINGS = ["placeholder", "maxItems", "plugins"];
@@ -39,6 +41,9 @@
     // Help text and errors stay tied to the input that takes focus.
     const described = select.getAttribute("aria-describedby");
     if (described) control.control_input.setAttribute("aria-describedby", described);
+    select.dispatchEvent(
+      new CustomEvent(EVENT, { bubbles: true, detail: { tomselect: control } }),
+    );
   }
 
   // The nodes Tom Select adds as it starts a control hold no select of ours,

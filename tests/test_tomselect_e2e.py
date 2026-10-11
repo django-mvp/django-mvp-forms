@@ -61,6 +61,30 @@ const holder = document.createElement("div");
 document.getElementById("page").append(holder);
 holder.append(document.getElementById("id_fruit"));
 """
+# Records each event the script sends, and whether it carries the instance the
+# select holds by then.
+LISTEN = """
+window.heard = [];
+document.addEventListener("mvp-forms:tomselect", (event) =>
+  window.heard.push({
+    id: event.target.id,
+    instance: event.detail.tomselect === event.target.tomselect,
+    class: event.detail.tomselect instanceof window.TomSelect,
+  }));
+"""
+# A listener that changes one control through a method of its instance.
+ADD_AN_OPTION = """
+document.addEventListener("mvp-forms:tomselect", (event) => {
+  if (event.target.id === "id_fruit") {
+    event.detail.tomselect.addOption({ value: "z", text: "Zed" });
+  }
+});
+"""
+HEARD_IDS = "window.heard.map((entry) => entry.id)"
+SELECT_IDS = (
+    "[...document.querySelectorAll('select[data-tom-select]')]"
+    ".map((select) => select.id).sort()"
+)
 IN_TEMPLATE = "(selector) => document.getElementById('line').content.querySelectorAll(selector).length"
 
 
@@ -560,3 +584,76 @@ class TestAControlInAModal:
 
         items = "document.getElementById('id_nearby').tomselect.items"
         assert page.evaluate(items) == ["b"]
+
+
+class TestTheEvent:
+    def test_each_select_sends_it_once_with_the_instance_it_holds(
+        self, page, choices_page
+    ):
+        page.add_init_script(LISTEN)
+        page = choices_page()
+
+        heard = page.evaluate("window.heard")
+
+        assert sorted(entry["id"] for entry in heard) == page.evaluate(SELECT_IDS)
+        assert all(entry["instance"] and entry["class"] for entry in heard)
+
+    def test_it_is_sent_once_when_the_script_is_on_the_page_three_times(
+        self, page, choices_page
+    ):
+        page.add_init_script(LISTEN)
+        page = choices_page("choices-page-copies")
+
+        heard = page.evaluate("window.heard")
+
+        assert sorted(entry["id"] for entry in heard) == page.evaluate(SELECT_IDS)
+
+    def test_it_is_sent_from_a_select_added_later(self, page, choices_page):
+        page.add_init_script(LISTEN)
+        page = choices_page()
+        before = page.evaluate("window.heard.length")
+
+        page.evaluate(ADD_SELECT, "id_later")
+
+        heard = page.evaluate("window.heard")
+        assert [entry["id"] for entry in heard[before:]] == ["id_later"]
+        assert heard[-1]["instance"] and heard[-1]["class"]
+
+    def test_it_is_sent_from_the_select_of_a_row_added_later(self, page, choices_page):
+        page.add_init_script(LISTEN)
+        page = choices_page()
+        before = page.evaluate("window.heard.length")
+
+        page.evaluate(ADD_ROW, "2")
+
+        heard = page.evaluate("window.heard")
+        assert [entry["id"] for entry in heard[before:]] == ["id_form-2-fruit"]
+
+    def test_it_is_not_sent_again_for_a_select_that_is_moved(self, page, choices_page):
+        page.add_init_script(LISTEN)
+        page = choices_page()
+        before = page.evaluate("window.heard.length")
+
+        page.evaluate(MOVE_FRUIT)
+
+        assert page.evaluate("window.heard.length") == before
+
+    def test_it_is_not_sent_for_a_select_tom_select_refused(self, page, choices_page):
+        page.add_init_script(LISTEN)
+        page = choices_page("choices-page-refused")
+
+        heard = page.evaluate(HEARD_IDS)
+
+        assert "id_refused" not in heard
+        assert "id_fruit" in heard
+
+    def test_a_listener_that_calls_a_method_of_the_instance_changes_the_control(
+        self, page, choices_page
+    ):
+        page.add_init_script(ADD_AN_OPTION)
+        page = choices_page()
+
+        assert page.evaluate(OPTIONS_OF, "id_fruit") == ["a", "b", "z"]
+        choose(page, "fruit", "z")
+        items = "document.getElementById('id_fruit').tomselect.items"
+        assert page.evaluate(items) == ["z"]
