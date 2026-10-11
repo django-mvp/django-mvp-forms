@@ -4102,6 +4102,58 @@ class TomSelectWidgetsPageContract:
 
         assert missing == []
 
+    def test_the_form_draws_the_single_widgets_select_beside_the_multiple_one(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        drawn = page.find("select", id=f"id_{TOM_SELECT_WIDGETS_PREFIX}-topic")
+
+        assert drawn is not None
+        assert not drawn.has_attr("multiple")
+        assert drawn.has_attr("data-tom-select")
+
+    def test_each_state_size_and_colour_draws_the_single_widgets_select(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        missing = [
+            prefix
+            for prefix in TOM_SELECT_WIDGETS_SECTIONS
+            if page.find(
+                "select", id=f"id_{prefix}-topic", attrs={"data-tom-select": True}
+            )
+            is None
+        ]
+
+        assert missing == []
+
+    def test_a_post_shows_the_single_value_the_form_cleaned_to(self, open_page):
+        page = open_page(
+            self.url_name,
+            {
+                **TOM_SELECT_WIDGETS_POSTED,
+                f"{TOM_SELECT_WIDGETS_PREFIX}-topic": "seismology",
+            },
+        )
+
+        shown = page.find(id=f"{TOM_SELECT_WIDGETS_PREFIX}-cleaned-topic")
+
+        assert shown.get_text(strip=True) == "seismology"
+
+    def test_a_post_with_the_empty_choice_cleans_the_single_field_to_no_value(
+        self, open_page
+    ):
+        page = open_page(
+            self.url_name,
+            {**TOM_SELECT_WIDGETS_POSTED, f"{TOM_SELECT_WIDGETS_PREFIX}-topic": ""},
+        )
+
+        shown = page.find(id=f"{TOM_SELECT_WIDGETS_PREFIX}-cleaned-topic")
+
+        assert shown.get_text(strip=True) == ""
+
     def test_a_get_shows_nothing_cleaned(self, open_page):
         page = open_page(self.url_name)
 
@@ -4159,6 +4211,23 @@ class TestTomSelectWidgetsPage(TomSelectWidgetsPageContract):
         assert stock is not None
         assert not stock.has_attr("data-tom-select")
         assert mine.has_attr("data-tom-select")
+        assert foreign is not None
+        assert not foreign.has_attr("data-tom-select")
+
+    def test_it_holds_each_kind_of_single_select_beside_the_multiple_ones(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        stock = page.find("select", id="id_comparison-stock_single")
+        mine = page.find("select", id="id_comparison-widget_single")
+        foreign = page.find("select", id="id_comparison-django_single")
+
+        assert stock is not None
+        assert not stock.has_attr("data-tom-select")
+        assert not stock.has_attr("multiple")
+        assert mine.has_attr("data-tom-select")
+        assert not mine.has_attr("multiple")
         assert foreign is not None
         assert not foreign.has_attr("data-tom-select")
 

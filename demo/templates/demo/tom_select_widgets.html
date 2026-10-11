@@ -3,9 +3,11 @@
 {% block page.content %}
   <c-section title="Try it" icon="tomselect">
     <c-text>
-      A text input and a multiple choice field drawn by <code>TomSelectMultiple</code>. The
-      options are written into the page with the form, and no view answers for them. The
-      field is required. Submit the form and the page shows what it cleaned to.
+      A text input, a single choice field drawn by <code>TomSelect</code> and a multiple
+      choice field drawn by <code>TomSelectMultiple</code>. The options are written into
+      the page with the form, and no view answers for them. The single field is optional
+      and the multiple field is required. Submit the form and the page shows what it
+      cleaned to.
     </c-text>
     {% crispy form %}
   </c-section>
@@ -20,9 +22,10 @@
   {% endif %}
   <c-section title="Beside a stock select and a django-tomselect control" level="3">
     <c-text>
-      The same six topics in a stock multiple select and in the widget, then a control
-      django-tomselect builds from a view. This page loads django-tomselect's script, so
-      one copy of Tom Select serves both kinds of control, and one stylesheet draws them.
+      The same six topics in a stock select and in each widget, then a control
+      django-tomselect builds from a view, first for one value and then for several. This
+      page loads django-tomselect's script, so one copy of Tom Select serves both kinds
+      of control, and one stylesheet draws them.
     </c-text>
     {% crispy comparison %}
   </c-section>

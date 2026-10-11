@@ -278,6 +278,22 @@ class TestTomSelect:
     def test_the_media_of_a_form_without_the_widgets_names_no_script(self):
         assert StockSingleForm().media._js == []
 
+    def test_the_readmes_example_draws_a_single_select_beside_the_multiple_one(
+        self, draw
+    ):
+        section = re.search(
+            r"^### Tom Select widgets$(.*?)^### ", README.read_text(), re.M | re.S
+        ).group(1)
+        source = re.search(r"```python\n(.*?)```", section, re.S).group(1)
+        names = {}
+
+        exec(source, names)  # noqa: S102
+        soup = draw("{{ form.as_div }}", form=names["ArticleForm"]())
+
+        drawn = soup.find("select", id="id_section", attrs={"data-tom-select": True})
+        assert drawn is not None
+        assert not drawn.has_attr("multiple")
+
 
 class TestTheReadmesExample:
     def test_the_form_it_gives_draws_the_widgets_select(self, draw):

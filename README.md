@@ -1261,6 +1261,7 @@ A Django choice field whose options are known when the form is built can be draw
 
 This is the public surface:
 
+- `mvp_forms.widgets.TomSelect`, for a field where a person picks one value
 - `mvp_forms.widgets.TomSelectMultiple`, for a field where a person picks several values
 - the attribute `data-tom-select`, which holds the settings the script reads as JSON on the widget's `<select>`
 - the script `mvp_forms/tomselect.js`, which the widget names in its media
@@ -1268,7 +1269,7 @@ This is the public surface:
 ```python
 from django import forms
 
-from mvp_forms.widgets import TomSelectMultiple
+from mvp_forms.widgets import TomSelect, TomSelectMultiple
 
 
 class ArticleForm(forms.Form):
@@ -1276,9 +1277,16 @@ class ArticleForm(forms.Form):
         choices=[("geology", "Geology"), ("volcanology", "Volcanology")],
         widget=TomSelectMultiple,
     )
+    section = forms.ChoiceField(
+        choices=[("", "No section"), ("earth", "Earth"), ("ice", "Ice")],
+        required=False,
+        widget=TomSelect,
+    )
 ```
 
-The widget works on every field Django draws with a multiple select: `MultipleChoiceField`, `TypedMultipleChoiceField` and `ModelMultipleChoiceField`. The field receives what a stock `SelectMultiple` hands it. Choices written in groups are drawn as option groups, as Django draws them, and a subclass of the widget is drawn and started as its parent is. A `help_text`, an error and a label stay tied to the control, and a disabled field has a disabled control.
+`TomSelectMultiple` works on every field Django draws with a multiple select: `MultipleChoiceField`, `TypedMultipleChoiceField` and `ModelMultipleChoiceField`. `TomSelect` works on every field Django draws with a single select: `ChoiceField`, `TypedChoiceField` and `ModelChoiceField`. Each field receives what the stock `SelectMultiple` or `Select` hands it. Choices written in groups are drawn as option groups, as Django draws them, and a subclass of either widget is drawn and started as its parent is. A `help_text`, an error and a label stay tied to the control, and a disabled field has a disabled control.
+
+A control for a single value holds the choice a stock select would show as chosen. A required field with no empty choice starts out holding its first choice. An optional field needs an empty choice, which `ModelChoiceField` writes itself and a `ChoiceField` is given as `("", "No section")`. Tom Select leaves the empty choice out of its dropdown. A person returns the field to no value by focusing the control and pressing Backspace, and the form then submits an empty entry for it.
 
 The pack draws the select as it draws any select, with the size, colour and variant stated for the form or the field and `select-error` on a field in error. The widget writes the attribute through `build_attrs`, so it is the same whether the form is drawn with `{{ form|crispy }}`, `{% crispy form %}`, `{{ field|as_crispy_field }}` or Django's own form rendering. The `attrs` you give the widget are kept. In Django's own rendering the classes come from you and not from the pack, so the control is in Tom Select's own look.
 
@@ -1307,7 +1315,7 @@ Tom Select is not a dependency of the package and the package does not distribut
 - The script is a file and the widget writes no inline script and no inline handler. A page whose Content Security Policy allows scripts from its own origin and from the origin serving Tom Select, and forbids inline script, starts every control.
 - A project that uses none of these widgets never loads the script. The pack's own templates still need no script.
 
-A page that does not load Tom Select draws every select as a stock multiple select. Nothing is started, no error is raised in the browser, and the form submits.
+A page that does not load Tom Select draws every select as a stock select. Nothing is started, no error is raised in the browser, and the form submits.
 
 #### What the script does
 
