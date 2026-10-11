@@ -82,6 +82,9 @@ INPUT_KINDS = [
     ("date", "input"),
     ("time", "input"),
     ("date_time", "input"),
+    ("search", "input"),
+    ("tel", "input"),
+    ("color", "input"),
     ("textarea", "textarea"),
 ]
 SUBMITTED = {"submit-email": "not an email"}

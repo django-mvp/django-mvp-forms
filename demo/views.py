@@ -176,6 +176,9 @@ class TextInputsMixin(StatesMixin):
         "date": datetime.date(2026, 10, 3),
         "time": datetime.time(14, 30),
         "date_time": datetime.datetime(2026, 10, 3, 14, 30),
+        "search": "daisyUI",
+        "tel": "+49 30 1234567",
+        "color": "#3b82f6",
         "textarea": "Some lines\nof text",
     }
     refused = {

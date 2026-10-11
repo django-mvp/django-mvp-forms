@@ -160,7 +160,7 @@ The label is tied to the input, and a required field's label carries a marker th
 
 These inputs are drawn as daisyUI components, whichever way crispy-forms is asked to draw the form (`|crispy`, `{% crispy form %}` or `|as_crispy_field`):
 
-- text, email, URL, number, password, date, time and date-time inputs, as `input`
+- text, email, URL, number, password, date, time, date-time, search, telephone and colour inputs, as `input`. The last three are Django's `SearchInput`, `TelInput` and `ColorInput`
 - textareas, as `textarea`
 - `Select`, `SelectMultiple` and `NullBooleanSelect`, and selects with named groups, as `select`, and the three selects of a date drawn by `SelectDateWidget`, each named by an `aria-label` of Year, Month or Day unless the widget carries an `aria-label` of its own. The part is read from the end of the select's name, so a subclass that renames `year_field`, `month_field` or `day_field` names its own selects
 - `CheckboxInput`, as `checkbox`, inside its own label, with `checkbox-error` when invalid

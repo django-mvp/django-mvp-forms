@@ -75,6 +75,9 @@ class TextInputsForm(forms.Form):
     date = forms.DateField(label=_("Date"))
     time = forms.TimeField(label=_("Time"))
     date_time = forms.DateTimeField(label=_("Date and time"))
+    search = forms.CharField(label=_("Search"), widget=forms.SearchInput)
+    tel = forms.CharField(label=_("Telephone"), widget=forms.TelInput)
+    color = forms.CharField(label=_("Colour"), widget=forms.ColorInput)
     textarea = forms.CharField(label=_("Textarea"), widget=forms.Textarea)
 
     help_texts = {
@@ -89,6 +92,9 @@ class TextInputsForm(forms.Form):
         "date": _("A date such as 2026-10-03."),
         "time": _("A time such as 14:30."),
         "date_time": _("A date and a time such as 2026-10-03 14:30."),
+        "search": _("A word or two to look for."),
+        "tel": _("A number such as +49 30 1234567."),
+        "color": _("A colour picked from the browser's own picker."),
         "textarea": _("Several lines of free text."),
     }
 
