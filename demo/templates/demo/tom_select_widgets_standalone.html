@@ -54,6 +54,17 @@
       </section>
       <section class="card card-border bg-base-100">
         <div class="card-body">
+          <h2 class="card-title">Groups and an unavailable option</h2>
+          <p>
+            Choices written in groups are listed under their headings. The multiple
+            field uses a subclass that draws one option with the
+            <code>disabled</code> attribute, so it is listed and cannot be chosen.
+          </p>
+          {% crispy groups_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
           <h2 class="card-title">In every state</h2>
           {% for state in states %}
             <h3 class="font-semibold">{{ state.title }}</h3>

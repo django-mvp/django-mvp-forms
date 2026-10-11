@@ -37,6 +37,15 @@
     </c-text>
     {% crispy settings_form %}
   </c-section>
+  <c-section title="Groups and an unavailable option" level="3">
+    <c-text>
+      Choices written in groups are listed under their headings, and an option that sits
+      outside every group is listed with none. The multiple field uses a subclass of
+      <code>TomSelectMultiple</code> that draws one option with the
+      <code>disabled</code> attribute, so it is listed and cannot be chosen.
+    </c-text>
+    {% crispy groups_form %}
+  </c-section>
   <c-section title="In every state" level="3">
     <c-text>
       The field in the same state. No form from here down posts anywhere.

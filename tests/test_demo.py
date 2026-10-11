@@ -4149,6 +4149,18 @@ class TomSelectWidgetsPageContract:
             "remove_button",
         ]
 
+    def test_the_groups_form_draws_grouped_options_and_one_unavailable_option(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        single = page.find("select", id="id_groups-topic")
+        multiple = page.find("select", id="id_groups-topics")
+
+        assert single.find("optgroup") is not None
+        assert multiple.find("optgroup") is not None
+        assert len(multiple.find_all("option", attrs={"disabled": True})) == 1
+
     def test_a_post_shows_the_single_value_the_form_cleaned_to(self, open_page):
         page = open_page(
             self.url_name,

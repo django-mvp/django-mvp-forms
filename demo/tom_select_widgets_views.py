@@ -8,6 +8,7 @@ from demo.tom_select_widgets_forms import (
     TomSelectWidgetsChosenForm,
     TomSelectWidgetsComparisonForm,
     TomSelectWidgetsForm,
+    TomSelectWidgetsGroupsForm,
     TomSelectWidgetsSettingsForm,
     TomSelectWidgetsStateForm,
 )
@@ -52,6 +53,7 @@ class TomSelectWidgetsMixin:
             prefix=self.prefix,
             cleaned=self.build_cleaned(form) if form.is_bound else [],
             settings_form=TomSelectWidgetsSettingsForm(prefix="settings"),
+            groups_form=TomSelectWidgetsGroupsForm(prefix="groups"),
             states=[
                 {
                     "title": title,

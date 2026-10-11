@@ -23,6 +23,32 @@ TOPICS = [
 
 OPTIONAL_TOPICS = [("", _("No topic")), *TOPICS]
 
+GROUPED_TOPICS = [
+    (_("Rock"), [("geology", _("Geology")), ("petrology", _("Petrology"))]),
+    (
+        _("Movement"),
+        [
+            ("seismology", _("Seismology")),
+            ("tectonics", _("Tectonics")),
+            ("volcanology", _("Volcanology")),
+        ],
+    ),
+    ("glaciology", _("Glaciology")),
+]
+
+
+class UnavailableTomSelectMultiple(TomSelectMultiple):
+    """A multiple widget that draws the volcanology option as unavailable."""
+
+    unavailable = "volcanology"
+
+    def create_option(self, name, value, *args, **kwargs):
+        """Draw the unavailable option with the ``disabled`` attribute."""
+        option = super().create_option(name, value, *args, **kwargs)
+        if value == self.unavailable:
+            option["attrs"]["disabled"] = True
+        return option
+
 
 def topics_field(**kwargs):
     """Build the field the page is about: several values from a fixed list."""
@@ -127,6 +153,34 @@ class TomSelectWidgetsSettingsForm(ChosenForm):
             max_items=3,
         ),
         help_text=_("A button on each value, and no more than three values."),
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Leave the media to the page."""
+        super().__init__(*args, **kwargs)
+        self.helper.include_media = False
+
+
+class TomSelectWidgetsGroupsForm(ChosenForm):
+    """Both widgets over choices written in groups, and one option unavailable.
+
+    The single widget lists the options under their headings. The multiple
+    widget is a subclass that draws one option with the ``disabled`` attribute.
+    """
+
+    topic = forms.ChoiceField(
+        label=_("TomSelect"),
+        choices=[("", _("No topic")), *GROUPED_TOPICS],
+        required=False,
+        widget=TomSelect,
+        help_text=_("Options under headings, with one left outside every group."),
+    )
+    topics = forms.MultipleChoiceField(
+        label=_("TomSelectMultiple"),
+        choices=GROUPED_TOPICS,
+        required=False,
+        widget=UnavailableTomSelectMultiple,
+        help_text=_("Volcanology is listed and cannot be chosen."),
     )
 
     def __init__(self, *args, **kwargs):
