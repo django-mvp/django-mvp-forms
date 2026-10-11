@@ -41,6 +41,10 @@ INSERT_SELECT = """
 ADD_SELECT = INSERT_SELECT.replace(
     "return select;", 'document.getElementById("page").append(select);'
 )
+# The same select, its attribute holding a setting the script does not read.
+ADD_CREATING_SELECT = ADD_SELECT.replace(
+    '{ placeholder: "Pick later" }', '{ create: true, placeholder: "Pick later" }'
+)
 ADD_WRAPPED_SELECT = INSERT_SELECT.replace(
     "return select;",
     """const holder = document.createElement("div");
@@ -488,6 +492,17 @@ class TestSelectsAddedAfterThePageLoads:
 
         assert placeholder == "Pick later"
         assert '"id_later": ["b"]' in page.inner_text("body")
+
+    def test_a_setting_the_script_does_not_read_is_left_off(self, choices_page):
+        page = choices_page()
+        page.evaluate(ADD_CREATING_SELECT, "id_later")
+
+        settings = page.evaluate(
+            "document.getElementById('id_later').tomselect.settings"
+        )
+
+        assert not settings["create"]
+        assert settings["placeholder"] == "Pick later"
 
     def test_a_late_control_is_tied_to_the_help_text_of_its_select(self, choices_page):
         page = choices_page()
