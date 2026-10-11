@@ -1,8 +1,10 @@
 """The forms the Tom Select widgets page draws."""
 
+from crispy_forms.bootstrap import Modal
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit
+from crispy_forms.layout import Layout, Submit
 from django import forms
+from django.forms import formset_factory
 from django.utils.translation import gettext_lazy as _
 from django_tomselect.forms import TomSelectChoiceField, TomSelectMultipleChoiceField
 
@@ -227,3 +229,48 @@ class TomSelectWidgetsComparisonForm(ChosenForm):
             stock=["geology", "volcanology"],
             widget=["geology", "volcanology"],
         )
+
+
+class TomSelectWidgetsLineForm(forms.Form):
+    """One line of the formset: a sample, and the topics it belongs to."""
+
+    name = forms.CharField(label=_("Sample"), required=False)
+    topics = forms.MultipleChoiceField(
+        label=_("Topics"),
+        choices=TOPICS,
+        required=False,
+        widget=TomSelectMultiple(placeholder=_("Pick topics"), remove_button=True),
+    )
+
+
+TomSelectWidgetsLineFormSet = formset_factory(TomSelectWidgetsLineForm, extra=2)
+
+
+class TomSelectWidgetsModalForm(forms.Form):
+    """A form whose controls sit in a modal. The form must be given a prefix."""
+
+    name = forms.CharField(label=_("Sample"), required=False)
+    topic = topic_field(choices=OPTIONAL_TOPICS, required=False)
+    topics = topics_field(required=False)
+
+    def __init__(self, *args, **kwargs):
+        """Build the layout, with the prefix in every id."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.include_media = False
+        self.helper.layout = Layout(
+            "name",
+            Modal(
+                "topic",
+                "topics",
+                css_id=self.dialog_id,
+                title=_("Topics"),
+                title_id=f"{self.prefix}-title",
+            ),
+        )
+
+    @property
+    def dialog_id(self):
+        """The id of the modal's dialog, for the button that opens it."""
+        return f"{self.prefix}-dialog"

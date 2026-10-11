@@ -4204,6 +4204,38 @@ class TomSelectWidgetsPageContract:
         assert page.find(id=f"id_{TOM_SELECT_WIDGETS_PREFIX}-topics_error") is not None
         assert page.find(id=f"{TOM_SELECT_WIDGETS_PREFIX}-cleaned") is None
 
+    def test_the_empty_form_of_the_formset_is_kept_in_a_template(self, open_page):
+        page = open_page(self.url_name)
+
+        template = page.find("template", id="samples-line")
+        row = template.find("select", id="id_samples-__prefix__-topics")
+
+        assert row is not None
+        assert row.has_attr("data-tom-select")
+
+    def test_the_rows_of_the_formset_hold_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        rows = page.find(id="samples-formset").find_all("select", multiple=True)
+
+        assert [row["id"] for row in rows] == [
+            "id_samples-0-topics",
+            "id_samples-1-topics",
+        ]
+        assert all(row.has_attr("data-tom-select") for row in rows)
+
+    def test_a_button_adds_a_row_from_the_empty_form(self, open_page):
+        page = open_page(self.url_name)
+
+        assert page.find(attrs={"data-add-line": "samples"}) is not None
+
+    def test_the_modal_holds_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        dialog = page.find("dialog", id="modal-dialog")
+
+        assert dialog.find("select", id="id_modal-topics").has_attr("data-tom-select")
+
     def test_no_id_repeats(self, open_page):
         page = open_page(self.url_name)
         ids = [element["id"] for element in page.find_all(id=True)]

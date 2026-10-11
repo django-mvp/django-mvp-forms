@@ -65,6 +65,30 @@
       </section>
       <section class="card card-border bg-base-100">
         <div class="card-body">
+          <h2 class="card-title">In a formset</h2>
+          <p>
+            A sample added in the browser holds a control with no script written for
+            it. The page keeps the formset's empty form in a
+            <code>&lt;template&gt;</code>, replaces its prefix and inserts the row. A
+            row is never made by copying one whose control has started.
+          </p>
+          <div id="{{ lines.prefix }}-formset">
+            {% crispy lines lines_helper %}
+          </div>
+          <template id="{{ lines.prefix }}-line">{% crispy line lines_helper %}</template>
+          <button type="button" class="btn" data-add-line="{{ lines.prefix }}">Add a sample</button>
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">In a modal</h2>
+          <p>The controls are started while the modal is closed and work once it is open.</p>
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()">Open the modal</button>
+          {% crispy modal_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
           <h2 class="card-title">In every state</h2>
           {% for state in states %}
             <h3 class="font-semibold">{{ state.title }}</h3>
@@ -91,5 +115,23 @@
         </div>
       </section>
     </main>
+    <script>
+      // This page's own "Add a sample" button.
+      document.addEventListener("click", function (event) {
+        const button = event.target.closest("[data-add-line]");
+        if (!button) return;
+        const prefix = button.dataset.addLine;
+        const total = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
+        const rows = document.querySelectorAll("#" + prefix + "-formset tbody tr");
+        const row = document.getElementById(prefix + "-line").content.querySelector("tbody tr").cloneNode(true);
+        row.querySelectorAll("*").forEach(function (node) {
+          Array.from(node.attributes).forEach(function (attribute) {
+            attribute.value = attribute.value.replace("__prefix__", total.value);
+          });
+        });
+        rows[rows.length - 1].after(row);
+        total.value = Number(total.value) + 1;
+      });
+    </script>
   </body>
 </html>

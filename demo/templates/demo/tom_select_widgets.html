@@ -46,6 +46,26 @@
     </c-text>
     {% crispy groups_form %}
   </c-section>
+  <c-section title="In a formset" level="3">
+    <c-text>
+      A sample added in the browser holds a control with no script written for it. The
+      page keeps the formset's empty form in a <code>&lt;template&gt;</code>, replaces
+      its prefix and inserts the row. A row is never made by copying one whose control
+      has started.
+    </c-text>
+    <div id="{{ lines.prefix }}-formset">
+      {% crispy lines lines_helper %}
+    </div>
+    <template id="{{ lines.prefix }}-line">{% crispy line lines_helper %}</template>
+    <c-button type="button" text="Add a sample" data-add-line="{{ lines.prefix }}" />
+  </c-section>
+  <c-section title="In a modal" level="3">
+    <c-text>
+      The controls are started while the modal is closed and work once it is open.
+    </c-text>
+    <c-button type="button" text="Open the modal" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()" />
+    {% crispy modal_form %}
+  </c-section>
   <c-section title="In every state" level="3">
     <c-text>
       The field in the same state. No form from here down posts anywhere.
@@ -77,3 +97,24 @@
     <c-link href="{% url 'tom-select-widgets-standalone' %}" text="The same page without django-mvp" />
   </c-text>
 {% endblock page.content %}
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    // This page's own "Add a sample" button.
+    document.addEventListener("click", function (event) {
+      const button = event.target.closest("[data-add-line]");
+      if (!button) return;
+      const prefix = button.dataset.addLine;
+      const total = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
+      const rows = document.querySelectorAll("#" + prefix + "-formset tbody tr");
+      const row = document.getElementById(prefix + "-line").content.querySelector("tbody tr").cloneNode(true);
+      row.querySelectorAll("*").forEach(function (node) {
+        Array.from(node.attributes).forEach(function (attribute) {
+          attribute.value = attribute.value.replace("__prefix__", total.value);
+        });
+      });
+      rows[rows.length - 1].after(row);
+      total.value = Number(total.value) + 1;
+    });
+  </script>
+{% endblock extra_js %}

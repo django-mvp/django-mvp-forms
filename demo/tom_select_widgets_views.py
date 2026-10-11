@@ -1,5 +1,6 @@
 """The pages that show this package's Tom Select widgets."""
 
+from crispy_forms.helper import FormHelper
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import TemplateView
 from mvp.views import MVPTemplateView
@@ -9,6 +10,8 @@ from demo.tom_select_widgets_forms import (
     TomSelectWidgetsComparisonForm,
     TomSelectWidgetsForm,
     TomSelectWidgetsGroupsForm,
+    TomSelectWidgetsLineFormSet,
+    TomSelectWidgetsModalForm,
     TomSelectWidgetsSettingsForm,
     TomSelectWidgetsStateForm,
 )
@@ -48,12 +51,25 @@ class TomSelectWidgetsMixin:
         """Add every form the page draws."""
         form = kwargs.setdefault("form", TomSelectWidgetsForm(prefix=self.prefix))
         context = super().get_context_data(**kwargs)
+        # The row "Add a sample" copies: the formset's empty form, drawn alone and
+        # without a second management form.
+        line = TomSelectWidgetsLineFormSet(prefix="samples")
+        line.forms = [line.empty_form]
+        line.management_form = []
+        lines_helper = FormHelper()
+        lines_helper.form_tag = False
+        lines_helper.include_media = False
+        lines_helper.template = "daisyui/table_inline_formset.html"
         context.update(
             form=form,
             prefix=self.prefix,
             cleaned=self.build_cleaned(form) if form.is_bound else [],
             settings_form=TomSelectWidgetsSettingsForm(prefix="settings"),
             groups_form=TomSelectWidgetsGroupsForm(prefix="groups"),
+            lines=TomSelectWidgetsLineFormSet(prefix="samples"),
+            line=line,
+            lines_helper=lines_helper,
+            modal_form=TomSelectWidgetsModalForm(prefix="modal"),
             states=[
                 {
                     "title": title,
