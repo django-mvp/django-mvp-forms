@@ -2,7 +2,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table, and it draws the select controls of django-tomselect. Nothing is published to PyPI. The versions of Django, django-crispy-forms and daisyUI it supports are in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions).
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table, and it draws the select controls of django-tomselect and the fields of django-countries. Nothing is published to PyPI. The versions of Django, django-crispy-forms and daisyUI it supports are in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions).
 
 ## Why
 
@@ -1255,6 +1255,63 @@ Without it a control's script starts the control when the document finishes load
 
 The support is tested against django-tomselect 2026.6.2, which the development dependencies name as the least release. That release declares Django up to 6.0, and its controls work on Django 6.1, apart from the `{% tomselect_media %}` tag above. Which releases of django-tomselect are supported is stated here and is not part of the [support window](https://github.com/django-mvp/django-mvp-forms#supported-versions), whose periods apply to Django, django-crispy-forms and daisyUI.
 
+### django-countries
+
+The pack draws the form fields of [django-countries](https://github.com/SmileyChris/django-countries) as daisyUI selects. It covers the field a `CountryField` gives a form, the field a `CountryField(multiple=True)` gives one, and either drawn by django-countries' flag widget, `CountrySelectWidget`. django-countries is not a dependency of the package and no module of the package imports it, so a project without it is drawn as before.
+
+`{{ form|crispy }}` and `{% crispy form %}` need nothing from you for these fields. They write daisyUI's `select` class on the `<select>` with `w-full`, the size, the colour and the variant stated for the form or for the field, and `select-error` in place of the colour on a field in error, exactly as for a stock select. A disabled field carries the `disabled` attribute, the label is tied to the select, and the form cleans to django-countries' two-letter codes as it does under any other pack.
+
+```python
+from django import forms
+from django_countries.fields import CountryField
+from django_countries.widgets import CountrySelectWidget
+
+
+class AddressForm(forms.Form):
+    country = CountryField().formfield()
+    visited = CountryField(multiple=True).formfield(required=False)
+    residence = CountryField().formfield(widget=CountrySelectWidget())
+```
+
+A model form gets the first two for a model's `CountryField` with no code at all, and the third by naming the widget in its `Meta.widgets`.
+
+#### The flag widget
+
+`CountrySelectWidget` writes a flag image after its select and changes the image when the country changes. The pack draws the select as a daisyUI select, like any other, and leaves the flag where django-countries puts it. django-countries places the two with the widget's `layout` argument, and its own layout puts the flag after the select with nothing around them. A field's frame is one column, so the flag then sits on a line of its own under a full-width select.
+
+To sit the flag beside the select, centred against it, pass a layout that holds the two in a row:
+
+```python
+from django import forms
+from django_countries.fields import CountryField
+from django_countries.widgets import CountrySelectWidget
+
+FLAG_BESIDE = (
+    '<div class="flex items-center gap-2">{widget}'
+    '<img class="country-select-flag" id="{flag_id}" src="{country.flag}"></div>'
+)
+
+
+class AddressForm(forms.Form):
+    residence = CountryField().formfield(
+        widget=CountrySelectWidget(layout=FLAG_BESIDE)
+    )
+```
+
+The select takes the width the flag leaves. The image keeps the class and the `id` django-countries gives it, which its handler finds the image by, and leaves out the inline margin of django-countries' own layout. The three utilities are Tailwind's and the string is in your code, so a Tailwind build of your own finds them there. daisyUI's CDN install with Tailwind's browser build needs nothing.
+
+- The flag images are django-countries' own static files. List `django_countries` in `INSTALLED_APPS` so that Django's static files finder serves them.
+- The image changes through an `onchange` handler that django-countries writes on the select. Under a Content Security Policy that forbids inline event handlers the select still works and the flag stays as the page drew it. The handler is django-countries' own, and a policy that forbids it is yours to open, as it is for [the pack's two handlers](https://github.com/django-mvp/django-mvp-forms#layout-objects).
+
+#### What is not covered
+
+- django-countries' own behaviour: its settings, its translations, the countries it lists and what a `CountryField` stores. The pack draws the field and changes none of it.
+- django-countries' Django REST framework, GraphQL and admin filter support, which draw no form field.
+
+#### The release tested
+
+The support is tested against django-countries 9.1.0, which the development dependencies name as the least release. That release declares Django 4.2, 5.2, 6.0 and 6.1. Which releases of django-countries are supported is stated here and is not part of the [support window](https://github.com/django-mvp/django-mvp-forms#supported-versions), whose periods apply to Django, django-crispy-forms and daisyUI.
+
 ### Input masks
 
 A mask is a rule [IMask](https://imask.js.org/) applies to a text input as a person types: it decides what can be typed and how it is shown. The package gives a developer a widget to name on a field, and one script that hands what the widget wrote to IMask. The widgets add nothing to validation, so a field cleans and validates exactly as it did.
@@ -1989,6 +2046,11 @@ One more page draws django-tomselect's controls. Its sidebar entry is in a group
 - `/tomselect/standalone/` is the same page styled by daisyUI's CDN build alone, with django-tomselect's files and `mvp_forms/tomselect.css`.
 
 Every page inside the shell links `mvp_forms/tomselect.css`, because the demo's base template does.
+
+One more page draws django-countries' fields, in the same sidebar group. The page holds a form to submit with a text input, a country, several countries and a country drawn by the flag widget, which is given the layout that sits its flag beside its select. Submitting it with no country comes back with the country's error, and submitting it with one shows the codes the form cleaned to. Nothing is saved. The page also draws the three fields in a state each (holding a value, in error and disabled) and at each size.
+
+- `/countries/` is the page inside the django-mvp shell, reached from its sidebar under "Third-party widgets" as "django-countries".
+- `/countries/standalone/` is the same page styled by daisyUI's CDN build alone.
 
 ## License
 

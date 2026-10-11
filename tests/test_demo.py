@@ -11,9 +11,10 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.shortcuts import resolve_url
 from django.template.loader import get_template
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 
 from demo.autocompletes import ROCKS, UNGROUPED_ROCKS
+from demo.countries_views import CountriesMixin
 from demo.forms import (
     DAISYUI_VERSION,
     THEME_NAMES,
@@ -3264,6 +3265,10 @@ def links_the_tomselect_stylesheet(page):
     )
 
 
+# The pages of the sidebar's group for supported packages, in its order.
+THIRD_PARTY_PAGES = [reverse_lazy("tomselect"), reverse_lazy("countries")]
+
+
 class TomSelectPageContract:
     url_name = ""
 
@@ -3371,7 +3376,7 @@ class TestTomSelectPage(TomSelectPageContract):
         standard = [
             position
             for position, href in enumerate(entries)
-            if href and href != reverse("tomselect")
+            if href and href not in THIRD_PARTY_PAGES
         ]
 
         assert max(standard) < mine
@@ -3952,3 +3957,97 @@ class TestStandalonePartialDatesPage(PartialDatesPageContract):
 
     def test_it_links_back_to_the_shell_page(self, page):
         assert page.find("a", href=reverse("partial-dates")) is not None
+
+
+COUNTRIES_PREFIX = "countries"
+COUNTRIES_FIELDS = ("country", "countries", "flagged")
+COUNTRIES_SUBMIT = {f"{COUNTRIES_PREFIX}-submit": "Submit"}
+COUNTRIES_POSTED = {
+    **COUNTRIES_SUBMIT,
+    f"{COUNTRIES_PREFIX}-country": "DE",
+    f"{COUNTRIES_PREFIX}-countries": ["FR", "JP"],
+    f"{COUNTRIES_PREFIX}-flagged": "NZ",
+}
+# The prefix of each form the page draws in a state and at a size.
+COUNTRIES_SECTIONS = [
+    *(f"state-{state}" for state, _ in CountriesMixin.states),
+    *(f"size-{name}" for name in Modifiers.names("size", "select")),
+]
+
+
+class CountriesPageContract:
+    url_name = ""
+
+    def test_the_form_draws_a_select_for_each_of_its_fields(self, open_page):
+        page = open_page(self.url_name)
+
+        for name in COUNTRIES_FIELDS:
+            assert page.find("select", id=f"id_{COUNTRIES_PREFIX}-{name}") is not None
+
+    def test_each_state_and_size_is_drawn_with_its_flag(self, open_page):
+        page = open_page(self.url_name)
+
+        missing = [
+            prefix
+            for prefix in COUNTRIES_SECTIONS
+            if page.find("img", id=f"flag_id_{prefix}-flagged") is None
+        ]
+
+        assert missing == []
+
+    def test_a_get_shows_nothing_cleaned(self, open_page):
+        assert open_page(self.url_name).find(id=f"{COUNTRIES_PREFIX}-cleaned") is None
+
+    def test_a_post_shows_the_codes_the_form_cleaned_to(self, open_page):
+        page = open_page(self.url_name, COUNTRIES_POSTED)
+
+        shown = {
+            name: page.find(id=f"{COUNTRIES_PREFIX}-cleaned-{name}").get_text(
+                strip=True
+            )
+            for name in COUNTRIES_FIELDS
+        }
+        assert shown == {"country": "DE", "countries": "FR JP", "flagged": "NZ"}
+
+    def test_a_post_with_no_country_comes_back_with_its_error(self, open_page):
+        page = open_page(self.url_name, COUNTRIES_SUBMIT)
+
+        assert page.find(id=f"id_{COUNTRIES_PREFIX}-country_error") is not None
+        assert page.find(id=f"{COUNTRIES_PREFIX}-cleaned") is None
+
+
+class TestCountriesPage(CountriesPageContract):
+    url_name = "countries"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_lists_it_next_after_the_other_supported_package(
+        self, open_page
+    ):
+        nav = open_page("overview").find(attrs={"aria-label": "Main navigation"})
+        entries = [
+            link["href"] if (link := item.find("a")) else None
+            for item in nav.find_all("li", recursive=False)
+        ]
+
+        assert entries.index(reverse("countries")) == (
+            entries.index(reverse("tomselect")) + 1
+        )
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("countries-standalone")) is not None
+
+
+class TestStandaloneCountriesPage(CountriesPageContract):
+    url_name = "countries-standalone"
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("countries")) is not None

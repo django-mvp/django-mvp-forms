@@ -17,6 +17,8 @@ from django.forms import (
     widgets,
 )
 from django.utils.safestring import mark_safe
+from django_countries.fields import CountryField
+from django_countries.widgets import CountrySelectWidget
 from django_tomselect.app_settings import TomSelectConfig
 from django_tomselect.forms import (
     TomSelectChoiceField,
@@ -1074,6 +1076,19 @@ class TomSelectForm(forms.Form):
     country = TomSelectChoiceField(config=COUNTRIES, help_text="One country")
     countries = TomSelectMultipleChoiceField(
         config=COUNTRIES, help_text="Some countries"
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class CountriesForm(forms.Form):
+    country = CountryField().formfield(help_text="One country")
+    countries = CountryField(multiple=True).formfield(help_text="Some countries")
+    flagged = CountryField().formfield(
+        widget=CountrySelectWidget(), help_text="One country, with its flag"
     )
 
     def __init__(self, *args, **kwargs):

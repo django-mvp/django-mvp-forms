@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     # A supported third-party package, for the pages that show its widgets. The
     # package itself never depends on it.
     "django_tomselect",
+    # A second one. Listing it is what serves its flag images.
+    "django_countries",
     # Reloads the browser on a change to a template, a stylesheet or Python. It
     # arrives with the shared development bundle rather than a pin of its own,
     # and its middleware removes itself from the chain unless DEBUG is on.
@@ -150,6 +152,7 @@ EASY_ICONS = {
             "partial-dates": "bi bi-calendar3",
             "themes": "bi bi-brush",
             "tomselect": "bi bi-menu-button-wide",
+            "countries": "bi bi-globe",
         },
     },
 }

@@ -62,6 +62,7 @@ dev = [
     # note on `dependencies` above.
     "django-mvp>=0.24.0",
     "django-tomselect>=2026.6.2",
+    "django-countries>=9.1.0",
 ]
 
 [tool.uv.sources]
