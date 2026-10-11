@@ -78,3 +78,10 @@ Did: Added one Chrome test in tests/test_tomselect_e2e.py: a select added later 
 Verified: uv run pytest tests/test_tomselect_e2e.py -k does_not_read, 1 passed. Probed by replacing the loop over the three names in tomselect.js with Object.assign(given, written): the test failed on assert not True for settings["create"]. The script was restored from a copy and git status showed only the test file changed.
 Next: T010, then T011, then full verify.
 Watch: the control's settings are read from the instance (tomselect.settings), so the test shows what the script handed to Tom Select, not Tom Select's own behaviour for create.
+
+## 2026-10-11T23:57:15Z · Implementer FIX-1 · T010
+
+Did: Removed the pick helper from tests/test_tomselect_e2e.py. Its three users, the no-request test, the two-values test and the remove-button test, now call choose, which clicks the option by its value, and choose sits where pick was. The stylesheet test in tests/test_demo.py no longer asserts that the integrity value starts sha384-, and keeps the check that an integrity attribute is present and crossorigin is anonymous.
+Verified: uv run pytest tests/test_tomselect_e2e.py -n 4, 47 passed. uv run pytest tests/test_demo.py -k default_stylesheet_from_the_cdn, 1 passed. The first run after the swap failed two tests, because a second choose on a multiple control clicks a control whose dropdown is still open and the option is not visible. Each of those two tests now presses Escape between its two choices, as the late control tests already do.
+Next: T011, then full verify.
+Watch: choose now opens a multiple control by its control element, which the earlier tests already did for the late controls.

@@ -134,8 +134,22 @@
         },
         {
           "id": "T010",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_tomselect_e2e.py",
+              "tests/test_demo.py::TestStandaloneTomSelectWidgetsPage::test_it_loads_the_default_stylesheet_from_the_cdn_with_a_hash"
+            ],
+            "commands": [
+              "uv run pytest tests/test_tomselect_e2e.py -n 4",
+              "uv run pytest tests/test_demo.py -k default_stylesheet_from_the_cdn"
+            ],
+            "code": [
+              "tests/test_tomselect_e2e.py:154",
+              "tests/test_demo.py:4336"
+            ]
+          }
         }
       ]
     },
