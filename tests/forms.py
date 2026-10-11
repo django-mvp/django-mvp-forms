@@ -1362,3 +1362,24 @@ class StockMultipleForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+
+
+CITIES = [(f"c{number:03}", f"City {number:03}") for number in range(1, 121)]
+
+
+class TomSelectPageForm(forms.Form):
+    fruit = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, required=False, help_text="Pick some"
+    )
+    cities = forms.MultipleChoiceField(
+        choices=CITIES, widget=TomSelectMultiple, required=False
+    )
+    marked = forms.MultipleChoiceField(
+        choices=[("m", "<b>Bold</b> & Tom")], widget=TomSelectMultiple, required=False
+    )
+    off = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, required=False, disabled=True
+    )
+    plain = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.SelectMultiple, required=False
+    )

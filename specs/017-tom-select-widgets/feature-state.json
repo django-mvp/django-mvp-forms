@@ -83,8 +83,25 @@
         },
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 3,
+          "evidence": {
+            "tests": [
+              "tests/test_tomselect_e2e.py::TestAControlForEachSelect",
+              "tests/test_tomselect_e2e.py::TestWhatTheControlHolds",
+              "tests/test_tomselect_e2e.py::TestTheFormsFields",
+              "tests/test_tomselect_e2e.py::TestAPageWithoutTomSelect",
+              "tests/test_tomselect_e2e.py::TestOneControlForEachSelect",
+              "tests/test_tomselect_e2e.py::TestASelectTomSelectRefuses"
+            ],
+            "commands": [
+              "uv run pytest tests/test_tomselect_e2e.py -q -n 4"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/tomselect.js:14",
+              "mvp_forms/static/mvp_forms/tomselect.js:29"
+            ]
+          }
         },
         {
           "id": "T003",
