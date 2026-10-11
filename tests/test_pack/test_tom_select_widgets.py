@@ -7,7 +7,12 @@ from pathlib import Path
 import pytest
 
 from mvp_forms.choices import FormChoices
-from tests.forms import StockMultipleForm, TomSelectMultipleForm
+from tests.forms import (
+    StockMultipleForm,
+    StockSingleForm,
+    TomSelectMultipleForm,
+    TomSelectSingleForm,
+)
 
 SOURCES = [
     "{{ form|crispy }}",
@@ -150,6 +155,128 @@ class TestTomSelectMultiple:
 
     def test_the_media_of_a_form_without_the_widgets_names_no_script(self):
         assert StockMultipleForm().media._js == []
+
+
+class TestTomSelect:
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_attribute_is_drawn_whichever_way_the_form_is_rendered(
+        self, draw, source
+    ):
+        soup = draw(source, form=TomSelectSingleForm())
+
+        drawn = soup.find(id="id_fruit")
+
+        assert json.loads(drawn["data-tom-select"]) == {}
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_select_holds_every_choice_whichever_way_the_form_is_rendered(
+        self, draw, source
+    ):
+        soup = draw(source, form=TomSelectSingleForm())
+
+        drawn = soup.find(id="id_fruit")
+
+        assert not drawn.has_attr("multiple")
+        assert option_values(drawn) == ["a", "b"]
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_it_is_drawn_as_a_daisyui_select(self, draw, source):
+        soup = draw(source, form=TomSelectSingleForm())
+
+        drawn = soup.find(id="id_fruit")
+
+        assert drawn.name == "select"
+        assert {"select", "w-full"} <= set(drawn["class"])
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    @pytest.mark.parametrize(
+        ("kind", "value", "added"),
+        [
+            ("size", "lg", "select-lg"),
+            ("color", "primary", "select-primary"),
+            ("variant", "ghost", "select-ghost"),
+        ],
+    )
+    def test_it_takes_the_size_colour_and_variant_stated_for_the_form(
+        self, draw, source, kind, value, added
+    ):
+        form = TomSelectSingleForm()
+        form.helper.daisyui = FormChoices(**{kind: value})
+
+        soup = draw(source, form=form)
+
+        assert added in soup.find(id="id_fruit")["class"]
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_a_field_in_error_is_marked_and_described_by_its_error(self, draw, source):
+        soup = draw(source, form=TomSelectSingleForm({}))
+
+        drawn = soup.find(id="id_fruit")
+
+        assert "select-error" in drawn["class"]
+        assert drawn["aria-invalid"] == "true"
+        assert "id_fruit_error" in drawn["aria-describedby"].split()
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_a_disabled_field_is_drawn_disabled(self, draw, source):
+        soup = draw(source, form=TomSelectSingleForm())
+
+        assert soup.find(id="id_off").has_attr("disabled")
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_the_label_and_help_text_are_tied_to_the_select(self, draw, source):
+        soup = draw(source, form=TomSelectSingleForm())
+
+        drawn = soup.find(id="id_fruit")
+
+        assert soup.find("label", attrs={"for": "id_fruit"}) is not None
+        described = drawn["aria-describedby"].split()
+        assert "id_fruit_helptext" in described
+        assert all(soup.find(id=name) is not None for name in described)
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_initial_and_submitted_values_are_drawn_as_chosen(self, draw, source):
+        initial = draw(source, form=TomSelectSingleForm(initial={"fruit": "a"}))
+        submitted = draw(source, form=TomSelectSingleForm({"fruit": "b"}))
+
+        assert selected_values(initial.find(id="id_fruit")) == ["a"]
+        assert selected_values(submitted.find(id="id_fruit")) == ["b"]
+
+    @pytest.mark.parametrize("source", WHOLE_FORM)
+    def test_the_developers_attrs_are_kept(self, draw, source):
+        soup = draw(source, form=TomSelectSingleForm())
+
+        drawn = soup.find(id="id_own")
+
+        assert drawn["data-role"] == "picker"
+        assert "mine" in drawn["class"]
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_it_is_drawn_as_a_stock_select_is_beside_the_attribute(self, draw, source):
+        tom = draw(source, form=TomSelectSingleForm())
+        stock = draw(source, form=StockSingleForm())
+
+        for each in tom.find_all("select", attrs={"data-tom-select": True}):
+            del each["data-tom-select"]
+        for each in tom.find_all("script"):
+            each.decompose()
+
+        def lines(soup):
+            return [line for line in str(soup).splitlines() if line.strip()]
+
+        assert lines(tom) == lines(stock)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_form_without_the_widgets_is_drawn_with_no_attribute(self, draw, source):
+        soup = draw(source, form=StockSingleForm())
+
+        assert soup.find_all(attrs={"data-tom-select": True}) == []
+
+    def test_the_form_media_names_the_script_once(self):
+        assert TomSelectSingleForm().media._js == ["mvp_forms/tomselect.js"]
+
+    def test_the_media_of_a_form_without_the_widgets_names_no_script(self):
+        assert StockSingleForm().media._js == []
 
 
 class TestTheReadmesExample:

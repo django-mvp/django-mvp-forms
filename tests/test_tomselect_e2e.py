@@ -198,6 +198,54 @@ class TestTheFormsFields:
         assert "id_fruit_helptext" in described.split()
 
 
+def choose(page, name, value):
+    """Open the control of a single field and click the option with the value."""
+    page.locator(f"#id_{name} + .ts-wrapper .ts-control").click()
+    page.locator(f'#id_{name}-ts-dropdown .option[data-value="{value}"]').click()
+
+
+class TestTheSingleWidget:
+    def test_each_select_the_widget_drew_has_a_control(self, choices_page):
+        page = choices_page()
+
+        assert page.evaluate(STARTED, "id_single") is True
+        assert page.evaluate(STARTED, "id_optional") is True
+
+    def test_picking_an_option_sends_that_one_value(self, choices_page):
+        page = choices_page()
+        choose(page, "single", "b")
+
+        with page.expect_navigation():
+            page.click("button[type=submit]")
+
+        assert '"single": ["b"]' in page.inner_text("body")
+
+    def test_picking_another_option_replaces_the_first(self, choices_page):
+        page = choices_page()
+        choose(page, "single", "b")
+        choose(page, "single", "c")
+
+        with page.expect_navigation():
+            page.click("button[type=submit]")
+
+        assert '"single": ["c"]' in page.inner_text("body")
+
+    def test_an_optional_field_is_returned_to_no_value_from_the_keyboard(
+        self, choices_page
+    ):
+        page = choices_page(optional="a")
+        assert page.evaluate(STARTED, "id_optional") is True
+        assert page.evaluate("document.getElementById('id_optional').value") == "a"
+
+        page.locator("#id_optional-ts-control").focus()
+        page.keyboard.press("Backspace")
+        page.keyboard.press("Escape")
+
+        with page.expect_navigation():
+            page.click("button[type=submit]")
+        assert '"optional": [""]' in page.inner_text("body")
+
+
 class TestAPageWithoutTomSelect:
     def test_nothing_is_started_and_the_form_submits_the_stock_values(
         self, choices_page, page_errors, script_errors

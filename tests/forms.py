@@ -40,6 +40,7 @@ from mvp_forms.widgets import (
     PatternMaskInput,
     RangeBlock,
     RegexMaskInput,
+    TomSelect,
     TomSelectMultiple,
 )
 
@@ -1364,6 +1365,42 @@ class StockMultipleForm(forms.Form):
         self.helper.form_tag = False
 
 
+class TomSelectSingleForm(forms.Form):
+    fruit = forms.ChoiceField(choices=FRUIT, widget=TomSelect, help_text="Pick one")
+    grouped = forms.ChoiceField(choices=GROUPED, widget=TomSelect, required=False)
+    own = forms.ChoiceField(
+        choices=FRUIT,
+        required=False,
+        widget=TomSelect(attrs={"class": "mine", "data-role": "picker"}),
+    )
+    off = forms.ChoiceField(
+        choices=FRUIT, widget=TomSelect, required=False, disabled=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class StockSingleForm(forms.Form):
+    fruit = forms.ChoiceField(choices=FRUIT, widget=forms.Select, help_text="Pick one")
+    grouped = forms.ChoiceField(choices=GROUPED, widget=forms.Select, required=False)
+    own = forms.ChoiceField(
+        choices=FRUIT,
+        required=False,
+        widget=forms.Select(attrs={"class": "mine", "data-role": "picker"}),
+    )
+    off = forms.ChoiceField(
+        choices=FRUIT, widget=forms.Select, required=False, disabled=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
 CITIES = [(f"c{number:03}", f"City {number:03}") for number in range(1, 121)]
 
 
@@ -1382,4 +1419,10 @@ class TomSelectPageForm(forms.Form):
     )
     plain = forms.MultipleChoiceField(
         choices=FRUIT, widget=forms.SelectMultiple, required=False
+    )
+    single = forms.ChoiceField(
+        choices=[*FRUIT, ("c", "Cherry")], widget=TomSelect, required=False
+    )
+    optional = forms.ChoiceField(
+        choices=[("", "None"), *FRUIT], widget=TomSelect, required=False
     )

@@ -780,12 +780,12 @@ class PartialDateSelect(PartialDateInput):
         return super().get_context(name, value, attrs)
 
 
-class TomSelectMultiple(forms.SelectMultiple):
-    """A multiple select the script turns into a Tom Select control.
+class TomSelectAttribute:
+    """What the Tom Select widgets share: the attribute and the script.
 
-    The select is drawn as Django draws it, holding every choice of its field.
-    The attribute ``data-tom-select`` marks it for the script named in the
-    media, and holds the settings written for Tom Select as JSON.
+    The attribute ``data-tom-select`` marks the select for the script named in
+    the media, and holds the settings written for Tom Select as JSON. Put this
+    class before the Django select it is mixed into.
     """
 
     class Media:
@@ -796,3 +796,17 @@ class TomSelectMultiple(forms.SelectMultiple):
         attrs = super().build_attrs(base_attrs, extra_attrs)
         attrs["data-tom-select"] = json.dumps({})
         return attrs
+
+
+class TomSelect(TomSelectAttribute, forms.Select):
+    """A single select the script turns into a Tom Select control.
+
+    The select is drawn as Django draws it, holding every choice of its field.
+    """
+
+
+class TomSelectMultiple(TomSelectAttribute, forms.SelectMultiple):
+    """A multiple select the script turns into a Tom Select control.
+
+    The select is drawn as Django draws it, holding every choice of its field.
+    """

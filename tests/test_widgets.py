@@ -25,6 +25,7 @@ from mvp_forms.widgets import (
     PatternMaskInput,
     RangeBlock,
     RegexMaskInput,
+    TomSelect,
     TomSelectMultiple,
 )
 
@@ -1511,3 +1512,175 @@ class TestWhatTheTomSelectMultipleFieldReceives:
         with pytest.raises(forms.ValidationError) as refused_stock:
             self.received(stock, ["999"])
         assert refused.value.code == refused_stock.value.code == "invalid_choice"
+
+
+class TestTomSelect:
+    def test_it_draws_a_single_select_holding_every_choice(self):
+        select = select_of(TomSelect(choices=FRUIT))
+
+        assert not select.has_attr("multiple")
+        assert [each["value"] for each in select.find_all("option")] == ["a", "b", "c"]
+
+    def test_it_writes_no_setting_when_none_is_stated(self):
+        select = select_of(TomSelect(choices=FRUIT))
+
+        assert json.loads(select["data-tom-select"]) == {}
+
+    def test_its_media_names_the_script_and_no_stylesheet(self):
+        media = TomSelect().media
+
+        assert media._js == ["mvp_forms/tomselect.js"]
+        assert media._css == {}
+
+    def test_the_developers_attrs_are_kept_beside_the_attribute(self):
+        widget = TomSelect(
+            attrs={"class": "mine", "data-role": "picker"}, choices=FRUIT
+        )
+
+        select = select_of(widget)
+
+        assert select["class"] == ["mine"]
+        assert select["data-role"] == "picker"
+        assert json.loads(select["data-tom-select"]) == {}
+
+    def test_a_subclass_is_drawn_as_its_parent_is(self):
+        class Teams(TomSelect):
+            pass
+
+        select = select_of(Teams(choices=FRUIT))
+
+        assert json.loads(select["data-tom-select"]) == {}
+        assert Teams().media._js == ["mvp_forms/tomselect.js"]
+
+    def test_grouped_choices_are_drawn_as_option_groups(self):
+        widget = TomSelect(
+            choices=[("Fruit", FRUIT[:2]), ("Vegetable", [("d", "Dill")]), ("e", "Egg")]
+        )
+
+        select = select_of(widget)
+
+        groups = {
+            group["label"]: [each["value"] for each in group.find_all("option")]
+            for group in select.find_all("optgroup")
+        }
+        assert groups == {"Fruit": ["a", "b"], "Vegetable": ["d"]}
+
+    def test_the_initial_value_is_drawn_as_chosen(self):
+        select = select_of(TomSelect(choices=FRUIT), "b")
+
+        assert selected_values(select) == ["b"]
+
+    def test_the_empty_choice_is_drawn_as_an_option(self):
+        select = select_of(TomSelect(choices=[("", "None"), *FRUIT]))
+
+        assert [each["value"] for each in select.find_all("option")] == [
+            "",
+            "a",
+            "b",
+            "c",
+        ]
+
+
+class TestWhatTheTomSelectFieldReceives:
+    @staticmethod
+    def fields(field_class, **kwargs):
+        """Return the field with the stock widget and with the Tom Select one."""
+        return (
+            field_class(widget=forms.Select, **kwargs),
+            field_class(widget=TomSelect, **kwargs),
+        )
+
+    @staticmethod
+    def received(field, entry):
+        """Return what the field cleans the entry to, as its form would."""
+        data = QueryDict(mutable=True)
+        data["field"] = entry
+        return field.clean(field.widget.value_from_datadict(data, {}, "field"))
+
+    @pytest.mark.parametrize(
+        ("field_class", "kwargs", "entry"),
+        [
+            (forms.ChoiceField, {"choices": FRUIT}, "b"),
+            (
+                forms.TypedChoiceField,
+                {"choices": [("1", "One"), ("2", "Two")], "coerce": int},
+                "2",
+            ),
+            (
+                forms.ChoiceField,
+                {"choices": [("", "None"), *FRUIT], "required": False},
+                "",
+            ),
+            (
+                forms.TypedChoiceField,
+                {
+                    "choices": [("", "None"), ("1", "One")],
+                    "coerce": int,
+                    "required": False,
+                    "empty_value": None,
+                },
+                "",
+            ),
+        ],
+    )
+    def test_a_field_cleans_what_it_cleans_from_a_stock_select(
+        self, field_class, kwargs, entry
+    ):
+        stock, tom = self.fields(field_class, **kwargs)
+
+        assert self.received(tom, entry) == self.received(stock, entry)
+
+    @pytest.mark.django_db
+    def test_a_model_field_cleans_to_the_same_object(self):
+        pk = str(Group.objects.create(name="Editors").pk)
+        stock, tom = self.fields(forms.ModelChoiceField, queryset=Group.objects.all())
+
+        assert self.received(tom, pk) == self.received(stock, pk)
+        assert self.received(tom, pk).name == "Editors"
+
+    @pytest.mark.django_db
+    def test_a_model_field_that_is_optional_cleans_the_empty_entry_to_none(self):
+        stock, tom = self.fields(
+            forms.ModelChoiceField, queryset=Group.objects.all(), required=False
+        )
+
+        assert self.received(tom, "") is None
+        assert self.received(stock, "") is None
+
+    @pytest.mark.parametrize(
+        ("field_class", "kwargs"),
+        [
+            (forms.ChoiceField, {"choices": FRUIT}),
+            (forms.TypedChoiceField, {"choices": FRUIT, "coerce": str}),
+        ],
+    )
+    def test_a_value_not_among_the_choices_is_refused(self, field_class, kwargs):
+        stock, tom = self.fields(field_class, **kwargs)
+
+        with pytest.raises(forms.ValidationError) as refused:
+            self.received(tom, "nowhere")
+
+        with pytest.raises(forms.ValidationError) as refused_stock:
+            self.received(stock, "nowhere")
+        assert refused.value.code == refused_stock.value.code == "invalid_choice"
+
+    @pytest.mark.django_db
+    def test_a_model_value_not_among_the_choices_is_refused(self):
+        stock, tom = self.fields(forms.ModelChoiceField, queryset=Group.objects.all())
+
+        with pytest.raises(forms.ValidationError) as refused:
+            self.received(tom, "999")
+
+        with pytest.raises(forms.ValidationError) as refused_stock:
+            self.received(stock, "999")
+        assert refused.value.code == refused_stock.value.code == "invalid_choice"
+
+    def test_a_required_field_refuses_the_empty_entry(self):
+        stock, tom = self.fields(forms.ChoiceField, choices=[("", "None"), *FRUIT])
+
+        with pytest.raises(forms.ValidationError) as refused:
+            self.received(tom, "")
+
+        with pytest.raises(forms.ValidationError) as refused_stock:
+            self.received(stock, "")
+        assert refused.value.code == refused_stock.value.code == "required"
