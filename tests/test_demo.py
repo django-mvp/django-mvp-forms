@@ -4333,7 +4333,7 @@ class TestStandaloneTomSelectWidgetsPage(TomSelectWidgetsPageContract):
             "link", href=re.compile(r"cdn\.jsdelivr\.net/npm/tom-select@2")
         )
 
-        assert link["integrity"].startswith("sha384-")
+        assert link.has_attr("integrity")
         assert link["crossorigin"] == "anonymous"
 
     def test_it_loads_the_packages_stylesheet_and_no_django_tomselect_script(

@@ -151,13 +151,10 @@ def choices_page(page, page_errors, live_server):
     return open_page
 
 
-def pick(page, name, text):
-    """Type the text into the control of the field, take the first match, close."""
-    field = page.locator(f"#id_{name}-ts-control")
-    field.click()
-    field.press_sequentially(text)
-    page.keyboard.press("Enter")
-    page.keyboard.press("Escape")
+def choose(page, name, value):
+    """Open the control of a single field and click the option with the value."""
+    page.locator(f"#id_{name} + .ts-wrapper .ts-control").click()
+    page.locator(f'#id_{name}-ts-dropdown .option[data-value="{value}"]').click()
 
 
 class TestAControlForEachSelect:
@@ -171,7 +168,7 @@ class TestAControlForEachSelect:
 
     def test_no_request_is_made_for_options(self, choices_page, requests_made):
         page = choices_page()
-        pick(page, "fruit", "Apple")
+        choose(page, "fruit", "a")
 
         assert requests_made == []
 
@@ -238,8 +235,9 @@ class TestWhatTheControlHolds:
 class TestTheFormsFields:
     def test_two_chosen_values_are_sent_under_the_fields_name(self, choices_page):
         page = choices_page()
-        pick(page, "fruit", "Apple")
-        pick(page, "fruit", "Banana")
+        choose(page, "fruit", "a")
+        page.keyboard.press("Escape")
+        choose(page, "fruit", "b")
 
         with page.expect_navigation():
             page.click("button[type=submit]")
@@ -266,12 +264,6 @@ class TestTheFormsFields:
         )
 
         assert "id_fruit_helptext" in described.split()
-
-
-def choose(page, name, value):
-    """Open the control of a single field and click the option with the value."""
-    page.locator(f"#id_{name} + .ts-wrapper .ts-control").click()
-    page.locator(f'#id_{name}-ts-dropdown .option[data-value="{value}"]').click()
 
 
 class TestTheSingleWidget:
@@ -388,8 +380,9 @@ class TestTheSettings:
 
     def test_a_remove_button_removes_its_own_value_alone(self, choices_page):
         page = choices_page()
-        pick(page, "removable", "Apple")
-        pick(page, "removable", "Banana")
+        choose(page, "removable", "a")
+        page.keyboard.press("Escape")
+        choose(page, "removable", "b")
         items = "document.getElementById('id_removable').tomselect.items"
         assert page.evaluate(items) == ["a", "b"]
 
