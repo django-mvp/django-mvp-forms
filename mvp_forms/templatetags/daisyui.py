@@ -143,13 +143,6 @@ class FieldInput:
         forms.CheckboxSelectMultiple: "daisyui/widgets/inline_group.html",
         forms.RadioSelect: "daisyui/widgets/inline_group.html",
     }
-    # django-countries' widget that writes a flag after its select. It is named
-    # and never imported, because django-countries is not a dependency.
-    flag_widget = "django_countries.widgets.CountrySelectWidget"
-    # Sits the select and its flag side by side. Written out so a host project's
-    # Tailwind build finds the utilities when it scans this module. See
-    # docs/adr/0052-a-flag-widget-is-drawn-in-a-row-with-its-flag.md.
-    flag_row = '<div class="flex items-center gap-2">{}</div>'
     # The removal checkbox of a held file takes the size and the colour. A
     # checkbox has no variant.
     removal_kinds = ("size", "color")
@@ -494,8 +487,7 @@ class FieldInput:
         """The widget to draw: the field's own, or one made for this render.
 
         A widget the pack has a template for is a copy that names it. A rating is
-        a radio group and a range is a copy whose input type is ``range``. A flag
-        widget is a copy whose layout is a row.
+        a radio group and a range is a copy whose input type is ``range``.
         """
         widget: forms.Widget = self.field.field.widget
         if self.drawing == "rating" and isinstance(widget, ChoiceWidget):
@@ -504,10 +496,6 @@ class FieldInput:
             drawn = copy.copy(widget)
             drawn.input_type = "range"
             return drawn
-        if self.has_flag_row:
-            flagged = cast(Any, copy.copy(widget))
-            flagged.layout = self.flag_row.format(flagged.layout)
-            return cast(forms.Widget, flagged)
         if self.template_name:
             widget = copy.copy(widget)
             widget.template_name = self.template_name
@@ -520,35 +508,6 @@ class FieldInput:
             for index, part in enumerate(widget.widgets):
                 self.decorate_part(widget, index, part)
         return widget
-
-    @property
-    def has_flag_row(self) -> bool:
-        """Whether the widget is a flag widget the pack sits beside its flag.
-
-        It is django-countries' flag widget, or a subclass of it, that still has
-        django-countries' own layout and stands alone in the frame. A layout the
-        developer wrote is drawn as written, and a field with attached text,
-        joined buttons or a floating label, and a member of a ``Join``, has a
-        frame of the pack's already.
-        """
-        widget = self.field.field.widget
-        stock = next(
-            (
-                widget_class
-                for widget_class in type(widget).__mro__
-                if f"{widget_class.__module__}.{widget_class.__qualname__}"
-                == self.flag_widget
-            ),
-            None,
-        )
-        return (
-            stock is not None
-            and cast(Any, widget).layout == stock().layout
-            and not self.has_attached_text
-            and not self.is_joined
-            and not self.is_floating
-            and not self.is_member
-        )
 
     def rating_widget(self, widget: ChoiceWidget) -> forms.RadioSelect:
         """Return the widget a rating is drawn through, made for this render.

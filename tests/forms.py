@@ -2,12 +2,7 @@
 
 import datetime
 
-from crispy_forms.bootstrap import (
-    FieldWithButtons,
-    Modal,
-    PrependedText,
-    StrictButton,
-)
+from crispy_forms.bootstrap import Modal
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Field, Layout
 from django import forms
@@ -32,7 +27,6 @@ from django_tomselect.forms import (
     TomSelectMultipleChoiceField,
 )
 
-from mvp_forms.choices import Choice
 from mvp_forms.fields import PartialDateField
 from mvp_forms.layout import Join
 from mvp_forms.widgets import (
@@ -1087,9 +1081,6 @@ class TomSelectForm(forms.Form):
         self.helper.form_tag = False
 
 
-FLAG_LAYOUT_OF_THE_DEVELOPERS = '<p class="mine">{widget}<img id="{flag_id}"></p>'
-
-
 class CountriesForm(forms.Form):
     country = CountryField().formfield(help_text="One country")
     countries = CountryField(multiple=True).formfield(help_text="Some countries")
@@ -1101,33 +1092,6 @@ class CountriesForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
-
-
-class FlagLayoutForm(forms.Form):
-    flagged = CountryField().formfield(
-        widget=CountrySelectWidget(layout=FLAG_LAYOUT_OF_THE_DEVELOPERS)
-    )
-
-
-class FlagPlacedForm(forms.Form):
-    """A flag widget in each place where the pack draws a frame of its own."""
-
-    joined = CountryField().formfield(widget=CountrySelectWidget())
-    attached = CountryField().formfield(widget=CountrySelectWidget())
-    floating = CountryField().formfield(widget=CountrySelectWidget())
-    member = CountryField().formfield(widget=CountrySelectWidget())
-    number = forms.CharField()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.helper.form_tag = False
-        self.helper.layout = Layout(
-            FieldWithButtons("joined", StrictButton("Go")),
-            PrependedText("attached", "@"),
-            Choice("floating", label="floating"),
-            Join("member", "number"),
-        )
 
 
 class MaskedForm(forms.Form):

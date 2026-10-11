@@ -119,7 +119,6 @@ LAYOUT_UTILITIES = {
     "overflow-x-auto",
     "w-auto",
     "text-wrap",
-    "items-center",
 }
 
 

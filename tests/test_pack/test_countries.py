@@ -1,22 +1,15 @@
 """The markup the pack writes on a django-countries field, drawn as crispy-forms draws it."""
 
-import copy
-
 import pytest
 
 from mvp_forms.choices import FormChoices, Modifiers
-from tests.forms import (
-    CountriesForm,
-    FlagLayoutForm,
-    FlagPlacedForm,
-)
+from tests.forms import CountriesForm
 
 SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
 FIELDS = ["country", "countries", "flagged"]
 SIZES = Modifiers.names("size", "select")
 COLOURS = Modifiers.names("color", "select")
 VARIANTS = Modifiers.names("variant", "select")
-ROW = {"flex", "items-center", "gap-2"}
 POSTED = {"country": "DE", "countries": ["DE", "FR"], "flagged": "NZ"}
 
 
@@ -34,10 +27,6 @@ def in_error():
 
 def classes(soup, name):
     return set(soup.find(id=f"id_{name}")["class"])
-
-
-def flag_of(soup, name):
-    return soup.find("img", id=f"flag_id_{name}")
 
 
 @pytest.mark.parametrize("source", SOURCES)
@@ -148,65 +137,3 @@ class TestTheSelect:
         }
         assert form.is_valid()
         assert form.cleaned_data == POSTED
-
-
-@pytest.mark.parametrize("source", SOURCES)
-class TestTheFlag:
-    def test_the_select_and_its_flag_are_the_two_children_of_one_row(
-        self, draw, source
-    ):
-        soup = draw(source, form=CountriesForm())
-
-        row = soup.find(id="id_flagged").parent
-        assert set(row["class"]) == ROW
-        assert [child.name for child in row.find_all(recursive=False)] == [
-            "select",
-            "img",
-        ]
-        assert flag_of(soup, "flagged").parent is row
-
-    def test_the_row_sits_inside_the_frame_after_the_label(self, draw, source):
-        soup = draw(source, form=CountriesForm())
-
-        frame = soup.find(id="div_id_flagged")
-        row = soup.find(id="id_flagged").parent
-        assert row.parent is frame
-        assert row.find_previous_sibling("label")["for"] == "id_flagged"
-
-    def test_a_field_in_error_keeps_its_row(self, draw, source):
-        soup = draw(source, form=in_error())
-
-        assert set(soup.find(id="id_flagged").parent["class"]) == ROW
-
-    def test_a_field_with_no_flag_has_no_row(self, draw, source):
-        soup = draw(source, form=CountriesForm())
-
-        for name in ("country", "countries"):
-            assert soup.find(id=f"id_{name}").parent["id"] == f"div_id_{name}"
-
-    def test_a_layout_of_the_developers_is_drawn_as_written(self, draw, source):
-        soup = draw(source, form=FlagLayoutForm())
-
-        mine = soup.find(id="id_flagged").parent
-        assert mine["class"] == ["mine"]
-        assert mine.parent["id"] == "div_id_flagged"
-
-    def test_a_second_draw_is_the_same_and_leaves_the_widget_alone(self, draw, source):
-        form = stated(size="lg", color="primary", variant="ghost")
-        widget = form.fields["flagged"].widget
-        before = (widget.layout, copy.deepcopy(widget.attrs))
-
-        first = draw(source, form=form)
-        second = draw(source, form=form)
-
-        assert str(first) == str(second)
-        assert before == (widget.layout, widget.attrs)
-
-
-class TestTheFlagInAFrameOfThePacks:
-    @pytest.mark.parametrize("name", ["joined", "attached", "floating", "member"])
-    def test_a_flag_widget_the_layout_decorates_is_given_no_row(self, draw, name):
-        soup = draw("{% crispy form %}", form=FlagPlacedForm())
-
-        assert not set(soup.find(id=f"id_{name}").parent["class"]) >= ROW
-        assert flag_of(soup, name) is not None

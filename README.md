@@ -1276,15 +1276,31 @@ A model form gets the first two for a model's `CountryField` with no code at all
 
 #### The flag widget
 
-`CountrySelectWidget` writes a flag image after its select and changes the image when the country changes. The pack draws the two in one row, `<div class="flex items-center gap-2">`, inside the field's frame: the select takes the width the flag leaves and the flag sits to its right. The field's widget is not changed. The row is written on a copy made for the render.
+`CountrySelectWidget` writes a flag image after its select and changes the image when the country changes. The pack draws the select as a daisyUI select, like any other, and leaves the flag where django-countries puts it. django-countries places the two with the widget's `layout` argument, and its own layout puts the flag after the select with nothing around them. A field's frame is one column, so the flag then sits on a line of its own under a full-width select.
+
+To sit the flag beside the select, centred against it, pass a layout that holds the two in a row:
+
+```python
+from django import forms
+from django_countries.fields import CountryField
+from django_countries.widgets import CountrySelectWidget
+
+FLAG_BESIDE = (
+    '<div class="flex items-center gap-2">{widget}'
+    '<img class="country-select-flag" id="{flag_id}" src="{country.flag}"></div>'
+)
+
+
+class AddressForm(forms.Form):
+    residence = CountryField().formfield(
+        widget=CountrySelectWidget(layout=FLAG_BESIDE)
+    )
+```
+
+The select takes the width the flag leaves. The image keeps the class and the `id` django-countries gives it, which its handler finds the image by, and leaves out the inline margin of django-countries' own layout. The three utilities are Tailwind's and the string is in your code, so a Tailwind build of your own finds them there. daisyUI's CDN install with Tailwind's browser build needs nothing.
 
 - The flag images are django-countries' own static files. List `django_countries` in `INSTALLED_APPS` so that Django's static files finder serves them.
-- The image keeps the inline `margin: 6px 4px 0` django-countries writes on it, so its middle sits 3 pixels below the select's.
-- A widget given a `layout` of your own is drawn as you wrote it, with no row. That is also how to place the flag exactly: `CountrySelectWidget(layout='<div class="flex items-center gap-2">{widget}<img class="country-select-flag" id="{flag_id}" src="{country.flag}"></div>')` is the pack's row without django-countries' margin.
-- The row is written for a field that stands alone in its frame. With a floating label, text attached to the select, buttons joined to it, or as a member of a `Join`, the widget is drawn as django-countries writes it, with the flag after the select.
-- The image changes through an `onchange` handler that django-countries writes on the select. Under a Content Security Policy that forbids inline event handlers the select still works and the flag stays as the page drew it. A policy that forbids inline styles drops the margin on the image. Both are django-countries' own, and a policy that forbids them is yours to open, as it is for [the pack's two handlers](https://github.com/django-mvp/django-mvp-forms#layout-objects).
-
-A host project with its own Tailwind build needs `items-center` beside the utilities the pack already writes. It gets it by scanning the installed `mvp_forms` package, as for every other class. daisyUI's CDN install with Tailwind's browser build, and a django-mvp project, need nothing.
+- The image changes through an `onchange` handler that django-countries writes on the select. Under a Content Security Policy that forbids inline event handlers the select still works and the flag stays as the page drew it. The handler is django-countries' own, and a policy that forbids it is yours to open, as it is for [the pack's two handlers](https://github.com/django-mvp/django-mvp-forms#layout-objects).
 
 #### What is not covered
 
@@ -2030,7 +2046,7 @@ One more page draws django-tomselect's controls. Its sidebar entry is in a group
 
 Every page inside the shell links `mvp_forms/tomselect.css`, because the demo's base template does.
 
-One more page draws django-countries' fields, in the same sidebar group. The page holds a form to submit with a text input, a country, several countries and a country drawn by the flag widget. Submitting it with no country comes back with the country's error, and submitting it with one shows the codes the form cleaned to. Nothing is saved. The page also draws the three fields in a state each (holding a value, in error and disabled) and at each size.
+One more page draws django-countries' fields, in the same sidebar group. The page holds a form to submit with a text input, a country, several countries and a country drawn by the flag widget, which is given the layout that sits its flag beside its select. Submitting it with no country comes back with the country's error, and submitting it with one shows the codes the form cleaned to. Nothing is saved. The page also draws the three fields in a state each (holding a value, in error and disabled) and at each size.
 
 - `/countries/` is the page inside the django-mvp shell, reached from its sidebar under "Third-party widgets" as "django-countries".
 - `/countries/standalone/` is the same page styled by daisyUI's CDN build alone.

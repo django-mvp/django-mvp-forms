@@ -24,12 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- A README section, "django-countries", stating which fields of django-countries the pack draws and the release the support is tested against, 9.1.0. A country field and a multiple country field were already drawn as daisyUI selects, with the size, colour and variant stated for the form or the field and `select-error` on a field in error. They are now tested. django-countries is not a dependency of the package, and a project without it is drawn as before.
+- A README section, "django-countries", stating which fields of django-countries the pack draws and the release the support is tested against, 9.1.0. A country field and a multiple country field were already drawn as daisyUI selects, with the size, colour and variant stated for the form or the field and `select-error` on a field in error. They are now tested. The select of django-countries' flag widget, `CountrySelectWidget`, is drawn the same way, and its flag is placed by django-countries' own `layout` argument: the README gives the layout that sits the flag beside the select. django-countries is not a dependency of the package, and a project without it is drawn as before.
 - A demo page, "django-countries", at `/countries/` in the django-mvp shell, beside django-tomselect's in the sidebar, and the same page at `/countries/standalone/` on daisyUI's CDN build alone.
-
-### Changed
-
-- django-countries' flag widget, `CountrySelectWidget`, is drawn with its flag beside its select. The flag used to fall onto a line of its own under a full-width select. The pack now draws the two inside `<div class="flex items-center gap-2">`, so the select takes the width the flag leaves. Nothing changes in a form. A widget given a `layout` of your own is drawn as you wrote it, and so is a field with a floating label, attached text or joined buttons, or one that is a member of a `Join`. A page on daisyUI's CDN build with Tailwind's browser build needs nothing, and neither does a django-mvp project. A host project with its own Tailwind build gets `items-center` on its next build, as long as that build scans the installed `mvp_forms` package.
 
 ## [v0.3.0] - 2026-10-10
 

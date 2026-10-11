@@ -10,6 +10,13 @@ from django_countries.widgets import CountrySelectWidget
 from demo.forms import ChosenForm
 from mvp_forms.choices import FormChoices
 
+# Sits the flag beside its select, centred against it. django-countries places
+# the flag by this argument, and the README gives the same string.
+FLAG_BESIDE = (
+    '<div class="flex items-center gap-2">{widget}'
+    '<img class="country-select-flag" id="{flag_id}" src="{country.flag}"></div>'
+)
+
 
 def country_field(**kwargs):
     """Build the field django-countries gives a model's country."""
@@ -22,9 +29,11 @@ def countries_field(**kwargs):
 
 
 def flagged_field(**kwargs):
-    """Build a country field drawn by django-countries' flag widget."""
+    """Build a country field whose flag widget sits the flag beside the select."""
     return CountryField().formfield(
-        label=_("Country, with its flag"), widget=CountrySelectWidget(), **kwargs
+        label=_("Country, with its flag"),
+        widget=CountrySelectWidget(layout=FLAG_BESIDE),
+        **kwargs,
     )
 
 
