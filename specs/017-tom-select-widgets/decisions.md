@@ -17,7 +17,7 @@ duplicate them. Two widgets follow Django's `Select` and `SelectMultiple`, whose
 
 **Confirmed by the maintainer.**
 
-**ADR:** none expected.
+**ADR:** none — two widgets beside Django's own is the ordinary shape, nobody would ask why
 
 ## D2. The host project loads Tom Select
 
@@ -33,7 +33,7 @@ was checked against django-tomselect 2026.6.2 and is to be proved again at plann
 release stops exposing it, such a page loads Tom Select a second time and FR-017's second sentence
 is withdrawn.
 
-**ADR:** expected, for the script.
+**ADR:** docs/adr/0054-the-tom-select-widgets-bring-one-script-that-starts-controls.md
 
 ## D3. Four settings from Python
 
@@ -45,7 +45,7 @@ would mean following its API, and many settings are functions that cannot be wri
 
 **Confirmed by the maintainer.**
 
-**ADR:** none expected.
+**ADR:** docs/adr/0054-the-tom-select-widgets-bring-one-script-that-starts-controls.md
 
 ## D4. One stylesheet for Tom Select controls from either source
 
@@ -56,11 +56,11 @@ stylesheet.
 repeat them and the two would drift, and a page using both kinds of control would load both. ADR
 0042 says each supported package has a stylesheet of its own and that this one applies only to
 django-tomselect's controls. Its purpose, that a project pays only for what it uses, still holds:
-a project using either kind of control loads one file. The record is rewritten to say so.
+a project using either kind of control loads one file. A new record supersedes it to say so.
 
 **Confirmed by the maintainer.**
 
-**ADR:** 0042 is rewritten when the feature is built.
+**ADR:** docs/adr/0055-one-stylesheet-draws-tom-select-controls-from-either-source.md
 
 ## D5. The script starts controls added later
 
@@ -74,7 +74,7 @@ without being asked covers that case and every other script that adds a row.
 
 **Self-resolved.** It does more than the reading said and asks less of django-mvp.
 
-**ADR:** covered by the script's record.
+**ADR:** docs/adr/0054-the-tom-select-widgets-bring-one-script-that-starts-controls.md
 
 ## D6. No way to mark an option unavailable from Python
 
@@ -88,7 +88,7 @@ feature Django's own select widgets lack.
 **Self-resolved.** The reading suggested unavailable options could show greyed out, which this
 delivers.
 
-**ADR:** none expected.
+**ADR:** none — the widgets add nothing here, so there is nothing to explain later
 
 ## D7. No sketch
 
@@ -99,6 +99,8 @@ requires these controls to match it. The demo page is new but shows nothing that
 seen.
 
 **Confirmed by the maintainer.**
+
+**ADR:** none — local to this feature's process
 
 ## D8. Design review, before any code
 

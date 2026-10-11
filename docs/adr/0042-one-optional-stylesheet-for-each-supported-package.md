@@ -1,6 +1,6 @@
 # ADR 0042 — One optional stylesheet for each supported package, loaded by the host project
 
-**Status:** accepted
+**Status:** superseded by [ADR 0055](0055-one-stylesheet-draws-tom-select-controls-from-either-source.md)
 
 ## Decision
 
