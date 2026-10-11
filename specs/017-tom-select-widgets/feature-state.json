@@ -277,8 +277,19 @@
         },
         {
           "id": "T009",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_tomselect_e2e.py::TestSelectsAddedAfterThePageLoads::test_a_setting_the_script_does_not_read_is_left_off"
+            ],
+            "commands": [
+              "uv run pytest tests/test_tomselect_e2e.py -k does_not_read"
+            ],
+            "code": [
+              "tests/test_tomselect_e2e.py:496"
+            ]
+          }
         },
         {
           "id": "T011",

@@ -71,3 +71,10 @@ Did: The script now sends mvp-forms:tomselect from each select once its control 
 Verified: uv run pytest tests/test_tomselect_e2e.py::TestTheEvent, 8 passed. Six of the first seven were red first, because no event was sent (the moved-select test held with no event at all). uv run pytest tests/test_tomselect_e2e.py tests/test_pack/test_tom_select_widgets.py, 129 passed. Probed by sending the event twice (four tests failed, the once-each and added-later ones) and by dropping the already-started guard (the existing moved-select test failed on the script error, the new one held, see Watch). uv run pre-commit run --all-files passed.
 Next: full verify, then the report.
 Watch: the new moved-select test passes with the already-started guard removed, because Tom Select throws on a started select and the script's catch returns before the event. The existing TestAMovedSelect is the test that proves the guard. A listener registered after the page has loaded hears only controls started later, which the README says. No page under docs/ describes the script or the widgets (only ADRs, which are written at convergence).
+
+## 2026-10-11T23:54:34Z · Implementer FIX-1 · T009
+
+Did: Added one Chrome test in tests/test_tomselect_e2e.py: a select added later whose data-tom-select holds create true and a placeholder gets a control whose settings do not have create on, and whose placeholder arrived. No package code changed.
+Verified: uv run pytest tests/test_tomselect_e2e.py -k does_not_read, 1 passed. Probed by replacing the loop over the three names in tomselect.js with Object.assign(given, written): the test failed on assert not True for settings["create"]. The script was restored from a copy and git status showed only the test file changed.
+Next: T010, then T011, then full verify.
+Watch: the control's settings are read from the instance (tomselect.settings), so the test shows what the script handed to Tom Select, not Tom Select's own behaviour for create.
