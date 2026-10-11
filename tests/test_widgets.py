@@ -26,6 +26,7 @@ from mvp_forms.widgets import (
     RangeBlock,
     RegexMaskInput,
     TomSelect,
+    TomSelectAttribute,
     TomSelectMultiple,
 )
 
@@ -1569,6 +1570,15 @@ class TestTomSelect:
         select = select_of(TomSelect(choices=FRUIT), "b")
 
         assert selected_values(select) == ["b"]
+
+    def test_a_select_widget_of_ones_own_is_drawn_the_same_way_with_the_mixin(self):
+        class Own(TomSelectAttribute, forms.Select):
+            pass
+
+        select = select_of(Own(choices=FRUIT))
+
+        assert json.loads(select["data-tom-select"]) == {}
+        assert Own().media._js == ["mvp_forms/tomselect.js"]
 
     def test_the_empty_choice_is_drawn_as_an_option(self):
         select = select_of(TomSelect(choices=[("", "None"), *FRUIT]))

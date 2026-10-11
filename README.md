@@ -1263,6 +1263,7 @@ This is the public surface:
 
 - `mvp_forms.widgets.TomSelect`, for a field where a person picks one value
 - `mvp_forms.widgets.TomSelectMultiple`, for a field where a person picks several values
+- `mvp_forms.widgets.TomSelectAttribute`, the mixin both widgets take their attribute and script from
 - the attribute `data-tom-select`, which holds the settings the script reads as JSON on the widget's `<select>`
 - the script `mvp_forms/tomselect.js`, which the widget names in its media
 
@@ -1285,6 +1286,8 @@ class ArticleForm(forms.Form):
 ```
 
 `TomSelectMultiple` works on every field Django draws with a multiple select: `MultipleChoiceField`, `TypedMultipleChoiceField` and `ModelMultipleChoiceField`. `TomSelect` works on every field Django draws with a single select: `ChoiceField`, `TypedChoiceField` and `ModelChoiceField`. Each field receives what the stock `SelectMultiple` or `Select` hands it. Choices written in groups are drawn as option groups, as Django draws them, and a subclass of either widget is drawn and started as its parent is. A `help_text`, an error and a label stay tied to the control, and a disabled field has a disabled control.
+
+`TomSelectAttribute` writes the attribute and names the script, and it is the one place the two widgets share. Put it in front of a Django select widget of your own, as in `class RoleSelect(TomSelectAttribute, forms.Select)`, to have that widget drawn and started as the two are.
 
 A control for a single value holds the choice a stock select would show as chosen. A required field with no empty choice starts out holding its first choice. An optional field needs an empty choice, which `ModelChoiceField` writes itself and a `ChoiceField` is given as `("", "No section")`. Tom Select leaves the empty choice out of its dropdown. A person returns the field to no value by focusing the control and pressing Backspace, and the form then submits an empty entry for it.
 
