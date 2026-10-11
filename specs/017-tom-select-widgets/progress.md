@@ -36,3 +36,10 @@ Did: Added TomSelect, a Select that writes data-tom-select holding {} and names 
 Verified: uv run pytest tests/test_widgets.py tests/test_pack/test_tom_select_widgets.py -k TomSelect, 105 passed. uv run pytest tests/test_tomselect_e2e.py -k TheSingleWidget, 4 passed. uv run pytest tests/test_demo.py tests/test_pack/test_tom_select_widgets.py -k "TomSelectWidgets or TomSelect", 132 passed. Red seen first as an ImportError on the missing widget and a missing field on the demo pages. The browser tests were probed by removing the attribute write: all four failed. pre-commit run --all-files passed.
 Next: full verify, then the report.
 Watch: Tom Select ignores typed keys in a single control that holds a value, so the control cannot be searched until it is cleared or a choice is clicked. The browser tests click the option for that reason. The script needed no change. The README's Backspace sentence rests on the browser test only.
+
+## 2026-10-11T22:50:23Z · Implementer US2 · T004
+
+Did: The first full verify failed its docs step: the mixin TomSelectAttribute is a new public name that no page quotes, and the house rule against leading underscores makes it public. Named it in the README's public surface and section, gave it a sentence on how a select widget of one's own takes it, added a test that such a widget is drawn with the attribute and the script, and added the line to the CHANGELOG entry.
+Verified: uv run pytest tests/test_widgets.py -k TomSelect, 32 passed. The new test fails with the attribute write removed. pre-commit run --all-files passed. The full verify runs again after this entry.
+Next: full verify, then the report.
+Watch: documenting the mixin makes it a promise to consumers. If Sam would rather keep it out of the surface, the alternative is a docs exemption for it in pyproject.toml, or sharing by subclassing, which makes a multiple widget a TomSelect.
