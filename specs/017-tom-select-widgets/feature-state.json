@@ -236,8 +236,29 @@
       "tasks": [
         {
           "id": "T007",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_tomselect_e2e.py::TestSelectsAddedAfterThePageLoads",
+              "tests/test_tomselect_e2e.py::TestAFormsetRow",
+              "tests/test_tomselect_e2e.py::TestAMovedSelect",
+              "tests/test_tomselect_e2e.py::TestAControlInAModal",
+              "tests/test_demo.py::TestTomSelectWidgetsPage::test_the_empty_form_of_the_formset_is_kept_in_a_template",
+              "tests/test_demo.py::TestTomSelectWidgetsPage::test_the_modal_holds_the_widgets_select"
+            ],
+            "commands": [
+              "uv run pytest tests/test_tomselect_e2e.py -q",
+              "uv run pytest tests/test_demo.py -q -k TomSelectWidgets -n 0"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/tomselect.js:46",
+              "mvp_forms/static/mvp_forms/tomselect.js:55",
+              "tests/test_tomselect_e2e.py:422",
+              "demo/tom_select_widgets_forms.py:234",
+              "README.md:1408"
+            ]
+          }
         }
       ]
     },
