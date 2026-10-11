@@ -1395,7 +1395,9 @@ A page that does not load Tom Select draws every select as a stock select. Nothi
 
 #### What the script does
 
-The script starts a control on each `select[data-tom-select]` on the page once the document has loaded. It starts nothing on a select that lacks the attribute, so a stock select and a select drawn by django-tomselect's widgets are left alone. A page that includes the script more than once still starts one control on each select. A select added to the page after it has loaded is left as a stock select.
+The script starts a control on each `select[data-tom-select]` on the page once the document has loaded. It starts nothing on a select that lacks the attribute, so a stock select and a select drawn by django-tomselect's widgets are left alone. A page that includes the script more than once still starts one control on each select.
+
+It then watches the document for elements added afterwards. A select that your own script inserts, a node that holds one, a row added to a formset and a form that a library swaps into the page all get their control with no script of yours, and so does a select in a `Modal`, which is started before the dialog is opened. Each select has one control. A select moved within the page keeps the control it has, and the elements Tom Select adds as it starts a control are not mistaken for new selects. A select inside a `<template>` is inert and is not started until a copy of it is inserted into the page.
 
 The attribute holds a JSON object, and a widget that states no setting writes `{}`. The script reads three names from it and hands them to Tom Select: `placeholder`, `maxItems` and `plugins`. It also hands Tom Select `maxOptions: null`, so that every option of the field can be found by typing however many there are. Nothing else in the attribute is passed on. A plugin named in `plugins` has to be in the Tom Select the page loads. The complete build and django-tomselect's script carry `clear_button` and `remove_button`, and Tom Select's base build does not.
 
@@ -1405,7 +1407,28 @@ The label of an option is shown as text, in the dropdown and once chosen, and is
 
 #### In a formset
 
-A formset's empty form drawn into the page is itself a select the script starts, and a row copied from a row whose control has started carries Tom Select's wrapper with it. Keep the empty form in a `<template>` element and add a row from it, never by copying a started row. The script does not start a control in a row added after the document has loaded.
+A formset's empty form drawn into the page is itself a select the script starts, and a row copied from a row whose control has started carries Tom Select's wrapper with it. Keep the empty form in a `<template>` element and add a row from it, never by copying a started row. The script starts a control on each select of a row you add, whichever script adds the row, so long as you replace `__prefix__` in the row's markup with the form count before you insert it.
+
+```django
+<div id="lines">
+  {{ formset.management_form }}
+  {% for form in formset %}{{ form.as_div }}{% endfor %}
+</div>
+<template id="line-template">{{ formset.empty_form.as_div }}</template>
+<button type="button" id="add-line">Add a line</button>
+<script>
+  document.getElementById("add-line").addEventListener("click", function () {
+    const total = document.getElementById("id_{{ formset.prefix }}-TOTAL_FORMS");
+    const markup = document.getElementById("line-template").innerHTML;
+    document
+      .getElementById("lines")
+      .insertAdjacentHTML("beforeend", markup.replaceAll("__prefix__", total.value));
+    total.value = Number(total.value) + 1;
+  });
+</script>
+```
+
+The row's select is submitted under the name of its row, and the control has the field's options and the settings its widget was given.
 
 #### Which lists the widgets suit
 
