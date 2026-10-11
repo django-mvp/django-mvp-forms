@@ -1,7 +1,8 @@
 /*
- * django-tomselect controls drawn as daisyUI controls.
+ * Tom Select controls drawn as daisyUI controls, whether django-tomselect or this
+ * package's own Tom Select widgets built them.
  *
- * Load this after daisyUI, on any page that draws a django-tomselect select. It
+ * Load this after daisyUI, on any page that draws a Tom Select control. It
  * styles nothing else. The pack writes daisyUI's `select` class, and the size,
  * colour and variant stated for the field, on the select element. Tom Select
  * copies those classes to the wrapper it builds, so the wrapper is a daisyUI

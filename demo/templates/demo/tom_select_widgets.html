@@ -1,0 +1,59 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="tomselect">
+    <c-text>
+      A text input and a multiple choice field drawn by <code>TomSelectMultiple</code>. The
+      options are written into the page with the form, and no view answers for them. The
+      field is required. Submit the form and the page shows what it cleaned to.
+    </c-text>
+    {% crispy form %}
+  </c-section>
+  {% if cleaned %}
+    <c-section title="What the form cleaned to" level="3">
+      <ul id="{{ prefix }}-cleaned">
+        {% for item in cleaned %}
+          <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+        {% endfor %}
+      </ul>
+    </c-section>
+  {% endif %}
+  <c-section title="Beside a stock select and a django-tomselect control" level="3">
+    <c-text>
+      The same six topics in a stock multiple select and in the widget, then a control
+      django-tomselect builds from a view. This page loads django-tomselect's script, so
+      one copy of Tom Select serves both kinds of control, and one stylesheet draws them.
+    </c-text>
+    {% crispy comparison %}
+  </c-section>
+  <c-section title="In every state" level="3">
+    <c-text>
+      The field in the same state. No form from here down posts anywhere.
+    </c-text>
+    {% for state in states %}
+      <c-section :title="state.title" level="4">
+        {% crispy state.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Sizes" level="3">
+    <c-text>
+      The control takes the size stated for the form, as a stock select does.
+    </c-text>
+    {% for size in sizes %}
+      <c-section :title="size.title" level="4">
+        {% crispy size.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Colours" level="3">
+    {% for color in colors %}
+      <c-section :title="color.title" level="4">
+        {% crispy color.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'tom-select-widgets-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}

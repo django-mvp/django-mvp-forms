@@ -1,7 +1,9 @@
-"""Widgets that put an IMask input mask on a text input.
+"""Widgets for IMask input masks and for Tom Select controls.
 
-Each widget writes its options on the input as JSON in ``data-imask``, and the
-script named in its media hands them to IMask. The host project loads IMask.
+Each mask widget writes its options on the input as JSON in ``data-imask``, and
+the script named in its media hands them to IMask. A Tom Select widget writes its
+settings on the select as JSON in ``data-tom-select``, and its script starts a
+Tom Select control. The host project loads IMask and Tom Select.
 """
 
 import datetime

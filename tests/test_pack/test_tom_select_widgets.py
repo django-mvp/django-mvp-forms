@@ -1,6 +1,8 @@
 """The Tom Select widgets, drawn as the pack draws a select and through each renderer."""
 
 import json
+import re
+from pathlib import Path
 
 import pytest
 
@@ -15,6 +17,9 @@ SOURCES = [
 ]
 FORM_WIDE = SOURCES[:2]
 WHOLE_FORM = [*FORM_WIDE, SOURCES[3]]
+
+
+README = Path(__file__).parents[2] / "README.md"
 
 
 def selected_values(select):
@@ -145,3 +150,19 @@ class TestTomSelectMultiple:
 
     def test_the_media_of_a_form_without_the_widgets_names_no_script(self):
         assert StockMultipleForm().media._js == []
+
+
+class TestTheReadmesExample:
+    def test_the_form_it_gives_draws_the_widgets_select(self, draw):
+        section = re.search(
+            r"^### Tom Select widgets$(.*?)^### ", README.read_text(), re.M | re.S
+        ).group(1)
+        source = re.search(r"```python\n(.*?)```", section, re.S).group(1)
+        names = {}
+
+        exec(source, names)  # noqa: S102
+        soup = draw("{{ form.as_div }}", form=names["ArticleForm"]())
+
+        drawn = soup.find("select", attrs={"data-tom-select": True})
+        assert drawn is not None
+        assert drawn.has_attr("multiple")

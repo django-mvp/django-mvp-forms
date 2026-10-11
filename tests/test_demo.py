@@ -3,8 +3,11 @@
 # Everything in the demo fails quietly: an unresolvable component renders empty
 # and a menu entry whose URL will not resolve is dropped from the tree.
 
+import base64
+import hashlib
 import json
 import re
+from pathlib import Path
 
 import pytest
 from django.conf import settings
@@ -31,6 +34,7 @@ from demo.partial_date_forms import (
     PartialDateModalForm,
     PartialDateSizesForm,
 )
+from demo.tom_select_widgets_views import TomSelectWidgetsMixin
 from demo.tomselect_forms import SampleFormSet, country_field
 from demo.tomselect_views import TomSelectMixin
 from mvp_forms.choices import Modifiers
@@ -3266,7 +3270,11 @@ def links_the_tomselect_stylesheet(page):
 
 
 # The pages of the sidebar's group for supported packages, in its order.
-THIRD_PARTY_PAGES = [reverse_lazy("tomselect"), reverse_lazy("countries")]
+THIRD_PARTY_PAGES = [
+    reverse_lazy("tomselect"),
+    reverse_lazy("countries"),
+    reverse_lazy("tom-select-widgets"),
+]
 
 
 class TomSelectPageContract:
@@ -4051,3 +4059,154 @@ class TestStandaloneCountriesPage(CountriesPageContract):
     def test_it_links_back_to_the_shell_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("countries")) is not None
+
+
+TOM_SELECT_WIDGETS_PREFIX = "tom-select-widgets"
+TOM_SELECT_WIDGETS_SUBMIT = {f"{TOM_SELECT_WIDGETS_PREFIX}-submit": "Submit"}
+TOM_SELECT_WIDGETS_POSTED = {
+    **TOM_SELECT_WIDGETS_SUBMIT,
+    f"{TOM_SELECT_WIDGETS_PREFIX}-topics": ["geology", "volcanology"],
+}
+# The prefix of each form the page draws in a state, at a size and in a colour.
+TOM_SELECT_WIDGETS_SECTIONS = [
+    *(f"state-{state}" for state, _ in TomSelectWidgetsMixin.states),
+    *(f"size-{name}" for name in Modifiers.names("size", "select")),
+    *(f"color-{name}" for name in Modifiers.names("color", "select")),
+]
+TOM_SELECT_COPY = Path(__file__).parent / "data" / "tom-select-2.5.2.complete.min.js"
+
+
+class TomSelectWidgetsPageContract:
+    url_name = ""
+
+    def test_the_form_draws_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        drawn = page.find("select", id=f"id_{TOM_SELECT_WIDGETS_PREFIX}-topics")
+
+        assert drawn is not None
+        assert drawn.has_attr("multiple")
+        assert drawn.has_attr("data-tom-select")
+
+    def test_each_state_size_and_colour_draws_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        missing = [
+            prefix
+            for prefix in TOM_SELECT_WIDGETS_SECTIONS
+            if page.find(
+                "select", id=f"id_{prefix}-topics", attrs={"data-tom-select": True}
+            )
+            is None
+        ]
+
+        assert missing == []
+
+    def test_a_get_shows_nothing_cleaned(self, open_page):
+        page = open_page(self.url_name)
+
+        assert page.find(id=f"{TOM_SELECT_WIDGETS_PREFIX}-cleaned") is None
+
+    def test_a_post_shows_the_values_the_form_cleaned_to(self, open_page):
+        page = open_page(self.url_name, TOM_SELECT_WIDGETS_POSTED)
+
+        shown = page.find(id=f"{TOM_SELECT_WIDGETS_PREFIX}-cleaned-topics")
+
+        assert shown.get_text(strip=True) == "geology volcanology"
+
+    def test_a_post_with_no_topic_comes_back_with_its_error(self, open_page):
+        page = open_page(self.url_name, TOM_SELECT_WIDGETS_SUBMIT)
+
+        assert page.find(id=f"id_{TOM_SELECT_WIDGETS_PREFIX}-topics_error") is not None
+        assert page.find(id=f"{TOM_SELECT_WIDGETS_PREFIX}-cleaned") is None
+
+    def test_no_id_repeats(self, open_page):
+        page = open_page(self.url_name)
+        ids = [element["id"] for element in page.find_all(id=True)]
+
+        assert len(ids) == len(set(ids))
+
+
+class TestTomSelectWidgetsPage(TomSelectWidgetsPageContract):
+    url_name = "tom-select-widgets"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_lists_it_in_the_group_of_the_supported_packages(
+        self, open_page
+    ):
+        nav = open_page("overview").find(attrs={"aria-label": "Main navigation"})
+        entries = [
+            link["href"] if (link := item.find("a")) else None
+            for item in nav.find_all("li", recursive=False)
+        ]
+
+        assert entries.index(reverse("tom-select-widgets")) == (
+            entries.index(reverse("countries")) + 1
+        )
+
+    def test_it_holds_a_django_tomselect_control_and_a_stock_select_beside_its_own(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        stock = page.find("select", id="id_comparison-stock")
+        mine = page.find("select", id="id_comparison-widget")
+        foreign = page.find("select", id="id_comparison-django")
+
+        assert stock is not None
+        assert not stock.has_attr("data-tom-select")
+        assert mine.has_attr("data-tom-select")
+        assert foreign is not None
+        assert not foreign.has_attr("data-tom-select")
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("tom-select-widgets-standalone")) is not None
+
+
+class TestStandaloneTomSelectWidgetsPage(TomSelectWidgetsPageContract):
+    url_name = "tom-select-widgets-standalone"
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("tom-select-widgets")) is not None
+
+    def test_it_loads_tom_select_from_the_cdn_with_the_hash_of_the_file_served(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        script = page.find(
+            "script", src=re.compile(r"cdn\.jsdelivr\.net/npm/tom-select@2")
+        )
+
+        digest = base64.b64encode(
+            hashlib.sha384(TOM_SELECT_COPY.read_bytes()).digest()
+        ).decode()
+        assert script["integrity"] == f"sha384-{digest}"
+        assert script["crossorigin"] == "anonymous"
+
+    def test_it_loads_the_default_stylesheet_from_the_cdn_with_a_hash(self, open_page):
+        page = open_page(self.url_name)
+
+        link = page.find(
+            "link", href=re.compile(r"cdn\.jsdelivr\.net/npm/tom-select@2")
+        )
+
+        assert link["integrity"].startswith("sha384-")
+        assert link["crossorigin"] == "anonymous"
+
+    def test_it_loads_the_packages_stylesheet_and_no_django_tomselect_script(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        assert links_the_tomselect_stylesheet(page)
+        assert page.find("script", src=re.compile("django-tomselect")) is None

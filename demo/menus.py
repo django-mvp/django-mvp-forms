@@ -156,6 +156,11 @@ AppMenu.extend(
                     view_name="countries",
                     extra_context={"label": "django-countries", "icon": "countries"},
                 ),
+                MenuItem(
+                    name="tom-select-widgets",
+                    view_name="tom-select-widgets",
+                    extra_context={"label": "Tom Select widgets", "icon": "tomselect"},
+                ),
             ],
         ),
     ]
