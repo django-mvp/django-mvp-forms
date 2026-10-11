@@ -8,6 +8,7 @@ from demo.tom_select_widgets_forms import (
     TomSelectWidgetsChosenForm,
     TomSelectWidgetsComparisonForm,
     TomSelectWidgetsForm,
+    TomSelectWidgetsSettingsForm,
     TomSelectWidgetsStateForm,
 )
 from mvp_forms.choices import Modifiers
@@ -50,6 +51,7 @@ class TomSelectWidgetsMixin:
             form=form,
             prefix=self.prefix,
             cleaned=self.build_cleaned(form) if form.is_bound else [],
+            settings_form=TomSelectWidgetsSettingsForm(prefix="settings"),
             states=[
                 {
                     "title": title,

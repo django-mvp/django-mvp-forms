@@ -44,6 +44,16 @@
       {% endif %}
       <section class="card card-border bg-base-100">
         <div class="card-body">
+          <h2 class="card-title">Settings</h2>
+          <p>
+            A placeholder and a clear button on both widgets, and a button on each
+            chosen value and the largest number of values on the multiple one.
+          </p>
+          {% crispy settings_form %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
           <h2 class="card-title">In every state</h2>
           {% for state in states %}
             <h3 class="font-semibold">{{ state.title }}</h3>

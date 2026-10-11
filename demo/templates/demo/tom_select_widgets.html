@@ -29,6 +29,14 @@
     </c-text>
     {% crispy comparison %}
   </c-section>
+  <c-section title="Settings" level="3">
+    <c-text>
+      Each setting is a named argument of the widget. Both take a placeholder and a
+      button that clears the control. The multiple widget also takes a button on each
+      chosen value and the largest number of values. Here that number is three.
+    </c-text>
+    {% crispy settings_form %}
+  </c-section>
   <c-section title="In every state" level="3">
     <c-text>
       The field in the same state. No form from here down posts anywhere.

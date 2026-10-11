@@ -102,6 +102,39 @@ class TomSelectWidgetsChosenForm(ChosenForm):
         self.initial.update(topic="petrology", topics=["petrology", "tectonics"])
 
 
+class TomSelectWidgetsSettingsForm(ChosenForm):
+    """Both widgets with every setting each of them takes.
+
+    The single widget takes a placeholder and a clear button. The multiple widget
+    adds a button on each chosen value and the largest number of values.
+    """
+
+    topic = forms.ChoiceField(
+        label=_("TomSelect"),
+        choices=OPTIONAL_TOPICS,
+        required=False,
+        widget=TomSelect(placeholder=_("Pick a topic"), clear_button=True),
+        help_text=_("A placeholder while empty, and a button that clears it."),
+    )
+    topics = forms.MultipleChoiceField(
+        label=_("TomSelectMultiple"),
+        choices=TOPICS,
+        required=False,
+        widget=TomSelectMultiple(
+            placeholder=_("Pick up to three topics"),
+            clear_button=True,
+            remove_button=True,
+            max_items=3,
+        ),
+        help_text=_("A button on each value, and no more than three values."),
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Leave the media to the page."""
+        super().__init__(*args, **kwargs)
+        self.helper.include_media = False
+
+
 class TomSelectWidgetsComparisonForm(ChosenForm):
     """A stock select, this package's widget and a django-tomselect control, twice.
 

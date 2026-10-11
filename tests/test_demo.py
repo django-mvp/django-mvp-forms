@@ -4129,6 +4129,26 @@ class TomSelectWidgetsPageContract:
 
         assert missing == []
 
+    def test_the_settings_form_draws_each_setting_on_the_select(self, open_page):
+        page = open_page(self.url_name)
+
+        single = page.find("select", id="id_settings-topic")
+        multiple = page.find("select", id="id_settings-topics")
+
+        assert json.loads(single["data-tom-select"]).keys() == {
+            "placeholder",
+            "plugins",
+        }
+        assert json.loads(multiple["data-tom-select"]).keys() == {
+            "placeholder",
+            "plugins",
+            "maxItems",
+        }
+        assert json.loads(multiple["data-tom-select"])["plugins"] == [
+            "clear_button",
+            "remove_button",
+        ]
+
     def test_a_post_shows_the_single_value_the_form_cleaned_to(self, open_page):
         page = open_page(
             self.url_name,
