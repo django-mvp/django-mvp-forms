@@ -1263,7 +1263,6 @@ This is the public surface:
 
 - `mvp_forms.widgets.TomSelect`, for a field where a person picks one value
 - `mvp_forms.widgets.TomSelectMultiple`, for a field where a person picks several values
-- `mvp_forms.widgets.TomSelectAttribute`, the mixin both widgets take their attribute and script from
 - the attribute `data-tom-select`, which holds the settings the script reads as JSON on the widget's `<select>`
 - the script `mvp_forms/tomselect.js`, which the widget names in its media
 
@@ -1287,11 +1286,50 @@ class ArticleForm(forms.Form):
 
 `TomSelectMultiple` works on every field Django draws with a multiple select: `MultipleChoiceField`, `TypedMultipleChoiceField` and `ModelMultipleChoiceField`. `TomSelect` works on every field Django draws with a single select: `ChoiceField`, `TypedChoiceField` and `ModelChoiceField`. Each field receives what the stock `SelectMultiple` or `Select` hands it. Choices written in groups are drawn as option groups, as Django draws them, and a subclass of either widget is drawn and started as its parent is. A `help_text`, an error and a label stay tied to the control, and a disabled field has a disabled control.
 
-`TomSelectAttribute` writes the attribute and names the script, and it is the one place the two widgets share. Put it in front of a Django select widget of your own, as in `class RoleSelect(TomSelectAttribute, forms.Select)`, to have that widget drawn and started as the two are.
-
 A control for a single value holds the choice a stock select would show as chosen. A required field with no empty choice starts out holding its first choice. An optional field needs an empty choice, which `ModelChoiceField` writes itself and a `ChoiceField` is given as `("", "No section")`. Tom Select leaves the empty choice out of its dropdown. A person returns the field to no value by focusing the control and pressing Backspace, and the form then submits an empty entry for it.
 
 The pack draws the select as it draws any select, with the size, colour and variant stated for the form or the field and `select-error` on a field in error. The widget writes the attribute through `build_attrs`, so it is the same whether the form is drawn with `{{ form|crispy }}`, `{% crispy form %}`, `{{ field|as_crispy_field }}` or Django's own form rendering. The `attrs` you give the widget are kept. In Django's own rendering the classes come from you and not from the pack, so the control is in Tom Select's own look.
+
+#### Settings
+
+Four settings change the control. Each is a keyword-only argument of the widget, and a setting you do not state is not written, so Tom Select's own default applies.
+
+| Argument | Widget | What it does |
+| --- | --- | --- |
+| `placeholder` | both | Text shown while the control holds no value. |
+| `clear_button` | both | `True` adds a button that empties the control. |
+| `remove_button` | `TomSelectMultiple` | `True` adds a button to each chosen value that removes that value alone. |
+| `max_items` | `TomSelectMultiple` | The largest number of values that can be chosen, a whole number above zero. |
+
+```python
+from django import forms
+from django.utils.translation import gettext_lazy as _
+
+from mvp_forms.widgets import TomSelect, TomSelectMultiple
+
+
+class ArticleForm(forms.Form):
+    topics = forms.MultipleChoiceField(
+        choices=[("geology", "Geology"), ("volcanology", "Volcanology")],
+        widget=TomSelectMultiple(
+            placeholder=_("Pick up to three topics"),
+            clear_button=True,
+            remove_button=True,
+            max_items=3,
+        ),
+    )
+    section = forms.ChoiceField(
+        choices=[("", "No section"), ("earth", "Earth"), ("ice", "Ice")],
+        required=False,
+        widget=TomSelect(placeholder=_("Pick a section"), clear_button=True),
+    )
+```
+
+The settings arrive in `data-tom-select` under Tom Select's own names. The example above writes `placeholder` and `maxItems` for the first field, and a `plugins` list holding `clear_button` and `remove_button`. A lazy translation is accepted as a placeholder and is turned into text when the form is drawn, so it is in the language of the request. The settings are the same whichever way the form is drawn, and in the empty form of a formset.
+
+A widget refuses a setting that cannot be right when the form class is defined, so the mistake shows at import and not on a page. A `ValueError` names the argument for a placeholder that is not text or is empty, for `clear_button` or `remove_button` that is not `True` or `False`, and for a `max_items` that is a boolean, is not a whole number or is below one. `TomSelect` has no `remove_button` and no `max_items`, and given either it raises `TypeError`.
+
+Tom Select does not search a single control by typing while it holds a value, so a person clears it or clicks an option, and the clear button makes that visible. `max_items=1` makes Tom Select draw the control as a single one while the form still receives a list. The two buttons are Tom Select plugins, so the page needs the complete build or django-tomselect's script, as [What to load](https://github.com/django-mvp/django-mvp-forms#what-to-load) says.
 
 #### What to load
 
