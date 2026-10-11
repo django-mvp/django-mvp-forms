@@ -1,0 +1,61 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>django-countries</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <main class="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <h1 class="text-2xl">django-countries</h1>
+      <p>
+        A host project with neither django-mvp nor Cotton: daisyUI's stylesheet and
+        django-countries' own flags.
+        <a class="link" href="{% url 'countries' %}">The same page inside the django-mvp shell</a>
+      </p>
+      <label class="flex items-center gap-3">
+        <input type="checkbox" class="toggle" onchange="document.documentElement.dataset.theme = this.checked ? 'dark' : 'light'" />
+        Dark theme
+      </label>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Try it</h2>
+          {% crispy form %}
+        </div>
+      </section>
+      {% if cleaned %}
+        <section class="card card-border bg-base-100">
+          <div class="card-body">
+            <h2 class="card-title">What the form cleaned to</h2>
+            <ul id="{{ prefix }}-cleaned">
+              {% for item in cleaned %}
+                <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </section>
+      {% endif %}
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">In every state</h2>
+          {% for state in states %}
+            <h3 class="font-semibold">{{ state.title }}</h3>
+            {% crispy state.form %}
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card card-border bg-base-100">
+        <div class="card-body">
+          <h2 class="card-title">Sizes</h2>
+          {% for size in sizes %}
+            <h3 class="font-semibold">{{ size.title }}</h3>
+            {% crispy size.form %}
+          {% endfor %}
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -181,6 +181,7 @@ class Reader:
             "mt-4",
             "overflow-x-auto",
             "text-wrap",
+            "items-center",
             *(
                 f"{control}-{size}"
                 for control in (*CONTROLS, "rating")

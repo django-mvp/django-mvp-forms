@@ -48,6 +48,7 @@ from tests.forms import (
     ButtonedForm,
     CheckboxForm,
     CheckboxGroupsForm,
+    CountriesForm,
     DateSelectsForm,
     DecoratedFieldsForm,
     DeveloperAttrsForm,
@@ -85,7 +86,13 @@ PACK_OWN_TEMPLATES = sorted((PACKAGE / "templates" / "daisyui").rglob("*.html"))
 SUPPORTED_PACKAGE_TEMPLATES = sorted(
     (PACKAGE / "templates" / "django_tomselect").rglob("*.html")
 )
-FORBIDDEN_MODULES = {"mvp", "django_cotton", "daisy_cotton", "django_tomselect"}
+FORBIDDEN_MODULES = {
+    "mvp",
+    "django_cotton",
+    "daisy_cotton",
+    "django_tomselect",
+    "django_countries",
+}
 FORBIDDEN_LIBRARIES = {"cotton", "mvp"}
 
 DEVELOPER_CLASS = "wide"
@@ -94,6 +101,8 @@ FIELD_CLASS = "supplied-by-field-class"
 FORM_CLASS = "supplied-by-form-class"
 HELPER_CLASSES = {LABEL_CLASS, FIELD_CLASS, FORM_CLASS}
 MINE = frozenset({"mine"})
+# The class django-countries writes on the flag its widget draws.
+FLAG = frozenset({"country-select-flag"})
 # Tailwind utilities the pack writes where daisyUI has no class for the job.
 # Each is named here so that adding one is a reviewed change.
 LAYOUT_UTILITIES = {
@@ -110,6 +119,7 @@ LAYOUT_UTILITIES = {
     "overflow-x-auto",
     "w-auto",
     "text-wrap",
+    "items-center",
 }
 
 
@@ -433,6 +443,9 @@ ONE_MEMBER_FAILS = {"country_code": "+49", "number": ""}
 ERRORS_ONLY = "{{ form|as_crispy_errors }}"
 
 STATES = [
+    pytest.param(
+        "{% crispy form %}", CountriesForm, FLAG, id="django-countries' fields"
+    ),
     pytest.param("{{ form|crispy }}", TextInputsForm, NOTHING, id="unbound"),
     pytest.param(
         "{{ form|crispy }}", lambda: TextInputsForm({}), NOTHING, id="invalid"
