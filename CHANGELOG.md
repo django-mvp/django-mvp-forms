@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Django's `SearchInput`, `TelInput` and `ColorInput` are drawn as daisyUI inputs. A field using one of them was drawn with its label, help text and errors but with no daisyUI class on the input, so it looked unstyled beside the other fields. Each now carries `input` and fills the width of its field, takes the size, colour and variant stated for the form or the field, and carries `input-error` when its field is in error, as a text input does. Each can be a member of a `Join` and can take a floating label. Nothing changes on the form. A project that wrote `input` on one of these widgets by hand can remove it. The demo's "Text inputs" page shows the three in every state.
+
 ## [v0.3.0] - 2026-10-10
 
 ### Added

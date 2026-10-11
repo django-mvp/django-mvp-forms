@@ -50,6 +50,9 @@ class TextInputsForm(forms.Form):
     date = forms.DateField()
     time = forms.TimeField()
     date_time = forms.DateTimeField()
+    search = forms.CharField(widget=forms.SearchInput)
+    tel = forms.CharField(widget=forms.TelInput)
+    color = forms.CharField(widget=forms.ColorInput)
     message = forms.CharField(widget=forms.Textarea)
 
 
