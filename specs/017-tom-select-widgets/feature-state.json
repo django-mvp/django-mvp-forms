@@ -307,8 +307,24 @@
         },
         {
           "id": "T011",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_demo.py::TestTomSelectWidgetsPage::test_a_tab_holds_the_widgets_select",
+              "tests/test_demo.py::TestTomSelectWidgetsPage::test_an_accordion_group_holds_the_widgets_select",
+              "tests/test_demo.py::TestStandaloneTomSelectWidgetsPage::test_a_tab_holds_the_widgets_select",
+              "tests/test_demo.py::TestStandaloneTomSelectWidgetsPage::test_an_accordion_group_holds_the_widgets_select"
+            ],
+            "commands": [
+              "uv run pytest tests/test_demo.py -k TomSelectWidgets -n 4"
+            ],
+            "code": [
+              "demo/tom_select_widgets_forms.py:279",
+              "demo/templates/demo/tom_select_widgets.html:62",
+              "demo/templates/demo/tom_select_widgets_standalone.html:88"
+            ]
+          }
         }
       ]
     },

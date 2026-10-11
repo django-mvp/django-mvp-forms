@@ -85,3 +85,10 @@ Did: Removed the pick helper from tests/test_tomselect_e2e.py. Its three users, 
 Verified: uv run pytest tests/test_tomselect_e2e.py -n 4, 47 passed. uv run pytest tests/test_demo.py -k default_stylesheet_from_the_cdn, 1 passed. The first run after the swap failed two tests, because a second choose on a multiple control clicks a control whose dropdown is still open and the option is not visible. Each of those two tests now presses Escape between its two choices, as the late control tests already do.
 Next: T011, then full verify.
 Watch: choose now opens a multiple control by its control element, which the earlier tests already did for the late controls.
+
+## 2026-10-11T23:58:58Z · Implementer FIX-1 · T011
+
+Did: Added TomSelectWidgetsContainersForm in demo/tom_select_widgets_forms.py: a TabHolder whose second tab holds the single field and an Accordion whose second group holds the multiple field, so both sit out of sight at load. Both demo pages draw it beside the modal under "In a modal, a tab and an accordion", and the view passes it as containers_form. The comment on offering every option now sits on the maxOptions line of tomselect.js. plan.md shows TomSelectMultiple(TomSelect, forms.SelectMultiple) in its summary and its code block, and spec.md reads Status: Approved.
+Verified: uv run pytest tests/test_demo.py -k "a_tab_holds or an_accordion_group_holds" failed first on all four (the shell and standalone pages, no containers-tabs or containers-groups element), then uv run pytest tests/test_demo.py -k TomSelectWidgets -n 4, 46 passed, which includes the no-repeated-id test for both pages and the 200 from each page. uv run pre-commit run --all-files passed.
+Next: full verify, then the report.
+Watch: the first ledger row for this task carried two wrong code citations and was redone with the tool before commit. The tab radio inputs of the pack share one group name, so a second TabHolder on either page would share a group with this one.
