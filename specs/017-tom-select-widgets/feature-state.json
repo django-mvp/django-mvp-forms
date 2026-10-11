@@ -322,7 +322,7 @@
             "code": [
               "demo/tom_select_widgets_forms.py:279",
               "demo/templates/demo/tom_select_widgets.html:62",
-              "demo/templates/demo/tom_select_widgets_standalone.html:88"
+              "demo/templates/demo/tom_select_widgets_standalone.html:84"
             ]
           }
         }
