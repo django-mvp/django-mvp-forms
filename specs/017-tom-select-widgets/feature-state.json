@@ -134,8 +134,28 @@
       "tasks": [
         {
           "id": "T004",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 2,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestTomSelect",
+              "tests/test_widgets.py::TestWhatTheTomSelectFieldReceives",
+              "tests/test_pack/test_tom_select_widgets.py::TestTomSelect",
+              "tests/test_tomselect_e2e.py::TestTheSingleWidget",
+              "tests/test_demo.py::TestTomSelectWidgetsPage",
+              "tests/test_demo.py::TestStandaloneTomSelectWidgetsPage"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_pack/test_tom_select_widgets.py -q -k TomSelect",
+              "uv run pytest tests/test_tomselect_e2e.py -q -p no:randomly -k TheSingleWidget",
+              "uv run pytest tests/test_demo.py tests/test_pack/test_tom_select_widgets.py -q -k 'TomSelectWidgets or TomSelect' -n0"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:783",
+              "mvp_forms/widgets.py:801",
+              "mvp_forms/widgets.py:808"
+            ]
+          }
         }
       ]
     },

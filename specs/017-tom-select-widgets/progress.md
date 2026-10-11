@@ -29,3 +29,10 @@ Did: Full verify found one red step. Conformance refused tests/test_tomselect_e2
 Verified: forge verify, all six steps on the three task commits: lint, typecheck, test (63 s), build and docs passed, conformance failed on that one line. After the change, forge verify --steps conformance passed and pre-commit passed.
 Next: report.
 Watch: pyproject.toml is outside the brief's file list for T002.
+
+## 2026-10-11T22:48:38Z · Implementer US2 · T004
+
+Did: Added TomSelect, a Select that writes data-tom-select holding {} and names mvp_forms/tomselect.js. What it shares with TomSelectMultiple is one mixin in mvp_forms/widgets.py, TomSelectAttribute, which holds the attribute and the media. Tests first: TestTomSelect and TestWhatTheTomSelectFieldReceives in tests/test_widgets.py, TestTomSelect in tests/test_pack/test_tom_select_widgets.py, TestTheSingleWidget in tests/test_tomselect_e2e.py, with TomSelectSingleForm, StockSingleForm and two fields on TomSelectPageForm in tests/forms.py. README names TomSelect in the surface, the example and the section. CHANGELOG has an entry. The demo forms gained a single field beside the multiple one in the form, each state, each size, each colour and the comparison, and the shell page's two intro texts name both widgets.
+Verified: uv run pytest tests/test_widgets.py tests/test_pack/test_tom_select_widgets.py -k TomSelect, 105 passed. uv run pytest tests/test_tomselect_e2e.py -k TheSingleWidget, 4 passed. uv run pytest tests/test_demo.py tests/test_pack/test_tom_select_widgets.py -k "TomSelectWidgets or TomSelect", 132 passed. Red seen first as an ImportError on the missing widget and a missing field on the demo pages. The browser tests were probed by removing the attribute write: all four failed. pre-commit run --all-files passed.
+Next: full verify, then the report.
+Watch: Tom Select ignores typed keys in a single control that holds a value, so the control cannot be searched until it is cleared or a choice is clicked. The browser tests click the option for that reason. The script needed no change. The README's Backspace sentence rests on the browser test only.
