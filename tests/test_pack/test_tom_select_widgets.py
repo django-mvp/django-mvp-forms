@@ -11,6 +11,8 @@ from tests.forms import (
     StockMultipleForm,
     StockSingleForm,
     TomSelectMultipleForm,
+    TomSelectSettingsForm,
+    TomSelectSettingsFormSet,
     TomSelectSingleForm,
 )
 
@@ -293,6 +295,50 @@ class TestTomSelect:
         drawn = soup.find("select", id="id_section", attrs={"data-tom-select": True})
         assert drawn is not None
         assert not drawn.has_attr("multiple")
+
+
+class TestTheSettings:
+    TOPIC = {"placeholder": "Pick one", "plugins": ["clear_button"]}
+    TOPICS = {
+        "placeholder": "Pick some",
+        "maxItems": 2,
+        "plugins": ["clear_button", "remove_button"],
+    }
+
+    @pytest.mark.parametrize("source", [*SOURCES[:2], SOURCES[3]])
+    def test_each_field_carries_its_settings_whichever_way_the_form_is_rendered(
+        self, draw, source
+    ):
+        soup = draw(source, form=TomSelectSettingsForm())
+
+        drawn = {
+            name: json.loads(soup.find(id=f"id_{name}")["data-tom-select"])
+            for name in ("topic", "topics")
+        }
+
+        assert drawn == {"topic": self.TOPIC, "topics": self.TOPICS}
+
+    def test_a_field_is_drawn_with_its_settings_through_as_crispy_field(self, draw):
+        form = TomSelectSettingsForm()
+
+        soup = draw("{{ form.topics|as_crispy_field }}", form=form)
+
+        drawn = json.loads(soup.find(id="id_topics")["data-tom-select"])
+        assert drawn == self.TOPICS
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_the_empty_form_of_a_formset_carries_the_same_settings(self, draw, source):
+        formset = TomSelectSettingsFormSet()
+
+        row = draw(source, form=formset.forms[0])
+        template = draw(source, form=formset.empty_form)
+
+        def settings(soup, name):
+            drawn = soup.find("select", id=re.compile(f"id_.*{name}$"))
+            return json.loads(drawn["data-tom-select"])
+
+        assert settings(template, "topics") == settings(row, "topics") == self.TOPICS
+        assert settings(template, "topic") == settings(row, "topic") == self.TOPIC
 
 
 class TestTheReadmesExample:

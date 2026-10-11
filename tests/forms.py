@@ -1401,6 +1401,29 @@ class StockSingleForm(forms.Form):
         self.helper.form_tag = False
 
 
+class TomSelectSettingsForm(forms.Form):
+    topic = forms.ChoiceField(
+        choices=[("", "None"), *FRUIT],
+        widget=TomSelect(placeholder="Pick one", clear_button=True),
+        required=False,
+    )
+    topics = forms.MultipleChoiceField(
+        choices=FRUIT,
+        widget=TomSelectMultiple(
+            placeholder="Pick some", clear_button=True, remove_button=True, max_items=2
+        ),
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+TomSelectSettingsFormSet = formset_factory(TomSelectSettingsForm, extra=1)
+
+
 CITIES = [(f"c{number:03}", f"City {number:03}") for number in range(1, 121)]
 
 

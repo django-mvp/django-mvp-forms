@@ -12,6 +12,7 @@ from django.contrib.auth.models import Group
 from django.http import QueryDict
 from django.utils import translation
 from django.utils.dates import MONTHS
+from django.utils.translation import gettext_lazy
 
 from mvp_forms.fields import PartialDateField
 from mvp_forms.widgets import (
@@ -26,7 +27,6 @@ from mvp_forms.widgets import (
     RangeBlock,
     RegexMaskInput,
     TomSelect,
-    TomSelectAttribute,
     TomSelectMultiple,
 )
 
@@ -1571,15 +1571,6 @@ class TestTomSelect:
 
         assert selected_values(select) == ["b"]
 
-    def test_a_select_widget_of_ones_own_is_drawn_the_same_way_with_the_mixin(self):
-        class Own(TomSelectAttribute, forms.Select):
-            pass
-
-        select = select_of(Own(choices=FRUIT))
-
-        assert json.loads(select["data-tom-select"]) == {}
-        assert Own().media._js == ["mvp_forms/tomselect.js"]
-
     def test_the_empty_choice_is_drawn_as_an_option(self):
         select = select_of(TomSelect(choices=[("", "None"), *FRUIT]))
 
@@ -1694,3 +1685,141 @@ class TestWhatTheTomSelectFieldReceives:
         with pytest.raises(forms.ValidationError) as refused_stock:
             self.received(stock, "")
         assert refused.value.code == refused_stock.value.code == "required"
+
+
+def settings_of(widget):
+    """Return the settings the widget writes on the select it draws."""
+    return json.loads(select_of(widget)["data-tom-select"])
+
+
+class TestTheSettingsOfBothWidgets:
+    @pytest.fixture(params=[TomSelect, TomSelectMultiple])
+    def widget_class(self, request):
+        return request.param
+
+    def test_a_placeholder_is_written_under_tom_selects_name(self, widget_class):
+        widget = widget_class(choices=FRUIT, placeholder="Pick one")
+
+        assert settings_of(widget) == {"placeholder": "Pick one"}
+
+    def test_the_clear_button_is_written_as_a_plugin(self, widget_class):
+        widget = widget_class(choices=FRUIT, clear_button=True)
+
+        assert settings_of(widget) == {"plugins": ["clear_button"]}
+
+    def test_a_clear_button_that_is_not_wanted_is_not_written(self, widget_class):
+        widget = widget_class(choices=FRUIT, clear_button=False)
+
+        assert settings_of(widget) == {}
+
+    def test_no_setting_is_written_for_one_that_is_not_stated(self, widget_class):
+        widget = widget_class(choices=FRUIT, placeholder="Pick one")
+
+        assert "plugins" not in settings_of(widget)
+
+    def test_the_settings_are_written_beside_the_developers_attrs(self, widget_class):
+        widget = widget_class(
+            attrs={"class": "mine"}, choices=FRUIT, placeholder="Pick one"
+        )
+
+        select = select_of(widget)
+
+        assert select["class"] == ["mine"]
+        assert json.loads(select["data-tom-select"]) == {"placeholder": "Pick one"}
+
+    def test_the_settings_are_taken_by_name_only(self, widget_class):
+        with pytest.raises(TypeError):
+            widget_class(None, FRUIT, "Pick one")
+
+    def test_a_lazy_placeholder_is_written_in_the_language_active_when_drawn(
+        self, widget_class
+    ):
+        lazy = gettext_lazy("This field is required.")
+        widget = widget_class(choices=FRUIT, placeholder=lazy)
+
+        with translation.override("en"):
+            english = settings_of(widget)["placeholder"]
+            in_english = str(lazy)
+        with translation.override("de"):
+            german = settings_of(widget)["placeholder"]
+            in_german = str(lazy)
+
+        assert in_english != in_german
+        assert (english, german) == (in_english, in_german)
+
+    @pytest.mark.parametrize("value", ["", 3, b"bytes", ["a"]])
+    def test_a_placeholder_that_is_not_text_or_is_empty_is_refused(
+        self, widget_class, value
+    ):
+        with pytest.raises(ValueError, match="placeholder"):
+            widget_class(placeholder=value)
+
+    @pytest.mark.parametrize("value", [1, 0, "yes"])
+    def test_a_clear_button_that_is_not_true_or_false_is_refused(
+        self, widget_class, value
+    ):
+        with pytest.raises(ValueError, match="clear_button"):
+            widget_class(clear_button=value)
+
+
+class TestTheSettingsOfTomSelectMultiple:
+    def test_the_remove_button_is_written_as_a_plugin(self):
+        widget = TomSelectMultiple(choices=FRUIT, remove_button=True)
+
+        assert settings_of(widget) == {"plugins": ["remove_button"]}
+
+    def test_both_buttons_are_written_as_plugins(self):
+        widget = TomSelectMultiple(choices=FRUIT, clear_button=True, remove_button=True)
+
+        assert settings_of(widget) == {"plugins": ["clear_button", "remove_button"]}
+
+    def test_the_largest_number_of_values_is_written_as_max_items(self):
+        widget = TomSelectMultiple(choices=FRUIT, max_items=3)
+
+        assert settings_of(widget) == {"maxItems": 3}
+
+    def test_every_setting_is_written_together(self):
+        widget = TomSelectMultiple(
+            choices=FRUIT,
+            placeholder="Pick some",
+            clear_button=True,
+            remove_button=True,
+            max_items=2,
+        )
+
+        assert settings_of(widget) == {
+            "placeholder": "Pick some",
+            "maxItems": 2,
+            "plugins": ["clear_button", "remove_button"],
+        }
+
+    @pytest.mark.parametrize("value", [1, 0, "yes"])
+    def test_a_remove_button_that_is_not_true_or_false_is_refused(self, value):
+        with pytest.raises(ValueError, match="remove_button"):
+            TomSelectMultiple(remove_button=value)
+
+    @pytest.mark.parametrize("value", [True, False, 2.0, "2", 0, -1])
+    def test_a_largest_number_that_is_not_a_whole_number_above_zero_is_refused(
+        self, value
+    ):
+        with pytest.raises(ValueError, match="max_items"):
+            TomSelectMultiple(max_items=value)
+
+    def test_a_largest_number_of_one_is_accepted_and_the_field_still_gets_a_list(
+        self,
+    ):
+        field = forms.MultipleChoiceField(
+            choices=FRUIT, widget=TomSelectMultiple(max_items=1)
+        )
+        data = QueryDict(mutable=True)
+        data.setlist("field", ["b"])
+
+        assert settings_of(field.widget) == {"maxItems": 1}
+        assert field.clean(field.widget.value_from_datadict(data, {}, "field")) == ["b"]
+
+
+class TestTheSettingsOfTomSelect:
+    @pytest.mark.parametrize("name", ["remove_button", "max_items"])
+    def test_a_setting_only_the_multiple_widget_has_is_refused(self, name):
+        with pytest.raises(TypeError, match=name):
+            TomSelect(**{name: True})
