@@ -272,8 +272,21 @@
       "tasks": [
         {
           "id": "T008",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_tomselect_e2e.py::TestTheEvent"
+            ],
+            "commands": [
+              "uv run pytest tests/test_tomselect_e2e.py::TestTheEvent -q",
+              "uv run pytest tests/test_tomselect_e2e.py tests/test_pack/test_tom_select_widgets.py -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/tomselect.js:44"
+            ]
+          }
         }
       ]
     }
