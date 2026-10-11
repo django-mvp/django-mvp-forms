@@ -121,12 +121,12 @@ class TestAlertDismissControlSize:
             draw, Alert("Mind this", css_id="note"), choices=FormChoices(size="lg")
         )
 
-        assert dismiss_classes(soup) == ["btn", "btn-lg"]
+        assert dismiss_classes(soup) == ["btn", "btn-lg", "ms-auto"]
 
     def test_with_no_size_stated_it_is_small(self, draw):
         soup = draw_stated(draw, Alert("Mind this", css_id="note"))
 
-        assert dismiss_classes(soup) == ["btn", "btn-sm"]
+        assert dismiss_classes(soup) == ["btn", "btn-sm", "ms-auto"]
 
     def test_a_choice_around_the_alert_wins_over_the_form(self, draw):
         soup = draw_stated(
@@ -135,7 +135,7 @@ class TestAlertDismissControlSize:
             choices=FormChoices(size="lg"),
         )
 
-        assert dismiss_classes(soup) == ["btn", "btn-xs"]
+        assert dismiss_classes(soup) == ["btn", "btn-xs", "ms-auto"]
 
     def test_a_choice_that_states_no_size_leaves_the_form_s(self, draw):
         soup = draw_stated(
@@ -144,7 +144,7 @@ class TestAlertDismissControlSize:
             choices=FormChoices(size="lg"),
         )
 
-        assert dismiss_classes(soup) == ["btn", "btn-lg"]
+        assert dismiss_classes(soup) == ["btn", "btn-lg", "ms-auto"]
 
     def test_none_in_a_choice_is_the_size_it_has_with_nothing_stated(self, draw):
         soup = draw_stated(
@@ -153,7 +153,7 @@ class TestAlertDismissControlSize:
             choices=FormChoices(size="lg"),
         )
 
-        assert dismiss_classes(soup) == ["btn", "btn-sm"]
+        assert dismiss_classes(soup) == ["btn", "btn-sm", "ms-auto"]
 
     def test_it_takes_neither_the_colour_nor_the_variant_of_buttons(self, draw):
         soup = draw_stated(
@@ -162,7 +162,7 @@ class TestAlertDismissControlSize:
             choices=FormChoices(button_color="primary", button_variant="outline"),
         )
 
-        assert dismiss_classes(soup) == ["btn", "btn-sm"]
+        assert dismiss_classes(soup) == ["btn", "btn-sm", "ms-auto"]
 
     def test_a_choice_that_states_a_drawing_for_fields_is_passed_over(self, draw):
         soup = draw_stated(
@@ -170,4 +170,4 @@ class TestAlertDismissControlSize:
             Choice(Alert("Mind this", css_id="note"), "first", label="floating"),
         )
 
-        assert dismiss_classes(soup) == ["btn", "btn-sm"]
+        assert dismiss_classes(soup) == ["btn", "btn-sm", "ms-auto"]

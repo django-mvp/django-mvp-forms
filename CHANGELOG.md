@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The dismiss button of an `Alert` now sits at the end of the alert, the right under left-to-right text and the left under right-to-left. It was drawn straight after the content, wherever the last word ended. The button also carries Tailwind's `ms-auto` utility, after `btn` and its size. A page that loads daisyUI's CDN build with Tailwind's browser build needs nothing, and neither does a django-mvp project, whose stylesheet already holds the utility. A host project with its own Tailwind build gets it on its next build, as long as that build scans the installed `mvp_forms` package. A project that replaced `daisyui/layout/alert.html` adds `ms-auto` to the button in its own copy. The button's `onclick` is unchanged, so a Content Security Policy that allows it by its hash needs no new hash.
+
 ## [v0.3.0] - 2026-10-10
 
 ### Added
