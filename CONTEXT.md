@@ -39,8 +39,8 @@ A third-party Django package whose widgets the pack undertakes to draw well in a
 daisyUI form. Its templates, if the pack has any, are listed in the template
 list's second table. A supported package whose controls are built by script gets
 at most one optional stylesheet, which the host project loads, and never shares it
-with another package. django-tomselect is the first. A supported package is never
-a dependency.
+with another package. django-tomselect is the first and django-countries the
+second. A supported package is never a dependency.
 _Avoid_: integration, add-on.
 
 **Tagging**:

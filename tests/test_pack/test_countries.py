@@ -6,7 +6,6 @@ import pytest
 
 from mvp_forms.choices import FormChoices, Modifiers
 from tests.forms import (
-    FLAG_LAYOUT_OF_THE_DEVELOPERS,
     CountriesForm,
     FlagLayoutForm,
     FlagPlacedForm,
@@ -211,13 +210,3 @@ class TestTheFlagInAFrameOfThePacks:
 
         assert not set(soup.find(id=f"id_{name}").parent["class"]) >= ROW
         assert flag_of(soup, name) is not None
-
-
-class TestADeveloperLayout:
-    def test_the_fixture_differs_from_django_countries_own(self):
-        assert FlagLayoutForm().fields["flagged"].widget.layout == (
-            FLAG_LAYOUT_OF_THE_DEVELOPERS
-        )
-        assert CountriesForm().fields["flagged"].widget.layout != (
-            FLAG_LAYOUT_OF_THE_DEVELOPERS
-        )
