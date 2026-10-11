@@ -2,7 +2,7 @@
   "feature": "017-tom-select-widgets",
   "branch": "017-tom-select-widgets",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "DESIGN_REVIEW",
+  "state": "IMPLEMENT",
   "state_history": [
     {
       "state": "QUEUED",
@@ -18,6 +18,11 @@
       "state": "DESIGN_REVIEW",
       "at": "2026-10-11T22:06:46Z",
       "note": "one reviewer, three lenses"
+    },
+    {
+      "state": "IMPLEMENT",
+      "at": "2026-10-11T22:14:36Z",
+      "note": "plan gate open; US1 next"
     }
   ],
   "gates": {
