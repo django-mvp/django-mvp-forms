@@ -8,6 +8,7 @@ from demo.autocompletes import (
     LanguageAutocomplete,
     RockAutocomplete,
 )
+from demo.counted_views import CountedSelectView
 from demo.countries_views import CountriesView, StandaloneCountriesView
 from demo.partial_date_views import PartialDatesView, StandalonePartialDatesView
 from demo.tom_select_widgets_views import (
@@ -178,6 +179,7 @@ urlpatterns = [
     path(
         "tomselect/boosted/", TomSelectBoostedView.as_view(), name="tomselect-boosted"
     ),
+    path("counted-select/", CountedSelectView.as_view(), name="counted-select"),
     path("countries/", CountriesView.as_view(), name="countries"),
     path(
         "countries/standalone/",

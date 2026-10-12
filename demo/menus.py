@@ -140,6 +140,14 @@ AppMenu.extend(
                         "icon": "partial-dates",
                     },
                 ),
+                MenuItem(
+                    name="counted-select",
+                    view_name="counted-select",
+                    extra_context={
+                        "label": "Counted multiple select",
+                        "icon": "tomselect",
+                    },
+                ),
             ],
         ),
         MenuGroup(
