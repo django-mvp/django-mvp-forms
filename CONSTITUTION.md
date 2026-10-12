@@ -187,6 +187,10 @@ colour from the daisyUI theme, and is loaded by the host project, never by the
 pack. Each supported package has a stylesheet of its own. There is never one
 stylesheet for several packages.
 
+The stylesheet shipped for django-tomselect styles the controls Tom Select
+builds. The package's own Tom Select widgets build the same controls and are
+drawn by that stylesheet. They get no stylesheet of their own.
+
 Where django-crispy-forms documents how a layout object behaves, the pack
 matches it. A host project moving from another pack should find the same
 layout code draws the same structure.
@@ -222,4 +226,4 @@ Read at planning and at review; applies to every change.
 
 ---
 
-**Version**: 2.1.0 | **Ratified**: 2026-10-03 | **Last Amended**: 2026-10-09
+**Version**: 2.2.0 | **Ratified**: 2026-10-03 | **Last Amended**: 2026-10-12
