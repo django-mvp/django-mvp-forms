@@ -62,6 +62,18 @@
         "ARCH-002 (low) T006's browser tests cut to two",
         "SPEC-003, SPEC-004 (low) a glossary term and a README sentence"
       ]
+    },
+    "review": {
+      "approved_by": "code review, one reviewer: approved, one medium and five low findings",
+      "at": "2026-10-12T00:03:29Z",
+      "self_resolved": [
+        "COR-001 (medium) no test held the script to three settings: T009 adds one, seen to fail against a script that passes every key",
+        "COR-002 (low) the pick helper chose before the list was filtered: removed in T010",
+        "COR-003 (low) no control shown in a tab or an accordion group: T011 adds both to the demo",
+        "COR-004 (low) a demo test accepted any integrity value: assertion on the value removed in T010, value checked against the CDN's file",
+        "COR-005 (low) the demo's row-adding script is repeated on two pages: left, the demo is not distributed",
+        "COR-006 (low) controls are not destroyed when their select leaves the page: filed as issue #179"
+      ]
     }
   },
   "stories": [
