@@ -10,6 +10,10 @@ from demo.autocompletes import (
 )
 from demo.countries_views import CountriesView, StandaloneCountriesView
 from demo.partial_date_views import PartialDatesView, StandalonePartialDatesView
+from demo.tom_select_widgets_views import (
+    StandaloneTomSelectWidgetsView,
+    TomSelectWidgetsView,
+)
 from demo.tomselect_views import (
     StandaloneTomSelectView,
     TomSelectBoostedView,
@@ -179,6 +183,16 @@ urlpatterns = [
         "countries/standalone/",
         StandaloneCountriesView.as_view(),
         name="countries-standalone",
+    ),
+    path(
+        "tom-select-widgets/",
+        TomSelectWidgetsView.as_view(),
+        name="tom-select-widgets",
+    ),
+    path(
+        "tom-select-widgets/standalone/",
+        StandaloneTomSelectWidgetsView.as_view(),
+        name="tom-select-widgets-standalone",
     ),
     path("autocomplete/countries/", CountryAutocomplete.as_view(), name="ac-countries"),
     path(

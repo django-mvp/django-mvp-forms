@@ -50,11 +50,37 @@ developer's, and the field must accept a value that is not among its choices.
 _Avoid_: tags field (a field the developer writes, not a thing the pack ships).
 
 **Option group**:
-The heading a django-tomselect dropdown lists a set of options under. An option
-joins a group by carrying an `optgroup` key whose value is the heading. The pack's
-template for django-tomselect reads that key, which needs `mvp_forms` listed before
-`django_tomselect` in `INSTALLED_APPS`.
+The heading a dropdown lists a set of options under. For a django-tomselect control
+an option joins a group by carrying an `optgroup` key whose value is the heading.
+The pack's template for django-tomselect reads that key, which needs `mvp_forms`
+listed before `django_tomselect` in `INSTALLED_APPS`. For a Tom Select widget of
+this package a group is one written as Django's grouped choices, and Tom Select reads
+it from the `<optgroup>` elements of the select.
 _Avoid_: category, optgroup (that is the key and the HTML element, not the term).
+
+**Tom Select control**:
+The searchable select Tom Select builds in the browser in place of a select element.
+One built from a widget of this package and one built by django-tomselect are both
+Tom Select controls, and one stylesheet, `mvp_forms/tomselect.css`, draws both.
+_Avoid_: dropdown, combobox, autocomplete (an autocomplete fetches its options, and
+a control of this package's widgets does not).
+
+**Options that come with the form**:
+The choices of a field, written into the page as option elements when the form is
+drawn, as opposed to options a control requests from a view as a person types. The
+Tom Select widgets of this package use these and make no request.
+_Avoid_: static options, local options.
+
+**Chosen value**:
+A value a Tom Select control holds. A multiple control lists each one in the
+control as an item of its own, with the remove button when the control has one.
+_Avoid_: tag (a tag is a chosen value in a tagging control), selection.
+
+**Form's media**:
+The scripts and stylesheets Django collects from a form's widgets, which the host
+project's template renders with `{{ form.media }}`, or which `{% crispy form %}`
+writes beside the form. A Tom Select widget names its script here.
+_Avoid_: assets, static files.
 
 **Layout object**:
 A django-crispy-forms Python class placed in a form's `Layout` to say how part

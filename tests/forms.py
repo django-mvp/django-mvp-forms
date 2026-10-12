@@ -40,6 +40,8 @@ from mvp_forms.widgets import (
     PatternMaskInput,
     RangeBlock,
     RegexMaskInput,
+    TomSelect,
+    TomSelectMultiple,
 )
 
 
@@ -1317,3 +1319,196 @@ def partial_date_form(**options):
     return type(
         "PartialDateOptionsForm", (forms.Form,), {"born": PartialDateField(**options)}
     )
+
+
+class TomSelectMultipleForm(forms.Form):
+    fruit = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, help_text="Pick some"
+    )
+    grouped = forms.MultipleChoiceField(
+        choices=GROUPED, widget=TomSelectMultiple, required=False
+    )
+    own = forms.MultipleChoiceField(
+        choices=FRUIT,
+        required=False,
+        widget=TomSelectMultiple(attrs={"class": "mine", "data-role": "picker"}),
+    )
+    off = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, required=False, disabled=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class StockMultipleForm(forms.Form):
+    fruit = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.SelectMultiple, help_text="Pick some"
+    )
+    grouped = forms.MultipleChoiceField(
+        choices=GROUPED, widget=forms.SelectMultiple, required=False
+    )
+    own = forms.MultipleChoiceField(
+        choices=FRUIT,
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "mine", "data-role": "picker"}),
+    )
+    off = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.SelectMultiple, required=False, disabled=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class TomSelectSingleForm(forms.Form):
+    fruit = forms.ChoiceField(choices=FRUIT, widget=TomSelect, help_text="Pick one")
+    grouped = forms.ChoiceField(choices=GROUPED, widget=TomSelect, required=False)
+    own = forms.ChoiceField(
+        choices=FRUIT,
+        required=False,
+        widget=TomSelect(attrs={"class": "mine", "data-role": "picker"}),
+    )
+    off = forms.ChoiceField(
+        choices=FRUIT, widget=TomSelect, required=False, disabled=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class StockSingleForm(forms.Form):
+    fruit = forms.ChoiceField(choices=FRUIT, widget=forms.Select, help_text="Pick one")
+    grouped = forms.ChoiceField(choices=GROUPED, widget=forms.Select, required=False)
+    own = forms.ChoiceField(
+        choices=FRUIT,
+        required=False,
+        widget=forms.Select(attrs={"class": "mine", "data-role": "picker"}),
+    )
+    off = forms.ChoiceField(
+        choices=FRUIT, widget=forms.Select, required=False, disabled=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class TomSelectSettingsForm(forms.Form):
+    topic = forms.ChoiceField(
+        choices=[("", "None"), *FRUIT],
+        widget=TomSelect(placeholder="Pick one", clear_button=True),
+        required=False,
+    )
+    topics = forms.MultipleChoiceField(
+        choices=FRUIT,
+        widget=TomSelectMultiple(
+            placeholder="Pick some", clear_button=True, remove_button=True, max_items=2
+        ),
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+TomSelectSettingsFormSet = formset_factory(TomSelectSettingsForm, extra=1)
+
+
+CITIES = [(f"c{number:03}", f"City {number:03}") for number in range(1, 121)]
+
+
+class DisablingTomSelectMultiple(SecondOptionDisabled, TomSelectMultiple):
+    pass
+
+
+class TomSelectPageForm(forms.Form):
+    fruit = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, required=False, help_text="Pick some"
+    )
+    cities = forms.MultipleChoiceField(
+        choices=CITIES, widget=TomSelectMultiple, required=False
+    )
+    marked = forms.MultipleChoiceField(
+        choices=[("m", "<b>Bold</b> & Tom")], widget=TomSelectMultiple, required=False
+    )
+    off = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, required=False, disabled=True
+    )
+    plain = forms.MultipleChoiceField(
+        choices=FRUIT, widget=forms.SelectMultiple, required=False
+    )
+    single = forms.ChoiceField(
+        choices=[*FRUIT, ("c", "Cherry")], widget=TomSelect, required=False
+    )
+    optional = forms.ChoiceField(
+        choices=[("", "None"), *FRUIT], widget=TomSelect, required=False
+    )
+    placeheld = forms.MultipleChoiceField(
+        choices=FRUIT,
+        widget=TomSelectMultiple(placeholder="Pick fruit"),
+        required=False,
+    )
+    placeheld_single = forms.ChoiceField(
+        choices=[("", ""), *FRUIT],
+        widget=TomSelect(placeholder="Pick one fruit"),
+        required=False,
+    )
+    clearable = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple(clear_button=True), required=False
+    )
+    clearable_single = forms.ChoiceField(
+        choices=[("", "None"), *FRUIT],
+        widget=TomSelect(clear_button=True),
+        required=False,
+    )
+    removable = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple(remove_button=True), required=False
+    )
+    limited = forms.MultipleChoiceField(
+        choices=[*FRUIT, ("c", "Cherry")],
+        widget=TomSelectMultiple(max_items=2),
+        required=False,
+    )
+    grouped = forms.MultipleChoiceField(
+        choices=GROUPED, widget=TomSelectMultiple, required=False
+    )
+    unavailable = forms.MultipleChoiceField(
+        choices=FRUIT, widget=DisablingTomSelectMultiple, required=False
+    )
+
+
+class TomSelectLineForm(forms.Form):
+    fruit = forms.MultipleChoiceField(
+        choices=FRUIT,
+        widget=TomSelectMultiple(placeholder="Pick fruit", max_items=1),
+        required=False,
+        help_text="Pick one",
+    )
+
+
+TomSelectLineFormSet = formset_factory(TomSelectLineForm, extra=1)
+
+
+class TomSelectDialogForm(forms.Form):
+    nearby = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.include_media = False
+        self.helper.layout = Layout(
+            Modal("nearby", css_id="nearby-dialog", title="Nearby")
+        )

@@ -15,12 +15,23 @@ from tests.forms import (
     MaskedPageForm,
     PartialDatePageForm,
     PartialDatePageLineFormSet,
+    TomSelectDialogForm,
+    TomSelectForm,
+    TomSelectLineFormSet,
+    TomSelectPageForm,
 )
 
 # Where the browser tests' pages ask for IMask. The tests answer the request from
 # a copy under tests/data/ and nothing is fetched.
 IMASK_ORIGIN = "https://cdn.jsdelivr.net"
 IMASK_URL = f"{IMASK_ORIGIN}/npm/imask@7.6.1/dist/imask.min.js"
+# Where the browser tests' pages ask for Tom Select, and for django-tomselect's
+# script, which carries its own copy. The tests answer both from files.
+TOM_SELECT_ORIGIN = "https://cdn.jsdelivr.net"
+TOM_SELECT_URL = (
+    f"{TOM_SELECT_ORIGIN}/npm/tom-select@2.5.2/dist/js/tom-select.complete.min.js"
+)
+DJANGO_TOMSELECT_URL = "/static/django_tomselect/js/django-tomselect.min.js"
 
 
 class GroupAutocomplete(AutocompleteModelView):
@@ -111,6 +122,42 @@ class PartialDatePage(TemplateView):
         )
 
 
+@method_decorator(csrf_exempt, name="dispatch")
+class ChoicesPage(TemplateView):
+    """A page of Tom Select widgets, which answers a post with the entries it got."""
+
+    template_name = "tests/tomselect_page.html"
+    tomselect_url = TOM_SELECT_URL
+    copies = 1
+    policy = ""
+    foreign = False
+    refused = False
+
+    def get_context_data(self, **kwargs):
+        """Draw the form, with its initial values taken from the query string."""
+        return super().get_context_data(
+            form=TomSelectPageForm(initial=self.request.GET.dict()),
+            foreign=TomSelectForm() if self.foreign else None,
+            line=TomSelectLineFormSet().empty_form,
+            dialog=TomSelectDialogForm(),
+            tomselect_url=self.tomselect_url,
+            copies=range(self.copies),
+            refused=self.refused,
+            **kwargs,
+        )
+
+    def render_to_response(self, context, **response_kwargs):
+        """State the page's Content-Security-Policy, where it has one."""
+        response = super().render_to_response(context, **response_kwargs)
+        if self.policy:
+            response["Content-Security-Policy"] = self.policy
+        return response
+
+    def post(self, request, *args, **kwargs):
+        """Return each entry of the post as JSON."""
+        return JsonResponse({name: request.POST.getlist(name) for name in request.POST})
+
+
 urlpatterns = [
     *demo_urlpatterns,
     path("autocomplete/groups/", GroupAutocomplete.as_view(), name="ac-groups"),
@@ -134,5 +181,36 @@ urlpatterns = [
         "masked/strict-policy/",
         MaskedPage.as_view(policy=f"script-src 'self' {IMASK_ORIGIN}"),
         name="masked-strict",
+    ),
+    path("choices-page/", ChoicesPage.as_view(), name="choices-page"),
+    path(
+        "choices-page/three-copies/",
+        ChoicesPage.as_view(copies=3),
+        name="choices-page-copies",
+    ),
+    path(
+        "choices-page/without-tom-select/",
+        ChoicesPage.as_view(tomselect_url=None),
+        name="choices-page-bare",
+    ),
+    path(
+        "choices-page/django-tomselect/",
+        ChoicesPage.as_view(tomselect_url=DJANGO_TOMSELECT_URL),
+        name="choices-page-django-tomselect",
+    ),
+    path(
+        "choices-page/strict-policy/",
+        ChoicesPage.as_view(policy=f"script-src 'self' {TOM_SELECT_ORIGIN}"),
+        name="choices-page-strict",
+    ),
+    path(
+        "choices-page/with-django-tomselect-field/",
+        ChoicesPage.as_view(foreign=True),
+        name="choices-page-foreign",
+    ),
+    path(
+        "choices-page/with-refused-select/",
+        ChoicesPage.as_view(refused=True),
+        name="choices-page-refused",
     ),
 ]

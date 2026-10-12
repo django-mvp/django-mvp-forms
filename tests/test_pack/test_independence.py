@@ -996,6 +996,7 @@ class TestDistributedFiles:
             "mvp_forms/imask.js",
             "mvp_forms/partial-date.js",
             "mvp_forms/tomselect.css",
+            "mvp_forms/tomselect.js",
         ]
         assert [path for path in PACKAGE.rglob("static") if path.is_dir()] == [
             PACKAGE / "static"

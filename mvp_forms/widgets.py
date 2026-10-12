@@ -1,7 +1,9 @@
-"""Widgets that put an IMask input mask on a text input.
+"""Widgets for IMask input masks and for Tom Select controls.
 
-Each widget writes its options on the input as JSON in ``data-imask``, and the
-script named in its media hands them to IMask. The host project loads IMask.
+Each mask widget writes its options on the input as JSON in ``data-imask``, and
+the script named in its media hands them to IMask. A Tom Select widget writes its
+settings on the select as JSON in ``data-tom-select``, and its script starts a
+Tom Select control. The host project loads IMask and Tom Select.
 """
 
 import datetime
@@ -11,6 +13,7 @@ from decimal import Decimal
 
 from django import forms
 from django.utils.dates import MONTHS
+from django.utils.functional import Promise
 from django.utils.translation import gettext_lazy as _
 
 
@@ -776,3 +779,108 @@ class PartialDateSelect(PartialDateInput):
             *((year, year) for year in self.years(held)),
         ]
         return super().get_context(name, value, attrs)
+
+
+class TomSelect(forms.Select):
+    """A single select the script turns into a Tom Select control.
+
+    The select is drawn as Django draws it, holding every choice of its field.
+    The attribute ``data-tom-select`` marks it for the script named in the
+    media, and holds the settings stated as JSON.
+    """
+
+    class Media:
+        js = ["mvp_forms/tomselect.js"]
+
+    def __init__(self, attrs=None, choices=(), *, placeholder=None, clear_button=None):
+        """Keep the settings that were stated.
+
+        Args:
+            attrs: HTML attributes for the select.
+            choices: The choices to draw as options.
+            placeholder: Text shown while the control holds no value. A lazy
+                translation is read when the select is drawn.
+            clear_button: ``True`` to add a button that empties the control.
+
+        Raises:
+            ValueError: A setting holds a value that cannot be right. The
+                message names the setting.
+        """
+        if placeholder is not None and not isinstance(placeholder, Promise):
+            Check.text("placeholder", placeholder)
+        if clear_button is not None:
+            Check.one_of("clear_button", clear_button, (True, False))
+        super().__init__(attrs, choices)
+        self.placeholder = placeholder
+        self.clear_button = clear_button
+
+    def control_settings(self):
+        """Return the settings that were stated, under Tom Select's own names."""
+        settings = {}
+        if self.placeholder is not None:
+            settings["placeholder"] = str(self.placeholder)
+        if self.clear_button:
+            settings["plugins"] = ["clear_button"]
+        return settings
+
+    def build_attrs(self, base_attrs, extra_attrs=None):
+        """Add the settings to the select's attributes."""
+        attrs = super().build_attrs(base_attrs, extra_attrs)
+        attrs["data-tom-select"] = json.dumps(self.control_settings())
+        return attrs
+
+
+class TomSelectMultiple(TomSelect, forms.SelectMultiple):
+    """A multiple select the script turns into a Tom Select control.
+
+    It takes what ``TomSelect`` takes, and a button on each chosen value and
+    the largest number of values that may be chosen.
+    """
+
+    def __init__(
+        self,
+        attrs=None,
+        choices=(),
+        *,
+        placeholder=None,
+        clear_button=None,
+        remove_button=None,
+        max_items=None,
+    ):
+        """Keep the settings that were stated.
+
+        Args:
+            attrs: HTML attributes for the select.
+            choices: The choices to draw as options.
+            placeholder: Text shown while the control holds no value. A lazy
+                translation is read when the select is drawn.
+            clear_button: ``True`` to add a button that empties the control.
+            remove_button: ``True`` to add a button to each chosen value.
+            max_items: The largest number of values that may be chosen, a whole
+                number above zero. ``1`` makes Tom Select draw the control as a
+                single one, while the field still receives a list.
+
+        Raises:
+            ValueError: A setting holds a value that cannot be right. The
+                message names the setting.
+        """
+        if remove_button is not None:
+            Check.one_of("remove_button", remove_button, (True, False))
+        if max_items is not None:
+            Check.whole_number("max_items", max_items)
+            if max_items < 1:
+                raise ValueError(f"max_items must be above zero, not {max_items!r}.")
+        super().__init__(
+            attrs, choices, placeholder=placeholder, clear_button=clear_button
+        )
+        self.remove_button = remove_button
+        self.max_items = max_items
+
+    def control_settings(self):
+        """Return the settings that were stated, under Tom Select's own names."""
+        settings = super().control_settings()
+        if self.remove_button:
+            settings.setdefault("plugins", []).append("remove_button")
+        if self.max_items is not None:
+            settings["maxItems"] = self.max_items
+        return settings

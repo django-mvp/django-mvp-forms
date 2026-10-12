@@ -1,0 +1,122 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  <c-section title="Try it" icon="tomselect">
+    <c-text>
+      A text input, a single choice field drawn by <code>TomSelect</code> and a multiple
+      choice field drawn by <code>TomSelectMultiple</code>. The options are written into
+      the page with the form, and no view answers for them. The single field is optional
+      and the multiple field is required. Submit the form and the page shows what it
+      cleaned to.
+    </c-text>
+    {% crispy form %}
+  </c-section>
+  {% if cleaned %}
+    <c-section title="What the form cleaned to" level="3">
+      <ul id="{{ prefix }}-cleaned">
+        {% for item in cleaned %}
+          <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
+        {% endfor %}
+      </ul>
+    </c-section>
+  {% endif %}
+  <c-section title="Beside a stock select and a django-tomselect control" level="3">
+    <c-text>
+      The same six topics in a stock select and in each widget, then a control
+      django-tomselect builds from a view, first for one value and then for several. This
+      page loads django-tomselect's script, so one copy of Tom Select serves both kinds
+      of control, and one stylesheet draws them.
+    </c-text>
+    {% crispy comparison %}
+  </c-section>
+  <c-section title="Settings" level="3">
+    <c-text>
+      Each setting is a named argument of the widget. Both take a placeholder and a
+      button that clears the control. The multiple widget also takes a button on each
+      chosen value and the largest number of values. Here that number is three.
+    </c-text>
+    {% crispy settings_form %}
+  </c-section>
+  <c-section title="Groups and an unavailable option" level="3">
+    <c-text>
+      Choices written in groups are listed under their headings, and an option that sits
+      outside every group is listed with none. The multiple field uses a subclass of
+      <code>TomSelectMultiple</code> that draws one option with the
+      <code>disabled</code> attribute, so it is listed and cannot be chosen.
+    </c-text>
+    {% crispy groups_form %}
+  </c-section>
+  <c-section title="In a formset" level="3">
+    <c-text>
+      A sample added in the browser holds a control with no script written for it. The
+      page keeps the formset's empty form in a <code>&lt;template&gt;</code>, replaces
+      its prefix and inserts the row. A row is never made by copying one whose control
+      has started.
+    </c-text>
+    <div id="{{ lines.prefix }}-formset">
+      {% crispy lines lines_helper %}
+    </div>
+    <template id="{{ lines.prefix }}-line">{% crispy line lines_helper %}</template>
+    <c-button type="button" text="Add a sample" data-add-line="{{ lines.prefix }}" />
+  </c-section>
+  <c-section title="In a modal, a tab and an accordion" level="3">
+    <c-text>
+      The controls are started while the modal is closed, while the tab is not the one
+      shown and while the group is shut, and they work once they are in view.
+    </c-text>
+    <c-button type="button" text="Open the modal" onclick="document.getElementById('{{ modal_form.dialog_id }}').showModal()" />
+    {% crispy modal_form %}
+    {% crispy containers_form %}
+  </c-section>
+  <c-section title="In every state" level="3">
+    <c-text>
+      The field in the same state. No form from here down posts anywhere.
+    </c-text>
+    {% for state in states %}
+      <c-section :title="state.title" level="4">
+        {% crispy state.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Sizes" level="3">
+    <c-text>
+      The control takes the size stated for the form, as a stock select does.
+    </c-text>
+    {% for size in sizes %}
+      <c-section :title="size.title" level="4">
+        {% crispy size.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-section title="Colours" level="3">
+    {% for color in colors %}
+      <c-section :title="color.title" level="4">
+        {% crispy color.form %}
+      </c-section>
+    {% endfor %}
+  </c-section>
+  <c-text>
+    <c-link href="{% url 'tom-select-widgets-standalone' %}" text="The same page without django-mvp" />
+  </c-text>
+{% endblock page.content %}
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    // This page's own "Add a sample" button.
+    document.addEventListener("click", function (event) {
+      const button = event.target.closest("[data-add-line]");
+      if (!button) return;
+      const prefix = button.dataset.addLine;
+      const total = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
+      const rows = document.querySelectorAll("#" + prefix + "-formset tbody tr");
+      const row = document.getElementById(prefix + "-line").content.querySelector("tbody tr").cloneNode(true);
+      row.querySelectorAll("*").forEach(function (node) {
+        Array.from(node.attributes).forEach(function (attribute) {
+          attribute.value = attribute.value.replace("__prefix__", total.value);
+        });
+      });
+      rows[rows.length - 1].after(row);
+      total.value = Number(total.value) + 1;
+    });
+  </script>
+{% endblock extra_js %}

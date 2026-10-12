@@ -3,8 +3,11 @@
 # Everything in the demo fails quietly: an unresolvable component renders empty
 # and a menu entry whose URL will not resolve is dropped from the tree.
 
+import base64
+import hashlib
 import json
 import re
+from pathlib import Path
 
 import pytest
 from django.conf import settings
@@ -31,6 +34,7 @@ from demo.partial_date_forms import (
     PartialDateModalForm,
     PartialDateSizesForm,
 )
+from demo.tom_select_widgets_views import TomSelectWidgetsMixin
 from demo.tomselect_forms import SampleFormSet, country_field
 from demo.tomselect_views import TomSelectMixin
 from mvp_forms.choices import Modifiers
@@ -3266,7 +3270,11 @@ def links_the_tomselect_stylesheet(page):
 
 
 # The pages of the sidebar's group for supported packages, in its order.
-THIRD_PARTY_PAGES = [reverse_lazy("tomselect"), reverse_lazy("countries")]
+THIRD_PARTY_PAGES = [
+    reverse_lazy("tomselect"),
+    reverse_lazy("countries"),
+    reverse_lazy("tom-select-widgets"),
+]
 
 
 class TomSelectPageContract:
@@ -4051,3 +4059,303 @@ class TestStandaloneCountriesPage(CountriesPageContract):
     def test_it_links_back_to_the_shell_page(self, open_page):
         page = open_page(self.url_name)
         assert page.find("a", href=reverse("countries")) is not None
+
+
+TOM_SELECT_WIDGETS_PREFIX = "tom-select-widgets"
+TOM_SELECT_WIDGETS_SUBMIT = {f"{TOM_SELECT_WIDGETS_PREFIX}-submit": "Submit"}
+TOM_SELECT_WIDGETS_POSTED = {
+    **TOM_SELECT_WIDGETS_SUBMIT,
+    f"{TOM_SELECT_WIDGETS_PREFIX}-topics": ["geology", "volcanology"],
+}
+# The prefix of each form the page draws in a state, at a size and in a colour.
+TOM_SELECT_WIDGETS_SECTIONS = [
+    *(f"state-{state}" for state, _ in TomSelectWidgetsMixin.states),
+    *(f"size-{name}" for name in Modifiers.names("size", "select")),
+    *(f"color-{name}" for name in Modifiers.names("color", "select")),
+]
+TOM_SELECT_COPY = Path(__file__).parent / "data" / "tom-select-2.5.2.complete.min.js"
+
+
+class TomSelectWidgetsPageContract:
+    url_name = ""
+
+    def test_the_form_draws_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        drawn = page.find("select", id=f"id_{TOM_SELECT_WIDGETS_PREFIX}-topics")
+
+        assert drawn is not None
+        assert drawn.has_attr("multiple")
+        assert drawn.has_attr("data-tom-select")
+
+    def test_each_state_size_and_colour_draws_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        missing = [
+            prefix
+            for prefix in TOM_SELECT_WIDGETS_SECTIONS
+            if page.find(
+                "select", id=f"id_{prefix}-topics", attrs={"data-tom-select": True}
+            )
+            is None
+        ]
+
+        assert missing == []
+
+    def test_the_form_draws_the_single_widgets_select_beside_the_multiple_one(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        drawn = page.find("select", id=f"id_{TOM_SELECT_WIDGETS_PREFIX}-topic")
+
+        assert drawn is not None
+        assert not drawn.has_attr("multiple")
+        assert drawn.has_attr("data-tom-select")
+
+    def test_each_state_size_and_colour_draws_the_single_widgets_select(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        missing = [
+            prefix
+            for prefix in TOM_SELECT_WIDGETS_SECTIONS
+            if page.find(
+                "select", id=f"id_{prefix}-topic", attrs={"data-tom-select": True}
+            )
+            is None
+        ]
+
+        assert missing == []
+
+    def test_the_settings_form_draws_each_setting_on_the_select(self, open_page):
+        page = open_page(self.url_name)
+
+        single = page.find("select", id="id_settings-topic")
+        multiple = page.find("select", id="id_settings-topics")
+
+        assert json.loads(single["data-tom-select"]).keys() == {
+            "placeholder",
+            "plugins",
+        }
+        assert json.loads(multiple["data-tom-select"]).keys() == {
+            "placeholder",
+            "plugins",
+            "maxItems",
+        }
+        assert json.loads(multiple["data-tom-select"])["plugins"] == [
+            "clear_button",
+            "remove_button",
+        ]
+
+    def test_the_groups_form_draws_grouped_options_and_one_unavailable_option(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        single = page.find("select", id="id_groups-topic")
+        multiple = page.find("select", id="id_groups-topics")
+
+        assert single.find("optgroup") is not None
+        assert multiple.find("optgroup") is not None
+        assert len(multiple.find_all("option", attrs={"disabled": True})) == 1
+
+    def test_a_post_shows_the_single_value_the_form_cleaned_to(self, open_page):
+        page = open_page(
+            self.url_name,
+            {
+                **TOM_SELECT_WIDGETS_POSTED,
+                f"{TOM_SELECT_WIDGETS_PREFIX}-topic": "seismology",
+            },
+        )
+
+        shown = page.find(id=f"{TOM_SELECT_WIDGETS_PREFIX}-cleaned-topic")
+
+        assert shown.get_text(strip=True) == "seismology"
+
+    def test_a_post_with_the_empty_choice_cleans_the_single_field_to_no_value(
+        self, open_page
+    ):
+        page = open_page(
+            self.url_name,
+            {**TOM_SELECT_WIDGETS_POSTED, f"{TOM_SELECT_WIDGETS_PREFIX}-topic": ""},
+        )
+
+        shown = page.find(id=f"{TOM_SELECT_WIDGETS_PREFIX}-cleaned-topic")
+
+        assert shown.get_text(strip=True) == ""
+
+    def test_a_get_shows_nothing_cleaned(self, open_page):
+        page = open_page(self.url_name)
+
+        assert page.find(id=f"{TOM_SELECT_WIDGETS_PREFIX}-cleaned") is None
+
+    def test_a_post_shows_the_values_the_form_cleaned_to(self, open_page):
+        page = open_page(self.url_name, TOM_SELECT_WIDGETS_POSTED)
+
+        shown = page.find(id=f"{TOM_SELECT_WIDGETS_PREFIX}-cleaned-topics")
+
+        assert shown.get_text(strip=True) == "geology volcanology"
+
+    def test_a_post_with_no_topic_comes_back_with_its_error(self, open_page):
+        page = open_page(self.url_name, TOM_SELECT_WIDGETS_SUBMIT)
+
+        assert page.find(id=f"id_{TOM_SELECT_WIDGETS_PREFIX}-topics_error") is not None
+        assert page.find(id=f"{TOM_SELECT_WIDGETS_PREFIX}-cleaned") is None
+
+    def test_the_empty_form_of_the_formset_is_kept_in_a_template(self, open_page):
+        page = open_page(self.url_name)
+
+        template = page.find("template", id="samples-line")
+        row = template.find("select", id="id_samples-__prefix__-topics")
+
+        assert row is not None
+        assert row.has_attr("data-tom-select")
+
+    def test_the_rows_of_the_formset_hold_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        rows = page.find(id="samples-formset").find_all("select", multiple=True)
+
+        assert [row["id"] for row in rows] == [
+            "id_samples-0-topics",
+            "id_samples-1-topics",
+        ]
+        assert all(row.has_attr("data-tom-select") for row in rows)
+
+    def test_a_button_adds_a_row_from_the_empty_form(self, open_page):
+        page = open_page(self.url_name)
+
+        assert page.find(attrs={"data-add-line": "samples"}) is not None
+
+    def test_the_modal_holds_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        dialog = page.find("dialog", id="modal-dialog")
+
+        assert dialog.find("select", id="id_modal-topics").has_attr("data-tom-select")
+
+    def test_a_tab_holds_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        tabs = page.find(id="containers-tabs")
+
+        assert tabs.find("select", id="id_containers-topic").has_attr("data-tom-select")
+
+    def test_an_accordion_group_holds_the_widgets_select(self, open_page):
+        page = open_page(self.url_name)
+
+        groups = page.find(id="containers-groups")
+
+        assert groups.find("select", id="id_containers-topics").has_attr(
+            "data-tom-select"
+        )
+
+    def test_no_id_repeats(self, open_page):
+        page = open_page(self.url_name)
+        ids = [element["id"] for element in page.find_all(id=True)]
+
+        assert len(ids) == len(set(ids))
+
+
+class TestTomSelectWidgetsPage(TomSelectWidgetsPageContract):
+    url_name = "tom-select-widgets"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_lists_it_in_the_group_of_the_supported_packages(
+        self, open_page
+    ):
+        nav = open_page("overview").find(attrs={"aria-label": "Main navigation"})
+        entries = [
+            link["href"] if (link := item.find("a")) else None
+            for item in nav.find_all("li", recursive=False)
+        ]
+
+        assert entries.index(reverse("tom-select-widgets")) == (
+            entries.index(reverse("countries")) + 1
+        )
+
+    def test_it_holds_a_django_tomselect_control_and_a_stock_select_beside_its_own(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        stock = page.find("select", id="id_comparison-stock")
+        mine = page.find("select", id="id_comparison-widget")
+        foreign = page.find("select", id="id_comparison-django")
+
+        assert stock is not None
+        assert not stock.has_attr("data-tom-select")
+        assert mine.has_attr("data-tom-select")
+        assert foreign is not None
+        assert not foreign.has_attr("data-tom-select")
+
+    def test_it_holds_each_kind_of_single_select_beside_the_multiple_ones(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        stock = page.find("select", id="id_comparison-stock_single")
+        mine = page.find("select", id="id_comparison-widget_single")
+        foreign = page.find("select", id="id_comparison-django_single")
+
+        assert stock is not None
+        assert not stock.has_attr("data-tom-select")
+        assert not stock.has_attr("multiple")
+        assert mine.has_attr("data-tom-select")
+        assert not mine.has_attr("multiple")
+        assert foreign is not None
+        assert not foreign.has_attr("data-tom-select")
+
+    def test_it_links_the_standalone_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("tom-select-widgets-standalone")) is not None
+
+
+class TestStandaloneTomSelectWidgetsPage(TomSelectWidgetsPageContract):
+    url_name = "tom-select-widgets-standalone"
+
+    def test_it_carries_none_of_the_shells_navigation(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is None
+
+    def test_it_links_back_to_the_shell_page(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find("a", href=reverse("tom-select-widgets")) is not None
+
+    def test_it_loads_tom_select_from_the_cdn_with_the_hash_of_the_file_served(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        script = page.find(
+            "script", src=re.compile(r"cdn\.jsdelivr\.net/npm/tom-select@2")
+        )
+
+        digest = base64.b64encode(
+            hashlib.sha384(TOM_SELECT_COPY.read_bytes()).digest()
+        ).decode()
+        assert script["integrity"] == f"sha384-{digest}"
+        assert script["crossorigin"] == "anonymous"
+
+    def test_it_loads_the_default_stylesheet_from_the_cdn_with_a_hash(self, open_page):
+        page = open_page(self.url_name)
+
+        link = page.find(
+            "link", href=re.compile(r"cdn\.jsdelivr\.net/npm/tom-select@2")
+        )
+
+        assert link.has_attr("integrity")
+        assert link["crossorigin"] == "anonymous"
+
+    def test_it_loads_the_packages_stylesheet_and_no_django_tomselect_script(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        assert links_the_tomselect_stylesheet(page)
+        assert page.find("script", src=re.compile("django-tomselect")) is None
