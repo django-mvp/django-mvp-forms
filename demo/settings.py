@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     # django-mvp and listed below it: both ship an `icon` component, and the
     # one in `mvp` must be found first.
     "daisy_cotton",
+    # Serves the pages under demo/docs inside the shell.
+    "mvp_sphinx",
     "easy_icons",
     "crispy_forms",
     "flex_menu",
@@ -109,6 +111,10 @@ LOGIN_URL = "account_login"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
+# A documentation page shows a page of this site in a frame, and Django's
+# default refuses every frame.
+X_FRAME_OPTIONS = "SAMEORIGIN"
+
 CRISPY_ALLOWED_TEMPLATE_PACKS = ["daisyui"]
 CRISPY_TEMPLATE_PACK = "daisyui"
 
@@ -166,7 +172,7 @@ EASY_ICONS = {
 MVP_CONFIG = {
     "layout": {
         "sidebar": {
-            "title": "django-mvp-forms",
+            "title": "MVP Forms",
         },
     },
     "theme": {

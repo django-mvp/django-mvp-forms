@@ -1,0 +1,9 @@
+{% extends "demo/examples/base.html" %}
+{% load crispy_forms_tags %}
+{% block example %}
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit" class="btn btn-primary">Send</button>
+  </form>
+{% endblock example %}
