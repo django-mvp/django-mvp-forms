@@ -17,6 +17,8 @@ from django.template.loader import get_template
 from django.urls import reverse, reverse_lazy
 
 from demo.autocompletes import ROCKS, UNGROUPED_ROCKS
+from demo.counted_forms import DATASETS
+from demo.counted_views import CountedSelectView
 from demo.countries_views import CountriesMixin
 from demo.forms import (
     DAISYUI_VERSION,
@@ -4359,3 +4361,122 @@ class TestStandaloneTomSelectWidgetsPage(TomSelectWidgetsPageContract):
 
         assert links_the_tomselect_stylesheet(page)
         assert page.find("script", src=re.compile("django-tomselect")) is None
+
+
+COUNTED_FIELDS = ("disciplines", "countries", "datasets")
+COUNTED_DRAWINGS = ("plain", "tomselect")
+COUNTED_STATES = [state for state, _ in CountedSelectView.states]
+
+
+def counted_post(drawing, **values):
+    return {
+        f"{drawing}-submit": "Submit",
+        **{f"{drawing}-{name}": value for name, value in values.items()},
+    }
+
+
+class TestCountedSelectPage:
+    url_name = "counted-select"
+
+    def test_the_shell_wraps_it(self, open_page):
+        page = open_page(self.url_name)
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    def test_the_sidebar_lists_it_next_after_the_other_custom_field(self, open_page):
+        nav = open_page("overview").find(attrs={"aria-label": "Main navigation"})
+        entries = [
+            link["href"] if (link := item.find("a")) else None
+            for item in nav.find_all("li", recursive=False)
+        ]
+
+        assert entries.index(reverse(self.url_name)) == (
+            entries.index(reverse("partial-dates")) + 1
+        )
+
+    def test_the_drawing_with_no_script_holds_a_checkbox_for_every_option(
+        self, open_page
+    ):
+        page = open_page(self.url_name)
+
+        boxes = page.find(id="id_plain-datasets").find_all(
+            "input", type="checkbox", attrs={"name": "plain-datasets"}
+        )
+
+        assert [box["value"] for box in boxes] == DATASETS
+
+    def test_its_button_opens_the_list_and_is_named_by_the_count(self, open_page):
+        control = open_page(self.url_name).find(id="id_plain-disciplines")
+        button = control.find("button")
+
+        assert control.find(id=button["popovertarget"]).has_attr("popover")
+        assert control.find(id=button["aria-labelledby"]) is not None
+
+    def test_its_count_follows_the_checkboxes_it_counts(self, open_page):
+        control = open_page(self.url_name).find(id="id_plain-disciplines")
+        count = control.find(id="id_plain-disciplines_count")
+
+        assert count.find_previous("input", type="checkbox") is not None
+        assert count.find_next("input", attrs={"name": "plain-disciplines"}) is None
+
+    def test_the_tom_select_drawing_holds_a_select_for_every_field(self, open_page):
+        page = open_page(self.url_name)
+
+        for name in COUNTED_FIELDS:
+            assert page.find("select", id=f"id_tomselect-{name}") is not None
+
+    @pytest.mark.parametrize("state", COUNTED_STATES)
+    def test_each_state_is_drawn_both_ways(self, open_page, state):
+        page = open_page(self.url_name)
+
+        assert page.find(id=f"id_plain-{state}-disciplines") is not None
+        assert page.find("select", id=f"id_tomselect-{state}-disciplines") is not None
+
+    def test_the_disabled_state_disables_the_button_and_every_checkbox(self, open_page):
+        control = open_page(self.url_name).find(id="id_plain-disabled-disciplines")
+
+        assert control.find("button").has_attr("disabled")
+        assert all(
+            box.has_attr("disabled")
+            for box in control.find_all("input", type="checkbox")
+        )
+
+    def test_a_get_shows_nothing_cleaned(self, open_page):
+        page = open_page(self.url_name)
+
+        for drawing in COUNTED_DRAWINGS:
+            assert page.find(id=f"{drawing}-cleaned") is None
+
+    @pytest.mark.parametrize("drawing", COUNTED_DRAWINGS)
+    def test_a_post_shows_what_that_form_cleaned_to(self, open_page, drawing):
+        page = open_page(
+            self.url_name,
+            counted_post(
+                drawing, disciplines=["Geology", "Tectonics"], countries=["Germany"]
+            ),
+        )
+
+        shown = {
+            name: page.find(id=f"{drawing}-cleaned-{name}").get_text(strip=True)
+            for name in COUNTED_FIELDS
+        }
+        assert shown == {
+            "disciplines": "Geology, Tectonics",
+            "countries": "Germany",
+            "datasets": "—",
+        }
+
+    @pytest.mark.parametrize("drawing", COUNTED_DRAWINGS)
+    def test_a_post_leaves_the_other_form_as_it_was(self, open_page, drawing):
+        page = open_page(self.url_name, counted_post(drawing, disciplines=["Geology"]))
+        other = next(name for name in COUNTED_DRAWINGS if name != drawing)
+
+        assert page.find(id=f"{other}-cleaned") is None
+
+    @pytest.mark.parametrize("drawing", COUNTED_DRAWINGS)
+    def test_a_post_with_no_discipline_comes_back_with_its_error(
+        self, open_page, drawing
+    ):
+        page = open_page(self.url_name, counted_post(drawing))
+
+        assert page.find(id=f"id_{drawing}-disciplines_error") is not None
+        assert page.find(id=f"{drawing}-cleaned") is None

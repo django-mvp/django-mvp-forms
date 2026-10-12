@@ -1,0 +1,18 @@
+{% load i18n %}
+{# Checkboxes in a popover under a button. The count is drawn by counted-select.css. #}
+{% with id=widget.attrs.id %}
+  <div id="{{ id }}" class="counted-select">
+    <button type="button" class="select w-full{% if 'error' in widget.attrs.class %} select-error{% endif %}" popovertarget="{{ id }}_list" style="anchor-name: --{{ id }}" aria-haspopup="true" aria-labelledby="{{ id }}_count"{% if widget.attrs.disabled %} disabled{% endif %}></button>
+    <div id="{{ id }}_list" class="counted-select-list" popover style="position-anchor: --{{ id }}">
+      {% for group_name, options, group_index in widget.optgroups %}
+        {% for option in options %}
+          <label class="counted-select-option">
+            <input type="checkbox" name="{{ option.name }}" value="{{ option.value|stringformat:'s' }}"{% if option.attrs.id %} id="{{ option.attrs.id }}"{% endif %}{% if option.attrs.checked %} checked{% endif %}{% if option.attrs.disabled %} disabled{% endif %}>
+            <span>{{ option.label }}</span>
+          </label>
+        {% endfor %}
+      {% endfor %}
+    </div>
+    <span id="{{ id }}_count" class="counted-select-count" data-none="{% translate 'Nothing selected' %}" data-some="{% translate 'selected' %}"></span>
+  </div>
+{% endwith %}

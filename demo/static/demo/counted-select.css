@@ -1,0 +1,210 @@
+/* A multiple select that shows how many options are chosen and ticks each
+   chosen option in its list. Two drawings share the option and the count. */
+
+/* ---- Drawn with no script: checkboxes in a popover under a button ---- */
+
+.counted-select {
+  position: relative;
+  counter-reset: counted;
+}
+
+.counted-select-option input:checked {
+  counter-increment: counted;
+}
+
+/* The count sits over the button. It follows the list in the page, which is
+   what lets it read the counter the checkboxes have added to. */
+.counted-select-count {
+  position: absolute;
+  inset-block: 0;
+  inset-inline: 0.75rem 2rem;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.counted-select-count::before {
+  content: attr(data-none);
+  opacity: 0.5;
+}
+
+.counted-select:has(input:checked) .counted-select-count::before {
+  content: counter(counted) " " attr(data-some);
+  opacity: 1;
+}
+
+.counted-select:has(button:disabled) .counted-select-count {
+  opacity: 0.4;
+}
+
+.counted-select-list {
+  position: fixed;
+  inset: auto;
+  top: anchor(bottom);
+  left: anchor(left);
+  width: anchor-size(width);
+  position-try-fallbacks: flip-block;
+  max-height: min(18rem, 60dvh);
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border: var(--border) solid var(--color-base-200);
+  border-radius: var(--radius-box);
+  background: var(--color-base-100);
+  box-shadow: 0 8px 16px -6px
+    color-mix(in oklab, var(--color-neutral) 30%, transparent);
+  color: var(--color-base-content);
+  overflow-y: auto;
+}
+
+/* A closed popover is not drawn at all, and a checkbox that is not drawn adds
+   nothing to a counter. So the closed list stays in the page, unseen. */
+.counted-select-list:not(:popover-open) {
+  display: block;
+  visibility: hidden;
+  max-height: 0;
+  padding: 0;
+  border: 0 none;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.counted-select-option {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem;
+  border-radius: var(--radius-field);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition: background-color 0.2s cubic-bezier(0, 0, 0.2, 1);
+}
+
+.counted-select-option:hover,
+.counted-select-option:has(input:focus-visible) {
+  background-color: color-mix(in oklab, var(--color-base-content) 10%, transparent);
+}
+
+.counted-select-option:has(input:focus-visible) {
+  outline: 2px solid var(--color-base-content);
+  outline-offset: -2px;
+}
+
+/* ---- The tick, in both drawings ---- */
+
+.counted-select-option input,
+html:root .ts-wrapper.plugin-checkbox_options .ts-dropdown .option input {
+  flex: none;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  appearance: none;
+  outline: none;
+  cursor: inherit;
+}
+
+.counted-select-option input:checked::before,
+html:root .ts-wrapper.plugin-checkbox_options .ts-dropdown .option input:checked::before {
+  content: "\2713";
+  line-height: 1;
+}
+
+/* ---- Drawn by Tom Select, with its checkbox_options plugin ---- */
+
+html:root .ts-wrapper.multi.plugin-checkbox_options {
+  --counted-none: "Nothing selected";
+  --counted-some: "selected";
+}
+
+html:root .ts-wrapper.multi.plugin-checkbox_options .ts-control {
+  counter-reset: counted;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* With the search box in the list, the control itself takes the focus. The
+   wrapper already draws the ring. */
+html:root .ts-wrapper.multi.plugin-checkbox_options .ts-control:focus {
+  outline: none;
+}
+
+/* Each value stays in the page for a screen reader and adds one to the count. */
+html:root .ts-wrapper.multi.plugin-checkbox_options .ts-control > .item {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0 none;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  counter-increment: counted;
+}
+
+html:root .ts-wrapper.multi.plugin-checkbox_options .ts-control::after {
+  content: var(--counted-none);
+  opacity: 0.5;
+}
+
+html:root .ts-wrapper.multi.plugin-checkbox_options.has-items .ts-control::after {
+  content: counter(counted) " " var(--counted-some);
+  opacity: 1;
+}
+
+html:root .ts-wrapper.multi.plugin-checkbox_options.disabled .ts-control::after {
+  opacity: 0.4;
+}
+
+/* A chosen option is ticked, never filled. */
+html:root .ts-wrapper.plugin-checkbox_options .ts-dropdown .option {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+html:root .ts-wrapper.plugin-checkbox_options .ts-dropdown .option.selected:not(.active) {
+  background-color: transparent;
+  color: inherit;
+}
+
+html:root .ts-wrapper.plugin-checkbox_options .ts-dropdown .option.selected.active {
+  background-color: color-mix(in oklab, var(--color-base-content) 10%, transparent);
+  color: inherit;
+}
+
+/* The search box, which the dropdown_input plugin moves into the list. */
+html:root .ts-wrapper.plugin-checkbox_options .items-placeholder {
+  display: none !important;
+}
+
+html:root .ts-dropdown.plugin-dropdown_input .dropdown-input-wrap {
+  padding: 0.5rem 0.5rem 0;
+}
+
+html:root .ts-dropdown.plugin-dropdown_input .dropdown-input {
+  display: block;
+  width: 100%;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem;
+  border: var(--border) solid
+    color-mix(in oklab, var(--color-base-content) 20%, transparent);
+  border-radius: var(--radius-field);
+  background: var(--color-base-100);
+  box-shadow: none;
+  color: inherit;
+  font-size: inherit;
+  line-height: 1.25;
+}
+
+html:root .ts-dropdown.plugin-dropdown_input .dropdown-input:focus-visible {
+  border-color: var(--color-base-content);
+  outline: 2px solid var(--color-base-content);
+  outline-offset: 2px;
+}
+
+html:root .ts-dropdown.plugin-dropdown_input .dropdown-input::placeholder {
+  color: var(--color-base-content);
+  opacity: 0.5;
+}

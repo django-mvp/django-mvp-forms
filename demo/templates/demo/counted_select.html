@@ -1,0 +1,69 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags static %}
+{% block page.content %}
+  <link rel="stylesheet" href="{% static 'demo/counted-select.css' %}" />
+  <c-text>
+    One control drawn two ways. The control shows how many options are chosen, and the
+    list ticks each one. Submit either form and the page shows what it cleaned to.
+  </c-text>
+  <div class="grid gap-6 lg:grid-cols-2">
+    <c-section title="With no script" icon="tomselect">
+      <c-text>
+        Checkboxes in a popover. HTML and CSS only.
+      </c-text>
+      <ul class="list-disc ps-5">
+        <li>For: no script and no third-party package.</li>
+        <li>For: Escape or a click outside closes the list.</li>
+        <li>
+          Against: a screen reader is not told the count. The number is drawn by a CSS
+          counter, which browsers leave out of the button's name, so the button reads
+          "selected" however many are chosen.
+        </li>
+        <li>Against: no search, so a long list is scrolled.</li>
+        <li>
+          Against: it needs a browser with the Popover API and CSS anchor positioning.
+        </li>
+      </ul>
+      {% crispy plain %}
+      {% if plain_cleaned %}
+        <ul id="plain-cleaned">
+          {% for item in plain_cleaned %}<li>{{ item.label }}: <span id="plain-cleaned-{{ item.name }}">{{ item.value }}</span></li>{% endfor %}
+        </ul>
+      {% endif %}
+    </c-section>
+    <c-section title="Tom Select" icon="tomselect">
+      <c-text>
+        Its checkbox options, with the search box moved into the list.
+      </c-text>
+      <ul class="list-disc ps-5">
+        <li>For: a screen reader is told each chosen option by name.</li>
+        <li>For: search, and options fetched from the server as you scroll or type.</li>
+        <li>For: a button that clears every choice.</li>
+        <li>For: no script beyond Tom Select's own. The count is the same CSS counter.</li>
+        <li>Against: it needs django-tomselect and an autocomplete view for each list.</li>
+        <li>
+          Against: Backspace in an empty search box removes the option chosen last.
+        </li>
+      </ul>
+      {% crispy tomselect %}
+      {% if tomselect_cleaned %}
+        <ul id="tomselect-cleaned">
+          {% for item in tomselect_cleaned %}<li>{{ item.label }}: <span id="tomselect-cleaned-{{ item.name }}">{{ item.value }}</span></li>{% endfor %}
+        </ul>
+      {% endif %}
+    </c-section>
+  </div>
+  <c-section title="In every state" level="3">
+    <c-text>
+      No script on the left, Tom Select on the right. None of these posts anywhere.
+    </c-text>
+    {% for state in states %}
+      <c-section :title="state.title" level="4">
+        <div class="grid gap-6 lg:grid-cols-2">
+          <div>{% crispy state.plain %}</div>
+          <div>{% crispy state.tomselect %}</div>
+        </div>
+      </c-section>
+    {% endfor %}
+  </c-section>
+{% endblock page.content %}
