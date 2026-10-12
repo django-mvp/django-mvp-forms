@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- In a Tom Select control that holds one value, the option already chosen is marked with a tick at the start of its row, as daisyUI's own select marks it, and is no longer filled with the neutral colour. This applies to django-tomselect's single controls as well as the package's `TomSelect`.
+- A chosen value shown as a tag keeps its padding at the end when it holds no button. django-tomselect's stylesheet removed it from every tag, so a tag without a remove button had its text against its edge.
+
 ### Added
 
 - A widget that draws a multiple choice field as a [Tom Select](https://tom-select.js.org/) control, `TomSelectMultiple`, in `mvp_forms.widgets`. You name it on a `MultipleChoiceField`, a `TypedMultipleChoiceField` or a `ModelMultipleChoiceField` in place of `SelectMultiple`, and the options are written into the page with the form, so no view and no URL answer for them. The widget draws Django's own select, marked with `data-tom-select`, and the package's script, `mvp_forms/tomselect.js`, which the widget names in the form's media, starts a Tom Select control on it once the page has loaded. The pack draws the select as it draws any select, with the size, colour and variant stated for the form or the field, and the control is drawn by `mvp_forms/tomselect.css`, the stylesheet already shipped for django-tomselect. The field receives what `SelectMultiple` hands it and validates as before. Tom Select is loaded by the host project: it is not a dependency and is not distributed, and a page that already loads django-tomselect's script needs no other copy. A page that does not load Tom Select draws and submits a stock multiple select. The widget writes no inline script, so a page whose policy forbids inline script still starts the control. The README's new section "Tom Select widgets" says what to load and what the script does.

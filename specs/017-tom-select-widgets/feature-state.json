@@ -172,6 +172,19 @@
               "tests/test_demo.py:4336"
             ]
           }
+        },
+        {
+          "id": "T013",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "uv run python /tmp/fs017-measure2.py (computed padding and ::before content read in Chrome on the demo page)"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/tomselect.css:185"
+            ]
+          }
         }
       ]
     },
@@ -205,6 +218,19 @@
               "mvp_forms/widgets.py:783",
               "mvp_forms/widgets.py:801",
               "mvp_forms/widgets.py:808"
+            ]
+          }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "commands": [
+              "uv run python /tmp/fs017-measure2.py (computed padding and ::before content read in Chrome on the demo page)"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/tomselect.css:185"
             ]
           }
         }

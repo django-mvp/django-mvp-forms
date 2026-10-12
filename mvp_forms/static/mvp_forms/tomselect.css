@@ -186,6 +186,12 @@ html:root .ts-wrapper.multi .ts-control > .item {
   white-space: normal;
 }
 
+/* django-tomselect's stylesheet takes the end padding off every tag, to make
+   room for a button. A tag that holds no button keeps its padding. */
+html:root .ts-wrapper.multi .ts-control > .item:not(:has(.remove, .update)) {
+  padding-inline-end: 0.5em !important;
+}
+
 /* The tag the keyboard is on. */
 html:root .ts-wrapper.multi .ts-control > .item.active {
   border-color: var(--color-neutral);
@@ -306,6 +312,28 @@ html:root .ts-dropdown .option.selected {
   color: var(--color-neutral-content);
 }
 
+/* A control that holds one value marks the option chosen with a tick at the
+   start, as daisyUI's own select does, and leaves room for it on the others. */
+html:root .ts-dropdown.single .option {
+  position: relative;
+  padding-inline-start: calc(0.25rem * var(--option-px, 3) + 1.5em);
+}
+
+html:root .ts-dropdown.single .option.selected {
+  background-color: transparent;
+  color: inherit;
+}
+
+html:root .ts-dropdown.single .option.selected.active {
+  background-color: color-mix(in oklab, var(--color-base-content) 10%, transparent);
+}
+
+html:root .ts-dropdown.single .option.selected::before {
+  content: "\2713" / "";
+  position: absolute;
+  inset-inline-start: calc(0.25rem * var(--option-px, 3));
+}
+
 html:root .ts-dropdown [data-disabled],
 html:root .ts-dropdown .option[aria-disabled="true"] {
   opacity: 0.5;
@@ -339,6 +367,14 @@ html:root .ts-dropdown .optgroup-header {
 
 html:root .ts-dropdown .optgroup .option {
   padding-inline-start: calc(0.25rem * var(--option-px, 3) + 0.75rem);
+}
+
+html:root .ts-dropdown.single .optgroup .option {
+  padding-inline-start: calc(0.25rem * var(--option-px, 3) + 0.75rem + 1.5em);
+}
+
+html:root .ts-dropdown.single .optgroup .option.selected::before {
+  inset-inline-start: calc(0.25rem * var(--option-px, 3) + 0.75rem);
 }
 
 html:root .ts-dropdown .optgroup + .optgroup,

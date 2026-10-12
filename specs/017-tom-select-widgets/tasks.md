@@ -263,3 +263,21 @@ worth closing before the merge.
 - The comment about every option being offered sits on the `maxOptions` line.
 - `plan.md` shows `TomSelectMultiple(TomSelect, forms.SelectMultiple)`, as built. `spec.md` reads
   `Status: Approved`.
+
+---
+
+## After the maintainer walked the pages
+
+### T012 — The chosen option of a single control is marked with a tick (US2)
+
+**Files**: `mvp_forms/static/mvp_forms/tomselect.css`, `CHANGELOG.md`
+
+- In the dropdown of a control that holds one value, the chosen option carries a tick at the
+  start of its row, as daisyUI's own select draws it, and is not filled. Appearance, so no test.
+
+### T013 — A tag with no button keeps its end padding (US1)
+
+**Files**: `mvp_forms/static/mvp_forms/tomselect.css`, `CHANGELOG.md`
+
+- django-tomselect's stylesheet removes the end padding of every tag. A tag that holds no button
+  gets it back. Appearance, so no test.
