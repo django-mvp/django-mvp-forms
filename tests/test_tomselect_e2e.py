@@ -6,6 +6,7 @@ from pathlib import Path
 import django_tomselect
 import pytest
 from django.urls import reverse
+from playwright.sync_api import expect
 
 from tests.urls import DJANGO_TOMSELECT_URL, TOM_SELECT_URL
 
@@ -208,7 +209,7 @@ class TestWhatTheControlHolds:
         field.click()
         field.press_sequentially("city")
 
-        assert page.locator("#id_cities-ts-dropdown .option").count() == 120
+        expect(page.locator("#id_cities-ts-dropdown .option")).to_have_count(120)
 
     def test_initial_values_are_held_when_the_control_starts(self, choices_page):
         page = choices_page(fruit="b")

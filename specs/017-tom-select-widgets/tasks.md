@@ -281,3 +281,11 @@ worth closing before the merge.
 
 - django-tomselect's stylesheet removes the end padding of every tag. A tag that holds no button
   gets it back. Appearance, so no test.
+
+### T014 — The long-list browser test waits for the dropdown (US1)
+
+**Files**: `tests/test_tomselect_e2e.py`
+
+- The test counted the options the moment it had typed, before Tom Select had drawn them, and
+  read none on a slower machine. It now waits for the count. It still fails when the script
+  stops lifting Tom Select's limit of 50.

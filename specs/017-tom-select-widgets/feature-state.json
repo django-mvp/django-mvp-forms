@@ -185,6 +185,22 @@
               "mvp_forms/static/mvp_forms/tomselect.css:185"
             ]
           }
+        },
+        {
+          "id": "T014",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_tomselect_e2e.py::TestWhatTheControlHolds::test_every_option_of_a_long_list_is_reachable_by_typing"
+            ],
+            "commands": [
+              "uv run pytest tests/test_tomselect_e2e.py -q"
+            ],
+            "code": [
+              "tests/test_tomselect_e2e.py:212"
+            ]
+          }
         }
       ]
     },
