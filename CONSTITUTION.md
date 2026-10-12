@@ -130,6 +130,9 @@ taking a queryset, a model method or property instead of a function taking an
 instance, a `Form` or `Serializer` method instead of a free validation
 function, a view method instead of a helper the view calls.
 
+**Django standards.** Where code lives in a Django codebase, and when a new abstraction is worth
+adding, is set out in [`docs/contributing/standards/django.md`](docs/contributing/standards/django.md).
+
 **Exceptions, stated rather than assumed.** A genuinely standalone pure
 function with no siblings. Framework-dictated module shapes: `conftest.py`
 fixtures, migrations, `urls.py`, `apps.py`, decorator-registered template tags
@@ -226,4 +229,4 @@ Read at planning and at review; applies to every change.
 
 ---
 
-**Version**: 2.2.0 | **Ratified**: 2026-10-03 | **Last Amended**: 2026-10-12
+**Version**: 2.3.0 | **Ratified**: 2026-10-03 | **Last Amended**: 2026-10-12
