@@ -2,7 +2,7 @@
   "feature": "017-tom-select-widgets",
   "branch": "017-tom-select-widgets",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-11T23:44:53Z",
       "note": "one reviewer, correctness and spec"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-12T00:04:39Z",
+      "note": "review closed with nothing above low open; walkthrough laid out"
     }
   ],
   "gates": {
@@ -74,6 +79,11 @@
         "COR-005 (low) the demo's row-adding script is repeated on two pages: left, the demo is not distributed",
         "COR-006 (low) controls are not destroyed when their select leaves the page: filed as issue #179"
       ]
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-12T00:04:16Z",
+      "self_resolved": []
     }
   },
   "stories": [
@@ -389,6 +399,6 @@
   },
   "pr": {
     "number": 171,
-    "draft": true
+    "draft": false
   }
 }
