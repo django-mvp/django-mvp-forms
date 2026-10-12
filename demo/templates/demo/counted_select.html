@@ -33,16 +33,27 @@
     </c-section>
     <c-section title="Tom Select" icon="tomselect">
       <c-text>
-        Its checkbox options, with the search box moved into the list.
+        The package's <code>TomSelectMultiple</code> widget, with Tom Select's checkbox
+        options and its search box moved into the list.
       </c-text>
       <ul class="list-disc ps-5">
         <li>For: a screen reader is told each chosen option by name.</li>
-        <li>For: search, and options fetched from the server as you scroll or type.</li>
+        <li>For: search.</li>
         <li>For: a button that clears every choice.</li>
-        <li>For: no script beyond Tom Select's own. The count is the same CSS counter.</li>
-        <li>Against: it needs django-tomselect and an autocomplete view for each list.</li>
+        <li>
+          For: no view and no third-party Django package. The options are written into
+          the page with the form.
+        </li>
+        <li>
+          Against: the page has to load Tom Select, and without it the control is a
+          stock multiple select.
+        </li>
         <li>
           Against: Backspace in an empty search box removes the option chosen last.
+        </li>
+        <li>
+          Against: the widget has no setting for the two plugins yet, so this page names
+          them in a subclass.
         </li>
       </ul>
       {% crispy tomselect %}

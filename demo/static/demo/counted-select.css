@@ -124,10 +124,14 @@ html:root .ts-wrapper.multi.plugin-checkbox_options .ts-control {
   white-space: nowrap;
 }
 
-/* With the search box in the list, the control itself takes the focus. The
-   wrapper already draws the ring. */
-html:root .ts-wrapper.multi.plugin-checkbox_options .ts-control:focus {
+/* With the search box in the list, the control itself takes the focus, and
+   Tom Select's stylesheet borders it while the list is open. The wrapper
+   already draws the ring and the border. */
+html:root .ts-wrapper.multi.plugin-checkbox_options .ts-control,
+html:root .ts-wrapper.multi.plugin-checkbox_options.focus.dropdown-active .ts-control {
+  border: 0 none;
   outline: none;
+  box-shadow: none;
 }
 
 /* Each value stays in the page for a screen reader and adds one to the count. */

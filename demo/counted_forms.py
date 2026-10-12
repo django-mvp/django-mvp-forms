@@ -9,16 +9,9 @@ from crispy_forms.layout import Submit
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from django_countries import countries
-from django_tomselect.app_settings import (
-    PluginCheckboxOptions,
-    PluginClearButton,
-    PluginDropdownInput,
-    TomSelectConfig,
-)
-from django_tomselect.autocompletes import AutocompleteIterablesView
-from django_tomselect.forms import TomSelectMultipleChoiceField
 
 from demo.forms import ChosenForm
+from mvp_forms.widgets import TomSelectMultiple
 
 DISCIPLINES = [
     "Geology", "Glaciology", "Petrology", "Seismology", "Tectonics", "Volcanology",
@@ -37,25 +30,6 @@ DATASETS = [
     "Borehole temperature logs with their corrections and the method each used",
     "Thermal conductivity of sedimentary rocks, measured on core samples",
 ]
-
-
-class DisciplineAutocomplete(AutocompleteIterablesView):
-    """A few short options."""
-
-    iterable = DISCIPLINES
-
-
-class EveryCountryAutocomplete(AutocompleteIterablesView):
-    """Every country, a page at a time."""
-
-    iterable = COUNTRY_NAMES
-    page_size = 40
-
-
-class DatasetAutocomplete(AutocompleteIterablesView):
-    """Options with long text."""
-
-    iterable = DATASETS
 
 
 class CountedCheckboxSelect(forms.CheckboxSelectMultiple):
@@ -79,22 +53,27 @@ def plain_field(label, names, **kwargs):
     )
 
 
-def tomselect_field(label, url, **kwargs):
+class CountedTomSelect(TomSelectMultiple):
+    """The package's multiple widget, with a tick on each option and a search box.
+
+    ``TomSelectMultiple`` has no setting for either plugin, so they are named here.
+    """
+
+    def control_settings(self):
+        """Add Tom Select's two plugins to the settings that were stated."""
+        settings = super().control_settings()
+        settings.setdefault("plugins", []).extend(
+            ["checkbox_options", "dropdown_input"]
+        )
+        return settings
+
+
+def tomselect_field(label, names, **kwargs):
     """Build the Tom Select control: ticked options, a search box in the list."""
-    return TomSelectMultipleChoiceField(
+    return forms.MultipleChoiceField(
         label=label,
-        config=TomSelectConfig(
-            url=url,
-            value_field="value",
-            label_field="label",
-            placeholder=_("Search"),
-            minimum_query_length=0,
-            hide_selected=False,
-            close_after_select=False,
-            plugin_checkbox_options=PluginCheckboxOptions(),
-            plugin_dropdown_input=PluginDropdownInput(),
-            plugin_clear_button=PluginClearButton(),
-        ),
+        choices=named(names),
+        widget=CountedTomSelect(placeholder=_("Search"), clear_button=True),
         **kwargs,
     )
 
@@ -107,7 +86,6 @@ class PostedForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.attrs = {"novalidate": True}
-        self.helper.include_media = False
         self.helper.add_input(Submit(f"{self.prefix}-submit", _("Submit")))
 
 
@@ -136,23 +114,23 @@ class PlainCountedForm(PostedForm):
 
 
 class TomSelectCountedForm(PostedForm):
-    """The same three lists, each drawn by Tom Select."""
+    """The same three lists, each drawn by the package's Tom Select widget."""
 
     disciplines = tomselect_field(
         _("Disciplines"),
-        "ac-disciplines",
+        DISCIPLINES,
         initial=["Geology", "Volcanology"],
         help_text=_("A few short options."),
     )
     countries = tomselect_field(
         _("Countries"),
-        "ac-every-country",
+        COUNTRY_NAMES,
         required=False,
-        help_text=_("Every country, fetched as you scroll or type."),
+        help_text=_("Every country. Type to search."),
     )
     datasets = tomselect_field(
         _("Datasets"),
-        "ac-datasets",
+        DATASETS,
         required=False,
         initial=DATASETS[:4],
         help_text=_("Options with long text."),
@@ -184,7 +162,7 @@ class TomSelectStateForm(ChosenForm):
         state: ``"empty"``, ``"one"``, ``"error"`` or ``"disabled"``.
     """
 
-    disciplines = tomselect_field(_("Disciplines"), "ac-disciplines")
+    disciplines = tomselect_field(_("Disciplines"), DISCIPLINES)
 
     def __init__(self, *args, state, **kwargs):
         """Put the field in its state."""
