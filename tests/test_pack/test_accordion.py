@@ -222,10 +222,10 @@ class TestAccordionGroupNames:
         for group in groups(soup):
             assert not group.has_attr("name")
 
-    def test_two_accordions_have_different_ids(self, draw_layout):
+    def test_two_accordions_are_each_drawn_with_their_own_id(self, draw_layout):
         soup = draw_layout(
-            Accordion(AccordionGroup("One", "first")),
-            Accordion(AccordionGroup("Two", "second")),
+            Accordion(AccordionGroup("One", "first"), css_id="earlier"),
+            Accordion(AccordionGroup("Two", "second"), css_id="later"),
         )
 
         ids = [
@@ -233,8 +233,7 @@ class TestAccordionGroupNames:
             for holder in soup.find_all("div", id=True)
             if holder.find("details") and not holder.find_parent("details")
         ]
-        assert len(ids) == 2
-        assert ids[0] != ids[1]
+        assert ids == ["earlier", "later"]
 
 
 class TestAccordionSubmission:
