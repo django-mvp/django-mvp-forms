@@ -3380,7 +3380,7 @@ class TestTomSelectPage(TomSelectPageContract):
         nav = open_page("overview").find(attrs={"aria-label": "Main navigation"})
         entries = [
             link["href"] if (link := item.find("a")) else None
-            for item in nav.find_all("li", recursive=False)
+            for item in nav.ul.find_all("li", recursive=False)
         ]
         mine = entries.index(reverse("tomselect"))
         standard = [
@@ -4039,7 +4039,7 @@ class TestCountriesPage(CountriesPageContract):
         nav = open_page("overview").find(attrs={"aria-label": "Main navigation"})
         entries = [
             link["href"] if (link := item.find("a")) else None
-            for item in nav.find_all("li", recursive=False)
+            for item in nav.ul.find_all("li", recursive=False)
         ]
 
         assert entries.index(reverse("countries")) == (
@@ -4274,7 +4274,7 @@ class TestTomSelectWidgetsPage(TomSelectWidgetsPageContract):
         nav = open_page("overview").find(attrs={"aria-label": "Main navigation"})
         entries = [
             link["href"] if (link := item.find("a")) else None
-            for item in nav.find_all("li", recursive=False)
+            for item in nav.ul.find_all("li", recursive=False)
         ]
 
         assert entries.index(reverse("tom-select-widgets")) == (
@@ -4386,7 +4386,7 @@ class TestCountedSelectPage:
         nav = open_page("overview").find(attrs={"aria-label": "Main navigation"})
         entries = [
             link["href"] if (link := item.find("a")) else None
-            for item in nav.find_all("li", recursive=False)
+            for item in nav.ul.find_all("li", recursive=False)
         ]
 
         assert entries.index(reverse(self.url_name)) == (
