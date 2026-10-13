@@ -45,18 +45,36 @@ def pytest_sessionstart():
         raise pytest.UsageError(f"This run was asked for other versions: {found}")
 
 
-@pytest.fixture
-def overview_page(client, db):
-    return client.get(reverse("overview")).content.decode()
+@pytest.fixture(scope="module")
+def pages_got():
+    """What a plain GET of each demo page answered, kept for the module.
+
+    A demo page answers every anonymous GET alike, so the tests of one module
+    read one rendering of it. A test must not change the page it is handed.
+    """
+    return {}
 
 
 @pytest.fixture
-def open_page(client, db, parse):
+def overview_page(client, db, pages_got):
+    if "overview as text" not in pages_got:
+        text = client.get(reverse("overview")).content.decode()
+        pages_got["overview as text"] = text
+    return pages_got["overview as text"]
+
+
+@pytest.fixture
+def open_page(client, db, parse, pages_got):
     def open_url(name, data=None):
+        if data is None and name in pages_got:
+            return pages_got[name]
         url = reverse(name)
         response = client.get(url) if data is None else client.post(url, data)
         assert response.status_code == 200
-        return parse(response.content.decode())
+        page = parse(response.content.decode())
+        if data is None:
+            pages_got[name] = page
+        return page
 
     return open_url
 
