@@ -7,7 +7,7 @@ import pytest
 from django.urls import reverse
 from playwright.sync_api import expect
 
-from tests.urls import IMASK_URL
+from tests.urls import IMASK_ORIGIN, IMASK_URL
 
 pytestmark = pytest.mark.e2e
 
@@ -648,6 +648,9 @@ class TestPartialDateDemoPages:
     def test_a_sample_added_after_february_was_chosen_offers_the_days_of_march(
         self, dates_page, page, name
     ):
+        # A demo page links stylesheets and scripts on the CDN that this test has
+        # no use for. Each is refused at once, so the page loads with no network.
+        page.route(f"{IMASK_ORIGIN}/**", lambda route: route.abort())
         page.route(
             IMASK_URL,
             lambda route: route.fulfill(path=IMASK, content_type="text/javascript"),
