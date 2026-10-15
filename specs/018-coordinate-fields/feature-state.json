@@ -2,7 +2,7 @@
   "feature": "018-coordinate-fields",
   "branch": "018-coordinate-fields",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "IMPLEMENT",
+  "state": "REVIEW",
   "state_history": [
     {
       "state": "QUEUED",
@@ -23,6 +23,16 @@
       "state": "IMPLEMENT",
       "at": "2026-10-15T14:26:53Z",
       "note": "design review: one high finding fixed in the plan, five smaller ones applied; plan gate open"
+    },
+    {
+      "state": "CONVERGE",
+      "at": "2026-10-15T15:09:06Z",
+      "note": "all four stories accepted"
+    },
+    {
+      "state": "REVIEW",
+      "at": "2026-10-15T15:11:32Z",
+      "note": "converge: no gaps; ADR verdicts written; one cleanup task"
     }
   ],
   "gates": {
@@ -205,11 +215,11 @@
   ],
   "budgets": {
     "converge_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 2
     },
     "review_cycles": {
-      "used": 0,
+      "used": 1,
       "max": 1
     },
     "design_review_cycles": {
