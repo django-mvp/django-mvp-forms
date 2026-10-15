@@ -42,3 +42,10 @@ Did: tests for narrowed bounds (40..60, -60..-40) and decimal places in fields, 
 Verified: uv run pytest -n auto --dist loadscope -q: 6682 passed. Mutation probes: number kind in build() fails 4 browser tests; dropping the bounds in the field fails 24 field/widget tests.
 Next: US3.
 Watch: the input-drawn-with-35 browser test passes under the number-kind mutation too, so it pins the posted value, not the kind.
+
+## 2026-10-15T15:05:42Z · Implementer US3 · T005
+
+Did: PointField (MultiValueField of a LatitudeField and a LongitudeField, incomplete raised by clean with incomplete_latitude/incomplete_longitude, compress to SRID=4326;POINT(lon lat)) and PointInput (MultiWidget of two CoordinateMaskInput parts, decompress for stand-in, WKT text and pair, ValueError for other SRID/height/non-point) with mvp_forms/widgets/point.html. Tests first (ImportError red): fields, widget, pack, browser, demo. Demo: point, formset of points, modal. README, CONTEXT, CHANGELOG, catalogue, template list row, template_surface route list extended.
+Verified: uv run pytest -n auto -q: 6803 passed; pre-commit all hooks passed.
+Next: none, last story.
+Watch: tests/template_surface.py and tests/test_pack/test_template_surface.py needed PointInput.template_name added (outside the named file list).

@@ -163,8 +163,26 @@
       "tasks": [
         {
           "id": "T005",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_fields.py::TestPointField",
+              "tests/test_fields.py::TestPointFieldHasChanged",
+              "tests/test_widgets.py::TestPointInput",
+              "tests/test_pack/test_coordinates.py::TestPointField",
+              "tests/test_coordinates_e2e.py::TestPointMask",
+              "tests/test_demo.py::TestCoordinatesPage"
+            ],
+            "commands": [
+              "uv run pytest -n auto -q",
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/fields.py:300",
+              "mvp_forms/widgets.py:609"
+            ]
+          }
         }
       ]
     }
