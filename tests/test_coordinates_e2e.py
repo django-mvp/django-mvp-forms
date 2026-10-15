@@ -166,15 +166,21 @@ class TestCoordinateMask:
         assert form.cleaned_data["latitude"] == Decimal("51.5074")
         assert form.cleaned_data["longitude"] == Decimal("-0.1278")
 
-    def test_a_lone_minus_posts_what_imask_commits(self, place_page):
+    def test_a_lone_minus_is_posted_as_typed_and_refused(self, place_page):
         page = place_page()
         type_into(page, "latitude", "-")
         page.locator("#id_longitude").click()
 
-        posted = entries_of(page)["latitude"]
+        posted = entries_of(page)
 
-        assert posted == "-0"
-        assert str(cleaned(entries_of(page)).cleaned_data["latitude"]) == "0"
+        assert posted["latitude"] == "-"
+        assert cleaned(posted).has_error("latitude", code="invalid")
+
+    def test_a_plus_sign_is_refused_and_the_page_still_answers(self, place_page):
+        page = place_page()
+
+        assert type_into(page, "latitude", "+5") == "5"
+        assert page.evaluate("1 + 1") == 2
 
     def test_without_imask_the_input_is_plain_and_the_field_refuses_the_value(
         self, place_page, page_errors
@@ -226,6 +232,17 @@ class TestCoordinateMask:
 
         assert page.evaluate(MASKS_OF, "id_latitude") == 1
         assert page.locator("#id_latitude").input_value() == "51.5"
+
+    @pytest.mark.parametrize(
+        "stored", [Decimal("51.507400"), 51.0, Decimal("0.000000")]
+    )
+    def test_an_input_drawn_holding_trailing_zeros_is_masked_and_keeps_them(
+        self, place_page, stored
+    ):
+        page = place_page(latitude=stored)
+
+        assert page.evaluate(MASKS_OF, "id_latitude") == 1
+        assert page.locator("#id_latitude").input_value() == str(stored)
 
 
 class TestNarrowedCoordinateMask:

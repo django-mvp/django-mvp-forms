@@ -2075,7 +2075,7 @@ The bounds are never handed to IMask as `min` and `max`, which would change a va
 
 An input drawn holding a value the mask would cut, such as `51.50740123`, is left unmasked and posts that value unchanged, and the field refuses it with `max_decimal_places`. It is masked once the person changes it.
 
-A `-` and nothing after it, left in the input, is committed by IMask as `-0`, and the field cleans that to `0`.
+A `-` and nothing after it, left in the input, is posted as it is, and the field refuses it as not a number. A stored value with trailing zeros, such as `51.507400`, is shown and kept as it is written.
 
 A page that does not load IMask draws the input as an ordinary text input. Nothing is masked and no error is raised in the browser, and the field refuses a value outside its bounds or with too many decimal places when the form is sent.
 

@@ -127,12 +127,19 @@
       mask: Number,
       scale: scale,
       radix: radix,
+      // A stored 51.507400 is kept as it is written, so the mask takes it.
+      normalizeZeros: false,
       ...rest,
       validate: function (value) {
         const negative = value.startsWith("-");
         const text = negative ? value.slice(1) : value;
         if (value === "") return true;
         if (text === "") return lowest < 0;
+        // Only digits and one decimal mark are a number on its way.
+        const parts = text.split(radix);
+        if (parts.length > 2 || !parts.every((part) => /^[0-9]*$/.test(part))) {
+          return false;
+        }
         // The sign mirrors the interval, so only a size is compared.
         const from = Math.max(negative ? -highest : lowest, 0);
         const to = negative ? -lowest : highest;
