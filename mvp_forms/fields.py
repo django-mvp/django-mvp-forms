@@ -8,7 +8,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from mvp_forms.widgets import Check, CoordinateMaskInput
+from mvp_forms.widgets import Check, CoordinateMaskInput, PointInput
 
 RESOLUTIONS = ("year", "month", "day")
 
@@ -269,3 +269,113 @@ class LongitudeField(CoordinateField):
             "Enter a longitude with no more than %(max)s decimal places."
         ),
     }
+
+
+class PointField(forms.MultiValueField):
+    """A point from a latitude and a longitude, cleaned to WKT text.
+
+    The text carries the spatial reference, ``SRID=4326;POINT(<longitude>
+    <latitude>)``, so it can be assigned to a GeoDjango ``PointField``. An empty
+    point cleans to ``None``.
+    """
+
+    widget = PointInput
+    default_error_messages = {
+        "incomplete_latitude": _("Enter the latitude as well as the longitude."),
+        "incomplete_longitude": _("Enter the longitude as well as the latitude."),
+    }
+
+    def __init__(
+        self,
+        *,
+        min_latitude=None,
+        max_latitude=None,
+        min_longitude=None,
+        max_longitude=None,
+        decimal_places=6,
+        **kwargs,
+    ):
+        """State the range of each half and the number of decimal places.
+
+        Args:
+            min_latitude: The lowest latitude accepted, at least -90.
+            max_latitude: The highest latitude accepted, at most 90.
+            min_longitude: The lowest longitude accepted, at least -180.
+            max_longitude: The highest longitude accepted, at most 180.
+            decimal_places: The most decimal places either half accepts.
+            **kwargs: What ``Field`` takes, such as ``required`` and ``label``.
+
+        Raises:
+            ValueError: A bound or the decimal places is refused, naming the
+                option.
+        """
+        fields = (
+            self.half(
+                LatitudeField,
+                "latitude",
+                min_value=min_latitude,
+                max_value=max_latitude,
+                decimal_places=decimal_places,
+            ),
+            self.half(
+                LongitudeField,
+                "longitude",
+                min_value=min_longitude,
+                max_value=max_longitude,
+                decimal_places=decimal_places,
+            ),
+        )
+        super().__init__(fields, require_all_fields=False, **kwargs)
+
+    @staticmethod
+    def half(field_class, name, **options):
+        """Build one half, with an error that names the point field's option."""
+        try:
+            return field_class(required=True, **options)
+        except ValueError as error:
+            message = str(error)
+            for bound in ("min", "max"):
+                message = message.replace(f"{bound}_value", f"{bound}_{name}")
+            raise ValueError(message) from None
+
+    def get_bound_field(self, form, field_name):
+        """Tell each part of a ``PointInput`` its bounds and decimal places."""
+        if isinstance(self.widget, PointInput):
+            for part, half in zip(self.widget.widgets, self.fields, strict=True):
+                part.scale = half.decimal_places
+                part.min_value = half.min_value
+                part.max_value = half.max_value
+        return super().get_bound_field(form, field_name)
+
+    def clean(self, value):
+        """Refuse a point with one half empty, naming the half.
+
+        ``MultiValueField`` gives a missing half a message with no code, so the
+        point field raises ``incomplete`` itself.
+        """
+        if self.disabled and not isinstance(value, list):
+            value = self.widget.decompress(value)
+        if isinstance(value, list | tuple) and len(value) == 2:
+            latitude, longitude = (self.blank(half) for half in value)
+            if latitude and not longitude:
+                self.fail("incomplete_latitude")
+            if longitude and not latitude:
+                self.fail("incomplete_longitude")
+        return super().clean(value)
+
+    def blank(self, value):
+        """Return whether the half holds nothing."""
+        return value in self.empty_values or (
+            isinstance(value, str) and not value.strip()
+        )
+
+    def fail(self, code):
+        """Raise ``incomplete`` with the message of this half."""
+        raise ValidationError(self.error_messages[code], code="incomplete")
+
+    def compress(self, data_list):
+        """Return the point as WKT text with its spatial reference, or ``None``."""
+        if not data_list:
+            return None
+        latitude, longitude = data_list
+        return f"SRID=4326;POINT({longitude:f} {latitude:f})"

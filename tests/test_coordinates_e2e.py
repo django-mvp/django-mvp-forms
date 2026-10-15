@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from django import forms
 
-from mvp_forms.fields import LatitudeField, LongitudeField
+from mvp_forms.fields import LatitudeField, LongitudeField, PointField
 from tests.urls import IMASK_URL
 
 pytestmark = pytest.mark.e2e
@@ -42,6 +42,21 @@ class NarrowForm(forms.Form):
     north = LatitudeField(min_value=40, max_value=60, required=False)
     south = LatitudeField(min_value=-60, max_value=-40, required=False)
     rounded = LongitudeField(decimal_places=2, required=False)
+
+
+class PointForm(forms.Form):
+    place = PointField(required=False)
+
+
+class NarrowPointForm(forms.Form):
+    place = PointField(
+        min_latitude=40,
+        max_latitude=60,
+        min_longitude=-10,
+        max_longitude=10,
+        decimal_places=2,
+        required=False,
+    )
 
 
 def cleaned(entries, form_class=PlaceForm):
@@ -283,3 +298,88 @@ class TestNarrowedCoordinateMask:
         assert form.cleaned_data["north"] == Decimal("45.5")
         assert form.cleaned_data["south"] == Decimal("-45.5")
         assert form.cleaned_data["rounded"] == Decimal("1.23")
+
+
+class Place:
+    """Plays the GEOS point a GeoDjango model holds."""
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.srid = 4326
+        self.z = None
+
+
+class TestPointMask:
+    @pytest.mark.parametrize(
+        ("name", "typed", "shown"),
+        [
+            ("place_0", "91", "9"),
+            ("place_0", "-91", "-9"),
+            ("place_0", "90", "90"),
+            ("place_1", "181", "18"),
+            ("place_1", "-181", "-18"),
+            ("place_1", "180", "180"),
+            ("place_0", "51.12345678", "51.123456"),
+        ],
+    )
+    def test_each_half_is_masked_to_its_own_bounds(
+        self, place_page, name, typed, shown
+    ):
+        page = place_page(form_class=PointForm)
+
+        assert type_into(page, name, typed) == shown
+
+    @pytest.mark.parametrize(
+        ("name", "typed", "shown"),
+        [
+            ("place_0", "3", ""),
+            ("place_0", "45.5", "45.5"),
+            ("place_0", "61", "6"),
+            ("place_1", "11", "1"),
+            ("place_1", "-10", "-10"),
+            ("place_1", "1.234", "1.23"),
+        ],
+    )
+    def test_the_narrowed_bounds_and_places_reach_each_half(
+        self, place_page, name, typed, shown
+    ):
+        page = place_page(form_class=NarrowPointForm)
+
+        assert type_into(page, name, typed) == shown
+
+    def test_a_posted_pair_reaches_the_form_as_wkt_text(self, place_page):
+        page = place_page(form_class=PointForm)
+        type_into(page, "place_0", "51.5074")
+        type_into(page, "place_1", "-0.1278")
+
+        form = cleaned(entries_of(page), PointForm)
+
+        assert form.cleaned_data["place"] == "SRID=4326;POINT(-0.1278 51.5074)"
+
+    def test_one_half_typed_is_refused_as_incomplete(self, place_page):
+        page = place_page(form_class=PointForm)
+        type_into(page, "place_0", "51.5")
+
+        form = cleaned(entries_of(page), PointForm)
+
+        assert form.has_error("place", code="incomplete")
+
+    def test_an_input_drawn_holding_a_point_shows_each_half(self, place_page):
+        page = place_page(form_class=PointForm, place=Place(-0.1278, 51.5074))
+
+        assert page.locator("#id_place_0").input_value() == "51.5074"
+        assert page.locator("#id_place_1").input_value() == "-0.1278"
+        assert page.evaluate(MASKS_OF, "id_place_0") == 1
+        assert page.evaluate(MASKS_OF, "id_place_1") == 1
+
+    def test_without_imask_the_halves_are_plain_and_the_field_refuses_the_value(
+        self, place_page, page_errors
+    ):
+        page = place_page(imask=False, form_class=PointForm)
+
+        assert type_into(page, "place_0", "95") == "95"
+        type_into(page, "place_1", "5")
+        assert page_errors == []
+        form = cleaned(entries_of(page), PointForm)
+        assert form.has_error("place", code="max_value")

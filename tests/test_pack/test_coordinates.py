@@ -7,7 +7,7 @@ from crispy_forms.helper import FormHelper
 from django import forms
 
 from mvp_forms.choices import FormChoices
-from mvp_forms.fields import LatitudeField, LongitudeField
+from mvp_forms.fields import LatitudeField, LongitudeField, PointField
 
 SOURCES = [
     "{{ form|crispy }}",
@@ -80,3 +80,83 @@ class TestCoordinateFields:
 
     def test_the_form_names_the_script_that_applies_the_mask(self):
         assert "mvp_forms/imask.js" in str(CoordinateForm().media)
+
+
+class PointForm(forms.Form):
+    place = PointField(label="Place", help_text="Where it was found", required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class TestPointField:
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_it_is_one_fieldset_whose_legend_is_the_label(self, draw, source):
+        soup = draw(source, form=PointForm())
+
+        frame = soup.find(id="div_id_place")
+
+        assert frame.name == "fieldset"
+        assert len(frame.find_all("legend")) == 1
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_it_has_one_help_text_and_one_set_of_errors(self, draw, source):
+        soup = draw(source, form=PointForm({"place_0": "", "place_1": "5"}))
+
+        frame = soup.find(id="div_id_place")
+
+        assert len(frame.find_all(id="id_place_helptext")) == 1
+        assert len(frame.find_all(id="id_place_error")) == 1
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_it_draws_two_text_inputs_each_named_and_each_with_its_mask(
+        self, draw, source
+    ):
+        soup = draw(source, form=PointForm())
+
+        latitude = soup.find(attrs={"name": "place_0"})
+        longitude = soup.find(attrs={"name": "place_1"})
+
+        for part in (latitude, longitude):
+            assert part["type"] == "text"
+            assert part["aria-label"]
+            assert json.loads(part["data-imask"])["kind"] == "coordinate"
+            for attribute in ("step", "min", "max"):
+                assert not part.has_attr(attribute)
+        assert latitude["aria-label"] != longitude["aria-label"]
+        assert json.loads(latitude["data-imask"])["max"] == 90
+        assert json.loads(longitude["data-imask"])["max"] == 180
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    @pytest.mark.parametrize(
+        ("kind", "value", "added"),
+        [
+            ("size", "lg", "input-lg"),
+            ("color", "primary", "input-primary"),
+            ("variant", "ghost", "input-ghost"),
+        ],
+    )
+    def test_both_parts_take_the_size_colour_and_variant_stated_for_the_form(
+        self, draw, source, kind, value, added
+    ):
+        form = PointForm()
+        form.helper.daisyui = FormChoices(**{kind: value})
+
+        soup = draw(source, form=form)
+
+        for name in ("place_0", "place_1"):
+            assert added in soup.find(attrs={"name": name})["class"]
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_both_parts_are_marked_invalid_when_the_field_is_in_error(
+        self, draw, source
+    ):
+        soup = draw(source, form=PointForm({"place_0": "", "place_1": "5"}))
+
+        for name in ("place_0", "place_1"):
+            assert soup.find(attrs={"name": name})["aria-invalid"] == "true"
+
+    def test_the_form_names_the_script_that_applies_the_mask(self):
+        assert "mvp_forms/imask.js" in str(PointForm().media)

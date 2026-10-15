@@ -1,5 +1,6 @@
 """The demo's coordinates page."""
 
+from crispy_forms.helper import FormHelper
 from mvp.views import MVPTemplateView
 
 from demo.coordinate_forms import (
@@ -7,6 +8,9 @@ from demo.coordinate_forms import (
     CoordinateForm,
     InitialCoordinateForm,
     NarrowedCoordinateForm,
+    PointForm,
+    PointModalForm,
+    SiteFormSet,
 )
 
 
@@ -20,7 +24,17 @@ class CoordinatesView(MVPTemplateView):
 
     def get_context_data(self, **kwargs):
         """Add one form for each state of the two fields."""
+        # The row "Add a site" copies: the formset's empty form, drawn alone.
+        line = SiteFormSet(prefix="sites")
+        line.forms = [line.empty_form]
+        lines_helper = FormHelper()
+        lines_helper.form_tag = False
+        lines_helper.template = "daisyui/table_inline_formset.html"
         kwargs.update(
+            lines=SiteFormSet(prefix="sites"),
+            line=line,
+            lines_helper=lines_helper,
+            modal_form=PointModalForm(prefix="site"),
             sections=[
                 (
                     "defaults",
@@ -45,12 +59,20 @@ class CoordinatesView(MVPTemplateView):
                     NarrowedCoordinateForm(prefix="narrowed"),
                 ),
                 (
+                    "point",
+                    "A point",
+                    "PointField, drawn as a latitude and a longitude side by "
+                    "side, each masked to its own range. The form cleans the "
+                    "pair to WKT text that a GeoDjango PointField takes.",
+                    PointForm(prefix="point"),
+                ),
+                (
                     "error",
                     "Sent and refused",
                     "A latitude past 90 and a longitude with eight decimal places, "
                     "as a form that was sent without IMask would hold them.",
                     BoundCoordinateForm(prefix="error"),
                 ),
-            ]
+            ],
         )
         return super().get_context_data(**kwargs)

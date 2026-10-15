@@ -22,7 +22,7 @@ from django.template.library import SimpleNode
 from django.template.loader_tags import IncludeNode
 
 from mvp_forms.templatetags.daisyui import FieldInput
-from mvp_forms.widgets import PartialDateInput
+from mvp_forms.widgets import PartialDateInput, PointInput
 
 LIST_HEADING = "### Replacing one template"
 SUPPORTED_HEADING = "#### A supported package's templates"
@@ -130,6 +130,7 @@ class TemplateSurface:
             *FieldInput.inline_templates.values(),
             FieldInput.rating_template,
             PartialDateInput.template_name,
+            PointInput.template_name,
         ]
         while pending:
             path = pending.pop()

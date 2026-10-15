@@ -1077,6 +1077,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/widgets/rating.html` | A field drawn as a rating: the element that holds the stars and one radio input for each choice, where `widget` also holds `rating_class`, the classes of that element, and `inputs`, the choices in the order they are drawn, the one that clears the rating first. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/select_date.html` | A date drawn by `SelectDateWidget`: a select for each part of the date, side by side. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/partial_date.html` | A partial date drawn by `PartialDateInput` or `PartialDateSelect`: one element that holds a year, a month and a day side by side, each a part of one field. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/point.html` | A point drawn by `PointInput`: one element that holds a latitude and a longitude side by side, each a part of one field. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 
@@ -1990,7 +1991,9 @@ This is the public surface:
 
 - `mvp_forms.fields.LatitudeField`
 - `mvp_forms.fields.LongitudeField`
+- `mvp_forms.fields.PointField`
 - `mvp_forms.widgets.CoordinateMaskInput`
+- `mvp_forms.widgets.PointInput`
 
 #### The latitude and longitude fields
 
@@ -2075,6 +2078,87 @@ An input drawn holding a value the mask would cut, such as `51.50740123`, is lef
 A `-` and nothing after it, left in the input, is committed by IMask as `-0`, and the field cleans that to `0`.
 
 A page that does not load IMask draws the input as an ordinary text input. Nothing is masked and no error is raised in the browser, and the field refuses a value outside its bounds or with too many decimal places when the form is sent.
+
+#### The point field
+
+`PointField` takes a latitude and a longitude from one field and cleans them to WKT text with the spatial reference in front, longitude first, which is the order GeoDjango writes.
+
+```python
+from django import forms
+
+from mvp_forms.fields import PointField
+
+
+class SiteForm(forms.Form):
+    place = PointField()
+```
+
+| Entered | `cleaned_data["place"]` |
+|---|---|
+| latitude `51.5074`, longitude `-0.1278` | `"SRID=4326;POINT(-0.1278 51.5074)"` |
+| latitude `51.50`, longitude `0` | `"SRID=4326;POINT(0 51.50)"` |
+| both empty, not required | `None` |
+
+Each number is written as typed, in plain decimal notation. A GeoDjango model's `PointField` takes that text and turns it into a point when the model is saved, so nothing from `django.contrib.gis` is imported and GDAL is not needed. An empty point is `None`, which a model's `null=True` field takes.
+
+The field is two halves, a `LatitudeField` and a `LongitudeField`, each applying its own range and decimal places and refusing with the codes above. A half's error names the half, and `params["limit_value"]` is that half's bound.
+
+| Option | Takes | Default |
+|---|---|---|
+| `min_latitude`, `max_latitude` | an `int`, `float` or `Decimal` from -90 to 90 | -90, 90 |
+| `min_longitude`, `max_longitude` | an `int`, `float` or `Decimal` from -180 to 180 | -180, 180 |
+| `decimal_places` | a whole number of at least zero, for both halves | `6` |
+
+A bad option raises a `ValueError` naming the option when the form class is defined, for the same reasons as a latitude or a longitude does. A longitude range does not run across the antimeridian, so `min_longitude` above `max_longitude` is refused.
+
+A point with one half filled is refused with the code `incomplete`, whether the field is required or not, and the message names the half that is missing. Replace a message through `error_messages` with `incomplete_latitude` or `incomplete_longitude`:
+
+```python
+place = PointField(
+    error_messages={"incomplete_latitude": "Enter the latitude of the site."}
+)
+```
+
+Both halves empty is `required` on a required field and `None` on one that is not.
+
+#### The starting value
+
+`PointInput` draws the field's two halves and reads a starting value, from `initial` or a model instance, in four forms:
+
+- an object with `x` and `y`, such as a GEOS point, whose `srid` is `None` or `4326` and whose `z` is `None`
+- WKT text, `POINT(-0.1278 51.5074)` or `SRID=4326;POINT(-0.1278 51.5074)`, in any case and with any spacing
+- a list or tuple of `(latitude, longitude)`
+- `None` or empty text, which draws two empty inputs
+
+A point the form cannot show raises a `ValueError` when the form is drawn, naming the cause: a spatial reference other than 4326, whose numbers are not degrees, a point with a height, which the form has no input for, and text that is not a two-dimensional point, such as `POINT Z (1 2 3)`, `POINT EMPTY` or `LINESTRING(1 2, 3 4)`. A person cannot fix the cause, so the error is yours to see the first time you open the form. Convert the point to 4326 before drawing it.
+
+A form posted with the coordinates of its initial point reports the field as not changed.
+
+#### The point widget
+
+`PointInput(attrs=None)` is a `MultiWidget` of two `CoordinateMaskInput` parts, drawn by `mvp_forms/widgets/point.html` as one element holding the two side by side. Each part has its own placeholder and `aria-label`, "Latitude" and "Longitude". The field tells each part its half's bounds and the decimal places when the form is drawn. Through the pack the field is one fieldset whose legend is the label, with one help text and one set of errors, and both inputs take the size, colour and variant stated for the form and are marked `aria-invalid` when the field is in error. Each is masked as described above, and the page loads IMask the same way.
+
+#### On a model form
+
+Declare the field on a model form for a GeoDjango `PointField`:
+
+```python
+from django import forms
+
+from mvp_forms.fields import PointField
+
+from .models import Site
+
+
+class SiteForm(forms.ModelForm):
+    location = PointField(required=False)
+
+    class Meta:
+        model = Site
+        fields = ["name", "location"]
+```
+
+The form's own `PointField` in `django.contrib.gis.forms` has the same name and cleans to a GEOS point, so a form that imports both renames one on import. A model's `PointField` takes either, so saving is the same.
 
 ### Themes
 

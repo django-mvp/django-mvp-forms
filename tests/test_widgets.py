@@ -14,7 +14,7 @@ from django.utils import translation
 from django.utils.dates import MONTHS
 from django.utils.translation import gettext_lazy
 
-from mvp_forms.fields import LatitudeField, LongitudeField, PartialDateField
+from mvp_forms.fields import LatitudeField, LongitudeField, PartialDateField, PointField
 from mvp_forms.widgets import (
     CoordinateMaskInput,
     DynamicMaskInput,
@@ -25,6 +25,7 @@ from mvp_forms.widgets import (
     PartialDateSelect,
     PatternBlock,
     PatternMaskInput,
+    PointInput,
     RangeBlock,
     RegexMaskInput,
     TomSelect,
@@ -1948,3 +1949,127 @@ class TestTheSettingsOfTomSelect:
     def test_a_setting_only_the_multiple_widget_has_is_refused(self, name):
         with pytest.raises(TypeError, match=name):
             TomSelect(**{name: True})
+
+
+class Marker:
+    """Plays the GEOS point a GeoDjango model holds."""
+
+    def __init__(self, x, y, srid=4326, z=None):
+        self.x = x
+        self.y = y
+        self.srid = srid
+        self.z = z
+
+
+class TestPointInput:
+    @pytest.mark.parametrize(
+        "value",
+        [
+            Marker(-0.1278, 51.5074),
+            Marker(-0.1278, 51.5074, srid=None),
+            "POINT(-0.1278 51.5074)",
+            "SRID=4326;POINT(-0.1278 51.5074)",
+            "srid=4326; point ( -0.1278   51.5074 )",
+            (51.5074, -0.1278),
+            [51.5074, -0.1278],
+        ],
+    )
+    def test_decompress_reads_a_point_as_latitude_then_longitude(self, value):
+        assert PointInput().decompress(value) == [
+            Decimal("51.5074"),
+            Decimal("-0.1278"),
+        ]
+
+    @pytest.mark.parametrize("value", [None, "", "  "])
+    def test_decompress_reads_nothing_as_two_empty_halves(self, value):
+        assert PointInput().decompress(value) == [None, None]
+
+    def test_decompress_keeps_each_digit_a_float_is_written_with(self):
+        assert PointInput().decompress(Marker(0.00005, 51.50740123)) == [
+            Decimal("51.50740123"),
+            Decimal("0.00005"),
+        ]
+
+    @pytest.mark.parametrize(
+        ("value", "named"),
+        [
+            (Marker(1, 2, srid=3857), "3857"),
+            ("SRID=3857;POINT(1 2)", "3857"),
+            (Marker(1, 2, z=12.0), "height"),
+            ("POINT Z (1 2 3)", "two-dimensional"),
+            ("POINT(1 2 3)", "two-dimensional"),
+            ("POINT EMPTY", "two-dimensional"),
+            ("LINESTRING(1 2, 3 4)", "two-dimensional"),
+            ("not a point", "two-dimensional"),
+            ((1, 2, 3), "pair"),
+        ],
+    )
+    def test_decompress_refuses_a_point_the_form_cannot_show(self, value, named):
+        with pytest.raises(ValueError, match=named):
+            PointInput().decompress(value)
+
+    def test_it_has_a_masked_part_for_each_half(self):
+        widget = PointInput()
+
+        assert [type(part) for part in widget.widgets] == [CoordinateMaskInput] * 2
+
+    def test_it_names_the_script_in_its_media(self):
+        assert "mvp_forms/imask.js" in str(PointInput().media)
+
+    def test_the_parts_carry_a_label_for_a_screen_reader_each(self):
+        class Form(forms.Form):
+            place = PointField()
+
+        soup = BeautifulSoup(str(Form()["place"]), "html.parser")
+        latitude, longitude = soup.find_all("input")
+
+        assert latitude["aria-label"] != longitude["aria-label"]
+        assert latitude["name"] == "place_0"
+        assert longitude["name"] == "place_1"
+
+    def test_each_part_is_told_its_own_halfs_bounds_and_places(self):
+        class Form(forms.Form):
+            place = PointField(
+                min_latitude=40,
+                max_latitude=60,
+                min_longitude=-10.5,
+                max_longitude=10,
+                decimal_places=2,
+            )
+
+        soup = BeautifulSoup(str(Form()["place"]), "html.parser")
+        latitude, longitude = (
+            json.loads(each["data-imask"]) for each in soup.find_all("input")
+        )
+
+        assert (latitude["min"], latitude["max"], latitude["scale"]) == (40, 60, 2)
+        assert (longitude["min"], longitude["max"], longitude["scale"]) == (
+            -10.5,
+            10,
+            2,
+        )
+
+    def test_the_parts_are_drawn_holding_the_initial_point(self):
+        class Form(forms.Form):
+            place = PointField()
+
+        form = Form(initial={"place": Marker(-0.1278, 51.5074)})
+        soup = BeautifulSoup(str(form["place"]), "html.parser")
+        latitude, longitude = soup.find_all("input")
+
+        assert latitude["value"] == "51.5074"
+        assert longitude["value"] == "-0.1278"
+
+    def test_a_point_it_cannot_show_raises_when_the_form_is_drawn(self):
+        class Form(forms.Form):
+            place = PointField()
+
+        form = Form(initial={"place": Marker(1, 2, srid=3857)})
+
+        with pytest.raises(ValueError, match="3857"):
+            str(form["place"])
+
+    def test_the_halves_are_joined_in_one_group(self):
+        soup = BeautifulSoup(PointInput().render("place", None), "html.parser")
+
+        assert len(soup.select("div.join > input.join-item")) == 2

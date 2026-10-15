@@ -8,8 +8,18 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import translation
 
-from mvp_forms.fields import LatitudeField, LongitudeField, PartialDateField
-from mvp_forms.widgets import PartialDateInput, PartialDateMaskInput, PartialDateSelect
+from mvp_forms.fields import (
+    LatitudeField,
+    LongitudeField,
+    PartialDateField,
+    PointField,
+)
+from mvp_forms.widgets import (
+    PartialDateInput,
+    PartialDateMaskInput,
+    PartialDateSelect,
+    PointInput,
+)
 from tests.forms import PartialDateForm, partial_date_form
 
 LEAP_YEAR = 2024
@@ -889,3 +899,224 @@ class TestCoordinateFieldOptions:
         field = field_class(min_value=3, max_value=3)
 
         assert field.clean("3") == 3
+
+
+class Place:
+    """Plays the GEOS point a GeoDjango model holds."""
+
+    def __init__(self, x, y, srid=4326, z=None):
+        self.x = x
+        self.y = y
+        self.srid = srid
+        self.z = z
+
+
+def point_form(**options):
+    class PointForm(forms.Form):
+        place = PointField(**options)
+
+    return PointForm
+
+
+def point_codes(form):
+    return [error.code for error in form.errors.as_data().get("place", [])]
+
+
+def submit_point(latitude, longitude, **options):
+    form = point_form(**options)(
+        {"place_0": latitude, "place_1": longitude}, initial={}
+    )
+    form.full_clean()
+    return form
+
+
+class TestPointField:
+    @pytest.mark.parametrize(
+        ("latitude", "longitude", "cleaned"),
+        [
+            ("51.5074", "-0.1278", "SRID=4326;POINT(-0.1278 51.5074)"),
+            ("51.50", "0", "SRID=4326;POINT(0 51.50)"),
+            ("-90", "180", "SRID=4326;POINT(180 -90)"),
+            (".5", "+1.", "SRID=4326;POINT(1 0.5)"),
+            ("-0", "-0", "SRID=4326;POINT(0 0)"),
+        ],
+    )
+    def test_a_pair_cleans_to_wkt_text_with_the_longitude_first(
+        self, latitude, longitude, cleaned
+    ):
+        form = submit_point(latitude, longitude)
+
+        assert form.is_valid()
+        assert form.cleaned_data["place"] == cleaned
+
+    def test_both_halves_empty_is_none_when_not_required(self):
+        form = submit_point("", "", required=False)
+
+        assert form.is_valid()
+        assert form.cleaned_data["place"] is None
+
+    def test_both_halves_empty_is_required_when_required(self):
+        form = submit_point("", "")
+
+        assert point_codes(form) == ["required"]
+
+    @pytest.mark.parametrize("required", [True, False])
+    @pytest.mark.parametrize(
+        ("latitude", "longitude"), [("", "5"), ("5", ""), (" ", "5")]
+    )
+    def test_one_half_empty_is_incomplete(self, required, latitude, longitude):
+        form = submit_point(latitude, longitude, required=required)
+
+        assert point_codes(form) == ["incomplete"]
+
+    def test_the_messages_of_the_two_halves_differ(self):
+        no_latitude = list(submit_point("", "5").errors["place"])
+        no_longitude = list(submit_point("5", "").errors["place"])
+
+        assert no_latitude != no_longitude
+
+    def test_the_developer_replaces_the_message_of_a_half(self):
+        form = submit_point(
+            "",
+            "5",
+            error_messages={"incomplete_latitude": "Where north?"},
+        )
+
+        assert list(form.errors["place"]) == ["Where north?"]
+        other = submit_point(
+            "5",
+            "",
+            error_messages={"incomplete_latitude": "Where north?"},
+        )
+        assert list(other.errors["place"]) != ["Where north?"]
+
+    @pytest.mark.parametrize(
+        ("latitude", "longitude", "code"),
+        [
+            ("91", "0", "max_value"),
+            ("-91", "0", "min_value"),
+            ("0", "181", "max_value"),
+            ("0", "-181", "min_value"),
+            ("1.1234567", "0", "max_decimal_places"),
+            ("0", "1.1234567", "max_decimal_places"),
+            ("abc", "0", "invalid"),
+            ("0", "1e3", "invalid"),
+        ],
+    )
+    def test_a_half_that_is_refused_carries_its_own_code(
+        self, latitude, longitude, code
+    ):
+        form = submit_point(latitude, longitude)
+
+        assert point_codes(form) == [code]
+
+    def test_each_half_names_its_own_bound(self):
+        form = submit_point("91", "0")
+
+        assert form.errors.as_data()["place"][0].params["limit_value"] == 90
+
+    def test_the_messages_of_the_two_halves_differ_when_both_are_refused(self):
+        latitude = list(submit_point("91", "0").errors["place"])
+        longitude = list(submit_point("0", "181").errors["place"])
+
+        assert latitude != longitude
+
+    def test_both_halves_refused_report_both(self):
+        form = submit_point("91", "-181")
+
+        assert point_codes(form) == ["max_value", "min_value"]
+
+    def test_the_options_narrow_each_half(self):
+        options = {
+            "min_latitude": 40,
+            "max_latitude": 60,
+            "min_longitude": -10,
+            "max_longitude": 10,
+            "decimal_places": 2,
+        }
+
+        assert submit_point("45.5", "5", **options).is_valid()
+        assert point_codes(submit_point("39", "5", **options)) == ["min_value"]
+        assert point_codes(submit_point("61", "5", **options)) == ["max_value"]
+        assert point_codes(submit_point("45", "-11", **options)) == ["min_value"]
+        assert point_codes(submit_point("45", "11", **options)) == ["max_value"]
+        assert point_codes(submit_point("45.123", "5", **options)) == [
+            "max_decimal_places"
+        ]
+
+    @pytest.mark.parametrize(
+        ("options", "named"),
+        [
+            ({"min_latitude": -91}, "min_latitude"),
+            ({"max_latitude": 91}, "max_latitude"),
+            ({"min_longitude": -181}, "min_longitude"),
+            ({"max_longitude": 181}, "max_longitude"),
+            ({"min_latitude": 50, "max_latitude": 40}, "min_latitude"),
+            ({"min_longitude": 50, "max_longitude": 40}, "min_longitude"),
+            ({"min_latitude": float("nan")}, "min_latitude"),
+            ({"max_longitude": True}, "max_longitude"),
+            ({"decimal_places": -1}, "decimal_places"),
+            ({"decimal_places": True}, "decimal_places"),
+            ({"decimal_places": 1.5}, "decimal_places"),
+        ],
+    )
+    def test_a_bad_option_raises_a_value_error_naming_it(self, options, named):
+        with pytest.raises(ValueError, match=named):
+            PointField(**options)
+
+    def test_the_default_widget_is_the_point_input(self):
+        assert isinstance(PointField().widget, PointInput)
+
+    def test_a_disabled_field_cleans_its_initial_point(self):
+        class PointForm(forms.Form):
+            place = PointField(disabled=True, required=False)
+
+        form = PointForm({}, initial={"place": Place(-0.1278, 51.5074)})
+
+        assert form.is_valid()
+        assert form.cleaned_data["place"] == "SRID=4326;POINT(-0.1278 51.5074)"
+
+
+class TestPointFieldHasChanged:
+    @pytest.mark.parametrize(
+        "initial",
+        [
+            Place(-0.1278, 51.5074),
+            Place(-0.1278, 51.5074, srid=None),
+            "SRID=4326;POINT(-0.1278 51.5074)",
+            "POINT(-0.1278 51.5074)",
+            (51.5074, -0.1278),
+            [51.5074, -0.1278],
+        ],
+        ids=["stand-in", "no srid", "ewkt", "wkt", "tuple", "list"],
+    )
+    def test_a_form_posted_with_the_initial_coordinates_has_not_changed(self, initial):
+        form = point_form()(
+            {"place_0": "51.5074", "place_1": "-0.1278"}, initial={"place": initial}
+        )
+
+        assert form.changed_data == []
+
+    @pytest.mark.parametrize(
+        ("latitude", "longitude"), [("51.5075", "-0.1278"), ("51.5074", "-0.1279")]
+    )
+    def test_either_half_moving_is_a_change(self, latitude, longitude):
+        form = point_form()(
+            {"place_0": latitude, "place_1": longitude},
+            initial={"place": Place(-0.1278, 51.5074)},
+        )
+
+        assert form.changed_data == ["place"]
+
+    def test_emptying_both_halves_is_a_change(self):
+        form = point_form(required=False)(
+            {"place_0": "", "place_1": ""},
+            initial={"place": Place(-0.1278, 51.5074)},
+        )
+
+        assert form.changed_data == ["place"]
+
+    def test_no_initial_and_nothing_sent_is_no_change(self):
+        form = point_form(required=False)({"place_0": "", "place_1": ""})
+
+        assert form.changed_data == []

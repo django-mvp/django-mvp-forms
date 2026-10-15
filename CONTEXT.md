@@ -316,8 +316,15 @@ are its bounds).
 
 **Coordinate fields**:
 `LatitudeField` and `LongitudeField`. Each cleans one number in decimal degrees
-to a `Decimal`.
+to a `Decimal`. `PointField` is made of one of each.
 _Avoid_: geo fields, location fields.
+
+**WKT text**:
+A point written as `SRID=4326;POINT(<longitude> <latitude>)`, longitude first,
+which a GeoDjango model's `PointField` takes from a string. `PointField` cleans
+to it.
+_Avoid_: EWKT (this is the name of the form with the spatial reference), point
+string.
 
 **Partial date**:
 A date known to the year, to the month or to the day, written as ISO text:
