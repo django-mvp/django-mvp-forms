@@ -10,3 +10,7 @@ Design review not dispatched: sessions_spawn refuses every model (anthropic acco
 ## 2026-10-15T13:37:48Z · orchestrator · S3R
 
 Resumed in a new session; branch brought up to date with origin/main and the build claim moved to this session. Design review still not dispatched: sessions_spawn refuses opus, sonnet and the default model again ("selected account or native runtime is unavailable"; claude-cli models not allowed). The run waits at DESIGN_REVIEW with the brief rebuilt at /tmp/fs018/brief.json.
+
+## 2026-10-15 · orchestrator · S3R
+
+Resumed in a fresh session outside the worktree; the build claim moved to it. Design reviewer dispatched on opus against commit 07626a1.
