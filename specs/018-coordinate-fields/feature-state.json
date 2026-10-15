@@ -53,8 +53,19 @@
       "tasks": [
         {
           "id": "T001",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_fields.py::TestCoordinateFieldOptions"
+            ],
+            "commands": [
+              "uv run pre-commit run --all-files"
+            ],
+            "code": [
+              "mvp_forms/fields.py:196"
+            ]
+          }
         }
       ]
     },

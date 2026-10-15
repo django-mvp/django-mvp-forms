@@ -14,3 +14,10 @@ Resumed in a new session; branch brought up to date with origin/main and the bui
 ## 2026-10-15 · orchestrator · S3R
 
 Resumed in a fresh session outside the worktree; the build claim moved to it. Design reviewer dispatched on opus against commit 07626a1.
+
+## 2026-10-15T14:33:29Z · Implementer US1 · T001
+
+Did: LatitudeField and LongitudeField on a shared CoordinateField(DecimalField) in mvp_forms/fields.py: definition-time ValueErrors per option, to_python reading numbers as numbers and text by a plain-number pattern, -0 to 0, per-code messages. 170 new cases in tests/test_fields.py written first (red: ImportError), then probed by five mutations (abs, pattern, text branch, bound range, decimal_places), each failing 2 to 10 cases. README section "Coordinates", CHANGELOG, CONTEXT.md terms, English catalogue regenerated with makemessages from mvp_forms/.
+Verified: uv run pytest tests/test_fields.py -k Coordinate (170 passed); uv run pre-commit run --all-files green; uv run pytest -n auto -q (6586 passed).
+Next: T002, the masked input.
+Watch: the default widget is still DecimalField NumberInput until T002, so the initial-display test asserts only value="51.5" in the drawn HTML.
