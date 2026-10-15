@@ -51,7 +51,10 @@ Everything else is `DecimalField`'s, passed through. `max_digits` stays `None`.
   `±limit`, a `min_value` above `max_value`, and a `decimal_places` that is not a whole number of
   at least zero (a `bool` is not one). Each `ValueError` names the option. This reuses
   `Check.number` and `Check.whole_number` from `mvp_forms/widgets.py`.
-- **`to_python`** strips the value. It refuses anything that does not match
+- **`to_python`** works on text and on numbers. An `int`, `float` or `Decimal` goes straight to
+  `DecimalField.to_python`, so a float near zero such as `0.00005`, which Python writes as
+  `5e-05`, is read as the number it is. This is the path for a disabled field's initial value and
+  for `has_changed` on a point whose initial is a list. Text is stripped. It refuses anything that does not match
   `[+-]?(\d+(\.\d*)?|\.\d+)` with code `invalid`, which rules out exponent form, `inf`, `nan` and
   a comma, and then hands the value to `DecimalField.to_python`. A `Decimal` equal to zero is
   returned as `abs(value)` so `-0` becomes `0`. Empty is `None`.
@@ -72,7 +75,11 @@ Everything else is `DecimalField`'s, passed through. `max_digits` stays `None`.
 
 `CoordinateMaskInput(NumberMaskInput)`, `kind = "coordinate"`, taking only `attrs`. It sets
 `radix="."`, `thousands_separator=""` and `scale`, `min_value` and `max_value` from the attributes
-the field writes. `mask_options()` is built when the widget is drawn, not in `__init__`, so a field
+the field writes. Its class defaults are `scale = 6`, `min_value = None` and `max_value = None`,
+as `PartialDateMaskInput` has (ADR 0049), so on a field that is not a coordinate field it draws
+with no bounds. It draws no `inputmode` unless `attrs` states one: the decimal keypad on a phone
+has no minus key, and in a comma locale it offers a comma the mask refuses. The full keyboard has
+both `-` and `.`. `mask_options()` is built when the widget is drawn, not in `__init__`, so a field
 that changes them in `get_bound_field` is followed. `value_from_datadict` and `format_value` are
 `NumberMaskInput`'s, which with a full stop and no separator pass the text through.
 
@@ -82,14 +89,29 @@ In `imask.js`, `build()` gains:
 if (kind === "coordinate") return coordinate(rest);
 ```
 
-`coordinate(options)` returns `{ mask: Number, ...options, validate }`, where `validate` takes the
-value as typed and refuses it when nothing that can still be typed after it lies in
+`coordinate(options)` returns `{ mask: Number, scale, radix, thousandsSeparator, validate }`.
+The bounds go to `validate` only and are never handed to IMask as `min` and `max`: IMask clamps
+the value to them on every commit, when the mask attaches and on every blur, so a stored `35`
+under bounds of 40 to 60 would be shown and posted as `40`, and a typed `4` would become `40` on
+leaving the input. Without them, what the person typed is what is posted, and the field refuses
+it. `validate` takes the value as typed and refuses it when nothing that can still be typed after it lies in
 `[min, max]`. An empty value, or a lone `-` while `min < 0`, is always accepted. For an unsigned
 prefix `p` with no decimal mark, the values it can still become are `p` itself and every
 `[p·10ᵏ, (p+1)·10ᵏ)` for k ≥ 1. The check stops once `p·10ᵏ` exceeds `max(|min|, |max|)`. With a
 decimal mark and `f` fractional digits, the value is fixed to within `10⁻ᶠ`. The sign mirrors the
 interval. The function sits beside `reach()` and follows its comments. Nothing in the `number`
 kind changes.
+
+IMask also cuts a value with more decimal places than `scale` when it attaches: a stored
+`51.50740123` becomes `51.507401`. So the `coordinate` kind goes through the same path as the
+partial date (ADR 0050): `apply()` asks `takes()` whether the mask keeps the input's value as it
+is, and an input drawn holding one it would cut waits unmasked until the person changes it. The
+field then refuses the extra places with `max_decimal_places`, and nothing is rounded. `takes()`
+compares through `bare()` for a partial date only, and compares the values directly for a
+coordinate.
+
+A lone `-` left in the input is committed by IMask as `-0`, which the field cleans to `0`. This
+is IMask's number rule, it is stated in the README, and a browser test pins it.
 
 ## The point field
 
@@ -106,8 +128,12 @@ kind changes.
   the option. The point field catches each one and raises it again with its own option name
   (`min_latitude`, and so on). It calls `super().__init__(fields, require_all_fields=False,
   **kwargs)` with `widget=PointInput` unless one is named.
-- Each half's `incomplete` message is set to "Enter a latitude." or "Enter a longitude.", so
-  `MultiValueField` names the missing half (FR-020).
+- `MultiValueField` reports a missing half as a bare message with no code, and a half's own
+  `incomplete` message would beat one the developer gives the point field. So `PointField.clean`
+  checks for exactly one empty half before calling `super().clean`, and raises
+  `ValidationError(self.error_messages["incomplete_latitude"], code="incomplete")` or the
+  longitude's. Both messages are in `PointField`'s own `default_error_messages`, so a developer
+  replaces them through `error_messages` (FR-008, FR-020). The halves' `incomplete` is not set.
 - `compress([])` returns `None`. `compress([lat, lon])` returns
   `f"SRID=4326;POINT({lon:f} {lat:f})"`.
 - `has_changed` is `MultiValueField`'s. It works because `decompress` returns `Decimal`s, built

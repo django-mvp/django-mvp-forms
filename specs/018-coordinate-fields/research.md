@@ -13,9 +13,10 @@ attribute on a model is a `SpatialProxy`, and its `__set__` lets through `None`,
 `django/contrib/gis/db/models/proxy.py`). `GeometryField.get_prep_value` then builds a
 `GEOSGeometry` from the text when the model is saved (`django/contrib/gis/db/models/fields.py`),
 and `GEOSGeometry` reads EWKT, so `SRID=4326;POINT(<x> <y>)` keeps its spatial reference. A model
-form reaches the same proxy through `construct_instance` → `save_form_data` → `setattr`. After
-saving, the in-memory attribute is still the text until the instance is reloaded, so a form drawn
-again from that instance is handed WKT text. FR-022 already covers that.
+form reaches the same proxy through `construct_instance` → `save_form_data` → `setattr`. The
+first read of the attribute builds a GEOS geometry from the text and keeps it
+(`django/contrib/gis/db/models/proxy.py`), so a form drawn again from that instance is handed a
+point object. FR-022 covers both.
 
 The field reads an existing point by duck typing: `x`, `y`, `srid`, and `z`, which a GEOS `Point`
 returns as `None` when the point has no height. It never imports anything from
@@ -68,7 +69,9 @@ mask already uses (`reach()` in `imask.js`), applied to a number. `NumberMaskInp
 out-of-range number or corrects it, and some projects rely on that.
 
 `autofix` was considered and rejected. It corrects the value when the input loses focus, so a
-person who typed `35` would submit `40`, a value they never typed.
+person who typed `35` would submit `40`, a value they never typed. IMask's `min` and `max` do the
+same without `autofix`: the mask clamps to them on every commit, when it attaches and on every
+blur. So the bounds go to the script's own check only, never to IMask.
 
 ## What already exists
 
@@ -80,7 +83,7 @@ person who typed `35` would submit `40`, a value they never typed.
 | The masked input | **This repo:** `NumberMaskInput`, subclassed as `CoordinateMaskInput` with kind `coordinate` (note 3) |
 | The reach check while typing | **This repo:** the pattern of `reach()` in `mvp_forms/static/mvp_forms/imask.js`. **New code** for the number form of it |
 | The field telling its widget its options | **This repo:** `PartialDateField.get_bound_field` sets them on the widget it is given. Same pattern |
-| Two values as one field, `required` versus a half missing | **Django:** `forms.MultiValueField(require_all_fields=False)` with each subfield required. An empty pair cleans through `compress([])`, a missing half gets the subfield's `incomplete` message, and a required empty pair gets `required` |
+| Two values as one field, `required` versus a half missing | **Django:** `forms.MultiValueField(require_all_fields=False)` with each subfield required. An empty pair cleans through `compress([])`, and a required empty pair gets `required`. A missing half gets a bare message with no error code, so `PointField.clean` raises `incomplete` itself |
 | Two inputs as one widget | **Django:** `forms.MultiWidget`, with `decompress` written for points, WKT text and pairs (**new code**) |
 | Drawing a multi-widget as a fieldset with a legend, one help text and one set of errors, size, colour and variant on each part | **This repo:** the pack already does this for every `MultiWidget` (`frame.html` `is_group`, `daisyui.py` `decorate_part`). Nothing to add |
 | A visible name on each part | **This repo:** the partial date widget's typed year has a placeholder and an `aria-label` and sits in a daisyUI `join` (`mvp_forms/widgets/partial_date.html`). The point widget does the same with "Latitude" and "Longitude" |
@@ -96,8 +99,8 @@ person who typed `35` would submit `40`, a value they never typed.
   `decimal_places` on the latitude and longitude fields, and `min_latitude`, `max_latitude`,
   `min_longitude`, `max_longitude` and `decimal_places` on the point field.
 - **Errors** carry codes. The latitude and longitude fields use `invalid`, `min_value`,
-  `max_value`, `max_decimal_places` and `required`. The point field adds `incomplete` on each half
-  and `required` on the whole. Every message is wrapped in `gettext_lazy`, and the English
+  `max_value`, `max_decimal_places` and `required`. The point field adds `incomplete`, with one
+  message for each half, and `required` on the whole. Every message is wrapped in `gettext_lazy`, and the English
   catalogue gains them (Article VIII).
 - **A point that cannot be shown** raises `ValueError` from the widget's `decompress`, which runs
   when the form is drawn and when `has_changed` compares. The message names the spatial reference,

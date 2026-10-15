@@ -44,3 +44,13 @@ names the missing half.
 Every other field in the package refuses a lower bound above its upper bound when the form class is
 defined. Reading that as "wraps round the antimeridian" for a longitude alone would make one field
 behave unlike the rest, and would make a typo silently valid. Nothing in the request needs it.
+
+## 2026-10-15 · Design review
+
+- **IMask is never handed the bounds.** It clamps to `min` and `max` on every commit, so a stored or half-typed value outside them would be changed and posted. The `coordinate` kind checks the bounds in its own `validate`, and an input drawn holding a value the mask would cut waits unmasked, as a partial date does (ADR 0050).
+- **No `inputmode` on the coordinate input.** The decimal keypad on a phone has no minus key.
+- **`PointField.clean` raises `incomplete` itself**, with one message per half in its own `error_messages`, because `MultiValueField` gives a missing half no error code.
+- **`to_python` reads numbers as numbers**, so a float near zero written in exponent form is not refused.
+- **`CoordinateMaskInput` carries class defaults** (ADR 0049).
+- **A lone `-` posts what IMask commits**, `-0`, which cleans to `0`. Kept as IMask's number rule, stated in the README and pinned by a browser test, rather than adding a special case to the script.
+- Watch items for the implementers: bound errors are asserted by `params["limit_value"]` as well as by code. The reviewer suggested an ADR for the `coordinate` kind's own check in `data-imask`; it is written with T004, where the check is finished.

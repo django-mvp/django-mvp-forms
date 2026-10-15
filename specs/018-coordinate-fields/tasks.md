@@ -40,7 +40,8 @@ Plan, *The latitude and longitude fields*.
 
 - `LatitudeField` cleans `-90` to `90` and `LongitudeField` cleans `-180` to `180` to a
   `Decimal`. Both ends are accepted, and a value past either is refused with `min_value` or
-  `max_value`. Nothing is wrapped.
+  `max_value`, and the error's `params["limit_value"]` is the bound crossed. Nothing is
+  wrapped.
 - More than six decimal places is refused with `max_decimal_places`, and the value is not
   rounded.
 - Refused with `invalid`: text that is not a number, `51,5`, `5e1`, `1E2`, `inf`, `nan`, `-`
@@ -49,7 +50,8 @@ Plan, *The latitude and longitude fields*.
 - `initial` as a `Decimal`, a `float` or a `str` is shown with a full stop. Check that nothing is
   localised under a language whose decimal mark is a comma.
 - A developer's own `error_messages` replace each code's message. `disabled` and `validators`
-  behave as on a `DecimalField`.
+  behave as on a `DecimalField`. A disabled field whose initial is the float `0.00005` cleans to
+  `Decimal("0.00005")`.
 - The default widget is `CoordinateMaskInput` once T002 exists. Until then the field uses
   `DecimalField`'s, and this task asserts nothing about widgets.
 - README: the section "Coordinates" opens with the two fields: what they accept and return, and
@@ -74,7 +76,9 @@ Plan, *The masked input*.
   "thousandsSeparator": "", "min": -90, "max": 90}` for a latitude field with no options, and
   `±180` for a longitude. The field writes them in `get_bound_field`. Two forms of the same class
   each draw their own field's values.
-- A widget the developer named that is not a `CoordinateMaskInput` is left as it is.
+- A widget the developer named that is not a `CoordinateMaskInput` is left as it is. A
+  `CoordinateMaskInput` on a `CharField` draws, with no bounds in its JSON.
+- No `inputmode` is drawn, and one stated in `attrs` is kept.
 - Through the pack, the input is a text input with no `step`, `min` or `max` attribute, and takes
   a stated size, colour and variant. Its form's media names `mvp_forms/imask.js`.
 - A form with no coordinate field names no script it did not name before.
@@ -84,7 +88,10 @@ Plan, *The masked input*.
   decimal place is refused, a minus sign is taken only at the start, a second full stop is
   refused, letters are refused, and a posted value reaches `cleaned_data` as the `Decimal` typed.
   Without IMask the input is a plain text input, no error is raised, and an out-of-range value is
-  refused by the field. An input added after the page loaded is masked once.
+  refused by the field. An input added after the page loaded is masked once. An input drawn
+  holding `51.50740123` posts it unchanged and the field refuses it with `max_decimal_places`;
+  once the person edits it, it is masked. A lone `-` left in the input posts what IMask commits,
+  and the test pins it.
 - README: the masked input, what the page must load, and what happens without IMask.
   `CoordinateMaskInput` in the public surface, and the `coordinate` kind beside the other
   `data-imask` kinds.
@@ -112,14 +119,16 @@ Issue: #197. Delivers FR-026 to FR-029.
 `mvp_forms/fields.py`, `mvp_forms/static/mvp_forms/imask.js`, `README.md`,
 `demo/coordinate_forms.py`
 
-- `min_value`, `max_value` and `decimal_places` are enforced, and the widget's JSON follows them.
+- `min_value`, `max_value` and `decimal_places` are enforced, each bound error's
+  `params["limit_value"]` is the stated bound, and the widget's JSON follows them.
   `decimal_places=0` takes whole numbers only.
 - `ValueError` naming the option at definition: a bound past `±limit`, a bound that is not a
   finite number (including `bool`, `nan`, `inf` and text), `min_value` above `max_value`, and a
   `decimal_places` that is negative, not an `int`, or a `bool`. Equal bounds are allowed.
 - Browser: with `min_value=40, max_value=60`, typing `3` is refused, and `4`, `45` and `45.5` are
   taken. With `min_value=-60, max_value=-40` the same holds mirrored. With `decimal_places=2` a
-  third decimal place is refused. These fail before the `validate` in `imask.js` is right, and
+  third decimal place is refused. Typing `4` and leaving the input posts `4`, which the field
+  refuses with `min_value`, and an input drawn holding `35` posts `35`. These fail before the `validate` in `imask.js` is right, and
   the `40` to `60` case fails with the `number` kind (show this by the test's first run).
 - README: the options and the errors they raise. The demo's narrowed pair.
 
@@ -142,7 +151,8 @@ Plan, *The point field* and *The point widget*.
 
 - Cleans to `SRID=4326;POINT(<longitude> <latitude>)`, longitude first, each number as typed in
   plain decimal notation. Both empty: `None` when not required, `required` when required. One
-  half empty: an error with code `incomplete` on the field, whichever half, required or not. A
+  half empty: an error with code `incomplete` on the field, whichever half, required or not, and a
+  developer's `error_messages={"incomplete_latitude": ...}` replaces its message. A
   half out of bounds or not a number: that half's code. The message for each names the half.
   Assert by codes, and once each that the two halves' messages differ.
 - Options `min_latitude`, `max_latitude`, `min_longitude`, `max_longitude` and `decimal_places`
