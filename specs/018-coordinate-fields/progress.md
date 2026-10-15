@@ -28,3 +28,10 @@ Did: CoordinateMaskInput, default widget of both fields written in get_bound_fie
 Verified: widget, pack and e2e tests green; the e2e module fails 13 of 18 against the previous script; pre-commit green.
 Next: T003 demo page.
 Watch: a lone minus commits as -0 in IMask 7.6.1 (pinned by a test).
+
+## 2026-10-15T14:47:38Z · Implementer US2 · T003
+
+Did: Coordinates demo page (defaults, initial value, bound form in error), route, menu entry after Counted multiple select, icon.
+Verified: TestCoordinatesPage green; full suite 6650 passed; pre-commit green; dev server answers /coordinates/ with 200.
+Next: US4 (T004).
+Watch: none.
