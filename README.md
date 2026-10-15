@@ -1981,6 +1981,62 @@ The script writes no inline script and no inline handler, and it makes no reques
 
 A page that does not load the script draws the same three parts with every option: twelve months and the days 1 to 31, each part enabled. The form submits, and the field refuses a combination that is not a date, so a day with no month comes back as `no_month` and a date such as `2021-02-30` as `day`.
 
+### Coordinates
+
+A place on the earth is a latitude and a longitude in decimal degrees, as Leaflet, Google Maps and the GeoJSON format write them. `LatitudeField` and `LongitudeField` take one number each from a form, check it against the range the earth allows and hand the form `cleaned_data` a `Decimal`.
+
+This is the public surface:
+
+- `mvp_forms.fields.LatitudeField`
+- `mvp_forms.fields.LongitudeField`
+
+#### The latitude and longitude fields
+
+```python
+from django import forms
+
+from mvp_forms.fields import LatitudeField, LongitudeField
+
+
+class SiteForm(forms.Form):
+    latitude = LatitudeField()
+    longitude = LongitudeField(required=False)
+```
+
+A latitude is from -90 to 90 and a longitude from -180 to 180, both ends included. A value past either is refused, never wrapped round to the other side. The field takes `DecimalField`'s own arguments but `max_digits`, which stays unset, and `required`, `disabled`, `validators`, `error_messages`, `label`, `help_text` and `initial` behave as they do there.
+
+| Entered | `cleaned_data` |
+|---|---|
+| `51.5` | `Decimal("51.5")` |
+| `-0.127758` | `Decimal("-0.127758")` |
+| `+51.5`, `.5`, `90.` | `Decimal("51.5")`, `Decimal("0.5")`, `Decimal("90")` |
+| `-0` | `Decimal("0")` |
+| nothing, or only space | `None` |
+
+A value is an optional sign, digits and an optional full stop with digits after it. Space around it is dropped. A comma for the decimal mark, an exponent such as `5e1`, `inf` and `nan` are refused as not a number, whatever the active language. A value of more than six decimal places is refused and never rounded, since a rounded coordinate is a different place. A minus zero is cleaned to zero.
+
+A number given in Python, such as the `float` initial value of a disabled field, is read as the number it is. A `float` near zero, which Python writes in exponent form as `5e-05`, is accepted.
+
+| Option | Takes | Default |
+|---|---|---|
+| `min_value` | an `int`, `float` or `Decimal` of at least minus the limit | -90, or -180 |
+| `max_value` | an `int`, `float` or `Decimal` of at most the limit | 90, or 180 |
+| `decimal_places` | a whole number of at least zero | `6` |
+
+A field with a bound that is not a finite number or lies outside the range, a `min_value` above the `max_value`, or `decimal_places` that is not a whole number of at least zero raises a `ValueError` naming the option when the form class is defined.
+
+#### Error codes
+
+| Code | When |
+|---|---|
+| `required` | A required field is empty |
+| `invalid` | The text is not a plain number |
+| `min_value` | The value is below the lower bound. `params["limit_value"]` is the bound |
+| `max_value` | The value is above the upper bound. `params["limit_value"]` is the bound |
+| `max_decimal_places` | The value has more decimal places than `decimal_places` |
+
+A message of your own replaces each code's message through `error_messages`, as on any field.
+
 ### Themes
 
 The pack names only daisyUI's semantic colours, so a form follows whichever theme the host project chooses, and the pack sets none. Under each of the 35 themes built into daisyUI 5.7.47, light and dark, every piece of text the pack colours by its own choice can be read: labels, legends, help text, attached text, table headers, tabs and the alert that holds a form's errors. What is left is daisyUI's own drawing of a control, or a colour you chose for it.

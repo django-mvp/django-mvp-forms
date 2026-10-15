@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-mvp-forms\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-10 06:13-0500\n"
+"POT-Creation-Date: 2026-10-15 09:31-0500\n"
 "PO-Revision-Date: 2026-10-03 18:41+0200\n"
 "Last-Translator: django-mvp-forms\n"
 "Language-Team: English\n"
@@ -18,54 +18,92 @@ msgstr ""
 msgid "Forms"
 msgstr ""
 
-#: fields.py:18
+#: fields.py:21
 msgid "Enter a date as YYYY, YYYY-MM or YYYY-MM-DD."
 msgstr ""
 
-#: fields.py:19
+#: fields.py:22
 msgid "Enter the year with four digits."
 msgstr ""
 
-#: fields.py:20
+#: fields.py:23
 msgid "Enter a month from 1 to 12."
 msgstr ""
 
-#: fields.py:21
+#: fields.py:24
 msgid "That month has no such day."
 msgstr ""
 
-#: fields.py:22
+#: fields.py:25
 msgid "A month needs a year."
 msgstr ""
 
-#: fields.py:23
+#: fields.py:26
 msgid "A day needs a month."
 msgstr ""
 
-#: fields.py:24
+#: fields.py:27
 msgid "Enter at least a year and a month."
 msgstr ""
 
-#: fields.py:25
+#: fields.py:28
 msgid "Enter a full date."
 msgstr ""
 
-#: fields.py:26
+#: fields.py:29
 msgid "Enter the year only."
 msgstr ""
 
-#: fields.py:27
+#: fields.py:30
 msgid "Enter a year and a month, with no day."
 msgstr ""
 
-#: fields.py:28
+#: fields.py:31
 #, python-format
 msgid "Enter a date no earlier than %(limit)s."
 msgstr ""
 
-#: fields.py:29
+#: fields.py:32
 #, python-format
 msgid "Enter a date no later than %(limit)s."
+msgstr ""
+
+#: fields.py:243
+msgid "Enter a latitude in decimal degrees."
+msgstr ""
+
+#: fields.py:244
+#, python-format
+msgid "Enter a latitude of %(limit_value)s or more."
+msgstr ""
+
+#: fields.py:245
+#, python-format
+msgid "Enter a latitude of %(limit_value)s or less."
+msgstr ""
+
+#: fields.py:247
+#, python-format
+msgid "Enter a latitude with no more than %(max)s decimal places."
+msgstr ""
+
+#: fields.py:257
+msgid "Enter a longitude in decimal degrees."
+msgstr ""
+
+#: fields.py:258
+#, python-format
+msgid "Enter a longitude of %(limit_value)s or more."
+msgstr ""
+
+#: fields.py:259
+#, python-format
+msgid "Enter a longitude of %(limit_value)s or less."
+msgstr ""
+
+#: fields.py:261
+#, python-format
+msgid "Enter a longitude with no more than %(max)s decimal places."
 msgstr ""
 
 #: templates/daisyui/layout/alert.html:4
@@ -76,16 +114,16 @@ msgstr ""
 msgid "Close"
 msgstr ""
 
-#: templatetags/daisyui.py:33 widgets.py:688 widgets.py:689 widgets.py:743
-#: widgets.py:766
+#: templatetags/daisyui.py:33 widgets.py:700 widgets.py:701 widgets.py:755
+#: widgets.py:778
 msgid "Year"
 msgstr ""
 
-#: templatetags/daisyui.py:34 widgets.py:658 widgets.py:662
+#: templatetags/daisyui.py:34 widgets.py:670 widgets.py:674
 msgid "Month"
 msgstr ""
 
-#: templatetags/daisyui.py:35 widgets.py:669 widgets.py:673
+#: templatetags/daisyui.py:35 widgets.py:681 widgets.py:685
 msgid "Day"
 msgstr ""
 

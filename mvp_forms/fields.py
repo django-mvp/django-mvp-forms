@@ -8,6 +8,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from mvp_forms.widgets import Check
+
 RESOLUTIONS = ("year", "month", "day")
 
 
@@ -167,3 +169,94 @@ class PartialDateField(forms.CharField):
             self.fail("day")
         given = [part for part in (year, month, day) if part]
         return "-".join([year, *(part.zfill(2) for part in given[1:])])
+
+
+class CoordinateField(forms.DecimalField):
+    """What a latitude and a longitude share: a decimal degree inside a range.
+
+    Attributes:
+        limit: The whole number of degrees the range reaches either side of zero.
+    """
+
+    limit = 0
+    plain_number = re.compile(r"[+-]?([0-9]+(\.[0-9]*)?|\.[0-9]+)")
+
+    def __init__(self, *, min_value=None, max_value=None, decimal_places=6, **kwargs):
+        """State the range and the number of decimal places the field accepts.
+
+        Args:
+            min_value: The lowest degree accepted, at least minus the limit.
+            max_value: The highest degree accepted, at most the limit.
+            decimal_places: The most decimal places accepted.
+            **kwargs: Everything a ``DecimalField`` takes but ``max_digits``.
+
+        Raises:
+            ValueError: A bound is not a finite number or lies outside the
+                range, min_value is above max_value, or decimal_places is not a
+                whole number of at least zero.
+        """
+        bounds = {
+            "min_value": -self.limit if min_value is None else min_value,
+            "max_value": self.limit if max_value is None else max_value,
+        }
+        for option, bound in bounds.items():
+            Check.number(option, bound)
+            if abs(bound) > self.limit:
+                raise ValueError(
+                    f"{option} must be between {-self.limit} and {self.limit}, "
+                    f"not {bound!r}."
+                )
+        if bounds["min_value"] > bounds["max_value"]:
+            raise ValueError(
+                f"min_value must not be above max_value, not "
+                f"{bounds['min_value']!r} and {bounds['max_value']!r}."
+            )
+        Check.whole_number("decimal_places", decimal_places)
+        if decimal_places < 0:
+            raise ValueError(
+                f"decimal_places must be at least zero, not {decimal_places!r}."
+            )
+        super().__init__(decimal_places=decimal_places, **bounds, **kwargs)
+
+    def to_python(self, value):
+        """Return the number as a ``Decimal``, with no sign on a zero.
+
+        Numbers are read as numbers. Text must be a plain number: no exponent,
+        no comma, no ``inf`` or ``nan``.
+        """
+        if isinstance(value, str):
+            value = value.strip()
+            if value and not self.plain_number.fullmatch(value):
+                raise ValidationError(self.error_messages["invalid"], code="invalid")
+        number = super().to_python(value)
+        if number is not None and number == 0:
+            return abs(number)
+        return number
+
+
+class LatitudeField(CoordinateField):
+    """A latitude in decimal degrees, from -90 to 90, cleaned to a ``Decimal``."""
+
+    limit = 90
+    default_error_messages = {
+        "invalid": _("Enter a latitude in decimal degrees."),
+        "min_value": _("Enter a latitude of %(limit_value)s or more."),
+        "max_value": _("Enter a latitude of %(limit_value)s or less."),
+        "max_decimal_places": _(
+            "Enter a latitude with no more than %(max)s decimal places."
+        ),
+    }
+
+
+class LongitudeField(CoordinateField):
+    """A longitude in decimal degrees, from -180 to 180, cleaned to a ``Decimal``."""
+
+    limit = 180
+    default_error_messages = {
+        "invalid": _("Enter a longitude in decimal degrees."),
+        "min_value": _("Enter a longitude of %(limit_value)s or more."),
+        "max_value": _("Enter a longitude of %(limit_value)s or less."),
+        "max_decimal_places": _(
+            "Enter a longitude with no more than %(max)s decimal places."
+        ),
+    }
