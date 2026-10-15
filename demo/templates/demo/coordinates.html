@@ -1,0 +1,14 @@
+{% extends "page_view.html" %}
+{% load crispy_forms_tags %}
+{% block page.content %}
+  {% for id, name, text, form in sections %}
+    <c-mvp.section :title="name" icon="coordinates" id="{{ id }}">
+      <c-mvp.text>{{ text }}</c-mvp.text>
+      {% crispy form %}
+    </c-mvp.section>
+  {% endfor %}
+{% endblock page.content %}
+{% block extra_js %}
+  {{ block.super }}
+  <script src="https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js" integrity="sha384-UO8YwPv//GjwHj93ZlwXcDNjv3BSxdBFUB2jtiOuL3d/a0kS9E8sYvHjTBkQI8u8" crossorigin="anonymous"></script>
+{% endblock extra_js %}

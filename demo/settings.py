@@ -154,6 +154,7 @@ EASY_ICONS = {
             "formset-table": "bi bi-table",
             "input-masks": "bi bi-123",
             "partial-dates": "bi bi-calendar3",
+            "coordinates": "bi bi-geo-alt",
             "themes": "bi bi-brush",
             "tomselect": "bi bi-menu-button-wide",
             "countries": "bi bi-globe",
