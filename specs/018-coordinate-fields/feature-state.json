@@ -2,7 +2,7 @@
   "feature": "018-coordinate-fields",
   "branch": "018-coordinate-fields",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "REVIEW",
+  "state": "PR_READY",
   "state_history": [
     {
       "state": "QUEUED",
@@ -33,6 +33,11 @@
       "state": "REVIEW",
       "at": "2026-10-15T15:11:32Z",
       "note": "converge: no gaps; ADR verdicts written; one cleanup task"
+    },
+    {
+      "state": "PR_READY",
+      "at": "2026-10-15T15:29:24Z",
+      "note": "review fixed; walkthrough laid out"
     }
   ],
   "gates": {
@@ -50,6 +55,11 @@
     "merge": {
       "approved_by": null,
       "at": null
+    },
+    "walkthrough": {
+      "approved_by": null,
+      "at": "2026-10-15T15:28:56Z",
+      "self_resolved": []
     }
   },
   "stories": [
