@@ -356,10 +356,10 @@ class PointField(forms.MultiValueField):
         if self.disabled and not isinstance(value, list):
             value = self.widget.decompress(value)
         if isinstance(value, list | tuple) and len(value) == 2:
-            latitude, longitude = (self.blank(half) for half in value)
-            if latitude and not longitude:
+            no_latitude, no_longitude = (self.blank(half) for half in value)
+            if no_latitude and not no_longitude:
                 self.fail("incomplete_latitude")
-            if longitude and not latitude:
+            if no_longitude and not no_latitude:
                 self.fail("incomplete_longitude")
         return super().clean(value)
 
