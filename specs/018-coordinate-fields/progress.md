@@ -35,3 +35,10 @@ Did: Coordinates demo page (defaults, initial value, bound form in error), route
 Verified: TestCoordinatesPage green; full suite 6650 passed; pre-commit green; dev server answers /coordinates/ with 200.
 Next: US4 (T004).
 Watch: none.
+
+## 2026-10-15T14:55:20Z · Implementer US4 · T004
+
+Did: tests for narrowed bounds (40..60, -60..-40) and decimal places in fields, widget JSON and the browser; ADR 0056; README, changelog, demo section. validate in imask.js needed no change.
+Verified: uv run pytest -n auto --dist loadscope -q: 6682 passed. Mutation probes: number kind in build() fails 4 browser tests; dropping the bounds in the field fails 24 field/widget tests.
+Next: US3.
+Watch: the input-drawn-with-35 browser test passes under the number-kind mutation too, so it pins the posted value, not the kind.
