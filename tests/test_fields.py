@@ -799,6 +799,33 @@ class TestCoordinateFieldOptions:
         assert form.errors.as_data()["place"][0].params["limit_value"] == 10.5
 
     @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize(
+        ("bounds", "value", "code", "limit_value"),
+        [
+            ((40, 60), "35", "min_value", 40),
+            ((40, 60), "61", "max_value", 60),
+            ((-60, -40), "-35", "max_value", -40),
+            ((-60, -40), "-61", "min_value", -60),
+        ],
+    )
+    def test_a_value_outside_a_narrowed_range_names_the_bound_it_broke(
+        self, field_class, limit, bounds, value, code, limit_value
+    ):
+        form = submit_place(
+            field_class, value, min_value=bounds[0], max_value=bounds[1]
+        )
+
+        assert place_codes(form) == [code]
+        assert form.errors.as_data()["place"][0].params["limit_value"] == limit_value
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize("value", ["40", "45.5", "60"])
+    def test_a_value_inside_a_narrowed_range_is_taken(self, field_class, limit, value):
+        form = submit_place(field_class, value, min_value=40, max_value=60)
+
+        assert form.cleaned_data["place"] == Decimal(value)
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
     def test_the_bounds_of_the_range_itself_are_accepted_as_options(
         self, field_class, limit
     ):

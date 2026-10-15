@@ -38,9 +38,15 @@ class PlaceForm(forms.Form):
     longitude = LongitudeField(required=False)
 
 
-def cleaned(entries):
+class NarrowForm(forms.Form):
+    north = LatitudeField(min_value=40, max_value=60, required=False)
+    south = LatitudeField(min_value=-60, max_value=-40, required=False)
+    rounded = LongitudeField(decimal_places=2, required=False)
+
+
+def cleaned(entries, form_class=PlaceForm):
     """Return the form a post of these entries gives, validated."""
-    form = PlaceForm(entries)
+    form = form_class(entries)
     form.is_valid()
     return form
 
@@ -62,8 +68,8 @@ def place_page(page, page_errors, live_server):
     )
     page.add_init_script(COUNT_MASKS)
 
-    def open_page(imask=True, **initial):
-        form = PlaceForm(initial=initial)
+    def open_page(imask=True, form_class=PlaceForm, **initial):
+        form = form_class(initial=initial)
         script = f'<script src="{IMASK_URL}"></script>' if imask else ""
         html = (
             "<!doctype html><html><head><meta charset=utf-8></head><body>"
@@ -205,3 +211,75 @@ class TestCoordinateMask:
 
         assert page.evaluate(MASKS_OF, "id_latitude") == 1
         assert page.locator("#id_latitude").input_value() == "51.5"
+
+
+class TestNarrowedCoordinateMask:
+    @pytest.mark.parametrize(
+        ("name", "typed", "shown"),
+        [
+            ("north", "3", ""),
+            ("north", "4", "4"),
+            ("north", "45", "45"),
+            ("north", "45.5", "45.5"),
+            ("north", "61", "6"),
+            ("north", "9", ""),
+            ("south", "-3", "-"),
+            ("south", "-4", "-4"),
+            ("south", "-45", "-45"),
+            ("south", "-45.5", "-45.5"),
+            ("south", "-61", "-6"),
+            ("rounded", "1.234", "1.23"),
+            ("rounded", "-12.5", "-12.5"),
+        ],
+    )
+    def test_typing_past_the_narrowed_bounds_is_refused(
+        self, place_page, name, typed, shown
+    ):
+        page = place_page(form_class=NarrowForm)
+
+        assert type_into(page, name, typed) == shown
+
+    def test_a_value_left_as_typed_is_posted_and_the_field_refuses_it(self, place_page):
+        page = place_page(form_class=NarrowForm)
+        type_into(page, "north", "4")
+        page.locator("#id_south").click()
+
+        posted = entries_of(page)
+
+        assert posted["north"] == "4"
+        form = cleaned(posted, NarrowForm)
+        assert form.has_error("north", code="min_value")
+        assert form.errors.as_data()["north"][0].params["limit_value"] == 40
+
+    def test_an_input_drawn_holding_a_value_below_the_bound_posts_it(self, place_page):
+        page = place_page(form_class=NarrowForm, north="35", south="-35")
+
+        assert page.locator("#id_north").input_value() == "35"
+        posted = entries_of(page)
+        assert posted["north"] == "35"
+        assert posted["south"] == "-35"
+        form = cleaned(posted, NarrowForm)
+        assert form.has_error("north", code="min_value")
+        assert form.has_error("south", code="max_value")
+
+    def test_an_input_drawn_holding_a_value_inside_the_bounds_is_masked(
+        self, place_page
+    ):
+        page = place_page(form_class=NarrowForm, north="45.5")
+
+        assert page.evaluate(MASKS_OF, "id_north") == 1
+        assert page.locator("#id_north").input_value() == "45.5"
+
+    def test_a_value_typed_inside_the_narrowed_bounds_is_accepted_by_the_field(
+        self, place_page
+    ):
+        page = place_page(form_class=NarrowForm)
+        type_into(page, "north", "45.5")
+        type_into(page, "south", "-45.5")
+        type_into(page, "rounded", "1.23")
+
+        form = cleaned(entries_of(page), NarrowForm)
+
+        assert form.cleaned_data["north"] == Decimal("45.5")
+        assert form.cleaned_data["south"] == Decimal("-45.5")
+        assert form.cleaned_data["rounded"] == Decimal("1.23")

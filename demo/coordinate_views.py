@@ -6,6 +6,7 @@ from demo.coordinate_forms import (
     BoundCoordinateForm,
     CoordinateForm,
     InitialCoordinateForm,
+    NarrowedCoordinateForm,
 )
 
 
@@ -34,6 +35,14 @@ class CoordinatesView(MVPTemplateView):
                     "With an initial value",
                     "The value is drawn with a full stop, whatever the language.",
                     InitialCoordinateForm(prefix="initial"),
+                ),
+                (
+                    "narrowed",
+                    "Narrowed to one country",
+                    "Latitude 47.27 to 55.06 and longitude 5.87 to 15.04, to two "
+                    "decimal places. A digit that no value in the range could "
+                    "follow is refused.",
+                    NarrowedCoordinateForm(prefix="narrowed"),
                 ),
                 (
                     "error",

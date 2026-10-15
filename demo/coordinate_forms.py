@@ -48,3 +48,26 @@ class BoundCoordinateForm(CoordinateForm):
             {"latitude": "95", "longitude": "-0.12775812"}, *args, **kwargs
         )
         self.is_valid()
+
+
+class NarrowedCoordinateForm(CoordinateForm):
+    """A latitude and a longitude narrowed to one country, with two places."""
+
+    latitude = LatitudeField(
+        label=_("Latitude"),
+        min_value=Decimal("47.27"),
+        max_value=Decimal("55.06"),
+        decimal_places=2,
+        help_text=_(
+            "LatitudeField(min_value=47.27, max_value=55.06, decimal_places=2)"
+        ),
+    )
+    longitude = LongitudeField(
+        label=_("Longitude"),
+        min_value=Decimal("5.87"),
+        max_value=Decimal("15.04"),
+        decimal_places=2,
+        help_text=_(
+            "LongitudeField(min_value=5.87, max_value=15.04, decimal_places=2)"
+        ),
+    )

@@ -2025,7 +2025,16 @@ A number given in Python, such as the `float` initial value of a disabled field,
 | `max_value` | an `int`, `float` or `Decimal` of at most the limit | 90, or 180 |
 | `decimal_places` | a whole number of at least zero | `6` |
 
-A field with a bound that is not a finite number or lies outside the range, a `min_value` above the `max_value`, or `decimal_places` that is not a whole number of at least zero raises a `ValueError` naming the option when the form class is defined.
+```python
+class SiteForm(forms.Form):
+    north = LatitudeField(min_value=40, max_value=60)
+    south = LatitudeField(min_value=-60, max_value=-40)
+    whole_degrees = LongitudeField(decimal_places=0)
+```
+
+Equal bounds are allowed, and a value is taken at either bound. `decimal_places=0` takes whole numbers only. A value below `min_value` is refused with `min_value` and above `max_value` with `max_value`, and `params["limit_value"]` is the bound you stated. The widget's `data-imask` follows the options.
+
+A field with a bound that is not a finite number (text, `bool`, `nan` and `inf` included) or lies outside the range, a `min_value` above the `max_value`, or `decimal_places` that is not a whole number of at least zero (a `bool` is not one) raises a `ValueError` naming the option when the form class is defined.
 
 #### Error codes
 
@@ -2053,13 +2062,13 @@ latitude = LatitudeField(widget=CoordinateMaskInput(attrs={"placeholder": "51.5"
 
 The form's media names `mvp_forms/imask.js`, and the page has to load IMask as the section on input masks describes under "What to load". With IMask the input refuses:
 
-- a digit that leaves no number between the bounds, so `91` stops at `9` for a latitude
+- a digit that leaves no number between the bounds, so `91` stops at `9` for a latitude, and `3` is refused where the bounds are 40 and 60 while `4`, `45` and `45.5` are taken
 - a seventh decimal place, or more than the field's `decimal_places`
 - a minus sign anywhere but the start
 - a second full stop
 - anything that is not a digit, a minus sign or a full stop
 
-The bounds are never handed to IMask as `min` and `max`, which would change a value outside them whenever the input is committed. The script checks them itself, so what a person typed is what is posted and the field refuses it with its own code.
+The bounds are never handed to IMask as `min` and `max`, which would change a value outside them whenever the input is committed. The script checks them itself, so what a person typed is what is posted and the field refuses it with its own code. A `4` left in the input under bounds of 40 and 60 is posted as `4`, and the field refuses it with `min_value`. An input drawn holding `35` under the same bounds posts `35`. The reasoning is in [ADR 0056](https://github.com/django-mvp/django-mvp-forms/blob/main/docs/adr/0056-the-coordinate-mask-checks-its-own-bounds.md).
 
 An input drawn holding a value the mask would cut, such as `51.50740123`, is left unmasked and posts that value unchanged, and the field refuses it with `max_decimal_places`. It is masked once the person changes it.
 

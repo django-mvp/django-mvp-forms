@@ -949,6 +949,24 @@ class TestCoordinateMaskInput:
         assert json.loads(drawn_first["data-imask"])["min"] == -10
         assert json.loads(drawn_second["data-imask"])["min"] == -20
 
+    def test_the_narrowed_bounds_and_decimal_places_are_written(self):
+        class Form(forms.Form):
+            north = LatitudeField(min_value=40, max_value=60, decimal_places=2)
+            south = LatitudeField(min_value=Decimal("-60.5"), max_value=-40)
+            whole = LongitudeField(decimal_places=0)
+
+        form = Form()
+        north, south, whole = (
+            json.loads(
+                BeautifulSoup(str(form[name]), "html.parser").input["data-imask"]
+            )
+            for name in ("north", "south", "whole")
+        )
+
+        assert (north["min"], north["max"], north["scale"]) == (40, 60, 2)
+        assert (south["min"], south["max"], south["scale"]) == (-60.5, -40, 6)
+        assert (whole["min"], whole["max"], whole["scale"]) == (-180, 180, 0)
+
     def test_it_is_the_default_widget_of_both_fields(self):
         assert isinstance(LatitudeField().widget, CoordinateMaskInput)
         assert isinstance(LongitudeField().widget, CoordinateMaskInput)
