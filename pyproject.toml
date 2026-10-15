@@ -4,7 +4,7 @@ description = "A daisyUI template pack for django-crispy-forms, with form fields
 # Pre-viable. The first published release is 0.1.0, cut once the Essential
 # goals in GOALS.md are delivered; until then the version stays in 0.0.x and
 # nothing is uploaded to the package index.
-version = "0.3.0"
+version = "0.4.0"
 authors = [
     { name = "Samuel Jennings", email = "samuel.scott.jennings@gmail.com" },
 ]
@@ -60,7 +60,7 @@ dev = [
     "mvp-shared[dev,test]",
     # The demo project's application shell. Not a runtime dependency: see the
     # note on `dependencies` above.
-    "django-mvp>=0.24.0",
+    "django-mvp>=0.28.2",
     "django-tomselect>=2026.6.2",
     "django-countries>=9.1.0",
 ]

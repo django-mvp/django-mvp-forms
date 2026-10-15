@@ -32,6 +32,10 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.staticfiles",
     "mvp",
+    # The components django-mvp draws its shell with. It is installed with
+    # django-mvp and listed below it: both ship an `icon` component, and the
+    # one in `mvp` must be found first.
+    "daisy_cotton",
     "easy_icons",
     "crispy_forms",
     "flex_menu",

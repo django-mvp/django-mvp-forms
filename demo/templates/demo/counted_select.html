@@ -2,15 +2,15 @@
 {% load crispy_forms_tags static %}
 {% block page.content %}
   <link rel="stylesheet" href="{% static 'demo/counted-select.css' %}" />
-  <c-text>
+  <c-mvp.text>
     One control drawn two ways. The control shows how many options are chosen, and the
     list ticks each one. Submit either form and the page shows what it cleaned to.
-  </c-text>
+  </c-mvp.text>
   <div class="grid gap-6 lg:grid-cols-2">
-    <c-section title="With no script" icon="tomselect">
-      <c-text>
+    <c-mvp.section title="With no script" icon="tomselect">
+      <c-mvp.text>
         Checkboxes in a popover. HTML and CSS only.
-      </c-text>
+      </c-mvp.text>
       <ul class="list-disc ps-5">
         <li>For: no script and no third-party package.</li>
         <li>For: Escape or a click outside closes the list.</li>
@@ -30,12 +30,12 @@
           {% for item in plain_cleaned %}<li>{{ item.label }}: <span id="plain-cleaned-{{ item.name }}">{{ item.value }}</span></li>{% endfor %}
         </ul>
       {% endif %}
-    </c-section>
-    <c-section title="Tom Select" icon="tomselect">
-      <c-text>
+    </c-mvp.section>
+    <c-mvp.section title="Tom Select" icon="tomselect">
+      <c-mvp.text>
         The package's <code>TomSelectMultiple</code> widget, with Tom Select's checkbox
         options and its search box moved into the list.
-      </c-text>
+      </c-mvp.text>
       <ul class="list-disc ps-5">
         <li>For: a screen reader is told each chosen option by name.</li>
         <li>For: search.</li>
@@ -62,19 +62,19 @@
           {% for item in tomselect_cleaned %}<li>{{ item.label }}: <span id="tomselect-cleaned-{{ item.name }}">{{ item.value }}</span></li>{% endfor %}
         </ul>
       {% endif %}
-    </c-section>
+    </c-mvp.section>
   </div>
-  <c-section title="In every state" level="3">
-    <c-text>
+  <c-mvp.section title="In every state" level="3">
+    <c-mvp.text>
       No script on the left, Tom Select on the right. None of these posts anywhere.
-    </c-text>
+    </c-mvp.text>
     {% for state in states %}
-      <c-section :title="state.title" level="4">
+      <c-mvp.section :title="state.title" level="4">
         <div class="grid gap-6 lg:grid-cols-2">
           <div>{% crispy state.plain %}</div>
           <div>{% crispy state.tomselect %}</div>
         </div>
-      </c-section>
+      </c-mvp.section>
     {% endfor %}
-  </c-section>
+  </c-mvp.section>
 {% endblock page.content %}

@@ -1,45 +1,45 @@
 {% extends "page_view.html" %}
 {% load crispy_forms_tags %}
 {% block page.content %}
-  <c-section title="Try it" icon="countries">
-    <c-text>
+  <c-mvp.section title="Try it" icon="countries">
+    <c-mvp.text>
       A text input, then the three fields django-countries gives a form: a country, several
       countries, and a country drawn by its flag widget. The first country is required.
       Submit the form and the page shows what it cleaned to.
-    </c-text>
+    </c-mvp.text>
     {% crispy form %}
-  </c-section>
+  </c-mvp.section>
   {% if cleaned %}
-    <c-section title="What the form cleaned to" level="3">
+    <c-mvp.section title="What the form cleaned to" level="3">
       <ul id="{{ prefix }}-cleaned">
         {% for item in cleaned %}
           <li>{{ item.label }}: <span id="{{ prefix }}-cleaned-{{ item.name }}">{{ item.value }}</span></li>
         {% endfor %}
       </ul>
-    </c-section>
+    </c-mvp.section>
   {% endif %}
-  <c-section title="In every state" level="3">
-    <c-text>
+  <c-mvp.section title="In every state" level="3">
+    <c-mvp.text>
       The three fields in the same state. No form from here down posts anywhere.
-    </c-text>
+    </c-mvp.text>
     {% for state in states %}
-      <c-section :title="state.title" level="4">
+      <c-mvp.section :title="state.title" level="4">
         {% crispy state.form %}
-      </c-section>
+      </c-mvp.section>
     {% endfor %}
-  </c-section>
-  <c-section title="Sizes" level="3">
-    <c-text>
+  </c-mvp.section>
+  <c-mvp.section title="Sizes" level="3">
+    <c-mvp.text>
       The fields take the size stated for the form, as any select does, and the flag stays
       beside its select at each.
-    </c-text>
+    </c-mvp.text>
     {% for size in sizes %}
-      <c-section :title="size.title" level="4">
+      <c-mvp.section :title="size.title" level="4">
         {% crispy size.form %}
-      </c-section>
+      </c-mvp.section>
     {% endfor %}
-  </c-section>
-  <c-text>
+  </c-mvp.section>
+  <c-mvp.text>
     <c-link href="{% url 'countries-standalone' %}" text="The same page without django-mvp" />
-  </c-text>
+  </c-mvp.text>
 {% endblock page.content %}

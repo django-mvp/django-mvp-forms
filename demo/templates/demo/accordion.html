@@ -1,18 +1,18 @@
 {% extends "page_view.html" %}
 {% load crispy_forms_tags %}
 {% block page.content %}
-  <c-section title="Try it" icon="accordion">
-    <c-text>
+  <c-mvp.section title="Try it" icon="accordion">
+    <c-mvp.text>
       The third group holds a required field. Submit the form empty to see the
       group that holds the first error open.
-    </c-text>
+    </c-mvp.text>
     {% crispy accordion_form %}
-  </c-section>
-  <c-section title="Groups the developer opened and closed" level="3">
-    <c-text>The first group is given active=False and the second active=True.</c-text>
+  </c-mvp.section>
+  <c-mvp.section title="Groups the developer opened and closed" level="3">
+    <c-mvp.text>The first group is given active=False and the second active=True.</c-mvp.text>
     {% crispy chosen_form %}
-  </c-section>
-  <c-text>
+  </c-mvp.section>
+  <c-mvp.text>
     <c-link href="{% url 'containers-standalone' %}" text="The same forms without django-mvp" />
-  </c-text>
+  </c-mvp.text>
 {% endblock page.content %}
