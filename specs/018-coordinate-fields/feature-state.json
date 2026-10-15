@@ -66,6 +66,11 @@
               "mvp_forms/fields.py:196"
             ]
           }
+        },
+        {
+          "id": "T006",
+          "status": "todo",
+          "attempts": 0
         }
       ]
     },
