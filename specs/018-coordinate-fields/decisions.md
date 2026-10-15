@@ -10,6 +10,8 @@ reference in front drops straight onto a `PointField` with nothing imported. A p
 would have been neater for a project without GeoDjango, but would leave every GeoDjango user to
 write the conversion the field exists to save them.
 
+**ADR:** none — the field's contract, stated in the spec and the README; no other part of the package builds on it.
+
 ## D2. The name `PointField`
 
 The maintainer's choice over `CoordinatesField`. GeoDjango's form module has a field of the same
@@ -17,11 +19,15 @@ name, so a form importing both renames one on import, and a developer expecting 
 should know this one cleans to text rather than a GEOS point. The README says both plainly. A
 model's `PointField` takes either, so neither difference affects saving.
 
+**ADR:** none — the field's name and what it returns are public surface, stated in the README, not an architectural choice.
+
 ## D3. Empty cleans to `None`
 
 Django's `DecimalField` cleans an empty value to `None`, and the latitude and longitude fields
 follow it. The point field does too rather than cleaning to empty text like a `CharField`, because
 a nullable `PointField` takes `None`, while empty text reaches GEOS on save and fails there.
+
+**ADR:** none — follows Django's own `DecimalField`, nothing downstream inherits it.
 
 ## D4. A point that cannot be shown is the developer's error
 
@@ -33,11 +39,15 @@ so the field raises when the form is drawn. The developer sees it the first time
 form, and the message says what to do. A point with a height is refused for the same reason: the
 form has no input for it and saving would drop it.
 
+**ADR:** none — local to this field's starting values and stated in the README.
+
 ## D5. A half-filled point is always an error
 
 A not-required point field with one half filled could have been cleaned to `None`, as if left
 empty. That would throw away what the person typed without telling them, so it is an error that
 names the missing half.
+
+**ADR:** none — local to this field's cleaning.
 
 ## D6. No range across the antimeridian
 
@@ -45,7 +55,9 @@ Every other field in the package refuses a lower bound above its upper bound whe
 defined. Reading that as "wraps round the antimeridian" for a longitude alone would make one field
 behave unlike the rest, and would make a typo silently valid. Nothing in the request needs it.
 
-## 2026-10-15 · Design review
+**ADR:** none — the package's existing rule for bounds, applied unchanged.
+
+## D7. Design review, 2026-10-15
 
 - **IMask is never handed the bounds.** It clamps to `min` and `max` on every commit, so a stored or half-typed value outside them would be changed and posted. The `coordinate` kind checks the bounds in its own `validate`, and an input drawn holding a value the mask would cut waits unmasked, as a partial date does (ADR 0050).
 - **No `inputmode` on the coordinate input.** The decimal keypad on a phone has no minus key.
@@ -54,3 +66,5 @@ behave unlike the rest, and would make a typo silently valid. Nothing in the req
 - **`CoordinateMaskInput` carries class defaults** (ADR 0049).
 - **A lone `-` posts what IMask commits**, `-0`, which cleans to `0`. Kept as IMask's number rule, stated in the README and pinned by a browser test, rather than adding a special case to the script.
 - Watch items for the implementers: bound errors are asserted by `params["limit_value"]` as well as by code. The reviewer suggested an ADR for the `coordinate` kind's own check in `data-imask`; it is written with T004, where the check is finished.
+
+**ADR:** docs/adr/0056-the-coordinate-mask-checks-its-own-bounds.md
