@@ -566,6 +566,46 @@ class NumberMaskInput(MaskInput):
         return str(value).replace(".", self.radix)
 
 
+class CoordinateMaskInput(NumberMaskInput):
+    """A decimal degree, typed with a full stop and an optional minus sign.
+
+    The latitude and longitude fields state the number of decimal places and the
+    bounds on the widget they are given. The bounds are checked by the script
+    and never handed to IMask, which would change a value outside them.
+    """
+
+    kind = "coordinate"
+    scale = 6
+    min_value = None
+    max_value = None
+
+    def __init__(self, attrs=None):
+        """Draw no ``inputmode``, unless ``attrs`` states one.
+
+        The decimal keypad of a phone has no minus key, and offers a comma where
+        the language's decimal mark is a comma.
+
+        Args:
+            attrs: HTML attributes for the input.
+        """
+        super().__init__(attrs, radix=".", thousands_separator="")
+        if "inputmode" not in (attrs or {}):
+            del self.attrs["inputmode"]
+
+    def mask_options(self):
+        """Return the kind of mask, its decimal places and the field's bounds."""
+        bounds = {
+            "min": self.write_bound(self.min_value),
+            "max": self.write_bound(self.max_value),
+        }
+        return {
+            "kind": self.kind,
+            "scale": self.scale,
+            **self.options,
+            **{name: bound for name, bound in bounds.items() if bound is not None},
+        }
+
+
 class DynamicMaskInput(MaskInput):
     """A list of masks, from which IMask applies the one that fits best."""
 

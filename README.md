@@ -1533,6 +1533,7 @@ This is the public surface:
 - `mvp_forms.widgets.RegexMaskInput`
 - `mvp_forms.widgets.NumberMaskInput`
 - `mvp_forms.widgets.DynamicMaskInput`
+- `mvp_forms.widgets.CoordinateMaskInput`, described under Coordinates, which writes the kind `coordinate`: the `number` kind with its bounds checked by the script instead of IMask
 - the attribute `data-imask`, which holds a widget's options as JSON on its `<input>`
 - the script `mvp_forms/imask.js`, which each widget names in its media
 - the event `mvp-forms:imask`, which the script sends from each input once its mask is applied, with the IMask instance in `event.detail.mask`
@@ -1989,6 +1990,7 @@ This is the public surface:
 
 - `mvp_forms.fields.LatitudeField`
 - `mvp_forms.fields.LongitudeField`
+- `mvp_forms.widgets.CoordinateMaskInput`
 
 #### The latitude and longitude fields
 
@@ -2036,6 +2038,34 @@ A field with a bound that is not a finite number or lies outside the range, a `m
 | `max_decimal_places` | The value has more decimal places than `decimal_places` |
 
 A message of your own replaces each code's message through `error_messages`, as on any field.
+
+#### The masked input
+
+Both fields draw `CoordinateMaskInput`, a text input that has IMask refuse what can never be a coordinate as a person types.
+
+```python
+from mvp_forms.widgets import CoordinateMaskInput
+
+latitude = LatitudeField(widget=CoordinateMaskInput(attrs={"placeholder": "51.5"}))
+```
+
+`CoordinateMaskInput(attrs=None)` takes HTML attributes and nothing else. The field tells it the decimal places and the bounds when the form is drawn, so two fields with different bounds each draw their own. Its `data-imask` holds `{"kind": "coordinate", "scale": 6, "radix": ".", "thousandsSeparator": "", "min": -90, "max": 90}` for a latitude with no options, and `-180` and `180` for a longitude. On a field that is not a coordinate field it holds no `min` and `max`. The input is a text input with no `step`, `min` or `max` attribute, so a browser's own number rules do not apply to it. It carries no `inputmode`, because the decimal keypad of a phone has no minus key and offers a comma where the language's decimal mark is one. An `inputmode` in your `attrs` is kept. In the pack it takes the size, colour and variant stated for the form.
+
+The form's media names `mvp_forms/imask.js`, and the page has to load IMask as the section on input masks describes under "What to load". With IMask the input refuses:
+
+- a digit that leaves no number between the bounds, so `91` stops at `9` for a latitude
+- a seventh decimal place, or more than the field's `decimal_places`
+- a minus sign anywhere but the start
+- a second full stop
+- anything that is not a digit, a minus sign or a full stop
+
+The bounds are never handed to IMask as `min` and `max`, which would change a value outside them whenever the input is committed. The script checks them itself, so what a person typed is what is posted and the field refuses it with its own code.
+
+An input drawn holding a value the mask would cut, such as `51.50740123`, is left unmasked and posts that value unchanged, and the field refuses it with `max_decimal_places`. It is masked once the person changes it.
+
+A `-` and nothing after it, left in the input, is committed by IMask as `-0`, and the field cleans that to `0`.
+
+A page that does not load IMask draws the input as an ordinary text input. Nothing is masked and no error is raised in the browser, and the field refuses a value outside its bounds or with too many decimal places when the form is sent.
 
 ### Themes
 

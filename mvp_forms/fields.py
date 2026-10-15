@@ -8,7 +8,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from mvp_forms.widgets import Check
+from mvp_forms.widgets import Check, CoordinateMaskInput
 
 RESOLUTIONS = ("year", "month", "day")
 
@@ -179,6 +179,7 @@ class CoordinateField(forms.DecimalField):
     """
 
     limit = 0
+    widget = CoordinateMaskInput
     plain_number = re.compile(r"[+-]?([0-9]+(\.[0-9]*)?|\.[0-9]+)")
 
     def __init__(self, *, min_value=None, max_value=None, decimal_places=6, **kwargs):
@@ -217,6 +218,14 @@ class CoordinateField(forms.DecimalField):
                 f"decimal_places must be at least zero, not {decimal_places!r}."
             )
         super().__init__(decimal_places=decimal_places, **bounds, **kwargs)
+
+    def get_bound_field(self, form, field_name):
+        """Tell a ``CoordinateMaskInput`` the decimal places and the bounds."""
+        if isinstance(self.widget, CoordinateMaskInput):
+            self.widget.scale = self.decimal_places
+            self.widget.min_value = self.min_value
+            self.widget.max_value = self.max_value
+        return super().get_bound_field(form, field_name)
 
     def to_python(self, value):
         """Return the number as a ``Decimal``, with no sign on a zero.
