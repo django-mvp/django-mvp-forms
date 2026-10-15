@@ -131,6 +131,8 @@ Issue: #197. Delivers FR-026 to FR-029.
   refuses with `min_value`, and an input drawn holding `35` posts `35`. These fail before the `validate` in `imask.js` is right, and
   the `40` to `60` case fails with the `number` kind (show this by the test's first run).
 - README: the options and the errors they raise. The demo's narrowed pair.
+- ADR: the `coordinate` kind checks the bounds in its own `validate` and never hands them to
+  IMask, and waits unmasked on a value the mask would cut. Numbered as the next free ADR.
 
 ---
 
