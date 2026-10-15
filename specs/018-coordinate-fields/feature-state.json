@@ -134,6 +134,39 @@
               "demo/coordinate_forms.py:11"
             ]
           }
+        },
+        {
+          "id": "T008",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_coordinates_e2e.py::TestCoordinateMask::test_a_plus_sign_is_refused_and_the_page_still_answers"
+            ],
+            "commands": [
+              "uv run pytest tests/test_coordinates_e2e.py -k plus_sign (red with the guard removed: hang then failure; green with it)"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:140"
+            ]
+          }
+        },
+        {
+          "id": "T009",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_coordinates_e2e.py::TestCoordinateMask::test_an_input_drawn_holding_trailing_zeros_is_masked_and_keeps_them",
+              "tests/test_coordinates_e2e.py::TestCoordinateMask::test_a_lone_minus_is_posted_as_typed_and_refused"
+            ],
+            "commands": [
+              "uv run pytest tests/test_coordinates_e2e.py -k 'trailing_zeros or lone_minus' (4 red without normalizeZeros false, green with it)"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:131"
+            ]
+          }
         }
       ]
     },
@@ -207,6 +240,38 @@
             ],
             "code": [
               "mvp_forms/fields.py:359"
+            ]
+          }
+        },
+        {
+          "id": "T010",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_fields.py::TestPointField::test_both_halves_only_space_is_none_when_not_required"
+            ],
+            "commands": [
+              "uv run pytest tests/test_fields.py -k only_space (red with the empty-path line removed, green with it)"
+            ],
+            "code": [
+              "mvp_forms/fields.py:365"
+            ]
+          }
+        },
+        {
+          "id": "T011",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestPointInput::test_decompress_refuses_a_point_the_form_cannot_show"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py -k decompress (2 red before, green after)"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:691"
             ]
           }
         }
