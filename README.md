@@ -1,5 +1,16 @@
 # django-mvp-forms
 
+[![Tests](https://github.com/django-mvp/django-mvp-forms/actions/workflows/tests.yml/badge.svg)](https://github.com/django-mvp/django-mvp-forms/actions/workflows/tests.yml)
+[![Build](https://github.com/django-mvp/django-mvp-forms/actions/workflows/build.yml/badge.svg)](https://github.com/django-mvp/django-mvp-forms/actions/workflows/build.yml)
+[![Publish](https://github.com/django-mvp/django-mvp-forms/actions/workflows/publish.yml/badge.svg)](https://github.com/django-mvp/django-mvp-forms/actions/workflows/publish.yml)
+[![Coverage](https://codecov.io/gh/django-mvp/django-mvp-forms/branch/main/graph/badge.svg)](https://codecov.io/gh/django-mvp/django-mvp-forms)
+[![PyPI](https://img.shields.io/pypi/v/django-mvp-forms)](https://pypi.org/project/django-mvp-forms/)
+[![Development status](https://img.shields.io/pypi/status/django-mvp-forms)](https://pypi.org/project/django-mvp-forms/)
+[![Python](https://img.shields.io/pypi/pyversions/django-mvp-forms)](https://pypi.org/project/django-mvp-forms/)
+[![Django](https://img.shields.io/pypi/djversions/django-mvp-forms)](https://pypi.org/project/django-mvp-forms/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Licence](https://img.shields.io/github/license/django-mvp/django-mvp-forms)](https://github.com/django-mvp/django-mvp-forms/blob/main/LICENSE)
+
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
 > **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table, and it draws the select controls of django-tomselect and the fields of django-countries. Nothing is published to PyPI. The versions of Django, django-crispy-forms and daisyUI it supports are in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions).
@@ -2255,6 +2266,10 @@ One more page draws django-countries' fields, in the same sidebar group. The pag
 One more page, in the sidebar's "Custom fields" group, draws one multiple select two ways, side by side, so the two can be compared before either becomes a widget. Both show how many options are chosen, not the options themselves, and tick each chosen option in the list. One is checkboxes in a popover, drawn with HTML and CSS alone. The other is the package's `TomSelectMultiple` widget, with Tom Select's checkbox options and its search box moved into the list. The widget has no setting for those two plugins, so the page names them in a subclass. Each form holds a short list, every country and a list of long options, and submitting either shows what it cleaned to. Under each heading the page lists what that drawing costs. A screen reader is not told the count of the one with no script, because the number is drawn by a CSS counter. The page also draws both with nothing chosen, with one chosen, in error and disabled. Its widget and stylesheet are in `demo/`, and nothing in the package changes.
 
 - `/counted-select/` is the page, reached from the sidebar under "Custom fields" as "Counted multiple select".
+
+## Changelog
+
+See [CHANGELOG.md](https://github.com/django-mvp/django-mvp-forms/blob/main/CHANGELOG.md).
 
 ## License
 
