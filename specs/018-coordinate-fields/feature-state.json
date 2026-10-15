@@ -95,8 +95,19 @@
       "tasks": [
         {
           "id": "T002",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_widgets.py::TestCoordinateMaskInput,tests/test_pack/test_coordinates.py,tests/test_coordinates_e2e.py"
+            ],
+            "commands": [
+              "uv run pytest tests/test_widgets.py tests/test_fields.py tests/test_pack/test_coordinates.py tests/test_coordinates_e2e.py tests/test_imask_e2e.py tests/test_partial_date_e2e.py -q"
+            ],
+            "code": [
+              "mvp_forms/static/mvp_forms/imask.js:117"
+            ]
+          }
         },
         {
           "id": "T003",

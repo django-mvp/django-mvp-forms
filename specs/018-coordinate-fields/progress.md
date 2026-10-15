@@ -21,3 +21,10 @@ Did: LatitudeField and LongitudeField on a shared CoordinateField(DecimalField) 
 Verified: uv run pytest tests/test_fields.py -k Coordinate (170 passed); uv run pre-commit run --all-files green; uv run pytest -n auto -q (6586 passed).
 Next: T002, the masked input.
 Watch: the default widget is still DecimalField NumberInput until T002, so the initial-display test asserts only value="51.5" in the drawn HTML.
+
+## 2026-10-15T14:45:51Z · Implementer US2 · T002
+
+Did: CoordinateMaskInput, default widget of both fields written in get_bound_field, coordinate kind in imask.js with its own validate and the takes/wait path, README, tests.
+Verified: widget, pack and e2e tests green; the e2e module fails 13 of 18 against the previous script; pre-commit green.
+Next: T003 demo page.
+Watch: a lone minus commits as -0 in IMask 7.6.1 (pinned by a test).
