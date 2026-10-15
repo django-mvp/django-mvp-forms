@@ -2003,7 +2003,7 @@ class SiteForm(forms.Form):
     longitude = LongitudeField(required=False)
 ```
 
-A latitude is from -90 to 90 and a longitude from -180 to 180, both ends included. A value past either is refused, never wrapped round to the other side. The field takes `DecimalField`'s own arguments but `max_digits`, which stays unset, and `required`, `disabled`, `validators`, `error_messages`, `label`, `help_text` and `initial` behave as they do there.
+A latitude is from -90 to 90 and a longitude from -180 to 180, both ends included. A value past either is refused, never wrapped round to the other side. The field takes `DecimalField`'s own arguments but `max_digits`, which stays unset, and `required`, `disabled`, `validators`, `error_messages`, `label`, `help_text` and `initial` behave as they do there. Both are subclasses of `mvp_forms.fields.CoordinateField`, which holds everything they share and is not meant to be used on its own.
 
 | Entered | `cleaned_data` |
 |---|---|
