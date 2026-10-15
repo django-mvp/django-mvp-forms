@@ -284,6 +284,22 @@
               "mvp_forms/widgets.py:691"
             ]
           }
+        },
+        {
+          "id": "T012",
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "tests/test_pack/test_coordinates.py::TestPointField"
+            ],
+            "commands": [
+              "uv run pytest tests/test_pack/test_coordinates.py (8 red before the change, green after); uv run pytest -n auto (6812 passed)"
+            ],
+            "code": [
+              "mvp_forms/widgets.py:645"
+            ]
+          }
         }
       ]
     }
