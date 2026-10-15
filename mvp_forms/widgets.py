@@ -10,7 +10,7 @@ import datetime
 import json
 import re
 from collections.abc import Mapping
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django import forms
 from django.utils.dates import MONTHS
@@ -686,7 +686,12 @@ class PointInput(forms.MultiWidget):
             latitude, longitude = value.y, value.x
         else:
             raise ValueError(f"{value!r} is not a point.")
-        return [Decimal(str(latitude)), Decimal(str(longitude))]
+        try:
+            return [Decimal(str(latitude)), Decimal(str(longitude))]
+        except InvalidOperation:
+            raise ValueError(
+                f"A point holds a latitude and a longitude, not {value!r}."
+            ) from None
 
     @staticmethod
     def check_srid(srid):

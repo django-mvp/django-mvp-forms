@@ -2002,6 +2002,8 @@ class TestPointInput:
             ("LINESTRING(1 2, 3 4)", "two-dimensional"),
             ("not a point", "two-dimensional"),
             ((1, 2, 3), "pair"),
+            ((51.5, None), "latitude and a longitude"),
+            (("51.5", ""), "latitude and a longitude"),
         ],
     )
     def test_decompress_refuses_a_point_the_form_cannot_show(self, value, named):

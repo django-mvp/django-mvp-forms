@@ -960,6 +960,17 @@ class TestPointField:
 
         assert point_codes(form) == ["required"]
 
+    def test_both_halves_only_space_is_none_when_not_required(self):
+        form = submit_point(" ", "  ", required=False)
+
+        assert form.is_valid()
+        assert form.cleaned_data["place"] is None
+
+    def test_both_halves_only_space_is_required_when_required(self):
+        form = submit_point(" ", "  ")
+
+        assert point_codes(form) == ["required"]
+
     @pytest.mark.parametrize("required", [True, False])
     @pytest.mark.parametrize(
         ("latitude", "longitude"), [("", "5"), ("5", ""), (" ", "5")]

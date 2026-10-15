@@ -361,6 +361,8 @@ class PointField(forms.MultiValueField):
                 self.fail("incomplete_latitude")
             if no_longitude and not no_latitude:
                 self.fail("incomplete_longitude")
+            if no_latitude and no_longitude:
+                value = []
         return super().clean(value)
 
     def blank(self, value):

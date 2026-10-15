@@ -64,7 +64,7 @@ behave unlike the rest, and would make a typo silently valid. Nothing in the req
 - **`PointField.clean` raises `incomplete` itself**, with one message per half in its own `error_messages`, because `MultiValueField` gives a missing half no error code.
 - **`to_python` reads numbers as numbers**, so a float near zero written in exponent form is not refused.
 - **`CoordinateMaskInput` carries class defaults** (ADR 0049).
-- **A lone `-` posts what IMask commits**, `-0`, which cleans to `0`. Kept as IMask's number rule, stated in the README and pinned by a browser test, rather than adding a special case to the script.
+- **A lone `-` is posted as typed** and the field refuses it as not a number. The code review found that IMask normalises zeros, which kept a stored `51.507400` unmasked; turning that off with `normalizeZeros: false` also stops IMask committing a lone `-` as `-0`, so no value the person never typed is posted.
 - Watch items for the implementers: bound errors are asserted by `params["limit_value"]` as well as by code. The reviewer suggested an ADR for the `coordinate` kind's own check in `data-imask`; it is written with T004, where the check is finished.
 
 **ADR:** docs/adr/0056-the-coordinate-mask-checks-its-own-bounds.md
