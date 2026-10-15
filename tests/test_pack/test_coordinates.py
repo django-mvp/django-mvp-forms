@@ -147,7 +147,29 @@ class TestPointField:
         soup = draw(source, form=form)
 
         for name in ("place_0", "place_1"):
-            assert added in soup.find(attrs={"name": name})["class"]
+            frame = soup.find(attrs={"name": name}).find_parent("label")
+            assert added in frame["class"]
+
+    @pytest.mark.parametrize("source", FORM_WIDE)
+    def test_each_part_sits_in_its_own_input_frame_with_a_visible_name(
+        self, draw, source
+    ):
+        soup = draw(source, form=PointForm())
+
+        names = []
+        for name in ("place_0", "place_1"):
+            part = soup.find(attrs={"name": name})
+            frame = part.find_parent("label")
+            assert "input" in frame["class"]
+            assert "input" not in part.get("class", [])
+            names.append(frame.find("span", class_="label").get_text(strip=True))
+        assert names == [
+            soup.find(attrs={"name": "place_0"})["aria-label"],
+            soup.find(attrs={"name": "place_1"})["aria-label"],
+        ]
+        assert soup.find(attrs={"name": "place_0"}).find_parent("label") is not (
+            soup.find(attrs={"name": "place_1"}).find_parent("label")
+        )
 
     @pytest.mark.parametrize("source", FORM_WIDE)
     def test_both_parts_are_marked_invalid_when_the_field_is_in_error(

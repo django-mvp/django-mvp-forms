@@ -610,8 +610,9 @@ class CoordinateMaskInput(NumberMaskInput):
 class PointInput(forms.MultiWidget):
     """A latitude and a longitude as two masked inputs that make one point.
 
-    The point field states each half's bounds and the decimal places on the
-    parts it is given.
+    Each input is drawn inside its own daisyUI ``input`` frame, a ``<label>``
+    that shows the half's name before it. The point field states each half's
+    bounds and the decimal places on the parts it is given.
     """
 
     template_name = "mvp_forms/widgets/point.html"
@@ -628,22 +629,22 @@ class PointInput(forms.MultiWidget):
             attrs: HTML attributes for both parts.
         """
         parts = [
-            CoordinateMaskInput(
-                {
-                    "class": "join-item w-32",
-                    "placeholder": _("Latitude"),
-                    "aria-label": _("Latitude"),
-                }
-            ),
-            CoordinateMaskInput(
-                {
-                    "class": "join-item w-32",
-                    "placeholder": _("Longitude"),
-                    "aria-label": _("Longitude"),
-                }
-            ),
+            CoordinateMaskInput({"aria-label": _("Latitude")}),
+            CoordinateMaskInput({"aria-label": _("Longitude")}),
         ]
         super().__init__(parts, attrs)
+
+    def get_context(self, name, value, attrs):
+        """Move each part's classes onto the frame drawn around it.
+
+        The frame is the daisyUI ``input``, so the size, colour, variant and
+        error state the pack gives a part belong on it, not on the input inside.
+        """
+        context = super().get_context(name, value, attrs)
+        for part in context["widget"]["subwidgets"]:
+            part["frame_class"] = part["attrs"].pop("class", "")
+            part["frame_name"] = part["attrs"].get("aria-label", "")
+        return context
 
     def decompress(self, value):
         """Split a point into its latitude and longitude.

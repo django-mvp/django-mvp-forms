@@ -2070,8 +2070,3 @@ class TestPointInput:
 
         with pytest.raises(ValueError, match="3857"):
             str(form["place"])
-
-    def test_the_halves_are_joined_in_one_group(self):
-        soup = BeautifulSoup(PointInput().render("place", None), "html.parser")
-
-        assert len(soup.select("div.join > input.join-item")) == 2

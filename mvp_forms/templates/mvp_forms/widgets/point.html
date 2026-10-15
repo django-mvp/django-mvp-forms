@@ -1,1 +1,1 @@
-<div class="join">{% for widget in widget.subwidgets %}{% include widget.template_name %}{% endfor %}</div>
+<div class="grid gap-2 sm:grid-cols-2">{% for widget in widget.subwidgets %}<label class="{{ widget.frame_class }}"><span class="label">{{ widget.frame_name }}</span>{% include widget.template_name %}</label>{% endfor %}</div>

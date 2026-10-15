@@ -1077,7 +1077,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/widgets/rating.html` | A field drawn as a rating: the element that holds the stars and one radio input for each choice, where `widget` also holds `rating_class`, the classes of that element, and `inputs`, the choices in the order they are drawn, the one that clears the rating first. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/select_date.html` | A date drawn by `SelectDateWidget`: a select for each part of the date, side by side. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/partial_date.html` | A partial date drawn by `PartialDateInput` or `PartialDateSelect`: one element that holds a year, a month and a day side by side, each a part of one field. | `widget` | `FORM_RENDERER` |
-| `mvp_forms/widgets/point.html` | A point drawn by `PointInput`: one element that holds a latitude and a longitude side by side, each a part of one field. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/point.html` | A point drawn by `PointInput`: a latitude input and a longitude input, each inside its own daisyUI `input` frame that shows its name before it. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 
@@ -2136,7 +2136,7 @@ A form posted with the coordinates of its initial point reports the field as not
 
 #### The point widget
 
-`PointInput(attrs=None)` is a `MultiWidget` of two `CoordinateMaskInput` parts, drawn by `mvp_forms/widgets/point.html` as one element holding the two side by side. Each part has its own placeholder and `aria-label`, "Latitude" and "Longitude". The field tells each part its half's bounds and the decimal places when the form is drawn. Through the pack the field is one fieldset whose legend is the label, with one help text and one set of errors, and both inputs take the size, colour and variant stated for the form and are marked `aria-invalid` when the field is in error. Each is masked as described above, and the page loads IMask the same way.
+`PointInput(attrs=None)` is a `MultiWidget` of two `CoordinateMaskInput` parts, drawn by `mvp_forms/widgets/point.html` as two inputs, side by side on a wide screen and one above the other on a narrow one. Each input sits inside its own daisyUI `input` frame, a `<label>` that shows the half's name, "Latitude" or "Longitude", before the input, and the input carries the same name as its `aria-label`. The field tells each part its half's bounds and the decimal places when the form is drawn. Through the pack the field is one fieldset whose legend is the label, with one help text and one set of errors, and both frames take the size, colour and variant stated for the form, and both inputs are marked `aria-invalid` when the field is in error. Each is masked as described above, and the page loads IMask the same way.
 
 #### On a model form
 
