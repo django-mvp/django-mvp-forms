@@ -6,3 +6,7 @@ Specification approved; research, plan and tasks written. Four stories, five tas
 ## 2026-10-15T10:36:41Z · orchestrator · S3R
 
 Design review not dispatched: sessions_spawn refuses every model (anthropic account unavailable; claude-cli model not allowed). Sam chose to restore the account; the run waits at DESIGN_REVIEW with the brief written.
+
+## 2026-10-15T13:37:48Z · orchestrator · S3R
+
+Resumed in a new session; branch brought up to date with origin/main and the build claim moved to this session. Design review still not dispatched: sessions_spawn refuses opus, sonnet and the default model again ("selected account or native runtime is unavailable"; claude-cli models not allowed). The run waits at DESIGN_REVIEW with the brief rebuilt at /tmp/fs018/brief.json.
