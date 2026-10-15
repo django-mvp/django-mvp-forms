@@ -69,8 +69,19 @@
         },
         {
           "id": "T006",
-          "status": "todo",
-          "attempts": 0
+          "status": "done",
+          "attempts": 1,
+          "evidence": {
+            "tests": [
+              "forge verify docs step"
+            ],
+            "commands": [
+              "forge verify --repo . --base ff495da"
+            ],
+            "code": [
+              "README.md:2006"
+            ]
+          }
         }
       ]
     },
