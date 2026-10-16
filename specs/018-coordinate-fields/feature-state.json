@@ -2,7 +2,7 @@
   "feature": "018-coordinate-fields",
   "branch": "018-coordinate-fields",
   "repo": "django-mvp/django-mvp-forms",
-  "state": "PR_READY",
+  "state": "MERGED",
   "state_history": [
     {
       "state": "QUEUED",
@@ -38,6 +38,11 @@
       "state": "PR_READY",
       "at": "2026-10-15T15:29:24Z",
       "note": "review fixed; walkthrough laid out"
+    },
+    {
+      "state": "MERGED",
+      "at": "2026-10-16T08:30:07Z",
+      "note": "PR #193 merged; approved by SamuelJennings"
     }
   ],
   "gates": {
@@ -53,12 +58,12 @@
       "at": "2026-10-15T14:26:53Z"
     },
     "merge": {
-      "approved_by": null,
-      "at": null
+      "approved_by": "SamuelJennings",
+      "at": "2026-10-16T08:29:56Z"
     },
     "walkthrough": {
-      "approved_by": null,
-      "at": "2026-10-15T15:28:56Z",
+      "approved_by": "SamuelJennings",
+      "at": "2026-10-16T08:29:56Z",
       "self_resolved": []
     }
   },
@@ -318,12 +323,12 @@
       "max": 1
     },
     "tokens": {
-      "used": 23.08,
+      "used": 30.71,
       "max": 120
     }
   },
   "pr": {
     "number": 193,
-    "draft": true
+    "draft": false
   }
 }
