@@ -36,7 +36,7 @@ This specification says nothing about how fields, rows, fieldsets or buttons are
 - Q: Which Python classes does a developer use? → A: django-crispy-forms' own `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, imported from where django-crispy-forms provides them, with the arguments it documents. This feature adds no layout object names of its own.
 - Q: When several tabs or accordion groups hold a field with an error, which one opens? → A: The first one in layout order. This is the rule django-crispy-forms already applies, and the pack draws the state it is given.
 - Q: Does a modal holding a field with an error open too? → A: Yes. The request names tabs and accordion groups, but its stated purpose is that nobody submits a form and sees nothing wrong, and a closed modal hides an error just as well as a closed tab does.
-- Q: Who opens the modal in the first place? → A: The host project. The pack draws the modal with the id the developer gave it and draws no control to open it, which matches django-crispy-forms. The demo page shows one way of opening it.
+- Q: Who opens the modal in the first place? → A: The host project. The pack draws the modal with the id the developer gave it and draws no control to open it, which matches django-crispy-forms. The Modal page's example shows one way of opening it.
 - Q: Is a dismissed alert remembered? → A: No. Dismissing hides it on the page in front of the person. A reload or the next response draws it again.
 - Q: What may the host project be asked to load for any of this to work? → A: daisyUI and nothing else. No script file, no stylesheet and no build step.
 
@@ -175,7 +175,7 @@ All four (User Stories 1 to 4)
 - **FR-021**: Tabs and accordion groups MUST be reachable and operable from the keyboard.
 - **FR-022**: Text the pack itself supplies, such as the names of the close and dismiss controls, MUST be translatable. Names and titles supplied by the developer MUST be escaped when drawn.
 - **FR-023**: These layout objects MUST hold any layout object or field the pack can draw, and may be nested in one another.
-- **FR-024**: The demo project MUST gain one page for each of tabs, accordion, modal and alert. The tabs, accordion and modal pages MUST let a visitor submit invalid data and see the right one open. The modal page MUST include a control that opens the modal.
+- **FR-024**: The demo project MUST gain a Tabs, an Accordion, a Modal and an Alert page in its Layout objects group, each with a live example. The Tabs, Accordion and Modal examples MUST let a visitor send invalid data and see the right one open. The Modal example MUST include a control that opens the modal.
 - **FR-025**: The README's public surface MUST list the six layout objects as supported, say how a host project opens a modal, and carry the note on alert content from FR-016.
 
 ## Success Criteria *(mandatory)*
@@ -187,7 +187,7 @@ All four (User Stories 1 to 4)
 - **SC-003**: All four work on a page whose only added asset is daisyUI's CDN build. The host project writes no script and runs no build.
 - **SC-004**: A form laid out with any of the four submits the same field data as the same form laid out without them.
 - **SC-005**: With this feature and the layout objects from issues #7 and #8, no layout object django-crispy-forms ships is left without a drawing in the pack.
-- **SC-006**: A developer can open one demo page per layout object, four in all, and on three of them produce the error case in under a minute.
+- **SC-006**: A developer can open one demo page per layout object, four in all, and in the examples on three of them produce the error case in under a minute.
 
 ## Assumptions
 
@@ -197,4 +197,4 @@ All four (User Stories 1 to 4)
 - The pack's interactive pieces do not all have to work under a Content Security Policy that forbids inline script. Under one, the modal's close button and the alert's dismiss button are drawn and do nothing, and tabs and the accordion are unaffected. Issue #47 asked, and ADR 0041 records the answer and what a host project with such a policy does.
 - Forms split across steps, with a tab per step and validation between them, are a form view's business and belong to django-mvp.
 - A formset inside a tab or group is drawn by issue #10's work. Nothing here is specific to one.
-- The demo pages are the demo project's own pages, on django-mvp's shell. Nothing in them is distributed.
+- The demo pages and their examples are the demo project's own, on django-mvp's shell. Nothing in them is distributed.

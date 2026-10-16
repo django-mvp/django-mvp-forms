@@ -90,9 +90,9 @@ unchanged.
    text is drawn attached to the select in the same way.
 8. **Given** a form whose field is wrapped, **When** it is submitted with a value, **Then** the
    form receives the same data it would receive with the field unwrapped.
-9. **Given** the demo project, **When** its page for prepended and appended text is opened,
-   **Then** it shows each of the three layout objects on a field that is valid and on a field that
-   has an error.
+9. **Given** the demo project, **When** its Attached text and buttons page in the Modifiers group
+   is opened, **Then** it has live examples of each of the three layout objects on a field that is
+   valid and on a field that has an error.
 
 ---
 
@@ -130,8 +130,9 @@ same data.
    data it would receive from the stacked group.
 7. **Given** a field whose choices are disabled in the form, **When** it is drawn inline, **Then**
    the options are drawn disabled as FS-002 draws them.
-8. **Given** the demo project, **When** its page for inline checkboxes and radios is opened,
-   **Then** it shows both layout objects, each on a valid field and on a field that has an error.
+8. **Given** the demo project, **When** its Inline choices page in the Special fields group is
+   opened, **Then** it has live examples of both layout objects, each on a valid field and on a
+   field that has an error.
 
 ---
 
@@ -163,8 +164,9 @@ intact.
 5. **Given** a submit button attached to a field, **When** it is pressed, **Then** the form is
    submitted with the button's name and value in the data, as it would be for the same button
    placed anywhere else in the layout.
-6. **Given** the demo project, **When** its page for fields with buttons is opened, **Then** it
-   shows a field with one button and a field with several, valid and with an error.
+6. **Given** the demo project, **When** its Attached text and buttons page in the Modifiers group
+   is opened, **Then** it has live examples of a field with one button and a field with several,
+   valid and with an error.
 
 ---
 
@@ -195,8 +197,8 @@ disabled, and that the label and help text are intact.
    behaviour for a disabled field.
 5. **Given** an uneditable field whose value contains markup characters, **When** the form is
    rendered, **Then** the value is escaped.
-6. **Given** the demo project, **When** its page for uneditable fields is opened, **Then** it
-   shows an uneditable field beside an editable one.
+6. **Given** the demo project, **When** its State page in the Modifiers group is opened, **Then**
+   it has a live example of an uneditable field beside an editable one.
 
 ---
 
@@ -229,8 +231,8 @@ it, and that errors are still drawn.
    **Then** the errors are drawn and tied to the input, and the input is marked invalid.
 6. **Given** an inline field with help text, **When** the form is rendered, **Then** the help
    text is tied to the input so assistive technology announces it.
-7. **Given** the demo project, **When** its page for inline fields is opened, **Then** it shows a
-   short form made of inline fields, valid and with an error.
+7. **Given** the demo project, **When** its Inline field page in the Modifiers group is opened,
+   **Then** it has a live example of a short form made of inline fields, valid and with an error.
 
 ---
 
@@ -262,8 +264,9 @@ submitting returns the same data.
    **Then** the remaining parts are drawn without extra attributes and no error is raised.
 5. **Given** a multi-widget field, **When** the form is submitted, **Then** the form receives the
    same data it would receive without the layout object.
-6. **Given** the demo project, **When** its page for multi-widget fields is opened, **Then** it
-   shows a multi-widget field with different attributes on each part, valid and with an error.
+6. **Given** the demo project, **When** its Multi-widget field page in the Layout objects group is
+   opened, **Then** it has a live example of a multi-widget field with different attributes on
+   each part, valid and with an error.
 
 ---
 
@@ -383,9 +386,11 @@ All nine layout objects (every user story)
   neither django-cotton nor daisy-cotton, MUST use only daisyUI's standard classes and modifiers,
   and MUST add no stylesheet, script or runtime dependency.
 - **FR-029**: Any text the pack itself adds for these layout objects MUST be translatable.
-- **FR-030**: The demo project MUST have a page, reachable from its menu, for each of the six
-  kinds of decoration in this specification, showing every layout object of that kind on a valid
-  field and, where the layout object can show an error, on a field with an error.
+- **FR-030**: The demo project MUST have live examples of each of the six kinds of decoration in
+  this specification, showing every layout object of that kind on a valid field and, where the
+  layout object can show an error, on a field with an error. They sit on the Inline choices page
+  (Special fields), the Attached text and buttons, State and Inline field pages (Modifiers), and
+  the Multi-widget field page (Layout objects).
 - **FR-031**: The README's public surface MUST list the nine layout objects, with where to import
   each from and what the pack draws for it. The CHANGELOG MUST record them.
 
@@ -410,8 +415,8 @@ All nine layout objects (every user story)
   name, and every help text and error is tied to the input or group it belongs to.
 - **SC-004**: For every one of the nine except `UneditableField`, a form submits the same data
   with the layout object as without it.
-- **SC-005**: The demo pages for this feature draw correctly on a page that loads daisyUI's full
-  CDN build, with no build step in the host project.
+- **SC-005**: The forms in this feature's demo examples draw correctly on a page that loads
+  daisyUI's full CDN build, with no build step in the host project.
 - **SC-006**: A developer can find each of the nine in the README's public surface and see each
   one drawn in the demo project.
 

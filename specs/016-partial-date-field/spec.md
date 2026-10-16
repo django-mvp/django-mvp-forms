@@ -501,8 +501,10 @@ resolution on both sides of each limit, and draw the field with each widget.
   the template list.
 - **FR-031**: The specification of FS-015 and the README's section on mask widgets MUST be
   brought up to date where they say the package has no date widget.
-- **FR-032**: The demo MUST gain a page showing the field with each widget at each resolution,
-  with an earliest and a latest date, with initial values, in an invalid state, in a formset whose rows can be added, and in a modal.
+- **FR-032**: The demo MUST gain a Partial date field page in its Custom fields group and a
+  Partial date widgets page in its Custom widgets group, with live examples that between them
+  show the field with each widget at each resolution, with an earliest and a latest date, with
+  initial values, in an invalid state, in a formset whose rows can be added, and in a modal.
 - **FR-033**: `CONTEXT.md` MUST gain the terms under Key Entities.
 
 ### Requirement coverage

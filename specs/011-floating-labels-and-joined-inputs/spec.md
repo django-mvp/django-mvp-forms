@@ -330,11 +330,11 @@ it, and the markup uses only classes daisyUI defines.
 
 #### Shipping it
 
-- **FR-028**: The demo project MUST gain a page for floating labels and a page for joined groups,
-  each reachable from the sidebar. Between them they MUST show every kind of field that takes a
-  floating label, a joined group, each state from FR-005, FR-007, FR-016 and FR-019, and the
-  sizes, colours and variants from FR-022 and FR-023. Both MUST also be shown on a page that
-  loads only daisyUI's CDN install.
+- **FR-028**: The demo project MUST gain a Floating labels page in its Modifiers group and a
+  Joined groups page in its Layout objects group, each with live examples. Between them they MUST
+  show the kinds of field that take a floating label, a joined group, the states from FR-005,
+  FR-007, FR-016 and FR-019 that matter for each, and the sizes, colours and variants from FR-022
+  and FR-023.
 - **FR-029**: The README's public surface MUST say how a floating label is stated and how fields
   are joined, what each is refused for, and what is passed over. The CHANGELOG MUST record the
   addition, and the glossary in `CONTEXT.md` MUST gain the terms this feature introduces
@@ -379,7 +379,7 @@ story shows its own behaviour in the demo project and documents its own surface.
 - **SC-006**: No field is left without a visible label by a floating label: an empty field, a
   filled one and a disabled one each show what the field is.
 - **SC-007**: Every size, colour and variant FS-007 offers can be applied to a field with a
-  floating label and to a joined group, and the demo project shows each on a page that loads
+  floating label and to a joined group, and the demo project shows each in a form drawn on
   daisyUI's CDN install with no build step.
 - **SC-008**: Every statement the pack cannot honour is reported with an error naming the field
   or the layout object. None results in a field drawn some other way without notice.
@@ -410,4 +410,4 @@ story shows its own behaviour in the demo project and documents its own surface.
   are in its stylesheet. The pack promises only daisyUI's documented CDN install.
 - No change to the continuous-integration workflows is needed.
 - No sketch is needed before the build. The feature places two stock daisyUI components in a form
-  and adds demo pages, and nothing in it calls for a new design.
+  and adds demo pages with live examples, and nothing in it calls for a new design.

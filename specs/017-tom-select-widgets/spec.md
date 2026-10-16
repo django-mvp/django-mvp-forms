@@ -409,9 +409,9 @@ and call a method of the instance it carries.
   stylesheet does, how a page that also uses django-tomselect is set up, which list the widgets
   suit and when to use django-tomselect, and what is not supported. Each widget MUST appear in
   the README's public surface.
-- **FR-031**: The demo MUST gain a page that shows each widget with its settings, grouped
-  choices, a control in a formset whose rows can be added, one in a modal, and one beside a
-  django-tomselect control and a stock select.
+- **FR-031**: The demo MUST gain a Tom Select page in its Custom widgets group, with live
+  examples of each widget with its settings, grouped choices, a control in a formset whose rows
+  can be added, one in a modal, and one beside a django-tomselect control and a stock select.
 - **FR-032**: The decision records MUST state that `mvp_forms/tomselect.css` serves Tom Select
   controls from this package's widgets as well as django-tomselect's, and that the package ships
   a script for these widgets. ADR 0042 MUST read true beside them.

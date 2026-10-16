@@ -342,10 +342,9 @@ raises an error that names the field.
 
 #### Shipping it
 
-- **FR-025**: The demo project MUST gain a page that shows a rating and a range, each in a form to
-  submit, with help text, in error, disabled, and in the sizes and colours of FR-018. The page
-  MUST be reachable from the demo project's sidebar, and the same forms MUST be shown on a page
-  styled by daisyUI's CDN install alone.
+- **FR-025**: The demo project MUST gain a Rating and range page in its Special fields group, with
+  live examples of a rating and a range, each in a form to send, with help text and in the sizes
+  and colours of FR-018, and showing an error when sent with invalid data.
 - **FR-026**: The README's public surface MUST describe the rating and the range, which fields
   take each and how one is stated. The CHANGELOG MUST record the addition (Article VI), and the
   glossary's entry for a drawing MUST cover them.
@@ -359,7 +358,7 @@ raises an error that names the field.
 | US-3: A rating and a range take the form's size and colour | FR-018, FR-019, FR-020, FR-021, FR-022, FR-025, FR-026 |
 
 FR-025 and FR-026 land with the first story and are extended by the stories that follow, so each
-story shows its own behaviour on the demo page and documents its own surface.
+story shows its own behaviour on the Rating and range page and documents its own surface.
 
 ### Key Entities
 
@@ -388,7 +387,7 @@ story shows its own behaviour on the demo page and documents its own surface.
 - **SC-004**: Each of the label, required marker, help text, errors, invalid state and disabled
   state that a normal field has is present on a rating and on a range. None is lost in either.
 - **SC-005**: Every size and colour FS-007 offers can be applied to a rating and to a range,
-  stated for the form or for the field, and the demo shows each on a page that uses daisyUI's CDN
+  stated for the form or for the field, and the demo shows each in a form drawn on daisyUI's CDN
   install with no build step.
 - **SC-006**: Every statement the pack cannot honour is reported with an error naming the field.
   None results in a field drawn some other way without notice.
@@ -426,5 +425,5 @@ story shows its own behaviour on the demo page and documents its own surface.
 - A host project with its own Tailwind build makes sure daisyUI's rating, range and colour classes
   are in its stylesheet. The pack promises only daisyUI's documented CDN install.
 - No sketch is needed before the build. The feature places two stock daisyUI components in the
-  field frame the pack already has and adds one demo page, and nothing in it calls for a new
-  design.
+  field frame the pack already has and adds one demo page with live examples, and nothing in it
+  calls for a new design.

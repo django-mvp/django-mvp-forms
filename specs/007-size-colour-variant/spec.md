@@ -135,17 +135,17 @@ A developer mistypes a size, or asks for a colour daisyUI does not have. They fi
 
 ### User Story 5 - See the combinations in the demo project (Priority: P3)
 
-Someone deciding whether to use the pack, or a contributor checking a change, opens the demo project and finds a page showing a form at each size, in each colour and in each variant, with one field and one button overridden. The README's public surface lists how each choice is stated and which names are allowed.
+Someone deciding whether to use the pack, or a contributor checking a change, opens the demo project and finds a page with live examples of a form at each size, in each colour and in each variant, with one field and one button overridden. The README's public surface lists how each choice is stated and which names are allowed.
 
 **Why this priority**: The choices are only useful to someone who knows they exist and what the names are. It is P3 because it documents the other stories and delivers nothing they do not.
 
-**Independent Test**: Open the demo page and find every size, every colour and every variant drawn at least once, along with a form in which one field and one button override the form's choice. The README's public surface names every choice.
+**Independent Test**: Open the Size, colour and variant page and find every size, every colour and every variant drawn at least once, along with a form in which one field and one button override the form's choice. The README's public surface names every choice.
 
 **Acceptance Scenarios**:
 
-1. **Given** the demo project, **When** its menu is opened, **Then** it holds an entry that leads to a page for this feature.
-2. **Given** that page, **When** it is opened, **Then** every allowed size, colour and variant is drawn at least once on an input and at least once on a button where buttons have it.
-3. **Given** that page, **When** it is opened, **Then** it includes a form in which one field and one button are drawn differently from the form's choice.
+1. **Given** the demo project, **When** its sidebar is opened, **Then** the Modifiers group holds a Size, colour and variant page for this feature.
+2. **Given** that page, **When** it is opened, **Then** its examples draw every allowed size, colour and variant at least once on an input and at least once on a button where buttons have it.
+3. **Given** that page, **When** it is opened, **Then** it includes an example form in which one field and one button are drawn differently from the form's choice.
 4. **Given** the README, **When** its public surface is read, **Then** it says how a choice is stated for a form, for a field and for a button, and lists the names allowed.
 
 ---
@@ -200,7 +200,7 @@ Someone deciding whether to use the pack, or a contributor checking a change, op
 
 **Showing it**
 
-- **FR-023**: The demo project MUST have a page, reachable from its menu, that draws every allowed size, colour and variant at least once and includes a form with one field and one button overriding the form's choice. *(US5)*
+- **FR-023**: The demo project MUST have a Size, colour and variant page in its Modifiers group, with live examples that draw every allowed size, colour and variant at least once and includes a form with one field and one button overriding the form's choice. *(US5)*
 - **FR-024**: The README's public surface MUST say how a choice is stated for a form, a field and a button, and list the names allowed. The CHANGELOG MUST record the addition. *(US5)*
 
 ### Key Entities
@@ -219,7 +219,7 @@ Someone deciding whether to use the pack, or a contributor checking a change, op
 - **SC-004**: A page that loads only daisyUI's full CDN build shows every accepted combination of choices correctly, with no build step in the host project.
 - **SC-005**: A form written before this feature, which states no choice, draws byte-for-byte the same markup after it.
 - **SC-006**: Every misspelt or unknown choice is reported as an error that lists the allowed names. None reaches the browser as a class that does nothing.
-- **SC-007**: The demo page shows every allowed size, colour and variant at least once, so a reader can see each without writing any code.
+- **SC-007**: The Size, colour and variant page shows every allowed size, colour and variant at least once, so a reader can see each without writing any code.
 
 ## Assumptions
 

@@ -27,7 +27,7 @@ This is the first feature of the pack. It also settles the things every later fe
 - Errors that belong to the form as a whole.
 - The form element itself when django-crispy-forms is asked to draw it, including the CSRF token.
 - Each documented way of asking django-crispy-forms to draw: a whole form through the filter, a whole form through the tag, one field, and the form's errors on their own.
-- One demo page, and the README's installation, quickstart and first public-surface entry.
+- One demo page with a live example, and the README's installation, quickstart and first public-surface entry.
 
 ### What this feature leaves to others
 
@@ -124,20 +124,19 @@ A developer whose project is not built on django-mvp, and whose pages load daisy
 
 ### User Story 5 - See it and install it (Priority: P3)
 
-A developer deciding whether to use the pack opens the README and finds how to install it, how to select it, and a short example that draws a form. A contributor or reviewer opens the demo project and finds a page showing each covered input in each of its states.
+A developer deciding whether to use the pack opens the README and finds how to install it, how to select it, and a short example that draws a form. A contributor or reviewer opens the demo project and finds a page showing each covered input in a live form.
 
 **Why this priority**: The pack is usable without either, but a public interface with no documentation does not meet the project's own standard, and reviewers need somewhere to look at the result.
 
-**Independent Test**: Follow the README from a clean project to a drawn form, and load the demo page.
+**Independent Test**: Follow the README from a clean project to a drawn form, and load the Standard fields page.
 
 **Acceptance Scenarios**:
 
-1. **Given** the demo project is running, **When** the text inputs page is opened, **Then** it shows every input kind this feature covers, each in these states: empty, holding a value, required, with help text, and with an error.
-2. **Given** the demo project is running, **When** the same page is submitted, **Then** it comes back with real validation errors on its fields and a form-wide error, drawn by the pack.
-3. **Given** the demo project's sidebar, **When** it is drawn, **Then** it holds an entry that leads to the text inputs page.
-4. **Given** the demo project is running, **When** the standalone variant of the page is opened, **Then** the same form is drawn on a page that takes its styling from daisyUI's documented CDN install alone, with no build step.
-5. **Given** the README, **When** a developer follows its installation and quickstart sections in a project that loads daisyUI, **Then** the steps as written produce a form drawn by the pack.
-6. **Given** the README's public surface section, **When** it is read, **Then** it names the pack, the settings that select it and the input kinds it draws.
+1. **Given** the demo project is running, **When** the Standard fields page under Crispy forms is opened, **Then** it shows a live example of every input kind this feature covers on one plain form, beside the source files that make it.
+2. **Given** that example, **When** it is sent with invalid data, **Then** it shows real validation errors on its fields and a form-wide error, drawn by the pack, and when it is sent with valid data it says it was accepted and saves nothing.
+3. **Given** the demo project's sidebar, **When** it is drawn, **Then** it holds an entry for the Standard fields page in the Crispy forms group.
+4. **Given** the README, **When** a developer follows its installation and quickstart sections in a project that loads daisyUI, **Then** the steps as written produce a form drawn by the pack.
+5. **Given** the README's public surface section, **When** it is read, **Then** it names the pack, the settings that select it and the input kinds it draws.
 
 ---
 
@@ -205,9 +204,8 @@ A developer deciding whether to use the pack opens the README and finds how to i
 
 #### Demo and documentation
 
-- **FR-031**: The demo project MUST use the pack for its own forms and MUST have a page, reachable from its sidebar, that shows every covered input kind in each of these states: empty, holding a value, required, with help text, and with an error.
-- **FR-032**: That page MUST be submittable, and MUST come back showing field errors and a form-wide error.
-- **FR-033**: The demo project MUST offer the same form on a page that takes its styling from daisyUI's documented CDN install alone, with no build step.
+- **FR-031**: The demo project MUST use the pack for its own forms and MUST have a Standard fields page in its Crispy forms group, with a live example that shows every covered input kind on one plain form.
+- **FR-032**: That example MUST be submittable, and MUST come back showing field errors and a form-wide error. A valid submission MUST say it was accepted and save nothing.
 - **FR-034**: The README MUST carry installation and quickstart sections that lead from a clean project to a drawn form, and a public surface entry naming the pack, the settings that select it and the input kinds it draws. The CHANGELOG MUST record the addition.
 
 ### Requirement to story map
@@ -233,11 +231,11 @@ A developer deciding whether to use the pack opens the README and finds how to i
 
 - **SC-001**: A host project draws a form of text-like fields as daisyUI inputs after adding the package and selecting the pack, with no line of layout, helper or per-field code.
 - **SC-002**: Every one of the twelve covered input kinds (text, email, URL, number, password, date, time, date-time, search, telephone, colour, textarea) is drawn as its daisyUI counterpart.
-- **SC-003**: For every covered input kind, the label, the required state, the help text and each error are announced with the field by assistive technology. An automated accessibility check of the demo page reports no missing label, no missing description and no duplicate id.
+- **SC-003**: For every covered input kind, the label, the required state, the help text and each error are announced with the field by assistive technology. An automated accessibility check of the Standard fields example reports no missing label, no missing description and no duplicate id.
 - **SC-004**: A form that fails for a form-wide reason always shows that reason. No invalid submission comes back with nothing drawn to explain it.
 - **SC-005**: Every class the pack emits is one daisyUI's documented CDN install styles, so a page that loads that install and has no build step shows the form fully styled.
 - **SC-006**: The package installs and draws a form in a project where django-mvp, django-cotton and daisy-cotton are absent.
-- **SC-007**: The demo page shows every covered input kind in all five states, and a developer following only the README reaches a drawn form.
+- **SC-007**: The Standard fields page shows every covered input kind, and a developer following only the README reaches a drawn form.
 - **SC-008**: The features that depend on this one ([#6](https://github.com/django-mvp/django-mvp-forms/issues/6) and [#7](https://github.com/django-mvp/django-mvp-forms/issues/7)) can draw their own inputs inside the field frame without redefining the label, marker, help text or error handling.
 
 ## Clarifications
@@ -249,7 +247,7 @@ A developer deciding whether to use the pack opens the README and finds how to i
 - Q: Django draws a date field as a plain text input by default. Does the pack turn it into a date picker? → A: No. The pack draws the widget it is handed with the input type that widget declares. Changing the type would change what the browser submits and how the field parses it, which is the form's business. (Edge cases, FR-007)
 - Q: Which django-crispy-forms helper settings does a form with no layout have to honour? → A: Those that govern the form element, the CSRF token, labels, errors, and the label and field classes. The settings that place help text and errors inline are a matter of appearance and change nothing. A horizontal form is left as an open question in [#14](https://github.com/django-mvp/django-mvp-forms/issues/14). (FR-022 to FR-025, Edge cases)
 - Q: What happens to a field whose widget belongs to a later feature? → A: It is still drawn with the same frame, in place, and nothing raises. A form never loses a field because the pack is incomplete. (FR-009)
-- Q: Does "daisyUI's CDN build" mean the stylesheet alone? → A: No. It means daisyUI's documented CDN install: the stylesheet together with Tailwind's browser build. Components use daisyUI's classes, and a Tailwind utility is allowed for layout only where daisyUI has none. (User Story 4, FR-026, FR-033, SC-005)
+- Q: Does "daisyUI's CDN build" mean the stylesheet alone? → A: No. It means daisyUI's documented CDN install: the stylesheet together with Tailwind's browser build. Components use daisyUI's classes, and a Tailwind utility is allowed for layout only where daisyUI has none. (User Story 4, FR-026, SC-005)
 
 ### Session 2026-10-11
 
@@ -264,4 +262,4 @@ A developer deciding whether to use the pack opens the README and finds how to i
 - Disabled and read-only states are drawn by [#6](https://github.com/django-mvp/django-mvp-forms/issues/6), as that request says. This feature only keeps the attributes Django emits.
 - The pack draws each input in daisyUI's default presentation. Any choice of size, colour or variant arrives with [#11](https://github.com/django-mvp/django-mvp-forms/issues/11).
 - The class names inside the rendered markup are not public interface, as the project's compatibility rule already says. The pack's name is.
-- The demo project is the only place django-mvp and django-cotton appear. Its own pages may use them. The standalone demo page does not, because it stands in for a host project that has neither.
+- The demo project is the only place django-mvp and django-cotton appear. Its own pages may use them.
