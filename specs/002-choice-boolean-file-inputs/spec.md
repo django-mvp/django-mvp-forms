@@ -75,8 +75,8 @@ with an error after a failed submission, and disabled.
 The text inputs #5 draws appear in two further states that this feature supplies: disabled and
 read-only.
 
-A developer looking at the demo project sees one page that shows every one of these inputs in
-every one of these states, and a text input disabled and read-only.
+A developer looking at the demo project sees every one of these inputs in a live example on its
+Standard fields page, and the disabled and read-only states in the examples on its State page.
 
 ## Clarifications
 
@@ -297,26 +297,26 @@ that the read-only inputs cannot be edited and are submitted.
 
 ---
 
-### User Story 7 - Every input and state can be seen in the demo project (Priority: P3)
+### User Story 7 - Every input can be seen in the demo project (Priority: P3)
 
 A contributor, or a developer deciding whether to adopt the pack, opens the demo project and finds
-a page showing each input from this feature in each of its states. The README lists the same
-inputs under its public surface.
+each input from this feature in a live example. The README lists the same inputs under its public
+surface.
 
 **Why this priority**: How an input looks is judged by eye, so there has to be somewhere to look.
 It comes last because it shows the other stories and adds no behaviour of its own.
 
-**Independent Test**: Open the demo page and check that it draws without error, that every widget
-this feature covers appears on it, and that each appears in every state listed under "What a
-person sees".
+**Independent Test**: Open the Standard fields, Special fields and State pages and check that
+they draw without error, that every widget this feature covers appears in an example, and that
+the disabled and read-only states are shown.
 
 **Acceptance Scenarios**:
 
-1. **Given** the demo project is running, **When** a developer follows its menu, **Then** they
-   reach a page showing every input this feature draws.
-2. **Given** that page, **When** it is drawn, **Then** each input appears untouched, holding a
-   value, required, with help text, with an error and disabled, and a text input appears disabled
-   and read-only.
+1. **Given** the demo project is running, **When** a developer follows its sidebar, **Then** they
+   reach the Standard fields page and the Special fields page in the Crispy forms group, which
+   between them show every input this feature draws in a live example.
+2. **Given** the State page in the Modifiers group, **When** it is drawn, **Then** it shows a
+   disabled input and a read-only text input.
 3. **Given** the README, **When** a developer reads its public surface, **Then** every widget
    this feature draws is listed there.
 
@@ -427,10 +427,10 @@ Whatever the input
 
 Demo and documentation
 
-- **FR-021**: The demo project MUST have a page, reachable from its menu, showing every input
-  this feature draws in each of these states: untouched, holding a value, required, with help
-  text, with an error, and disabled. The page MUST also show a text input disabled and
-  read-only. (Story 7)
+- **FR-021**: The demo project MUST show every input this feature draws in a live example on its
+  Standard fields page or its Special fields page, both in the Crispy forms group. Its State
+  page, in the Modifiers group, MUST show a disabled input and a read-only text input.
+  (Story 7)
 - **FR-022**: The README's public surface MUST list the widgets this feature draws, and the
   CHANGELOG MUST record them, in the same pull request as the code. (Story 7)
 
@@ -443,16 +443,16 @@ Demo and documentation
   unstyled default.
 - **SC-002**: A developer moving a plain Django form onto the pack changes nothing in the form
   class: no widget is swapped, and no attribute is added to make an input look right.
-- **SC-003**: On a page showing every input from this feature, every visible input has a name
+- **SC-003**: On a form showing every input from this feature, every visible input has a name
   assistive technology can announce, every group has a name of its own, and every help text and
   error is announced with the input or group it belongs to. An automated accessibility check of
-  that page reports no labelling or naming failures.
-- **SC-004**: The same page displays correctly when the only styling it loads is daisyUI's full
+  that form reports no labelling or naming failures.
+- **SC-004**: The same form displays correctly when the only styling it loads is daisyUI's full
   CDN build, with no build step in the host project.
 - **SC-005**: A form rejected because of any field in this feature, hidden fields included, always
   shows the person at least one error message.
-- **SC-006**: Every input this feature draws can be seen in every one of its states on the demo
-  project, without writing any code.
+- **SC-006**: Every input this feature draws can be seen in a live example on the demo project,
+  without writing any code.
 
 ## Assumptions
 

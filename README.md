@@ -2243,7 +2243,6 @@ Where daisyUI's own drawing, or a colour you chose for a control, falls short un
 
 To see where the pack stands, run `uv run python -m tests.legibility`: it prints this table as the check would write it, then the ratio of each disabled control's dimmed parts under every theme. When the check fails, repair the markup with a stock daisyUI class that passes under every theme, or, where no such class exists, paste the report's table between the two markers above.
 
-The demo project draws every form state the check covers on one page, `/themes/`, reached from its sidebar, with a chooser of the 35 themes: check one and the page is drawn under it. `/themes/standalone/` is the same page as a host project with neither django-mvp nor Cotton would have it. Both load daisyUI's [`themes.css`](https://daisyui.com/docs/themes/) for the pinned version from a CDN, because django-mvp's prebuilt stylesheet and daisyUI's main CDN file carry only a few themes.
 
 ## Contributing
 
@@ -2351,100 +2350,31 @@ which is tracked in
 [issue 126](https://github.com/django-mvp/django-mvp-forms/issues/126).
 
 `demo/` is a Django project on django-mvp's application shell, for looking at
-this package in a browser while working on it:
+this package in a browser while working on it. Its pages are written in Markdown
+under `demo/docs/` and served by django-mvp-sphinx, so the pages are built before
+the server starts:
 
 ```bash
 uv run python manage.py migrate
 uv run python manage.py seed_demo
+uv run python manage.py build_docs
 uv run python manage.py runserver
 ```
 
-The demo has two pairs of pages, and each pair draws the same forms. One pair
-shows every text input kind in each of five states (empty, holding a value,
-required, with help text, with an error), and a form to submit that comes back
-with a field error and a form-wide error. The other shows every select, boolean,
-radio and checkbox group, file and hidden input in those five states and a sixth,
-disabled, with a text input drawn disabled and another read-only, and a multipart
-form to submit that comes back with a field error. An uploaded file is checked and
-dropped, and nothing is stored.
+The sidebar follows the package:
 
-- `/text-inputs/` and `/choice-inputs/` are the pages inside the django-mvp shell,
-  reached from its sidebar.
-- `/text-inputs/standalone/` and `/choice-inputs/standalone/` are the same pages
-  as a host project with neither django-mvp nor Cotton would have them, styled by
-  daisyUI's CDN build alone.
+- **Crispy forms**: every field Django ships on one plain form, the fields the pack
+  draws in a special way, the modifiers that change a field, the layout objects and
+  formsets.
+- **Custom fields** and **Custom widgets**: the fields and widgets this package
+  ships.
+- **Third-party support**: django-tomselect and django-countries drawn by the pack.
 
-Two more pages draw the layout objects, a form to submit and a form that already
-fails, so an error inside a fieldset, a row and a column can be seen:
-
-- `/layout-objects/` is the page inside the django-mvp shell, reached from its sidebar.
-- `/layout-objects/standalone/` is the same page styled by daisyUI's CDN build alone.
-
-One more page draws the size, colour and variant of a form's inputs and buttons. It holds a small form for each size and for each colour, each with one input and one button; a form holding every kind of input at one size; a form of inputs in the ghost variant and a button bar with one button in each variant; and a form that states choices and overrides them for one field in its layout, for one field by name, for one field that drops the colour, and for one button. It also holds a small and a large form with an alert and a modal in each, whose dismiss and close buttons take the form's size. The forms are built from the tables of `Modifiers`, so the page follows them, and none of them posts anywhere.
-
-- `/choices/` is the page inside the django-mvp shell, reached from its sidebar as "Size, colour and variant".
-- `/choices/standalone/` is the same page styled by daisyUI's CDN build alone.
-
-One more page draws a boolean field as a checkbox, a toggle and a switch. It holds one form with three boolean fields, drawn those three ways: the first states nothing, the second is a toggle by its name in `FormChoices`, and the third is a switch in the layout. Turning some on and submitting the form draws the page again with each field as it was posted and the values the form cleaned to. Nothing is saved. The page also draws each of the three in each state (off, on, with help text, required and in error, and disabled), at every size and in every colour a toggle has, and in a form whose size and colour one field overrides.
-
-- `/drawings/` is the page inside the django-mvp shell, reached from its sidebar as "Checkbox, toggle and switch".
-- `/drawings/standalone/` is the same page styled by daisyUI's CDN build alone.
-
-One more page draws a single-choice field as a rating and a number field as a range. It holds one form with two ratings and a range: a required rating stated by its name in `FormChoices`, an optional one stated in the layout, whose empty choice clears it, and a range with limits and a step. Picking stars, moving the slider and submitting the form draws the page again with each field as it was posted and the values the form cleaned to. Nothing is saved. The page also draws a rating and a range each with help text, in error and disabled.
-
-- `/rating-and-range/` is the page inside the django-mvp shell, reached from its sidebar as "Rating and range".
-- `/rating-and-range/standalone/` is the same page styled by daisyUI's CDN build alone.
-
-Both pages end the form to submit in a `FormActions` holding a `Submit`, a `Reset`, a `Button` and a `StrictButton`, and add a form whose buttons were added to its helper and a small layout that puts two fields straight in a `Row` above a `ButtonHolder`. The form to submit also places an `HTML` note inside its fieldset, groups two fields in a `MultiField`, and carries a `Hidden` input.
-
-One more page draws fields with a floating label. It holds a form to submit with an input, a textarea and a select that float, a field that undoes the form's statement and a checkbox the statement passes over. Submitting it with no name comes back with the error, and submitting it with one shows the values the form cleaned to. Nothing is saved. The page also draws a form that already fails, with a required field and its help text, a disabled field and a read-only field, and a form drawn with no layout that floats one field by name. It also draws a floating form at each size, one at each colour and one in the variant.
-
-- `/floating-labels/` is the page inside the django-mvp shell, reached from its sidebar as "Floating labels".
-- `/floating-labels/standalone/` is the same page styled by daisyUI's CDN build alone.
-
-One more page draws fields joined into one group. It holds a form to submit with a country code and a number under one label. Submitting it with no number comes back with the number's error, and submitting it with one shows the values the form cleaned to. Nothing is saved. The page also draws a group that already fails in one member, a group with help text on a member, a group with a disabled member, a read-only member and a hidden member, a group with no label, and a group of one. It also draws a group at each size, one at each colour and one in the variant, a coloured group with one member in error, and a group inside a `Choice` that states a size and a colour.
-
-- `/joined-groups/` is the page inside the django-mvp shell, reached from its sidebar as "Joined groups".
-- `/joined-groups/standalone/` is the same page styled by daisyUI's CDN build alone.
-
-Five more pages draw the containers and the notice django-crispy-forms keeps in `crispy_forms.bootstrap`. Each of the first three holds a form to submit whose required field sits in a tab, a group or a modal that is not open, so submitting it empty comes back with the tab, group or modal that holds the error open:
-
-- `/tabs/` is inside the django-mvp shell, reached from its sidebar. Its second form is already bound and fails in its third tab.
-- `/accordion/` is inside the shell too. Its second form has one group the developer opened and one the developer closed.
-- `/modal/` is inside the shell too. Its form holds the street and the city, both required, in a modal that a button on the page opens by the modal's id. Submitting the form empty comes back with the modal open and the errors inside it.
-- `/alert/` is inside the shell too. Its form has three alerts ahead of its field: one with a dismiss control, one without, and one with a daisyUI colour. Submitting the form empty draws all three again.
-- `/containers/standalone/` draws the forms of all four pages as a host project with neither django-mvp nor Cotton would have them, styled by daisyUI's CDN build alone. A post is bound to the form whose submit button it names.
-
-Six more pages draw the layout objects that decorate a field. The first draws the three that attach text to an input. Its form has a text input with a prepended text, one with an appended text, one with both and a select with a prepended text, every field required, so submitting it empty comes back with an error in each frame. A second form on the page already fails. The second draws the two that put choices in a line, the third draws `FieldWithButtons`, the fourth draws `UneditableField`, the fifth draws `InlineField` and the sixth draws `MultiWidgetField`. The first three, the fifth and the sixth each have a form to submit and one that already fails; the fourth has one form to submit:
-
-- `/attached-text/` is the page inside the django-mvp shell, reached from its sidebar.
-- `/inline-choices/` is the page inside the shell, reached from its sidebar. The form to submit holds a required radio group and a required checkbox group, so submitting it empty comes back with an error in each frame.
-- `/field-with-buttons/` is the page inside the shell, reached from its sidebar. The form to submit has a required field with one button and a required field with three, so submitting it empty comes back with an error in each frame.
-- `/uneditable-field/` is the page inside the shell, reached from its sidebar. Its form holds an uneditable account, shown with its value and the `disabled` attribute, beside an editable nickname. The account is declared disabled in the form class, so submitting the form keeps its value and shows no error.
-- `/inline-field/` is the page inside the shell, reached from its sidebar. The form to submit has a required email and a required city, each drawn with no label and named by its placeholder, and a checkbox that keeps its label, so submitting it empty comes back with an error in the frame of each of the two fields.
-- `/multi-widget-field/` is the page inside the shell, reached from its sidebar. The form to submit has a required split date and time whose parts each have a placeholder of their own, and an optional one drawn with no layout object, so submitting it empty comes back with an error in the frame of the first.
-- `/decorated-fields/standalone/` draws the forms of all six pages as a host project with neither django-mvp nor Cotton would have them, styled by daisyUI's CDN build alone.
-
-Four more pages draw a formset of order lines, each with a delete input and an order input, and each drawn twice: a formset to submit and a formset that already fails, so all three kinds of error can be seen. A line with a quantity below one is a field error, a line whose total passes a limit is a form-wide error, and the same item on two lines is a formset-wide error. Posting the formset to submit with lines like those comes back with all three. Nothing is saved.
-
-- `/formset-stacked/` and `/formset-table/` draw the formset stacked and as a table, inside the django-mvp shell, and are reached from its sidebar.
-- `/formset-stacked/standalone/` and `/formset-table/standalone/` are the same pages styled by daisyUI's CDN build alone.
-
-One more page draws django-tomselect's controls. Its sidebar entry is in a group of its own, apart from the standard pages. The page holds a form to submit with a text input and a stock select beside a single control, a multiple control, a tagging control and a control whose options are listed under groups. Submitting it with no country comes back with the country's error, and submitting it with one shows the values the form cleaned to. Nothing is saved. The page also draws a stock select, a single control and a tagging control in a state each (holding a value, in error and disabled), and the same three controls at each size, at each colour and in the variant. It ends with controls in a modal and in a formset drawn as a table, a form that htmx fetches and a link to a second page that htmx navigation loads. The autocomplete views behind the controls answer from lists kept in the demo, so the page needs no data.
-
-- `/tomselect/` is the page inside the django-mvp shell, reached from its sidebar under "Third-party widgets" as "django-tomselect".
-- `/tomselect/standalone/` is the same page styled by daisyUI's CDN build alone, with django-tomselect's files and `mvp_forms/tomselect.css`.
-
-Every page inside the shell links `mvp_forms/tomselect.css`, because the demo's base template does.
-
-One more page draws django-countries' fields, in the same sidebar group. The page holds a form to submit with a text input, a country, several countries and a country drawn by the flag widget, which is given the layout that sits its flag beside its select. Submitting it with no country comes back with the country's error, and submitting it with one shows the codes the form cleaned to. Nothing is saved. The page also draws the three fields in a state each (holding a value, in error and disabled) and at each size.
-
-- `/countries/` is the page inside the django-mvp shell, reached from its sidebar under "Third-party widgets" as "django-countries".
-- `/countries/standalone/` is the same page styled by daisyUI's CDN build alone.
-
-One more page, in the sidebar's "Custom fields" group, draws one multiple select two ways, side by side, so the two can be compared before either becomes a widget. Both show how many options are chosen, not the options themselves, and tick each chosen option in the list. One is checkboxes in a popover, drawn with HTML and CSS alone. The other is the package's `TomSelectMultiple` widget, with Tom Select's checkbox options and its search box moved into the list. The widget has no setting for those two plugins, so the page names them in a subclass. Each form holds a short list, every country and a list of long options, and submitting either shows what it cleaned to. Under each heading the page lists what that drawing costs. A screen reader is not told the count of the one with no script, because the number is drawn by a CSS counter. The page also draws both with nothing chosen, with one chosen, in error and disabled. Its widget and stylesheet are in `demo/`, and nothing in the package changes.
-
-- `/counted-select/` is the page, reached from the sidebar under "Custom fields" as "Counted multiple select".
+Each page shows live examples: a running form in a frame beside the files that
+make it. Every example is one Python file under `demo/examples/` and one route in
+`demo/examples/urls.py`. Sending a form shows its errors, or says it was accepted.
+Nothing is saved. The theme switch in the top bar changes the page and every
+example on it.
 
 ## Changelog
 

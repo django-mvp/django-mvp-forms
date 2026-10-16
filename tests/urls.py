@@ -158,8 +158,9 @@ class ChoicesPage(TemplateView):
         return JsonResponse({name: request.POST.getlist(name) for name in request.POST})
 
 
+# The demo's pages answer every address nothing before them claims, so the
+# suite's own routes come first.
 urlpatterns = [
-    *demo_urlpatterns,
     path("autocomplete/groups/", GroupAutocomplete.as_view(), name="ac-groups"),
     path("masked/", MaskedPage.as_view(), name="masked"),
     path("dates/", PartialDatePage.as_view(), name="dates"),
@@ -213,4 +214,5 @@ urlpatterns = [
         ChoicesPage.as_view(refused=True),
         name="choices-page-refused",
     ),
+    *demo_urlpatterns,
 ]

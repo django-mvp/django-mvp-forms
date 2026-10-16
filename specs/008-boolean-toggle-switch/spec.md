@@ -239,9 +239,9 @@ field takes its own.
 
 #### Shipping it
 
-- **FR-016**: The demo project MUST gain a page that shows a boolean field in each of the three
-  drawings, in each state from FR-009, and with the sizes and colours from FR-011. The page MUST be
-  reachable from the demo project's sidebar.
+- **FR-016**: The demo project MUST gain a Checkbox, toggle and switch page in its Special fields
+  group, with live examples of a boolean field in each of the three drawings, in the states from
+  FR-009 that matter for it, and with the sizes and colours from FR-011.
 - **FR-017**: The README's public surface MUST list the three drawings and how one is chosen, and
   the CHANGELOG MUST record the addition (Article VI).
 
@@ -254,7 +254,7 @@ field takes its own.
 | US-3: A boolean field takes the form's size and colour | FR-006, FR-011, FR-013, FR-016 |
 
 FR-016 and FR-017 land with the first story and are extended by the stories that follow, so each
-story shows its own behaviour on the demo page and documents its own surface.
+story shows its own behaviour on the Checkbox, toggle and switch page and documents its own surface.
 
 ### Key Entities
 
@@ -275,8 +275,8 @@ story shows its own behaviour on the demo page and documents its own surface.
 - **SC-004**: Each of the label tie, required marker, help text, errors and disabled state that a
   checkbox has is present on a toggle and on a switch. None is lost in either drawing.
 - **SC-005**: Every size and colour FS-007 offers can be applied to all three drawings, set for
-  the form or for the field, and the demo page shows each on a page that loads daisyUI's full CDN
-  build with no build step.
+  the form or for the field, and the demo shows each in a form drawn on daisyUI's full CDN build
+  with no build step.
 - **SC-006**: Every choice the pack cannot honour is reported with an error naming the field. None
   results in a field drawn some other way without notice.
 
@@ -299,4 +299,4 @@ story shows its own behaviour on the demo page and documents its own surface.
 - A host project with its own Tailwind build makes sure daisyUI's toggle classes are in its
   stylesheet. The pack promises only the full CDN build.
 - No sketch is needed before the build. The feature places stock daisyUI components in a form and
-  adds one demo page, and nothing in it calls for a new design.
+  adds one demo page with live examples, and nothing in it calls for a new design.

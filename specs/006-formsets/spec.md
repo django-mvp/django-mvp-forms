@@ -108,17 +108,17 @@ A developer turns on deletion or ordering for a formset. Django adds a delete ch
 
 ### User Story 5 - Both layouts can be seen in the demo project and found in the README (Priority: P3)
 
-A developer deciding whether to use the pack, or a contributor changing it, opens the demo project and sees a formset in each layout: untouched, and again with errors after a bad submission. The README's public surface says how to hand a formset to the pack and how to choose a layout.
+A developer deciding whether to use the pack, or a contributor changing it, opens the demo project and sees a live formset in each layout: untouched, and again with errors after a bad submission. The README's public surface says how to hand a formset to the pack and how to choose a layout.
 
 **Why this priority**: The repository asks each feature to bring its own demo page and its own public-surface entry. It is last because it shows the other four stories and adds no drawing behaviour of its own.
 
-**Independent Test**: Run the demo project, reach each formset page from the navigation, submit each with a mistake and see the errors, and follow the README entry to draw a formset in a fresh host project.
+**Independent Test**: Run the demo project, reach each formset page from the sidebar, send each example with a mistake and see the errors, and follow the README entry to draw a formset in a fresh host project.
 
 **Acceptance Scenarios**:
 
-1. **Given** the demo project, **When** its navigation is opened, **Then** there is a page for the stacked layout and a page for the table layout, and each responds successfully.
-2. **Given** either demo page, **When** it is submitted with invalid data, **Then** the page is shown again with a field error, a form-wide error and a formset-wide error visible in the response.
-3. **Given** either demo page, **When** it is opened, **Then** the formset on it has deletion and ordering turned on.
+1. **Given** the demo project, **When** its sidebar is opened, **Then** the Formsets group under Crispy forms holds a Stacked page and an As a table page, each with a live example, and each responds successfully.
+2. **Given** either example, **When** it is sent with invalid data, **Then** the form is shown again with a field error, a form-wide error and a formset-wide error visible in the response.
+3. **Given** either example, **When** it is opened, **Then** the formset in it has deletion and ordering turned on.
 4. **Given** the README, **When** its public surface section is read, **Then** it names how a formset is handed to the pack and how each layout is chosen, and the CHANGELOG records the addition.
 
 ---
@@ -158,7 +158,7 @@ A developer deciding whether to use the pack, or a contributor changing it, open
 - **FR-016**: When the helper asks for a surrounding form element, the pack MUST draw exactly one around the whole formset, and none when the helper asks for none.
 - **FR-017**: The formset templates MUST be plain Django templates built from daisyUI's standard classes and modifiers, so that the result works on a page loading daisyUI's full CDN build with no build step in the host project.
 - **FR-018**: The pack MUST NOT add or remove formset rows in the browser, ship a script for doing so, or draw a spare empty form for one. It MUST NOT ship a view, a URL or a page template for a formset.
-- **FR-019**: The demo project MUST gain one page per layout, reachable from its navigation, each showing a formset with deletion and ordering turned on, and each redisplaying with field, form-wide and formset-wide errors after an invalid submission.
+- **FR-019**: The demo project MUST gain one page per layout in its Formsets group, Stacked and As a table, each with a live example of a formset with deletion and ordering turned on, and each redisplaying with field, form-wide and formset-wide errors after an invalid submission.
 - **FR-020**: The README's public surface MUST state how a formset is handed to the pack and how each layout is chosen, and the CHANGELOG MUST record the addition.
 - **FR-021**: The repository's glossary (CONTEXT.md) MUST define formset, stacked layout and table layout as this package uses them, and MUST stop listing formset as a word this package does not use. The glossary MUST keep the line between drawing a formset, which is this package's, and handling one, which is django-mvp's.
 
@@ -182,9 +182,9 @@ Requirements map to stories as follows. US1: FR-001, FR-002, FR-004, FR-005, FR-
 - **SC-002**: Moving a formset between the stacked and the table layout takes one change in Python and no change to any template.
 - **SC-003**: Every formset the pack draws, in both layouts and with any number of forms from none upward, binds on submission to the number of forms that were drawn.
 - **SC-004**: For a bound formset, every error it reports appears once in the output, inside its own form's unit or, for a formset-wide error, outside all of them. No error is missing, repeated or shown with the wrong form.
-- **SC-005**: Every input in a drawn formset, in both layouts and including the delete and order inputs, has a programmatic name. An automated accessibility check of both demo pages reports no input without a name and no error without an owner.
+- **SC-005**: Every input in a drawn formset, in both layouts and including the delete and order inputs, has a programmatic name. An automated accessibility check of both demo examples reports no input without a name and no error without an owner.
 - **SC-006**: Ticking a delete input or filling an order input on a drawn formset is read back by Django for exactly that form, in both layouts.
-- **SC-007**: Both demo pages draw correctly on a page that loads daisyUI's full CDN build, with no build step and no stylesheet from this package.
+- **SC-007**: Both demo examples draw correctly on a page that loads daisyUI's full CDN build, with no build step and no stylesheet from this package.
 - **SC-008**: The package still ships no script, view, URL, model or migration, and none of its templates uses django-cotton or daisy-cotton.
 
 ## Assumptions
@@ -199,4 +199,4 @@ Requirements map to stories as follows. US1: FR-001, FR-002, FR-004, FR-005, FR-
 - How the table behaves on a narrow screen, where help text sits in the table, and whether an empty table shows its headings are matters of appearance. They are settled by eye when the feature is built and are not requirements here.
 - The names and paths of the two formset templates become part of the public surface under Article XI of the constitution when they are built. Documenting every overridable template path is roadmap item R6.
 - django-mvp adds and removes rows in the browser. What it needs from this pack's output to do that, beyond one distinguishable unit per form, is an open question tracked in issue #13. It does not block this feature.
-- The demo pages are the demo project's own and may use django-mvp's shell and components. Nothing the package distributes does.
+- The demo pages and their examples are the demo project's own and may use django-mvp's shell and components. Nothing the package distributes does.

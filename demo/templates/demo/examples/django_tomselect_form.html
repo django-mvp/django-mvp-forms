@@ -1,0 +1,13 @@
+{% extends "demo/examples/base.html" %}
+{% load crispy_forms_tags static %}
+{% block styles %}
+  {{ block.super }}
+  {# django-tomselect's two stylesheets and script, and the pack's stylesheet, loaded by path in the head: each control's own script runs where the control is drawn, and needs the library there already. #}
+  <link rel="stylesheet" href="{% static 'django_tomselect/vendor/tom-select/css/tom-select.default.css' %}" />
+  <link rel="stylesheet" href="{% static 'django_tomselect/css/django-tomselect.css' %}" />
+  <link rel="stylesheet" href="{% static 'mvp_forms/tomselect.css' %}" />
+  <script src="{% static 'django_tomselect/js/django-tomselect.min.js' %}"></script>
+{% endblock styles %}
+{% block example %}
+  {% crispy form %}
+{% endblock example %}

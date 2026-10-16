@@ -352,8 +352,9 @@ places, submit values on both sides of each, and define fields with options that
   without IMask, and how the point field is declared on a form for a GeoDjango `PointField`. All
   three fields and any widget the feature adds MUST appear in the README's public surface, and any
   template the feature adds MUST appear in the template list.
-- **FR-034**: The demo MUST gain a page showing each field with its defaults, with narrower bounds,
-  with an initial value, in an invalid state, in a formset whose rows can be added, and in a modal.
+- **FR-034**: The demo MUST gain a Coordinate fields page in its Custom fields group, with live
+  examples of each field with its defaults, with narrower bounds, with an initial value, in an
+  invalid state, in a formset whose rows can be added, and in a modal.
 - **FR-035**: `CONTEXT.md` MUST gain the terms under Key Entities.
 
 ### Requirement coverage

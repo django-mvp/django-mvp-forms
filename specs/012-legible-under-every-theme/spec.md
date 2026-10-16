@@ -103,7 +103,8 @@ In scope:
   theme.
 - Changing which stock daisyUI class the pack writes, where that brings a failing pairing up to
   the standard.
-- A check that stays in the test suite, a demo page, and a README section.
+- A check that stays in the test suite, and a README section. In the demo project the shell's
+  theme switch is how a person sees a theme.
 
 Out of scope:
 
@@ -214,31 +215,27 @@ pairing. Revert the change and it passes.
 ### User Story 3 - A developer can see the forms under any theme and knows what is promised (Priority: P3)
 
 A developer is choosing a theme for a project, or deciding whether to adopt the pack at all. In
-the demo project they open one page that shows every form state together, and switch it through
-daisyUI's themes without editing anything. In the README they read what the pack promises under a
+the demo project they use the shell's theme switch, and every page and every live example is
+redrawn under the chosen theme without editing anything. In the README they read what the pack promises under a
 theme, which standard it is measured against, and the short list of places where a particular
 daisyUI theme falls short and the pack cannot help.
 
 **Why this priority**: The first two stories deliver the behaviour. This one lets a person see it
 and rely on it. It is last because the forms are legible without it.
 
-**Independent Test**: Open the demo page and choose each shipped theme in turn: every form state
-is on the page and is redrawn under the chosen theme. Read the README: every known exception the
+**Independent Test**: Open the demo project and choose each shipped theme in turn with the shell's
+theme switch: the pages and their examples are redrawn under the chosen theme. Read the README: every known exception the
 check holds is listed there, and nothing is listed that the check does not hold.
 
 **Acceptance Scenarios**:
 
-1. **Given** the demo project, **When** a person follows its sidebar, **Then** they reach a page
-   that shows every form state the check covers.
-2. **Given** that page, **When** a person chooses any shipped theme on the page itself, **Then**
-   the whole page is drawn under that theme, and no setting or file was edited.
-3. **Given** a page that loads daisyUI's documented CDN install and neither django-mvp nor Cotton,
-   **When** the same form states are drawn on it, **Then** a person can choose any shipped theme
-   there too.
-4. **Given** the README, **When** a developer reads its section on themes, **Then** it states what
+1. **Given** the demo project, **When** a person chooses any shipped theme with the shell's theme
+   switch, **Then** every page and every live example is drawn under that theme, and no setting
+   or file was edited.
+2. **Given** the README, **When** a developer reads its section on themes, **Then** it states what
    is checked, the standard, which themes, and what a host project with a theme of its own should
    know.
-5. **Given** the known exceptions the check holds, **When** they are compared with the list in the
+3. **Given** the known exceptions the check holds, **When** they are compared with the list in the
    README, **Then** the two are the same.
 
 ---
@@ -342,11 +339,9 @@ check holds is listed there, and nothing is listed that the check does not hold.
 
 #### Shipping it
 
-- **FR-020**: The demo project MUST gain a page that shows every form state the check covers, and
-  on which a person can choose any shipped theme and see the page drawn under it without editing a
-  setting or a file. The page MUST be reachable from the demo project's sidebar.
-- **FR-021**: The same form states MUST be viewable under any shipped theme on a demo page that
-  loads daisyUI's documented CDN install and uses neither django-mvp nor Cotton.
+- **FR-020**: A person MUST be able to see the demo project's forms under any shipped theme by
+  choosing it with the shell's theme switch, without editing a setting or a file. The switch
+  changes every page and every live example.
 - **FR-022**: The README's public surface MUST gain a section on themes. It states what the pack
   checks, the standard, which themes are covered, every known exception, and that a theme the host
   project writes itself is not measured.
@@ -361,7 +356,7 @@ check holds is listed there, and nothing is listed that the check does not hold.
 |---|---|
 | US-1: A person can read the form whatever theme the host project chose | FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-010, FR-011, FR-017, FR-018, FR-019, FR-024 |
 | US-2: A change that makes a form hard to read is caught before it merges | FR-008, FR-009, FR-012, FR-013, FR-014, FR-015, FR-016 |
-| US-3: A developer can see the forms under any theme and knows what is promised | FR-020, FR-021, FR-022, FR-023, FR-024 |
+| US-3: A developer can see the forms under any theme and knows what is promised | FR-020, FR-022, FR-023, FR-024 |
 
 ### Key Entities
 
@@ -385,8 +380,8 @@ check holds is listed there, and nothing is listed that the check does not hold.
   Every shortfall that one would repair has been repaired.
 - **SC-004**: A change that puts any form state below the standard under any shipped theme fails
   the documented test command, and the failure says which form state, theme and pairing.
-- **SC-005**: A person can see every form state under any shipped theme on one demo page, by
-  choosing the theme on the page.
+- **SC-005**: A person can see the demo project's forms under any shipped theme, by choosing the
+  theme with the shell's theme switch.
 - **SC-006**: A form drawn before this feature keeps its ids, its ties to labels, help text and
   errors, its structure and its submitted data. Only daisyUI class names differ.
 - **SC-007**: The repository's continuous-integration workflows are the same before and after.
@@ -428,5 +423,5 @@ check holds is listed there, and nothing is listed that the check does not hold.
   [#89](https://github.com/django-mvp/django-mvp-forms/issues/89) are written alongside this one
   and none depends on another. Whichever of this feature and a new kind of input is built second
   brings that input's form states under the check.
-- No sketch is needed before the build. The demo page gathers forms the demo project already
-  shows and adds a theme chooser, and nothing in it calls for a new design.
+- No sketch is needed before the build. The shell's theme switch already changes every page of
+  the demo project, and nothing in the feature calls for a new design.

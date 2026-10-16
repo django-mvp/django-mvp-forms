@@ -1,0 +1,8 @@
+{% extends "demo/examples/base.html" %}
+{% load crispy_forms_tags %}
+{% block example %}
+  {# The pack draws nothing that opens the modal: the page does, by its id. #}
+  <button type="button" class="btn btn-primary mb-4"
+          onclick="document.getElementById('address-dialog').showModal()">Edit the address</button>
+  {% crispy form %}
+{% endblock example %}

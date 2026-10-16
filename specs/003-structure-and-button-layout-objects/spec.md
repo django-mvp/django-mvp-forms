@@ -155,7 +155,7 @@ A developer has a few fields that make sense only together, such as the parts of
 - **FR-019**: Where a layout object was given a template of the developer's own, that template MUST be used.
 - **FR-020**: Every template this feature adds MUST be a plain Django template. None may use django-cotton or daisy-cotton, and nothing this feature adds may import from django-mvp.
 - **FR-021**: The markup this feature draws MUST use daisyUI's own classes and modifiers, so that it works on a page that loads only what FS-001 requires of a host project, with no build step.
-- **FR-022**: The demo project MUST gain pages that between them show every layout object in this feature, including a form drawn with errors.
+- **FR-022**: The demo project MUST gain a Fieldsets, rows and columns page in its Layout objects group, with live examples that between them show every layout object in this feature, including a form drawn with errors.
 - **FR-023**: The README's public surface MUST list every layout object this feature draws, and the CHANGELOG MUST record the addition.
 
 ### Requirement to story map
@@ -184,14 +184,14 @@ A developer has a few fields that make sense only together, such as the parts of
 
 - **SC-001**: A developer can use all thirteen layout objects this feature names in one layout and get a drawn form, without writing a template of their own.
 - **SC-002**: The layout examples for these objects in django-crispy-forms' documentation draw with the pack as written, with no argument added or changed for the pack's sake.
-- **SC-003**: The demo pages for this feature draw correctly on a page that loads only what FS-001 requires of a host project, with no build step.
+- **SC-003**: The forms in this feature's demo examples draw correctly on a page that loads only what FS-001 requires of a host project, with no build step.
 - **SC-004**: Every field placed inside these layout objects keeps its label, help text and errors tied to it, and every `Fieldset` with a legend and every `MultiField` is read by assistive technology as a named group.
-- **SC-005**: Every layout object this feature draws appears in the README's public surface and on a demo page.
+- **SC-005**: Every layout object this feature draws appears in the README's public surface and in a demo example.
 
 ## Assumptions
 
 - FS-001 (issue #5) is delivered first. It supplies the drawing of a field, the form wrapper, and the definition of what a host project has to load for the pack to work without a build step.
-- The fields used on this feature's demo pages are the text fields FS-001 draws. Demo pages do not wait for the widgets issue #6 adds.
+- The fields used in this feature's demo examples are the text fields FS-001 draws. The examples do not wait for the widgets issue #6 adds.
 - The pack is used with the django-crispy-forms version the package already requires, 2.7 or later, and the layout objects are the ones that version ships.
 - This feature adds no wording of its own. Button text, legends and labels all come from the developer, so there is nothing here to translate.
 - How a `Row` arranges its columns using only daisyUI's own classes is settled when the feature is planned. daisyUI has no column component, and the question is tracked in issue #18.

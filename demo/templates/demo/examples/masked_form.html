@@ -1,0 +1,9 @@
+{% extends "demo/examples/base.html" %}
+{% load crispy_forms_tags %}
+{% block example %}
+  {% crispy form %}
+  {# IMask itself, which the host project supplies. The widget's own script arrives with the form's media. #}
+  <script src="https://cdn.jsdelivr.net/npm/imask@7.6.1/dist/imask.min.js"
+          integrity="sha384-UO8YwPv//GjwHj93ZlwXcDNjv3BSxdBFUB2jtiOuL3d/a0kS9E8sYvHjTBkQI8u8"
+          crossorigin="anonymous"></script>
+{% endblock example %}

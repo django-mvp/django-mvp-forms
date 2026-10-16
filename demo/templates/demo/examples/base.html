@@ -1,0 +1,25 @@
+{% extends "mvp_sphinx/example.html" %}
+{# The base every live example extends. A page that shows the example in a frame is the same site, so the frame is sized to what it holds and follows the theme picked on the page around it. #}
+{% block content %}
+  {% block example %}
+  {% endblock example %}
+  <script>
+    (function () {
+      var frame = window.frameElement;
+      if (frame) {
+        var fit = function () {
+          frame.style.minHeight = "0";
+          frame.parentElement.style.minHeight = "0";
+          frame.style.height = document.documentElement.scrollHeight + "px";
+        };
+        new ResizeObserver(fit).observe(document.body);
+        fit();
+      }
+      window.addEventListener("storage", function (event) {
+        if (event.key === "theme" && event.newValue) {
+          document.documentElement.setAttribute("data-theme", event.newValue);
+        }
+      });
+    })();
+  </script>
+{% endblock content %}

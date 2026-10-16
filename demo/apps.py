@@ -20,7 +20,7 @@ def name_the_site(sender: AppConfig, **kwargs: object) -> None:
 
     Site.objects.update_or_create(
         pk=settings.SITE_ID,
-        defaults={"domain": "localhost:8000", "name": "django-mvp-forms"},
+        defaults={"domain": "localhost:8000", "name": "MVP Forms"},
     )
 
 

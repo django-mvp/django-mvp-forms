@@ -73,10 +73,10 @@ and changes no form.
 **Why this priority**: This is the request. Without it, every project that uses both packages
 writes and maintains its own stylesheet for the same control.
 
-**Independent Test**: Open the demo page for django-tomselect. A form holds a stock select, a text
+**Independent Test**: Open the django-tomselect page. An example form holds a stock select, a text
 input and a single and a multiple django-tomselect control. Compare them at each size, in error
 and disabled, switch between a light and a dark theme, open each dropdown, search, and clear a
-value. Submit the form and read back the values it cleaned to.
+value. Send the form and read back the values it cleaned to.
 
 **Acceptance Scenarios**:
 
@@ -119,7 +119,7 @@ among the options, the dropdown offers to add it, and choosing that adds a tag l
 **Why this priority**: Tagging is the most common reason these projects use the multiple control,
 and its tags and "add" option are the parts furthest from anything daisyUI draws by itself.
 
-**Independent Test**: On the demo page, pick three values in the tagging control, remove one with
+**Independent Test**: On the django-tomselect page, pick three values in the tagging control, remove one with
 its button and one with the keyboard, type a value that does not exist, add it, and submit.
 
 **Acceptance Scenarios**:
@@ -149,7 +149,7 @@ server. The developer writes no template to make this work.
 **Why this priority**: The maintainer's projects need it now, and today each one carries a
 template of its own to get it.
 
-**Independent Test**: On the demo page, open the grouped control, see the options under their
+**Independent Test**: On the django-tomselect page, open the grouped control, see the options under their
 headings, search so that only some groups have matches, and pick an option from the second group.
 
 **Acceptance Scenarios**:
@@ -179,10 +179,10 @@ control starts up without help from the developer and its dropdown can be seen a
 that is on the page from the start. It comes after the first three stories because they decide
 what the control and its dropdown are.
 
-**Independent Test**: On the demo page, open the modal and pick a value from a dropdown longer
+**Independent Test**: On the django-tomselect page, open the modal and pick a value from a dropdown longer
 than the modal. Pick a value in the last row of the table formset. Press the button that fetches a
-form with htmx, then pick a value in the form that arrives. Follow a boosted link to another demo
-page and use the control there.
+form with htmx, then pick a value in the form that arrives. Follow a boosted link to another page of
+the demo and use the control there.
 
 **Acceptance Scenarios**:
 
@@ -332,13 +332,12 @@ page and use the control there.
 #### Demo, documentation and tests
 
 - **FR-029**: The demo project's sidebar MUST list third-party widgets in a group of their own,
-  apart from the standard widgets.
-- **FR-030**: The demo project MUST gain a page for django-tomselect in that group. It MUST show
-  a single and a multiple control beside a stock select and a text input, each state of FR-012,
-  each size, the colours and the variant, tagging, grouping, a control in
-  a modal, a control in a table formset, a form fetched with htmx, and a form to submit that
-  shows the values it cleaned to. The same controls MUST be shown on a page styled by daisyUI's
-  CDN install alone, with no django-mvp.
+  Third-party support, apart from the standard widgets.
+- **FR-030**: The demo project MUST gain a django-tomselect page in that group. Its live examples
+  MUST show a single and a multiple control beside a stock select and a text input, the states of
+  FR-012 that matter for the control, the sizes, the colours and the variant, tagging, grouping, a
+  control in a modal, a control in a table formset, a form fetched with htmx, and a form to send
+  that shows the values it cleaned to.
 - **FR-031**: The README MUST say how to turn the support on: what to install, which stylesheet
   and scripts to load and in what order, the one django-tomselect look that is supported, how a
   group is named, and what is not supported. It MUST name the django-tomselect releases the
@@ -357,7 +356,7 @@ page and use the control there.
 | US-4: A developer puts the control in a modal, a table and a page htmx loads | FR-024 to FR-027, FR-030, FR-031 |
 
 FR-030 and FR-031 land with the first story and are extended by each story after it, so every
-story shows its own behaviour on the demo page and documents its own surface.
+story shows its own behaviour on the django-tomselect page and documents its own surface.
 
 ### Key Entities
 

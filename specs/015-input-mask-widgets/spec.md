@@ -415,8 +415,9 @@ change an option on the instance it carries.
   the widgets are written for, what the form receives from each widget, the event and what it
   carries, what a page without IMask does, the options that are not supported, and the two
   cautions under Edge cases. Each widget MUST appear in the README's public surface.
-- **FR-032**: The demo MUST gain a page that shows each widget with its common options, a masked
-  field in a formset whose rows can be added, and one in a modal.
+- **FR-032**: The demo MUST gain an Input masks page in its Custom widgets group, with live
+  examples of each widget with its common options, a masked field in a formset whose rows can be
+  added, and one in a modal.
 - **FR-033**: The decision records MUST state that the package ships a script for these widgets
   and that the pack's own templates still need none, and ADR 0041 MUST read true beside it.
 - **FR-034**: `CONTEXT.md` MUST gain the terms under Key Entities.
