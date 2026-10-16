@@ -4,7 +4,7 @@ from django.urls import path
 
 from demo.examples.custom_fields.coordinate_fields import SiteForm
 from demo.examples.custom_fields.partial_date_field import SampleForm
-from demo.examples.custom_widgets.dynamic_mask import PhoneForm
+from demo.examples.custom_widgets.dynamic_mask import PhoneForm as DynamicPhoneForm
 from demo.examples.custom_widgets.number_mask import InvoiceForm
 from demo.examples.custom_widgets.partial_date_input import PartDatesForm
 from demo.examples.custom_widgets.partial_date_mask import MaskedDatesForm
@@ -116,7 +116,7 @@ urlpatterns = [
     ),
     path(
         "dynamic-mask/",
-        ExampleView.as_view(form_class=PhoneForm, template_name=MASKED),
+        ExampleView.as_view(form_class=DynamicPhoneForm, template_name=MASKED),
     ),
     path(
         "partial-date-mask/",
