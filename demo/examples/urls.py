@@ -4,8 +4,14 @@ from django.urls import path
 
 from demo.examples.custom_fields.coordinate_fields import SiteForm
 from demo.examples.custom_fields.partial_date_field import SampleForm
+from demo.examples.custom_widgets.dynamic_mask import PhoneForm
 from demo.examples.custom_widgets.number_mask import InvoiceForm
+from demo.examples.custom_widgets.partial_date_input import PartDatesForm
+from demo.examples.custom_widgets.partial_date_mask import MaskedDatesForm
+from demo.examples.custom_widgets.partial_date_select import SelectDatesForm
 from demo.examples.custom_widgets.pattern_mask import ContactForm
+from demo.examples.custom_widgets.regex_mask import AccountForm
+from demo.examples.custom_widgets.tom_select import TopicsForm
 from demo.examples.formsets.stacked import OrderHelper, OrderLineFormSet
 from demo.examples.formsets.table import OrderHelper as TableOrderHelper
 from demo.examples.formsets.table import OrderLineFormSet as TableOrderLineFormSet
@@ -33,9 +39,12 @@ from demo.examples.special_fields.inline_choices import SurveyForm
 from demo.examples.special_fields.rating_and_range import ReviewForm
 from demo.examples.standard_fields import StandardFieldsForm
 from demo.examples.third_party.countries import AddressForm
+from demo.examples.third_party.tomselect import ResearchForm
 from demo.examples.views import ExampleView, FormsetExampleView
 
 MASKED = "demo/examples/masked_form.html"
+TOM_SELECT = "demo/examples/tom_select_form.html"
+DJANGO_TOMSELECT = "demo/examples/django_tomselect_form.html"
 
 urlpatterns = [
     path(
@@ -100,6 +109,28 @@ urlpatterns = [
     path(
         "number-mask/",
         ExampleView.as_view(form_class=InvoiceForm, template_name=MASKED),
+    ),
+    path(
+        "regex-mask/",
+        ExampleView.as_view(form_class=AccountForm, template_name=MASKED),
+    ),
+    path(
+        "dynamic-mask/",
+        ExampleView.as_view(form_class=PhoneForm, template_name=MASKED),
+    ),
+    path(
+        "partial-date-mask/",
+        ExampleView.as_view(form_class=MaskedDatesForm, template_name=MASKED),
+    ),
+    path("partial-date-input/", ExampleView.as_view(form_class=PartDatesForm)),
+    path("partial-date-select/", ExampleView.as_view(form_class=SelectDatesForm)),
+    path(
+        "tom-select/",
+        ExampleView.as_view(form_class=TopicsForm, template_name=TOM_SELECT),
+    ),
+    path(
+        "django-tomselect/",
+        ExampleView.as_view(form_class=ResearchForm, template_name=DJANGO_TOMSELECT),
     ),
     path("countries/", ExampleView.as_view(form_class=AddressForm)),
 ]

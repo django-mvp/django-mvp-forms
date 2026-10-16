@@ -31,12 +31,29 @@ one, so a `DecimalField` cleans it without knowing a mask was there.
 ../../examples/custom_widgets/number_mask.py
 ```
 
-## The other two
+## A regular expression
 
-`RegexMaskInput` accepts a character only while the value still matches a
-regular expression. `DynamicMaskInput` takes a list of masks and applies the one
-that fits best.
+`RegexMaskInput` accepts a character only while the whole value still matches
+a regular expression. Use it where a field has a limited alphabet but no fixed
+shape. IMask tests the value after every keystroke, so the expression has to
+allow every partial value on the way: write `^\d{0,5}$`, not `^\d{5}$`, and let
+the field decide that five digits were required. The expression is JavaScript's
+dialect, and `flags` takes its flags as text.
 
-:::{note}
-Their examples are not written yet.
-:::
+```{live-example} /examples/regex-mask/
+:title: Digits only and a hexadecimal colour
+
+../../examples/custom_widgets/regex_mask.py
+```
+
+## Several masks
+
+`DynamicMaskInput` takes a list of `PatternMaskInput`, `RegexMaskInput` and
+`NumberMaskInput` widgets and applies the one that takes the most of what has
+been typed. Use it for a value of more than one shape.
+
+```{live-example} /examples/dynamic-mask/
+:title: A phone number of seven or ten digits
+
+../../examples/custom_widgets/dynamic_mask.py
+```
