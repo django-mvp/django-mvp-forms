@@ -7,6 +7,16 @@ from demo.examples.custom_fields.partial_date_field import SampleForm
 from demo.examples.custom_widgets.number_mask import InvoiceForm
 from demo.examples.custom_widgets.pattern_mask import ContactForm
 from demo.examples.formsets.stacked import OrderHelper, OrderLineFormSet
+from demo.examples.formsets.table import OrderHelper as TableOrderHelper
+from demo.examples.formsets.table import OrderLineFormSet as TableOrderLineFormSet
+from demo.examples.layout_objects.accordion import ChosenGroupForm
+from demo.examples.layout_objects.accordion import ProfileForm as AccordionForm
+from demo.examples.layout_objects.alert import NoticeForm
+from demo.examples.layout_objects.buttons import ActionsForm, HolderForm
+from demo.examples.layout_objects.fieldsets_rows_columns import DetailsForm
+from demo.examples.layout_objects.joined_groups import PhoneForm
+from demo.examples.layout_objects.modal import AddressForm as ModalForm
+from demo.examples.layout_objects.multi_widget_field import EventForm
 from demo.examples.layout_objects.tabs import ProfileForm
 from demo.examples.modifiers.attached_text import PriceForm
 from demo.examples.modifiers.colour import ColouredForm
@@ -52,10 +62,30 @@ urlpatterns = [
     path("colour/", ExampleView.as_view(form_class=ColouredForm)),
     path("variant/", ExampleView.as_view(form_class=GhostForm)),
     path("tabs/", ExampleView.as_view(form_class=ProfileForm)),
+    path("fieldsets-rows-columns/", ExampleView.as_view(form_class=DetailsForm)),
+    path("button-holder/", ExampleView.as_view(form_class=HolderForm)),
+    path("form-actions/", ExampleView.as_view(form_class=ActionsForm)),
+    path("joined-groups/", ExampleView.as_view(form_class=PhoneForm)),
+    path("multi-widget-field/", ExampleView.as_view(form_class=EventForm)),
+    path("accordion/", ExampleView.as_view(form_class=AccordionForm)),
+    path("accordion-chosen/", ExampleView.as_view(form_class=ChosenGroupForm)),
+    path(
+        "modal/",
+        ExampleView.as_view(
+            form_class=ModalForm, template_name="demo/examples/modal_form.html"
+        ),
+    ),
+    path("alert/", ExampleView.as_view(form_class=NoticeForm)),
     path(
         "formset-stacked/",
         FormsetExampleView.as_view(
             form_class=OrderLineFormSet, helper_class=OrderHelper
+        ),
+    ),
+    path(
+        "formset-table/",
+        FormsetExampleView.as_view(
+            form_class=TableOrderLineFormSet, helper_class=TableOrderHelper
         ),
     ),
     path("partial-date-field/", ExampleView.as_view(form_class=SampleForm)),
