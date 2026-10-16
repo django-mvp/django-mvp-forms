@@ -301,6 +301,31 @@ A character of a pattern that IMask writes and the person does not type, such as
 the hyphen in `aa-0000`.
 _Avoid_: literal, separator, constant.
 
+**Decimal degrees**:
+A latitude or a longitude written as one number with a fractional part, such as
+`51.507401`, as map libraries and GeoJSON write it. Degrees, minutes and seconds
+are not decimal degrees.
+_Avoid_: DMS, decimal coordinates.
+
+**WGS84 bounds**:
+The range the earth allows a coordinate: a latitude from -90 to 90 and a
+longitude from -180 to 180, both ends included. A value outside it is refused,
+never wrapped round to the other side.
+_Avoid_: valid range, limits (a field's own narrower `min_value` and `max_value`
+are its bounds).
+
+**Coordinate fields**:
+`LatitudeField` and `LongitudeField`. Each cleans one number in decimal degrees
+to a `Decimal`. `PointField` is made of one of each.
+_Avoid_: geo fields, location fields.
+
+**WKT text**:
+A point written as `SRID=4326;POINT(<longitude> <latitude>)`, longitude first,
+which a GeoDjango model's `PointField` takes from a string. `PointField` cleans
+to it.
+_Avoid_: EWKT (this is the name of the form with the spatial reference), point
+string.
+
 **Partial date**:
 A date known to the year, to the month or to the day, written as ISO text:
 `2021`, `2021-03` or `2021-03-14`. A part is only ever left out from the right,

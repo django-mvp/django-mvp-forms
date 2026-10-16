@@ -4480,3 +4480,69 @@ class TestCountedSelectPage:
 
         assert page.find(id=f"id_{drawing}-disciplines_error") is not None
         assert page.find(id=f"{drawing}-cleaned") is None
+
+
+COORDINATE_FIELDS = [
+    f"id_{prefix}-{name}"
+    for prefix in ("defaults", "initial", "narrowed", "error")
+    for name in ("latitude", "longitude")
+]
+POINT_FIELDS = [
+    f"id_{prefix}_{index}"
+    for prefix in ("point-place", "sites-0-place", "site-place")
+    for index in (0, 1)
+]
+
+
+class TestCoordinatesPage:
+    url_name = "coordinates"
+
+    @pytest.fixture
+    def page(self, open_page):
+        return open_page(self.url_name)
+
+    def test_the_shell_wraps_it(self, page):
+        assert page.find(attrs={"aria-label": "Main navigation"}) is not None
+
+    @pytest.mark.parametrize("field_id", COORDINATE_FIELDS)
+    def test_it_holds_each_field_as_a_masked_input(self, page, field_id):
+        drawn = page.find(id=field_id)
+
+        assert json.loads(drawn["data-imask"])["kind"] == "coordinate"
+
+    def test_the_initial_value_is_drawn(self, page):
+        assert page.find(id="id_initial-latitude")["value"] == "51.5074"
+
+    @pytest.mark.parametrize("field_id", POINT_FIELDS)
+    def test_it_holds_each_half_of_a_point_as_a_masked_input(self, page, field_id):
+        drawn = page.find(id=field_id)
+
+        assert json.loads(drawn["data-imask"])["kind"] == "coordinate"
+
+    def test_the_point_is_drawn_holding_its_initial_value(self, page):
+        assert page.find(id="id_point-place_0")["value"] == "51.5074"
+        assert page.find(id="id_point-place_1")["value"] == "-0.1278"
+
+    def test_the_formset_has_a_row_to_copy_for_a_site_added_later(self, page):
+        row = page.find("template", id="sites-line")
+
+        assert "id_sites-__prefix__-place_0" in str(row)
+
+    def test_the_modal_holds_the_point(self, page):
+        dialog = page.find("dialog", id="site-dialog")
+
+        assert dialog.find(id="id_site-place_0") is not None
+        assert not dialog.has_attr("open")
+
+    def test_the_bound_form_is_drawn_in_error(self, page):
+        assert page.find(id="error").find(attrs={"aria-invalid": "true"}) is not None
+
+    def test_the_page_loads_imask(self, page):
+        scripts = page.find_all("script", src=re.compile(r"^https://.*imask"))
+
+        assert len(scripts) == 1
+
+    def test_the_sidebar_links_it(self, overview_page: str) -> None:
+        sidebar = overview_page.split('aria-label="Main navigation"', 1)[1]
+        sidebar = sidebar.split("</ul>", 1)[0]
+        assert f'href="{reverse("coordinates")}"' in sidebar

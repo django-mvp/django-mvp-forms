@@ -1077,6 +1077,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/widgets/rating.html` | A field drawn as a rating: the element that holds the stars and one radio input for each choice, where `widget` also holds `rating_class`, the classes of that element, and `inputs`, the choices in the order they are drawn, the one that clears the rating first. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/select_date.html` | A date drawn by `SelectDateWidget`: a select for each part of the date, side by side. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/partial_date.html` | A partial date drawn by `PartialDateInput` or `PartialDateSelect`: one element that holds a year, a month and a day side by side, each a part of one field. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/point.html` | A point drawn by `PointInput`: a latitude input and a longitude input, each inside its own daisyUI `input` frame that shows its name before it. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 
@@ -1533,6 +1534,7 @@ This is the public surface:
 - `mvp_forms.widgets.RegexMaskInput`
 - `mvp_forms.widgets.NumberMaskInput`
 - `mvp_forms.widgets.DynamicMaskInput`
+- `mvp_forms.widgets.CoordinateMaskInput`, described under Coordinates, which writes the kind `coordinate`: the `number` kind with its bounds checked by the script instead of IMask
 - the attribute `data-imask`, which holds a widget's options as JSON on its `<input>`
 - the script `mvp_forms/imask.js`, which each widget names in its media
 - the event `mvp-forms:imask`, which the script sends from each input once its mask is applied, with the IMask instance in `event.detail.mask`
@@ -1980,6 +1982,183 @@ The script keeps the three parts in step with the calendar as the person fills t
 The script writes no inline script and no inline handler, and it makes no request. It holds on to the full list of a part's options the first time it meets it, and puts back into the select only those that can be chosen.
 
 A page that does not load the script draws the same three parts with every option: twelve months and the days 1 to 31, each part enabled. The form submits, and the field refuses a combination that is not a date, so a day with no month comes back as `no_month` and a date such as `2021-02-30` as `day`.
+
+### Coordinates
+
+A place on the earth is a latitude and a longitude in decimal degrees, as Leaflet, Google Maps and the GeoJSON format write them. `LatitudeField` and `LongitudeField` take one number each from a form, check it against the range the earth allows and hand the form `cleaned_data` a `Decimal`.
+
+This is the public surface:
+
+- `mvp_forms.fields.LatitudeField`
+- `mvp_forms.fields.LongitudeField`
+- `mvp_forms.fields.PointField`
+- `mvp_forms.widgets.CoordinateMaskInput`
+- `mvp_forms.widgets.PointInput`
+
+#### The latitude and longitude fields
+
+```python
+from django import forms
+
+from mvp_forms.fields import LatitudeField, LongitudeField
+
+
+class SiteForm(forms.Form):
+    latitude = LatitudeField()
+    longitude = LongitudeField(required=False)
+```
+
+A latitude is from -90 to 90 and a longitude from -180 to 180, both ends included. A value past either is refused, never wrapped round to the other side. The field takes `DecimalField`'s own arguments but `max_digits`, which stays unset, and `required`, `disabled`, `validators`, `error_messages`, `label`, `help_text` and `initial` behave as they do there. Both are subclasses of `mvp_forms.fields.CoordinateField`, which holds everything they share and is not meant to be used on its own.
+
+| Entered | `cleaned_data` |
+|---|---|
+| `51.5` | `Decimal("51.5")` |
+| `-0.127758` | `Decimal("-0.127758")` |
+| `+51.5`, `.5`, `90.` | `Decimal("51.5")`, `Decimal("0.5")`, `Decimal("90")` |
+| `-0` | `Decimal("0")` |
+| nothing, or only space | `None` |
+
+A value is an optional sign, digits and an optional full stop with digits after it. Space around it is dropped. A comma for the decimal mark, an exponent such as `5e1`, `inf` and `nan` are refused as not a number, whatever the active language. A value of more than six decimal places is refused and never rounded, since a rounded coordinate is a different place. A minus zero is cleaned to zero.
+
+A number given in Python, such as the `float` initial value of a disabled field, is read as the number it is. A `float` near zero, which Python writes in exponent form as `5e-05`, is accepted.
+
+| Option | Takes | Default |
+|---|---|---|
+| `min_value` | an `int`, `float` or `Decimal` of at least minus the limit | -90, or -180 |
+| `max_value` | an `int`, `float` or `Decimal` of at most the limit | 90, or 180 |
+| `decimal_places` | a whole number of at least zero | `6` |
+
+```python
+class SiteForm(forms.Form):
+    north = LatitudeField(min_value=40, max_value=60)
+    south = LatitudeField(min_value=-60, max_value=-40)
+    whole_degrees = LongitudeField(decimal_places=0)
+```
+
+Equal bounds are allowed, and a value is taken at either bound. `decimal_places=0` takes whole numbers only. A value below `min_value` is refused with `min_value` and above `max_value` with `max_value`, and `params["limit_value"]` is the bound you stated. The widget's `data-imask` follows the options.
+
+A field with a bound that is not a finite number (text, `bool`, `nan` and `inf` included) or lies outside the range, a `min_value` above the `max_value`, or `decimal_places` that is not a whole number of at least zero (a `bool` is not one) raises a `ValueError` naming the option when the form class is defined.
+
+#### Error codes
+
+| Code | When |
+|---|---|
+| `required` | A required field is empty |
+| `invalid` | The text is not a plain number |
+| `min_value` | The value is below the lower bound. `params["limit_value"]` is the bound |
+| `max_value` | The value is above the upper bound. `params["limit_value"]` is the bound |
+| `max_decimal_places` | The value has more decimal places than `decimal_places` |
+
+A message of your own replaces each code's message through `error_messages`, as on any field.
+
+#### The masked input
+
+Both fields draw `CoordinateMaskInput`, a text input that has IMask refuse what can never be a coordinate as a person types.
+
+```python
+from mvp_forms.widgets import CoordinateMaskInput
+
+latitude = LatitudeField(widget=CoordinateMaskInput(attrs={"placeholder": "51.5"}))
+```
+
+`CoordinateMaskInput(attrs=None)` takes HTML attributes and nothing else. The field tells it the decimal places and the bounds when the form is drawn, so two fields with different bounds each draw their own. Its `data-imask` holds `{"kind": "coordinate", "scale": 6, "radix": ".", "thousandsSeparator": "", "min": -90, "max": 90}` for a latitude with no options, and `-180` and `180` for a longitude. On a field that is not a coordinate field it holds no `min` and `max`. The input is a text input with no `step`, `min` or `max` attribute, so a browser's own number rules do not apply to it. It carries no `inputmode`, because the decimal keypad of a phone has no minus key and offers a comma where the language's decimal mark is one. An `inputmode` in your `attrs` is kept. In the pack it takes the size, colour and variant stated for the form.
+
+The form's media names `mvp_forms/imask.js`, and the page has to load IMask as the section on input masks describes under "What to load". With IMask the input refuses:
+
+- a digit that leaves no number between the bounds, so `91` stops at `9` for a latitude, and `3` is refused where the bounds are 40 and 60 while `4`, `45` and `45.5` are taken
+- a seventh decimal place, or more than the field's `decimal_places`
+- a minus sign anywhere but the start
+- a second full stop
+- anything that is not a digit, a minus sign or a full stop
+
+The bounds are never handed to IMask as `min` and `max`, which would change a value outside them whenever the input is committed. The script checks them itself, so what a person typed is what is posted and the field refuses it with its own code. A `4` left in the input under bounds of 40 and 60 is posted as `4`, and the field refuses it with `min_value`. An input drawn holding `35` under the same bounds posts `35`. The reasoning is in [ADR 0056](https://github.com/django-mvp/django-mvp-forms/blob/main/docs/adr/0056-the-coordinate-mask-checks-its-own-bounds.md).
+
+An input drawn holding a value the mask would cut, such as `51.50740123`, is left unmasked and posts that value unchanged, and the field refuses it with `max_decimal_places`. It is masked once the person changes it.
+
+A `-` and nothing after it, left in the input, is posted as it is, and the field refuses it as not a number. A stored value with trailing zeros, such as `51.507400`, is shown and kept as it is written.
+
+A page that does not load IMask draws the input as an ordinary text input. Nothing is masked and no error is raised in the browser, and the field refuses a value outside its bounds or with too many decimal places when the form is sent.
+
+#### The point field
+
+`PointField` takes a latitude and a longitude from one field and cleans them to WKT text with the spatial reference in front, longitude first, which is the order GeoDjango writes.
+
+```python
+from django import forms
+
+from mvp_forms.fields import PointField
+
+
+class SiteForm(forms.Form):
+    place = PointField()
+```
+
+| Entered | `cleaned_data["place"]` |
+|---|---|
+| latitude `51.5074`, longitude `-0.1278` | `"SRID=4326;POINT(-0.1278 51.5074)"` |
+| latitude `51.50`, longitude `0` | `"SRID=4326;POINT(0 51.50)"` |
+| both empty, not required | `None` |
+
+Each number is written as typed, in plain decimal notation. A GeoDjango model's `PointField` takes that text and turns it into a point when the model is saved, so nothing from `django.contrib.gis` is imported and GDAL is not needed. An empty point is `None`, which a model's `null=True` field takes.
+
+The field is two halves, a `LatitudeField` and a `LongitudeField`, each applying its own range and decimal places and refusing with the codes above. A half's error names the half, and `params["limit_value"]` is that half's bound.
+
+| Option | Takes | Default |
+|---|---|---|
+| `min_latitude`, `max_latitude` | an `int`, `float` or `Decimal` from -90 to 90 | -90, 90 |
+| `min_longitude`, `max_longitude` | an `int`, `float` or `Decimal` from -180 to 180 | -180, 180 |
+| `decimal_places` | a whole number of at least zero, for both halves | `6` |
+
+A bad option raises a `ValueError` naming the option when the form class is defined, for the same reasons as a latitude or a longitude does. A longitude range does not run across the antimeridian, so `min_longitude` above `max_longitude` is refused.
+
+A point with one half filled is refused with the code `incomplete`, whether the field is required or not, and the message names the half that is missing. Replace a message through `error_messages` with `incomplete_latitude` or `incomplete_longitude`:
+
+```python
+place = PointField(
+    error_messages={"incomplete_latitude": "Enter the latitude of the site."}
+)
+```
+
+Both halves empty is `required` on a required field and `None` on one that is not.
+
+#### The starting value
+
+`PointInput` draws the field's two halves and reads a starting value, from `initial` or a model instance, in four forms:
+
+- an object with `x` and `y`, such as a GEOS point, whose `srid` is `None` or `4326` and whose `z` is `None`
+- WKT text, `POINT(-0.1278 51.5074)` or `SRID=4326;POINT(-0.1278 51.5074)`, in any case and with any spacing
+- a list or tuple of `(latitude, longitude)`
+- `None` or empty text, which draws two empty inputs
+
+A point the form cannot show raises a `ValueError` when the form is drawn, naming the cause: a spatial reference other than 4326, whose numbers are not degrees, a point with a height, which the form has no input for, and text that is not a two-dimensional point, such as `POINT Z (1 2 3)`, `POINT EMPTY` or `LINESTRING(1 2, 3 4)`. A person cannot fix the cause, so the error is yours to see the first time you open the form. Convert the point to 4326 before drawing it.
+
+A form posted with the coordinates of its initial point reports the field as not changed.
+
+#### The point widget
+
+`PointInput(attrs=None)` is a `MultiWidget` of two `CoordinateMaskInput` parts, drawn by `mvp_forms/widgets/point.html` as two inputs, side by side on a wide screen and one above the other on a narrow one. Each input sits inside its own daisyUI `input` frame, a `<label>` that shows the half's name, "Latitude" or "Longitude", before the input, and the input carries the same name as its `aria-label`. The field tells each part its half's bounds and the decimal places when the form is drawn. Through the pack the field is one fieldset whose legend is the label, with one help text and one set of errors, and both frames take the size, colour and variant stated for the form, and both inputs are marked `aria-invalid` when the field is in error. Each is masked as described above, and the page loads IMask the same way.
+
+#### On a model form
+
+Declare the field on a model form for a GeoDjango `PointField`:
+
+```python
+from django import forms
+
+from mvp_forms.fields import PointField
+
+from .models import Site
+
+
+class SiteForm(forms.ModelForm):
+    location = PointField(required=False)
+
+    class Meta:
+        model = Site
+        fields = ["name", "location"]
+```
+
+The form's own `PointField` in `django.contrib.gis.forms` has the same name and cleans to a GEOS point, so a form that imports both renames one on import. A model's `PointField` takes either, so saving is the same.
 
 ### Themes
 

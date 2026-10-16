@@ -1,13 +1,25 @@
-"""The partial date field cleans text to a date that exists, or says why not."""
+"""The fields clean text to a date that exists or a coordinate in range, or say why not."""
 
 import datetime
+from decimal import Decimal
 
 import pytest
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils import translation
 
-from mvp_forms.fields import PartialDateField
-from mvp_forms.widgets import PartialDateInput, PartialDateMaskInput, PartialDateSelect
+from mvp_forms.fields import (
+    LatitudeField,
+    LongitudeField,
+    PartialDateField,
+    PointField,
+)
+from mvp_forms.widgets import (
+    PartialDateInput,
+    PartialDateMaskInput,
+    PartialDateSelect,
+    PointInput,
+)
 from tests.forms import PartialDateForm, partial_date_form
 
 LEAP_YEAR = 2024
@@ -533,3 +545,589 @@ class TestPartialDateField:
 
         assert Form({"born": today.isoformat()}).is_valid()
         assert Form({"born": tomorrow.isoformat()}).has_error("born", "max_value")
+
+
+EACH_FIELD = (
+    pytest.param(LatitudeField, 90, id="latitude"),
+    pytest.param(LongitudeField, 180, id="longitude"),
+)
+
+
+def place_form(field_class, **options):
+    class PlaceForm(forms.Form):
+        place = field_class(**options)
+
+    return PlaceForm
+
+
+def place_codes(form):
+    return [error.code for error in form.errors.as_data().get("place", [])]
+
+
+def submit_place(field_class, value, **options):
+    form = place_form(field_class, **options)({"place": value})
+    form.full_clean()
+    return form
+
+
+class TestCoordinateField:
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize(
+        ("typed", "cleaned"),
+        [
+            ("51.5", "51.5"),
+            ("0", "0"),
+            ("-12.345678", "-12.345678"),
+            ("-1", "-1"),
+            ("+1.5", "1.5"),
+            (".5", "0.5"),
+            ("-.5", "-0.5"),
+            ("5.", "5"),
+            (" 5.25 ", "5.25"),
+            ("0.000001", "0.000001"),
+        ],
+    )
+    def test_a_number_in_range_cleans_to_the_decimal_typed(
+        self, field_class, limit, typed, cleaned
+    ):
+        form = submit_place(field_class, typed)
+
+        assert form.cleaned_data["place"] == Decimal(cleaned)
+        assert isinstance(form.cleaned_data["place"], Decimal)
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_both_ends_of_the_range_are_accepted(self, field_class, limit):
+        low = submit_place(field_class, f"-{limit}")
+        high = submit_place(field_class, f"{limit}.")
+        high_full = submit_place(field_class, f"{limit}.000000")
+
+        assert low.cleaned_data["place"] == Decimal(-limit)
+        assert high.cleaned_data["place"] == Decimal(limit)
+        assert high_full.cleaned_data["place"] == Decimal(limit)
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_a_value_past_the_upper_end_is_refused_with_the_bound(
+        self, field_class, limit
+    ):
+        form = submit_place(field_class, f"{limit}.000001")
+
+        assert place_codes(form) == ["max_value"]
+        error = form.errors.as_data()["place"][0]
+        assert error.params["limit_value"] == limit
+        assert "place" not in form.cleaned_data
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_a_value_past_the_lower_end_is_refused_with_the_bound(
+        self, field_class, limit
+    ):
+        form = submit_place(field_class, f"-{limit + 1}")
+
+        assert place_codes(form) == ["min_value"]
+        error = form.errors.as_data()["place"][0]
+        assert error.params["limit_value"] == -limit
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_more_than_six_decimal_places_is_refused_and_not_rounded(
+        self, field_class, limit
+    ):
+        form = submit_place(field_class, "51.5000001")
+
+        assert place_codes(form) == ["max_decimal_places"]
+        assert "place" not in form.cleaned_data
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize(
+        "typed",
+        [
+            "abc",
+            "51,5",
+            "5e1",
+            "1E2",
+            "inf",
+            "-inf",
+            "nan",
+            "-",
+            "+",
+            ".",
+            "1.2.3",
+            "٣",
+        ],
+    )
+    def test_text_that_is_not_a_plain_number_is_invalid(
+        self, field_class, limit, typed
+    ):
+        form = submit_place(field_class, typed)
+
+        assert place_codes(form) == ["invalid"]
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize("typed", ["-0", "-0.0", "-0.000000", "+0"])
+    def test_minus_zero_cleans_to_zero_without_a_sign(self, field_class, limit, typed):
+        cleaned = submit_place(field_class, typed).cleaned_data["place"]
+
+        assert cleaned == 0
+        assert not cleaned.is_signed()
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize("typed", ["", "   ", None])
+    def test_empty_is_none_when_not_required(self, field_class, limit, typed):
+        form = submit_place(field_class, typed, required=False)
+
+        assert form.is_valid()
+        assert form.cleaned_data["place"] is None
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize("typed", ["", "   ", None])
+    def test_empty_is_required_when_required(self, field_class, limit, typed):
+        form = submit_place(field_class, typed)
+
+        assert place_codes(form) == ["required"]
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize(
+        ("given", "cleaned"),
+        [
+            (0.00005, "0.00005"),
+            (-0.00005, "-0.00005"),
+            (1.5, "1.5"),
+            (3, "3"),
+            (Decimal("2.25"), "2.25"),
+        ],
+    )
+    def test_a_number_is_read_as_the_number_it_is(
+        self, field_class, limit, given, cleaned
+    ):
+        field = field_class()
+
+        assert field.clean(given) == Decimal(cleaned)
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize("given", [float("inf"), float("nan"), Decimal("NaN")])
+    def test_a_number_that_is_not_finite_is_invalid(self, field_class, limit, given):
+        with pytest.raises(ValidationError) as caught:
+            field_class().clean(given)
+
+        assert caught.value.code == "invalid"
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_a_disabled_field_with_a_float_initial_near_zero_cleans_to_it(
+        self, field_class, limit
+    ):
+        class PlaceForm(forms.Form):
+            place = field_class(disabled=True)
+
+        form = PlaceForm(data={}, initial={"place": 0.00005})
+
+        assert form.is_valid()
+        assert form.cleaned_data["place"] == Decimal("0.00005")
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize("initial", [Decimal("51.5"), 51.5, "51.5"])
+    @pytest.mark.parametrize("language", ["en", "de", "fr"])
+    def test_the_initial_value_is_shown_with_a_full_stop_in_every_language(
+        self, field_class, limit, initial, language
+    ):
+        form = place_form(field_class)(initial={"place": initial})
+
+        with translation.override(language):
+            html = str(form["place"])
+
+        assert 'value="51.5"' in html
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_a_posted_value_is_not_localised(self, field_class, limit):
+        with translation.override("de"):
+            form = submit_place(field_class, "51,5")
+
+        assert place_codes(form) == ["invalid"]
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize("code", ["invalid", "min_value", "max_value"])
+    def test_a_developers_error_message_replaces_the_codes_message(
+        self, field_class, limit, code
+    ):
+        typed = {
+            "invalid": "x",
+            "min_value": str(-limit - 1),
+            "max_value": str(limit + 1),
+        }
+        form = submit_place(
+            field_class, typed[code], error_messages={code: "Mine, %(limit_value)s."}
+        )
+
+        assert place_codes(form) == [code]
+        assert form.errors["place"][0].startswith("Mine")
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_a_developers_message_replaces_the_decimal_places_message(
+        self, field_class, limit
+    ):
+        form = submit_place(
+            field_class, "1.1234567", error_messages={"max_decimal_places": "Too fine."}
+        )
+
+        assert form.errors["place"] == ["Too fine."]
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_a_developers_validators_run_after_the_field_accepts_the_value(
+        self, field_class, limit
+    ):
+        def not_zero(value):
+            if value == 0:
+                raise ValidationError("No zero.", code="zero")
+
+        form = submit_place(field_class, "0", validators=[not_zero])
+
+        assert place_codes(form) == ["zero"]
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_a_disabled_field_keeps_its_initial_value(self, field_class, limit):
+        class PlaceForm(forms.Form):
+            place = field_class(disabled=True, initial=Decimal("12.5"))
+
+        form = PlaceForm(data={"place": "99"})
+
+        assert form.is_valid()
+        assert form.cleaned_data["place"] == Decimal("12.5")
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_the_options_are_stated_on_the_field(self, field_class, limit):
+        field = field_class()
+
+        assert field.min_value == -limit
+        assert field.max_value == limit
+        assert field.decimal_places == 6
+        assert field.max_digits is None
+
+
+class TestCoordinateFieldOptions:
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_narrower_bounds_are_accepted_and_enforced(self, field_class, limit):
+        form = submit_place(field_class, "11", min_value=-10, max_value=10.5)
+
+        assert place_codes(form) == ["max_value"]
+        assert form.errors.as_data()["place"][0].params["limit_value"] == 10.5
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize(
+        ("bounds", "value", "code", "limit_value"),
+        [
+            ((40, 60), "35", "min_value", 40),
+            ((40, 60), "61", "max_value", 60),
+            ((-60, -40), "-35", "max_value", -40),
+            ((-60, -40), "-61", "min_value", -60),
+        ],
+    )
+    def test_a_value_outside_a_narrowed_range_names_the_bound_it_broke(
+        self, field_class, limit, bounds, value, code, limit_value
+    ):
+        form = submit_place(
+            field_class, value, min_value=bounds[0], max_value=bounds[1]
+        )
+
+        assert place_codes(form) == [code]
+        assert form.errors.as_data()["place"][0].params["limit_value"] == limit_value
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize("value", ["40", "45.5", "60"])
+    def test_a_value_inside_a_narrowed_range_is_taken(self, field_class, limit, value):
+        form = submit_place(field_class, value, min_value=40, max_value=60)
+
+        assert form.cleaned_data["place"] == Decimal(value)
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_the_bounds_of_the_range_itself_are_accepted_as_options(
+        self, field_class, limit
+    ):
+        field = field_class(min_value=-limit, max_value=Decimal(limit))
+
+        assert field.clean(str(limit)) == limit
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_a_lower_bound_above_zero_is_accepted(self, field_class, limit):
+        field = field_class(min_value=5, max_value=10)
+
+        assert field.clean("5") == 5
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_decimal_places_are_stated(self, field_class, limit):
+        form = submit_place(field_class, "1.234", decimal_places=2)
+        zero = submit_place(field_class, "1.5", decimal_places=0)
+        whole = submit_place(field_class, "7", decimal_places=0)
+
+        assert place_codes(form) == ["max_decimal_places"]
+        assert place_codes(zero) == ["max_decimal_places"]
+        assert whole.cleaned_data["place"] == 7
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize("option", ["min_value", "max_value"])
+    @pytest.mark.parametrize("bound", ["5", True, float("inf"), float("nan"), [1]])
+    def test_a_bound_that_is_not_a_finite_number_names_the_option(
+        self, field_class, limit, option, bound
+    ):
+        with pytest.raises(ValueError, match=option):
+            field_class(**{option: bound})
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize(
+        ("option", "bound"),
+        [("min_value", -1), ("max_value", 1)],
+    )
+    def test_a_bound_outside_the_range_names_the_option(
+        self, field_class, limit, option, bound
+    ):
+        stated = bound * (limit + 1)
+
+        with pytest.raises(ValueError, match=option):
+            field_class(**{option: stated})
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_a_lower_bound_above_the_upper_names_the_option(self, field_class, limit):
+        with pytest.raises(ValueError, match="min_value"):
+            field_class(min_value=10, max_value=5)
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    @pytest.mark.parametrize("places", [-1, 1.5, "2", True, None])
+    def test_decimal_places_that_are_not_a_whole_number_name_the_option(
+        self, field_class, limit, places
+    ):
+        with pytest.raises(ValueError, match="decimal_places"):
+            field_class(decimal_places=places)
+
+    @pytest.mark.parametrize(("field_class", "limit"), [*EACH_FIELD])
+    def test_equal_bounds_are_accepted(self, field_class, limit):
+        field = field_class(min_value=3, max_value=3)
+
+        assert field.clean("3") == 3
+
+
+class Place:
+    """Plays the GEOS point a GeoDjango model holds."""
+
+    def __init__(self, x, y, srid=4326, z=None):
+        self.x = x
+        self.y = y
+        self.srid = srid
+        self.z = z
+
+
+def point_form(**options):
+    class PointForm(forms.Form):
+        place = PointField(**options)
+
+    return PointForm
+
+
+def point_codes(form):
+    return [error.code for error in form.errors.as_data().get("place", [])]
+
+
+def submit_point(latitude, longitude, **options):
+    form = point_form(**options)(
+        {"place_0": latitude, "place_1": longitude}, initial={}
+    )
+    form.full_clean()
+    return form
+
+
+class TestPointField:
+    @pytest.mark.parametrize(
+        ("latitude", "longitude", "cleaned"),
+        [
+            ("51.5074", "-0.1278", "SRID=4326;POINT(-0.1278 51.5074)"),
+            ("51.50", "0", "SRID=4326;POINT(0 51.50)"),
+            ("-90", "180", "SRID=4326;POINT(180 -90)"),
+            (".5", "+1.", "SRID=4326;POINT(1 0.5)"),
+            ("-0", "-0", "SRID=4326;POINT(0 0)"),
+        ],
+    )
+    def test_a_pair_cleans_to_wkt_text_with_the_longitude_first(
+        self, latitude, longitude, cleaned
+    ):
+        form = submit_point(latitude, longitude)
+
+        assert form.is_valid()
+        assert form.cleaned_data["place"] == cleaned
+
+    def test_both_halves_empty_is_none_when_not_required(self):
+        form = submit_point("", "", required=False)
+
+        assert form.is_valid()
+        assert form.cleaned_data["place"] is None
+
+    def test_both_halves_empty_is_required_when_required(self):
+        form = submit_point("", "")
+
+        assert point_codes(form) == ["required"]
+
+    def test_both_halves_only_space_is_none_when_not_required(self):
+        form = submit_point(" ", "  ", required=False)
+
+        assert form.is_valid()
+        assert form.cleaned_data["place"] is None
+
+    def test_both_halves_only_space_is_required_when_required(self):
+        form = submit_point(" ", "  ")
+
+        assert point_codes(form) == ["required"]
+
+    @pytest.mark.parametrize("required", [True, False])
+    @pytest.mark.parametrize(
+        ("latitude", "longitude"), [("", "5"), ("5", ""), (" ", "5")]
+    )
+    def test_one_half_empty_is_incomplete(self, required, latitude, longitude):
+        form = submit_point(latitude, longitude, required=required)
+
+        assert point_codes(form) == ["incomplete"]
+
+    def test_the_messages_of_the_two_halves_differ(self):
+        no_latitude = list(submit_point("", "5").errors["place"])
+        no_longitude = list(submit_point("5", "").errors["place"])
+
+        assert no_latitude != no_longitude
+
+    def test_the_developer_replaces_the_message_of_a_half(self):
+        form = submit_point(
+            "",
+            "5",
+            error_messages={"incomplete_latitude": "Where north?"},
+        )
+
+        assert list(form.errors["place"]) == ["Where north?"]
+        other = submit_point(
+            "5",
+            "",
+            error_messages={"incomplete_latitude": "Where north?"},
+        )
+        assert list(other.errors["place"]) != ["Where north?"]
+
+    @pytest.mark.parametrize(
+        ("latitude", "longitude", "code"),
+        [
+            ("91", "0", "max_value"),
+            ("-91", "0", "min_value"),
+            ("0", "181", "max_value"),
+            ("0", "-181", "min_value"),
+            ("1.1234567", "0", "max_decimal_places"),
+            ("0", "1.1234567", "max_decimal_places"),
+            ("abc", "0", "invalid"),
+            ("0", "1e3", "invalid"),
+        ],
+    )
+    def test_a_half_that_is_refused_carries_its_own_code(
+        self, latitude, longitude, code
+    ):
+        form = submit_point(latitude, longitude)
+
+        assert point_codes(form) == [code]
+
+    def test_each_half_names_its_own_bound(self):
+        form = submit_point("91", "0")
+
+        assert form.errors.as_data()["place"][0].params["limit_value"] == 90
+
+    def test_the_messages_of_the_two_halves_differ_when_both_are_refused(self):
+        latitude = list(submit_point("91", "0").errors["place"])
+        longitude = list(submit_point("0", "181").errors["place"])
+
+        assert latitude != longitude
+
+    def test_both_halves_refused_report_both(self):
+        form = submit_point("91", "-181")
+
+        assert point_codes(form) == ["max_value", "min_value"]
+
+    def test_the_options_narrow_each_half(self):
+        options = {
+            "min_latitude": 40,
+            "max_latitude": 60,
+            "min_longitude": -10,
+            "max_longitude": 10,
+            "decimal_places": 2,
+        }
+
+        assert submit_point("45.5", "5", **options).is_valid()
+        assert point_codes(submit_point("39", "5", **options)) == ["min_value"]
+        assert point_codes(submit_point("61", "5", **options)) == ["max_value"]
+        assert point_codes(submit_point("45", "-11", **options)) == ["min_value"]
+        assert point_codes(submit_point("45", "11", **options)) == ["max_value"]
+        assert point_codes(submit_point("45.123", "5", **options)) == [
+            "max_decimal_places"
+        ]
+
+    @pytest.mark.parametrize(
+        ("options", "named"),
+        [
+            ({"min_latitude": -91}, "min_latitude"),
+            ({"max_latitude": 91}, "max_latitude"),
+            ({"min_longitude": -181}, "min_longitude"),
+            ({"max_longitude": 181}, "max_longitude"),
+            ({"min_latitude": 50, "max_latitude": 40}, "min_latitude"),
+            ({"min_longitude": 50, "max_longitude": 40}, "min_longitude"),
+            ({"min_latitude": float("nan")}, "min_latitude"),
+            ({"max_longitude": True}, "max_longitude"),
+            ({"decimal_places": -1}, "decimal_places"),
+            ({"decimal_places": True}, "decimal_places"),
+            ({"decimal_places": 1.5}, "decimal_places"),
+        ],
+    )
+    def test_a_bad_option_raises_a_value_error_naming_it(self, options, named):
+        with pytest.raises(ValueError, match=named):
+            PointField(**options)
+
+    def test_the_default_widget_is_the_point_input(self):
+        assert isinstance(PointField().widget, PointInput)
+
+    def test_a_disabled_field_cleans_its_initial_point(self):
+        class PointForm(forms.Form):
+            place = PointField(disabled=True, required=False)
+
+        form = PointForm({}, initial={"place": Place(-0.1278, 51.5074)})
+
+        assert form.is_valid()
+        assert form.cleaned_data["place"] == "SRID=4326;POINT(-0.1278 51.5074)"
+
+
+class TestPointFieldHasChanged:
+    @pytest.mark.parametrize(
+        "initial",
+        [
+            Place(-0.1278, 51.5074),
+            Place(-0.1278, 51.5074, srid=None),
+            "SRID=4326;POINT(-0.1278 51.5074)",
+            "POINT(-0.1278 51.5074)",
+            (51.5074, -0.1278),
+            [51.5074, -0.1278],
+        ],
+        ids=["stand-in", "no srid", "ewkt", "wkt", "tuple", "list"],
+    )
+    def test_a_form_posted_with_the_initial_coordinates_has_not_changed(self, initial):
+        form = point_form()(
+            {"place_0": "51.5074", "place_1": "-0.1278"}, initial={"place": initial}
+        )
+
+        assert form.changed_data == []
+
+    @pytest.mark.parametrize(
+        ("latitude", "longitude"), [("51.5075", "-0.1278"), ("51.5074", "-0.1279")]
+    )
+    def test_either_half_moving_is_a_change(self, latitude, longitude):
+        form = point_form()(
+            {"place_0": latitude, "place_1": longitude},
+            initial={"place": Place(-0.1278, 51.5074)},
+        )
+
+        assert form.changed_data == ["place"]
+
+    def test_emptying_both_halves_is_a_change(self):
+        form = point_form(required=False)(
+            {"place_0": "", "place_1": ""},
+            initial={"place": Place(-0.1278, 51.5074)},
+        )
+
+        assert form.changed_data == ["place"]
+
+    def test_no_initial_and_nothing_sent_is_no_change(self):
+        form = point_form(required=False)({"place_0": "", "place_1": ""})
+
+        assert form.changed_data == []

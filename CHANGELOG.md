@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `LatitudeField` and `LongitudeField`, in `mvp_forms.fields`, for a coordinate in decimal degrees. A latitude is from -90 to 90 and a longitude from -180 to 180, both ends included, and each cleans to a `Decimal`. A value past a bound is refused with the code `min_value` or `max_value`, more than six decimal places with `max_decimal_places` and is never rounded, and text that is not a plain number, such as `51,5`, `5e1` or `inf`, with `invalid`. A minus zero is cleaned to zero. The options `min_value`, `max_value` and `decimal_places` narrow the range or state the number of decimal places, and a bound outside the range raises a `ValueError` when the form class is defined. The README's new section "Coordinates" lists the values the fields accept and the codes.
+- The demo's Coordinates page gains a latitude and longitude narrowed to one country, to two decimal places. The mask refuses a digit no value in the narrowed range could follow, and a value left below the lower bound is posted as typed and refused by the field with `min_value`.
+
+- `PointField`, in `mvp_forms.fields`, and `PointInput`, in `mvp_forms.widgets`, for a place from a latitude and a longitude. The field cleans to WKT text such as `SRID=4326;POINT(-0.1278 51.5074)`, which a GeoDjango model's `PointField` takes, and to `None` when empty. Each half is refused with its own code, and a point with one half empty is refused with `incomplete`, whose message names the missing half and is replaced through `error_messages` with `incomplete_latitude` or `incomplete_longitude`. The options `min_latitude`, `max_latitude`, `min_longitude`, `max_longitude` and `decimal_places` narrow the ranges. A starting value is read from a point object, WKT text or a `(latitude, longitude)` pair, and a point in another spatial reference, with a height or that is not a point raises a `ValueError` when the form is drawn. The input is drawn by the new template `mvp_forms/widgets/point.html`.
+- The demo's Coordinates page gains a point, a formset of points whose rows can be added, and a point in a modal.
+
 ## [v0.4.0] - 2026-10-13
 
 ### Changed

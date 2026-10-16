@@ -8,6 +8,7 @@ from demo.autocompletes import (
     LanguageAutocomplete,
     RockAutocomplete,
 )
+from demo.coordinate_views import CoordinatesView
 from demo.counted_views import CountedSelectView
 from demo.countries_views import CountriesView, StandaloneCountriesView
 from demo.partial_date_views import PartialDatesView, StandalonePartialDatesView
@@ -151,6 +152,7 @@ urlpatterns = [
     ),
     path("input-masks/", InputMasksView.as_view(), name="input-masks"),
     path("partial-dates/", PartialDatesView.as_view(), name="partial-dates"),
+    path("coordinates/", CoordinatesView.as_view(), name="coordinates"),
     path(
         "partial-dates/standalone/",
         StandalonePartialDatesView.as_view(),

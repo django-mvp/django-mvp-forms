@@ -148,6 +148,11 @@ AppMenu.extend(
                         "icon": "tomselect",
                     },
                 ),
+                MenuItem(
+                    name="coordinates",
+                    view_name="coordinates",
+                    extra_context={"label": "Coordinates", "icon": "coordinates"},
+                ),
             ],
         ),
         MenuGroup(

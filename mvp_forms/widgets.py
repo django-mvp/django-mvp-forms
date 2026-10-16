@@ -8,8 +8,9 @@ Tom Select control. The host project loads IMask and Tom Select.
 
 import datetime
 import json
+import re
 from collections.abc import Mapping
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django import forms
 from django.utils.dates import MONTHS
@@ -564,6 +565,150 @@ class NumberMaskInput(MaskInput):
         if isinstance(value, Decimal | float):
             value = format(Decimal(str(value)), "f")
         return str(value).replace(".", self.radix)
+
+
+class CoordinateMaskInput(NumberMaskInput):
+    """A decimal degree, typed with a full stop and an optional minus sign.
+
+    The latitude and longitude fields state the number of decimal places and the
+    bounds on the widget they are given. The bounds are checked by the script
+    and never handed to IMask, which would change a value outside them.
+    """
+
+    kind = "coordinate"
+    scale = 6
+    min_value = None
+    max_value = None
+
+    def __init__(self, attrs=None):
+        """Draw no ``inputmode``, unless ``attrs`` states one.
+
+        The decimal keypad of a phone has no minus key, and offers a comma where
+        the language's decimal mark is a comma.
+
+        Args:
+            attrs: HTML attributes for the input.
+        """
+        super().__init__(attrs, radix=".", thousands_separator="")
+        if "inputmode" not in (attrs or {}):
+            del self.attrs["inputmode"]
+
+    def mask_options(self):
+        """Return the kind of mask, its decimal places and the field's bounds."""
+        bounds = {
+            "min": self.write_bound(self.min_value),
+            "max": self.write_bound(self.max_value),
+        }
+        return {
+            "kind": self.kind,
+            "scale": self.scale,
+            **self.options,
+            **{name: bound for name, bound in bounds.items() if bound is not None},
+        }
+
+
+class PointInput(forms.MultiWidget):
+    """A latitude and a longitude as two masked inputs that make one point.
+
+    Each input is drawn inside its own daisyUI ``input`` frame, a ``<label>``
+    that shows the half's name before it. The point field states each half's
+    bounds and the decimal places on the parts it is given.
+    """
+
+    template_name = "mvp_forms/widgets/point.html"
+    number = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?"
+    well_known_text = re.compile(
+        rf"\s*(?:SRID\s*=\s*(\d+)\s*;\s*)?POINT\s*\(\s*({number})\s+({number})\s*\)\s*",
+        re.IGNORECASE,
+    )
+
+    def __init__(self, attrs=None):
+        """Build the latitude and the longitude parts.
+
+        Args:
+            attrs: HTML attributes for both parts.
+        """
+        parts = [
+            CoordinateMaskInput({"aria-label": _("Latitude")}),
+            CoordinateMaskInput({"aria-label": _("Longitude")}),
+        ]
+        super().__init__(parts, attrs)
+
+    def get_context(self, name, value, attrs):
+        """Move each part's classes onto the frame drawn around it.
+
+        The frame is the daisyUI ``input``, so the size, colour, variant and
+        error state the pack gives a part belong on it, not on the input inside.
+        """
+        context = super().get_context(name, value, attrs)
+        for part in context["widget"]["subwidgets"]:
+            part["frame_class"] = part["attrs"].pop("class", "")
+            part["frame_name"] = part["attrs"].get("aria-label", "")
+        return context
+
+    def decompress(self, value):
+        """Split a point into its latitude and longitude.
+
+        Args:
+            value: An object with ``x`` and ``y`` such as a GEOS point, WKT
+                text, or a pair of ``(latitude, longitude)``.
+
+        Returns:
+            The latitude and the longitude as ``Decimal`` numbers, or two
+            ``None`` for an empty value.
+
+        Raises:
+            ValueError: The point is in a spatial reference other than 4326, has
+                a height, or is not a two-dimensional point.
+        """
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return [None, None]
+        if isinstance(value, str):
+            found = self.well_known_text.fullmatch(value)
+            if not found:
+                raise ValueError(
+                    f"{value!r} is not a two-dimensional WKT point, such as "
+                    "'SRID=4326;POINT(-0.1278 51.5074)'."
+                )
+            srid, longitude, latitude = found.groups()
+            self.check_srid(int(srid) if srid else None)
+        elif isinstance(value, list | tuple):
+            if len(value) != 2:
+                raise ValueError(
+                    f"A pair holds a latitude and a longitude, not {value!r}."
+                )
+            latitude, longitude = value
+        elif hasattr(value, "x") and hasattr(value, "y"):
+            self.check_srid(getattr(value, "srid", None))
+            if getattr(value, "z", None) is not None:
+                raise ValueError(
+                    "The point has a height, which the form has no input for."
+                )
+            latitude, longitude = value.y, value.x
+        else:
+            raise ValueError(f"{value!r} is not a point.")
+        try:
+            return [Decimal(str(latitude)), Decimal(str(longitude))]
+        except InvalidOperation:
+            raise ValueError(
+                f"A point holds a latitude and a longitude, not {value!r}."
+            ) from None
+
+    @staticmethod
+    def check_srid(srid):
+        """Refuse a spatial reference whose numbers are not degrees of WGS84.
+
+        Args:
+            srid: The point's spatial reference identifier, or ``None``.
+
+        Raises:
+            ValueError: The identifier is neither ``None`` nor 4326.
+        """
+        if srid not in (None, 4326):
+            raise ValueError(
+                f"The point is in spatial reference {srid}, which is not "
+                "latitude and longitude in degrees. Convert it to 4326 first."
+            )
 
 
 class DynamicMaskInput(MaskInput):

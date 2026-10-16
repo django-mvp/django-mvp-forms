@@ -114,8 +114,60 @@
     };
   }
 
+  // A number as it is typed, with bounds IMask is never handed: IMask changes a
+  // value outside its bounds on every commit, and what a person typed is what
+  // is posted. The value is refused when nothing that can still be typed after
+  // it lies between the bounds. Values are counted in units of 10^-scale.
+  function coordinate(options) {
+    const { min, max, scale = 6, radix = ".", ...rest } = options;
+    const unit = Math.pow(10, scale);
+    const lowest = min === undefined ? -Infinity : Math.round(min * unit);
+    const highest = max === undefined ? Infinity : Math.round(max * unit);
+    return {
+      mask: Number,
+      scale: scale,
+      radix: radix,
+      // A stored 51.507400 is kept as it is written, so the mask takes it.
+      normalizeZeros: false,
+      ...rest,
+      validate: function (value) {
+        const negative = value.startsWith("-");
+        const text = negative ? value.slice(1) : value;
+        if (value === "") return true;
+        if (text === "") return lowest < 0;
+        // Only digits and one decimal mark are a number on its way.
+        const parts = text.split(radix);
+        if (parts.length > 2 || !parts.every((part) => /^[0-9]*$/.test(part))) {
+          return false;
+        }
+        // The sign mirrors the interval, so only a size is compared.
+        const from = Math.max(negative ? -highest : lowest, 0);
+        const to = negative ? -lowest : highest;
+        if (to < 0) return false;
+        if (text.includes(radix)) {
+          const [whole, fraction] = text.split(radix);
+          const digits = fraction.slice(0, scale);
+          const first = Number(whole || "0") * unit + Number(digits.padEnd(scale, "0") || "0");
+          const last = first + Math.max(unit / Math.pow(10, digits.length), 1) - 1;
+          return first <= to && last >= from;
+        }
+        // The whole part with nothing after it is itself, with any decimal
+        // places, and every number it begins.
+        let first = Number(text) * unit;
+        let last = first + unit - 1;
+        for (;;) {
+          if (first <= to && last >= from) return true;
+          if (first > to || first === 0) return false;
+          first *= 10;
+          last = (last + 1) * 10 - 1;
+        }
+      },
+    };
+  }
+
   function build(written) {
     const { kind, definitions, blocks, flags, ...rest } = written;
+    if (kind === "coordinate") return coordinate(rest);
     if (kind === "partial-date") return partialDate(rest.resolution, rest.min, rest.max);
     if (kind === "regex") return { mask: new RegExp(rest.mask, flags) };
     if (kind === "number") return { mask: Number, ...rest };
@@ -159,10 +211,10 @@
   }
 
   // Whether the mask keeps what the input holds as it is.
-  function takes(options, value) {
+  function takes(options, value, partial) {
     const tried = window.IMask.createMask(options);
     tried.resolve(value);
-    return bare(tried.value) === value;
+    return (partial ? bare(tried.value) : tried.value) === value;
   }
 
   // A change inside a partial date never alters a part the person did not
@@ -226,8 +278,9 @@
   }
 
   // A partial date mask cuts a value it does not take, such as 2021-02-30, down
-  // to what it does. The input shows the whole value until the person has
-  // changed it to one the mask takes, and no scan of the page masks it before.
+  // to what it does, and a coordinate mask cuts places past its scale. The
+  // input shows the whole value until the person has changed it to one the mask
+  // takes, and no scan of the page masks it before.
   function wait(input) {
     waiting.add(input);
     input.addEventListener(
@@ -248,7 +301,10 @@
       const written = JSON.parse(input.dataset.imask);
       const options = build(written);
       partial = written.kind === "partial-date";
-      if (partial && !takes(options, input.value)) {
+      if (
+        (partial || written.kind === "coordinate") &&
+        !takes(options, input.value, partial)
+      ) {
         wait(input);
         return;
       }
