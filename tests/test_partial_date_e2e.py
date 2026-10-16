@@ -1,19 +1,14 @@
 """The script that keeps a three-part date in step, run in Chrome with no IMask."""
 
 import json
-from pathlib import Path
 
 import pytest
 from django.urls import reverse
 from playwright.sync_api import expect
 
-from tests.urls import IMASK_ORIGIN, IMASK_URL
-
 pytestmark = pytest.mark.e2e
 
-IMASK = Path(__file__).parent / "data" / "imask-7.6.1.min.js"
 FIELDS = ["typed", "listed"]
-DEMO_PAGES = ["partial-dates", "partial-dates-standalone"]
 LIMITED = ["limited_typed", "limited_listed"]
 # Records each listener for the events the script reacts to, and each observer.
 RECORD_REGISTRATIONS = """
@@ -641,26 +636,3 @@ class TestPartialDateScriptLimits:
         answer = submit(page)
 
         assert answer["errors"] == {field: ["min_value"]}
-
-
-class TestPartialDateDemoPages:
-    @pytest.mark.parametrize("name", DEMO_PAGES)
-    def test_a_sample_added_after_february_was_chosen_offers_the_days_of_march(
-        self, dates_page, page, name
-    ):
-        # A demo page links stylesheets and scripts on the CDN that this test has
-        # no use for. Each is refused at once, so the page loads with no network.
-        page.route(f"{IMASK_ORIGIN}/**", lambda route: route.abort())
-        page.route(
-            IMASK_URL,
-            lambda route: route.fulfill(path=IMASK, content_type="text/javascript"),
-        )
-        page = dates_page(name)
-        enter_year(page, "collected", "2021", "samples-1-")
-        part(page, "collected", "month", "samples-1-").select_option("02")
-
-        page.click("[data-add-line]")
-        enter_year(page, "collected", "2021", "samples-2-")
-        part(page, "collected", "month", "samples-2-").select_option("03")
-
-        assert len(offered(page, "collected", "day", "samples-2-")) == 31

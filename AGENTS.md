@@ -28,7 +28,8 @@ depend on django-mvp at runtime.
 - **Lint:** `uv run pre-commit run --all-files`
 - **Type-check:** `uv run mypy`
 - **Build:** `uv build`
-- **Demo project:** `uv run python manage.py runserver 0.0.0.0:8026`
+- **Demo project:** `uv run python manage.py build_docs`, then
+  `uv run python manage.py runserver 0.0.0.0:8026`
 - **Bump the version:** `uv version` — never edit `pyproject.toml` alone, because `uv.lock`
   records this package's own version too
 
@@ -51,16 +52,25 @@ deployed. Nothing in it is distributed — `pyproject.toml` packages
 `tests/settings.py` inherits `demo/settings.py` rather than restating it, so
 there is one description of the shell.
 
-Everything in the demo fails quietly. A Cotton component that cannot be
-resolved renders as empty output, a Tailwind class the packaged stylesheet does
-not emit does nothing, and a menu entry whose URL will not resolve is dropped
-from the tree. None of them raise, which is why `tests/test_demo.py` asserts
-against the rendered page rather than against the objects behind it.
+Its pages are Markdown under `demo/docs/`, served by django-mvp-sphinx at the
+site root, and their contents are the sidebar. Build them before the server
+starts, and again after editing a page: `uv run python manage.py build_docs`.
 
-**Adding a page** takes four things: a view in `demo/views.py` on
-`mvp.views.MVPTemplateView`, a route in `demo/urls.py`, a template extending
-`page_view.html` and filling `{% block page.content %}`,
-and a `MenuItem` in `demo/menus.py`.
+Everything in the demo fails quietly. A page missing from a contents list is
+dropped from the sidebar, and a live example whose address does not resolve
+draws an empty frame. Neither raises, which is why `tests/test_demo.py` builds
+the pages and asserts against what is served rather than against the objects
+behind it.
+
+**Adding a page** takes three things:
+
+- a Markdown page under `demo/docs/`, listed in its group's contents
+- one Python file per example under `demo/examples/`, holding the form
+- a route for each example in `demo/examples/urls.py`, on the generic
+  `ExampleView`
+
+The page shows each example with the `{live-example}` directive, naming the
+route and the files to show beside it.
 
 **Signing in.** `uv run python manage.py seed_demo` creates three accounts —
 `regular.user@example.com`, `staff.user@example.com` and

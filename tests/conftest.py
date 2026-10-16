@@ -14,7 +14,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import QueryDict
 from django.template import Context, Template
 from django.test import override_settings
-from django.urls import reverse
 
 import mvp_forms
 from support_window import ASKED, DECLARATION, Window, class_list, installed_versions
@@ -43,40 +42,6 @@ def pytest_sessionstart():
     if unmet:
         found = ", ".join(f"{d.package} {d.version}" for d in unmet)
         raise pytest.UsageError(f"This run was asked for other versions: {found}")
-
-
-@pytest.fixture(scope="module")
-def pages_got():
-    """What a plain GET of each demo page answered, kept for the module.
-
-    A demo page answers every anonymous GET alike, so the tests of one module
-    read one rendering of it. A test must not change the page it is handed.
-    """
-    return {}
-
-
-@pytest.fixture
-def overview_page(client, db, pages_got):
-    if "overview as text" not in pages_got:
-        text = client.get(reverse("overview")).content.decode()
-        pages_got["overview as text"] = text
-    return pages_got["overview as text"]
-
-
-@pytest.fixture
-def open_page(client, db, parse, pages_got):
-    def open_url(name, data=None):
-        if data is None and name in pages_got:
-            return pages_got[name]
-        url = reverse(name)
-        response = client.get(url) if data is None else client.post(url, data)
-        assert response.status_code == 200
-        page = parse(response.content.decode())
-        if data is None:
-            pages_got[name] = page
-        return page
-
-    return open_url
 
 
 @pytest.fixture
