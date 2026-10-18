@@ -348,6 +348,43 @@ class TestReplacingOneTemplate:
         assert found(elsewhere, "whole")
 
 
+class TestAReplacementCallingThePublicTags:
+    def test_a_field_template_of_its_own_draws_the_pack_s_input_with_daisyui_field(
+        self, replace, draw
+    ):
+        field = (
+            "{% load daisyui %}{% daisyui_field field as drawn %}"
+            '<div data-replaced="field">{{ drawn.render }}</div>'
+        )
+        before = draw(FILTER, form=TextInputsForm())
+
+        with replace({"daisyui/field.html": field}):
+            after = draw(FILTER, form=TextInputsForm())
+
+        assert len(found(after, "field")) == len(TextInputsForm().fields)
+        assert [str(tag) for tag in after.find_all("input")] == [
+            str(tag) for tag in before.find_all("input")
+        ]
+
+    def test_a_button_template_of_its_own_draws_the_pack_s_classes_with_daisyui_button(
+        self, replace, draw
+    ):
+        button = (
+            "{% load daisyui %}{% daisyui_button input as drawn %}"
+            '<input data-replaced="button" type="{{ input.input_type }}"'
+            ' class="{{ drawn.css_class }}">'
+        )
+        before = draw(TAG, form=with_save_button(TextInputsForm()))
+
+        with replace({"daisyui/layout/baseinput.html": button}):
+            after = draw(TAG, form=with_save_button(TextInputsForm()))
+
+        assert (
+            found(after, "button")[0]["class"]
+            == (before.find(attrs={"type": "submit"})["class"])
+        )
+
+
 class TestWhereAReplacementIsFound:
     def test_an_app_listed_after_the_pack_is_not_used(self, draw, settings):
         apps = [*settings.INSTALLED_APPS, "tests.host_app"]

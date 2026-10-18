@@ -1,6 +1,6 @@
 # ADR 0029 — Every template the pack distributes is public, with the names it reads
 
-**Status:** accepted, extended by [ADR 0044](0044-grouping-is-added-by-extending-django-tomselects-template.md): one template is distributed outside `daisyui/`
+**Status:** accepted, extended by [ADR 0044](0044-grouping-is-added-by-extending-django-tomselects-template.md): one template is distributed outside `daisyui/`, and by [ADR 0058](0058-two-template-tags-are-public.md): which of the pack's template tags are public
 
 ## Decision
 
@@ -84,5 +84,4 @@ warning every project.
 
 The pack's templates gain named blocks, which would make each block name part of this surface.
 django-crispy-forms renames one of the paths it chooses, such as `%s/layout/div.html`, which the
-pack cannot intercept from a template. Or the pack's template tags, which a copied template
-calls, are ruled public or private.
+pack cannot intercept from a template.

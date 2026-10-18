@@ -1099,6 +1099,17 @@ A path on its way out stays a row of the table for as long as it is honoured, wi
 
 The markup and the class names inside a template of the pack are not part of this promise and can change in any release. A replacement that copied the old markup keeps drawing it until its owner updates it.
 
+#### The template tags a replacement calls
+
+A replacement copied from one of the pack's templates calls the pack's tags and filters, loaded with `{% load daisyui %}`. Two of them are public, and change only as a listed path does:
+
+- `{% daisyui_field field as drawn %}` hands a field's template `drawn`, the pack's drawing of the field. The templates of the layout objects that decorate a field add options to it, such as `prepended=crispy_prepended_text`, `join=div` or `disabled=True`, and those options are promised with it, as are the parts of `drawn` listed above for `daisyui/frame.html` and `daisyui/field_body.html`.
+- `{% daisyui_button input as drawn %}` hands a button's template `drawn`, the pack's drawing of a `Submit`, `Button`, `Reset` or `StrictButton`, with its classes as `drawn.css_class` and, for a `StrictButton`, its attributes as `drawn.flat_attrs`.
+
+A release that renames one of the two, or one of their options, keeps the old name working for one minor version. For that version the old name raises a `DeprecationWarning` naming the new one, and the CHANGELOG says what replaces it.
+
+Every other tag and filter of the pack is internal: `daisyui_button_size`, `daisyui_sized`, `daisyui_host_template`, `daisyui_layout_object`, `daisyui_formset_table` and the filters `daisyui_classes`, `daisyui_shown`, `daisyui_date_part` and `daisyui_tab_group`. Any release can rename, change or remove one, a patch release included, so a replacement that calls one may need changing when you upgrade. A tag that no longer exists fails with `TemplateSyntaxError` the first time the template is drawn, so your tests find it.
+
 ### django-tomselect
 
 The pack draws the select widgets of [django-tomselect](https://github.com/OmenApps/django-tomselect) so that they sit in a daisyUI form as a stock select does. It covers the single and the multiple widget, over a model and over a list of choices: `TomSelectModelWidget`, `TomSelectModelMultipleWidget`, `TomSelectIterablesWidget` and `TomSelectIterablesMultipleWidget`, which `TomSelectModelChoiceField`, `TomSelectModelMultipleChoiceField`, `TomSelectChoiceField` and `TomSelectMultipleChoiceField` build. django-tomselect is not a dependency of the package and no module of the package imports it, so a project without it is drawn as before.
