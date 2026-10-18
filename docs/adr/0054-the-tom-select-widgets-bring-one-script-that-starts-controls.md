@@ -23,6 +23,10 @@ to finish loading. Beyond that it:
   Select with `maxOptions: null`, and passes nothing else
 - copies the select's `aria-describedby` to the input Tom Select builds
 - watches the document for added elements and starts a control on any marked select among them
+- destroys the control of a marked select that is out of the page once a batch of changes has
+  been made, so a select moved within the page keeps its control
+- copies `data-none-text` and `data-count-text` from the select to the box that holds the chosen
+  values, for a counted control ([ADR 0057](0057-a-counted-control-is-one-setting-drawn-by-the-tom-select-stylesheet.md))
 - sends `mvp-forms:tomselect` from the select, with the instance in `event.detail.tomselect`
 
 It is tested in Chrome, as [ADR 0046](0046-the-mask-script-is-tested-in-a-browser.md) decided
@@ -54,6 +58,12 @@ control that started only on selects present when the page loaded would be missi
 the places it is used. django-mvp inserts a row from an empty form kept in a `<template>`, whose
 content the script never sees, so the inserted select arrives unstarted and the watcher finds
 it.
+
+Tom Select adds listeners to the document and the window for each control and removes them only
+in `destroy()`. A page that swaps a form out with htmx would keep the listeners of every control
+it had shown. A move within the page is a removal and an insertion in the same batch, so the
+script asks whether the select is still in the page once the batch is read, rather than treating
+every removal as the end of the control.
 
 ## Revisit if
 

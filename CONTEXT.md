@@ -76,6 +76,12 @@ A value a Tom Select control holds. A multiple control lists each one in the
 control as an item of its own, with the remove button when the control has one.
 _Avoid_: tag (a tag is a chosen value in a tagging control), selection.
 
+**Counted control**:
+A multiple Tom Select control that shows how many values it holds in place of the
+values themselves, ticks each chosen option in its dropdown and has its search box
+at the top of the dropdown. `TomSelectMultiple(counted=True)` draws one.
+_Avoid_: checkbox select, summary select.
+
 **Form's media**:
 The scripts and stylesheets Django collects from a form's widgets, which the host
 project's template renders with `{{ form.media }}`, or which `{% crispy form %}`

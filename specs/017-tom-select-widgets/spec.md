@@ -85,6 +85,30 @@ constitution and the decision records. Longer rationale is in `decisions.md`.
   the same on one page. The decision record is rewritten to say the stylesheet serves Tom Select
   controls from either source. Recorded as FR-012, FR-013 and FR-032.
 
+### Session 2026-10-18
+
+The maintainer asked for the control the demo drew from a subclass, a count in place of the
+tags with a tick on each chosen option (issue #182), to be a setting of the multiple widget, and
+settled the questions the issue raised. They are recorded in ADR 0057.
+
+- **Q: Is it one setting for the whole control or one per plugin?**
+  A: One, `counted`, on `TomSelectMultiple`. It turns on both `checkbox_options` and
+  `dropdown_input`. Recorded as FR-034.
+
+- **Q: How are the two words in the control translated?**
+  A: They are settings of the widget, `none_text` and `count_text`, whose defaults, "Nothing
+  selected" and "selected", are translated. Recorded as FR-035.
+
+- **Q: Should Backspace in an empty search box go on removing the value chosen last?**
+  A: Yes. Tom Select's default is kept. Recorded as FR-036.
+
+- **Q: Does the single widget get the search box in its dropdown as well?**
+  A: No. `TomSelect` is unchanged. Recorded as FR-034.
+
+- **Q: Where are the rules that draw it?**
+  A: In `mvp_forms/tomselect.css`, under Article XIV: every colour from the daisyUI theme.
+  Recorded as FR-037.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A developer gives a multiple choice field a Tom Select control (Priority: P1)
@@ -244,6 +268,11 @@ choose a value in the new row.
    opened, **Then** the control is in place and its dropdown is not cut off by the container.
 5. **Given** a page that holds the script more than once, **When** it has loaded, **Then** each
    select has one control.
+6. **Given** a select whose control has been started, **When** the select leaves the page, alone
+   or with the form that htmx swaps out, **Then** its control is destroyed, and a select moved
+   within the page keeps its control.
+7. **Given** a select whose control was destroyed when it left the page, **When** it is put
+   back, **Then** a new control is started on it.
 
 ---
 
@@ -253,8 +282,8 @@ A developer needs a setting this package does not carry, such as drawing each op
 icon. They listen for the event the script sends from each select once its control has started,
 take the Tom Select instance from it, and make the change in a few lines of their own script.
 
-**Why this priority**: It serves the few cases outside the four settings. Without it those cases
-have no route but to stop using the widget.
+**Why this priority**: It serves the few cases outside the settings it carries. Without it those
+cases have no route but to stop using the widget.
 
 **Independent Test**: On a page with one of these controls, listen for the event on the document
 and call a method of the instance it carries.
@@ -266,6 +295,42 @@ and call a method of the instance it carries.
    carries the Tom Select instance.
 2. **Given** a select added to the page after it has loaded, **When** its control is started,
    **Then** the same event is sent from it.
+
+---
+
+### User Story 7 - A developer shows a count in place of the chosen values (Priority: P3)
+
+A developer has a multiple choice field where a person ticks several options from a list, such
+as the countries a survey covered, and the chosen values matter less than finding and ticking
+them. They name the multiple widget with `counted=True`. A person sees "3 selected" in the
+control, opens the list, searches it from a box at its top, and ticks or unticks each option.
+
+**Why this priority**: The control works without it. A list of tags grows with each value and
+pushes the form about, and the demo had to draw this control from a subclass and a stylesheet of
+its own.
+
+**Independent Test**: Define a form with a `MultipleChoiceField` using the multiple widget with
+`counted=True`, on a page that loads Tom Select, the stylesheets and the form's media, tick two
+options and submit.
+
+**Acceptance Scenarios**:
+
+1. **Given** a multiple widget with `counted=True`, **When** its form is drawn, **Then** the
+   settings name the plugins `checkbox_options` and `dropdown_input`, after any button the
+   widget was given.
+2. **Given** a counted widget, **When** its form is drawn, **Then** the select holds the two
+   words of the control, translated by default, or the ones the developer stated.
+3. **Given** a page that loads Tom Select and the form's media, **When** a counted control has
+   started, **Then** the box that holds its chosen values carries the two words.
+4. **Given** a counted control and the package's stylesheet, **When** it holds no value, **Then**
+   it shows the first word, and **When** it holds values, **Then** it shows their number
+   followed by the second word, with no tag for each, and each chosen option has a tick in the
+   dropdown.
+5. **Given** a counted control, **When** a person ticks two options and submits the form,
+   **Then** the field receives both values.
+6. **Given** a multiple widget given a word and not counted, a counted widget given the remove
+   button, or the single widget given `counted` or a word, **When** the form class is defined,
+   **Then** an error is raised that names the setting.
 
 ---
 
@@ -306,9 +371,10 @@ and call a method of the instance it carries.
 - Options loaded from a view as a person types. That is django-tomselect's, which the pack
   already draws.
 - Adding a value that is not among the field's choices. The field would reject it.
-- Every Tom Select setting and plugin other than the four of FR-006 to FR-009, including the ones
-  written as JavaScript functions, dragging chosen values into an order, and checkboxes in the
-  dropdown.
+- Every Tom Select setting and plugin other than those of FR-006 to FR-009 and FR-034,
+  including the ones written as JavaScript functions, dragging chosen values into an order,
+  checkboxes in the dropdown of a control that still shows its tags, and a search box in the
+  dropdown of a single control.
 - A way to mark an option unavailable from Python.
 - A limit on the number of options, or a warning when there are many.
 - Fields. This feature adds widgets only.
@@ -375,6 +441,8 @@ and call a method of the instance it carries.
 - **FR-019**: The script MUST start a control on a select added to the page after it has loaded,
   whichever script added it, including a formset row made by copying the formset's empty form.
   It MUST NOT start two controls on one select, however many times the page includes the script.
+  It MUST destroy the control of a select that has left the page, checked once each batch of
+  changes has been made, so that a select moved within the page keeps its control.
 - **FR-020**: On a page where Tom Select is not present, the script MUST do nothing and MUST raise
   no error, and each field MUST be a stock select that works.
 - **FR-021**: The widgets and the script MUST use no inline script and no inline event handler.
@@ -418,6 +486,27 @@ and call a method of the instance it carries.
 - **FR-033**: `CONTEXT.md` MUST gain the terms under Key Entities, and its entry for an option
   group MUST cover a group written as Django's grouped choices.
 
+#### A counted control
+
+- **FR-034**: The multiple widget MUST take `counted`. `True` MUST turn on Tom Select's
+  `checkbox_options` and `dropdown_input` plugins together. There MUST be no setting for either
+  plugin alone, and the single widget MUST NOT take `counted`.
+- **FR-035**: The multiple widget MUST take `none_text`, shown by a counted control holding no
+  value, and `count_text`, shown after the number of values it holds. Each MUST default to a
+  translated word, "Nothing selected" and "selected", MUST accept a lazy translation, and MUST be
+  written on the select of a counted widget only. The script MUST copy both to the box that
+  holds the chosen values. Either word on a widget that is not counted, and the remove button on
+  a counted widget, MUST raise an error that names the setting.
+- **FR-036**: A counted control MUST keep Tom Select's own keys, including Backspace in an empty
+  search box removing the value chosen last.
+- **FR-037**: `mvp_forms/tomselect.css` MUST draw a counted control: the count from the two
+  words in place of the tags, a tick on each chosen option, and the search box in the dropdown,
+  with every colour from the daisyUI theme. The chosen values MUST stay in the control for
+  assistive technology. A django-tomselect control that uses `checkbox_options` MUST keep its
+  tags.
+- **FR-038**: The demo's Tom Select page MUST show counted controls: a short list, a long list to
+  search, options with long labels and a disabled field.
+
 ### Requirement coverage
 
 | Story | Requirements |
@@ -428,6 +517,7 @@ and call a method of the instance it carries.
 | US-4 | FR-011, FR-014 |
 | US-5 | FR-019, FR-031 |
 | US-6 | FR-022, FR-030 |
+| US-7 | FR-034 to FR-038 |
 
 ### Key Entities
 
@@ -438,6 +528,9 @@ and call a method of the instance it carries.
   elements when the form is drawn, as opposed to options a control requests from a view.
 - **Chosen value**: A value held by a control. A multiple control lists each one in the control
   as an item of its own.
+- **Counted control**: A multiple control that shows how many values it holds in place of the
+  values themselves, ticks each chosen option in its dropdown and has its search box at the top
+  of the dropdown.
 - **Option group**: The heading a dropdown lists a set of options under. For these widgets it is
   a group in Django's grouped choices.
 - **Form's media**: The scripts and stylesheets Django collects from a form's widgets, which the

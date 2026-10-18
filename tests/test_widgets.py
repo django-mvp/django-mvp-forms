@@ -1944,8 +1944,88 @@ class TestTheSettingsOfTomSelectMultiple:
         assert field.clean(field.widget.value_from_datadict(data, {}, "field")) == ["b"]
 
 
+class TestACountedTomSelectMultiple:
+    def test_it_turns_on_the_checkbox_and_search_box_plugins(self):
+        widget = TomSelectMultiple(choices=FRUIT, counted=True)
+
+        assert settings_of(widget) == {
+            "plugins": ["checkbox_options", "dropdown_input"]
+        }
+
+    def test_its_plugins_follow_the_clear_button(self):
+        widget = TomSelectMultiple(choices=FRUIT, clear_button=True, counted=True)
+
+        assert settings_of(widget)["plugins"] == [
+            "clear_button",
+            "checkbox_options",
+            "dropdown_input",
+        ]
+
+    def test_it_writes_the_two_words_it_is_given_on_the_select(self):
+        widget = TomSelectMultiple(
+            choices=FRUIT, counted=True, none_text="None yet", count_text="chosen"
+        )
+
+        select = select_of(widget)
+
+        assert (select["data-none-text"], select["data-count-text"]) == (
+            "None yet",
+            "chosen",
+        )
+
+    def test_it_writes_both_words_when_none_is_stated(self):
+        select = select_of(TomSelectMultiple(choices=FRUIT, counted=True))
+
+        assert select["data-none-text"]
+        assert select["data-count-text"]
+
+    def test_a_lazy_word_is_written_in_the_language_active_when_drawn(self):
+        lazy = gettext_lazy("This field is required.")
+        widget = TomSelectMultiple(choices=FRUIT, counted=True, count_text=lazy)
+
+        with translation.override("en"):
+            english = select_of(widget)["data-count-text"]
+            in_english = str(lazy)
+        with translation.override("de"):
+            german = select_of(widget)["data-count-text"]
+            in_german = str(lazy)
+
+        assert in_english != in_german
+        assert (english, german) == (in_english, in_german)
+
+    @pytest.mark.parametrize("counted", [None, False])
+    def test_a_widget_that_is_not_counted_writes_no_words(self, counted):
+        select = select_of(TomSelectMultiple(choices=FRUIT, counted=counted))
+
+        assert not select.has_attr("data-none-text")
+        assert not select.has_attr("data-count-text")
+        assert "plugins" not in json.loads(select["data-tom-select"])
+
+    @pytest.mark.parametrize("value", [1, 0, "yes"])
+    def test_counted_that_is_not_true_or_false_is_refused(self, value):
+        with pytest.raises(ValueError, match="counted"):
+            TomSelectMultiple(counted=value)
+
+    @pytest.mark.parametrize("name", ["none_text", "count_text"])
+    @pytest.mark.parametrize("value", ["", 3, ["a"]])
+    def test_a_word_that_is_not_text_or_is_empty_is_refused(self, name, value):
+        with pytest.raises(ValueError, match=name):
+            TomSelectMultiple(counted=True, **{name: value})
+
+    @pytest.mark.parametrize("name", ["none_text", "count_text"])
+    def test_a_word_for_a_control_that_is_not_counted_is_refused(self, name):
+        with pytest.raises(ValueError, match=name):
+            TomSelectMultiple(**{name: "chosen"})
+
+    def test_a_remove_button_on_a_counted_control_is_refused(self):
+        with pytest.raises(ValueError, match="remove_button"):
+            TomSelectMultiple(counted=True, remove_button=True)
+
+
 class TestTheSettingsOfTomSelect:
-    @pytest.mark.parametrize("name", ["remove_button", "max_items"])
+    @pytest.mark.parametrize(
+        "name", ["remove_button", "max_items", "counted", "none_text", "count_text"]
+    )
     def test_a_setting_only_the_multiple_widget_has_is_refused(self, name):
         with pytest.raises(TypeError, match=name):
             TomSelect(**{name: True})

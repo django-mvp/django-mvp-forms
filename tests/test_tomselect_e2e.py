@@ -68,6 +68,16 @@ const holder = document.createElement("div");
 document.getElementById("page").append(holder);
 holder.append(document.getElementById("id_fruit"));
 """
+# What a library swapping the form out does: the element that holds the select
+# and its control leaves the page. Records whether the control was destroyed.
+REMOVE_FRUIT = """
+window.held = document.getElementById("id_fruit").tomselect;
+window.destroyed = false;
+window.held.on("destroy", () => { window.destroyed = true; });
+window.removed = document.getElementById("id_fruit").closest("div");
+window.removed.remove();
+"""
+PUT_FRUIT_BACK = 'document.getElementById("page").append(window.removed)'
 # Records each event the script sends, and whether it carries the instance the
 # select holds by then.
 LISTEN = """
@@ -404,7 +414,7 @@ class TestTheSettings:
         page.locator(option.format("b")).click()
 
         assert page.evaluate(items) == ["a", "b"]
-        assert not page.locator(option.format("c")).is_visible()
+        expect(page.locator(option.format("c"))).not_to_be_visible()
 
         page.keyboard.press("Backspace")
         page.locator("#id_limited-ts-control").click()
@@ -413,10 +423,54 @@ class TestTheSettings:
         assert page.evaluate(items) == ["a", "c"]
 
 
+class TestACountedControl:
+    def test_it_is_started_with_both_of_its_plugins(self, choices_page, script_errors):
+        page = choices_page()
+
+        wrapper = page.locator("#id_counted + .ts-wrapper")
+
+        assert page.evaluate(STARTED, "id_counted") is True
+        expect(wrapper).to_have_class(re.compile(r"\bplugin-checkbox_options\b"))
+        expect(wrapper).to_have_class(re.compile(r"\bplugin-dropdown_input\b"))
+        assert script_errors == []
+
+    def test_the_box_holding_its_values_carries_its_two_words(self, choices_page):
+        page = choices_page()
+
+        box = page.locator("#id_counted + .ts-wrapper .ts-control")
+
+        assert box.get_attribute("data-none-text") == "None yet"
+        assert box.get_attribute("data-count-text") == "chosen"
+
+    def test_a_control_that_is_not_counted_carries_no_words(self, choices_page):
+        page = choices_page()
+
+        box = page.locator("#id_fruit + .ts-wrapper .ts-control")
+
+        assert box.get_attribute("data-none-text") is None
+        assert box.get_attribute("data-count-text") is None
+
+    def test_two_chosen_values_are_sent_under_the_fields_name(self, choices_page):
+        page = choices_page()
+        page.locator("#id_counted + .ts-wrapper .ts-control").click()
+        dropdown = page.locator("#id_counted-ts-dropdown")
+        dropdown.locator('.option[data-value="a"]').click()
+        dropdown.locator('.option[data-value="b"]').click()
+        page.keyboard.press("Escape")
+
+        with page.expect_navigation():
+            page.click("button[type=submit]")
+
+        assert '"counted": ["a", "b"]' in page.inner_text("body")
+
+
 class TestGroupsAndUnavailableOptions:
     def test_an_option_is_listed_under_the_heading_of_its_group(self, choices_page):
         page = choices_page()
         page.locator("#id_grouped + .ts-wrapper .ts-control").click()
+        expect(page.locator("#id_grouped-ts-dropdown .optgroup .option")).to_have_count(
+            3
+        )
 
         listed = page.locator("#id_grouped-ts-dropdown .optgroup").evaluate_all(
             """(groups) => groups.map((group) => [
@@ -579,6 +633,44 @@ class TestAMovedSelect:
         assert page.evaluate(WRAPPERS) == before
         assert page_errors == []
         assert script_errors == []
+
+    def test_its_control_is_not_destroyed(self, choices_page):
+        page = choices_page()
+        page.evaluate(
+            'document.getElementById("id_fruit").tomselect.on('
+            '"destroy", () => { window.destroyed = true; })'
+        )
+
+        page.evaluate(MOVE_FRUIT)
+        page.evaluate("new Promise((done) => setTimeout(done))")
+
+        assert page.evaluate("window.destroyed === undefined")
+
+
+class TestARemovedSelect:
+    def test_its_control_is_destroyed(self, choices_page, page_errors, script_errors):
+        page = choices_page()
+
+        page.evaluate(REMOVE_FRUIT)
+
+        page.wait_for_function("window.destroyed")
+        assert page.evaluate("window.removed.querySelector('select').tomselect") is None
+        assert page_errors == []
+        assert script_errors == []
+
+    def test_one_put_back_gets_a_new_control(self, choices_page, page_errors):
+        page = choices_page()
+        page.evaluate(REMOVE_FRUIT)
+        page.wait_for_function("window.destroyed")
+
+        page.evaluate(PUT_FRUIT_BACK)
+
+        assert page.evaluate(STARTED, "id_fruit") is True
+        assert page.evaluate(
+            "document.getElementById('id_fruit').tomselect !== window.held"
+        )
+        assert page.evaluate(WRAPPERS) == page.evaluate(SELECTS)
+        assert page_errors == []
 
 
 class TestAControlInAModal:

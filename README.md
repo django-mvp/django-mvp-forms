@@ -1276,6 +1276,7 @@ This is the public surface:
 - `mvp_forms.widgets.TomSelect`, for a field where a person picks one value
 - `mvp_forms.widgets.TomSelectMultiple`, for a field where a person picks several values
 - the attribute `data-tom-select`, which holds the settings the script reads as JSON on the widget's `<select>`
+- the attributes `data-none-text` and `data-count-text`, which hold the two words of a [counted control](https://github.com/django-mvp/django-mvp-forms#a-counted-control) on its `<select>`, and which the script copies to the box Tom Select builds to hold the chosen values
 - the script `mvp_forms/tomselect.js`, which the widget names in its media
 - the event `mvp-forms:tomselect`, which the script sends from each select once its control has started, with the Tom Select instance in `event.detail.tomselect`
 
@@ -1305,7 +1306,7 @@ The pack draws the select as it draws any select, with the size, colour and vari
 
 #### Settings
 
-Four settings change the control. Each is a keyword-only argument of the widget, and a setting you do not state is not written, so Tom Select's own default applies.
+These settings change the control. Each is a keyword-only argument of the widget, and a setting you do not state is not written, so Tom Select's own default applies.
 
 | Argument | Widget | What it does |
 | --- | --- | --- |
@@ -1313,6 +1314,9 @@ Four settings change the control. Each is a keyword-only argument of the widget,
 | `clear_button` | both | `True` adds a button that empties the control. |
 | `remove_button` | `TomSelectMultiple` | `True` adds a button to each chosen value that removes that value alone. |
 | `max_items` | `TomSelectMultiple` | The largest number of values that can be chosen, a whole number above zero. |
+| `counted` | `TomSelectMultiple` | `True` shows how many values are chosen in place of the values, as [A counted control](https://github.com/django-mvp/django-mvp-forms#a-counted-control) describes. |
+| `none_text` | `TomSelectMultiple` | What a counted control shows while it holds no value. `"Nothing selected"` unless stated. |
+| `count_text` | `TomSelectMultiple` | What a counted control shows after the number of values it holds. `"selected"` unless stated. |
 
 ```python
 from django import forms
@@ -1340,9 +1344,37 @@ class ArticleForm(forms.Form):
 
 The settings arrive in `data-tom-select` under Tom Select's own names. The example above writes `placeholder` and `maxItems` for the first field, and a `plugins` list holding `clear_button` and `remove_button`. A lazy translation is accepted as a placeholder and is turned into text when the form is drawn, so it is in the language of the request. The settings are the same whichever way the form is drawn, and in the empty form of a formset.
 
-A widget refuses a setting that cannot be right when the form class is defined, so the mistake shows at import and not on a page. A `ValueError` names the argument for a placeholder that is not text or is empty, for `clear_button` or `remove_button` that is not `True` or `False`, and for a `max_items` that is a boolean, is not a whole number or is below one. `TomSelect` has no `remove_button` and no `max_items`, and given either it raises `TypeError`.
+A widget refuses a setting that cannot be right when the form class is defined, so the mistake shows at import and not on a page. A `ValueError` names the argument for a placeholder, a `none_text` or a `count_text` that is not text or is empty, for `clear_button`, `remove_button` or `counted` that is not `True` or `False`, and for a `max_items` that is a boolean, is not a whole number or is below one. It also names `none_text` or `count_text` given to a widget that is not counted, and `remove_button` on a counted widget, whose values are not shown. `TomSelect` has none of the settings only `TomSelectMultiple` has, and given one it raises `TypeError`.
 
 Tom Select does not search a single control by typing while it holds a value, so a person clears it or clicks an option, and the clear button makes that visible. `max_items=1` makes Tom Select draw the control as a single one while the form still receives a list. The two buttons are Tom Select plugins, so the page needs the complete build or django-tomselect's script, as [What to load](https://github.com/django-mvp/django-mvp-forms#what-to-load) says.
+
+#### A counted control
+
+`counted=True` draws a multiple control that shows how many values it holds, such as "3 selected", in place of a tag for each. Each option in the dropdown has a tick beside it once it is chosen, and the search box sits at the top of the dropdown rather than in the control. It suits a list where the values chosen matter less than finding and ticking them, and where tags would push the form about as they are added.
+
+```python
+from django import forms
+from django.utils.translation import gettext_lazy as _
+
+from mvp_forms.widgets import TomSelectMultiple
+
+
+class FieldworkForm(forms.Form):
+    countries = forms.MultipleChoiceField(
+        choices=[("de", "Germany"), ("fr", "France"), ("it", "Italy")],
+        widget=TomSelectMultiple(
+            counted=True,
+            placeholder=_("Search"),
+            clear_button=True,
+            none_text=_("No country"),
+            count_text=_("countries"),
+        ),
+    )
+```
+
+The setting turns on two of Tom Select's plugins, `checkbox_options` and `dropdown_input`, so `plugins` holds them after any button. The control shows `none_text` while it holds no value, and the number of values followed by `count_text` once it holds one. Both words are translated by default, and a lazy translation stated for either is turned into text when the form is drawn. The widget writes them on the select as `data-none-text` and `data-count-text`, the script copies them to the box Tom Select builds, and `mvp_forms/tomselect.css` draws the count from them, so a page without the stylesheet shows the tags as any multiple control does. A placeholder is shown in the search box.
+
+Each chosen value stays in the control, out of sight, so a screen reader is still told each one by name. Backspace in an empty search box removes the value chosen last, as it does in every Tom Select control.
 
 #### Groups and unavailable options
 
@@ -1412,7 +1444,9 @@ The script starts a control on each `select[data-tom-select]` on the page once t
 
 It then watches the document for elements added afterwards. A select that your own script inserts, a node that holds one, a row added to a formset and a form that a library swaps into the page all get their control with no script of yours, and so does a select in a `Modal`, which is started before the dialog is opened. Each select has one control. A select moved within the page keeps the control it has, and the elements Tom Select adds as it starts a control are not mistaken for new selects. A select inside a `<template>` is inert and is not started until a copy of it is inserted into the page.
 
-The attribute holds a JSON object, and a widget that states no setting writes `{}`. The script reads three names from it and hands them to Tom Select: `placeholder`, `maxItems` and `plugins`. It also hands Tom Select `maxOptions: null`, so that every option of the field can be found by typing however many there are. Nothing else in the attribute is passed on. A plugin named in `plugins` has to be in the Tom Select the page loads. The complete build and django-tomselect's script carry `clear_button` and `remove_button`, and Tom Select's base build does not.
+It destroys the control of a select that leaves the page, alone or inside an element that is removed, as a form swapped out by htmx is. Tom Select keeps listeners on the document and the window for each control until it is destroyed, so a page that swaps forms in and out would otherwise keep the listeners of every control it had shown. The script looks once each batch of changes has been made, so a select moved within the page is back in it by then and keeps its control. A select that is put back after it was removed gets a new control.
+
+The attribute holds a JSON object, and a widget that states no setting writes `{}`. The script reads three names from it and hands them to Tom Select: `placeholder`, `maxItems` and `plugins`. It also hands Tom Select `maxOptions: null`, so that every option of the field can be found by typing however many there are. Nothing else in the attribute is passed on. A plugin named in `plugins` has to be in the Tom Select the page loads. The complete build and django-tomselect's script carry `clear_button`, `remove_button`, `checkbox_options` and `dropdown_input`, and Tom Select's base build does not. The script also copies `data-none-text` and `data-count-text`, where the select has them, to the box that holds the chosen values.
 
 Tom Select moves the label's `for` to the control's own input, and the script copies the select's `aria-describedby` to that input, so the label, the help text and the errors name the element that takes focus. A select that Tom Select refuses is left as it is, the error is reported in the browser's console, and the script goes on to the next select.
 
