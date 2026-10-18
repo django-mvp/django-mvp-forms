@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A `Join` can hold buttons as well as fields, so a select, a text input and a button can be drawn as one piece, such as a search bar. A `StrictButton`, `Submit`, `Button` or `Reset` sits in the join in the place you give it, is drawn as it is anywhere else and carries `join-item`. It takes the form's `size`, `button_color` and `button_variant`, and a `Choice` around the group or around the button, as the buttons of a `FieldWithButtons` do, and keeps your own class, id and attributes. The fields of a group are drawn as before, with or without buttons. `Join.contents()` returns the members and the buttons in order, each button as the new `GroupButton`. A `Hidden` in a group still raises `InvalidMember`. The demo's "Joined groups" page gains a search bar.
+
 ## [v0.5.0] - 2026-10-18
 
 ### Added

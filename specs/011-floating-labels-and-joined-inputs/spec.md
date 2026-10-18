@@ -11,7 +11,7 @@ inputs, are reachable from a layout)
 
 **Roadmap**: R7 (daisyUI's other form components)
 
-**Issue**: #87
+**Issue**: #87, and #94 for the buttons a joined group holds
 
 **Depends on**: FS-007 (#11) for the size, colour and variant choices and for the place in Python
 where a choice is stated. FS-004 (#8) for the field frame a decorated field is drawn in. Through
@@ -55,11 +55,11 @@ Longer rationale is in `decisions.md`.
   own. Recorded as FR-014 to FR-018.
 
 - **Q: What may a joined group hold?**
-  A: Fields the pack draws as a daisyUI input or select. Anything else named in it, such as a
-  checkbox, a textarea or another layout object that draws a frame of its own, raises an error
-  naming it. Buttons are not part of this feature: one field with buttons is the existing
-  `FieldWithButtons`, and #94 asks whether a group of fields should take buttons too. Recorded as
-  FR-013 and FR-021.
+  A: Fields the pack draws as a daisyUI input or select, and buttons. Anything else named in it,
+  such as a checkbox, a textarea or another layout object that draws a frame of its own, raises an
+  error naming it. The maintainer settled the buttons under #94, so that daisyUI's own lead example
+  of a join, a select, a text input and a button in one piece, can be drawn. Recorded as FR-013,
+  FR-021 and FR-030 to FR-033.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -201,6 +201,45 @@ it, and the markup uses only classes daisyUI defines.
 
 ---
 
+### User Story 4 - A developer puts buttons in a joined group (Priority: P4)
+
+A developer wants a search bar: a select for what to search, a text input for the words and a
+button to send it, drawn as one piece, which is daisyUI's own lead example of a join. In the
+layout they put the button in the joined group beside the fields. The button is drawn in its place
+in the join, takes the form's size, colour and variant for buttons as any button does, and the
+fields are drawn exactly as they are in a group without buttons.
+
+**Why this priority**: It extends the group the second story built and needs nothing else from
+this feature. `FieldWithButtons` already joins buttons to one field, and this lets a group of
+fields do the same.
+
+**Independent Test**: Join a select, a text field and a button, state a button colour and a size
+for the form, and submit it once valid and once with the text missing. The three are drawn in one
+join in the layout's order, the button carries the form's button colour and size, the error is on
+the text input alone, and the cleaned data is what the form gives without the button.
+
+**Acceptance Scenarios**:
+
+1. **Given** a layout that joins a select, a text field and a button, **When** the pack draws the
+   form, **Then** the select, the input and the button are the children of one daisyUI join, in
+   the order the layout names them, each drawn as an item of the join.
+2. **Given** a joined group holding a `StrictButton`, a `Submit`, a `Button` or a `Reset`,
+   **When** the pack draws it, **Then** the button is drawn as it is anywhere else, so a `Submit`
+   keeps its name and value.
+3. **Given** a form with a size, a button colour or a button variant stated, **When** the pack
+   draws a button in a joined group, **Then** the button takes it, as the buttons of a
+   `FieldWithButtons` do.
+4. **Given** a choice stated around a joined group that holds a button, **When** the pack draws
+   it, **Then** the members and the button take it, over the form's, and a choice stated around
+   the button alone reaches the button and no member.
+5. **Given** a button in a joined group with a class of the developer's own, **When** the pack
+   draws it, **Then** the class is kept.
+6. **Given** a joined group holding fields and a button, **When** the pack draws and submits it,
+   **Then** each field is drawn, labelled, described, marked and cleaned exactly as in a group
+   that holds no button.
+
+---
+
 ### Edge Cases
 
 - A floating label is stated on one field by name and the field is a checkbox, a toggle, a radio
@@ -217,6 +256,12 @@ it, and the markup uses only classes daisyUI defines.
   applied, so a floating label has no effect, a joined group is not drawn, and neither raises.
 - A joined group holds one field. It is drawn as a group of one. A group that holds nothing draws
   nothing.
+- A joined group holds a button and no visible field, because its fields are hidden or the form
+  lacks them. The button is drawn in the join, and the hidden fields beside it.
+- A `Hidden` from django-crispy-forms is named in a joined group. It is not a button, so the group
+  raises an error naming it.
+- A button follows the joined group in the layout rather than being in it. It is not part of the
+  group and is drawn as any button is.
 - A joined group is given no label. No group label is drawn, and each input is still named by its
   own field's label.
 - A joined group names a field the form does not have. django-crispy-forms decides what happens,
@@ -305,8 +350,21 @@ it, and the markup uses only classes daisyUI defines.
 #### Mistakes with a joined group
 
 - **FR-021**: A joined group that names a field the pack cannot join, or holds a layout object
-  other than the wrappers FR-013 allows, MUST raise an error that names it, no later than when the
-  form is drawn.
+  other than the wrappers FR-013 allows and the buttons FR-030 allows, MUST raise an error that
+  names it, no later than when the form is drawn.
+
+#### Buttons in a joined group
+
+- **FR-030**: A joined group MUST accept a `StrictButton`, a `Submit`, a `Button` or a `Reset`,
+  alone or in a choice, anywhere among its fields. The pack MUST draw it in its place in the join,
+  as an item of the join, and draw it as it draws that button anywhere else.
+- **FR-031**: A button in a joined group MUST take the form's size, button colour and button
+  variant, and a choice stated around the group or around the button, exactly as the buttons of a
+  `FieldWithButtons` do. A choice around the group is stated for its fields and its buttons alike.
+- **FR-032**: A button in a joined group MUST keep any class, id and attribute the developer gave
+  it.
+- **FR-033**: A field in a joined group that holds buttons MUST be drawn, labelled, described and
+  cleaned exactly as it is in a group that holds none, under FR-013 to FR-019 and FR-023.
 
 #### Size, colour and variant
 
@@ -332,9 +390,9 @@ it, and the markup uses only classes daisyUI defines.
 
 - **FR-028**: The demo project MUST gain a Floating labels page in its Modifiers group and a
   Joined groups page in its Layout objects group, each with live examples. Between them they MUST
-  show the kinds of field that take a floating label, a joined group, the states from FR-005,
-  FR-007, FR-016 and FR-019 that matter for each, and the sizes, colours and variants from FR-022
-  and FR-023.
+  show the kinds of field that take a floating label, a joined group, a joined group with a
+  button, the states from FR-005, FR-007, FR-016 and FR-019 that matter for each, and the sizes,
+  colours and variants from FR-022, FR-023 and FR-031.
 - **FR-029**: The README's public surface MUST say how a floating label is stated and how fields
   are joined, what each is refused for, and what is passed over. The CHANGELOG MUST record the
   addition, and the glossary in `CONTEXT.md` MUST gain the terms this feature introduces
@@ -347,6 +405,7 @@ it, and the markup uses only classes daisyUI defines.
 | US-1: A developer gives a field a floating label | FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029 |
 | US-2: A developer joins several fields into one group | FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029 |
 | US-3: Floating labels and joined groups take the form's choices | FR-022, FR-023, FR-024, FR-028 |
+| US-4: A developer puts buttons in a joined group | FR-030, FR-031, FR-032, FR-033, FR-024, FR-025, FR-028, FR-029 |
 
 FR-028 and FR-029 land with the first story and are extended by the stories that follow, so each
 story shows its own behaviour in the demo project and documents its own surface.
@@ -356,9 +415,9 @@ story shows its own behaviour in the demo project and documents its own surface.
 - **Floating label**: daisyUI's label that is drawn inside a field's frame in place of the label
   above the input, and is shown at the input's edge once the input has focus or a value. A
   choice, stated for a form or for one field. A field that states none has its ordinary label.
-- **Joined group**: several fields that a layout names to be drawn as one daisyUI join, side by
-  side, under one label. Each member stays a field of its own.
-- **Member**: one field of a joined group.
+- **Joined group**: several fields, and any buttons with them, that a layout names to be drawn as
+  one daisyUI join, side by side, under one label. Each member stays a field of its own.
+- **Member**: one field of a joined group. A button in the group is not a member.
 
 ## Success Criteria *(mandatory)*
 
@@ -383,6 +442,8 @@ story shows its own behaviour in the demo project and documents its own surface.
   daisyUI's CDN install with no build step.
 - **SC-008**: Every statement the pack cannot honour is reported with an error naming the field
   or the layout object. None results in a field drawn some other way without notice.
+- **SC-009**: A developer draws a select, a text input and a button as one piece with one entry in
+  the form's layout, and edits no template and writes no CSS class.
 
 ## Assumptions
 
@@ -390,8 +451,8 @@ story shows its own behaviour in the demo project and documents its own surface.
   wherever FS-007 puts a choice. How it is spelt in Python is for the plan.
 - Joining is stated in a layout only. A form drawn without a layout has no way to join fields,
   because joining names several fields at once and is not a statement about one.
-- A joined group holds fields and no buttons. One field with buttons is `FieldWithButtons`, which
-  FS-004 delivers. #94 asks whether a group of fields should take buttons as well.
+- One field with buttons is still `FieldWithButtons`, which FS-004 delivers. A joined group is
+  for several fields, with or without buttons.
 - A joined group is drawn side by side. A developer who wants it stacked writes daisyUI's own
   class on the group, which FR-020 keeps. How the width is shared between the members is a matter
   for the build, and a width the developer sets on a member is kept as it is on any input.
