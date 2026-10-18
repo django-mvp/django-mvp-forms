@@ -140,10 +140,11 @@ class Reader:
         "mask-star-2": Paint(control="rating"),
         "alert": Paint(control="alert"),
         "alert-soft": Paint(variant="soft"),
+        "status": Paint(control="status"),
         **{control: Paint(control=control) for control in CONTROLS},
         **{
             f"{control}-{colour}": Paint(colour=colour)
-            for control in (*CONTROLS, "alert")
+            for control in (*CONTROLS, "alert", "status")
             for colour in COLOURS
         },
         **{f"bg-{colour}": Paint(colour=colour) for colour in COLOURS},
@@ -161,6 +162,8 @@ class Reader:
             "collapse",
             "collapse-title",
             "collapse-content",
+            "indicator",
+            "indicator-item",
             "modal",
             "modal-action",
             "mask",
@@ -246,6 +249,10 @@ class Reader:
             below = self.read_button(tag, paints, here, element, found)
         elif control == "tab":
             self.read_tab(override, here, element, found)
+        elif control == "status":
+            colour, _ = self.modifiers(paints)
+            ink = Ink(colour) if colour else CONTENT
+            self.measure(found, element, "mark", ink, here.surface)
         elif control == "arrow":
             self.measure(found, element, "mark", here.ink, here.surface, own=here.own)
         elif control == "alert":

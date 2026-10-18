@@ -1,7 +1,11 @@
-{% load daisyui %}
+{% load daisyui i18n %}
 {% with pane_class=div.css_class|daisyui_classes %}
-<input type="radio" name="daisyui-tab-group"{% if div.active %} checked{% endif %} form="" class="tab text-base-content" aria-label="{{ div.name }}">
+<input type="radio" name="daisyui-tab-group"{% if div.active %} checked{% endif %} form="" class="tab text-base-content" aria-label="{{ div.name }}"{% if 'aria-invalid="true"' in fields %} aria-describedby="{{ div.css_id }}-error"{% endif %}>
 <div{% if div.css_id %} id="{{ div.css_id }}"{% endif %} class="tab-content mt-4{% if pane_class %} {{ pane_class }}{% endif %}"{{ div.flat_attrs }}>
   {{ fields }}
 </div>
+{% if 'aria-invalid="true"' in fields %}
+<span class="indicator"><span class="indicator-item status status-error" aria-hidden="true"></span></span>
+<span id="{{ div.css_id }}-error" hidden>{% translate "Contains a field with an error" %}</span>
+{% endif %}
 {% endwith %}

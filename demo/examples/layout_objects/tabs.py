@@ -7,7 +7,7 @@ from django import forms
 
 
 class ProfileForm(forms.Form):
-    """Send it empty: the tab holding the first error is the one that opens."""
+    """Send it empty: two tabs hold an error, and the first of them opens."""
 
     name = forms.CharField(required=False)
     street = forms.CharField()

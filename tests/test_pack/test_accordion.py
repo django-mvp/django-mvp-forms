@@ -251,3 +251,92 @@ class TestAccordionSubmission:
             assert summary.find(["input", "select", "textarea", "button"]) is None
         assert len(holder.find_all("input")) == len(FIELDS)
         assert holder.find(["select", "textarea", "button"]) is None
+
+
+def marked(soup):
+    return [
+        group for group in groups(soup) if group.summary.has_attr("aria-describedby")
+    ]
+
+
+class TestAccordionErrorMarker:
+    def test_every_group_holding_an_error_is_marked(self, draw):
+        form = StructureForm(data_without("second", "third"), layout=[three_groups()])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert names_of(marked(soup)) == ["Two", "Three"]
+
+    def test_a_marked_heading_is_described_by_hidden_text_before_its_group(self, draw):
+        form = StructureForm(data_without("second", "third"), layout=[three_groups()])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        for group in marked(soup):
+            description = group.find_previous_sibling()
+            assert description["id"] == group.summary["aria-describedby"]
+            assert description.has_attr("hidden")
+            assert description.get_text(strip=True)
+
+    def test_a_marked_heading_shows_an_error_status_beside_its_name(self, draw):
+        form = StructureForm(data_without("second"), layout=[three_groups()])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        (group,) = marked(soup)
+        indicator = group.summary.find(class_="indicator")
+        assert indicator.get_text() == "Two"
+        status = indicator.find(class_="indicator-item")
+        assert {"status", "status-error"} <= set(status["class"])
+        assert status["aria-hidden"] == "true"
+
+    def test_a_group_without_an_error_carries_no_marker(self, draw):
+        form = StructureForm(data_without("second"), layout=[three_groups()])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert len(soup.find_all(class_="status")) == 1
+        assert names_of(marked(soup)) == ["Two"]
+
+    def test_a_form_without_field_errors_marks_no_group(self, draw):
+        form = StructureWideErrorForm(FIELDS, layout=[three_groups()])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert marked(soup) == []
+        assert soup.find(class_="status") is None
+
+    def test_an_error_on_a_hidden_field_marks_no_group(self, draw):
+        form = StructureHiddenForm(
+            FIELDS,
+            layout=[
+                Accordion(
+                    AccordionGroup("One", "first"),
+                    AccordionGroup("Two", "second", "token"),
+                )
+            ],
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert marked(soup) == []
+
+    def test_an_error_in_a_group_inside_a_tab_marks_both(self, draw):
+        accordion = Accordion(
+            AccordionGroup("One", "first"), AccordionGroup("Two", "second")
+        )
+        form = StructureForm(
+            data_without("second"),
+            layout=[TabHolder(Tab("Plain", "third"), Tab("Nested", accordion))],
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        radios = soup.find_all("input", class_="tab")
+        tabs = [
+            radio["aria-label"]
+            for radio in radios
+            if radio.has_attr("aria-describedby")
+        ]
+        assert tabs == ["Nested"]
+        assert names_of(marked(soup)) == ["Two"]

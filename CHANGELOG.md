@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- When a form comes back with errors, every tab label and every accordion group heading that holds a field with an error is marked, so a person sees all of them at once and not only the one that opened. The mark is daisyUI's error status dot, and assistive technology hears that the tab or group contains a field with an error. It is drawn by default, with nothing to turn on, and does not change which tab or group opens. An error on a hidden field or a form-wide error marks nothing.
+- The demo's Tabs page gains a form that arrives with errors in two tabs and two accordion groups.
+
 ## [v0.5.0] - 2026-10-18
 
 ### Added

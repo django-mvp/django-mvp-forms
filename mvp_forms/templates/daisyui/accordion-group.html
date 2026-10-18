@@ -1,5 +1,11 @@
+{% load i18n %}
+{% if 'aria-invalid="true"' in fields %}<span id="{{ div.css_id }}-error" hidden>{% translate "Contains a field with an error" %}</span>{% endif %}
 <details{% if div.css_id %} id="{{ div.css_id }}"{% endif %} class="collapse collapse-arrow bg-base-200{% if div.css_class %} {{ div.css_class }}{% endif %}"{{ div.flat_attrs }}{% if div.active %} open{% endif %}>
+  {% if 'aria-invalid="true"' in fields %}
+  <summary class="collapse-title" aria-describedby="{{ div.css_id }}-error"><span class="indicator">{{ div.name }}<span class="indicator-item status status-error" aria-hidden="true"></span></span></summary>
+  {% else %}
   <summary class="collapse-title">{{ div.name }}</summary>
+  {% endif %}
   <div class="collapse-content">
     {{ fields }}
   </div>
