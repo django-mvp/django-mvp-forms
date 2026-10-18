@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.5.0] - 2026-10-18
+
 ### Added
 
 - `LatitudeField` and `LongitudeField`, in `mvp_forms.fields`, for a coordinate in decimal degrees. A latitude is from -90 to 90 and a longitude from -180 to 180, both ends included, and each cleans to a `Decimal`. A value past a bound is refused with the code `min_value` or `max_value`, more than six decimal places with `max_decimal_places` and is never rounded, and text that is not a plain number, such as `51,5`, `5e1` or `inf`, with `invalid`. A minus zero is cleaned to zero. The options `min_value`, `max_value` and `decimal_places` narrow the range or state the number of decimal places, and a bound outside the range raises a `ValueError` when the form class is defined. The README's new section "Coordinates" lists the values the fields accept and the codes.
