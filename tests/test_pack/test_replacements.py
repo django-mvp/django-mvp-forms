@@ -379,8 +379,9 @@ class TestAReplacementCallingThePublicTags:
         with replace({"daisyui/layout/baseinput.html": button}):
             after = draw(TAG, form=with_save_button(TextInputsForm()))
 
-        assert found(after, "button")[0]["class"] == (
-            before.find(attrs={"type": "submit"})["class"]
+        assert (
+            found(after, "button")[0]["class"]
+            == (before.find(attrs={"type": "submit"})["class"])
         )
 
 
