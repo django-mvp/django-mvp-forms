@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- An empty required field with a floating label now shows the required marker after the label's text in its placeholder, as in `Email *`, so someone looking over an empty form can see which fields are required. The marker moves to the label once it floats and is never shown twice. A placeholder set on the widget is kept as written.
+
 ## [v0.5.0] - 2026-10-18
 
 ### Added
