@@ -19,7 +19,7 @@ from django.forms import (
 from django.utils.safestring import mark_safe
 from django_countries.fields import CountryField
 from django_countries.widgets import CountrySelectWidget
-from django_tomselect.app_settings import TomSelectConfig
+from django_tomselect.app_settings import PluginClearButton, TomSelectConfig
 from django_tomselect.forms import (
     TomSelectChoiceField,
     TomSelectModelChoiceField,
@@ -1078,6 +1078,15 @@ class TomSelectForm(forms.Form):
     country = TomSelectChoiceField(config=COUNTRIES, help_text="One country")
     countries = TomSelectMultipleChoiceField(
         config=COUNTRIES, help_text="Some countries"
+    )
+    place = TomSelectChoiceField(
+        config=TomSelectConfig(
+            url="ac-countries",
+            value_field="value",
+            label_field="label",
+            plugin_clear_button=PluginClearButton(),
+        ),
+        required=False,
     )
 
     def __init__(self, *args, **kwargs):

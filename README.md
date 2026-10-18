@@ -1166,6 +1166,8 @@ The clear button, `PluginClearButton`, and the remove button on each tag of a mu
 
 Tagging is a multiple control that offers to add what was typed. Each value is a tag with a remove button, and when the typed text matches no option the dropdown begins with a line to add it, set apart from the options below by a rule. Turn it on with `create=True` in the `TomSelectConfig` of a multiple control that has `PluginRemoveButton`, and the stylesheet draws the tags, the tag the keyboard is on and the line that offers to add a value.
 
+In a multiple control, text typed to find a value stays in the box after the value is picked with Enter. That is Tom Select's default, which django-tomselect does not change. Adding a new value empties the box.
+
 The pack draws the control and nothing more. Saving a new value is yours: django-tomselect posts it as it posts any other, and what your view does with it is up to you. The field has to accept it first, and django-tomselect's stock fields do not. `TomSelectMultipleChoiceField` and `TomSelectModelMultipleChoiceField` reject a value that is not among their choices, so a form with a new tag comes back in error. Write a field of your own that accepts any value, as the demo's `TagsField` does:
 
 ```python

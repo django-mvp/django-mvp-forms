@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `mvp_forms/tomselect.css` shows the clear button of a Tom Select control, with a focus ring, while the keyboard is on it. Tom Select and django-tomselect both make the button a stop that Tab reaches from the control's input, and the stylesheet drew it invisible there, whether django-tomselect or this package's Tom Select widgets built the control.
+
 ## [v0.5.0] - 2026-10-18
 
 ### Added

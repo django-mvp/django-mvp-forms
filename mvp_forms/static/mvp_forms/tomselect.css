@@ -235,7 +235,11 @@ html:root .ts-wrapper.plugin-remove_button .ts-control .item.active .remove {
 
 /* The clear button sits at the end of the control, before the caret. It is
    shown while the control holds a value and is under the pointer or focused.
-   django-tomselect marks its own colour and opacity important. */
+   Tom Select and django-tomselect both write it with `tabindex="0"`, so Tab
+   from the control's input reaches it, and Tom Select takes the `focus` class
+   off the wrapper as it does: the button is shown, with a ring, while the
+   keyboard is on it. django-tomselect marks its own colour and opacity
+   important. */
 html:root .ts-wrapper.plugin-clear_button .clear-button {
   inset-inline-end: 0;
   color: inherit !important;
@@ -249,6 +253,12 @@ html:root .ts-wrapper.plugin-clear_button.has-items.focus .clear-button {
 }
 
 html:root .ts-wrapper.plugin-clear_button.has-items:not(.disabled) .clear-button:hover {
+  opacity: 1 !important;
+}
+
+html:root .ts-wrapper.plugin-clear_button .clear-button:focus-visible {
+  outline: 2px solid var(--color-base-content);
+  outline-offset: 2px;
   opacity: 1 !important;
 }
 
