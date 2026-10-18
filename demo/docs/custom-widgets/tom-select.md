@@ -25,7 +25,28 @@ listed under their headings.
 | `clear_button` | Both | `True` adds a button that clears the control. |
 | `remove_button` | `TomSelectMultiple` | `True` adds a button to each chosen value. |
 | `max_items` | `TomSelectMultiple` | The most values that can be chosen. |
+| `counted` | `TomSelectMultiple` | `True` shows a count in place of the chosen values. |
+| `none_text` | `TomSelectMultiple` | What a counted control shows while nothing is chosen. |
+| `count_text` | `TomSelectMultiple` | What a counted control shows after the count. |
 
 The page loads Tom Select's complete build and the package's stylesheet
 `mvp_forms/tomselect.css`. The widget brings its own small script with the
 form's media.
+
+## A count in place of the chosen values
+
+With `counted=True`, the control shows how many values are chosen rather than
+listing them. Each chosen option has a tick in the list, and the search box sits
+at the top of the list.
+
+```{live-example} /examples/tom-select-counted/
+:title: Counted controls
+
+../../examples/custom_widgets/counted_select.py
+../../templates/demo/examples/tom_select_form.html
+```
+
+Untick every discipline and send the form to see the field in error. Search the
+countries in the list and pick a few, then clear them with the button. A screen
+reader is told each chosen value by name. Backspace in an empty search box
+removes the value chosen last, as it does in any Tom Select control.

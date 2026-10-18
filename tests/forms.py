@@ -1485,6 +1485,13 @@ class TomSelectPageForm(forms.Form):
     unavailable = forms.MultipleChoiceField(
         choices=FRUIT, widget=DisablingTomSelectMultiple, required=False
     )
+    counted = forms.MultipleChoiceField(
+        choices=FRUIT,
+        widget=TomSelectMultiple(
+            counted=True, none_text="None yet", count_text="chosen"
+        ),
+        required=False,
+    )
 
 
 class TomSelectLineForm(forms.Form):

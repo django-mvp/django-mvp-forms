@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `PointField`, in `mvp_forms.fields`, and `PointInput`, in `mvp_forms.widgets`, for a place from a latitude and a longitude. The field cleans to WKT text such as `SRID=4326;POINT(-0.1278 51.5074)`, which a GeoDjango model's `PointField` takes, and to `None` when empty. Each half is refused with its own code, and a point with one half empty is refused with `incomplete`, whose message names the missing half and is replaced through `error_messages` with `incomplete_latitude` or `incomplete_longitude`. The options `min_latitude`, `max_latitude`, `min_longitude`, `max_longitude` and `decimal_places` narrow the ranges. A starting value is read from a point object, WKT text or a `(latitude, longitude)` pair, and a point in another spatial reference, with a height or that is not a point raises a `ValueError` when the form is drawn. The input is drawn by the new template `mvp_forms/widgets/point.html`.
 - The demo's Coordinates page gains a point, a formset of points whose rows can be added, and a point in a modal.
+- `TomSelectMultiple(counted=True)` draws a counted control: it shows how many values are chosen, such as "3 selected", in place of a tag for each, ticks each chosen option in its dropdown and has its search box at the top of the dropdown. It turns on Tom Select's `checkbox_options` and `dropdown_input` plugins, so the page needs Tom Select's complete build or django-tomselect's script. `none_text` and `count_text` replace the two words, "Nothing selected" and "selected", which are translated by default. `mvp_forms/tomselect.css` draws the count, the ticks and the search box, and also draws the ticks and the search box of a django-tomselect control that uses either plugin. A subclass that named the two plugins itself can be replaced by the setting.
+- The demo's Tom Select page gains counted controls: a short list, every country, options with long labels and a disabled field.
+
+### Fixed
+
+- The script of the Tom Select widgets destroys the control of a select that leaves the page, so a page that swaps forms in and out with htmx no longer keeps Tom Select's listeners for every control it has shown. A select moved within the page keeps its control, and one put back after it was removed gets a new one.
 
 ## [v0.4.0] - 2026-10-13
 

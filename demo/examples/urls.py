@@ -4,6 +4,7 @@ from django.urls import path
 
 from demo.examples.custom_fields.coordinate_fields import SiteForm
 from demo.examples.custom_fields.partial_date_field import SampleForm
+from demo.examples.custom_widgets.counted_select import FieldworkForm
 from demo.examples.custom_widgets.dynamic_mask import PhoneForm as DynamicPhoneForm
 from demo.examples.custom_widgets.number_mask import InvoiceForm
 from demo.examples.custom_widgets.partial_date_input import PartDatesForm
@@ -127,6 +128,10 @@ urlpatterns = [
     path(
         "tom-select/",
         ExampleView.as_view(form_class=TopicsForm, template_name=TOM_SELECT),
+    ),
+    path(
+        "tom-select-counted/",
+        ExampleView.as_view(form_class=FieldworkForm, template_name=TOM_SELECT),
     ),
     path(
         "django-tomselect/",

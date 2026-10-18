@@ -423,6 +423,124 @@ html:root .ts-dropdown .spinner::after {
   opacity: 0.6;
 }
 
+/* Options with a checkbox, from Tom Select's checkbox_options plugin. A chosen
+   option is ticked, as daisyUI's own select marks it, and is never filled. */
+
+html:root .ts-wrapper.plugin-checkbox_options .ts-dropdown .option {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+html:root .ts-wrapper.plugin-checkbox_options .ts-dropdown .option input {
+  flex: none;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  appearance: none;
+  outline: none;
+  cursor: inherit;
+}
+
+html:root .ts-wrapper.plugin-checkbox_options .ts-dropdown .option input:checked::before {
+  content: "\2713" / "";
+  line-height: 1;
+}
+
+html:root .ts-wrapper.plugin-checkbox_options .ts-dropdown .option.selected:not(.active) {
+  background-color: transparent;
+  color: inherit;
+}
+
+html:root .ts-wrapper.plugin-checkbox_options .ts-dropdown .option.selected.active {
+  background-color: color-mix(in oklab, var(--color-base-content) 10%, transparent);
+  color: inherit;
+}
+
+/* The search box, which Tom Select's dropdown_input plugin moves into the list.
+   The control then takes the focus itself, and Tom Select's stylesheet borders
+   it while the list is open. The wrapper already draws the ring and the border. */
+
+html:root .ts-wrapper.plugin-dropdown_input.focus.dropdown-active .ts-control {
+  border: 0 none;
+  outline: none;
+  box-shadow: none;
+}
+
+html:root .ts-dropdown.plugin-dropdown_input .dropdown-input-wrap {
+  padding: 0.5rem 0.5rem 0;
+}
+
+html:root .ts-dropdown.plugin-dropdown_input .dropdown-input {
+  display: block;
+  width: 100%;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem;
+  border: var(--border) solid
+    color-mix(in oklab, var(--color-base-content) 20%, transparent);
+  border-radius: var(--radius-field);
+  background: var(--color-base-100);
+  box-shadow: none;
+  color: inherit;
+  font-size: inherit;
+  line-height: 1.25;
+}
+
+html:root .ts-dropdown.plugin-dropdown_input .dropdown-input:focus-visible {
+  border-color: var(--color-base-content);
+  outline: 2px solid var(--color-base-content);
+  outline-offset: 2px;
+}
+
+html:root .ts-dropdown.plugin-dropdown_input .dropdown-input::placeholder {
+  color: var(--color-base-content);
+  opacity: 0.5;
+}
+
+/* A counted control: TomSelectMultiple with `counted=True`. The box shows how
+   many values are chosen in place of their tags. The widget writes the two
+   words on the select, and the package's script copies them to the box. */
+
+html:root .ts-wrapper.multi .ts-control[data-count-text] {
+  counter-reset: counted;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* Each value stays in the page for a screen reader and adds one to the count.
+   The padding outweighs the end padding given to a tag with no button above. */
+html:root .ts-wrapper.multi .ts-control[data-count-text] > .item {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0 !important;
+  border: 0 none;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  counter-increment: counted;
+}
+
+/* dropdown_input leaves an input in the box to show the placeholder, and sets
+   its display itself. The count takes its place. */
+html:root .ts-wrapper .ts-control[data-count-text] .items-placeholder {
+  display: none !important;
+}
+
+html:root .ts-wrapper.multi .ts-control[data-count-text]::after {
+  content: attr(data-none-text);
+  opacity: 0.5;
+}
+
+html:root .ts-wrapper.multi.has-items .ts-control[data-count-text]::after {
+  content: counter(counted) " " attr(data-count-text);
+  opacity: 1;
+}
+
+html:root .ts-wrapper.multi.disabled .ts-control[data-count-text]::after {
+  opacity: 0.4;
+}
+
 /* django-tomselect announces what was chosen in an element it hides with a
    class only Bootstrap defines. Hide it the same way here. */
 html:root [id$="_sr_status"].visually-hidden {

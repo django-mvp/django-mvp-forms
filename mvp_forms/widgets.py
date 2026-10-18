@@ -978,8 +978,10 @@ class TomSelect(forms.Select):
 class TomSelectMultiple(TomSelect, forms.SelectMultiple):
     """A multiple select the script turns into a Tom Select control.
 
-    It takes what ``TomSelect`` takes, and a button on each chosen value and
-    the largest number of values that may be chosen.
+    It takes what ``TomSelect`` takes, and a button on each chosen value, the
+    largest number of values that may be chosen, and a counted control: one that
+    shows how many values are chosen in place of the values themselves, ticks
+    each chosen option in its list and has its search box in the list.
     """
 
     def __init__(
@@ -991,6 +993,9 @@ class TomSelectMultiple(TomSelect, forms.SelectMultiple):
         clear_button=None,
         remove_button=None,
         max_items=None,
+        counted=None,
+        none_text=None,
+        count_text=None,
     ):
         """Keep the settings that were stated.
 
@@ -1004,6 +1009,10 @@ class TomSelectMultiple(TomSelect, forms.SelectMultiple):
             max_items: The largest number of values that may be chosen, a whole
                 number above zero. ``1`` makes Tom Select draw the control as a
                 single one, while the field still receives a list.
+            counted: ``True`` to show a count in place of the chosen values.
+            none_text: What a counted control shows while it holds no value.
+            count_text: What a counted control shows after the number of values
+                it holds.
 
         Raises:
             ValueError: A setting holds a value that cannot be right. The
@@ -1015,11 +1024,28 @@ class TomSelectMultiple(TomSelect, forms.SelectMultiple):
             Check.whole_number("max_items", max_items)
             if max_items < 1:
                 raise ValueError(f"max_items must be above zero, not {max_items!r}.")
+        if counted is not None:
+            Check.one_of("counted", counted, (True, False))
+        if counted and remove_button:
+            raise ValueError(
+                "remove_button has no effect on a counted control, whose chosen "
+                "values are not shown."
+            )
+        for option, text in (("none_text", none_text), ("count_text", count_text)):
+            if text is None:
+                continue
+            if not counted:
+                raise ValueError(f"{option} is used only with counted=True.")
+            if not isinstance(text, Promise):
+                Check.text(option, text)
         super().__init__(
             attrs, choices, placeholder=placeholder, clear_button=clear_button
         )
         self.remove_button = remove_button
         self.max_items = max_items
+        self.counted = counted
+        self.none_text = _("Nothing selected") if none_text is None else none_text
+        self.count_text = _("selected") if count_text is None else count_text
 
     def control_settings(self):
         """Return the settings that were stated, under Tom Select's own names."""
@@ -1028,4 +1054,16 @@ class TomSelectMultiple(TomSelect, forms.SelectMultiple):
             settings.setdefault("plugins", []).append("remove_button")
         if self.max_items is not None:
             settings["maxItems"] = self.max_items
+        if self.counted:
+            settings.setdefault("plugins", []).extend(
+                ["checkbox_options", "dropdown_input"]
+            )
         return settings
+
+    def build_attrs(self, base_attrs, extra_attrs=None):
+        """Add the words of a counted control, which the stylesheet draws."""
+        attrs = super().build_attrs(base_attrs, extra_attrs)
+        if self.counted:
+            attrs["data-none-text"] = str(self.none_text)
+            attrs["data-count-text"] = str(self.count_text)
+        return attrs
