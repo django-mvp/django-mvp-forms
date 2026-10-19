@@ -8,7 +8,7 @@ import pytest
 from django.urls import reverse
 from playwright.sync_api import expect
 
-from tests.urls import DJANGO_TOMSELECT_URL, TOM_SELECT_URL
+from tests.urls import DJANGO_TOMSELECT_URL, HTMX_URL, TOM_SELECT_URL
 
 pytestmark = pytest.mark.e2e
 
@@ -20,6 +20,7 @@ DJANGO_TOMSELECT = (
     / "js"
     / "django-tomselect.min.js"
 )
+HTMX = Path(__file__).parent / "data" / "htmx-2.0.10.min.js"
 README = Path(__file__).parents[1] / "README.md"
 STARTED = "(id) => document.getElementById(id).tomselect !== undefined"
 WRAPPERS = "document.querySelectorAll('.ts-wrapper').length"
@@ -160,6 +161,27 @@ def choices_page(page, page_errors, live_server):
         return page
 
     return open_page
+
+
+@pytest.fixture
+def boosted_page(choices_page, page):
+    """Open the first of two boosted pages, with htmx answered from a file."""
+    page.route(
+        HTMX_URL,
+        lambda route: route.fulfill(path=HTMX, content_type="text/javascript"),
+    )
+    return choices_page("boosted-list")
+
+
+def follow_boosted_link(page):
+    """Follow the link to the other page and wait until htmx has settled it."""
+    page.evaluate(
+        "() => { window.settled = new Promise((done) =>"
+        " document.addEventListener('htmx:afterSettle', () => done(), { once: true })); }"
+    )
+    page.click("#other")
+    page.evaluate("window.settled")
+    page.wait_for_function("document.title === 'boosted-new'")
 
 
 def choose(page, name, value):
@@ -695,6 +717,37 @@ class TestARemovedSelect:
         )
         assert page.evaluate(WRAPPERS) == page.evaluate(SELECTS)
         assert page_errors == []
+
+
+class TestAPageReachedThroughABoostedLink:
+    def test_its_select_stays_hidden_behind_a_visible_control(
+        self, boosted_page, page_errors, script_errors
+    ):
+        page = boosted_page
+
+        follow_boosted_link(page)
+
+        classes = page.locator("#id_tags").get_attribute("class").split()
+        assert "ts-hidden-accessible" in classes
+        expect(page.locator("#id_tags + .ts-wrapper .ts-control")).to_be_visible()
+        assert page_errors == []
+        assert script_errors == []
+
+    def test_its_select_has_one_control_and_the_old_one_is_gone(self, boosted_page):
+        page = boosted_page
+        page.evaluate(
+            "window.held = document.getElementById('id_tags').tomselect;"
+            " window.held.on('destroy', () => { window.destroyed = true; })"
+        )
+
+        follow_boosted_link(page)
+
+        assert page.evaluate(STARTED, "id_tags") is True
+        assert page.evaluate(
+            "document.getElementById('id_tags').tomselect !== window.held"
+        )
+        assert page.evaluate("window.destroyed") is True
+        assert page.evaluate(WRAPPERS) == page.evaluate(SELECTS) == 1
 
 
 class TestAControlInAModal:

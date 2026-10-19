@@ -273,6 +273,9 @@ choose a value in the new row.
    within the page keeps its control.
 7. **Given** a select whose control was destroyed when it left the page, **When** it is put
    back, **Then** a new control is started on it.
+8. **Given** a page reached through a boosted htmx link, whose select shares its `id` with a
+   select on the page being left, **When** the swap has settled, **Then** the select is hidden
+   behind a visible control, as it is on a page loaded in full.
 
 ---
 
@@ -442,7 +445,8 @@ options and submit.
   whichever script added it, including a formset row made by copying the formset's empty form.
   It MUST NOT start two controls on one select, however many times the page includes the script.
   It MUST destroy the control of a select that has left the page, checked once each batch of
-  changes has been made, so that a select moved within the page keeps its control.
+  changes has been made, so that a select moved within the page keeps its control. It MUST
+  start the control of a select that htmx swaps in once the swap has settled.
 - **FR-020**: On a page where Tom Select is not present, the script MUST do nothing and MUST raise
   no error, and each field MUST be a stock select that works.
 - **FR-021**: The widgets and the script MUST use no inline script and no inline event handler.

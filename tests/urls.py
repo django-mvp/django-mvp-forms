@@ -20,6 +20,7 @@ from tests.forms import (
     TomSelectForm,
     TomSelectLineFormSet,
     TomSelectPageForm,
+    TomSelectTagsForm,
 )
 
 # Where the browser tests' pages ask for IMask. The tests answer the request from
@@ -33,6 +34,8 @@ TOM_SELECT_URL = (
     f"{TOM_SELECT_ORIGIN}/npm/tom-select@2.5.2/dist/js/tom-select.complete.min.js"
 )
 DJANGO_TOMSELECT_URL = "/static/django_tomselect/js/django-tomselect.min.js"
+# Where the boosted pages ask for htmx. The tests answer it from a file.
+HTMX_URL = "https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js"
 
 
 class GroupAutocomplete(AutocompleteModelView):
@@ -172,6 +175,23 @@ class ChoicesPage(TemplateView):
         return JsonResponse({name: request.POST.getlist(name) for name in request.POST})
 
 
+class BoostedPage(TemplateView):
+    """One of two pages whose selects share an id, each linking to the other."""
+
+    template_name = "tests/tomselect_boosted_page.html"
+    other = ""
+
+    def get_context_data(self, **kwargs):
+        """Draw the form and the address of the other page."""
+        return super().get_context_data(
+            form=TomSelectTagsForm(),
+            other=self.other,
+            htmx_url=HTMX_URL,
+            tomselect_url=TOM_SELECT_URL,
+            **kwargs,
+        )
+
+
 # The demo's pages answer every address nothing before them claims, so the
 # suite's own routes come first.
 urlpatterns = [
@@ -238,6 +258,16 @@ urlpatterns = [
             foreign=True,
         ),
         name="choices-page-styled",
+    ),
+    path(
+        "boosted/list/",
+        BoostedPage.as_view(other="boosted-new"),
+        name="boosted-list",
+    ),
+    path(
+        "boosted/new/",
+        BoostedPage.as_view(other="boosted-list"),
+        name="boosted-new",
     ),
     *demo_urlpatterns,
 ]

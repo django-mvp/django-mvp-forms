@@ -2,6 +2,8 @@
 {% load crispy_forms_tags static %}
 {% block example %}
   {% crispy form %}
+  {# htmx follows this link by swapping the page in, as a boosted link in a project's own pages does. #}
+  <a href="{{ request.path }}" hx-boost="true" class="link mt-4 inline-block">Load this page again through htmx</a>
   {# Tom Select itself, which the host project supplies. The widget's own script arrives with the form's media. #}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.5.2/dist/css/tom-select.default.min.css" integrity="sha384-ysUSQKRs8NxL3MLtPxj9HZ7KmGXzQJwr8rfFRR8iT5A26QF3slDzsChy8nZ7Q1W2" crossorigin="anonymous" />
   <link rel="stylesheet" href="{% static 'mvp_forms/tomselect.css' %}" />
