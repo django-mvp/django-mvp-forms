@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - An empty required field with a floating label now shows the required marker after the label's text in its placeholder, as in `Email *`, so someone looking over an empty form can see which fields are required. The marker moves to the label once it floats and is never shown twice. A placeholder set on the widget is kept as written.
+- Two of the pack's template tags, `daisyui_field` and `daisyui_button`, are now public: a rename keeps the old name working for one minor version, as a template path does. Every other tag and filter in `daisyui`, such as `daisyui_layout_object` or `daisyui_classes`, is internal and can change in any release, so a replacement template that calls one may need changing when you upgrade. The README's new section "The template tags a replacement calls" lists both.
 
 ## [v0.5.0] - 2026-10-18
 
