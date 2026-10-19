@@ -19,6 +19,10 @@ Send the form empty to see the required field in error, then pick a topic and
 try the clear button. Choices written in groups, as Django writes them, are
 listed under their headings.
 
+The link under the form loads the page again through htmx, which swaps the new
+page in rather than loading it. Each control is started once htmx has finished
+the swap, so it looks and works as it does on a page loaded in full.
+
 | Option | Widget | What it does |
 | --- | --- | --- |
 | `placeholder` | Both | Text shown while nothing is chosen. |
