@@ -14,12 +14,16 @@ class ExampleView(FormView):
 
     template_name = "demo/examples/form.html"
     sent_empty = False
+    sent_data = None
 
     def get_form_kwargs(self):
-        """Bind the form to nothing on arrival when the example opens sent empty."""
+        """Bind the form on arrival when the example opens already sent."""
         kwargs = super().get_form_kwargs()
-        if self.sent_empty and "data" not in kwargs:
-            kwargs["data"] = {}
+        if "data" not in kwargs:
+            if self.sent_data is not None:
+                kwargs["data"] = self.sent_data
+            elif self.sent_empty:
+                kwargs["data"] = {}
         return kwargs
 
     def form_valid(self, form):

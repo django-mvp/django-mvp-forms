@@ -1,0 +1,1 @@
+<div class="join w-full">{% for widget in widget.subwidgets %}{% if not widget.is_hidden %}{% include widget.template_name %}{% endif %}{% endfor %}</div>{% for widget in widget.subwidgets %}{% if widget.is_hidden %}{% include widget.template_name %}{% endif %}{% endfor %}

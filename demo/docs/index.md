@@ -69,4 +69,5 @@ custom-widgets/range-inputs
 
 third-party-support/django-tomselect
 third-party-support/django-countries
+third-party-support/django-pint
 ```

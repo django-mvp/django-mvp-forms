@@ -135,6 +135,8 @@ class FieldInput:
     # A member of a join shares the group's width with the others: an input
     # takes what is left and a select its own width.
     member_widths: dict[str, str] = {"input": "flex-1", "select": "w-auto"}
+    # The parts of a multi-widget drawn through Django's own template, joined.
+    joined_parts_template = "daisyui/widgets/joined_parts.html"
     # A checkbox, a radio, a toggle and a rating are fixed-size and never widened.
     fixed_size: set[str] = {"checkbox", "radio", "toggle", "rating"}
     templates: dict[type[forms.Widget], str] = {
@@ -518,8 +520,11 @@ class FieldInput:
             widget.template_name = self.template_name
         elif isinstance(widget, forms.MultiWidget):
             widget = copy.deepcopy(widget)
+            joined = self.joins_parts(widget)
+            if joined:
+                widget.template_name = self.joined_parts_template
             for index, part in enumerate(widget.widgets):
-                self.decorate_part(widget, index, part)
+                self.decorate_part(widget, index, part, joined=joined)
             if isinstance(widget, RangeInput):
                 widget.get_context = self.range_context(  # type: ignore[method-assign]
                     widget.get_context
@@ -552,6 +557,21 @@ class FieldInput:
             return context
 
         return with_label
+
+    def joins_parts(self, widget: forms.MultiWidget) -> bool:
+        """Whether a multi-widget's parts are drawn as one daisyUI join.
+
+        Only a widget drawn through Django's own multi-widget template, which
+        lays its parts one after another, is joined. A widget with a template
+        of its own arranges its parts itself. Every visible part must be drawn
+        as an input or a select, the two components a join squares.
+        """
+        if widget.template_name != forms.MultiWidget.template_name:
+            return False
+        visible = [part for part in widget.widgets if not part.is_hidden]
+        return bool(visible) and all(
+            self.component_of(part) in self.member_widths for part in visible
+        )
 
     def rating_widget(self, widget: ChoiceWidget) -> forms.RadioSelect:
         """Return the widget a rating is drawn through, made for this render.
@@ -647,7 +667,12 @@ class FieldInput:
         return colors
 
     def decorate_part(
-        self, widget: forms.MultiWidget, index: int, part: forms.Widget
+        self,
+        widget: forms.MultiWidget,
+        index: int,
+        part: forms.Widget,
+        *,
+        joined: bool = False,
     ) -> None:
         """Class and name one part of a copy of a multi-widget, for this render.
 
@@ -666,6 +691,13 @@ class FieldInput:
             own = self.own_names(part)
             modifiers = self.resolve_modifiers(self.choices, self.own, component)
             classes = self.classes_for(component, own, modifiers)
+            if joined:
+                # A joined part takes a member's width, as in a Join.
+                classes = [
+                    self.member_widths[component] if name == self.width else name
+                    for name in classes
+                ]
+                classes.insert(1 + len(modifiers), "join-item")
             part.attrs["class"] = " ".join(dict.fromkeys(own + classes))
         if isinstance(widget, forms.SplitDateTimeWidget):
             name = str(SPLIT_DATE_TIME_PARTS[index])
