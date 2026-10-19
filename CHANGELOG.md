@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.6.0] - 2026-10-19
+
 ### Added
 
 - `RangeInput`, `DateRangeInput` and `DateTimeRangeInput`, in `mvp_forms.widgets`, draw a low and a high end as one field: two number, date or date-and-time inputs, either of which can be left empty. By default each end sits in its own frame showing "Min" and "Max", or "From" and "To", side by side on a wide screen. `joined=True` joins the two in one row at every width, and `compact=True` puts both in one frame with a dash between them, or the text you give as `separator`. They read the `slice` django-filter's range fields give, so `RangeFilter(widget=RangeInput())` and `DateFromToRangeFilter(widget=DateRangeInput())` work as they are. The demo project's new "Range inputs" page, under Custom widgets, shows each layout.
