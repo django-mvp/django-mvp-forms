@@ -44,7 +44,10 @@ Longer rationale is in `decisions.md`.
 - **Q: What does a person see in an empty field with a floating label, and in a disabled one?**
   A: daisyUI shows the input's placeholder while the field is empty, and shows the label once the
   field has focus or a value. So an empty field with no placeholder of the developer's own shows
-  the label's text, and a placeholder the developer set is kept. daisyUI hides a floating label
+  the label's text, followed by the required marker when the field is required, so someone
+  scanning an empty form can see which fields are required. daisyUI hides the placeholder once
+  the label has moved to the edge, where the label carries the marker, so the marker is never
+  shown twice. A placeholder the developer set is kept as written. daisyUI hides a floating label
   on a disabled input, which would leave a disabled field with no visible label at all, so a
   disabled field keeps the ordinary label. Recorded as FR-006 and FR-007.
 
@@ -99,17 +102,21 @@ opted-out field and the checkbox are drawn as before, and the cleaned data is un
    label for the form or for one field by name, **Then** the statement takes effect.
 7. **Given** an empty field with a floating label and no placeholder of the developer's own,
    **When** the pack draws it, **Then** the field shows the label's text while it is empty.
-8. **Given** a field with a floating label and a placeholder the developer set, **When** the pack
+8. **Given** an empty required field with a floating label and no placeholder of the developer's
+   own, **When** the pack draws it, **Then** the field shows the label's text and the required
+   marker while it is empty, and the marker is shown once the label has moved to the edge but
+   never twice.
+9. **Given** a field with a floating label and a placeholder the developer set, **When** the pack
    draws it, **Then** the developer's placeholder is kept.
-9. **Given** a required field with help text, drawn with a floating label in a bound form that
-   failed validation, **When** the pack draws it, **Then** it carries the required marker, the
-   help text and the errors, each tied to the input the way FS-001 ties them to any field, and the
-   input is marked invalid.
-10. **Given** a disabled field for which a floating label is stated, **When** the pack draws it,
+10. **Given** a required field with help text, drawn with a floating label in a bound form that
+    failed validation, **When** the pack draws it, **Then** it carries the required marker, the
+    help text and the errors, each tied to the input the way FS-001 ties them to any field, and
+    the input is marked invalid.
+11. **Given** a disabled field for which a floating label is stated, **When** the pack draws it,
     **Then** it is disabled and has its ordinary label, so a person can still see what it is.
-11. **Given** a form whose helper turns labels off, **When** a floating label is stated, **Then**
+12. **Given** a form whose helper turns labels off, **When** a floating label is stated, **Then**
     no label is drawn and the input is named for assistive technology as FS-001 names it.
-12. **Given** a formset whose form states a floating label, **When** the pack draws it stacked,
+13. **Given** a formset whose form states a floating label, **When** the pack draws it stacked,
     **Then** every form draws the field that way.
 
 ---
@@ -258,7 +265,9 @@ it, and the markup uses only classes daisyUI defines.
   input so that it names the input to assistive technology, and MUST keep its required marker,
   help text, errors, invalid state and read-only state as FS-001 gives them.
 - **FR-006**: An empty field with a floating label and no placeholder of the developer's own MUST
-  show the label's text. A placeholder the developer set MUST be kept.
+  show the label's text, followed by the required marker when the field is required. The marker
+  MUST NOT be shown twice: once the label has moved to the edge, the label carries it and the
+  placeholder is hidden. A placeholder the developer set MUST be kept as written.
 - **FR-007**: A disabled field MUST keep a visible label. Where a floating label is stated for
   it, it MUST be drawn with the ordinary label.
 - **FR-008**: When the form's helper turns labels off, a floating label MUST NOT be drawn, and the
