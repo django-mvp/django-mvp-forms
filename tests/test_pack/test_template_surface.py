@@ -24,6 +24,15 @@ class TestNamesRead:
 
         assert names_read(source) == {"field", "flag"}
 
+    def test_a_blocktranslate_reads_its_with_values_and_free_names(self, names_read):
+        source = (
+            "{% load i18n %}"
+            "{% blocktranslate with label=widget.label %}{{ label }} {{ other }}"
+            "{% endblocktranslate %}"
+        )
+
+        assert names_read(source) == {"widget", "other"}
+
     def test_a_filter_argument_is_read(self, names_read):
         assert names_read("{{ a|default:b }}") == {"a", "b"}
 
