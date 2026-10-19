@@ -20,6 +20,22 @@ The depth holds both ends and the heat flow only its low end. Send the form with
 the measured dates empty to see the error on both ends, or put the low depth
 above the high one. On a narrow screen the two ends stack.
 
+## Joined in one row
+
+`joined=True` draws the two ends as one daisyUI join. They share a border and
+stay in one row at every width, where the separate ends stack on a narrow
+screen.
+
+```python
+depth = DepthField(widget=RangeInput(joined=True))
+```
+
+```{live-example} /examples/range-input-joined/
+:title: Joined ranges
+
+../../examples/custom_widgets/range_input.py
+```
+
 ## Size and colour
 
 The ends take the form's size and colour, as every other input does.

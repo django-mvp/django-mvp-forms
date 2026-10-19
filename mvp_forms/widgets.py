@@ -722,13 +722,21 @@ class RangeInput(forms.MultiWidget):
     template_name = "mvp_forms/widgets/range.html"
     ends = (_("Min"), _("Max"))
 
-    def __init__(self, attrs=None):
+    def __init__(self, attrs=None, *, joined=None):
         """Build the two ends.
 
         Args:
             attrs: HTML attributes for both ends.
+            joined: ``True`` to draw the two ends as one daisyUI join, in one
+                row at every width.
+
+        Raises:
+            ValueError: ``joined`` is neither ``True`` nor ``False``.
         """
+        if joined is not None:
+            Check.one_of("joined", joined, (True, False))
         super().__init__([self.end({"aria-label": name}) for name in self.ends], attrs)
+        self.joined = bool(joined)
 
     def end(self, attrs):
         """Return the input for one end."""
@@ -737,9 +745,14 @@ class RangeInput(forms.MultiWidget):
     def get_context(self, name, value, attrs):
         """Move each end's classes onto the frame drawn around it."""
         context = super().get_context(name, value, attrs)
+        context["widget"]["joined"] = self.joined
         for part in context["widget"]["subwidgets"]:
             part["frame_class"] = part["attrs"].pop("class", "")
             part["frame_name"] = part["attrs"].get("aria-label", "")
+            if self.joined:
+                # A joined pair stays in one row, so an input may be narrower
+                # than a browser would draw it on its own.
+                part["attrs"]["class"] = "w-full min-w-0"
         return context
 
     def decompress(self, value):

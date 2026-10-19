@@ -91,3 +91,35 @@ class SmallRangesForm(SearchRangesForm):
         self.helper.daisyui = FormChoices(
             size="sm", fields={"heat_flow": Choice(color="primary")}
         )
+
+
+class JoinedRangesForm(forms.Form):
+    """Each kind of range with its two ends joined in one row."""
+
+    depth = PairField(
+        forms.DecimalField,
+        RangeInput(joined=True),
+        label="Depth (m)",
+        initial=slice(100, 2500),
+        required=False,
+    )
+    measured = PairField(
+        forms.DateField,
+        DateRangeInput(joined=True),
+        label="Measured",
+        help_text="Required. Send the form with both ends empty to see the error.",
+    )
+    logged = PairField(
+        forms.DateTimeField,
+        DateTimeRangeInput(joined=True),
+        label="Logged",
+        initial=slice(datetime.datetime(2024, 3, 1, 9, 0), None),
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Add the helper and a submit button."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.add_input(Submit("submit", "Search"))
