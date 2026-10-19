@@ -7,8 +7,10 @@ field.
 
 ## For the form
 
-Focus a field to see its label move. Send the form empty to see the errors, which
-sit below the fields as they do with ordinary labels.
+Focus a field to see its label move. While a required field is empty, its
+required marker follows the label's text in the placeholder, and it moves to the
+label when the label floats. Send the form empty to see the errors, which sit
+below the fields as they do with ordinary labels.
 
 ```{live-example} /examples/floating-labels/
 :title: A sign-in form with floating labels

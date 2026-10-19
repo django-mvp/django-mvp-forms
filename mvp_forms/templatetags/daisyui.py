@@ -775,7 +775,7 @@ class FieldInput:
         if self.disabled:
             attrs["disabled"] = True
         if self.requires_placeholder:
-            attrs["placeholder"] = self.label_text
+            attrs["placeholder"] = self.placeholder_text
         if self.requires_aria_required:
             attrs["aria-required"] = "true"
         if self.requires_aria_label:
@@ -809,6 +809,18 @@ class FieldInput:
         if isinstance(plain, SafeData):
             return unescape(strip_tags(str(plain))).strip()
         return plain
+
+    @property
+    def placeholder_text(self) -> str:
+        """The label as the placeholder, with the required marker when it floats.
+
+        daisyUI hides a floating label while its field is empty and hides the
+        placeholder once the label has floated, so the marker shows in the
+        placeholder until then and is never drawn twice.
+        """
+        if self.is_floating and self.field.field.required:
+            return f"{self.label_text} *"
+        return self.label_text
 
     @property
     def requires_placeholder(self) -> bool:
