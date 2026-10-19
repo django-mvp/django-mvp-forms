@@ -32,6 +32,7 @@ from mvp_forms.layout import Join
 from mvp_forms.widgets import (
     DynamicMaskInput,
     EnumBlock,
+    ImageInput,
     NumberMaskInput,
     PartialDateInput,
     PartialDateMaskInput,
@@ -315,6 +316,71 @@ class FilesForm(forms.Form):
         required=False,
         initial=HeldFile("locked.pdf"),
         widget=forms.ClearableFileInput(attrs={"disabled": True}),
+    )
+
+
+class ImagesForm(forms.Form):
+    photo = forms.ImageField(
+        label="Profile photo",
+        required=False,
+        initial=HeldFile("ada.jpg"),
+        widget=ImageInput,
+    )
+    badge = forms.ImageField(label="Badge", required=False, widget=ImageInput)
+    picked = forms.ImageField(
+        label="Logo",
+        required=False,
+        initial=HeldFile("logo.png"),
+        widget=ImageInput(show_input=False),
+    )
+    marked = forms.ImageField(
+        label=mark_safe("<b>Bold</b> & plain"),
+        required=False,
+        widget=ImageInput,
+    )
+    shaped = forms.ImageField(
+        label="Banner",
+        required=False,
+        initial=HeldFile("banner.jpg"),
+        widget=ImageInput(
+            aspect_ratio=3, mask="squircle", horizontal=True, show_file_name=True
+        ),
+    )
+
+
+# A stored image the browser tests' pages can show without a server to fetch it
+# from: four red pixels.
+STORED_IMAGE = (
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAFElEQVR4"
+    "nGM8oaHBAANMDEgANwcAOFQBICTvemsAAAAASUVORK5CYII="
+)
+
+
+class StoredImage(HeldFile):
+    def __init__(self, name, url=STORED_IMAGE):
+        super().__init__(name)
+        self.url = url
+
+
+class ImagePageForm(forms.Form):
+    photo = forms.ImageField(
+        label="Photo",
+        required=False,
+        initial=StoredImage("photo.png"),
+        widget=ImageInput,
+    )
+    empty = forms.ImageField(label="Empty", required=False, widget=ImageInput)
+    picked = forms.ImageField(
+        label="Picked",
+        required=False,
+        initial=StoredImage("picked.png"),
+        widget=ImageInput(show_input=False),
+    )
+    lost = forms.ImageField(
+        label="Lost",
+        required=False,
+        initial=StoredImage("lost.png", url="/static/tests/no-such-image.png"),
+        widget=ImageInput,
     )
 
 

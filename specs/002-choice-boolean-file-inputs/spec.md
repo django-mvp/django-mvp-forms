@@ -322,6 +322,58 @@ the disabled and read-only states are shown.
 
 ---
 
+### User Story 8 - An image field shows its image (Priority: P2)
+
+A developer has a form with an image field, such as a profile photo or a banner, and gives it
+`ImageInput`. The person editing the record sees the stored image as a thumbnail, and a file they
+choose takes its place before the form is sent. They can put the stored image back, or ask for it
+to be removed, and are told that the form has to be saved for either to take effect. The developer
+can give the thumbnail the shape and height the image has in their site, a daisyUI mask, and a
+place beside the input. They can leave the file input out, so that the thumbnail itself opens the
+file picker, and choose whether the stored file's name is shown.
+
+**Why this priority**: A link is the least useful way to show an image. A person replacing a
+photo needs to see the one they are about to keep or replace.
+
+**Independent Test**: Draw a form with an optional image field holding an image, through the
+pack, and check that the thumbnail shows the stored image with the field's label as its
+alternative text and that the removal checkbox is offered. In a browser, choose a new file and
+check that the thumbnail shows it and that reverting puts the stored image back.
+
+**Acceptance Scenarios**:
+
+1. **Given** an image field with `ImageInput` that holds an image, **When** the form is drawn by
+   the pack, **Then** the stored image is shown with the field's label as its alternative text,
+   with the file input and, where the field is optional, the removal checkbox.
+2. **Given** the same field holding nothing, **When** the form is drawn, **Then** no image is
+   shown and no removal checkbox is offered.
+3. **Given** a person who chooses an image file, **When** the file is chosen, **Then** the
+   thumbnail shows it, the person is told the form must be saved for the change to take effect,
+   and a way to revert is offered. Reverting shows the stored image again and empties the file
+   input.
+4. **Given** a person who ticks the removal checkbox, **When** it is ticked, **Then** a chosen
+   file is dropped and the person is told the form must be saved. Choosing a file afterwards
+   unticks the checkbox, because Django refuses a form that asks for both.
+5. **Given** a person who chooses a file that is not an image, **When** it is chosen, **Then** no
+   preview is shown and the person is told the file cannot be shown as an image.
+6. **Given** a stored image whose file can no longer be loaded, **When** the form is drawn,
+   **Then** the thumbnail shows that the image is missing rather than a broken image.
+7. **Given** `show_input=False`, **When** the form is drawn and its script has run, **Then** the
+   file input is out of sight and out of the tab order, and the thumbnail is a button, named for
+   the field, that opens the file picker. Without the script the file input stays usable.
+8. **Given** `aspect_ratio` and `height`, **When** the form is drawn, **Then** the thumbnail has
+   that ratio and that height in rem, and the image fills it. Without `aspect_ratio` the thumbnail
+   is square and the whole image is shown.
+9. **Given** `mask="<name>"`, **When** the form is drawn, **Then** the thumbnail carries daisyUI's
+   `mask` class and `mask-<name>`.
+10. **Given** `show_file_name=True`, **When** a field holding an image is drawn, **Then** the
+    stored file's name is shown without its folders, as a link to the file. Without it no name is
+    shown.
+11. **Given** an option set to a value it cannot take, **When** the widget is made, **Then** a
+    `ValueError` names the option.
+
+---
+
 ### Edge Cases
 
 - A choice field with no choices at all draws its label and an empty input, and the page does not
@@ -433,6 +485,21 @@ Demo and documentation
   (Story 7)
 - **FR-022**: The README's public surface MUST list the widgets this feature draws, and the
   CHANGELOG MUST record them, in the same pull request as the code. (Story 7)
+
+Image input
+
+- **FR-024**: `ImageInput` MUST draw an image field's stored image as a thumbnail whose
+  alternative text is the field's label, and MUST keep the clearable file input's removal
+  checkbox, which is offered only for an optional field holding a file. (Story 8)
+- **FR-025**: Its script MUST show a newly chosen image in the thumbnail before the form is sent,
+  offer to revert it, keep choosing a file and removing the stored one apart, and say that the form
+  must be saved for a change to take effect. It MUST come with the form's media and need nothing
+  else on the page. (Story 8)
+- **FR-026**: `aspect_ratio`, `height`, `mask`, `show_input`, `show_file_name`, `horizontal` and
+  `align` MUST each change only what Story 8 says of it, and a value an option cannot take MUST
+  raise a `ValueError` naming it. (Story 8)
+- **FR-027**: The demo project MUST show `ImageInput`, with each of its options, on a page of its
+  own in the Custom widgets group. (Story 8)
 
 ## Success Criteria *(mandatory)*
 

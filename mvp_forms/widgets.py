@@ -1067,3 +1067,111 @@ class TomSelectMultiple(TomSelect, forms.SelectMultiple):
             attrs["data-none-text"] = str(self.none_text)
             attrs["data-count-text"] = str(self.count_text)
         return attrs
+
+
+# daisyUI's masks, written out so that a host project's Tailwind build finds
+# them when it scans this module. A name not listed here is still drawn, and
+# works wherever the host's stylesheet has its class.
+DAISYUI_MASKS = (
+    "mask-squircle mask-heart mask-hexagon mask-hexagon-2 mask-decagon "
+    "mask-pentagon mask-diamond mask-square mask-circle mask-star mask-star-2 "
+    "mask-triangle mask-triangle-2 mask-triangle-3 mask-triangle-4"
+)
+
+
+class ImageInput(forms.ClearableFileInput):
+    """A file input for an image that shows the image it holds.
+
+    The stored image is drawn as a thumbnail, and a newly chosen file takes its
+    place before the form is sent. Removing the stored image stays a checkbox,
+    as it is for any clearable file.
+    """
+
+    template_name = "mvp_forms/widgets/image.html"
+    clear_checkbox_label = _("Remove image")  # type: ignore[assignment]
+    initial_text = _("Current image")  # type: ignore[assignment]
+
+    class Media:
+        js = ["mvp_forms/image-input.js"]
+
+    def __init__(
+        self,
+        attrs=None,
+        *,
+        aspect_ratio=None,
+        show_input=True,
+        show_file_name=False,
+        horizontal=False,
+        align="middle",
+        height=6,
+        mask=None,
+    ):
+        """Set how the image is shown.
+
+        Args:
+            attrs: The file input's attributes.
+            aspect_ratio: The thumbnail's width over its height, such as ``1``,
+                ``2`` or ``16 / 9``. The image fills a thumbnail of that shape.
+                Without one the thumbnail is square and the image is shown
+                whole inside it.
+            show_input: ``False`` to leave out the file input, so that the
+                thumbnail itself opens the file picker.
+            show_file_name: ``True`` to name the stored file beside the image,
+                as a link to it.
+            horizontal: ``True`` to set the thumbnail beside the rest, where
+                there is room, rather than above it.
+            align: Where the rest sits beside a horizontal thumbnail:
+                ``"top"``, ``"middle"`` or ``"bottom"``.
+            height: The thumbnail's height in rem, as a number. Its width
+                follows from the aspect ratio.
+            mask: The name of a daisyUI mask, such as ``"squircle"`` or
+                ``"circle"``, to give the thumbnail that shape. It is drawn
+                with the classes ``mask mask-<name>``.
+
+        Raises:
+            ValueError: An option holds a value it cannot take.
+        """
+        if aspect_ratio is not None:
+            Check.of_type("aspect_ratio", aspect_ratio, (int, float), "a number")
+            if isinstance(aspect_ratio, bool) or aspect_ratio <= 0:
+                raise ValueError(
+                    f"aspect_ratio must be a number above zero, not {aspect_ratio!r}."
+                )
+        for option, value in (
+            ("show_input", show_input),
+            ("show_file_name", show_file_name),
+            ("horizontal", horizontal),
+        ):
+            Check.one_of(option, value, (True, False))
+        Check.one_of("align", align, ("top", "middle", "bottom"))
+        Check.of_type("height", height, (int, float), "a number")
+        if isinstance(height, bool) or height <= 0:
+            raise ValueError(f"height must be a number above zero, not {height!r}.")
+        if mask is not None:
+            Check.text("mask", mask)
+        super().__init__(attrs)
+        self.mask = mask
+        self.align = align
+        self.height = height
+        self.aspect_ratio = aspect_ratio
+        self.show_input = show_input
+        self.show_file_name = show_file_name
+        self.horizontal = horizontal
+
+    def get_context(self, name, value, attrs):
+        """Add the options and the stored file's name without its folders."""
+        context = super().get_context(name, value, attrs)
+        widget = context["widget"]
+        widget["aspect_ratio"] = self.aspect_ratio
+        widget["show_input"] = self.show_input
+        widget["show_file_name"] = self.show_file_name
+        widget["horizontal"] = self.horizontal
+        widget["align"] = self.align
+        widget["height"] = self.height
+        widget["ratio"] = self.aspect_ratio or 1
+        widget["mask"] = self.mask
+        widget["mask_class"] = f"mask-{self.mask}" if self.mask else ""
+        widget["invalid"] = widget["attrs"].get("aria-invalid") == "true"
+        if widget["is_initial"]:
+            widget["file_name"] = str(value.name).rsplit("/", 1)[-1]
+        return context

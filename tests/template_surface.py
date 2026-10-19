@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from django.template import Variable, engines
-from django.template.base import TextNode
+from django.template.base import TextNode, TokenType
 from django.template.defaulttags import (
     AutoEscapeControlNode,
     CommentNode,
@@ -20,9 +20,10 @@ from django.template.defaulttags import (
 )
 from django.template.library import SimpleNode
 from django.template.loader_tags import IncludeNode
+from django.templatetags.i18n import BlockTranslateNode
 
 from mvp_forms.templatetags.daisyui import FieldInput
-from mvp_forms.widgets import PartialDateInput, PointInput
+from mvp_forms.widgets import ImageInput, PartialDateInput, PointInput
 
 LIST_HEADING = "### Replacing one template"
 SUPPORTED_HEADING = "#### A supported package's templates"
@@ -129,6 +130,7 @@ class TemplateSurface:
             *FieldInput.templates.values(),
             *FieldInput.inline_templates.values(),
             FieldInput.rating_template,
+            ImageInput.template_name,
             PartialDateInput.template_name,
             PointInput.template_name,
         ]
@@ -326,6 +328,15 @@ class TemplateSurface:
                     self.read_expression(value, bound, names)
                 if node.target_var:
                     bound = bound | {node.target_var}
+            elif isinstance(node, BlockTranslateNode):
+                for value in node.extra_context.values():
+                    self.read_expression(value, bound, names)
+                inside = bound | set(node.extra_context)
+                for token in [*node.singular, *(node.plural or [])]:
+                    if token.token_type == TokenType.VAR:
+                        name = token.contents.split(".")[0]
+                        if name not in inside:
+                            names.add(name)
             elif isinstance(node, CsrfTokenNode):
                 if "csrf_token" not in bound:
                     names.add("csrf_token")

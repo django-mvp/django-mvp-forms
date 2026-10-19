@@ -19,6 +19,7 @@ from mvp_forms.widgets import (
     CoordinateMaskInput,
     DynamicMaskInput,
     EnumBlock,
+    ImageInput,
     NumberMaskInput,
     PartialDateInput,
     PartialDateMaskInput,
@@ -2150,3 +2151,190 @@ class TestPointInput:
 
         with pytest.raises(ValueError, match="3857"):
             str(form["place"])
+
+
+class StoredImage:
+    """A stored file as a model hands it to a form: a name and an address."""
+
+    def __init__(self, name):
+        self.name = name
+        self.url = f"/media/{name}"
+
+    def __str__(self):
+        return self.name
+
+
+def image_input_of(widget, value=None, **attrs):
+    """Return the group an image input draws."""
+    html = widget.render("photo", value, attrs={"id": "id_photo", **attrs})
+    return BeautifulSoup(html, "html.parser").find(attrs={"data-image-input": True})
+
+
+class TestImageInput:
+    def test_a_stored_image_is_the_thumbnails_source(self):
+        group = image_input_of(ImageInput(), StoredImage("people/ada.jpg"))
+
+        assert group.find("img", attrs={"data-image-input-preview": True})["src"] == (
+            "/media/people/ada.jpg"
+        )
+        assert group["data-image-input-stored"] == "/media/people/ada.jpg"
+
+    def test_with_nothing_stored_the_thumbnail_has_no_source(self):
+        group = image_input_of(ImageInput())
+
+        preview = group.find("img", attrs={"data-image-input-preview": True})
+
+        assert not preview.has_attr("src")
+        assert not group.has_attr("data-image-input-stored")
+
+    def test_the_file_input_is_drawn_with_its_name_and_attributes(self):
+        group = image_input_of(ImageInput(attrs={"accept": "image/png"}))
+
+        file_input = group.find("input", attrs={"type": "file"})
+
+        assert file_input["name"] == "photo"
+        assert file_input["id"] == "id_photo"
+        assert file_input["accept"] == "image/png"
+
+    def test_an_optional_field_holding_an_image_offers_the_removal_checkbox(self):
+        widget = ImageInput()
+        widget.is_required = False
+
+        group = image_input_of(widget, StoredImage("ada.jpg"))
+
+        checkbox = group.find("input", attrs={"data-image-input-remove": True})
+        assert checkbox["name"] == "photo-clear"
+        assert checkbox["type"] == "checkbox"
+
+    def test_a_required_field_holding_an_image_offers_no_removal_checkbox(self):
+        widget = ImageInput()
+        widget.is_required = True
+
+        group = image_input_of(widget, StoredImage("ada.jpg"))
+
+        assert group.find("input", attrs={"type": "checkbox"}) is None
+
+    def test_a_field_holding_nothing_offers_no_removal_checkbox(self):
+        group = image_input_of(ImageInput())
+
+        assert group.find("input", attrs={"type": "checkbox"}) is None
+
+    def test_its_media_names_its_script(self):
+        assert ImageInput().media._js == ["mvp_forms/image-input.js"]
+
+    def test_the_file_name_is_not_shown_unless_asked_for(self):
+        group = image_input_of(ImageInput(), StoredImage("people/ada.jpg"))
+
+        assert group.find("a") is None
+
+    def test_show_file_name_links_the_file_by_its_name_without_folders(self):
+        group = image_input_of(
+            ImageInput(show_file_name=True), StoredImage("people/2025/ada.jpg")
+        )
+
+        link = group.find("a")
+        assert link["href"] == "/media/people/2025/ada.jpg"
+        assert link.get_text() == "ada.jpg"
+
+    def test_a_file_name_holding_markup_is_shown_as_text(self):
+        group = image_input_of(
+            ImageInput(show_file_name=True), StoredImage("<b>x&y.jpg")
+        )
+
+        assert group.find("b") is None
+        assert group.find("a").get_text() == "<b>x&y.jpg"
+
+    def test_the_file_input_is_drawn_and_no_picker_button_by_default(self):
+        group = image_input_of(ImageInput())
+
+        assert group.find(attrs={"data-image-input-open": True}) is None
+        assert not group.has_attr("data-image-input-picker")
+
+    def test_without_the_input_the_thumbnail_is_a_button_the_script_reveals(self):
+        group = image_input_of(ImageInput(show_input=False))
+
+        button = group.find(attrs={"data-image-input-open": True})
+
+        assert button.name == "button"
+        assert button["type"] == "button"
+        assert button.has_attr("hidden")
+        assert group.find("input", attrs={"type": "file"}) is not None
+
+    def test_the_picker_button_is_disabled_with_a_disabled_field(self):
+        group = image_input_of(ImageInput(show_input=False), disabled=True)
+
+        assert group.find(attrs={"data-image-input-open": True}).has_attr("disabled")
+
+    def test_a_square_thumbnail_six_rem_high_by_default(self):
+        frame = image_input_of(ImageInput()).find(
+            attrs={"data-image-input-frame": True}
+        )
+
+        assert "height: calc(6 * 1rem)" in frame["style"]
+        assert "aspect-ratio: calc(1)" in frame["style"]
+
+    def test_aspect_ratio_and_height_are_written_into_the_thumbnails_style(self):
+        frame = image_input_of(ImageInput(aspect_ratio=2.5, height=8)).find(
+            attrs={"data-image-input-frame": True}
+        )
+
+        assert "height: calc(8 * 1rem)" in frame["style"]
+        assert "aspect-ratio: calc(2.5)" in frame["style"]
+
+    def test_a_ratio_is_written_with_a_point_under_any_language(self):
+        with translation.override("de"):
+            frame = image_input_of(ImageInput(aspect_ratio=2.5, height=1.5)).find(
+                attrs={"data-image-input-frame": True}
+            )
+
+        assert "aspect-ratio: calc(2.5)" in frame["style"]
+        assert "height: calc(1.5 * 1rem)" in frame["style"]
+
+    def test_a_stated_ratio_fills_the_thumbnail_and_none_shows_the_whole_image(self):
+        filled = image_input_of(ImageInput(aspect_ratio=3), StoredImage("a.jpg"))
+        whole = image_input_of(ImageInput(), StoredImage("a.jpg"))
+
+        assert "object-cover" in filled.find("img")["class"]
+        assert "object-contain" in whole.find("img")["class"]
+
+    def test_a_mask_puts_daisyuis_mask_classes_on_the_thumbnail(self):
+        frame = image_input_of(ImageInput(mask="squircle")).find(
+            attrs={"data-image-input-frame": True}
+        )
+
+        assert {"mask", "mask-squircle"} <= set(frame["class"])
+
+    def test_without_a_mask_the_thumbnail_has_no_mask_class(self):
+        frame = image_input_of(ImageInput()).find(
+            attrs={"data-image-input-frame": True}
+        )
+
+        assert not any(name.startswith("mask") for name in frame["class"])
+
+    @pytest.mark.parametrize(
+        ("option", "value"),
+        [
+            ("aspect_ratio", 0),
+            ("aspect_ratio", -1),
+            ("aspect_ratio", "16/9"),
+            ("aspect_ratio", True),
+            ("height", 0),
+            ("height", "6rem"),
+            ("height", False),
+            ("align", "centre"),
+            ("show_input", "no"),
+            ("show_file_name", 1),
+            ("horizontal", None),
+            ("mask", ""),
+            ("mask", 3),
+        ],
+    )
+    def test_a_value_an_option_cannot_take_raises_naming_it(self, option, value):
+        with pytest.raises(ValueError, match=option):
+            ImageInput(**{option: value})
+
+    def test_the_script_hooks_are_drawn(self):
+        group = image_input_of(ImageInput(), StoredImage("a.jpg"))
+
+        for hook in ("frame", "preview", "empty", "status", "revert", "actions"):
+            assert group.find(attrs={f"data-image-input-{hook}": True}) is not None
