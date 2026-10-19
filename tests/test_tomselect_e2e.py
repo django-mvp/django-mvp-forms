@@ -852,3 +852,43 @@ class TestTheEvent:
 
         items = "document.getElementById('id_fruit').tomselect.items"
         assert page.evaluate(items) == ["a"]
+
+
+class TestAControlWithNoLabelAboveIt:
+    @pytest.mark.parametrize("name", ["single", "counted"])
+    def test_pressing_the_label_in_its_frame_opens_it(self, choices_page, name):
+        page = choices_page("unlabelled")
+
+        page.locator(f"#div_id_{name} .select > .label").click()
+
+        expect(page.locator(f"#id_{name} + .ts-wrapper")).to_have_class(
+            re.compile(r"\bdropdown-active\b")
+        )
+
+    def test_picking_options_keeps_it_open_and_chooses_them(self, choices_page):
+        page = choices_page("unlabelled")
+        page.locator("#div_id_counted .select > .label").click()
+        dropdown = page.locator("#id_counted-ts-dropdown")
+
+        dropdown.locator('.option[data-value="a"]').click()
+        dropdown.locator('.option[data-value="b"]').click()
+
+        expect(page.locator("#id_counted + .ts-wrapper")).to_have_class(
+            re.compile(r"\bdropdown-active\b")
+        )
+        assert page.evaluate(
+            "[...document.getElementById('id_counted').selectedOptions]"
+            ".map((option) => option.value)"
+        ) == ["a", "b"]
+
+    @pytest.mark.parametrize("name", ["single", "counted"])
+    def test_the_input_that_takes_focus_is_named_by_the_label(self, choices_page, name):
+        page = choices_page("unlabelled")
+
+        named = page.evaluate(
+            "(id) => document.getElementById(id).tomselect.control_input"
+            ".getAttribute('aria-label')",
+            f"id_{name}",
+        )
+
+        assert named == page.locator(f"#id_{name}").get_attribute("aria-label")

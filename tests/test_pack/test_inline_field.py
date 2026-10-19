@@ -92,7 +92,7 @@ class TestInlineFieldOnOtherWidgets:
 
         field = soup.find(id="id_country")
 
-        assert frame_of(soup, "country").find("label") is None
+        assert soup.find("label", attrs={"for": "id_country"}) is None
         assert not field.has_attr("placeholder")
         assert field["aria-label"] == "Fruit"
 

@@ -194,7 +194,8 @@ class TestFloatingLabels:
 
         soup = draw(TAG, form=form)
 
-        assert soup.find("label") is None
+        assert soup.find(class_="floating-label") is None
+        assert soup.find("label", attrs={"for": True}) is None
         for name in FLOATERS:
             assert soup.find(id=f"id_{name}")["aria-label"] == form[name].label
 

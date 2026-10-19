@@ -16,6 +16,11 @@ NAMED_EXCEPTIONS = frozenset(
         '[id$="_sr_status"].visually-hidden',
         ".modal-box:has(.ts-wrapper.dropdown-active)",
         ".overflow-x-auto:has(.ts-wrapper.dropdown-active)",
+        ".select:has(> .ts-wrapper)",
+        ".select:has(> .ts-wrapper.multi > .ts-control:not([data-count-text]))",
+        ".select:has(> .ts-wrapper.dropdown-active)",
+        ".select:has(> .ts-wrapper.disabled)",
+        ".select > select.ts-hidden-accessible",
     }
 )
 COLOUR_FUNCTION = re.compile(

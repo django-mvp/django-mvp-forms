@@ -577,9 +577,9 @@ html:root .select:has(> .ts-wrapper.disabled) {
   cursor: not-allowed;
 }
 
-html:root .select > .ts-wrapper,
-html:root .select > .ts-wrapper.multi,
-html:root .select > .ts-wrapper.loading {
+html:root .ts-wrapper:is(.select > *),
+html:root .ts-wrapper.multi:is(.select > *),
+html:root .ts-wrapper.loading:is(.select > *) {
   position: static;
   display: flex;
   flex: 1 1 0%;
@@ -606,15 +606,15 @@ html:root .select > select.ts-hidden-accessible {
   padding: 0;
 }
 
-html:root .select > .ts-wrapper.focus {
+html:root .ts-wrapper.focus:is(.select > *) {
   outline: none;
 }
 
-html:root .select > .ts-wrapper > .ts-dropdown {
+html:root .ts-wrapper:is(.select > *) > .ts-dropdown {
   inset-block-start: 100%;
 }
 
-html:root .select > .ts-wrapper.plugin-clear_button .clear-button {
+html:root .ts-wrapper.plugin-clear_button:is(.select > *) .clear-button {
   inset-inline-end: 1.5rem;
 }
 

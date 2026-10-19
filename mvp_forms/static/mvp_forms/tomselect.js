@@ -45,12 +45,6 @@
     // Help text and errors stay tied to the input that takes focus.
     const described = select.getAttribute("aria-describedby");
     if (described) control.control_input.setAttribute("aria-describedby", described);
-    // A select drawn with no label above it is named by its own aria-label,
-    // which the input that takes focus carries too.
-    const named = select.getAttribute("aria-label");
-    if (named && !control.control_input.hasAttribute("aria-labelledby")) {
-      control.control_input.setAttribute("aria-label", named);
-    }
     WORDS.forEach(function (name) {
       if (name in select.dataset) control.control.dataset[name] = select.dataset[name];
     });

@@ -374,6 +374,43 @@ check that the thumbnail shows it and that reverting puts the stored image back.
 
 ---
 
+### User Story 9 - A select with no label above it still names its field (Priority: P3)
+
+A developer draws a row of filters above a list with labels turned off, so each field takes no
+room above it. A text input can carry its name as a placeholder, but a select shows only its
+value, and a person looking at "Any" or "2 selected" cannot tell which filter it is. With labels
+off, the pack draws the field's label inside the select's frame, before the value, in every state:
+nothing chosen, one value, a count. This holds for a stock select, a Tom Select control from this
+package and one from django-tomselect.
+
+**Why this priority**: A form with labels on is unaffected. It matters where labels are turned
+off, which is where filters above a list are drawn.
+
+**Independent Test**: Draw a form with `form_show_labels` off holding a select, a `TomSelect`
+and a counted `TomSelectMultiple`, and check that each frame shows the field's label before the
+control and that each control is named by it. In a browser, press the label of a Tom Select
+control and check that its dropdown opens.
+
+**Acceptance Scenarios**:
+
+1. **Given** a form with labels off, **When** a select is drawn, **Then** it sits in daisyUI's
+   `select` frame with the field's label, as escaped text, in a `label` span before it, and the
+   select is named by an `aria-label` holding the label.
+2. **Given** the same form, **When** a Tom Select control from this package or from
+   django-tomselect is drawn, **Then** the frame is a `div`, so that a press inside it is not
+   passed to the hidden select. In a control from this package, the input that takes focus is
+   named by the label.
+3. **Given** a control from this package in such a frame, with its stylesheet and script,
+   **When** a person presses the label, **Then** the control opens, and picking an option keeps
+   it open as it does in a control with no frame.
+4. **Given** a select with text attached by a layout object, a select that is a member of a
+   `Join`, or one with buttons joined to it, **When** labels are off, **Then** it is drawn as
+   before and shows no label of its own.
+5. **Given** a form with labels on, or a field with no label, **When** a select is drawn, **Then**
+   nothing changes.
+
+---
+
 ### Edge Cases
 
 - A choice field with no choices at all draws its label and an empty input, and the page does not
@@ -500,6 +537,15 @@ Image input
   raise a `ValueError` naming it. (Story 8)
 - **FR-027**: The demo project MUST show `ImageInput`, with each of its options, on a page of its
   own in the Custom widgets group. (Story 8)
+
+Labels off
+
+- **FR-028**: With labels off, through `form_show_labels` or `InlineField`, a select whose field
+  has a label, and which has no attached text, no joined buttons and no place in a `Join`, MUST
+  be drawn in daisyUI's `select` frame with the label as a `label` span before it. The frame
+  MUST be a `div` when the select is a Tom Select control, and a `label` otherwise. (Story 9)
+- **FR-029**: The input a `TomSelect` or `TomSelectMultiple` control focuses MUST carry the
+  select's `aria-label`, and a press on the frame outside the control MUST open it. (Story 9)
 
 ## Success Criteria *(mandatory)*
 

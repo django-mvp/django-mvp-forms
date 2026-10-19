@@ -712,11 +712,13 @@ class PointInput(forms.MultiWidget):
 
 
 class RangeInput(forms.MultiWidget):
-    """A low and a high number, drawn side by side as one field.
+    """A low and a high number, drawn as one field.
 
-    Each end is drawn inside its own daisyUI ``input`` frame, a ``<label>`` that
-    shows the end's name before it. Either end may be left empty. The value is a
-    pair, or a ``slice`` as django-filter's range fields give it.
+    By default each end is drawn inside its own daisyUI ``input`` frame, a
+    ``<label>`` that shows the end's name before it. ``joined`` draws the two
+    frames as one daisyUI join, and ``compact`` draws both ends in one frame.
+    Either end may be left empty. The value is a pair, or a ``slice`` as
+    django-filter's range fields give it.
     """
 
     template_name = "mvp_forms/widgets/range.html"
@@ -770,8 +772,8 @@ class RangeInput(forms.MultiWidget):
             if self.compact:
                 part["attrs"].setdefault("placeholder", part["frame_name"])
             if self.joined or self.compact:
-                # A joined or compact pair stays in one row, so an input may be narrower
-                # than a browser would draw it on its own.
+                # A pair in one row may leave an input narrower than a browser
+                # would draw it on its own.
                 part["attrs"]["class"] = "w-full min-w-0"
         return context
 

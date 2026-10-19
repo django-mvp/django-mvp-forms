@@ -26,7 +26,7 @@ from mvp_forms.choices import (
 )
 from mvp_forms.deprecation import host_template
 from mvp_forms.layout import InvalidMember, Join
-from mvp_forms.widgets import TomSelect
+from mvp_forms.widgets import RangeInput, TomSelect
 
 register = template.Library()
 
@@ -229,8 +229,8 @@ class FieldInput:
             if self.component == "file-input"
             else []
         )
-        # A select drawn with no label above it shows the label inside its
-        # frame, where an input shows it as its placeholder.
+        # A select has no placeholder, so with no label above it the label is
+        # shown inside its frame.
         if self.names_itself_inside:
             self.prepended = escape(self.label_text)
 
@@ -520,13 +520,14 @@ class FieldInput:
             widget = copy.deepcopy(widget)
             for index, part in enumerate(widget.widgets):
                 self.decorate_part(widget, index, part)
-            widget.get_context = self.label_context(  # type: ignore[method-assign]
-                widget.get_context
-            )
+            if isinstance(widget, RangeInput):
+                widget.get_context = self.range_context(  # type: ignore[method-assign]
+                    widget.get_context
+                )
         return widget
 
-    def label_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
-        """Wrap a multi-widget's context so that it knows whether a label is drawn.
+    def range_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
+        """Wrap a range's context so that it knows whether a label is drawn.
 
         A range drawn with no label above it shows the label inside its first
         frame, which only its own template can do.
@@ -547,8 +548,7 @@ class FieldInput:
                 # The label takes the first frame, so each end's name moves into
                 # its input as the placeholder.
                 for part in context["widget"]["subwidgets"]:
-                    if part.get("frame_name"):
-                        part["attrs"].setdefault("placeholder", part["frame_name"])
+                    part["attrs"].setdefault("placeholder", part["frame_name"])
             return context
 
         return with_label
@@ -827,8 +827,9 @@ class FieldInput:
         Select has hidden, so a click in its list would leave the control.
         """
         widget = self.field.field.widget
-        script = isinstance(widget, TomSelect) or type(widget).__module__.startswith(
-            "django_tomselect"
+        script = isinstance(widget, TomSelect) or any(
+            kind.__module__.startswith("django_tomselect")
+            for kind in type(widget).__mro__
         )
         return "div" if script else "label"
 

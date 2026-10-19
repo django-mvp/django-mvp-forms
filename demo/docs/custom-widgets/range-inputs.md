@@ -5,10 +5,23 @@ end as one field: two inputs side by side under the field's label, each named
 inside its frame. Either end can be left empty, so "at least 60" and "up to
 2500" can both be written.
 
-Give one to any field that takes a pair of values, such as a `MultiValueField`
-of two number or date fields. The widget takes the pair, or a `slice` as
-django-filter's range fields give it, and sends back two values for the field
-to clean. The example below builds its own pair field in a few lines.
+Give one to a field that takes a pair of values. With django-filter, pass it to a
+range filter:
+
+```python
+import django_filters
+
+from mvp_forms.widgets import DateRangeInput, RangeInput
+
+
+class SiteFilter(django_filters.FilterSet):
+    depth = django_filters.RangeFilter(widget=RangeInput())
+    measured = django_filters.DateFromToRangeFilter(widget=DateRangeInput())
+```
+
+The widget takes a pair, or a `slice` as django-filter's range fields give it,
+and sends back two values for the field to clean. In a plain form, use a
+`MultiValueField` of two number or date fields, as the example below does.
 
 ```{live-example} /examples/range-input/
 :title: Depths, dates and times
@@ -27,7 +40,7 @@ stay in one row at every width, where the separate ends stack on a narrow
 screen.
 
 ```python
-depth = DepthField(widget=RangeInput(joined=True))
+depth = django_filters.RangeFilter(widget=RangeInput(joined=True))
 ```
 
 ```{live-example} /examples/range-input-joined/
@@ -38,13 +51,15 @@ depth = DepthField(widget=RangeInput(joined=True))
 
 ## Compact
 
-`compact=True` draws both ends in one input frame, with a dash between them and
+`compact=True` draws both ends in one input frame, with an en dash between them and
 the ends' names as placeholders. `separator` changes the text between them, such
 as `separator=_("to")`.
 
 ```python
-depth = DepthField(widget=RangeInput(compact=True))
-measured = DateRangeField(widget=DateRangeInput(compact=True, separator=_("to")))
+depth = django_filters.RangeFilter(widget=RangeInput(compact=True))
+measured = django_filters.DateFromToRangeFilter(
+    widget=DateRangeInput(compact=True, separator=_("to"))
+)
 ```
 
 ```{live-example} /examples/range-input-compact/

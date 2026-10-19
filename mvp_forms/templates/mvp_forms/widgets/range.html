@@ -1,1 +1,17 @@
-{% if widget.compact %}{% with first=widget.subwidgets.0 last=widget.subwidgets.1 %}<div class="{{ first.frame_class }}" style="contain: inline-size">{% if widget.unlabelled %}<span class="label">{{ widget.label }}</span>{% endif %}{% with widget=first %}{% include widget.template_name %}{% endwith %}<span class="label" aria-hidden="true" style="margin-inline: 0.75rem; border-inline: var(--border) solid color-mix(in oklab, currentColor 10%, transparent)">{{ widget.separator }}</span>{% with widget=last %}{% include widget.template_name %}{% endwith %}</div>{% endwith %}{% else %}{% if widget.joined %}<div class="join w-full" style="contain: inline-size">{% else %}<div class="grid gap-2 {% if not widget.unlabelled %}sm:grid-cols-2{% endif %}"{% if widget.unlabelled %} style="grid-template-columns: 3fr 2fr"{% endif %}>{% endif %}{% for part in widget.subwidgets %}<label class="{{ part.frame_class }}{% if widget.joined %} join-item min-w-0{% endif %}"{% if widget.joined %} style="flex: {% if widget.unlabelled and forloop.first %}3{% else %}2{% endif %} 1 0%"{% endif %}>{% if widget.unlabelled %}{% if forloop.first %}<span class="label">{{ widget.label }}</span>{% endif %}{% else %}<span class="label">{{ part.frame_name }}</span>{% endif %}{% with widget=part %}{% include widget.template_name %}{% endwith %}</label>{% endfor %}</div>{% endif %}
+{% if widget.compact %}{% with first=widget.subwidgets.0 last=widget.subwidgets.1 %}
+<div class="{{ first.frame_class }}" style="contain: inline-size">
+  {% if widget.unlabelled %}<span class="label text-base-content">{{ widget.label }}</span>{% endif %}
+  {% with widget=first %}{% include widget.template_name %}{% endwith %}
+  <span class="label text-base-content" aria-hidden="true" style="margin-inline: 0.75rem; border-inline: var(--border) solid color-mix(in oklab, currentColor 10%, transparent)">{{ widget.separator }}</span>
+  {% with widget=last %}{% include widget.template_name %}{% endwith %}
+</div>
+{% endwith %}{% else %}
+{% if widget.joined %}<div class="join w-full" style="contain: inline-size">{% elif widget.unlabelled %}<div class="grid gap-2" style="grid-template-columns: 3fr 2fr">{% else %}<div class="grid gap-2 sm:grid-cols-2">{% endif %}
+  {% for part in widget.subwidgets %}
+  <label class="{{ part.frame_class }}{% if widget.joined %} join-item min-w-0{% endif %}"{% if widget.joined %} style="flex: {% if widget.unlabelled and forloop.first %}3{% else %}2{% endif %} 1 0%"{% endif %}>
+    {% if not widget.unlabelled %}<span class="label text-base-content">{{ part.frame_name }}</span>{% elif forloop.first %}<span class="label text-base-content">{{ widget.label }}</span>{% endif %}
+    {% with widget=part %}{% include widget.template_name %}{% endwith %}
+  </label>
+  {% endfor %}
+</div>
+{% endif %}

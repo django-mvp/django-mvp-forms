@@ -189,7 +189,7 @@ A hidden field is drawn as its `<input type="hidden">` alone, or one per value f
 With `{% crispy form %}` the pack follows these `FormHelper` settings:
 
 - `form_tag`, `form_method`, `form_action`, `form_id`, `form_class` and `attrs` for the `<form>` element, which is `multipart` when the form needs it, and `disable_csrf` for its CSRF token, drawn for a post form
-- `form_show_labels`: with labels off, each input is named by an `aria-label` holding the label's text, unless the widget sets its own
+- `form_show_labels`: with labels off, each input is named by an `aria-label` holding the label's text, unless the widget sets its own. A select also shows the label inside its frame, before its value, as daisyUI's select with a label: a `<span class="label">` in a `select` frame, which is a `<label>`, or a `<div>` for a Tom Select control. A select with text attached, buttons joined to it or a place in a `Join` keeps those instead. The same holds for a select drawn by `InlineField`
 - `form_show_errors`: with errors off, no field error, no form-wide error and no error styling is drawn, and an input's description names only what is on the page
 - `label_class` on each label, and `field_class` on an element wrapped around each input
 - `form_error_title` inside the form-wide error element, and `include_media` for the form's media
@@ -1070,7 +1070,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/inputs.html` | The helper's buttons and inputs, with the hidden inputs first and the rest in a row. | `inputs` | `TEMPLATES` |
 | `daisyui/field.html` | One field: the pack draws the field's widget and the frame puts it in place. | `field` | `TEMPLATES` |
 | `daisyui/frame.html` | The frame around a field's widget: a daisyUI fieldset holding the label, or the legend of a group, with the required marker, and then the field's body, and a hidden field is its input alone. | `drawn.group_description`, `drawn.is_floating`, `drawn.is_group`, `drawn.is_single_checkbox`, `drawn.label_text`, `drawn.show_labels`, `drawn.wrapper_class`, `field`, `label_class` | `TEMPLATES` |
-| `daisyui/field_body.html` | What sits inside the frame: the widget, which may be a single checkbox in its own label, have text attached, have buttons joined to it or sit in a floating label, then the field's help text and its errors, which `daisyui/field_messages.html` draws. | `buttons`, `drawn.appended`, `drawn.attached_class`, `drawn.has_attached_text`, `drawn.is_floating`, `drawn.is_joined`, `drawn.is_single_checkbox`, `drawn.join`, `drawn.prepended`, `drawn.render`, `drawn.show_labels`, `field`, `field_class`, `label_class` | `TEMPLATES` |
+| `daisyui/field_body.html` | What sits inside the frame: the widget, which may be a single checkbox in its own label, have text attached, have buttons joined to it or sit in a floating label, then the field's help text and its errors, which `daisyui/field_messages.html` draws. | `buttons`, `drawn.appended`, `drawn.attached_class`, `drawn.attached_tag`, `drawn.has_attached_text`, `drawn.is_floating`, `drawn.is_joined`, `drawn.is_single_checkbox`, `drawn.join`, `drawn.prepended`, `drawn.render`, `drawn.show_labels`, `field`, `field_class`, `label_class` | `TEMPLATES` |
 | `daisyui/field_messages.html` | A field's help text, with the id that the input's description names, and its errors in one element with an id of its own, unless the form turns errors off. A joined group draws it once for each of its members. | `field`, `form_show_errors` | `TEMPLATES` |
 | `daisyui/required_marker.html` | The marker a required field's label and a required column's heading carry, and nothing for an optional field. | `field` | `TEMPLATES` |
 | `daisyui/multifield.html` | A field inside a `MultiField`, drawn as any field is: it reads nothing itself and passes `field` on to `daisyui/field.html`. | `field` | `TEMPLATES` |
@@ -1110,6 +1110,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `mvp_forms/widgets/partial_date.html` | A partial date drawn by `PartialDateInput` or `PartialDateSelect`: one element that holds a year, a month and a day side by side, each a part of one field. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/image.html` | An image field drawn by `ImageInput`: a thumbnail of the stored image, the file input or, with `show_input=False`, a button over the thumbnail that opens the file picker, the removal checkbox of an optional field, a revert button and a status line, each carrying the `data-image-input-` hook its script reads. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/point.html` | A point drawn by `PointInput`: a latitude input and a longitude input, each inside its own daisyUI `input` frame that shows its name before it. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/range.html` | A range drawn by `RangeInput`, `DateRangeInput` or `DateTimeRangeInput`: two inputs, each inside its own daisyUI `input` frame that shows its end's name, the two frames joined when `joined` is set, or both inputs in one frame with the separator between them when `compact` is set. In a form with labels off, the field's label in the first frame. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 
@@ -1420,6 +1421,8 @@ class FieldworkForm(forms.Form):
 The setting turns on two of Tom Select's plugins, `checkbox_options` and `dropdown_input`, so `plugins` holds them after any button. The control shows `none_text` while it holds no value, and the number of values followed by `count_text` once it holds one. Both words are translated by default, and a lazy translation stated for either is turned into text when the form is drawn. The widget writes them on the select as `data-none-text` and `data-count-text`, the script copies them to the box Tom Select builds, and `mvp_forms/tomselect.css` draws the count from them, so a page without the stylesheet shows the tags as any multiple control does. A placeholder is shown in the search box.
 
 Each chosen value stays in the control, out of sight, so a screen reader is still told each one by name. Backspace in an empty search box removes the value chosen last, as it does in every Tom Select control.
+
+In a form that draws no labels, such as a row of filters above a list, a counted control would read only "2 selected". The pack draws the field's label inside its frame, so it reads "Category" and then "2 selected", in every state. Pressing the label opens the control, and the control is named by the label. A single control and a stock select are drawn the same way: see `form_show_labels` under [Template pack `daisyui`](#template-pack-daisyui).
 
 #### Groups and unavailable options
 
@@ -2296,6 +2299,45 @@ The mask classes daisyUI has today are written out in `mvp_forms/widgets.py`, so
 #### What the script does
 
 `mvp_forms/image-input.js` comes with the form's media, needs nothing else on the page and acts once however often the page includes it. It listens on the document, so an image input added later, by a formset or by htmx, is covered with nothing to call. Without it the stored image, the file input and the removal checkbox all work, and only the preview, the revert button, the status line and the thumbnail as a picker are missing.
+
+### Range inputs
+
+`RangeInput`, `DateRangeInput` and `DateTimeRangeInput` draw a low and a high end as one field: two number inputs, two `date` inputs or two `datetime-local` inputs. Either end may be left empty, so "at least 60" and "up to 2500" can both be written.
+
+This is the public surface:
+
+- `mvp_forms.widgets.RangeInput`, `mvp_forms.widgets.DateRangeInput` and `mvp_forms.widgets.DateTimeRangeInput`
+- the template `mvp_forms/widgets/range.html`
+
+Each is a `MultiWidget`. Give it to a field that takes a pair of values, such as django-filter's range filters:
+
+```python
+import django_filters
+
+from mvp_forms.widgets import DateRangeInput, RangeInput
+
+
+class SiteFilter(django_filters.FilterSet):
+    depth = django_filters.RangeFilter(widget=RangeInput(compact=True))
+    measured = django_filters.DateFromToRangeFilter(widget=DateRangeInput(joined=True))
+```
+
+The widget reads a pair, a `slice` as django-filter's range fields give it, or nothing, and sends the two ends back as `<name>_0` and `<name>_1` for the field to clean. A plain Django form takes it on a `MultiValueField` of two number or date fields. The package ships no such field.
+
+#### Layouts
+
+`RangeInput(attrs=None, *, joined=None, compact=None, separator=None)`, and the same for the other two. Every setting is keyword-only, and a value a setting cannot take raises a `ValueError` that names it when the widget is made.
+
+| Setting | Takes | What it does |
+|---|---|---|
+| none | | Each end sits in its own daisyUI `input` frame, a `<label>` that shows the end's name before it: "Min" and "Max", or "From" and "To". The two sit side by side on a wide screen and one above the other on a narrow one. |
+| `joined` | `True` or `False` | `True` draws the two frames as one daisyUI `join`, in one row at every width. On a narrow screen each end gets half the row, which can be too little to show a whole date. |
+| `compact` | `True` or `False` | `True` draws both inputs in one `input` frame, with the separator between them and each end's name as its input's placeholder. It cannot be used with `joined`. |
+| `separator` | text, or a lazy translation | The text between the ends of a compact range, an en dash by default. It is hidden from assistive technology. Given without `compact`, it raises. |
+
+Through the pack the field is one fieldset whose legend is the label, with one help text and one set of errors. Each input is named by its end's name. Every frame takes the size, colour and variant stated for the form or the field, and the error state of a field in error, and both inputs are marked `aria-invalid`. In a form that draws no labels the field's label is shown in the first frame, and each end's name becomes its input's placeholder. Drawn without the pack, the frames carry no daisyUI class.
+
+The widgets need no script and no stylesheet of the package's.
 
 ### Themes
 

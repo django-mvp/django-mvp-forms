@@ -57,11 +57,11 @@ removes the value chosen last, as it does in any Tom Select control.
 
 ## In a row of filters
 
-A form that draws no labels, with `form_show_labels = False`, still names every
-field. An input shows its label as its placeholder, and a select shows it inside
-its frame, before the value. A counted control reads "Category" and then "2
-selected", so a row of them can still be told apart once something is chosen.
-A Tom Select control, a counted one and a stock select are all drawn this way.
+In a form that draws no labels, with `form_show_labels = False`, a select shows
+its label inside its frame, before the value. A counted control reads "Category"
+and then "2 selected", so a row of them can still be told apart once something is
+chosen. A Tom Select control, a counted one and a stock select are all drawn this
+way. A text input has no frame to show it in, so give it a placeholder.
 
 ```{live-example} /examples/filter-toolbar/
 :title: Filters above a list of sites

@@ -221,6 +221,9 @@ class Reader:
             "text-xs",
             "transition-opacity",
             "w-fit",
+            # The two ends of a range, side by side from the small breakpoint up.
+            "grid",
+            "sm:grid-cols-2",
             "avatar",
             "avatar-placeholder",
             "rounded-box",

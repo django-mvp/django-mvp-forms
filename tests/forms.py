@@ -30,6 +30,8 @@ from django_tomselect.forms import (
 from mvp_forms.fields import PartialDateField
 from mvp_forms.layout import Join
 from mvp_forms.widgets import (
+    DateRangeInput,
+    DateTimeRangeInput,
     DynamicMaskInput,
     EnumBlock,
     ImageInput,
@@ -40,6 +42,7 @@ from mvp_forms.widgets import (
     PatternBlock,
     PatternMaskInput,
     RangeBlock,
+    RangeInput,
     RegexMaskInput,
     TomSelect,
     TomSelectMultiple,
@@ -1600,3 +1603,73 @@ class TomSelectDialogForm(forms.Form):
         self.helper.layout = Layout(
             Modal("nearby", css_id="nearby-dialog", title="Nearby")
         )
+
+
+class UnlabelledSelectsForm(forms.Form):
+    """Selects of every kind, drawn by a form with its labels off."""
+
+    plain = forms.ChoiceField(choices=[("", "Any"), *FRUIT], required=False)
+    single = forms.ChoiceField(
+        choices=[("", ""), *FRUIT], widget=TomSelect, required=False
+    )
+    counted = forms.MultipleChoiceField(
+        label="Kind <b>&</b> sort",
+        choices=FRUIT,
+        widget=TomSelectMultiple(counted=True),
+        required=False,
+    )
+    foreign = TomSelectChoiceField(config=COUNTRIES, required=False)
+    unnamed = forms.ChoiceField(choices=FRUIT, label="", required=False)
+
+    def __init__(self, *args, layout=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.form_show_labels = False
+        if layout:
+            self.helper.layout = Layout(*layout)
+
+
+class PairField(forms.MultiValueField):
+    """A low and a high end, either of which may be empty, cleaned to a slice."""
+
+    def __init__(self, end, widget, **kwargs):
+        super().__init__(
+            fields=(end(required=False), end(required=False)),
+            widget=widget,
+            require_all_fields=False,
+            **kwargs,
+        )
+
+    def compress(self, data_list):
+        if not data_list or all(value in (None, "") for value in data_list):
+            return None
+        return slice(*data_list)
+
+
+class RangeInputsForm(forms.Form):
+    depth = PairField(
+        forms.DecimalField,
+        RangeInput(),
+        label="Depth",
+        help_text="Metres",
+        required=False,
+    )
+    measured = PairField(forms.DateField, DateRangeInput(), required=False)
+    logged = PairField(forms.DateTimeField, DateTimeRangeInput(), required=False)
+    joined = PairField(forms.IntegerField, RangeInput(joined=True), required=False)
+    compact = PairField(forms.IntegerField, RangeInput(compact=True), required=False)
+    worded = PairField(
+        forms.DateField,
+        DateRangeInput(compact=True, separator="to"),
+        required=False,
+    )
+    needed = PairField(forms.IntegerField, RangeInput())
+
+    def __init__(self, *args, show_labels=True, choices=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.form_show_labels = show_labels
+        if choices:
+            self.helper.daisyui = choices

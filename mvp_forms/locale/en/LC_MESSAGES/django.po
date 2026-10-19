@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-mvp-forms\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 04:30-0500\n"
+"POT-Creation-Date: 2026-10-19 18:38+0200\n"
 "PO-Revision-Date: 2026-10-03 18:41+0200\n"
 "Last-Translator: django-mvp-forms\n"
 "Language-Team: English\n"
@@ -169,24 +169,24 @@ msgstr ""
 msgid "This file cannot be shown as an image."
 msgstr ""
 
-#: templatetags/daisyui.py:33 widgets.py:845 widgets.py:846 widgets.py:900
-#: widgets.py:923
+#: templatetags/daisyui.py:34 widgets.py:948 widgets.py:949 widgets.py:1003
+#: widgets.py:1026
 msgid "Year"
 msgstr ""
 
-#: templatetags/daisyui.py:34 widgets.py:815 widgets.py:819
+#: templatetags/daisyui.py:35 widgets.py:918 widgets.py:922
 msgid "Month"
 msgstr ""
 
-#: templatetags/daisyui.py:35 widgets.py:826 widgets.py:830
+#: templatetags/daisyui.py:36 widgets.py:929 widgets.py:933
 msgid "Day"
 msgstr ""
 
-#: templatetags/daisyui.py:38
+#: templatetags/daisyui.py:39
 msgid "Date"
 msgstr ""
 
-#: templatetags/daisyui.py:38
+#: templatetags/daisyui.py:39
 msgid "Time"
 msgstr ""
 
@@ -198,18 +198,34 @@ msgstr ""
 msgid "Longitude"
 msgstr ""
 
-#: widgets.py:1047
+#: widgets.py:723
+msgid "Min"
+msgstr ""
+
+#: widgets.py:723
+msgid "Max"
+msgstr ""
+
+#: widgets.py:798 widgets.py:808
+msgid "From"
+msgstr ""
+
+#: widgets.py:798 widgets.py:808
+msgid "To"
+msgstr ""
+
+#: widgets.py:1150
 msgid "Nothing selected"
 msgstr ""
 
-#: widgets.py:1048
+#: widgets.py:1151
 msgid "selected"
 msgstr ""
 
-#: widgets.py:1091
+#: widgets.py:1194
 msgid "Remove image"
 msgstr ""
 
-#: widgets.py:1092
+#: widgets.py:1195
 msgid "Current image"
 msgstr ""
