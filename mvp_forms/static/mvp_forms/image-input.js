@@ -149,25 +149,42 @@
     true,
   );
 
-  // A form sent back with an error, or restored by the browser's back button,
-  // can hold a file already.
   // Where the thumbnail is the picker, the file input is taken out of sight
   // and out of the tab order only once this script runs, so a page without it
-  // still has an input to use.
+  // still has an input to use. A form sent back with an error, or restored by
+  // the browser's back button, can hold a file already, so each group is drawn
+  // from what it holds.
+  const PREPARED = new WeakSet();
+
+  function prepare(group) {
+    if (PREPARED.has(group)) return;
+    PREPARED.add(group);
+    const p = parts(group);
+    if (p.open) {
+      p.open.hidden = false;
+      p.file.parentElement.classList.add("sr-only");
+      p.file.tabIndex = -1;
+    }
+    draw(group);
+    // A stored image that failed before this script was listening.
+    if (p.preview.getAttribute("src") && p.preview.complete && !p.preview.naturalWidth) {
+      showEmpty(p, p.emptyText.dataset.missing);
+    }
+  }
+
+  function prepareWithin(node) {
+    if (node.matches && node.matches(SELECTOR)) prepare(node);
+    if (node.querySelectorAll) node.querySelectorAll(SELECTOR).forEach(prepare);
+  }
+
+  // Groups added later, by a formset or by htmx, are prepared as they arrive.
   function start() {
-    document.querySelectorAll(SELECTOR).forEach(function (group) {
-      const p = parts(group);
-      if (p.open) {
-        p.open.hidden = false;
-        p.file.parentElement.classList.add("sr-only");
-        p.file.tabIndex = -1;
-      }
-      draw(group);
-      // A stored image that failed before this script was listening.
-      if (p.preview.getAttribute("src") && p.preview.complete && !p.preview.naturalWidth) {
-        showEmpty(p, p.emptyText.dataset.missing);
-      }
-    });
+    prepareWithin(document);
+    new MutationObserver(function (records) {
+      records.forEach(function (record) {
+        record.addedNodes.forEach(prepareWithin);
+      });
+    }).observe(document.documentElement, { childList: true, subtree: true });
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", start);

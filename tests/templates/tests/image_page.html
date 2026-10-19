@@ -9,6 +9,8 @@
       {{ form|crispy }}
       <button type="submit">Send</button>
     </form>
+    <div id="later"></div>
+    <template id="picker">{{ form.picked }}</template>
     {% if script %}{{ form.media }}{% endif %}
   </body>
 </html>

@@ -498,8 +498,8 @@ Image input
 - **FR-026**: `aspect_ratio`, `height`, `mask`, `show_input`, `show_file_name`, `horizontal` and
   `align` MUST each change only what Story 8 says of it, and a value an option cannot take MUST
   raise a `ValueError` naming it. (Story 8)
-- **FR-027**: The demo project MUST show `ImageInput` with each option on a page of its own in the
-  Custom widgets group. (Story 8)
+- **FR-027**: The demo project MUST show `ImageInput`, with each of its options, on a page of its
+  own in the Custom widgets group. (Story 8)
 
 ## Success Criteria *(mandatory)*
 

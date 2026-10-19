@@ -84,7 +84,6 @@ class MaskedPage(TemplateView):
         return JsonResponse({name: request.POST.getlist(name) for name in request.POST})
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class ImagePage(TemplateView):
     """A page of image inputs, drawn by the pack, with or without their script."""
 
@@ -98,6 +97,7 @@ class ImagePage(TemplateView):
         )
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class PartialDatePage(TemplateView):
     """A page of three-part dates, which answers a post with what the form made."""
 

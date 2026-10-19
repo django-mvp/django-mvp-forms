@@ -153,10 +153,23 @@ class TestTheThumbnailAsThePicker:
 
     def test_the_thumbnail_is_reached_and_opened_from_the_keyboard(self, images_page):
         page = images_page()
-        hook(page, "picked", "open").focus()
+        opener = hook(page, "picked", "open")
+        expect(opener).to_be_visible()
 
         with page.expect_file_chooser():
-            page.keyboard.press("Enter")
+            opener.press("Enter")
+
+    def test_a_picker_added_later_is_prepared(self, images_page):
+        page = images_page()
+
+        page.evaluate(
+            """document.getElementById("later").append(
+              document.getElementById("picker").content.cloneNode(true))"""
+        )
+
+        added = page.locator("#later [data-image-input]")
+        expect(added.locator("[data-image-input-open]")).to_be_visible()
+        expect(added.locator('input[type="file"]')).to_have_attribute("tabindex", "-1")
 
     def test_without_the_script_the_file_input_stays_usable(self, images_page):
         page = images_page("images-bare")

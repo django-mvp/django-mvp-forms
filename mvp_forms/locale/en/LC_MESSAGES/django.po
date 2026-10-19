@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-mvp-forms\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 04:27-0500\n"
+"POT-Creation-Date: 2026-10-19 04:30-0500\n"
 "PO-Revision-Date: 2026-10-03 18:41+0200\n"
 "Last-Translator: django-mvp-forms\n"
 "Language-Team: English\n"
@@ -128,17 +128,21 @@ msgid "Close"
 msgstr ""
 
 #: templates/mvp_forms/widgets/image.html:3
-#: templates/mvp_forms/widgets/image.html:11
-msgid "Change image"
+#, python-format
+msgid "%(label)s: Change image"
 msgstr ""
 
 #: templates/mvp_forms/widgets/image.html:3
-#: templates/mvp_forms/widgets/image.html:8
-msgid "Add image"
+#, python-format
+msgid "%(label)s: Add image"
 msgstr ""
 
 #: templates/mvp_forms/widgets/image.html:8
 msgid "No image"
+msgstr ""
+
+#: templates/mvp_forms/widgets/image.html:8
+msgid "Add image"
 msgstr ""
 
 #: templates/mvp_forms/widgets/image.html:8
@@ -147,6 +151,10 @@ msgstr ""
 
 #: templates/mvp_forms/widgets/image.html:8
 msgid "No preview"
+msgstr ""
+
+#: templates/mvp_forms/widgets/image.html:11
+msgid "Change image"
 msgstr ""
 
 #: templates/mvp_forms/widgets/image.html:27
