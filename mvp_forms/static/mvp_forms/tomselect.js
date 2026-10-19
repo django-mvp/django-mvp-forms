@@ -1,10 +1,11 @@
 // Starts a Tom Select control on every select a Tom Select widget draws, on
 // the page as it loads and on each select added to it afterwards, and destroys
-// the control of each select that leaves the page. The widget writes its
-// settings on the select as JSON in data-tom-select. The page loads Tom Select
-// itself, and on a page without it this script does nothing and each select
-// stays a stock select. Once a control has started, the select sends
-// mvp-forms:tomselect, which carries the Tom Select instance.
+// the control of each select that leaves the page. A select htmx swaps in is
+// started once the swap has settled. The widget writes its settings on the
+// select as JSON in data-tom-select. The page loads Tom Select itself, and on a
+// page without it this script does nothing and each select stays a stock
+// select. Once a control has started, the select sends mvp-forms:tomselect,
+// which carries the Tom Select instance.
 (function () {
   "use strict";
 
@@ -67,13 +68,36 @@
     node.querySelectorAll(SELECTOR).forEach(act);
   }
 
+  // Until a swap settles, htmx gives a new select that shares its id with one
+  // on the old page the old select's classes, and then takes them back. A
+  // control started in between copies them to its wrapper and loses the class
+  // that hides the select, so it waits for the settle.
+  const unsettled = new Set();
+
+  function added(select) {
+    const htmx = window.htmx;
+    if (htmx && select.closest("." + htmx.config.addedClass)) {
+      unsettled.add(select);
+    } else {
+      apply(select);
+    }
+  }
+
+  function settled() {
+    unsettled.forEach(function (select) {
+      if (select.isConnected) apply(select);
+    });
+    unsettled.clear();
+  }
+
   function start() {
     if (typeof window.TomSelect !== "function") return;
     document.querySelectorAll(SELECTOR).forEach(apply);
+    document.addEventListener("htmx:afterSettle", settled);
     new MutationObserver(function (records) {
       records.forEach(function (record) {
         record.addedNodes.forEach(function (node) {
-          each(node, apply);
+          each(node, added);
         });
       });
       records.forEach(function (record) {

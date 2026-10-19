@@ -1515,6 +1515,12 @@ class TomSelectLineForm(forms.Form):
 TomSelectLineFormSet = formset_factory(TomSelectLineForm, extra=1)
 
 
+class TomSelectTagsForm(forms.Form):
+    tags = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, required=False
+    )
+
+
 class TomSelectDialogForm(forms.Form):
     nearby = forms.MultipleChoiceField(
         choices=FRUIT, widget=TomSelectMultiple, required=False

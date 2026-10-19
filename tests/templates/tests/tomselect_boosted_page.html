@@ -1,0 +1,13 @@
+{% load crispy_forms_tags %}<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ request.resolver_match.url_name }}</title>
+    <script src="{{ htmx_url }}"></script>
+    <script src="{{ tomselect_url }}"></script>
+  </head>
+  <body hx-boost="true">
+    <a id="other" href="{% url other %}">Other page</a>
+    {% crispy form %}
+  </body>
+</html>

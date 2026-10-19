@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `mvp_forms/tomselect.css` shows the clear button of a Tom Select control, with a focus ring, while the keyboard is on it. Tom Select and django-tomselect both make the button a stop that Tab reaches from the control's input, and the stylesheet drew it invisible there, whether django-tomselect or this package's Tom Select widgets built the control.
+- A Tom Select control on a page reached through a boosted htmx link no longer has the native select drawn over it. When the page being left had a select with the same `id`, htmx gave the new select the old one's classes until the swap settled, and the control started in that moment lost the class that hides the select. The script now starts the control of a select htmx swaps in once the swap has settled. A page without htmx is unchanged.
 
 ## [v0.5.0] - 2026-10-18
 
