@@ -4,10 +4,12 @@
 They are the browser's own `<details>`, so they need no script. Both come from
 `crispy_forms.bootstrap`.
 
-Send the form empty. Only the last group has a required field, so it opens.
+Send the form empty. The second and third groups have required fields, so the
+second opens. Both headings carry a dot in the error colour, and a screen reader says the group
+contains a field with an error.
 
 ```{live-example} /examples/accordion/
-:title: Three groups, the last with the error
+:title: Three groups, two with an error
 
 ../../../examples/layout_objects/accordion.py
 ```

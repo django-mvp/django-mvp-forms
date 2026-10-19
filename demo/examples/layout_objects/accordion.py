@@ -7,10 +7,10 @@ from django import forms
 
 
 class ProfileForm(forms.Form):
-    """Send it empty: the group holding the first error is the one that opens."""
+    """Send it empty: two groups hold an error, and the first of them opens."""
 
     name = forms.CharField(required=False)
-    street = forms.CharField(required=False)
+    street = forms.CharField()
     note = forms.CharField()
 
     def __init__(self, *args, **kwargs):

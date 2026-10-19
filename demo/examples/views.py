@@ -13,6 +13,14 @@ class ExampleView(FormView):
     """
 
     template_name = "demo/examples/form.html"
+    sent_empty = False
+
+    def get_form_kwargs(self):
+        """Bind the form to nothing on arrival when the example opens sent empty."""
+        kwargs = super().get_form_kwargs()
+        if self.sent_empty and "data" not in kwargs:
+            kwargs["data"] = {}
+        return kwargs
 
     def form_valid(self, form):
         """Say the form was accepted and come back to the same address."""

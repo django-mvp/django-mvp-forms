@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-mvp-forms\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 12:16-0500\n"
+"POT-Creation-Date: 2026-10-19 00:07+0200\n"
 "PO-Revision-Date: 2026-10-03 18:41+0200\n"
 "Last-Translator: django-mvp-forms\n"
 "Language-Team: English\n"
@@ -112,6 +112,11 @@ msgstr ""
 
 #: fields.py:285
 msgid "Enter the longitude as well as the latitude."
+msgstr ""
+
+#: templates/daisyui/accordion-group.html:5
+#: templates/daisyui/layout/tab-pane.html:9
+msgid "Contains a field with an error"
 msgstr ""
 
 #: templates/daisyui/layout/alert.html:4

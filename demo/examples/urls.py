@@ -23,6 +23,7 @@ from demo.examples.layout_objects.buttons import ActionsForm, HolderForm
 from demo.examples.layout_objects.fieldsets_rows_columns import DetailsForm
 from demo.examples.layout_objects.joined_groups import PhoneForm
 from demo.examples.layout_objects.joined_search import JoinedSearchForm
+from demo.examples.layout_objects.marked_errors import ApplicationForm
 from demo.examples.layout_objects.modal import AddressForm as ModalForm
 from demo.examples.layout_objects.multi_widget_field import EventForm
 from demo.examples.layout_objects.tabs import ProfileForm
@@ -73,6 +74,10 @@ urlpatterns = [
     path("colour/", ExampleView.as_view(form_class=ColouredForm)),
     path("variant/", ExampleView.as_view(form_class=GhostForm)),
     path("tabs/", ExampleView.as_view(form_class=ProfileForm)),
+    path(
+        "marked-errors/",
+        ExampleView.as_view(form_class=ApplicationForm, sent_empty=True),
+    ),
     path("fieldsets-rows-columns/", ExampleView.as_view(form_class=DetailsForm)),
     path("button-holder/", ExampleView.as_view(form_class=HolderForm)),
     path("form-actions/", ExampleView.as_view(form_class=ActionsForm)),

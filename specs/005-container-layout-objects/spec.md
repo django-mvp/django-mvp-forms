@@ -18,7 +18,7 @@
 
 django-crispy-forms ships six layout objects that hold part of a form behind an interaction or show a notice: `TabHolder` and `Tab`, `Accordion` and `AccordionGroup`, `Modal`, and `Alert`. This feature makes the pack draw all six, each with its daisyUI counterpart: tabs, collapse, modal and alert.
 
-A developer keeps writing the layout the way django-crispy-forms documents it. What changes is what a person filling in the form gets. When a submitted form comes back with an error in a field that sits inside a tab, an accordion group or a modal, that tab, group or modal is already open, so the error is in view.
+A developer keeps writing the layout the way django-crispy-forms documents it. What changes is what a person filling in the form gets. When a submitted form comes back with an error in a field that sits inside a tab, an accordion group or a modal, that tab, group or modal is already open, so the error is in view. Every tab and every accordion group holding a field with an error is marked as well, so a person sees all of them at once and not only the one that opened.
 
 Together with the structural and field-decorating layout objects (issues #7 and #8), this covers every layout object django-crispy-forms ships.
 
@@ -39,6 +39,10 @@ This specification says nothing about how fields, rows, fieldsets or buttons are
 - Q: Who opens the modal in the first place? → A: The host project. The pack draws the modal with the id the developer gave it and draws no control to open it, which matches django-crispy-forms. The Modal page's example shows one way of opening it.
 - Q: Is a dismissed alert remembered? → A: No. Dismissing hides it on the page in front of the person. A reload or the next response draws it again.
 - Q: What may the host project be asked to load for any of this to work? → A: daisyUI and nothing else. No script file, no stylesheet and no build step.
+
+### Session 2026-10-18
+
+- Q: Should every tab and accordion group holding an error be marked, and is it part of the default drawing or something a developer turns on? (issue #46) → A: Every one is marked, as the pack's default drawing, with nothing to turn on. The mark reaches assistive technology as well as sighted people. The rule that the first tab or group holding an error is the one that opens stays as it is.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -122,6 +126,26 @@ A developer places an `Alert` between other layout objects to tell people someth
 
 ---
 
+### User Story 5 - See every tab and group that holds an error (Priority: P2)
+
+A person submits a long form laid out with tabs or an accordion, and fields in more than one tab or group have errors. When the form comes back, the first of them is open, as before, and every tab label and group heading that holds a field with an error carries a mark. They see at once how many places need fixing, and a screen reader tells them the same when it reaches each tab or heading. The developer does nothing to get this.
+
+**Why this priority**: Without it a person fixes the first error, submits, and only then finds the next. The form still works without the mark, so it follows the stories that open the right tab or group.
+
+**Independent Test**: Draw a form with three tabs and an accordion of three groups, submit it with invalid data for fields in two tabs and two groups, and check that exactly those two tabs and two groups are marked, visibly and for assistive technology.
+
+**Acceptance Scenarios**:
+
+1. **Given** a submitted form with errors in fields in the second and third tabs, **When** it is drawn again, **Then** both tab labels carry daisyUI's error status, the second tab is open, and the first tab carries no mark.
+2. **Given** a submitted form with errors in fields in two accordion groups, **When** it is drawn again, **Then** both group headings carry daisyUI's error status, open or closed, and no other group does.
+3. **Given** a marked tab or group, **When** assistive technology reaches its tab or heading, **Then** it announces the name the developer gave and that it contains a field with an error.
+4. **Given** a field with an error inside an accordion group inside a tab, or inside a tab holder inside a tab, **When** the form is drawn again, **Then** the outer tab and the inner tab or group are both marked.
+5. **Given** a form with no field errors, unbound, valid, or with an error that belongs to the form as a whole, **When** it is drawn, **Then** no tab or group is marked.
+6. **Given** a submitted form whose only field error is on a hidden field, **When** it is drawn again, **Then** no tab or group is marked, because that error is shown above the form and not inside the tab or group.
+7. **Given** a form whose helper does not show errors, **When** it comes back with a field error in a tab or group, **Then** that tab or group is still marked, as the field itself still reports that it is invalid.
+
+---
+
 ### Edge Cases
 
 - A tab holder or an accordion with a single tab or group is drawn, with that one open.
@@ -166,6 +190,13 @@ Alert (User Story 4)
 - **FR-015**: A dismissible alert MUST carry a dismiss control with a name assistive technology can announce. Using it removes the alert from view without submitting the form or reloading the page. An alert marked as not dismissible MUST carry no such control.
 - **FR-016**: Alert content MUST be drawn as the developer wrote it, markup included, as django-crispy-forms documents. The documentation MUST say that this content is trusted, and that anything a person typed has to be escaped before it is put there.
 
+Marking errors (User Story 5)
+
+- **FR-026**: Every tab and every accordion group that holds a field drawn as invalid MUST be marked, however deeply the field is nested, whether the tab or group is open or not. The mark MUST be part of the pack's default drawing, with no setting to turn it on.
+- **FR-027**: The mark MUST be visible as daisyUI's error status beside the tab label or group heading, and MUST reach assistive technology as a description of the tab or heading saying that it contains a field with an error. The description is text the pack supplies and is translatable.
+- **FR-028**: A tab or group MUST NOT be marked for an error on a hidden field or for an error that belongs to the form as a whole.
+- **FR-029**: The mark MUST NOT change which tab or group opens, the name a tab or group is announced by, or the data the form submits.
+
 All four (User Stories 1 to 4)
 
 - **FR-017**: Each of these layout objects MUST accept the arguments django-crispy-forms documents for it. An id, extra classes or extra attributes given by the developer MUST appear on the element they describe. An argument with no daisyUI counterpart MUST be accepted without raising.
@@ -176,7 +207,8 @@ All four (User Stories 1 to 4)
 - **FR-022**: Text the pack itself supplies, such as the names of the close and dismiss controls, MUST be translatable. Names and titles supplied by the developer MUST be escaped when drawn.
 - **FR-023**: These layout objects MUST hold any layout object or field the pack can draw, and may be nested in one another.
 - **FR-024**: The demo project MUST gain a Tabs, an Accordion, a Modal and an Alert page in its Layout objects group, each with a live example. The Tabs, Accordion and Modal examples MUST let a visitor send invalid data and see the right one open. The Modal example MUST include a control that opens the modal.
-- **FR-025**: The README's public surface MUST list the six layout objects as supported, say how a host project opens a modal, and carry the note on alert content from FR-016.
+- **FR-025**: The README's public surface MUST list the six layout objects as supported, say how a host project opens a modal, carry the note on alert content from FR-016, and describe the marks of FR-026 to FR-028.
+- **FR-030**: The demo project MUST show a form that arrives with errors in two tabs and two accordion groups, with no submit needed.
 
 ## Success Criteria *(mandatory)*
 
@@ -188,10 +220,11 @@ All four (User Stories 1 to 4)
 - **SC-004**: A form laid out with any of the four submits the same field data as the same form laid out without them.
 - **SC-005**: With this feature and the layout objects from issues #7 and #8, no layout object django-crispy-forms ships is left without a drawing in the pack.
 - **SC-006**: A developer can open one demo page per layout object, four in all, and in the examples on three of them produce the error case in under a minute.
+- **SC-007**: When a submitted form comes back with field errors in several tabs or groups, a person can tell which ones hold an error without opening any of them, by sight or with a screen reader.
 
 ## Assumptions
 
-- A person can have errors in more than one tab or group. They see the first, fix it and submit again. Marking every tab or group that holds an error is not part of this feature. Issue #46 asks whether it should be added.
+- A tab or group is counted as holding an error when a field drawn inside it reports itself invalid to assistive technology. This is the same test that opens a modal (FR-012), so a field error the helper does not show still counts, and an error on a hidden field, which has no input to mark, does not.
 - The rule for which tab or group opens lives in django-crispy-forms' Python classes. The pack draws the state those classes give it and adds no rule of its own, except for the modal in FR-012, where django-crispy-forms has none.
 - An alert's colour is chosen by passing one of daisyUI's alert modifiers as an extra class. A first-class Python option for size, colour and variant belongs to issue #11.
 - The pack's interactive pieces do not all have to work under a Content Security Policy that forbids inline script. Under one, the modal's close button and the alert's dismiss button are drawn and do nothing, and tabs and the accordion are unaffected. Issue #47 asked, and ADR 0041 records the answer and what a host project with such a policy does.

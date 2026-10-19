@@ -301,3 +301,96 @@ class TestTabHolderSubmission:
             if control.has_attr("name") and not control.has_attr("form")
         }
         assert submitted == FORM_CONTROLS
+
+
+def marked(soup):
+    return [radio for radio in radios(soup) if radio.has_attr("aria-describedby")]
+
+
+def marker_of(radio):
+    return content_of(radio).find_next_sibling()
+
+
+class TestTabHolderErrorMarker:
+    def test_every_tab_holding_an_error_is_marked(self, draw):
+        form = StructureForm(data_without("second", "third"), layout=[three_tabs()])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert labels_of(marked(soup)) == ["Two", "Three"]
+
+    def test_a_marked_tab_is_described_by_hidden_text(self, draw):
+        form = StructureForm(data_without("second", "third"), layout=[three_tabs()])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        descriptions = [
+            soup.find(id=radio["aria-describedby"]) for radio in marked(soup)
+        ]
+        assert len({description["id"] for description in descriptions}) == 2
+        for description in descriptions:
+            assert description.has_attr("hidden")
+            assert description.get_text(strip=True)
+
+    def test_a_marked_tab_shows_an_error_status_after_its_content(self, draw):
+        form = StructureForm(data_without("second", "third"), layout=[three_tabs()])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        for radio in marked(soup):
+            marker = marker_of(radio)
+            assert "indicator" in marker["class"]
+            status = marker.find(class_="indicator-item")
+            assert {"status", "status-error"} <= set(status["class"])
+            assert status["aria-hidden"] == "true"
+
+    def test_a_tab_without_an_error_carries_no_marker(self, draw):
+        form = StructureForm(data_without("second"), layout=[three_tabs()])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert labels_of(marked(soup)) == ["Two"]
+        assert soup.find_all(class_="status") == [marker_of(marked(soup)[0]).span]
+
+    @pytest.mark.parametrize("bound", [False, True], ids=["unbound", "valid"])
+    def test_a_form_without_field_errors_marks_no_tab(self, draw, bound):
+        form = StructureForm(FIELDS if bound else None, layout=[three_tabs()])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert marked(soup) == []
+        assert soup.find(class_="status") is None
+
+    def test_a_form_wide_error_alone_marks_no_tab(self, draw):
+        form = StructureWideErrorForm(FIELDS, layout=[three_tabs()])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert marked(soup) == []
+
+    def test_an_error_on_a_hidden_field_marks_no_tab(self, draw):
+        form = StructureHiddenForm(
+            FIELDS,
+            layout=[TabHolder(Tab("One", "first"), Tab("Two", "second", "token"))],
+        )
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert marked(soup) == []
+
+    def test_an_error_in_a_nested_holder_marks_the_inner_and_outer_tab(self, draw):
+        inner = TabHolder(Tab("Inner one", "first"), Tab("Inner two", "second"))
+        outer = TabHolder(Tab("Outer one", "third", inner), Tab("Outer two", "fourth"))
+        form = StructureForm(data_without("second"), layout=[outer])
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert labels_of(marked(soup)) == ["Outer one", "Inner two"]
+
+    def test_a_tab_is_marked_when_the_helper_does_not_show_errors(self, draw):
+        form = StructureForm(data_without("second"), layout=[three_tabs()])
+        form.helper.form_show_errors = False
+
+        soup = draw("{% crispy form %}", form=form)
+
+        assert labels_of(marked(soup)) == ["Two"]
