@@ -168,6 +168,19 @@ class HorizontalForm(SampleForm):
         label="Profile photo",
         widget=ImageInput(horizontal=True),
         required=False,
+        help_text='The rest sits in the middle, align="middle".',
+    )
+    top = forms.ImageField(
+        label="Cover image",
+        widget=ImageInput(horizontal=True, align="top", show_file_name=True),
+        required=False,
+        help_text='align="top"',
+    )
+    bottom = forms.ImageField(
+        label="Station badge",
+        widget=ImageInput(horizontal=True, align="bottom", height=8),
+        required=False,
+        help_text='align="bottom", height=8',
     )
     avatar = forms.ImageField(
         label="Avatar",
@@ -175,16 +188,40 @@ class HorizontalForm(SampleForm):
         required=False,
         help_text="horizontal=True with show_input=False.",
     )
-    badge = forms.ImageField(
-        label="Station badge",
-        widget=ImageInput(horizontal=True),
-        required=False,
-        help_text="Nothing stored yet.",
-    )
 
     initial_values = {
         "photo": stored("ada-portrait.jpg"),
+        "top": stored("field-season-cover.jpg"),
         "avatar": stored("ada-portrait.jpg"),
+    }
+
+
+class SizesForm(SampleForm):
+    """The same image at three heights."""
+
+    small = forms.ImageField(
+        label="Small",
+        widget=ImageInput(height=4, aspect_ratio=1, horizontal=True),
+        required=False,
+        help_text="height=4",
+    )
+    default = forms.ImageField(
+        label="Default",
+        widget=ImageInput(aspect_ratio=1, horizontal=True),
+        required=False,
+        help_text="height=6, the default",
+    )
+    large = forms.ImageField(
+        label="Large",
+        widget=ImageInput(height=12, aspect_ratio=1, horizontal=True),
+        required=False,
+        help_text="height=12",
+    )
+
+    initial_values = {
+        "small": stored("ada-portrait.jpg"),
+        "default": stored("ada-portrait.jpg"),
+        "large": stored("ada-portrait.jpg"),
     }
 
 
@@ -201,3 +238,16 @@ class SentBackForm(SampleForm):
         """Return the data and files the form is drawn as having been sent."""
         notes = SimpleUploadedFile("notes.txt", b"Not an image.", "text/plain")
         return {}, {"photo": notes}
+
+
+class PickerSentBackForm(SentBackForm):
+    """The same form sent back, with the thumbnails as the pickers."""
+
+    photo = forms.ImageField(
+        label="Profile photo",
+        widget=ImageInput(show_input=False, aspect_ratio=1),
+        required=False,
+    )
+    badge = forms.ImageField(
+        label="Station badge", widget=ImageInput(show_input=False, aspect_ratio=1)
+    )

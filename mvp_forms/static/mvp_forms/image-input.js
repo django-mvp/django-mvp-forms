@@ -23,8 +23,8 @@
       emptyText: find("empty-text"),
       remove: find("remove"),
       status: find("status"),
-      statusText: find("status-text"),
-      undo: find("undo"),
+      actions: find("actions"),
+      revert: find("revert"),
       open: find("open"),
       hint: find("hint"),
     };
@@ -53,10 +53,13 @@
     name(p, false);
   }
 
-  function say(p, message, undo) {
+  // The status line says what is waiting on the form being saved. Reverting is
+  // offered while a chosen file waits; the remove checkbox is its own undo.
+  function say(p, message, revert) {
     p.status.hidden = !message;
-    p.statusText.textContent = message || "";
-    p.undo.hidden = !undo;
+    p.status.textContent = message || "";
+    p.revert.hidden = !revert;
+    p.actions.hidden = !p.remove && !revert;
   }
 
   function release(group) {
@@ -77,7 +80,7 @@
         const url = URL.createObjectURL(file);
         PREVIEWS.set(group, url);
         showImage(p, url);
-        say(p, p.status.dataset.chosen, true);
+        say(p, p.status.dataset.pending, true);
       } else {
         showEmpty(p, p.emptyText.dataset.unreadable);
         say(p, p.status.dataset.unreadable, true);
@@ -90,7 +93,7 @@
       showEmpty(p, p.emptyText.dataset.empty);
     }
     if (p.remove && p.remove.checked) {
-      say(p, p.status.dataset.removed, true);
+      say(p, p.status.dataset.pending, false);
     } else {
       say(p, "", false);
     }
@@ -115,9 +118,9 @@
       parts(open.closest(SELECTOR)).file.click();
       return;
     }
-    const undo = event.target.closest("[data-image-input-undo]");
-    if (!undo) return;
-    const group = undo.closest(SELECTOR);
+    const revert = event.target.closest("[data-image-input-revert]");
+    if (!revert) return;
+    const group = revert.closest(SELECTOR);
     const p = parts(group);
     p.file.value = "";
     if (p.remove) p.remove.checked = false;

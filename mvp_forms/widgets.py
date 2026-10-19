@@ -1092,6 +1092,8 @@ class ImageInput(forms.ClearableFileInput):
         show_input=True,
         show_file_name=False,
         horizontal=False,
+        align="middle",
+        height=6,
     ):
         """Set how the image is shown.
 
@@ -1107,6 +1109,10 @@ class ImageInput(forms.ClearableFileInput):
                 as a link to it.
             horizontal: ``True`` to set the thumbnail beside the rest, where
                 there is room, rather than above it.
+            align: Where the rest sits beside a horizontal thumbnail:
+                ``"top"``, ``"middle"`` or ``"bottom"``.
+            height: The thumbnail's height in rem. Its width follows from the
+                aspect ratio.
 
         Raises:
             ValueError: An option holds a value it cannot take.
@@ -1123,7 +1129,13 @@ class ImageInput(forms.ClearableFileInput):
             ("horizontal", horizontal),
         ):
             Check.one_of(option, value, (True, False))
+        Check.one_of("align", align, ("top", "middle", "bottom"))
+        Check.of_type("height", height, (int, float), "a number")
+        if isinstance(height, bool) or height <= 0:
+            raise ValueError(f"height must be a number above zero, not {height!r}.")
         super().__init__(attrs)
+        self.align = align
+        self.height = height
         self.aspect_ratio = aspect_ratio
         self.show_input = show_input
         self.show_file_name = show_file_name
@@ -1137,6 +1149,10 @@ class ImageInput(forms.ClearableFileInput):
         widget["show_input"] = self.show_input
         widget["show_file_name"] = self.show_file_name
         widget["horizontal"] = self.horizontal
+        widget["align"] = self.align
+        widget["height"] = self.height
+        widget["ratio"] = self.aspect_ratio or 1
+        widget["invalid"] = widget["attrs"].get("aria-invalid") == "true"
         if widget["is_initial"]:
             widget["file_name"] = str(value.name).rsplit("/", 1)[-1]
         return context

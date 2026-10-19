@@ -10,9 +10,11 @@ from demo.examples.custom_widgets.image_input import (
     HorizontalForm,
     NewRecordForm,
     PickerForm,
+    PickerSentBackForm,
     ProfileForm as ImageProfileForm,
     SentBackForm,
     ShapesForm,
+    SizesForm,
     StatesForm,
 )
 from demo.examples.custom_widgets.number_mask import InvoiceForm
@@ -166,6 +168,14 @@ urlpatterns = [
     path(
         "image-input-horizontal/",
         StoredFilesExampleView.as_view(form_class=HorizontalForm),
+    ),
+    path(
+        "image-input-sizes/",
+        StoredFilesExampleView.as_view(form_class=SizesForm),
+    ),
+    path(
+        "image-input-picker-sent-back/",
+        StoredFilesExampleView.as_view(form_class=PickerSentBackForm),
     ),
     path(
         "image-input-sent-back/",

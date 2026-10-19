@@ -28,12 +28,15 @@ with the form's media, and needs nothing else on the page.
 | `show_input` | `True` | `False` leaves out the file input. The thumbnail opens the file picker. |
 | `show_file_name` | `False` | `True` names the stored file above the input, as a link to it. |
 | `horizontal` | `False` | `True` sets the thumbnail beside the input where there is room, and above it where there is not. |
+| `align` | `"middle"` | Where the input and its controls sit beside a horizontal thumbnail: `"top"`, `"middle"` or `"bottom"`. |
+| `height` | `6` | The thumbnail's height in rem. Its width follows from `aspect_ratio`. |
 
 ## A record with pictures
 
-Choose a new file for either image and the thumbnail changes straight away,
-with a line saying it is saved when the form is sent. **Undo** puts the stored
-image back. Tick **Remove image** and the thumbnail fades. Choosing a file and
+Choose a new file for either image and the thumbnail changes straight away.
+**Revert changes** appears beside **Remove image** and puts the stored image
+back. Tick **Remove image** and the thumbnail fades. Either way a line under the
+input says the form must be saved for the change to take effect. Choosing a file and
 removing the image cannot both be asked for, so doing one undoes the other.
 
 The field report is a `FileField`, which keeps the plain clearable file input.
@@ -72,10 +75,21 @@ height and takes the width the shape needs.
 ## Beside the input
 
 `horizontal=True` puts the thumbnail beside the input. On a narrow screen the
-input moves under it.
+input moves under it. `align` sets where the input sits against the thumbnail,
+in the middle unless you say otherwise.
 
 ```{live-example} /examples/image-input-horizontal/
 :title: Thumbnail and input side by side
+
+../../examples/custom_widgets/image_input.py
+```
+
+## Sizes
+
+`height` sets the thumbnail's height in rem.
+
+```{live-example} /examples/image-input-sizes/
+:title: Four, six and twelve rem
 
 ../../examples/custom_widgets/image_input.py
 ```
@@ -111,6 +125,16 @@ form is sent again.
 
 ```{live-example} /examples/image-input-sent-back/
 :title: A file that is not an image, and a required image missing
+
+../../examples/custom_widgets/image_input.py
+../../examples/views.py
+```
+
+The same form with the thumbnails as the pickers. A thumbnail whose field has an
+error takes the error colour on its border, since there is no input to show it.
+
+```{live-example} /examples/image-input-picker-sent-back/
+:title: Sent back, with the thumbnails as the pickers
 
 ../../examples/custom_widgets/image_input.py
 ../../examples/views.py
