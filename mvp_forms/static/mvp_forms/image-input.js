@@ -159,7 +159,7 @@
       const p = parts(group);
       if (p.open) {
         p.open.hidden = false;
-        p.file.classList.add("sr-only");
+        p.file.parentElement.classList.add("sr-only");
         p.file.tabIndex = -1;
       }
       draw(group);

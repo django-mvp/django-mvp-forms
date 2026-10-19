@@ -1069,6 +1069,16 @@ class TomSelectMultiple(TomSelect, forms.SelectMultiple):
         return attrs
 
 
+# daisyUI's masks, written out so that a host project's Tailwind build finds
+# them when it scans this module. A name not listed here is still drawn, and
+# works wherever the host's stylesheet has its class.
+DAISYUI_MASKS = (
+    "mask-squircle mask-heart mask-hexagon mask-hexagon-2 mask-decagon "
+    "mask-pentagon mask-diamond mask-square mask-circle mask-star mask-star-2 "
+    "mask-triangle mask-triangle-2 mask-triangle-3 mask-triangle-4"
+)
+
+
 class ImageInput(forms.ClearableFileInput):
     """A file input for an image that shows the image it holds.
 
@@ -1094,6 +1104,7 @@ class ImageInput(forms.ClearableFileInput):
         horizontal=False,
         align="middle",
         height=6,
+        mask=None,
     ):
         """Set how the image is shown.
 
@@ -1111,8 +1122,11 @@ class ImageInput(forms.ClearableFileInput):
                 there is room, rather than above it.
             align: Where the rest sits beside a horizontal thumbnail:
                 ``"top"``, ``"middle"`` or ``"bottom"``.
-            height: The thumbnail's height in rem. Its width follows from the
-                aspect ratio.
+            height: The thumbnail's height in rem, as a number. Its width
+                follows from the aspect ratio.
+            mask: The name of a daisyUI mask, such as ``"squircle"`` or
+                ``"circle"``, to give the thumbnail that shape. It is drawn
+                with the classes ``mask mask-<name>``.
 
         Raises:
             ValueError: An option holds a value it cannot take.
@@ -1133,7 +1147,10 @@ class ImageInput(forms.ClearableFileInput):
         Check.of_type("height", height, (int, float), "a number")
         if isinstance(height, bool) or height <= 0:
             raise ValueError(f"height must be a number above zero, not {height!r}.")
+        if mask is not None:
+            Check.text("mask", mask)
         super().__init__(attrs)
+        self.mask = mask
         self.align = align
         self.height = height
         self.aspect_ratio = aspect_ratio
@@ -1152,6 +1169,8 @@ class ImageInput(forms.ClearableFileInput):
         widget["align"] = self.align
         widget["height"] = self.height
         widget["ratio"] = self.aspect_ratio or 1
+        widget["mask"] = self.mask
+        widget["mask_class"] = f"mask-{self.mask}" if self.mask else ""
         widget["invalid"] = widget["attrs"].get("aria-invalid") == "true"
         if widget["is_initial"]:
             widget["file_name"] = str(value.name).rsplit("/", 1)[-1]

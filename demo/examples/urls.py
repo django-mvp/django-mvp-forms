@@ -8,6 +8,7 @@ from demo.examples.custom_widgets.counted_select import FieldworkForm
 from demo.examples.custom_widgets.dynamic_mask import PhoneForm as DynamicPhoneForm
 from demo.examples.custom_widgets.image_input import (
     HorizontalForm,
+    MasksForm,
     NewRecordForm,
     PickerForm,
     PickerSentBackForm,
@@ -168,6 +169,10 @@ urlpatterns = [
     path(
         "image-input-horizontal/",
         StoredFilesExampleView.as_view(form_class=HorizontalForm),
+    ),
+    path(
+        "image-input-masks/",
+        StoredFilesExampleView.as_view(form_class=MasksForm),
     ),
     path(
         "image-input-sizes/",

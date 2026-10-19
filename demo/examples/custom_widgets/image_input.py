@@ -225,6 +225,45 @@ class SizesForm(SampleForm):
     }
 
 
+class MasksForm(SampleForm):
+    """Thumbnails cut to daisyUI's mask shapes."""
+
+    squircle = forms.ImageField(
+        label="Squircle",
+        widget=ImageInput(mask="squircle", aspect_ratio=1, horizontal=True),
+        required=False,
+        help_text='mask="squircle"',
+    )
+    circle = forms.ImageField(
+        label="Circle",
+        widget=ImageInput(
+            mask="circle", aspect_ratio=1, horizontal=True, show_input=False
+        ),
+        required=False,
+        help_text='mask="circle", show_input=False',
+    )
+    hexagon = forms.ImageField(
+        label="Hexagon",
+        widget=ImageInput(mask="hexagon", aspect_ratio=1, horizontal=True),
+        required=False,
+        help_text='mask="hexagon"',
+    )
+    empty = forms.ImageField(
+        label="Nothing stored",
+        widget=ImageInput(
+            mask="squircle", aspect_ratio=1, horizontal=True, show_input=False
+        ),
+        required=False,
+        help_text='mask="squircle", show_input=False',
+    )
+
+    initial_values = {
+        "squircle": stored("ada-portrait.jpg"),
+        "circle": stored("ada-portrait.jpg"),
+        "hexagon": stored("field-season-cover.jpg"),
+    }
+
+
 class SentBackForm(SampleForm):
     """A form sent with a file that is not an image, and a required one empty."""
 

@@ -29,7 +29,8 @@ with the form's media, and needs nothing else on the page.
 | `show_file_name` | `False` | `True` names the stored file above the input, as a link to it. |
 | `horizontal` | `False` | `True` sets the thumbnail beside the input where there is room, and above it where there is not. |
 | `align` | `"middle"` | Where the input and its controls sit beside a horizontal thumbnail: `"top"`, `"middle"` or `"bottom"`. |
-| `height` | `6` | The thumbnail's height in rem. Its width follows from `aspect_ratio`. |
+| `height` | `6` | The thumbnail's height, as a number of rem. Its width follows from `aspect_ratio`. |
+| `mask` | none | The name of a daisyUI mask, such as `"squircle"`, `"circle"` or `"hexagon"`. The thumbnail is cut to that shape. |
 
 ## A record with pictures
 
@@ -86,10 +87,34 @@ in the middle unless you say otherwise.
 
 ## Sizes
 
-`height` sets the thumbnail's height in rem.
+`height` is a number of rem. It is written into the thumbnail's own `style`
+attribute as `height: calc(<height> * 1rem)`, next to
+`aspect-ratio: calc(<aspect_ratio>)`, so the browser works the width out from
+the two and no class has to exist for it in your stylesheet. A square thumbnail
+six rem high is the default.
+
+```python
+ImageInput(height=12, aspect_ratio=16 / 9)  # 12rem high, 21.33rem wide
+```
 
 ```{live-example} /examples/image-input-sizes/
 :title: Four, six and twelve rem
+
+../../examples/custom_widgets/image_input.py
+```
+
+## Masks
+
+`mask` names one of daisyUI's
+[masks](https://daisyui.com/components/mask/), and the thumbnail is drawn with
+the classes `mask mask-<name>`. A masked thumbnail has no border, because the
+mask would cut it unevenly. The masks daisyUI has today are written out in the
+package, so a Tailwind build that scans it, as the installation asks, finds
+their classes. A mask daisyUI adds later works as soon as your stylesheet has
+its class.
+
+```{live-example} /examples/image-input-masks/
+:title: A squircle, a circle and a hexagon
 
 ../../examples/custom_widgets/image_input.py
 ```
