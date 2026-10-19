@@ -163,6 +163,10 @@
         p.file.tabIndex = -1;
       }
       draw(group);
+      // A stored image that failed before this script was listening.
+      if (p.preview.getAttribute("src") && p.preview.complete && !p.preview.naturalWidth) {
+        showEmpty(p, p.emptyText.dataset.missing);
+      }
     });
   }
   if (document.readyState === "loading") {

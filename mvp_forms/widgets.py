@@ -1088,8 +1088,8 @@ class ImageInput(forms.ClearableFileInput):
     """
 
     template_name = "mvp_forms/widgets/image.html"
-    clear_checkbox_label = _("Remove image")
-    initial_text = _("Current image")
+    clear_checkbox_label = _("Remove image")  # type: ignore[assignment]
+    initial_text = _("Current image")  # type: ignore[assignment]
 
     class Media:
         js = ["mvp_forms/image-input.js"]

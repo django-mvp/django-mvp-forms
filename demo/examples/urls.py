@@ -12,11 +12,13 @@ from demo.examples.custom_widgets.image_input import (
     NewRecordForm,
     PickerForm,
     PickerSentBackForm,
-    ProfileForm as ImageProfileForm,
     SentBackForm,
     ShapesForm,
     SizesForm,
     StatesForm,
+)
+from demo.examples.custom_widgets.image_input import (
+    ProfileForm as ImageProfileForm,
 )
 from demo.examples.custom_widgets.number_mask import InvoiceForm
 from demo.examples.custom_widgets.partial_date_input import PartDatesForm

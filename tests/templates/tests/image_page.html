@@ -1,0 +1,14 @@
+{% load crispy_forms_tags %}<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Image inputs</title>
+  </head>
+  <body>
+    <form id="images" method="post" enctype="multipart/form-data" action="">
+      {{ form|crispy }}
+      <button type="submit">Send</button>
+    </form>
+    {% if script %}{{ form.media }}{% endif %}
+  </body>
+</html>

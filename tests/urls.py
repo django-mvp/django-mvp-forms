@@ -10,6 +10,7 @@ from django_tomselect.autocompletes import AutocompleteModelView
 
 from demo.urls import urlpatterns as demo_urlpatterns
 from tests.forms import (
+    ImagePageForm,
     MaskedDialogForm,
     MaskedLineFormSet,
     MaskedPageForm,
@@ -84,6 +85,19 @@ class MaskedPage(TemplateView):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
+class ImagePage(TemplateView):
+    """A page of image inputs, drawn by the pack, with or without their script."""
+
+    template_name = "tests/image_page.html"
+    script = True
+
+    def get_context_data(self, **kwargs):
+        """Draw the form."""
+        return super().get_context_data(
+            form=ImagePageForm(), script=self.script, **kwargs
+        )
+
+
 class PartialDatePage(TemplateView):
     """A page of three-part dates, which answers a post with what the form made."""
 
@@ -163,6 +177,8 @@ class ChoicesPage(TemplateView):
 urlpatterns = [
     path("autocomplete/groups/", GroupAutocomplete.as_view(), name="ac-groups"),
     path("masked/", MaskedPage.as_view(), name="masked"),
+    path("images/", ImagePage.as_view(), name="images"),
+    path("images/without-script/", ImagePage.as_view(script=False), name="images-bare"),
     path("dates/", PartialDatePage.as_view(), name="dates"),
     path("dates/three-copies/", PartialDatePage.as_view(copies=3), name="dates-copies"),
     path(

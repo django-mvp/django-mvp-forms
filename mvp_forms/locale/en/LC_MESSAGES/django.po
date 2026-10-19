@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-mvp-forms\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 00:07+0200\n"
+"POT-Creation-Date: 2026-10-19 04:27-0500\n"
 "PO-Revision-Date: 2026-10-03 18:41+0200\n"
 "Last-Translator: django-mvp-forms\n"
 "Language-Team: English\n"
@@ -114,7 +114,7 @@ msgstr ""
 msgid "Enter the longitude as well as the latitude."
 msgstr ""
 
-#: templates/daisyui/accordion-group.html:5
+#: templates/daisyui/accordion-group.html:2
 #: templates/daisyui/layout/tab-pane.html:9
 msgid "Contains a field with an error"
 msgstr ""
@@ -125,6 +125,40 @@ msgstr ""
 
 #: templates/daisyui/layout/modal.html:7
 msgid "Close"
+msgstr ""
+
+#: templates/mvp_forms/widgets/image.html:3
+#: templates/mvp_forms/widgets/image.html:11
+msgid "Change image"
+msgstr ""
+
+#: templates/mvp_forms/widgets/image.html:3
+#: templates/mvp_forms/widgets/image.html:8
+msgid "Add image"
+msgstr ""
+
+#: templates/mvp_forms/widgets/image.html:8
+msgid "No image"
+msgstr ""
+
+#: templates/mvp_forms/widgets/image.html:8
+msgid "Image not found"
+msgstr ""
+
+#: templates/mvp_forms/widgets/image.html:8
+msgid "No preview"
+msgstr ""
+
+#: templates/mvp_forms/widgets/image.html:27
+msgid "Revert changes"
+msgstr ""
+
+#: templates/mvp_forms/widgets/image.html:30
+msgid "You must save this form for changes to take effect."
+msgstr ""
+
+#: templates/mvp_forms/widgets/image.html:31
+msgid "This file cannot be shown as an image."
 msgstr ""
 
 #: templatetags/daisyui.py:33 widgets.py:845 widgets.py:846 widgets.py:900
@@ -162,4 +196,12 @@ msgstr ""
 
 #: widgets.py:1048
 msgid "selected"
+msgstr ""
+
+#: widgets.py:1091
+msgid "Remove image"
+msgstr ""
+
+#: widgets.py:1092
+msgid "Current image"
 msgstr ""

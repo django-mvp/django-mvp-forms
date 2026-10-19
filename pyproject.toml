@@ -168,4 +168,5 @@ non-mirror-paths = [
   "tests/test_coordinates_e2e.py",
   "tests/test_partial_date_e2e.py",
   "tests/test_tomselect_e2e.py",
+  "tests/test_image_input_e2e.py",
 ]

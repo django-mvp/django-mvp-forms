@@ -8,7 +8,7 @@
         <span data-image-input-empty-text data-empty="{% if widget.show_input %}{% translate 'No image' %}{% else %}{% translate 'Add image' %}{% endif %}" data-missing="{% translate 'Image not found' %}" data-unreadable="{% translate 'No preview' %}">{% if widget.show_input %}{% translate "No image" %}{% else %}{% translate "Add image" %}{% endif %}</span>
       </div>
       {% if not widget.show_input %}
-        <span class="absolute inset-x-0 bottom-0 bg-neutral py-1 text-center text-xs text-neutral-content opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"{% if not widget.is_initial %} hidden{% endif %} aria-hidden="true" data-image-input-hint>{% translate "Change image" %}</span>
+        <span class="absolute inset-x-0 bottom-0 bg-base-100 py-1 text-center text-xs text-base-content opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"{% if not widget.is_initial %} hidden{% endif %} aria-hidden="true" data-image-input-hint>{% translate "Change image" %}</span>
       {% endif %}
     </div>
   {% if widget.show_input %}</div>{% else %}</button>{% endif %}
@@ -24,7 +24,7 @@
           {{ widget.clear_checkbox_label }}
         </label>
       {% endif %}
-      <button type="button" class="link link-primary text-sm" hidden data-image-input-revert>{% translate "Revert changes" %}</button>
+      <button type="button" class="link text-sm" hidden data-image-input-revert>{% translate "Revert changes" %}</button>
     </div>
     <p class="text-sm text-base-content" aria-live="polite" hidden data-image-input-status
        data-pending="{% translate 'You must save this form for changes to take effect.' %}"

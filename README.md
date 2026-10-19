@@ -176,7 +176,7 @@ These inputs are drawn as daisyUI components, whichever way crispy-forms is aske
 - `Select`, `SelectMultiple` and `NullBooleanSelect`, and selects with named groups, as `select`, and the three selects of a date drawn by `SelectDateWidget`, each named by an `aria-label` of Year, Month or Day unless the widget carries an `aria-label` of its own. The part is read from the end of the select's name, so a subclass that renames `year_field`, `month_field` or `day_field` names its own selects
 - `CheckboxInput`, as `checkbox`, inside its own label, with `checkbox-error` when invalid
 - `RadioSelect`, as a group of `radio` inputs, and `CheckboxSelectMultiple`, as a group of `checkbox` inputs: each option is an input inside a label of its own, tied to it by `for`, with `radio-error` or `checkbox-error` when invalid. Choices with named groups sit under their name in a nested `<fieldset>`, and an attribute a widget sets on one option stays on that option. A required checkbox group does not mark its options `required`, since that would demand all of them
-- `FileInput` and `ClearableFileInput`, as `file-input`, with `file-input-error` when invalid. A `ClearableFileInput` whose field holds a file shows a link to it, and, when the field is optional, a removal checkbox in a label of its own; a required field offers no removal and its input is not `required`, so it can be submitted without choosing another file. A widget that allows several files keeps `multiple`
+- `FileInput` and `ClearableFileInput`, as `file-input`, with `file-input-error` when invalid. A `ClearableFileInput` whose field holds a file shows a link to it, and, when the field is optional, a removal checkbox in a label of its own; a required field offers no removal and its input is not `required`, so it can be submitted without choosing another file. A widget that allows several files keeps `multiple`. An image field given `ImageInput` shows its image, as [Image input](#image-input) describes.
 - `HiddenInput` and `MultipleHiddenInput`, as `<input type="hidden">` and nothing around it, which is described below
 - the parts of a `MultiWidget`, each as the component of its own kind, so a `SplitDateTimeField` is two `input` elements. A part that is hidden has no class
 
@@ -1108,6 +1108,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/widgets/rating.html` | A field drawn as a rating: the element that holds the stars and one radio input for each choice, where `widget` also holds `rating_class`, the classes of that element, and `inputs`, the choices in the order they are drawn, the one that clears the rating first. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/select_date.html` | A date drawn by `SelectDateWidget`: a select for each part of the date, side by side. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/partial_date.html` | A partial date drawn by `PartialDateInput` or `PartialDateSelect`: one element that holds a year, a month and a day side by side, each a part of one field. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/image.html` | An image field drawn by `ImageInput`: a thumbnail of the stored image, the file input or, with `show_input=False`, a button over the thumbnail that opens the file picker, the removal checkbox of an optional field, a revert button and a status line, each carrying the `data-image-input-` hook its script reads. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/point.html` | A point drawn by `PointInput`: a latitude input and a longitude input, each inside its own daisyUI `input` frame that shows its name before it. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
@@ -2237,6 +2238,64 @@ class SiteForm(forms.ModelForm):
 ```
 
 The form's own `PointField` in `django.contrib.gis.forms` has the same name and cleans to a GEOS point, so a form that imports both renames one on import. A model's `PointField` takes either, so saving is the same.
+
+### Image input
+
+`ImageInput` draws an image field with its image. The stored image is a thumbnail, and a file the person chooses takes its place before the form is sent. It is chosen by name: the pack draws an `ImageField` with a plain clearable file input unless the field is given this widget, and a `FileField` always keeps that input.
+
+This is the public surface:
+
+- `mvp_forms.widgets.ImageInput`
+- the template `mvp_forms/widgets/image.html` and the script `mvp_forms/image-input.js`
+
+```python
+from django import forms
+
+from mvp_forms.widgets import ImageInput
+
+from .models import Profile
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ["photo", "banner"]
+        widgets = {
+            "photo": ImageInput(show_input=False, aspect_ratio=1, mask="circle"),
+            "banner": ImageInput(aspect_ratio=3, horizontal=True),
+        }
+```
+
+#### Options
+
+`ImageInput(attrs=None, *, aspect_ratio=None, height=6, mask=None, show_input=True, show_file_name=False, horizontal=False, align="middle")`. Every option is keyword-only, and a value an option cannot take raises a `ValueError` that names it when the widget is made.
+
+| Option | Takes | What it does |
+|---|---|---|
+| `aspect_ratio` | a number above zero, such as `1`, `3` or `16 / 9` | The thumbnail's width over its height. The image fills it, cropped as the site would show it. With none the thumbnail is square and the whole image is shown inside it, never enlarged past its own size. |
+| `height` | a number above zero | The thumbnail's height in rem. |
+| `mask` | the name of a daisyUI mask, such as `"squircle"`, `"circle"` or `"hexagon"` | Adds the classes `mask` and `mask-<name>` to the thumbnail, which drops its border. |
+| `show_input` | `True` or `False` | `False` leaves the file input out of sight: the thumbnail is a button, named for the field, that opens the file picker. An empty one reads "Add image", and a stored image shows "Change image" over it while the pointer or the focus is on it. |
+| `show_file_name` | `True` or `False` | `True` shows the stored file's name, without the folders it is stored in, as a link to the file. |
+| `horizontal` | `True` or `False` | `True` sets the thumbnail beside the input where there is room, and the input under it where there is not. With `False` the thumbnail is always above. |
+| `align` | `"top"`, `"middle"` or `"bottom"` | Where the input and its controls sit beside a horizontal thumbnail. |
+
+`height` and `aspect_ratio` are written into the thumbnail's own `style` attribute, as `height: calc(<height> * 1rem); aspect-ratio: calc(<aspect_ratio>)`, and the browser works out the width from the two. No class has to exist in your stylesheet for any size or shape.
+
+The mask classes daisyUI has today are written out in `mvp_forms/widgets.py`, so a Tailwind build that scans the package, as [Installation](#installation) asks, finds them. A name daisyUI adds later is drawn the same way, and works once your stylesheet has its class.
+
+#### What the person sees
+
+- The stored image, with the field's label as its alternative text. A field holding nothing shows a placeholder, and a stored file that will not load is shown as missing rather than as a broken image.
+- An optional field holding an image keeps the removal checkbox of a clearable file input, labelled "Remove image", which takes the size and colour stated for the form. A required field has none.
+- Choosing an image shows it in the thumbnail and offers "Revert changes", which puts the stored image back and empties the input. A file that is not an image is not previewed, and the person is told it cannot be shown as one. The field still validates what is sent.
+- Ticking "Remove image" drops a chosen file and fades the thumbnail. Choosing a file unticks it, since Django refuses a form that asks for both.
+- While a change waits, a line under the input says the form must be saved for it to take effect. It is announced politely to assistive technology.
+- An error on the field marks the file input invalid, as for any file input. With `show_input=False` the thumbnail's border takes the error colour instead.
+
+#### What the script does
+
+`mvp_forms/image-input.js` comes with the form's media, needs nothing else on the page and acts once however often the page includes it. It listens on the document, so an image input added later, by a formset or by htmx, is covered with nothing to call. Without it the stored image, the file input and the removal checkbox all work, and only the preview, the revert button, the status line and the thumbnail as a picker are missing.
 
 ### Themes
 

@@ -146,6 +146,7 @@ class TestRendererRoute:
             "daisyui/widgets/select_date.html",
             "daisyui/widgets/clearable_file_input.html",
             "daisyui/widgets/rating.html",
+            "mvp_forms/widgets/image.html",
             "mvp_forms/widgets/partial_date.html",
             "mvp_forms/widgets/point.html",
         }
