@@ -25,7 +25,7 @@ from mvp_forms.choices import (
     write_size,
 )
 from mvp_forms.deprecation import host_template
-from mvp_forms.layout import InvalidMember
+from mvp_forms.layout import InvalidMember, Join
 
 register = template.Library()
 
@@ -932,6 +932,8 @@ class DrawnButton:
         choices: The form's statement of size, colour and variant, if any.
         placed: The ``Choice`` of a layout around the button, if any. It wins
             over the form's statement for this button.
+        joined: Whether the button is drawn in a ``Join``, which adds
+            ``join-item`` to its classes.
 
     Raises:
         InvalidChoice: A size, colour or variant stated for the form or the
@@ -948,9 +950,13 @@ class DrawnButton:
         button: Any,
         choices: FormChoices | None = None,
         placed: Choice | None = None,
+        joined: bool = False,
     ) -> None:
         self.button = button
+        # The classes the pack adds: the choices', then join-item in a Join.
         self.modifiers = self.resolve_modifiers(choices or FormChoices(), placed)
+        if joined:
+            self.modifiers.append("join-item")
 
     def resolve_modifiers(
         self, choices: FormChoices, placed: Choice | None
@@ -1011,7 +1017,7 @@ class DrawnButton:
 
     @property
     def css_class(self) -> str:
-        """The classes of an ``<input>`` button: its own, then the choices.
+        """The classes of an ``<input>`` button: its own, then the pack's.
 
         The colour a ``Submit`` is given by default is left out when a colour
         resolved, so that one colour is written. The same class given by the
@@ -1029,10 +1035,10 @@ class DrawnButton:
 
     @property
     def flat_attrs(self) -> str:
-        """The attributes of a ``StrictButton``, with the choices in its classes.
+        """The attributes of a ``StrictButton``, with the pack's in its classes.
 
-        The string is returned as django-crispy-forms wrote it when there are
-        no choices. Otherwise they are added inside the ``class`` attribute,
+        The string is returned as django-crispy-forms wrote it when the pack
+        adds no class. Otherwise they are added inside the ``class`` attribute,
         found by its leading space so that an attribute whose name ends in
         ``class`` is left alone.
         """
@@ -1073,6 +1079,7 @@ def daisyui_button(context: Context, button: Any) -> DrawnButton:
         button,
         choices=FormChoices.lookup(context),
         placed=placed if isinstance(placed, Choice) else None,
+        joined=isinstance(context.get(Join.context_name), Join),
     )
 
 

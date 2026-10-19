@@ -1,5 +1,7 @@
 """The size, colour, variant, drawing and label a form states, and what they mean."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from enum import Enum
 from typing import Any, ClassVar, cast
 
@@ -433,6 +435,28 @@ class Choice(LayoutObject):
         self.drawing = drawing
         self.label = label
 
+    @staticmethod
+    @contextmanager
+    def placed_in(context: Context, values: dict[str, Any]) -> Iterator[None]:
+        """Push a layer of values onto a context while a layout object is drawn.
+
+        django-crispy-forms leaves layers of its own on top of the context while
+        it draws, so the layer is removed by identity and never by popping the
+        top.
+
+        Args:
+            context: The template context.
+            values: The names and values the layer holds.
+        """
+        layer = context.push(values)
+        try:
+            yield
+        finally:
+            for index in range(len(context.dicts) - 1, -1, -1):
+                if context.dicts[index] is layer:
+                    del context.dicts[index]
+                    break
+
     def over(self, outer: "Choice") -> "Choice":
         """Return this choice merged over an outer one, each kind separately.
 
@@ -460,10 +484,6 @@ class Choice(LayoutObject):
     ) -> SafeString:
         """Draw what the choice holds, with the choice placed in the context.
 
-        django-crispy-forms leaves layers of its own on top of the context while
-        it draws, so the layer pushed here is removed by identity and never by
-        popping the top.
-
         Args:
             form: The form being drawn.
             context: The template context.
@@ -479,19 +499,13 @@ class Choice(LayoutObject):
         """
         outer = context.get(self.context_name)
         placed = self.over(outer) if isinstance(outer, Choice) else self
-        layer = context.push({self.context_name: placed})
-        try:
+        with self.placed_in(context, {self.context_name: placed}):
             drawn: SafeString = self.get_rendered_fields(
                 form, context, template_pack, **kwargs
             )
-            if placed.size is INHERIT:
-                return drawn
-            return cast(SafeString, write_size(drawn, placed.size))
-        finally:
-            for index in range(len(context.dicts) - 1, -1, -1):
-                if context.dicts[index] is layer:
-                    del context.dicts[index]
-                    break
+        if placed.size is INHERIT:
+            return drawn
+        return cast(SafeString, write_size(drawn, placed.size))
 
 
 class FormChoices:
