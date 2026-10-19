@@ -423,6 +423,30 @@ class TestTheSettings:
         assert page.evaluate(items) == ["a", "c"]
 
 
+class TestTheClearButtonWithTheStylesheet:
+    @pytest.mark.parametrize(
+        "name",
+        [
+            pytest.param("place", id="django-tomselect"),
+            pytest.param("clearable", id="tom-select-widget"),
+        ],
+    )
+    def test_tab_from_the_input_reaches_a_button_that_can_be_seen(
+        self, choices_page, name
+    ):
+        page = choices_page("choices-page-styled")
+        page.locator(f"#id_{name}-ts-control").focus()
+        wrapper = page.locator(f"#id_{name} + .ts-wrapper")
+        expect(wrapper).to_have_class(re.compile(r"\bfocus\b"))
+
+        page.keyboard.press("Tab")
+
+        button = wrapper.locator(".clear-button")
+        expect(button).to_be_focused()
+        expect(button).to_have_css("opacity", "1")
+        expect(button).not_to_have_css("outline-style", "none")
+
+
 class TestACountedControl:
     def test_it_is_started_with_both_of_its_plugins(self, choices_page, script_errors):
         page = choices_page()

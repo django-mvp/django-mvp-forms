@@ -214,5 +214,14 @@ urlpatterns = [
         ChoicesPage.as_view(refused=True),
         name="choices-page-refused",
     ),
+    path(
+        "choices-page/styled/",
+        ChoicesPage.as_view(
+            template_name="tests/tomselect_styled_page.html",
+            tomselect_url=DJANGO_TOMSELECT_URL,
+            foreign=True,
+        ),
+        name="choices-page-styled",
+    ),
     *demo_urlpatterns,
 ]

@@ -1,0 +1,19 @@
+{% load static %}<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tom Select widgets with the package's stylesheet</title>
+    {# The one theme colour the rules under test read, as daisyUI would set it. #}
+    <style>:root { --color-base-content: oklch(27% 0.033 256); }</style>
+    <link rel="stylesheet" href="{% static 'mvp_forms/tomselect.css' %}">
+    {# django-tomselect starts each control where it is drawn, so its script comes first. #}
+    <script src="{{ tomselect_url }}"></script>
+  </head>
+  <body>
+    <form id="page" method="post" action="">
+      {{ form.as_div }}
+      {{ foreign.as_div }}
+    </form>
+    {{ form.media }}
+  </body>
+</html>
