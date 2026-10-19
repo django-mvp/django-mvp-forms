@@ -24,12 +24,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A `Join` can hold buttons as well as fields, so a select, a text input and a button can be drawn as one piece, such as a search bar. A `StrictButton`, `Submit`, `Button` or `Reset` sits in the join in the place you give it, is drawn as it is anywhere else and carries `join-item`. It takes the form's `size`, `button_color` and `button_variant`, and a `Choice` around the group or around the button, as the buttons of a `FieldWithButtons` do, and keeps your own class, id and attributes. The fields of a group are drawn as before, with or without buttons. `Join.contents()` returns the members and the buttons in order, each button as the new `GroupButton`. A `Hidden` in a group still raises `InvalidMember`. The demo's "Joined groups" page gains a search bar.
 - When a form comes back with errors, every tab label and every accordion group heading that holds a field with an error is marked, so a person sees all of them at once and not only the one that opened. The mark is daisyUI's error status dot, and assistive technology hears that the tab or group contains a field with an error. It is drawn by default, with nothing to turn on, and does not change which tab or group opens. An error on a hidden field or a form-wide error marks nothing.
 - The demo's Tabs page gains a form that arrives with errors in two tabs and two accordion groups.
 
 ### Changed
 
+- An empty required field with a floating label now shows the required marker after the label's text in its placeholder, as in `Email *`, so someone looking over an empty form can see which fields are required. The marker moves to the label once it floats and is never shown twice. A placeholder set on the widget is kept as written.
 - Two of the pack's template tags, `daisyui_field` and `daisyui_button`, are now public: a rename keeps the old name working for one minor version, as a template path does. Every other tag and filter in `daisyui`, such as `daisyui_layout_object` or `daisyui_classes`, is internal and can change in any release, so a replacement template that calls one may need changing when you upgrade. The README's new section "The template tags a replacement calls" lists both.
+
+### Fixed
+
+- `mvp_forms/tomselect.css` shows the clear button of a Tom Select control, with a focus ring, while the keyboard is on it. Tom Select and django-tomselect both make the button a stop that Tab reaches from the control's input, and the stylesheet drew it invisible there, whether django-tomselect or this package's Tom Select widgets built the control.
 
 ## [v0.5.0] - 2026-10-18
 
