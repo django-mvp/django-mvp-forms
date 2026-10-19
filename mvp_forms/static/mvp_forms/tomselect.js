@@ -45,9 +45,26 @@
     // Help text and errors stay tied to the input that takes focus.
     const described = select.getAttribute("aria-describedby");
     if (described) control.control_input.setAttribute("aria-describedby", described);
+    // A select drawn with no label above it is named by its own aria-label,
+    // which the input that takes focus carries too.
+    const named = select.getAttribute("aria-label");
+    if (named && !control.control_input.hasAttribute("aria-labelledby")) {
+      control.control_input.setAttribute("aria-label", named);
+    }
     WORDS.forEach(function (name) {
       if (name in select.dataset) control.control.dataset[name] = select.dataset[name];
     });
+    // In a frame that holds text before or after the control, a press on the
+    // text opens the control, as a press on a label opens a stock select.
+    const frame = select.parentElement;
+    if (frame && frame.classList.contains("select")) {
+      frame.addEventListener("mousedown", function (event) {
+        if (control.wrapper.contains(event.target) || control.isDisabled) return;
+        event.preventDefault();
+        control.focus();
+        control.open();
+      });
+    }
     select.dispatchEvent(
       new CustomEvent(EVENT, { bubbles: true, detail: { tomselect: control } }),
     );

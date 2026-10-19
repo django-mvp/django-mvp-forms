@@ -5,11 +5,11 @@
     {{ drawn.render }}{{ field.label }}{% include "daisyui/required_marker.html" %}
   </label>
 {% elif drawn.has_attached_text %}
-  <label class="{{ drawn.attached_class }}">
+  <{{ drawn.attached_tag }} class="{{ drawn.attached_class }}">
     {% if drawn.prepended %}<span class="label text-base-content">{{ drawn.prepended|safe }}</span>{% endif %}
     {{ drawn.render }}
     {% if drawn.appended %}<span class="label text-base-content">{{ drawn.appended|safe }}</span>{% endif %}
-  </label>
+  </{{ drawn.attached_tag }}>
 {% elif drawn.is_floating %}
   <label{% if field.id_for_label %} for="{{ field.id_for_label }}"{% endif %} class="floating-label">
     <span>{{ field.label }}{% include "daisyui/required_marker.html" %}</span>

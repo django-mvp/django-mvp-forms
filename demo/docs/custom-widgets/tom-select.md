@@ -54,3 +54,28 @@ Untick every discipline and send the form to see the field in error. Search the
 countries in the list and pick a few, then clear them with the button. A screen
 reader is told each chosen value by name. Backspace in an empty search box
 removes the value chosen last, as it does in any Tom Select control.
+
+## In a row of filters
+
+A form that draws no labels, with `form_show_labels = False`, still names every
+field. An input shows its label as its placeholder, and a select shows it inside
+its frame, before the value. A counted control reads "Category" and then "2
+selected", so a row of them can still be told apart once something is chosen.
+A Tom Select control, a counted one and a stock select are all drawn this way.
+
+```{live-example} /examples/filter-toolbar/
+:title: Filters above a list of sites
+
+../../examples/custom_widgets/filter_toolbar.py
+```
+
+The same row with a value chosen in every filter:
+
+```{live-example} /examples/filter-toolbar-chosen/
+:title: Filters with values chosen
+
+../../examples/custom_widgets/filter_toolbar.py
+```
+
+Pressing the label opens the control. A screen reader hears the field's label
+as the control's name, chosen or not.

@@ -711,6 +711,76 @@ class PointInput(forms.MultiWidget):
             )
 
 
+class RangeInput(forms.MultiWidget):
+    """A low and a high number, drawn side by side as one field.
+
+    Each end is drawn inside its own daisyUI ``input`` frame, a ``<label>`` that
+    shows the end's name before it. Either end may be left empty. The value is a
+    pair, or a ``slice`` as django-filter's range fields give it.
+    """
+
+    template_name = "mvp_forms/widgets/range.html"
+    ends = (_("Min"), _("Max"))
+
+    def __init__(self, attrs=None):
+        """Build the two ends.
+
+        Args:
+            attrs: HTML attributes for both ends.
+        """
+        super().__init__([self.end({"aria-label": name}) for name in self.ends], attrs)
+
+    def end(self, attrs):
+        """Return the input for one end."""
+        return forms.NumberInput(attrs)
+
+    def get_context(self, name, value, attrs):
+        """Move each end's classes onto the frame drawn around it."""
+        context = super().get_context(name, value, attrs)
+        for part in context["widget"]["subwidgets"]:
+            part["frame_class"] = part["attrs"].pop("class", "")
+            part["frame_name"] = part["attrs"].get("aria-label", "")
+        return context
+
+    def decompress(self, value):
+        """Split a range into its low and its high end.
+
+        Args:
+            value: A pair, a ``slice``, or ``None``.
+
+        Returns:
+            The two ends, either of which may be ``None``.
+        """
+        if value is None:
+            return [None, None]
+        if isinstance(value, slice):
+            return [value.start, value.stop]
+        low, high = value
+        return [low, high]
+
+
+class DateRangeInput(RangeInput):
+    """A from date and a to date, drawn side by side as one field."""
+
+    ends = (_("From"), _("To"))
+
+    def end(self, attrs):
+        """Return a date input for one end."""
+        return forms.DateInput({"type": "date", **attrs}, format="%Y-%m-%d")
+
+
+class DateTimeRangeInput(RangeInput):
+    """A from date and time and a to date and time, drawn as one field."""
+
+    ends = (_("From"), _("To"))
+
+    def end(self, attrs):
+        """Return a date and time input for one end."""
+        return forms.DateTimeInput(
+            {"type": "datetime-local", **attrs}, format="%Y-%m-%dT%H:%M"
+        )
+
+
 class DynamicMaskInput(MaskInput):
     """A list of masks, from which IMask applies the one that fits best."""
 

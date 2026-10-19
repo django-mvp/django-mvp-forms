@@ -60,6 +60,7 @@ custom-widgets/partial-date-widgets
 custom-widgets/input-masks
 custom-widgets/tom-select
 custom-widgets/image-input
+custom-widgets/range-inputs
 ```
 
 ```{toctree}
