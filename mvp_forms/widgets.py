@@ -722,21 +722,37 @@ class RangeInput(forms.MultiWidget):
     template_name = "mvp_forms/widgets/range.html"
     ends = (_("Min"), _("Max"))
 
-    def __init__(self, attrs=None, *, joined=None):
+    def __init__(self, attrs=None, *, joined=None, compact=None, separator=None):
         """Build the two ends.
 
         Args:
             attrs: HTML attributes for both ends.
             joined: ``True`` to draw the two ends as one daisyUI join, in one
                 row at every width.
+            compact: ``True`` to draw both ends in one input frame, with the
+                separator between them and the ends' names as placeholders.
+            separator: The text between the ends of a compact range. A lazy
+                translation is read when the field is drawn. An en dash by
+                default.
 
         Raises:
-            ValueError: ``joined`` is neither ``True`` nor ``False``.
+            ValueError: A setting holds a value that cannot be right, or two
+                settings cannot be used together. The message names them.
         """
-        if joined is not None:
-            Check.one_of("joined", joined, (True, False))
+        for option, setting in (("joined", joined), ("compact", compact)):
+            if setting is not None:
+                Check.one_of(option, setting, (True, False))
+        if joined and compact:
+            raise ValueError("A range is either joined or compact, not both.")
+        if separator is not None:
+            if not compact:
+                raise ValueError("separator is used only with compact=True.")
+            if not isinstance(separator, Promise):
+                Check.text("separator", separator)
         super().__init__([self.end({"aria-label": name}) for name in self.ends], attrs)
         self.joined = bool(joined)
+        self.compact = bool(compact)
+        self.separator = "\u2013" if separator is None else separator
 
     def end(self, attrs):
         """Return the input for one end."""
@@ -746,11 +762,15 @@ class RangeInput(forms.MultiWidget):
         """Move each end's classes onto the frame drawn around it."""
         context = super().get_context(name, value, attrs)
         context["widget"]["joined"] = self.joined
+        context["widget"]["compact"] = self.compact
+        context["widget"]["separator"] = str(self.separator)
         for part in context["widget"]["subwidgets"]:
             part["frame_class"] = part["attrs"].pop("class", "")
             part["frame_name"] = part["attrs"].get("aria-label", "")
-            if self.joined:
-                # A joined pair stays in one row, so an input may be narrower
+            if self.compact:
+                part["attrs"].setdefault("placeholder", part["frame_name"])
+            if self.joined or self.compact:
+                # A joined or compact pair stays in one row, so an input may be narrower
                 # than a browser would draw it on its own.
                 part["attrs"]["class"] = "w-full min-w-0"
         return context

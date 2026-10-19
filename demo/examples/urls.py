@@ -30,6 +30,7 @@ from demo.examples.custom_widgets.partial_date_mask import MaskedDatesForm
 from demo.examples.custom_widgets.partial_date_select import SelectDatesForm
 from demo.examples.custom_widgets.pattern_mask import ContactForm
 from demo.examples.custom_widgets.range_input import (
+    CompactRangesForm,
     JoinedRangesForm,
     SearchRangesForm,
     SmallRangesForm,
@@ -218,6 +219,7 @@ urlpatterns = [
     path("range-input/", ExampleView.as_view(form_class=SearchRangesForm)),
     path("range-input-small/", ExampleView.as_view(form_class=SmallRangesForm)),
     path("range-input-joined/", ExampleView.as_view(form_class=JoinedRangesForm)),
+    path("range-input-compact/", ExampleView.as_view(form_class=CompactRangesForm)),
     path(
         "django-tomselect/",
         ExampleView.as_view(form_class=ResearchForm, template_name=DJANGO_TOMSELECT),

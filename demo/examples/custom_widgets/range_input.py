@@ -123,3 +123,43 @@ class JoinedRangesForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.attrs = {"novalidate": True}
         self.helper.add_input(Submit("submit", "Search"))
+
+
+class CompactRangesForm(forms.Form):
+    """Each kind of range with both ends in one frame."""
+
+    depth = PairField(
+        forms.DecimalField,
+        RangeInput(compact=True),
+        label="Depth (m)",
+        initial=slice(100, 2500),
+        required=False,
+    )
+    heat_flow = PairField(
+        forms.IntegerField,
+        RangeInput(compact=True),
+        label="Heat flow (mW/m²)",
+        initial=slice(60, None),
+        help_text="Only a low end. The empty end shows its name.",
+        required=False,
+    )
+    measured = PairField(
+        forms.DateField,
+        DateRangeInput(compact=True, separator="to"),
+        label="Measured",
+        help_text="Required, with a word between the ends.",
+    )
+    logged = PairField(
+        forms.DateTimeField,
+        DateTimeRangeInput(compact=True),
+        label="Logged",
+        initial=slice(datetime.datetime(2024, 3, 1, 9, 0), None),
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Add the helper and a submit button."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.add_input(Submit("submit", "Search"))

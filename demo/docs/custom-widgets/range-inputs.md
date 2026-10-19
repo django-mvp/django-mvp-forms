@@ -36,6 +36,23 @@ depth = DepthField(widget=RangeInput(joined=True))
 ../../examples/custom_widgets/range_input.py
 ```
 
+## Compact
+
+`compact=True` draws both ends in one input frame, with a dash between them and
+the ends' names as placeholders. `separator` changes the text between them, such
+as `separator=_("to")`.
+
+```python
+depth = DepthField(widget=RangeInput(compact=True))
+measured = DateRangeField(widget=DateRangeInput(compact=True, separator=_("to")))
+```
+
+```{live-example} /examples/range-input-compact/
+:title: Compact ranges
+
+../../examples/custom_widgets/range_input.py
+```
+
 ## Size and colour
 
 The ends take the form's size and colour, as every other input does.
