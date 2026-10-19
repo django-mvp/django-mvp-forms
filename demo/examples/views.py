@@ -39,3 +39,23 @@ class FormsetExampleView(ExampleView):
         context = super().get_context_data(**kwargs)
         context["helper"] = self.helper_class()
         return context
+
+
+class StoredFilesExampleView(ExampleView):
+    """Draw a form whose fields start out holding the files it names.
+
+    A form with a ``sent`` class method is drawn as if it had just been sent
+    back with what that returns, so its errors show on the first visit.
+    """
+
+    def get_initial(self):
+        """Hand the form the files its fields hold."""
+        return dict(getattr(self.form_class, "initial_values", {}))
+
+    def get_form_kwargs(self):
+        """Bind a form that is shown as sent back, on the first visit too."""
+        kwargs = super().get_form_kwargs()
+        sent = getattr(self.form_class, "sent", None)
+        if sent and self.request.method == "GET":
+            kwargs["data"], kwargs["files"] = sent()
+        return kwargs

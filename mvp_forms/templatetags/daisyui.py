@@ -489,8 +489,10 @@ class FieldInput:
     def widget(self) -> forms.Widget:
         """The widget to draw: the field's own, or one made for this render.
 
-        A widget the pack has a template for is a copy that names it. A rating is
-        a radio group and a range is a copy whose input type is ``range``.
+        A widget the pack has a template for is a copy that names it. A file
+        input is a copy whose context carries what the pack resolved for it. A
+        rating is a radio group and a range is a copy whose input type is
+        ``range``.
         """
         widget: forms.Widget = self.field.field.widget
         if self.drawing == "rating" and isinstance(widget, ChoiceWidget):
@@ -499,13 +501,16 @@ class FieldInput:
             drawn = copy.copy(widget)
             drawn.input_type = "range"
             return drawn
-        if self.template_name:
+        if self.component == "file-input":
+            widget = copy.copy(widget)
+            if self.template_name:
+                widget.template_name = self.template_name
+            widget.get_context = self.file_context(  # type: ignore[method-assign]
+                widget.get_context
+            )
+        elif self.template_name:
             widget = copy.copy(widget)
             widget.template_name = self.template_name
-            if self.removal_modifiers:
-                widget.get_context = self.removal_context(  # type: ignore[method-assign]
-                    widget.get_context
-                )
         elif isinstance(widget, forms.MultiWidget):
             widget = copy.deepcopy(widget)
             for index, part in enumerate(widget.widgets):
@@ -633,26 +638,30 @@ class FieldInput:
         if name and "aria-label" not in part.attrs:
             part.attrs["aria-label"] = name
 
-    def removal_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
-        """Wrap a widget's context so that it names the removal checkbox's classes.
+    def file_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
+        """Wrap a file input's context so that it carries what the pack resolved.
 
         Only the widget's own context reaches its template, so the classes the
-        pack resolved for the checkbox that removes a held file are added there,
-        on the copy of the widget that is drawn.
+        pack resolved for the checkbox that removes a held file, and the field's
+        label as plain text, are added there, on the copy of the widget that is
+        drawn. An image input writes the label as its thumbnail's alternative
+        text.
 
         Args:
             get_context: The copy's own ``get_context``.
 
         Returns:
-            A function that returns the same context with ``removal_class`` set.
+            A function that returns the same context with ``removal_class`` and
+            ``label`` set.
         """
 
-        def with_removal_class(*args: Any, **kwargs: Any) -> dict:
+        def with_resolved(*args: Any, **kwargs: Any) -> dict:
             context = get_context(*args, **kwargs)
             context["widget"]["removal_class"] = " ".join(self.removal_modifiers)
+            context["widget"]["label"] = self.label_text
             return context
 
-        return with_removal_class
+        return with_resolved
 
     @property
     def is_group(self) -> bool:

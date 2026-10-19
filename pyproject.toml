@@ -66,6 +66,7 @@ dev = [
     "django-mvp-sphinx>=0.1.0",
     "sphinx>=8.1",
     "myst-parser>=4.0",
+    "pillow>=13.0.0",
 ]
 
 [tool.uv.sources]
@@ -167,4 +168,5 @@ non-mirror-paths = [
   "tests/test_coordinates_e2e.py",
   "tests/test_partial_date_e2e.py",
   "tests/test_tomselect_e2e.py",
+  "tests/test_image_input_e2e.py",
 ]

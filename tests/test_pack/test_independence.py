@@ -40,6 +40,7 @@ from crispy_forms.layout import (
     Submit,
 )
 from django.apps import apps
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 import mvp_forms
 from mvp_forms.choices import Choice, FormChoices, Modifiers
@@ -59,6 +60,7 @@ from tests.forms import (
     FloatingForm,
     FormWideErrorsForm,
     HelpedForm,
+    ImagesForm,
     InlineCheckboxesForm,
     InlineFieldsForm,
     InlineRadiosForm,
@@ -120,6 +122,42 @@ LAYOUT_UTILITIES = {
     "w-auto",
     "text-wrap",
     "ms-auto",
+    # An image input's thumbnail, the band over a picker and the column beside it.
+    # daisyUI's avatar has no class for any of them (ADR 0060).
+    "absolute",
+    "border",
+    "bottom-0",
+    "break-words",
+    "cursor-pointer",
+    "flex-row",
+    "gap-1",
+    "gap-3",
+    "gap-x-4",
+    "gap-y-1",
+    "group",
+    "group-focus-within:opacity-100",
+    "group-hover:opacity-100",
+    "h-auto",
+    "inset-x-0",
+    "items-center",
+    "items-end",
+    "items-start",
+    "max-h-full",
+    "max-w-full",
+    "min-w-52",
+    "object-contain",
+    "object-cover",
+    "opacity-0",
+    "px-2",
+    "py-1",
+    "relative",
+    "shrink-0",
+    "size-8",
+    "text-center",
+    "text-sm",
+    "text-xs",
+    "transition-opacity",
+    "w-fit",
 }
 
 
@@ -652,6 +690,18 @@ STATES = [
         id="tag without errors",
     ),
     pytest.param(
+        "{% crispy form %}",
+        ImagesForm,
+        NOTHING,
+        id="image inputs",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: ImagesForm({}, {"picked": SimpleUploadedFile("notes.txt", b"text")}),
+        NOTHING,
+        id="image inputs, invalid",
+    ),
+    pytest.param(
         "{{ form|crispy }}",
         lambda: stating(EveryInputForm(), EVERY_CHOICE),
         NOTHING,
@@ -993,6 +1043,7 @@ class TestDistributedFiles:
         )
 
         assert files == [
+            "mvp_forms/image-input.js",
             "mvp_forms/imask.js",
             "mvp_forms/partial-date.js",
             "mvp_forms/tomselect.css",

@@ -1,10 +1,12 @@
 """File fields drawn through django-crispy-forms."""
 
 import pytest
+from crispy_forms.helper import FormHelper
 from django import forms
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from tests.forms import FilesForm
+from mvp_forms.choices import FormChoices
+from tests.forms import FilesForm, ImagesForm
 
 SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
 
@@ -174,3 +176,72 @@ class TestOwnTemplate:
 
         assert "file-input" in drawn["class"]
         assert frame.find("a") is None
+
+
+def stated(form, **statement):
+    form.helper = FormHelper(form)
+    form.helper.form_tag = False
+    form.helper.daisyui = FormChoices(**statement)
+    return form
+
+
+class TestImageInput:
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_thumbnails_alternative_text_is_the_fields_label(self, draw, source):
+        soup = draw(source, form=ImagesForm())
+
+        preview = soup.find(id="div_id_photo").find("img")
+
+        assert preview["alt"] == "Profile photo"
+        assert preview["src"] == "/media/ada.jpg"
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_label_written_as_markup_is_plain_alternative_text(self, draw, source):
+        soup = draw(source, form=ImagesForm())
+
+        assert soup.find(id="div_id_marked").find("img")["alt"] == "Bold & plain"
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_its_file_input_is_the_pack_file_input(self, draw, source):
+        soup = draw(source, form=ImagesForm())
+
+        file_input = soup.find(id="id_photo")
+
+        assert file_input["type"] == "file"
+        assert "file-input" in file_input["class"]
+        assert soup.find("label", attrs={"for": "id_photo"}) is not None
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_field_holding_nothing_offers_no_removal_checkbox(self, draw, source):
+        frame = draw(source, form=ImagesForm()).find(id="div_id_badge")
+
+        assert frame.find("input", attrs={"type": "checkbox"}) is None
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_picker_button_is_named_for_the_field(self, draw, source):
+        soup = draw(source, form=ImagesForm())
+
+        button = soup.find(id="div_id_picked").find(
+            attrs={"data-image-input-open": True}
+        )
+
+        assert button["aria-label"].startswith("Logo")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_an_error_marks_its_file_input_invalid(self, draw, source):
+        form = ImagesForm({}, {"photo": SimpleUploadedFile("notes.txt", b"text")})
+
+        file_input = draw(source, form=form).find(id="id_photo")
+
+        assert form.has_error("photo", code="invalid_image")
+        assert file_input["aria-invalid"] == "true"
+        assert "file-input-error" in file_input["class"]
+
+    def test_the_removal_checkbox_takes_the_size_and_colour(self, draw):
+        form = stated(ImagesForm(), size="lg", color="primary")
+
+        removal = draw("{% crispy form %}", form=form).find(
+            "input", attrs={"name": "photo-clear"}
+        )
+
+        assert set(removal["class"]) == {"checkbox", "checkbox-lg", "checkbox-primary"}
