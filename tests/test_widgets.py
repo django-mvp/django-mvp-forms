@@ -17,6 +17,8 @@ from django.utils.translation import gettext_lazy
 from mvp_forms.fields import LatitudeField, LongitudeField, PartialDateField, PointField
 from mvp_forms.widgets import (
     CoordinateMaskInput,
+    DateRangeInput,
+    DateTimeRangeInput,
     DynamicMaskInput,
     EnumBlock,
     ImageInput,
@@ -28,6 +30,7 @@ from mvp_forms.widgets import (
     PatternMaskInput,
     PointInput,
     RangeBlock,
+    RangeInput,
     RegexMaskInput,
     TomSelect,
     TomSelectMultiple,
@@ -2168,6 +2171,107 @@ def image_input_of(widget, value=None, **attrs):
     """Return the group an image input draws."""
     html = widget.render("photo", value, attrs={"id": "id_photo", **attrs})
     return BeautifulSoup(html, "html.parser").find(attrs={"data-image-input": True})
+
+
+class TestRangeInput:
+    @pytest.mark.parametrize(
+        ("value", "ends"),
+        [
+            (None, [None, None]),
+            ((10, 20), [10, 20]),
+            ([10, None], [10, None]),
+            (slice(10, 20), [10, 20]),
+            (slice(None, 20), [None, 20]),
+        ],
+    )
+    def test_decompress_reads_a_pair_a_slice_or_nothing(self, value, ends):
+        assert RangeInput().decompress(value) == ends
+
+    @pytest.mark.parametrize(
+        ("widget", "kind"),
+        [
+            (RangeInput(), "number"),
+            (DateRangeInput(), "date"),
+            (DateTimeRangeInput(), "datetime-local"),
+        ],
+    )
+    def test_it_draws_two_inputs_of_its_kind(self, widget, kind):
+        soup = BeautifulSoup(widget.render("span", None), "html.parser")
+
+        low, high = soup.find_all("input")
+
+        assert (low["type"], high["type"]) == (kind, kind)
+        assert (low["name"], high["name"]) == ("span_0", "span_1")
+
+    @pytest.mark.parametrize(
+        ("widget", "value", "written"),
+        [
+            (DateRangeInput(), slice(datetime.date(2024, 3, 1), None), "2024-03-01"),
+            (
+                DateTimeRangeInput(),
+                slice(datetime.datetime(2024, 3, 1, 9, 30), None),
+                "2024-03-01T09:30",
+            ),
+        ],
+    )
+    def test_a_date_is_written_as_its_input_reads_it(self, widget, value, written):
+        soup = BeautifulSoup(widget.render("span", value), "html.parser")
+
+        low, high = soup.find_all("input")
+
+        assert low["value"] == written
+        assert not high.has_attr("value")
+
+    def test_each_end_is_named_and_the_names_differ(self):
+        soup = BeautifulSoup(RangeInput().render("span", None), "html.parser")
+
+        low, high = soup.find_all("input")
+
+        assert low["aria-label"]
+        assert low["aria-label"] != high["aria-label"]
+
+    def test_a_compact_range_offers_each_ends_name_as_its_placeholder(self):
+        soup = BeautifulSoup(
+            RangeInput(compact=True).render("span", None), "html.parser"
+        )
+
+        for part in soup.find_all("input"):
+            assert part["placeholder"] == part["aria-label"]
+
+    def test_a_compact_range_writes_its_separator_hidden_from_a_screen_reader(self):
+        soup = BeautifulSoup(
+            DateRangeInput(compact=True, separator="to").render("span", None),
+            "html.parser",
+        )
+
+        separator = soup.find(attrs={"aria-hidden": "true"})
+
+        assert separator.get_text(strip=True) == "to"
+        assert separator.find_previous("input")["name"] == "span_0"
+        assert separator.find_next("input")["name"] == "span_1"
+
+    def test_a_lazy_separator_is_read_when_the_field_is_drawn(self):
+        widget = RangeInput(compact=True, separator=gettext_lazy("to"))
+
+        with translation.override("en"):
+            soup = BeautifulSoup(widget.render("span", None), "html.parser")
+
+        assert soup.find(attrs={"aria-hidden": "true"}).get_text(strip=True) == "to"
+
+    @pytest.mark.parametrize(
+        ("settings", "named"),
+        [
+            ({"joined": "yes"}, "joined"),
+            ({"compact": 1}, "compact"),
+            ({"joined": True, "compact": True}, "joined or compact"),
+            ({"separator": "to"}, "separator"),
+            ({"compact": True, "separator": ""}, "separator"),
+            ({"compact": True, "separator": 3}, "separator"),
+        ],
+    )
+    def test_a_setting_it_cannot_take_is_refused(self, settings, named):
+        with pytest.raises(ValueError, match=named):
+            RangeInput(**settings)
 
 
 class TestImageInput:

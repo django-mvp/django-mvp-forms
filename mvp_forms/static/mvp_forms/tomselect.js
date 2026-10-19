@@ -48,6 +48,17 @@
     WORDS.forEach(function (name) {
       if (name in select.dataset) control.control.dataset[name] = select.dataset[name];
     });
+    // In a frame that holds text before or after the control, a press on the
+    // text opens the control, as a press on a label opens a stock select.
+    const frame = select.parentElement;
+    if (frame && frame.classList.contains("select")) {
+      frame.addEventListener("mousedown", function (event) {
+        if (control.wrapper.contains(event.target) || control.isDisabled) return;
+        event.preventDefault();
+        control.focus();
+        control.open();
+      });
+    }
     select.dispatchEvent(
       new CustomEvent(EVENT, { bubbles: true, detail: { tomselect: control } }),
     );

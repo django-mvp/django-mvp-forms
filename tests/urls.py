@@ -21,6 +21,7 @@ from tests.forms import (
     TomSelectLineFormSet,
     TomSelectPageForm,
     TomSelectTagsForm,
+    UnlabelledSelectsForm,
 )
 
 # Where the browser tests' pages ask for IMask. The tests answer the request from
@@ -175,6 +176,20 @@ class ChoicesPage(TemplateView):
         return JsonResponse({name: request.POST.getlist(name) for name in request.POST})
 
 
+class UnlabelledPage(TemplateView):
+    """A page of Tom Select controls drawn by the pack with the labels off."""
+
+    template_name = "tests/tomselect_unlabelled_page.html"
+
+    def get_context_data(self, **kwargs):
+        """Draw the form's selects, leaving out django-tomselect's."""
+        return super().get_context_data(
+            form=UnlabelledSelectsForm(layout=["plain", "single", "counted"]),
+            tomselect_url=TOM_SELECT_URL,
+            **kwargs,
+        )
+
+
 class BoostedPage(TemplateView):
     """One of two pages whose selects share an id, each linking to the other."""
 
@@ -259,6 +274,7 @@ urlpatterns = [
         ),
         name="choices-page-styled",
     ),
+    path("choices-page/unlabelled/", UnlabelledPage.as_view(), name="unlabelled"),
     path(
         "boosted/list/",
         BoostedPage.as_view(other="boosted-new"),

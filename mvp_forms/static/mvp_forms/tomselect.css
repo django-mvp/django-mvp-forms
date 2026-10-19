@@ -551,6 +551,73 @@ html:root .ts-wrapper.multi.disabled .ts-control[data-count-text]::after {
   opacity: 0.4;
 }
 
+/* A control inside a daisyUI select frame that holds text before or after it:
+   the field's label in a form that draws no labels, or text a layout attached.
+   The frame is the select, with the border, the caret, the ring and the size.
+   The wrapper is only the part after the text, and the dropdown spans the
+   whole frame. */
+
+html:root .select:has(> .ts-wrapper) {
+  position: relative;
+  overflow: visible;
+  cursor: pointer;
+}
+
+/* A frame around a control that shows its values as tags grows with them. */
+html:root .select:has(> .ts-wrapper.multi > .ts-control:not([data-count-text])) {
+  height: auto;
+  min-height: var(--size);
+}
+
+html:root .select:has(> .ts-wrapper.dropdown-active) {
+  z-index: 50;
+}
+
+html:root .select:has(> .ts-wrapper.disabled) {
+  cursor: not-allowed;
+}
+
+html:root .ts-wrapper:is(.select > *),
+html:root .ts-wrapper.multi:is(.select > *),
+html:root .ts-wrapper.loading:is(.select > *) {
+  position: static;
+  display: flex;
+  flex: 1 1 0%;
+  align-items: center;
+  align-self: stretch;
+  width: auto;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  border: 0 none;
+  background: none;
+  box-shadow: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* daisyUI sizes a select inside a frame. The one Tom Select hides keeps out of
+   the row. */
+html:root .select > select.ts-hidden-accessible {
+  position: absolute !important;
+  width: 1px !important;
+  min-width: 0;
+  padding: 0;
+}
+
+html:root .ts-wrapper.focus:is(.select > *) {
+  outline: none;
+}
+
+html:root .ts-wrapper:is(.select > *) > .ts-dropdown {
+  inset-block-start: 100%;
+}
+
+html:root .ts-wrapper.plugin-clear_button:is(.select > *) .clear-button {
+  inset-inline-end: 1.5rem;
+}
+
 /* django-tomselect announces what was chosen in an element it hides with a
    class only Bootstrap defines. Hide it the same way here. */
 html:root [id$="_sr_status"].visually-hidden {

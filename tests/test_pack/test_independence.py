@@ -70,6 +70,7 @@ from tests.forms import (
     MediaForm,
     MultiWidgetsForm,
     RadioGroupsForm,
+    RangeInputsForm,
     RangesForm,
     RatingsForm,
     RequiredDrawnBooleanForm,
@@ -79,6 +80,7 @@ from tests.forms import (
     TextInputsForm,
     UncoveredWidgetsForm,
     UneditableFieldsForm,
+    UnlabelledSelectsForm,
     ruled_data,
 )
 
@@ -158,6 +160,9 @@ LAYOUT_UTILITIES = {
     "text-xs",
     "transition-opacity",
     "w-fit",
+    # The two ends of a range, side by side from the small breakpoint up.
+    "grid",
+    "sm:grid-cols-2",
 }
 
 
@@ -483,6 +488,31 @@ ERRORS_ONLY = "{{ form|as_crispy_errors }}"
 STATES = [
     pytest.param(
         "{% crispy form %}", CountriesForm, FLAG, id="django-countries' fields"
+    ),
+    pytest.param("{% crispy form %}", RangeInputsForm, NOTHING, id="range inputs"),
+    pytest.param(
+        "{% crispy form %}",
+        partial(RangeInputsForm, {}),
+        NOTHING,
+        id="range inputs in error",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        partial(RangeInputsForm, show_labels=False),
+        NOTHING,
+        id="range inputs with labels off",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        partial(RangeInputsForm, choices=FormChoices(size="sm", color="primary")),
+        NOTHING,
+        id="range inputs, small and coloured",
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        partial(UnlabelledSelectsForm, layout=["plain", "single", "counted"]),
+        NOTHING,
+        id="selects with labels off",
     ),
     pytest.param("{{ form|crispy }}", TextInputsForm, NOTHING, id="unbound"),
     pytest.param(

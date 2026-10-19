@@ -204,6 +204,50 @@ raises an error that names the field.
 
 ---
 
+### User Story 4 - A developer draws a pair of values as a range of two inputs (Priority: P3)
+
+A developer filters a list by depth, by the date a sample was measured or by when it was logged,
+and wants a low and a high end entered as one field. This is a different thing from the slider
+of Story 2: two inputs, either of which can be left empty, so "at least 60" and "up to 2500" can
+both be written. They give the field `RangeInput`, `DateRangeInput` or `DateTimeRangeInput`. By
+default the two ends sit side by side, each in its own frame with its name, "Min" and "Max" or
+"From" and "To", and stack on a narrow screen. `joined=True` joins them in one row at every
+width. `compact=True` puts both in one frame, with a dash or the developer's own `separator`
+between them and the ends' names as placeholders. The widget takes a pair, or the `slice`
+django-filter's range fields give it, so it can be passed to django-filter's `RangeFilter` and
+`DateFromToRangeFilter`.
+
+**Why this priority**: Range filters are among the most common on a list page, and django-filter
+draws its own as two bare inputs with a hyphen between them.
+
+**Independent Test**: Draw a form with a pair field given each widget and each layout, through
+the pack, and check the frames, the names of the ends and the values held. Submit one end
+empty and check that the field receives it empty.
+
+**Acceptance Scenarios**:
+
+1. **Given** a pair field with `RangeInput`, **When** the form is drawn by the pack, **Then** it is
+   one fieldset whose legend is the label, with two number inputs, each in its own daisyUI `input`
+   frame, a `label` that shows the end's name, and each named by that name.
+2. **Given** `DateRangeInput` or `DateTimeRangeInput`, **When** the form is drawn, **Then** the
+   ends are `date` or `datetime-local` inputs, named "From" and "To".
+3. **Given** a value that is a pair, a `slice` or nothing, **When** the form is drawn, **Then**
+   each end holds its part, and an end the value leaves out is empty.
+4. **Given** `joined=True`, **When** the form is drawn, **Then** the two frames are the items of
+   one daisyUI `join`.
+5. **Given** `compact=True`, **When** the form is drawn, **Then** both inputs sit in one daisyUI
+   `input` frame with the separator between them, hidden from assistive technology, and each
+   input shows its end's name as its placeholder. The separator is an en dash unless one is given.
+6. **Given** a form with labels off, **When** a range is drawn, **Then** the field's label is shown
+   in the first frame, and the ends' names are their inputs' placeholders.
+7. **Given** a form with a size or a colour, a field with its own, or a field in error, **When** a
+   range is drawn, **Then** every frame takes them as an input does, and both inputs are marked
+   invalid when the field is in error.
+8. **Given** `joined` and `compact` both, `separator` without `compact`, or a setting given a value
+   it cannot take, **When** the widget is made, **Then** a `ValueError` names the setting.
+
+---
+
 ### Edge Cases
 
 - The developer names a drawing the pack does not know. The pack raises an error naming the field
@@ -349,6 +393,23 @@ raises an error that names the field.
   take each and how one is stated. The CHANGELOG MUST record the addition (Article VI), and the
   glossary's entry for a drawing MUST cover them.
 
+#### Range inputs
+
+- **FR-027**: The package MUST provide `RangeInput`, `DateRangeInput` and `DateTimeRangeInput` in
+  `mvp_forms.widgets`, each a `MultiWidget` of two inputs, number, date or date and time, for the
+  low and the high end of one field. Either end MAY be empty. Each MUST read a pair, a `slice`
+  and nothing as its value. (Story 4)
+- **FR-028**: By default each end MUST be drawn in its own daisyUI `input` frame that shows the
+  end's name before it, side by side on a wide screen and one above the other on a narrow one.
+  `joined=True` MUST draw the frames as one daisyUI `join` in one row. `compact=True` MUST draw
+  both inputs in one frame, with `separator`, an en dash by default, between them. (Story 4)
+- **FR-029**: Each input MUST be named by its end's name. With labels off the field's label MUST
+  be shown in the first frame, and the ends' names MUST be placeholders. The frames MUST take the
+  size, colour and error state of the field. (Story 4)
+- **FR-030**: The README's public surface MUST describe the three widgets and their settings, the
+  demo project MUST show each layout on a Range inputs page in its Custom widgets group, and the
+  CHANGELOG MUST record them. (Story 4)
+
 ### Requirement coverage
 
 | Story | Requirements |
@@ -356,6 +417,7 @@ raises an error that names the field.
 | US-1: A developer draws a choice field as a rating | FR-001, FR-002, FR-003, FR-004, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-016, FR-017, FR-022, FR-023, FR-024, FR-025, FR-026 |
 | US-2: A developer draws a number field as a range | FR-001, FR-002, FR-003, FR-005, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-022, FR-023, FR-024, FR-025, FR-026 |
 | US-3: A rating and a range take the form's size and colour | FR-018, FR-019, FR-020, FR-021, FR-022, FR-025, FR-026 |
+| US-4: A developer draws a pair of values as a range of two inputs | FR-027, FR-028, FR-029, FR-030 |
 
 FR-025 and FR-026 land with the first story and are extended by the stories that follow, so each
 story shows its own behaviour on the Rating and range page and documents its own surface.

@@ -711,6 +711,111 @@ class PointInput(forms.MultiWidget):
             )
 
 
+class RangeInput(forms.MultiWidget):
+    """A low and a high number, drawn as one field.
+
+    By default each end is drawn inside its own daisyUI ``input`` frame, a
+    ``<label>`` that shows the end's name before it. ``joined`` draws the two
+    frames as one daisyUI join, and ``compact`` draws both ends in one frame.
+    Either end may be left empty. The value is a pair, or a ``slice`` as
+    django-filter's range fields give it.
+    """
+
+    template_name = "mvp_forms/widgets/range.html"
+    ends = (_("Min"), _("Max"))
+
+    def __init__(self, attrs=None, *, joined=None, compact=None, separator=None):
+        """Build the two ends.
+
+        Args:
+            attrs: HTML attributes for both ends.
+            joined: ``True`` to draw the two ends as one daisyUI join, in one
+                row at every width.
+            compact: ``True`` to draw both ends in one input frame, with the
+                separator between them and the ends' names as placeholders.
+            separator: The text between the ends of a compact range. A lazy
+                translation is read when the field is drawn. An en dash by
+                default.
+
+        Raises:
+            ValueError: A setting holds a value that cannot be right, or two
+                settings cannot be used together. The message names them.
+        """
+        for option, setting in (("joined", joined), ("compact", compact)):
+            if setting is not None:
+                Check.one_of(option, setting, (True, False))
+        if joined and compact:
+            raise ValueError("A range is either joined or compact, not both.")
+        if separator is not None:
+            if not compact:
+                raise ValueError("separator is used only with compact=True.")
+            if not isinstance(separator, Promise):
+                Check.text("separator", separator)
+        super().__init__([self.end({"aria-label": name}) for name in self.ends], attrs)
+        self.joined = bool(joined)
+        self.compact = bool(compact)
+        self.separator = "\u2013" if separator is None else separator
+
+    def end(self, attrs):
+        """Return the input for one end."""
+        return forms.NumberInput(attrs)
+
+    def get_context(self, name, value, attrs):
+        """Move each end's classes onto the frame drawn around it."""
+        context = super().get_context(name, value, attrs)
+        context["widget"]["joined"] = self.joined
+        context["widget"]["compact"] = self.compact
+        context["widget"]["separator"] = str(self.separator)
+        for part in context["widget"]["subwidgets"]:
+            part["frame_class"] = part["attrs"].pop("class", "")
+            part["frame_name"] = part["attrs"].get("aria-label", "")
+            if self.compact:
+                part["attrs"].setdefault("placeholder", part["frame_name"])
+            if self.joined or self.compact:
+                # A pair in one row may leave an input narrower than a browser
+                # would draw it on its own.
+                part["attrs"]["class"] = "w-full min-w-0"
+        return context
+
+    def decompress(self, value):
+        """Split a range into its low and its high end.
+
+        Args:
+            value: A pair, a ``slice``, or ``None``.
+
+        Returns:
+            The two ends, either of which may be ``None``.
+        """
+        if value is None:
+            return [None, None]
+        if isinstance(value, slice):
+            return [value.start, value.stop]
+        low, high = value
+        return [low, high]
+
+
+class DateRangeInput(RangeInput):
+    """A from date and a to date, drawn side by side as one field."""
+
+    ends = (_("From"), _("To"))
+
+    def end(self, attrs):
+        """Return a date input for one end."""
+        return forms.DateInput({"type": "date", **attrs}, format="%Y-%m-%d")
+
+
+class DateTimeRangeInput(RangeInput):
+    """A from date and time and a to date and time, drawn as one field."""
+
+    ends = (_("From"), _("To"))
+
+    def end(self, attrs):
+        """Return a date and time input for one end."""
+        return forms.DateTimeInput(
+            {"type": "datetime-local", **attrs}, format="%Y-%m-%dT%H:%M"
+        )
+
+
 class DynamicMaskInput(MaskInput):
     """A list of masks, from which IMask applies the one that fits best."""
 

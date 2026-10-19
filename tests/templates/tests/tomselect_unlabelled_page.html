@@ -1,0 +1,14 @@
+{% load crispy_forms_tags static %}<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tom Select controls with no label above them</title>
+    <link rel="stylesheet" href="{% static 'mvp_forms/tomselect.css' %}">
+  </head>
+  <body>
+    <form id="page" method="post" action="">
+      {% crispy form %}
+    </form>
+    <script src="{{ tomselect_url }}"></script>
+  </body>
+</html>

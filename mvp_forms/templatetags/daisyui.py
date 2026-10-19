@@ -12,7 +12,7 @@ from django.forms.boundfield import BoundField
 from django.forms.formsets import BaseFormSet
 from django.forms.widgets import ChoiceWidget
 from django.template import Context, Template
-from django.utils.html import strip_tags
+from django.utils.html import escape, strip_tags
 from django.utils.safestring import SafeData, SafeString
 from django.utils.translation import gettext_lazy
 
@@ -26,6 +26,7 @@ from mvp_forms.choices import (
 )
 from mvp_forms.deprecation import host_template
 from mvp_forms.layout import InvalidMember, Join
+from mvp_forms.widgets import RangeInput, TomSelect
 
 register = template.Library()
 
@@ -228,6 +229,10 @@ class FieldInput:
             if self.component == "file-input"
             else []
         )
+        # A select has no placeholder, so with no label above it the label is
+        # shown inside its frame.
+        if self.names_itself_inside:
+            self.prepended = escape(self.label_text)
 
     def own_choice(self, choices: FormChoices, placed: Choice | None) -> Choice:
         """Return what is stated for this field alone.
@@ -515,7 +520,38 @@ class FieldInput:
             widget = copy.deepcopy(widget)
             for index, part in enumerate(widget.widgets):
                 self.decorate_part(widget, index, part)
+            if isinstance(widget, RangeInput):
+                widget.get_context = self.range_context(  # type: ignore[method-assign]
+                    widget.get_context
+                )
         return widget
+
+    def range_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
+        """Wrap a range's context so that it knows whether a label is drawn.
+
+        A range drawn with no label above it shows the label inside its first
+        frame, which only its own template can do.
+
+        Args:
+            get_context: The copy's own ``get_context``.
+
+        Returns:
+            A function that returns the same context with ``label`` and
+            ``unlabelled`` set.
+        """
+
+        def with_label(*args: Any, **kwargs: Any) -> dict:
+            context = get_context(*args, **kwargs)
+            context["widget"]["label"] = self.label_text
+            context["widget"]["unlabelled"] = not self.show_labels
+            if not self.show_labels:
+                # The label takes the first frame, so each end's name moves into
+                # its input as the placeholder.
+                for part in context["widget"]["subwidgets"]:
+                    part["attrs"].setdefault("placeholder", part["frame_name"])
+            return context
+
+        return with_label
 
     def rating_widget(self, widget: ChoiceWidget) -> forms.RadioSelect:
         """Return the widget a rating is drawn through, made for this render.
@@ -765,6 +801,37 @@ class FieldInput:
             and self.component in {"input", "select"}
             and not self.is_group
         )
+
+    @property
+    def names_itself_inside(self) -> bool:
+        """Whether a select with no label above it shows its label in its frame.
+
+        A select has no placeholder to hold its label, so in a form that draws
+        no labels it would show only its value.
+        """
+        return (
+            not self.show_labels
+            and not self.is_member
+            and not self.is_joined
+            and self.component == "select"
+            and not self.is_group
+            and not (self.prepended or self.appended)
+            and bool(self.field.label)
+        )
+
+    @property
+    def attached_tag(self) -> str:
+        """The element that holds attached text: a label, or a div for Tom Select.
+
+        A click anywhere in a label is passed to the select it holds, which Tom
+        Select has hidden, so a click in its list would leave the control.
+        """
+        widget = self.field.field.widget
+        script = isinstance(widget, TomSelect) or any(
+            kind.__module__.startswith("django_tomselect")
+            for kind in type(widget).__mro__
+        )
+        return "div" if script else "label"
 
     @property
     def attached_class(self) -> str:
