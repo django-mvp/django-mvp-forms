@@ -13,5 +13,21 @@ number alone.
 ../../../examples/layout_objects/joined_groups.py
 ```
 
-A member must be an input or a select. Anything else in the group, such as a
-`Div`, raises `InvalidMember` when the form is drawn.
+## With a button
+
+A group can hold buttons as well as fields, so a select, a text input and a
+button make one search bar. The button takes the form's size, colour and
+variant for buttons, here the primary colour, and is drawn as one piece with
+the inputs.
+
+Send the form with no words to see the error on the text input alone.
+
+```{live-example} /examples/joined-search/
+:title: A search bar
+
+../../../examples/layout_objects/joined_search.py
+```
+
+A member must be an input or a select, and a button must be a `StrictButton`,
+`Submit`, `Button` or `Reset`. Anything else in the group, such as a `Div`,
+raises `InvalidMember` when the form is drawn.

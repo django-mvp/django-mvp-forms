@@ -619,7 +619,7 @@ class EventForm(forms.Form):
 
 #### Joined groups
 
-`Join` comes from `mvp_forms.layout`, and is the package's own, not django-crispy-forms'. It draws several fields as one daisyUI join under one label, such as a country code and a phone number:
+`Join` comes from `mvp_forms.layout`, and is the package's own, not django-crispy-forms'. It draws several fields, and any buttons you put with them, as one daisyUI join under one label, such as a country code and a phone number:
 
 ```python
 from crispy_forms.helper import FormHelper
@@ -642,18 +642,47 @@ class ContactForm(forms.Form):
         )
 ```
 
-- A group holds field names, `Field` objects and `Choice` objects, in the order they are drawn. A `Field` gives its attributes and its `css_class` to the input of each name it holds, and a `Choice` states its size, colour and variant for the names it holds. A member has no frame of its own, so a `Field` given a `wrapper_class` or a `template` raises `InvalidMember` with `Field` as `member`. Anything else in a group raises `InvalidMember` too, when the form is drawn, with the class name as `member`: a `Div`, a `PrependedText`, an `InlineField`, a button, another `Join`, and a subclass of `Field` such as `MultiWidgetField`.
+- A group holds field names, `Field` objects, `Choice` objects and buttons, in the order they are drawn. A `Field` gives its attributes and its `css_class` to the input of each name it holds, and a `Choice` states its size, colour and variant for the names and buttons it holds. A member has no frame of its own, so a `Field` given a `wrapper_class` or a `template` raises `InvalidMember` with `Field` as `member`. Anything else in a group raises `InvalidMember` too, when the form is drawn, with the class name as `member`: a `Div`, a `PrependedText`, an `InlineField`, a `Hidden`, another `Join`, and a subclass of `Field` such as `MultiWidgetField`.
 - A member is an input or a select drawn on its own. A checkbox, a toggle, a radio group, a checkbox group, a textarea, a file input, a multi-widget field, a date drawn as three selects, a rating, a range and a field whose widget the pack does not draw as an input raise `InvalidMember` with the field's name as `member`. A hidden field is accepted.
 - The group is one `<fieldset>`. Its `label` is the `<legend>`, as escaped text, with the required marker when any member is required, and a group with no label has no legend. A member draws no label of its own: its input is named by an `aria-label` that is its own field's label, and an `aria-label` you wrote on the widget or on the `Field` is kept. With the helper's `form_show_labels` off the legend is not drawn and the fieldset takes the group's label as its `aria-label`.
 - Each member keeps its own help text and errors. They are drawn after the join, inside the fieldset, once for each member, with the ids Django gives them, `<id>_helptext` and `<id>_error`. A member's input is described by its own help text and errors only, and only the member that failed is `aria-invalid`.
 - The inputs are the direct children of the one element that carries `join`, in the order the group holds them. A hidden member is drawn as its hidden input after that element, inside the fieldset, because daisyUI squares the first and last child of a join whatever they are. A disabled member stays in its place disabled, and a read-only member keeps its attribute.
 - The `css_id`, `css_class` and attributes you give `Join` are on the element that carries `join`, so `Join("width", "height", css_class="join-vertical")` stacks the inputs. A class written for another template pack is dropped. A name the form lacks is left to django-crispy-forms: it logs it, or raises when `CRISPY_FAIL_SILENTLY` is `False`, and draws nothing for it.
-- `Join.members()` returns what a group holds as a list of `Member`, one for each field name in order, each with its `name`, the `attrs` of the `Field` that held it and the `choice` around it. It raises `InvalidMember` for a layout object the group cannot hold, so a layout can be checked without drawing a form.
-- A group that holds no field draws nothing, and a group whose members are all hidden draws their hidden inputs alone.
+- `Join.members()` returns the fields a group holds as a list of `Member`, one for each field name in order, each with its `name`, the `attrs` of the `Field` that held it and the `choice` around it. `Join.contents()` returns the same members with a `GroupButton` in the place of each button, carrying the `button` and the `choice` around it. Both raise `InvalidMember` for a layout object the group cannot hold, so a layout can be checked without drawing a form.
+- A group that holds nothing draws nothing, and a group with no visible member and no button draws the hidden inputs of its members alone.
 - The join fills its width. An input takes the room the others leave and a select takes its own width. A width class of your own on a widget or a `Field`, such as `w-24`, is kept and the pack adds none.
 - A floating label never applies to a member. The form's `label="floating"` passes it over, and the same statement on a member raises `InvalidChoice` with `kind="label"`.
 - Size, colour and variant apply to each member as they do on any field, in the order under "One field's own choice". A `Choice` around the group states them for every member. A `Choice` around one member, or an entry for it in `FormChoices(fields=...)`, wins for that member, and the form's statement applies to every member the others leave alone. A member's own size wins for that member, and the group enforces no one size. A member in error carries its error modifier and no colour modifier, and the other members keep the colour.
 - A form with no `Join` is drawn as before, and the form posts and cleans to the same data joined and not joined. In a formset drawn stacked every form draws the group. A formset drawn as a table shows each field as a column, so it draws no join and raises nothing.
+
+A group can hold buttons as well as fields, so a select, a text input and a button make one search bar:
+
+```python
+from crispy_forms.bootstrap import StrictButton
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout
+from django import forms
+from mvp_forms.choices import FormChoices
+from mvp_forms.layout import Join
+
+
+class SearchForm(forms.Form):
+    scope = forms.ChoiceField(choices=[("all", "Everything"), ("people", "People")])
+    query = forms.CharField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.daisyui = FormChoices(button_color="primary")
+        self.helper.layout = Layout(
+            Join("scope", "query", StrictButton("Search", type="submit"), label="Search"),
+        )
+```
+
+- A button is a `StrictButton`, a `Submit`, a `Button` or a `Reset`, and it sits in the join in the place you gave it, among the inputs. It is drawn by the same code as a button anywhere else, so a `Submit` keeps its name and value, and the pack adds `join-item` to it, so the parts meet as one piece. A button after the `Join` in the layout is not part of the group and takes no `join-item`.
+- A button in a group takes the form's `size`, `button_color` and `button_variant`, as the buttons of a `FieldWithButtons` do. A `Choice` around the group is stated for its members and its buttons alike, so state only what both have: a variant that only buttons have, such as `outline`, raises `InvalidChoice` for an input. A `Choice` around one button inside the group is stated for that button alone, and wins over the one around the group.
+- Your `css_class`, `css_id` and attributes are kept on every button, and a `join-item` you wrote is not written twice.
+- The members of a group that holds buttons are drawn exactly as in a group that holds none: the label, the required marker, each member's help text and errors and the cleaned data are unchanged.
 
 ### Size, colour and variant
 
@@ -901,7 +930,7 @@ class SignInForm(forms.Form):
 
 Here `email`, `password` and `country` have a floating label, `notes` has its ordinary label, and `remember` is drawn as it is without the statement. It takes effect with `{{ form|crispy }}` and with `{% crispy form %}`, whether or not the form has a layout, and in each form of a formset drawn stacked. In a layout, wrap the field in a `Choice`: `Choice("email", label="floating")`.
 
-The label is drawn once, in a `<label class="floating-label">` that holds the input and is tied to it by `for`. The required marker is inside it. The help text and the errors are drawn as they are for any field, with the input's `aria-describedby` and `aria-invalid` unchanged, and the form posts and cleans to the same data as with ordinary labels. Size, colour and variant apply as they do on any field: the form's, an entry in `FormChoices(fields=...)` and a `Choice` in a layout, the layout winning over the entry and the entry over the form's, as under "One field's own choice". A floating field takes the same modifier it takes with an ordinary label, and one in error carries its error modifier and no colour.
+The label is drawn once, in a `<label class="floating-label">` that holds the input and is tied to it by `for`. The required marker is inside it. daisyUI hides that label while the field is empty, so the pack writes the label's text into the placeholder of an input or a textarea, followed by the marker when the field is required, as in `placeholder="Email *"`. Someone looking over an empty form can see which fields are required. Once the label has moved to the edge, daisyUI hides the placeholder, so the marker is shown once in either state. The input carries `required`, which is what tells assistive technology the field is required. The marker on the label is hidden from it, but a placeholder is exposed as written, so a screen reader that reads the placeholder out may read the marker too. A placeholder you set on the widget is kept as you wrote it, with no marker added. A select has no placeholder, and its label sits at the edge from the start, marker included. The help text and the errors are drawn as they are for any field, with the input's `aria-describedby` and `aria-invalid` unchanged, and the form posts and cleans to the same data as with ordinary labels. Size, colour and variant apply as they do on any field: the form's, an entry in `FormChoices(fields=...)` and a `Choice` in a layout, the layout winning over the entry and the entry over the form's, as under "One field's own choice". A floating field takes the same modifier it takes with an ordinary label, and one in error carries its error modifier and no colour.
 
 - A floating label is for an input, a textarea or a select drawn on its own. The form's statement is passed over, with no error, for every other field: a checkbox, a toggle, a radio group, a checkbox group, a file input, a rating, a range, a multi-widget field, a date drawn as three selects, and a field drawn with attached text on an input or a select, with buttons joined to it, or with no visible label by `InlineField`, and a member of a joined group. A textarea inside a `PrependedText` has no attached text to draw, so it floats.
 - The same statement made for one of those fields, by name or in a layout, raises `InvalidChoice` with `kind="label"`, nothing allowed and the field as `target`. A `Choice` around a `FieldWithButtons` is stated for its buttons too, and they are drawn first, so there the `target` is the first button. A name other than `floating` raises it too, with `floating` as the name allowed. `None` undoes the form's statement for a field and never raises.
@@ -918,7 +947,7 @@ A choice stated for the form that a kind of input has no modifier for is passed 
 
 A floating label stated for the form is passed over for every field that cannot take one, listed under "Floating labels", with no error. Stated on one of them it raises `InvalidChoice` with `kind="label"`, the field as `target` and nothing allowed, and so does one stated around a button. A name other than `floating` raises it with `floating` allowed.
 
-A `Join` that holds a layout object it cannot join, or a field it cannot draw as an input or a select, raises `InvalidMember`, from `mvp_forms.layout`, when the form is drawn. It is a `ValueError` carrying `member`: the layout object's class name, or the field's name. Nothing is passed over, because a field is named in the group on purpose. See "Joined groups".
+A `Join` that holds a layout object it cannot join, which is anything but a field name, a `Field`, a `Choice` and a button, or a field it cannot draw as an input or a select, raises `InvalidMember`, from `mvp_forms.layout`, when the form is drawn. It is a `ValueError` carrying `member`: the layout object's class name, or the field's name. Nothing is passed over, because a field is named in the group on purpose. See "Joined groups".
 
 A name in `FormChoices(fields=...)` that is not a field of the form raises `UnknownField`, a `KeyError` whose `names` lists them, when a field of the form is drawn.
 
@@ -1061,7 +1090,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/layout/baseinput.html` | A `Submit`, `Button`, `Reset` or `Hidden`: one `<input>` with the type, name and value the layout object gives it. | `input` | `TEMPLATES` |
 | `daisyui/layout/prepended_appended_text.html` | A `PrependedText`, `AppendedText` or `PrependedAppendedText`: a field with text before or after its input, in the field's frame. | `crispy_appended_text`, `crispy_prepended_text`, `field` | `TEMPLATES` |
 | `daisyui/layout/field_with_buttons.html` | A `FieldWithButtons`: a field's input joined to its buttons, in the field's frame. | `div`, `field` | `TEMPLATES` |
-| `daisyui/layout/join.html` | A `Join`: a fieldset with the group's label as its legend, the visible members as the children of one element that carries `join`, the hidden members after it and the help text and errors of each member. | `form_show_labels`, `hidden`, `inputs`, `join`, `label_class`, `members`, `required` | `TEMPLATES` |
+| `daisyui/layout/join.html` | A `Join`: a fieldset with the group's label as its legend, the visible members and the buttons as the children of one element that carries `join`, the hidden members after it and the help text and errors of each member. | `form_show_labels`, `hidden`, `inputs`, `join`, `label_class`, `members`, `required` | `TEMPLATES` |
 | `daisyui/layout/join_member.html` | One member of a `Join`: a field drawn as an input or a select of the join, or as its hidden input when it is hidden. | `field` | `TEMPLATES` |
 | `daisyui/layout/inline_field.html` | An `InlineField`: a field with no visible label, named by an `aria-label`, in the field's frame. | `field` | `TEMPLATES` |
 | `daisyui/layout/uneditable_input.html` | An `UneditableField`: a field's input disabled and showing the field's value, in the field's frame. | `field` | `TEMPLATES` |
@@ -1096,6 +1125,17 @@ A listed path, and the names a template is handed, change only through one minor
 A path on its way out stays a row of the table for as long as it is honoured, with what replaces it said in its `Draws` cell. The paths django-crispy-forms itself chooses, such as `daisyui/field.html`, change only if django-crispy-forms changes them.
 
 The markup and the class names inside a template of the pack are not part of this promise and can change in any release. A replacement that copied the old markup keeps drawing it until its owner updates it.
+
+#### The template tags a replacement calls
+
+A replacement copied from one of the pack's templates calls the pack's tags and filters, loaded with `{% load daisyui %}`. Two of them are public, and change only as a listed path does:
+
+- `{% daisyui_field field as drawn %}` hands a field's template `drawn`, the pack's drawing of the field. The templates of the layout objects that decorate a field add options to it, such as `prepended=crispy_prepended_text`, `join=div` or `disabled=True`, and those options are promised with it, as are the parts of `drawn` listed above for `daisyui/frame.html` and `daisyui/field_body.html`.
+- `{% daisyui_button input as drawn %}` hands a button's template `drawn`, the pack's drawing of a `Submit`, `Button`, `Reset` or `StrictButton`, with its classes as `drawn.css_class` and, for a `StrictButton`, its attributes as `drawn.flat_attrs`.
+
+A release that renames one of the two, or one of their options, keeps the old name working for one minor version. For that version the old name raises a `DeprecationWarning` naming the new one, and the CHANGELOG says what replaces it.
+
+Every other tag and filter of the pack is internal: `daisyui_button_size`, `daisyui_sized`, `daisyui_host_template`, `daisyui_layout_object`, `daisyui_formset_table` and the filters `daisyui_classes`, `daisyui_shown`, `daisyui_date_part` and `daisyui_tab_group`. Any release can rename, change or remove one, a patch release included, so a replacement that calls one may need changing when you upgrade. A tag that no longer exists fails with `TemplateSyntaxError` the first time the template is drawn, so your tests find it.
 
 ### django-tomselect
 

@@ -116,15 +116,24 @@ class TestFloatingLabels:
         assert floating_label_of(soup, "country") is not None
 
     @pytest.mark.parametrize("source", SOURCES)
-    def test_an_empty_field_with_no_placeholder_carries_its_label_as_one(
+    def test_an_optional_field_with_no_placeholder_carries_its_label_as_one(
         self, draw, source
     ):
         form = FloatingForm(choices=FLOATING)
 
         soup = draw(source, form=form)
 
-        assert soup.find(id="id_name")["placeholder"] == form["name"].label
         assert soup.find(id="id_notes")["placeholder"] == form["notes"].label
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_required_field_with_no_placeholder_carries_its_label_and_marker(
+        self, draw, source
+    ):
+        form = FloatingForm(choices=FLOATING)
+
+        soup = draw(source, form=form)
+
+        assert soup.find(id="id_name")["placeholder"] == f"{form['name'].label} *"
 
     @pytest.mark.parametrize("source", SOURCES)
     def test_a_placeholder_the_developer_set_is_kept(self, draw, source):

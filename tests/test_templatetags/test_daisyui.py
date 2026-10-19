@@ -2074,12 +2074,14 @@ class TestFieldInputLabel:
         assert not field_input.is_floating
 
     @pytest.mark.parametrize("name", ["plain", "note"])
-    def test_the_label_is_the_placeholder_of_a_floating_input_and_textarea(self, name):
+    def test_the_label_and_marker_are_the_placeholder_of_a_required_floating_field(
+        self, name
+    ):
         field_input = FieldInput(
             FloatingEdgesForm()[name], choices=FormChoices(label="floating")
         )
 
-        assert field_input.attrs["placeholder"] == field_input.label_text
+        assert field_input.attrs["placeholder"] == f"{field_input.label_text} *"
 
     def test_a_placeholder_of_the_developers_is_kept(self):
         field_input = FieldInput(
@@ -2121,7 +2123,7 @@ class TestFieldInputLabel:
             form["plain"], choices=FormChoices(label="floating")
         ).render()
 
-        assert 'placeholder="Plain"' in drawn
+        assert 'placeholder="Plain *"' in drawn
         assert "placeholder" not in form.fields["plain"].widget.attrs
 
     @pytest.mark.parametrize("how", ["layout", "name"])

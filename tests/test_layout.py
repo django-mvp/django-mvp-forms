@@ -2,11 +2,20 @@
 
 import pytest
 from crispy_forms.bootstrap import InlineField, PrependedText, StrictButton
-from crispy_forms.layout import HTML, Div, Field, MultiWidgetField, Submit
+from crispy_forms.layout import (
+    HTML,
+    Button,
+    Div,
+    Field,
+    Hidden,
+    MultiWidgetField,
+    Reset,
+    Submit,
+)
 from django.utils.safestring import mark_safe
 
 from mvp_forms.choices import INHERIT, Choice
-from mvp_forms.layout import InvalidMember, Join
+from mvp_forms.layout import GroupButton, InvalidMember, Join, Member
 from tests.forms import StructureForm, StructureHiddenForm
 
 
@@ -115,8 +124,7 @@ class TestJoinMembers:
             Div("first"),
             PrependedText("first", "$"),
             InlineField("first"),
-            Submit("go", "Go"),
-            StrictButton("Go"),
+            Hidden("go", "Go"),
             HTML("<hr>"),
             MultiWidgetField("first", attrs={}),
             Join("first"),
@@ -137,6 +145,37 @@ class TestJoinMembers:
 
     def test_the_error_is_a_value_error(self):
         assert issubclass(InvalidMember, ValueError)
+
+
+class TestJoinContents:
+    @pytest.mark.parametrize(
+        "button",
+        [StrictButton("Go"), Submit("go", "Go"), Button("go", "Go"), Reset("go", "Go")],
+        ids=lambda button: type(button).__name__,
+    )
+    def test_a_button_is_held_in_its_place_and_not_a_member(self, button):
+        group = Join("first", button, "second")
+
+        contents = group.contents()
+
+        assert [type(held) for held in contents] == [Member, GroupButton, Member]
+        assert contents[1].button is button
+        assert contents[1].choice is None
+        assert names_of(group) == ["first", "second"]
+
+    def test_a_button_in_a_choice_carries_the_merged_choice(self):
+        button = StrictButton("Go")
+        group = Join(Choice("first", Choice(button, color="error"), size="sm"))
+
+        member, held = group.contents()
+
+        assert member.choice.size == "sm"
+        assert (held.choice.size, held.choice.color) == ("sm", "error")
+
+    def test_a_group_of_fields_holds_its_members_alone(self):
+        group = Join("first", Field("second", css_class="x"))
+
+        assert group.contents() == group.members()
 
 
 class TestJoinRender:

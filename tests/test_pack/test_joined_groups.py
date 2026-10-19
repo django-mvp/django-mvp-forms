@@ -1,11 +1,11 @@
 """Fields drawn as one daisyUI join under one label, through crispy-forms."""
 
 import pytest
-from crispy_forms.bootstrap import PrependedText
-from crispy_forms.layout import Div, Field
+from crispy_forms.bootstrap import PrependedText, StrictButton
+from crispy_forms.layout import Button, Div, Field, Submit
 from django.utils.safestring import mark_safe
 
-from mvp_forms.choices import Choice, FormChoices, Modifiers
+from mvp_forms.choices import Choice, FormChoices, InvalidChoice, Modifiers
 from mvp_forms.layout import InvalidMember, Join
 from tests.forms import (
     JoinedEdgesForm,
@@ -493,3 +493,150 @@ class TestJoinedGroupChoices:
         assert modifiers_of(soup, "number", "color") == expected_for(
             "number", "color", "primary"
         )
+
+
+BUTTONS = [
+    pytest.param(lambda **kw: StrictButton("Go", css_id="act", **kw), id="strict"),
+    pytest.param(lambda **kw: Submit("act", "Go", css_id="act", **kw), id="submit"),
+    pytest.param(lambda **kw: Button("act", "Go", css_id="act", **kw), id="button"),
+]
+BUTTON_STATED = [
+    pytest.param(FormChoices(size="lg"), "btn-lg", id="size"),
+    pytest.param(FormChoices(button_color="accent"), "btn-accent", id="colour"),
+    pytest.param(FormChoices(button_variant="outline"), "btn-outline", id="variant"),
+]
+
+
+def ids_in(group):
+    return [tag.get("id") for tag in children_of(group)]
+
+
+class TestJoinedGroupButtons:
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_a_select_an_input_and_a_button_are_one_join_in_the_layouts_order(
+        self, draw, make
+    ):
+        soup = draw(TAG, form=joined("country_code", "number", make()))
+
+        group = join_of(soup)
+
+        assert len(soup.find_all(class_="join")) == 1
+        assert ids_in(group) == ["id_country_code", "id_number", "act"]
+        assert all("join-item" in tag["class"] for tag in children_of(group))
+        assert "btn" in soup.find(id="act")["class"]
+
+    def test_a_button_may_sit_between_members(self, draw):
+        soup = draw(
+            TAG, form=joined("country_code", StrictButton("Go", css_id="act"), "number")
+        )
+
+        assert ids_in(join_of(soup)) == ["id_country_code", "act", "id_number"]
+
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_a_button_keeps_its_own_class(self, draw, make):
+        soup = draw(TAG, form=joined("number", make(css_class="mine join-item")))
+
+        classes = soup.find(id="act")["class"]
+        assert "mine" in classes
+        assert classes.count("join-item") == 1
+
+    def test_a_submit_keeps_its_name_and_value(self, draw):
+        soup = draw(TAG, form=joined("number", Submit("search", "Search")))
+
+        button = join_of(soup).find("input", attrs={"name": "search"})
+        assert button["type"] == "submit"
+        assert button["value"] == "Search"
+
+    @pytest.mark.parametrize(("choices", "modifier"), BUTTON_STATED)
+    @pytest.mark.parametrize("make", BUTTONS)
+    def test_the_forms_button_choice_reaches_the_button(
+        self, draw, make, choices, modifier
+    ):
+        form = JoinedForm(layout=[Join("number", make())], choices=choices)
+
+        soup = draw(TAG, form=form)
+
+        assert modifier in soup.find(id="act")["class"]
+
+    def test_a_choice_around_the_group_reaches_its_members_and_its_button(self, draw):
+        form = JoinedForm(
+            layout=[
+                Choice(
+                    Join("country_code", "number", StrictButton("Go", css_id="act")),
+                    size="sm",
+                    color="primary",
+                )
+            ],
+            choices=FormChoices(size="xl"),
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert {"btn-sm", "btn-primary"} <= set(soup.find(id="act")["class"])
+        assert "btn-xl" not in soup.find(id="act")["class"]
+        assert "input-sm" in soup.find(id="id_number")["class"]
+        assert "select-sm" in soup.find(id="id_country_code")["class"]
+
+    def test_a_choice_around_the_button_alone_reaches_it_and_no_member(self, draw):
+        form = joined("number", Choice(StrictButton("Go", css_id="act"), color="error"))
+
+        soup = draw(TAG, form=form)
+
+        assert "btn-error" in soup.find(id="act")["class"]
+        assert "input-error" not in soup.find(id="id_number")["class"]
+
+    def test_a_choice_naming_something_a_button_has_not_raises_for_it(self, draw):
+        form = joined("number", Choice(StrictButton("Go"), label="floating"))
+
+        with pytest.raises(InvalidChoice) as caught:
+            draw(TAG, form=form)
+
+        assert caught.value.target == "Go"
+
+    def test_a_button_drawn_after_the_group_is_not_joined(self, draw):
+        form = JoinedForm(
+            layout=[
+                Join("number", StrictButton("In", css_id="in")),
+                StrictButton("Out", css_id="out"),
+            ]
+        )
+
+        soup = draw(TAG, form=form)
+
+        assert "join-item" in soup.find(id="in")["class"]
+        assert "join-item" not in soup.find(id="out")["class"]
+
+    def test_the_members_keep_their_label_help_text_and_error(self, draw):
+        form = JoinedForm(
+            {"country_code": "+49", "number": ""},
+            layout=[Join("country_code", "number", StrictButton("Go"), label="Phone")],
+        )
+
+        soup = draw(TAG, form=form)
+
+        fieldset = join_of(soup).find_parent("fieldset")
+        number = soup.find(id="id_number")
+        assert fieldset.find("legend") is not None
+        assert number["aria-label"] == "Number"
+        assert number["aria-invalid"] == "true"
+        assert len(fieldset.find_all(id="id_number_error")) == 1
+        assert len(fieldset.find_all(id="id_number_helptext")) == 1
+        assert not soup.find(id="id_country_code").has_attr("aria-invalid")
+
+    def test_a_group_of_hidden_members_and_a_button_draws_the_button_joined(self, draw):
+        soup = draw(TAG, form=joined("token", StrictButton("Go", css_id="act")))
+
+        assert ids_in(join_of(soup)) == ["act"]
+        assert soup.find(attrs={"name": "token"}).find_parent(class_="join") is None
+
+    def test_a_form_posted_from_a_group_with_a_button_cleans_to_the_same_data(
+        self, draw, posted
+    ):
+        layout = [Join("country_code", "number", StrictButton("Go"))]
+        data = {"country_code": "+44", "number": "5550100"}
+
+        soup = draw(TAG, form=JoinedForm(data, layout=layout))
+        form = JoinedForm(posted(soup), layout=layout)
+
+        assert form.is_valid()
+        assert form.cleaned_data["number"] == "5550100"
