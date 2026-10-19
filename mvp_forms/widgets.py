@@ -1067,3 +1067,26 @@ class TomSelectMultiple(TomSelect, forms.SelectMultiple):
             attrs["data-none-text"] = str(self.none_text)
             attrs["data-count-text"] = str(self.count_text)
         return attrs
+
+
+class ImageInput(forms.ClearableFileInput):
+    """A file input for an image that shows the image it holds.
+
+    The stored image is drawn as a thumbnail beside the input, and a newly
+    chosen file takes its place before the form is sent. Removing the stored
+    image stays a checkbox, as it is for any clearable file.
+    """
+
+    template_name = "mvp_forms/widgets/image.html"
+    clear_checkbox_label = _("Remove image")
+    initial_text = _("Current image")
+
+    class Media:
+        js = ["mvp_forms/image-input.js"]
+
+    def get_context(self, name, value, attrs):
+        """Add the stored file's name without the folders it is stored in."""
+        context = super().get_context(name, value, attrs)
+        if context["widget"]["is_initial"]:
+            context["widget"]["file_name"] = str(value.name).rsplit("/", 1)[-1]
+        return context

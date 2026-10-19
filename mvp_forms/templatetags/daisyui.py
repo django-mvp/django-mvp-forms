@@ -499,13 +499,16 @@ class FieldInput:
             drawn = copy.copy(widget)
             drawn.input_type = "range"
             return drawn
-        if self.template_name:
+        if self.component == "file-input":
+            widget = copy.copy(widget)
+            if self.template_name:
+                widget.template_name = self.template_name
+            widget.get_context = self.removal_context(  # type: ignore[method-assign]
+                widget.get_context
+            )
+        elif self.template_name:
             widget = copy.copy(widget)
             widget.template_name = self.template_name
-            if self.removal_modifiers:
-                widget.get_context = self.removal_context(  # type: ignore[method-assign]
-                    widget.get_context
-                )
         elif isinstance(widget, forms.MultiWidget):
             widget = copy.deepcopy(widget)
             for index, part in enumerate(widget.widgets):
@@ -650,6 +653,7 @@ class FieldInput:
         def with_removal_class(*args: Any, **kwargs: Any) -> dict:
             context = get_context(*args, **kwargs)
             context["widget"]["removal_class"] = " ".join(self.removal_modifiers)
+            context["widget"]["label"] = self.label_text
             return context
 
         return with_removal_class

@@ -59,6 +59,7 @@ custom-fields/coordinate-fields
 custom-widgets/partial-date-widgets
 custom-widgets/input-masks
 custom-widgets/tom-select
+custom-widgets/image-input
 ```
 
 ```{toctree}

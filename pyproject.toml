@@ -66,6 +66,7 @@ dev = [
     "django-mvp-sphinx>=0.1.0",
     "sphinx>=8.1",
     "myst-parser>=4.0",
+    "pillow>=13.0.0",
 ]
 
 [tool.uv.sources]

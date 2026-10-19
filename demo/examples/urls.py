@@ -6,6 +6,12 @@ from demo.examples.custom_fields.coordinate_fields import SiteForm
 from demo.examples.custom_fields.partial_date_field import SampleForm
 from demo.examples.custom_widgets.counted_select import FieldworkForm
 from demo.examples.custom_widgets.dynamic_mask import PhoneForm as DynamicPhoneForm
+from demo.examples.custom_widgets.image_input import (
+    NewRecordForm,
+    ProfileForm as ImageProfileForm,
+    SentBackForm,
+    StatesForm,
+)
 from demo.examples.custom_widgets.number_mask import InvoiceForm
 from demo.examples.custom_widgets.partial_date_input import PartDatesForm
 from demo.examples.custom_widgets.partial_date_mask import MaskedDatesForm
@@ -43,7 +49,11 @@ from demo.examples.special_fields.rating_and_range import ReviewForm
 from demo.examples.standard_fields import StandardFieldsForm
 from demo.examples.third_party.countries import AddressForm
 from demo.examples.third_party.tomselect import ResearchForm
-from demo.examples.views import ExampleView, FormsetExampleView
+from demo.examples.views import (
+    ExampleView,
+    FormsetExampleView,
+    StoredFilesExampleView,
+)
 
 MASKED = "demo/examples/masked_form.html"
 TOM_SELECT = "demo/examples/tom_select_form.html"
@@ -129,6 +139,22 @@ urlpatterns = [
     path(
         "partial-date-mask/",
         ExampleView.as_view(form_class=MaskedDatesForm, template_name=MASKED),
+    ),
+    path(
+        "image-input/",
+        StoredFilesExampleView.as_view(form_class=ImageProfileForm),
+    ),
+    path(
+        "image-input-new/",
+        StoredFilesExampleView.as_view(form_class=NewRecordForm),
+    ),
+    path(
+        "image-input-states/",
+        StoredFilesExampleView.as_view(form_class=StatesForm),
+    ),
+    path(
+        "image-input-sent-back/",
+        StoredFilesExampleView.as_view(form_class=SentBackForm),
     ),
     path("partial-date-input/", ExampleView.as_view(form_class=PartDatesForm)),
     path("partial-date-select/", ExampleView.as_view(form_class=SelectDatesForm)),
