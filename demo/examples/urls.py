@@ -7,9 +7,12 @@ from demo.examples.custom_fields.partial_date_field import SampleForm
 from demo.examples.custom_widgets.counted_select import FieldworkForm
 from demo.examples.custom_widgets.dynamic_mask import PhoneForm as DynamicPhoneForm
 from demo.examples.custom_widgets.image_input import (
+    HorizontalForm,
     NewRecordForm,
+    PickerForm,
     ProfileForm as ImageProfileForm,
     SentBackForm,
+    ShapesForm,
     StatesForm,
 )
 from demo.examples.custom_widgets.number_mask import InvoiceForm
@@ -151,6 +154,18 @@ urlpatterns = [
     path(
         "image-input-states/",
         StoredFilesExampleView.as_view(form_class=StatesForm),
+    ),
+    path(
+        "image-input-shapes/",
+        StoredFilesExampleView.as_view(form_class=ShapesForm),
+    ),
+    path(
+        "image-input-picker/",
+        StoredFilesExampleView.as_view(form_class=PickerForm),
+    ),
+    path(
+        "image-input-horizontal/",
+        StoredFilesExampleView.as_view(form_class=HorizontalForm),
     ),
     path(
         "image-input-sent-back/",

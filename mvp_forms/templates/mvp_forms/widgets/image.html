@@ -1,16 +1,19 @@
 {% load i18n %}
-<div class="flex flex-col gap-3 sm:flex-row sm:items-start" data-image-input{% if widget.is_initial %} data-image-input-stored="{{ widget.value.url }}"{% endif %}>
-  <div class="avatar avatar-placeholder shrink-0">
-    <div class="w-24 rounded-box border border-base-300 bg-base-200 transition-opacity" data-image-input-frame>
-      <img class="h-auto max-h-full w-auto max-w-full object-contain" alt="{{ widget.label }}"{% if widget.is_initial %} src="{{ widget.value.url }}"{% else %} hidden{% endif %} data-image-input-preview>
+<div class="flex gap-3 {% if widget.horizontal %}flex-row flex-wrap items-start{% else %}flex-col items-start{% endif %}" data-image-input{% if widget.is_initial %} data-image-input-stored="{{ widget.value.url }}"{% endif %}{% if not widget.show_input %} data-image-input-picker{% endif %}>
+  {% if widget.show_input %}<div class="avatar avatar-placeholder max-w-full shrink-0">{% else %}<button type="button" class="avatar avatar-placeholder group max-w-full shrink-0 cursor-pointer rounded-box" aria-label="{{ widget.label }}: {% if widget.is_initial %}{% translate 'Change image' %}{% else %}{% translate 'Add image' %}{% endif %}" data-change="{{ widget.label }}: {% translate 'Change image' %}" data-add="{{ widget.label }}: {% translate 'Add image' %}"{% if widget.attrs.disabled %} disabled{% endif %} hidden data-image-input-open>{% endif %}
+    <div class="relative {% if not widget.aspect_ratio %}w-24 {% endif %}rounded-box border border-base-300 bg-base-200 transition-opacity{% if not widget.show_input %} hover:border-primary{% endif %}"{% if widget.aspect_ratio %} style="aspect-ratio: calc({{ widget.aspect_ratio|stringformat:'s' }}); width: calc(6rem * {{ widget.aspect_ratio|stringformat:'s' }})"{% endif %} data-image-input-frame>
+      <img class="{% if widget.aspect_ratio %}object-cover{% else %}h-auto max-h-full w-auto max-w-full object-contain{% endif %}" alt="{{ widget.label }}"{% if widget.is_initial %} src="{{ widget.value.url }}"{% else %} hidden{% endif %} data-image-input-preview>
       <div class="flex flex-col items-center gap-1 px-2 text-center text-xs text-base-content"{% if widget.is_initial %} hidden{% endif %} data-image-input-empty>
         <svg class="size-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
-        <span data-image-input-empty-text data-empty="{% translate 'No image' %}" data-missing="{% translate 'Image not found' %}" data-unreadable="{% translate 'No preview' %}">{% translate "No image" %}</span>
+        <span data-image-input-empty-text data-empty="{% if widget.show_input %}{% translate 'No image' %}{% else %}{% translate 'Add image' %}{% endif %}" data-missing="{% translate 'Image not found' %}" data-unreadable="{% translate 'No preview' %}">{% if widget.show_input %}{% translate "No image" %}{% else %}{% translate "Add image" %}{% endif %}</span>
       </div>
+      {% if not widget.show_input %}
+        <span class="absolute inset-x-0 bottom-0 bg-neutral py-1 text-center text-xs text-neutral-content opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"{% if not widget.is_initial %} hidden{% endif %} aria-hidden="true" data-image-input-hint>{% translate "Change image" %}</span>
+      {% endif %}
     </div>
-  </div>
-  <div class="flex min-w-0 flex-1 flex-col gap-2">
-    {% if widget.is_initial %}
+  {% if widget.show_input %}</div>{% else %}</button>{% endif %}
+  <div class="flex flex-col gap-2 {% if widget.horizontal %}min-w-52 flex-1{% else %}w-full{% endif %}">
+    {% if widget.is_initial and widget.show_file_name %}
       <p class="text-sm text-base-content break-words">{{ widget.initial_text }}: <a class="link" href="{{ widget.value.url }}" target="_blank" rel="noopener">{{ widget.file_name }}</a></p>
     {% endif %}
     <input type="{{ widget.type }}" name="{{ widget.name }}"{% include "daisyui/widgets/attrs.html" %}>

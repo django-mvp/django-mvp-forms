@@ -1072,9 +1072,9 @@ class TomSelectMultiple(TomSelect, forms.SelectMultiple):
 class ImageInput(forms.ClearableFileInput):
     """A file input for an image that shows the image it holds.
 
-    The stored image is drawn as a thumbnail beside the input, and a newly
-    chosen file takes its place before the form is sent. Removing the stored
-    image stays a checkbox, as it is for any clearable file.
+    The stored image is drawn as a thumbnail, and a newly chosen file takes its
+    place before the form is sent. Removing the stored image stays a checkbox,
+    as it is for any clearable file.
     """
 
     template_name = "mvp_forms/widgets/image.html"
@@ -1084,9 +1084,59 @@ class ImageInput(forms.ClearableFileInput):
     class Media:
         js = ["mvp_forms/image-input.js"]
 
+    def __init__(
+        self,
+        attrs=None,
+        *,
+        aspect_ratio=None,
+        show_input=True,
+        show_file_name=False,
+        horizontal=False,
+    ):
+        """Set how the image is shown.
+
+        Args:
+            attrs: The file input's attributes.
+            aspect_ratio: The thumbnail's width over its height, such as ``1``,
+                ``2`` or ``16 / 9``. The image fills a thumbnail of that shape.
+                Without one the thumbnail is square and the image is shown
+                whole inside it.
+            show_input: ``False`` to leave out the file input, so that the
+                thumbnail itself opens the file picker.
+            show_file_name: ``True`` to name the stored file beside the image,
+                as a link to it.
+            horizontal: ``True`` to set the thumbnail beside the rest, where
+                there is room, rather than above it.
+
+        Raises:
+            ValueError: An option holds a value it cannot take.
+        """
+        if aspect_ratio is not None:
+            Check.of_type("aspect_ratio", aspect_ratio, (int, float), "a number")
+            if isinstance(aspect_ratio, bool) or aspect_ratio <= 0:
+                raise ValueError(
+                    f"aspect_ratio must be a number above zero, not {aspect_ratio!r}."
+                )
+        for option, value in (
+            ("show_input", show_input),
+            ("show_file_name", show_file_name),
+            ("horizontal", horizontal),
+        ):
+            Check.one_of(option, value, (True, False))
+        super().__init__(attrs)
+        self.aspect_ratio = aspect_ratio
+        self.show_input = show_input
+        self.show_file_name = show_file_name
+        self.horizontal = horizontal
+
     def get_context(self, name, value, attrs):
-        """Add the stored file's name without the folders it is stored in."""
+        """Add the options and the stored file's name without its folders."""
         context = super().get_context(name, value, attrs)
-        if context["widget"]["is_initial"]:
-            context["widget"]["file_name"] = str(value.name).rsplit("/", 1)[-1]
+        widget = context["widget"]
+        widget["aspect_ratio"] = self.aspect_ratio
+        widget["show_input"] = self.show_input
+        widget["show_file_name"] = self.show_file_name
+        widget["horizontal"] = self.horizontal
+        if widget["is_initial"]:
+            widget["file_name"] = str(value.name).rsplit("/", 1)[-1]
         return context

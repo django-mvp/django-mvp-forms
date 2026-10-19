@@ -80,9 +80,9 @@ class StatesForm(SampleForm):
     )
     scan = forms.ImageField(
         label="Label scan",
-        widget=ImageInput,
+        widget=ImageInput(show_file_name=True),
         required=False,
-        help_text="A tall image with a long file name.",
+        help_text="A tall image, with show_file_name=True and a long file name.",
     )
     lost = forms.ImageField(
         label="Site photo",
@@ -103,6 +103,88 @@ class StatesForm(SampleForm):
         "scan": stored("core-label-borehole-GH-2291-section-04-of-11-reverse-side.png"),
         "lost": stored("site-photo-deleted.jpg"),
         "locked": stored("ada-portrait.jpg"),
+    }
+
+
+class ShapesForm(SampleForm):
+    """Thumbnails shaped like the places the images are shown."""
+
+    banner = forms.ImageField(
+        label="Banner",
+        widget=ImageInput(aspect_ratio=3),
+        required=False,
+        help_text="aspect_ratio=3",
+    )
+    video_still = forms.ImageField(
+        label="Video still",
+        widget=ImageInput(aspect_ratio=16 / 9),
+        required=False,
+        help_text="aspect_ratio=16 / 9",
+    )
+    portrait = forms.ImageField(
+        label="Portrait",
+        widget=ImageInput(aspect_ratio=3 / 4),
+        required=False,
+        help_text="aspect_ratio=3 / 4",
+    )
+
+    initial_values = {
+        "banner": stored("field-season-cover.jpg"),
+        "video_still": stored("field-season-cover.jpg"),
+        "portrait": stored("ada-portrait.jpg"),
+    }
+
+
+class PickerForm(SampleForm):
+    """Images changed by clicking them, with no file input in sight."""
+
+    photo = forms.ImageField(
+        label="Profile photo",
+        widget=ImageInput(show_input=False, aspect_ratio=1),
+        required=False,
+    )
+    logo = forms.ImageField(
+        label="Logo",
+        widget=ImageInput(show_input=False),
+        required=False,
+        help_text="Nothing stored yet.",
+    )
+    cover = forms.ImageField(
+        label="Cover image",
+        widget=ImageInput(show_input=False, aspect_ratio=3),
+        required=False,
+    )
+
+    initial_values = {
+        "photo": stored("ada-portrait.jpg"),
+        "cover": stored("field-season-cover.jpg"),
+    }
+
+
+class HorizontalForm(SampleForm):
+    """The thumbnail beside the input, where there is room for both."""
+
+    photo = forms.ImageField(
+        label="Profile photo",
+        widget=ImageInput(horizontal=True),
+        required=False,
+    )
+    avatar = forms.ImageField(
+        label="Avatar",
+        widget=ImageInput(horizontal=True, show_input=False, aspect_ratio=1),
+        required=False,
+        help_text="horizontal=True with show_input=False.",
+    )
+    badge = forms.ImageField(
+        label="Station badge",
+        widget=ImageInput(horizontal=True),
+        required=False,
+        help_text="Nothing stored yet.",
+    )
+
+    initial_values = {
+        "photo": stored("ada-portrait.jpg"),
+        "avatar": stored("ada-portrait.jpg"),
     }
 
 

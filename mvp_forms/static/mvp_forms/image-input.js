@@ -25,13 +25,24 @@
       status: find("status"),
       statusText: find("status-text"),
       undo: find("undo"),
+      open: find("open"),
+      hint: find("hint"),
     };
+  }
+
+  // Where the thumbnail opens the picker, its name says whether it adds an
+  // image or changes the one shown, and so does the band shown over it.
+  function name(p, showing) {
+    if (!p.open) return;
+    p.open.setAttribute("aria-label", showing ? p.open.dataset.change : p.open.dataset.add);
+    if (p.hint) p.hint.hidden = !showing;
   }
 
   function showImage(p, url) {
     p.preview.src = url;
     p.preview.hidden = false;
     p.empty.hidden = true;
+    name(p, true);
   }
 
   function showEmpty(p, message) {
@@ -39,6 +50,7 @@
     p.preview.removeAttribute("src");
     p.empty.hidden = false;
     p.emptyText.textContent = message;
+    name(p, false);
   }
 
   function say(p, message, undo) {
@@ -98,6 +110,11 @@
   });
 
   document.addEventListener("click", function (event) {
+    const open = event.target.closest("[data-image-input-open]");
+    if (open) {
+      parts(open.closest(SELECTOR)).file.click();
+      return;
+    }
     const undo = event.target.closest("[data-image-input-undo]");
     if (!undo) return;
     const group = undo.closest(SELECTOR);
@@ -105,7 +122,7 @@
     p.file.value = "";
     if (p.remove) p.remove.checked = false;
     draw(group);
-    p.file.focus();
+    (p.open || p.file).focus();
   });
 
   // A stored image whose file is gone is drawn as missing, not as a broken
@@ -131,8 +148,19 @@
 
   // A form sent back with an error, or restored by the browser's back button,
   // can hold a file already.
+  // Where the thumbnail is the picker, the file input is taken out of sight
+  // and out of the tab order only once this script runs, so a page without it
+  // still has an input to use.
   function start() {
-    document.querySelectorAll(SELECTOR).forEach(draw);
+    document.querySelectorAll(SELECTOR).forEach(function (group) {
+      const p = parts(group);
+      if (p.open) {
+        p.open.hidden = false;
+        p.file.classList.add("sr-only");
+        p.file.tabIndex = -1;
+      }
+      draw(group);
+    });
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", start);

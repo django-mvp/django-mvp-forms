@@ -2,8 +2,8 @@
 
 An `ImageField` is drawn as a plain clearable file input unless you give it a
 widget: a link to the stored file, a checkbox to clear it and a file input.
-`ImageInput` shows the image itself. The stored image sits beside the input as a
-thumbnail, and a file you choose takes its place before the form is sent.
+`ImageInput` shows the image itself. The stored image is drawn as a thumbnail,
+and a file you choose takes its place before the form is sent.
 
 ```python
 from mvp_forms.widgets import ImageInput
@@ -12,12 +12,22 @@ from mvp_forms.widgets import ImageInput
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ["photo"]
-        widgets = {"photo": ImageInput}
+        fields = ["photo", "banner"]
+        widgets = {
+            "photo": ImageInput(show_input=False, aspect_ratio=1),
+            "banner": ImageInput(aspect_ratio=3),
+        }
 ```
 
 The thumbnail's alternative text is the field's label. The widget's script comes
 with the form's media, and needs nothing else on the page.
+
+| Option | Default | What it does |
+| --- | --- | --- |
+| `aspect_ratio` | none | The thumbnail's width over its height, such as `3` or `16 / 9`. The image fills that shape. Without it the thumbnail is square and the image is shown whole. |
+| `show_input` | `True` | `False` leaves out the file input. The thumbnail opens the file picker. |
+| `show_file_name` | `False` | `True` names the stored file above the input, as a link to it. |
+| `horizontal` | `False` | `True` sets the thumbnail beside the input where there is room, and above it where there is not. |
 
 ## A record with pictures
 
@@ -30,6 +40,42 @@ The field report is a `FileField`, which keeps the plain clearable file input.
 
 ```{live-example} /examples/image-input/
 :title: Two stored images and a stored file
+
+../../examples/custom_widgets/image_input.py
+```
+
+## The image as the picker
+
+With `show_input=False` there is no file input to see. Click the thumbnail, or
+tab to it and press Enter, to choose a file. An empty one says **Add image**,
+and a stored one shows **Change image** over it while the pointer or the focus
+is on it.
+
+```{live-example} /examples/image-input-picker/
+:title: Click the image to change it
+
+../../examples/custom_widgets/image_input.py
+```
+
+## Shaped like where it is shown
+
+`aspect_ratio` gives the thumbnail the shape the image has in your site, so a
+banner is seen cropped the way visitors will see it. The thumbnail keeps its
+height and takes the width the shape needs.
+
+```{live-example} /examples/image-input-shapes/
+:title: A banner, a video still and a portrait
+
+../../examples/custom_widgets/image_input.py
+```
+
+## Beside the input
+
+`horizontal=True` puts the thumbnail beside the input. On a narrow screen the
+input moves under it.
+
+```{live-example} /examples/image-input-horizontal/
+:title: Thumbnail and input side by side
 
 ../../examples/custom_widgets/image_input.py
 ```
