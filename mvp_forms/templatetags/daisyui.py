@@ -565,6 +565,12 @@ class FieldInput:
         lays its parts one after another, is joined. A widget with a template
         of its own arranges its parts itself. Every visible part must be drawn
         as an input or a select, the two components a join squares.
+
+        Args:
+            widget: The copy of the multi-widget.
+
+        Returns:
+            True when the parts are drawn in one join.
         """
         if widget.template_name != forms.MultiWidget.template_name:
             return False
@@ -683,6 +689,9 @@ class FieldInput:
             widget: The copy of the multi-widget that holds the part.
             index: The part's place in the widget.
             part: The part, which is changed.
+            joined: Whether the widget's parts are drawn in a join, which gives
+                each part ``join-item`` and a member's width in place of
+                ``w-full``.
         """
         if part.is_hidden:
             return
