@@ -130,6 +130,7 @@ class TemplateSurface:
             *FieldInput.templates.values(),
             *FieldInput.inline_templates.values(),
             FieldInput.rating_template,
+            FieldInput.joined_parts_template,
             ImageInput.template_name,
             PartialDateInput.template_name,
             PointInput.template_name,

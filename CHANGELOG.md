@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The parts of a multi-widget are drawn as one daisyUI join when the widget uses Django's own multi-widget template and every visible part is an input or a select. A number and its unit now sit in one row, the input filling it and the select as wide as its options, and any hidden part follows the join. A widget with a template of its own, such as the split date and time, is drawn as before. This covers django-pint's quantity fields, which need nothing added. Each part still takes the field's label as its `aria-label`, and `MultiWidgetField` names the unit.
+
 ## [v0.6.0] - 2026-10-19
 
 ### Added

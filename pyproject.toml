@@ -63,6 +63,7 @@ dev = [
     "django-mvp>=0.28.2",
     "django-tomselect>=2026.6.2",
     "django-countries>=9.1.0",
+    "django-pint>=1.0.4",
     "django-mvp-sphinx>=0.1.0",
     "sphinx>=8.1",
     "myst-parser>=4.0",

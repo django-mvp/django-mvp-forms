@@ -13,7 +13,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table, and it draws the select controls of django-tomselect and the fields of django-countries. Nothing is published to PyPI. The versions of Django, django-crispy-forms and daisyUI it supports are in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions).
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table, and it draws the select controls of django-tomselect and the fields of django-countries and django-pint. Nothing is published to PyPI. The versions of Django, django-crispy-forms and daisyUI it supports are in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions).
 
 ## Why
 
@@ -614,6 +614,7 @@ class EventForm(forms.Form):
 
 - `attrs` is a sequence with one set of attributes for each part, in order, or one set that goes on every part. A sequence shorter than the parts leaves the last parts with none, and raises nothing. A part given `{"type": "hidden"}` is drawn as a hidden input.
 - Each part is drawn as the daisyUI component of its kind: the two parts of a split date and time are `input`, with `input-error` when the field fails, and a class of your own on a part is kept beside it. A size, a colour and a variant stated for the form, or with a `Choice` around the layout object, reach every part as they reach any input, and a failing field's parts have the error modifier and not the colour.
+- A multi-widget drawn through Django's own multi-widget template whose visible parts are all inputs or selects is drawn as one daisyUI join: the visible parts in `<div class="join w-full">`, then any hidden parts outside it. The joined parts take the widths of a `Join`'s members, an input `flex-1` and a select `w-auto`, in place of `w-full`. A widget with a template of its own, such as the split date and time, is not joined, and neither is one with a visible part that is not an input or a select.
 - The frame is one `<fieldset>` with one `<legend>`, one help text and one error element, and the fieldset is described by the help text and the error. Each part has an `aria-label`: Date and Time for a split date and time, and the field's label for the parts of any other multi-widget. An `aria-label` you give a part is kept.
 - A `SplitDateTimeField` with no layout object is drawn the same way. A split field whose widget is hidden is drawn as hidden inputs and nothing around them. On a field with one widget, `MultiWidgetField` draws the field with the attributes.
 - The form's own widget and its parts are not changed: the classes and names are written on a copy for each render, so drawing a form twice gives the same markup. `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
@@ -1107,6 +1108,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/widgets/group_options.html` | The options of a radio group or a checkbox group, each an input in a label of its own, under a nested fieldset where the choices have group names, which the two group templates include. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/rating.html` | A field drawn as a rating: the element that holds the stars and one radio input for each choice, where `widget` also holds `rating_class`, the classes of that element, and `inputs`, the choices in the order they are drawn, the one that clears the rating first. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/select_date.html` | A date drawn by `SelectDateWidget`: a select for each part of the date, side by side. | `widget` | `FORM_RENDERER` |
+| `daisyui/widgets/joined_parts.html` | A multi-widget drawn through Django's own multi-widget template whose visible parts are all inputs or selects: the visible parts side by side in one daisyUI join, then any hidden parts. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/partial_date.html` | A partial date drawn by `PartialDateInput` or `PartialDateSelect`: one element that holds a year, a month and a day side by side, each a part of one field. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/image.html` | An image field drawn by `ImageInput`: a thumbnail of the stored image, the file input or, with `show_input=False`, a button over the thumbnail that opens the file picker, the removal checkbox of an optional field, a revert button and a status line, each carrying the `data-image-input-` hook its script reads. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/point.html` | A point drawn by `PointInput`: a latitude input and a longitude input, each inside its own daisyUI `input` frame that shows its name before it. | `widget` | `FORM_RENDERER` |
@@ -1605,6 +1607,48 @@ The select takes the width the flag leaves. The image keeps the class and the `i
 #### The release tested
 
 The support is tested against django-countries 9.1.0, which the development dependencies name as the least release. That release declares Django 4.2, 5.2, 6.0 and 6.1. Which releases of django-countries are supported is stated here and is not part of the [support window](https://github.com/django-mvp/django-mvp-forms#supported-versions), whose periods apply to Django, django-crispy-forms and daisyUI.
+
+### django-pint
+
+The pack draws the quantity fields of [django-pint](https://github.com/CarliJoy/django-pint): `QuantityFormField`, `IntegerQuantityFormField` and `DecimalQuantityFormField`. Each draws its number and its unit with one widget, a multi-widget of a number input and a select, and the pack draws the two as one daisyUI join. The number fills the row and the unit select is as wide as its longest unit. django-pint is not a dependency of the package and no module of the package imports it, so a project without it is drawn as before.
+
+`{{ form|crispy }}` and `{% crispy form %}` need nothing from you for these fields. The size, the colour and the variant stated for the form or for the field reach both parts, and a field in error has `input-error` on the number and `select-error` on the unit. The form cleans to the same quantity as it does under any other pack.
+
+```python
+from django import forms
+from quantityfield.fields import QuantityFormField
+
+
+class SampleForm(forms.Form):
+    weight = QuantityFormField(
+        base_units="kilogram", unit_choices=["kilogram", "gram", "pound"]
+    )
+```
+
+Each part is named by the field's label, so a screen reader reads the number and the unit both as "Weight". `MultiWidgetField` names each part, which is how a form names the unit:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, MultiWidgetField
+
+
+class SampleForm(forms.Form):
+    weight = QuantityFormField(
+        base_units="kilogram", unit_choices=["kilogram", "gram", "pound"]
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            MultiWidgetField(
+                "weight",
+                attrs=({"aria-label": "Weight"}, {"aria-label": "Weight unit"}),
+            ),
+        )
+```
+
+The support is tested against django-pint 1.0.4, which the development dependencies name as the least release. Which releases of django-pint are supported is stated here and is not part of the [support window](https://github.com/django-mvp/django-mvp-forms#supported-versions).
 
 ### Input masks
 
@@ -2548,7 +2592,7 @@ The sidebar follows the package:
   formsets.
 - **Custom fields** and **Custom widgets**: the fields and widgets this package
   ships.
-- **Third-party support**: django-tomselect and django-countries drawn by the pack.
+- **Third-party support**: django-tomselect, django-countries and django-pint drawn by the pack.
 
 Each page shows live examples: a running form in a frame beside the files that
 make it. Every example is one Python file under `demo/examples/` and one route in

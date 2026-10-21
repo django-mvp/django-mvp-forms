@@ -66,6 +66,13 @@ from demo.examples.special_fields.inline_choices import SurveyForm
 from demo.examples.special_fields.rating_and_range import ReviewForm
 from demo.examples.standard_fields import StandardFieldsForm
 from demo.examples.third_party.countries import AddressForm
+from demo.examples.third_party.pint import (
+    SENT,
+    DisabledForm,
+    NamedUnitForm,
+    QuantitiesForm,
+    SizedForm,
+)
 from demo.examples.third_party.tomselect import ResearchForm
 from demo.examples.views import (
     ExampleView,
@@ -225,4 +232,8 @@ urlpatterns = [
         ExampleView.as_view(form_class=ResearchForm, template_name=DJANGO_TOMSELECT),
     ),
     path("countries/", ExampleView.as_view(form_class=AddressForm)),
+    path("pint/", ExampleView.as_view(form_class=QuantitiesForm, sent_data=SENT)),
+    path("pint-sizes/", ExampleView.as_view(form_class=SizedForm)),
+    path("pint-disabled/", ExampleView.as_view(form_class=DisabledForm)),
+    path("pint-named-unit/", ExampleView.as_view(form_class=NamedUnitForm)),
 ]
