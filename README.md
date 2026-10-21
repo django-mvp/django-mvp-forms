@@ -1648,6 +1648,8 @@ class SampleForm(forms.Form):
         )
 ```
 
+The support is tested against django-pint 1.0.4, which the development dependencies name as the least release. Which releases of django-pint are supported is stated here and is not part of the [support window](https://github.com/django-mvp/django-mvp-forms#supported-versions).
+
 ### Input masks
 
 A mask is a rule [IMask](https://imask.js.org/) applies to a text input as a person types: it decides what can be typed and how it is shown. The package gives a developer a widget to name on a field, and one script that hands what the widget wrote to IMask. The widgets add nothing to validation, so a field cleans and validates exactly as it did.
