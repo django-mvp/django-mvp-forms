@@ -53,27 +53,3 @@ the unit.
 
 ../../examples/third_party/pint.py
 ```
-
-## Before: each part on its own line
-
-How the pack drew the same forms before the parts were joined, for comparison.
-The number and the unit each fill the row, one above the other, and the unit
-select is as wide as the number.
-
-```{live-example} /examples/pint-today/
-:title: The same form, unjoined
-
-../../examples/third_party/pint.py
-```
-
-```{live-example} /examples/pint-today-disabled/
-:title: A disabled weight, unjoined
-
-../../examples/third_party/pint.py
-```
-
-```{live-example} /examples/pint-today-sizes/
-:title: The five sizes, unjoined
-
-../../examples/third_party/pint.py
-```
