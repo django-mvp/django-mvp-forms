@@ -26,6 +26,7 @@ from django_tomselect.forms import (
     TomSelectModelMultipleChoiceField,
     TomSelectMultipleChoiceField,
 )
+from quantityfield.fields import QuantityFormField
 
 from mvp_forms.fields import PartialDateField
 from mvp_forms.layout import Join
@@ -627,6 +628,38 @@ class MultiWidgetsForm(forms.Form):
         self.helper.layout = Layout(*layout)
 
 
+class AmountWidget(forms.MultiWidget):
+    """A number and a unit on Django's own multi-widget template."""
+
+    def __init__(self, attrs=None, parts=None):
+        parts = parts or (forms.NumberInput, forms.Select(choices=[("kg", "kg")]))
+        super().__init__(parts, attrs)
+
+    def decompress(self, value):
+        return value.split(" ") if value else [None, None]
+
+
+class AmountField(forms.MultiValueField):
+    widget = AmountWidget
+
+    def __init__(self, **kwargs):
+        super().__init__((forms.CharField(), forms.CharField()), **kwargs)
+
+    def compress(self, data_list):
+        return " ".join(data_list)
+
+
+class AmountsForm(forms.Form):
+    amount = AmountField(label="Amount")
+
+    def __init__(self, *args, parts=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if parts:
+            self.fields["amount"].widget = AmountWidget(parts=parts)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
 class RefusedMomentForm(MultiWidgetsForm):
     moment = forms.SplitDateTimeField(
         label="Starts", help_text="Local time", validators=[refuse_moment]
@@ -1169,6 +1202,19 @@ class CountriesForm(forms.Form):
     countries = CountryField(multiple=True).formfield(help_text="Some countries")
     flagged = CountryField().formfield(
         widget=CountrySelectWidget(), help_text="One country, with its flag"
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class QuantityForm(forms.Form):
+    weight = QuantityFormField(
+        base_units="kilogram",
+        unit_choices=["kilogram", "gram", "pound"],
+        help_text="Dry weight",
     )
 
     def __init__(self, *args, **kwargs):
