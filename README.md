@@ -1114,7 +1114,7 @@ helper.daisyui = FormChoices(
 )
 ```
 
-The legend is a template rendered against the page's context with `formset` added. A collapsible table starts closed unless `open=True`, and a table holding an error in any of its rows is drawn open, with the error mark beside its legend. `TablePanel` raises `ValueError` as `StackedForms` does.
+The legend is a template rendered against the page's context with `formset` added. A collapsible table starts closed unless `open=True`, and a table holding an error in any of its rows is drawn open, with the error mark beside its legend. `TablePanel` raises `ValueError` as `StackedForms` does. Both take their three arguments and their checks from `FormsetPanel`, which is not stated on a helper itself.
 
 A helper's layout is not applied in a table: every visible field of the form gets a column. The columns are the first form's visible fields and every form is taken to have the same ones. A form that lacks one of them has an empty cell there.
 

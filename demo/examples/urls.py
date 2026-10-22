@@ -48,9 +48,9 @@ from demo.examples.formsets.collapsible import (
 from demo.examples.formsets.stacked import OrderHelper, OrderLineFormSet
 from demo.examples.formsets.table import LINES, CollapsibleHelper
 from demo.examples.formsets.table import OrderHelper as TableOrderHelper
+from demo.examples.formsets.table import OrderLineFormSet as TableOrderLineFormSet
 from demo.examples.formsets.table import TitledHelper as TableTitledHelper
 from demo.examples.formsets.table import sent_back as table_sent_back
-from demo.examples.formsets.table import OrderLineFormSet as TableOrderLineFormSet
 from demo.examples.layout_objects.accordion import ChosenGroupForm
 from demo.examples.layout_objects.accordion import ProfileForm as AccordionForm
 from demo.examples.layout_objects.alert import NoticeForm
