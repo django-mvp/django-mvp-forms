@@ -1,2 +1,11 @@
 {% extends "mvp/base.html" %}
 {# The base django-mvp's page templates extend by name, and the place for project-wide overrides. #}
+{% block styles %}
+  {{ block.super }}
+  {# django-mvp's stylesheet holds only the utilities django-mvp writes. The demo generates the ones the pack writes in the page with Tailwind's browser build, utilities only, so django-mvp's theme and base styles stay as they are. #}
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @import "tailwindcss/theme.css" layer(theme);
+    @import "tailwindcss/utilities.css" layer(utilities);
+  </style>
+{% endblock styles %}

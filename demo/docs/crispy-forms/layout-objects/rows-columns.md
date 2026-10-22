@@ -1,16 +1,16 @@
-# Fieldsets, rows and columns
+# Rows and columns
 
-`Fieldset`, `Row`, `Column` and `Div` group fields and set them out on the page.
-`HTML` puts a piece of markup between them. All five come from
-`crispy_forms.layout`, and the pack draws them as daisyUI.
+`Row`, `Column` and `Div` set fields out on the page. `HTML` puts a piece of
+markup between them. All four come from `crispy_forms.layout`, and the pack
+draws them as daisyUI.
 
 Send the form empty. Every field is required, and each error is drawn inside the
 container that holds its field.
 
-```{live-example} /examples/fieldsets-rows-columns/
-:title: A fieldset with a row, a note and a div
+```{live-example} /examples/rows-columns/
+:title: A row of two columns, a note and a div
 
-../../../examples/layout_objects/fieldsets_rows_columns.py
+../../../examples/layout_objects/rows_columns.py
 ```
 
 ## Buttons

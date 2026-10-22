@@ -87,6 +87,14 @@ class TestFieldset:
         assert "fieldset" in fieldset["class"]
         assert "fieldset-legend" in fieldset.find("legend")["class"]
 
+    def test_it_is_drawn_as_daisyuis_fieldset_panel(self, draw_layout):
+        soup = draw_layout(Fieldset(LEGEND, "first", css_id="group"))
+
+        fieldset = soup.find("fieldset", id="group")
+        assert {"bg-base-200", "border-base-300", "rounded-box", "border"} <= set(
+            fieldset["class"]
+        )
+
     def test_an_empty_legend_draws_no_legend_element(self, draw_layout):
         soup = draw_layout(Fieldset("", "first", css_id="group"))
 

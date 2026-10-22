@@ -1,6 +1,7 @@
 """The layout objects a form uses, beyond those of ``crispy_forms.layout``.
 
-``Join`` is the package's own. The others come from django-crispy-forms'
+``Join`` is the package's own, and ``Fieldset`` is django-crispy-forms' own with
+the option to collapse. The others come from django-crispy-forms'
 ``crispy_forms.bootstrap`` module, which is named for the framework its own
 templates were written for, and are passed through unchanged so that a form
 imports them from here. The ``daisyui`` template pack draws each of them.
@@ -25,10 +26,12 @@ from crispy_forms.bootstrap import (
     UneditableField,
 )
 from crispy_forms.layout import HTML, BaseInput, Field, LayoutObject
+from crispy_forms.layout import Fieldset as CrispyFieldset
 from crispy_forms.utils import TEMPLATE_PACK, flatatt, render_field
-from django.template import Context
+from django.template import Context, Template
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.utils.text import slugify
 from django.utils.safestring import SafeData, SafeString
 
 from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice, Modifiers
@@ -37,6 +40,7 @@ __all__ = [
     "Accordion",
     "AccordionGroup",
     "Alert",
+    "Fieldset",
     "FormActions",
     "GroupButton",
     "GroupText",
@@ -475,3 +479,85 @@ class Join(LayoutObject):
             )
         )
         return markup
+
+
+class Fieldset(CrispyFieldset):
+    """A fieldset drawn as a panel, which can carry a description and collapse.
+
+    Everything django-crispy-forms' own ``Fieldset`` takes is taken here and kept
+    as it is. A collapsible fieldset is opened and closed by its legend, and one
+    holding a field in error is drawn open whatever its state.
+
+    Args:
+        legend: The fieldset's legend, rendered as a template against the page's
+            context.
+        *fields: The fields and layout objects it holds.
+        collapsible: Whether a person can open and close it.
+        state: ``"open"`` or ``"closed"``, how a collapsible fieldset is first
+            drawn. A collapsible fieldset with no state is drawn closed.
+        description: Help text drawn at the top of the fieldset, before its
+            first field, and read out with the fieldset's name.
+        **kwargs: Passed to django-crispy-forms' ``Fieldset``.
+
+    Raises:
+        ValueError: The state is not ``"open"`` or ``"closed"``, a state is given
+            for a fieldset that is not collapsible, or a collapsible fieldset has
+            no legend to open it by.
+    """
+
+    states = ("open", "closed")
+
+    def __init__(
+        self,
+        legend: str,
+        *fields: Any,
+        collapsible: bool = False,
+        state: str | None = None,
+        description: str = "",
+        **kwargs: Any,
+    ) -> None:
+        if state is not None and state not in self.states:
+            raise ValueError(
+                f"{state!r} is not a fieldset state: use 'open' or 'closed'"
+            )
+        if state is not None and not collapsible:
+            raise ValueError("A fieldset has a state only when it is collapsible")
+        if collapsible and not legend:
+            raise ValueError("A collapsible fieldset needs a legend to open it by")
+        super().__init__(legend, *fields, **kwargs)
+        self.collapsible = collapsible
+        self.state = state or "closed"
+        self.description = description
+
+    def render(
+        self,
+        form: Any,
+        context: Context,
+        template_pack: str = TEMPLATE_PACK,
+        **kwargs: Any,
+    ) -> SafeString:
+        """Draw the fieldset, open when it holds a field in error.
+
+        The ids the template writes start with the fieldset's ``css_id``, or
+        with its legend made into a slug, and with the form's prefix, so the
+        forms of a formset do not share them.
+        """
+        fields = self.get_rendered_fields(form, context, template_pack, **kwargs)
+        legend = Template(str(self.legend)).render(context) if self.legend else ""
+        in_error = any(
+            pointer.name in form.errors for pointer in self.get_field_names()
+        )
+        name = self.css_id or slugify(strip_tags(legend) or self.description)
+        prefix = f"{form.prefix}-" if form.prefix else ""
+        context.update(
+            {
+                "fieldset": self,
+                "legend": SafeString(legend),
+                "fields": fields,
+                "fieldset_id": f"{prefix}{name or 'fieldset'}",
+                "fieldset_in_error": in_error,
+                "fieldset_open": self.state == "open" or in_error,
+            }
+        )
+        template = self.get_template_name(template_pack)
+        return render_to_string(template, context.flatten())

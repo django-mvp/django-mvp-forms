@@ -109,6 +109,25 @@ A developer has a few fields that make sense only together, such as the parts of
 
 ---
 
+### User Story 5 - Describe a fieldset and let people collapse it (Priority: P3)
+
+A developer has a long form whose fieldsets need a word of explanation, and some of which most people never need to fill in. They import `Fieldset` from `mvp_forms.layout`, give a fieldset a description, and make the rarely used ones collapsible and closed. A person filling in the form reads the description with the group, opens a closed fieldset by its legend when they need it, and finds any fieldset holding a mistake already open when the form comes back with errors.
+
+**Why this priority**: Every form works without it. It is what the Django admin offers its fieldsets, and a long form without it is harder to read.
+
+**Independent Test**: Draw a form with a described fieldset and two collapsible ones, one open and one closed, then send it empty and check that the closed one holding a required field is drawn open.
+
+**Acceptance Scenarios**:
+
+1. **Given** a `Fieldset` with a description, **When** the form is drawn, **Then** the description is drawn before the fieldset's first field, and assistive technology reads it as describing the fieldset.
+2. **Given** a collapsible `Fieldset` with the state `open`, **When** the form is drawn, **Then** its fields are shown, and a person can close it by its legend.
+3. **Given** a collapsible `Fieldset` with the state `closed`, or with no state, **When** the form is drawn, **Then** its fields are hidden, and a person can open it by its legend.
+4. **Given** a closed collapsible `Fieldset` holding a field in error, a hidden field included, **When** the form is drawn again, **Then** the fieldset is open, and assistive technology is told it holds an error.
+5. **Given** a `Fieldset` with a state but not collapsible, with a state other than `open` or `closed`, or collapsible with no legend, **When** the layout is built, **Then** it raises `ValueError`.
+6. **Given** a formset whose forms each hold a collapsible `Fieldset`, **When** it is drawn, **Then** each form's fieldset opens and closes on its own.
+
+---
+
 ### Edge Cases
 
 - A container with nothing in it is drawn as an empty container and raises nothing.
@@ -151,12 +170,21 @@ A developer has a few fields that make sense only together, such as the parts of
 
 #### Across all of them
 
-- **FR-018**: A layout written from django-crispy-forms' documentation with these layout objects MUST work with the pack without changing the layout code. This feature adds no layout classes of its own.
+- **FR-018**: A layout written from django-crispy-forms' documentation with these layout objects MUST work with the pack without changing the layout code. The one layout class this feature adds, `mvp_forms.layout.Fieldset`, takes everything django-crispy-forms' `Fieldset` takes.
 - **FR-019**: Where a layout object was given a template of the developer's own, that template MUST be used.
 - **FR-020**: Every template this feature adds MUST be a plain Django template. None may use django-cotton or daisy-cotton, and nothing this feature adds may import from django-mvp.
-- **FR-021**: The markup this feature draws MUST use daisyUI's own classes and modifiers, so that it works on a page that loads only what FS-001 requires of a host project, with no build step.
-- **FR-022**: The demo project MUST gain a Fieldsets, rows and columns page in its Layout objects group, with live examples that between them show every layout object in this feature, including a form drawn with errors.
+- **FR-021**: The markup this feature draws MUST use daisyUI's own classes and modifiers, and Tailwind utilities where daisyUI has no class for the job, so that it works on a page that loads only what FS-001 requires of a host project, with no build step.
+- **FR-022**: The demo project MUST have a Fieldsets page and a Rows and columns page in its Layout objects group, with live examples that between them show every layout object and every fieldset option in this feature, including a form drawn with errors.
 - **FR-023**: The README's public surface MUST list every layout object this feature draws, and the CHANGELOG MUST record the addition.
+
+#### Fieldset options
+
+- **FR-024**: `mvp_forms.layout` MUST provide a `Fieldset` that takes everything django-crispy-forms' `Fieldset` takes, draws the same, and adds `description`, `collapsible` and `state`. None of the three may be written to the page as an HTML attribute.
+- **FR-025**: A `Fieldset`'s description MUST be drawn before its first field and named by the fieldset's `aria-describedby`. Markup in it MUST be escaped.
+- **FR-026**: A collapsible `Fieldset` MUST be opened and closed by its legend, with the keyboard as well as the pointer, and with no script. Its state MUST say how it is first drawn, and with no state it MUST start closed.
+- **FR-027**: A collapsible `Fieldset` holding a field in error MUST be drawn open whatever its state, with the error announced to assistive technology.
+- **FR-028**: A state on a `Fieldset` that is not collapsible, a state other than `open` or `closed`, and a collapsible `Fieldset` with no legend MUST raise `ValueError` when the layout is built.
+- **FR-029**: The ids a `Fieldset` writes MUST differ between the forms of a formset.
 
 ### Requirement to story map
 
@@ -166,6 +194,7 @@ A developer has a few fields that make sense only together, such as the parts of
 | US2, buttons | FR-009, FR-010, FR-011, FR-012, FR-013, FR-014 |
 | US3, raw HTML and hidden values | FR-015, FR-016, FR-017 |
 | US4, shared label | FR-001, FR-004, FR-006, FR-008 |
+| US5, described and collapsible fieldsets | FR-024, FR-025, FR-026, FR-027, FR-028, FR-029 |
 | Every story | FR-018, FR-019, FR-020, FR-021, FR-022, FR-023 |
 
 ### Out of scope

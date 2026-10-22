@@ -44,6 +44,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 import mvp_forms
 from mvp_forms.choices import Choice, FormChoices, Modifiers
+from mvp_forms.layout import Fieldset as PanelFieldset
 from mvp_forms.layout import Join
 from tests.forms import (
     ButtonedForm,
@@ -163,6 +164,36 @@ LAYOUT_UTILITIES = {
     # The two ends of a range, side by side from the small breakpoint up.
     "grid",
     "sm:grid-cols-2",
+    # A fieldset drawn as the panel daisyUI's fieldset documentation shows, and a
+    # collapsible fieldset, whose legend daisyUI has no class to move (ADR 0066).
+    "-translate-x-1/2",
+    "-translate-y-1/2",
+    "[.peer:checked~legend_&]:hidden",
+    "bg-current",
+    "float-left",
+    "gap-1.5",
+    "h-[0.125em]",
+    "hidden",
+    "inset-y-0",
+    "items-baseline",
+    "left-1/2",
+    "mb-4",
+    "mx-1",
+    "p-0",
+    "p-4",
+    "peer",
+    "peer-checked:float-none",
+    "peer-checked:grid",
+    "peer-checked:ms-3",
+    "peer-checked:px-1",
+    "peer-checked:py-2",
+    "peer-checked:text-xs",
+    "peer-checked:w-auto",
+    "peer-focus-visible:outline-2",
+    "size-[1cap]",
+    "sr-only",
+    "top-1/2",
+    "w-[0.125em]",
 }
 
 
@@ -209,6 +240,23 @@ def structured(data=None):
                 "third",
             ),
             "fourth",
+        ),
+    )
+
+
+def collapsed(data=None):
+    return StructureForm(
+        data,
+        layout=(
+            PanelFieldset(
+                "Account",
+                "first",
+                collapsible=True,
+                state="open",
+                description="Only the holder can change these.",
+            ),
+            PanelFieldset("Contact", "second", collapsible=True),
+            PanelFieldset("", "third", description="Kept private."),
         ),
     )
 
@@ -626,6 +674,15 @@ STATES = [
         lambda: everything({}),
         NOTHING,
         id="all thirteen objects, invalid",
+    ),
+    pytest.param(
+        "{% crispy form %}", collapsed, NOTHING, id="collapsible fieldsets"
+    ),
+    pytest.param(
+        "{% crispy form %}",
+        lambda: collapsed({}),
+        NOTHING,
+        id="collapsible fieldsets, invalid",
     ),
     pytest.param("{% crispy form %}", tabbed, MINE, id="tabs"),
     pytest.param("{% crispy form %}", lambda: tabbed({}), MINE, id="tabs, invalid"),

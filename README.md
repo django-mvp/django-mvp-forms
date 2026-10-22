@@ -206,7 +206,7 @@ Read-only is the browser's and exists only on text inputs and textareas. Set `re
 
 ### Layout objects
 
-The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import the structural and button objects from `crispy_forms.layout`, as django-crispy-forms' documentation says. Import the rest from `mvp_forms.layout`: `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal`, `Alert`, `FormActions`, `StrictButton`, `InlineRadios`, `InlineCheckboxes`, `UneditableField` and `InlineField` are django-crispy-forms' own, passed through unchanged from its `crispy_forms.bootstrap` module, which is named for the framework its own templates were written for. This package adds two of its own, `Choice` (see "One field's own choice") and `Join` (see "Joined groups"). The structural and button objects are below:
+The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import the structural and button objects from `crispy_forms.layout`, as django-crispy-forms' documentation says. Import the rest from `mvp_forms.layout`: `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal`, `Alert`, `FormActions`, `StrictButton`, `InlineRadios`, `InlineCheckboxes`, `UneditableField` and `InlineField` are django-crispy-forms' own, passed through unchanged from its `crispy_forms.bootstrap` module, which is named for the framework its own templates were written for. This package adds two of its own, `Choice` (see "One field's own choice") and `Join` (see "Joined groups"), and a `Fieldset` that takes everything django-crispy-forms' `Fieldset` takes and can also collapse and carry a description (see [Collapsible fieldsets and descriptions](https://github.com/django-mvp/django-mvp-forms#collapsible-fieldsets-and-descriptions)). The structural and button objects are below:
 
 ```python
 from crispy_forms.helper import FormHelper
@@ -234,13 +234,42 @@ class ProfileForm(forms.Form):
 
 Build the layout in the form's `__init__`, as above, so each form has its own. django-crispy-forms stores some rendered values back on its layout objects, so one shared between forms or kept on a class is drawn wrongly the second time.
 
-- `Fieldset` is a daisyUI `fieldset` and its legend is a `fieldset-legend`. An empty legend draws no `<legend>`. The legend is rendered as a template against the page's context, as in the example, and markup in a context value is escaped.
+- `Fieldset` is a daisyUI `fieldset` drawn as a panel, as daisyUI's fieldset documentation shows it: a `base-200` background, a `base-300` border and the theme's box radius, with space below it so that panels one after another do not touch. Its legend is a `fieldset-legend` on the border. An empty legend draws no `<legend>`. The legend is rendered as a template against the page's context, as in the example, and markup in a context value is escaped.
 - `Div` is a plain `<div>` around its fields.
 - `Row` is a `<div>` that sets its columns side by side on a wide page and stacks them on a narrow one. It uses Tailwind layout utilities, because daisyUI has no component for a row.
 - `Column` is a `<div>` that takes an equal share of its row. Outside a `Row` it carries the same two layout classes, which do nothing unless its parent is a flex container. A `Row` that holds fields directly draws them in order, without columns.
 - `MultiField` is a daisyUI `fieldset` whose `<legend>` is the label you give it, holding its fields in order. Each field is still drawn in its own frame, with its own label, help text and errors, so an error sits beside the field it belongs to and not at the top of the group. The label is drawn as you write it, markup included. Unlike a `Fieldset` legend it is not rendered as a template, so it cannot read the page's context. `css_id`, `css_class`, `label_class` and attributes are kept on the group, and the class names django-crispy-forms writes for other template packs, listed under the buttons below, are not drawn.
 
 Each of the five holds its fields and further layout objects in the order the layout gives, and can be nested to any depth. The `css_id`, `css_class` and attributes you give one are kept on its element, and your classes come after the pack's. Every field inside is still drawn with its own label, help text and errors. An empty container is drawn, and `template=` draws a container with a template of your own.
+
+#### Collapsible fieldsets and descriptions
+
+Import `Fieldset` from `mvp_forms.layout` for three options on top of django-crispy-forms' own, modelled on the fieldsets of the Django admin:
+
+```python
+from crispy_forms.layout import Layout
+from mvp_forms.layout import Fieldset
+
+layout = Layout(
+    Fieldset(
+        "Contact",
+        "name",
+        "email",
+        collapsible=True,
+        state="open",
+        description="We use these only to send your booking confirmation.",
+    ),
+    Fieldset("Billing address", "street", "town", collapsible=True),
+)
+```
+
+- `description` is help text drawn at the top of the fieldset, before its first field, in the style of a field's help text. The fieldset's `aria-describedby` names it, so assistive technology reads it with the fieldset. It is drawn as you write it, with markup escaped.
+- `collapsible=True` lets a person open and close the fieldset by its legend. Open, the legend sits on the border as on any fieldset. Closed, it is the title inside the panel and the fields are hidden. A minus or a plus beside the legend shows which way it will go.
+- `state` is `"open"` or `"closed"`, how a collapsible fieldset is first drawn. With no state it starts closed, as a collapsed fieldset does in the admin.
+- A collapsible fieldset that holds a field in error, a hidden one included, is drawn open whatever its state, with an error mark beside its legend that assistive technology reads.
+- A `state` other than the two above, a `state` on a fieldset that is not collapsible, and a collapsible fieldset with no legend raise `ValueError` when the layout is built.
+
+The control is a checkbox, labelled by the legend, placed before it in the `<fieldset>`. Opening, closing and moving the legend are done by Tailwind utilities on the fieldset's parts, including the `peer-checked:` variant, so the page needs no script. A host project with its own Tailwind build gets them by scanning the package, as for every class the pack writes. The ids the fieldset writes start with its `css_id`, or else with its legend made into a slug, and with the form's prefix, so the forms of a formset do not share them.
 
 Tabs are daisyUI's `tabs`. `TabHolder` and `Tab` come from `mvp_forms.layout`:
 
@@ -1086,7 +1115,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/field_messages.html` | A field's help text, with the id that the input's description names, and its errors in one element with an id of its own, unless the form turns errors off. A joined group draws it once for each of its members. | `field`, `form_show_errors` | `TEMPLATES` |
 | `daisyui/required_marker.html` | The marker a required field's label and a required column's heading carry, and nothing for an optional field. | `field` | `TEMPLATES` |
 | `daisyui/multifield.html` | A field inside a `MultiField`, drawn as any field is: it reads nothing itself and passes `field` on to `daisyui/field.html`. | `field` | `TEMPLATES` |
-| `daisyui/layout/fieldset.html` | A `Fieldset`: a daisyUI fieldset with its legend, holding its fields. | `fields`, `fieldset`, `legend` | `TEMPLATES` |
+| `daisyui/layout/fieldset.html` | A `Fieldset`: a daisyUI fieldset drawn as a panel, with its legend, its description and its fields, and for a collapsible one the checkbox that opens and closes it. | `fields`, `fieldset`, `fieldset_id`, `fieldset_in_error`, `fieldset_open`, `legend` | `TEMPLATES` |
 | `daisyui/layout/div.html` | A `Div`: a `<div>` holding its fields, or the pane of a tab when it is one. | `div`, `fields` | `TEMPLATES` |
 | `daisyui/layout/row.html` | A `Row`: a `<div>` that lays its fields out along a row. | `div`, `fields` | `TEMPLATES` |
 | `daisyui/layout/column.html` | A `Column`: a `<div>` that takes an equal share of its row and holds its fields. | `div`, `fields` | `TEMPLATES` |
