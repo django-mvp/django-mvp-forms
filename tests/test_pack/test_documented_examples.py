@@ -384,24 +384,24 @@ class TestReadmeInlineChoices:
         assert [option["value"] for option in extras] == ["a", "b"]
 
 
-class TestReadmeFieldWithButtons:
-    def test_the_example_drawing_a_field_with_buttons_joins_them_to_the_input(
-        self, draw
-    ):
-        form = readme_example("A field with buttons")["SearchForm"]()
+class TestReadmeAttachedToOneField:
+    def test_the_example_joins_text_and_a_button_to_each_fields_own_input(self, draw):
+        form = readme_example("Text or buttons attached to one field")["PriceForm"]()
 
         soup = draw("{% crispy form %}", form=form)
 
-        parts = (
-            soup.find(id="div_id_query")
-            .find(class_="join")
-            .find_all(True, recursive=False)
-        )
-        assert [part["name"] for part in parts] == [
-            "query",
-            "go",
-            "clear",
-        ]
+        def parts(name):
+            join = soup.find(id=f"div_id_{name}").find(class_="join")
+            return [
+                part.get("name") or part.get_text(strip=True)
+                for part in join.find_all(True, recursive=False)
+            ]
+
+        assert parts("amount") == ["$", "amount"]
+        assert parts("weight") == ["weight", "kg"]
+        assert parts("budget") == ["$", "budget", ".00"]
+        assert parts("query") == ["query", "Search"]
+        assert soup.find("label", attrs={"for": "id_amount"}) is not None
 
 
 class TestReadmeUneditableField:
