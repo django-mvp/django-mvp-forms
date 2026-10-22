@@ -46,6 +46,8 @@ from demo.examples.layout_objects.alert import NoticeForm
 from demo.examples.layout_objects.buttons import ActionsForm, HolderForm
 from demo.examples.layout_objects.collapsible_fieldsets import BookingForm
 from demo.examples.layout_objects.fieldsets import OrderForm
+from demo.examples.layout_objects.form_text import EnquiryForm
+from demo.examples.layout_objects.form_text_sizes import FormTextSizesForm
 from demo.examples.layout_objects.joined_groups import PhoneForm
 from demo.examples.layout_objects.joined_search import JoinedSearchForm
 from demo.examples.layout_objects.joined_text import HeatFlowForm
@@ -118,6 +120,8 @@ urlpatterns = [
     ),
     path("fieldsets/", ExampleView.as_view(form_class=OrderForm)),
     path("collapsible-fieldsets/", ExampleView.as_view(form_class=BookingForm)),
+    path("form-text/", ExampleView.as_view(form_class=EnquiryForm)),
+    path("form-text-sizes/", ExampleView.as_view(form_class=FormTextSizesForm)),
     path("rows-columns/", ExampleView.as_view(form_class=DetailsForm)),
     path("button-holder/", ExampleView.as_view(form_class=HolderForm)),
     path("form-actions/", ExampleView.as_view(form_class=ActionsForm)),

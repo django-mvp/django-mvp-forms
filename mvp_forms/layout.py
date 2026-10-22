@@ -42,6 +42,7 @@ __all__ = [
     "Alert",
     "Fieldset",
     "FormActions",
+    "FormText",
     "GroupButton",
     "GroupText",
     "InlineCheckboxes",
@@ -554,3 +555,81 @@ class Fieldset(CrispyFieldset):
         )
         template = self.get_template_name(template_pack)
         return render_to_string(template, cast(dict[str, Any], context.flatten()))
+
+
+class FormText(LayoutObject):
+    """Text about a form, a fieldset or a group of fields, drawn between them.
+
+    Args:
+        text: The text, rendered as a template against the page's context.
+            Markup in it is drawn, and markup in a context value is escaped.
+        size: ``"small"`` or ``"large"``. With no size it is drawn at the
+            size of the text in the inputs beside it.
+        variant: ``"muted"`` draws it in a lighter shade of the text colour,
+            for text a person can pass over. With no variant it is drawn in
+            the text colour.
+        css_id: The id of the element the text is drawn in.
+        css_class: Classes of your own, after the pack's.
+        template: A template of your own to draw it with.
+        **kwargs: Attributes of the element.
+
+    Raises:
+        ValueError: The size is not ``"small"`` or ``"large"``, or the
+            variant is not ``"muted"``.
+    """
+
+    template = "%s/layout/form_text.html"
+    sizes = {"small": "text-xs", None: "text-sm", "large": "text-base"}
+    variants = {None: "text-base-content", "muted": "text-base-content/90"}
+
+    def __init__(
+        self,
+        text: str,
+        size: str | None = None,
+        variant: str | None = None,
+        css_id: str | None = None,
+        css_class: str | None = None,
+        template: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        if size not in self.sizes:
+            raise ValueError(f"{size!r} is not a size: use 'small' or 'large'")
+        if variant not in self.variants:
+            raise ValueError(f"{variant!r} is not a variant: use 'muted'")
+        # It holds no fields, so a container that looks through what it holds
+        # finds none here.
+        self.fields: list[Any] = []
+        self.text = text
+        self.size = size
+        self.variant = variant
+        self.css_id = css_id
+        self.css_class = css_class
+        self.template = template or self.template
+        self.flat_attrs = flatatt(kwargs)
+
+    def render(
+        self,
+        form: Any,
+        context: Context,
+        template_pack: str = TEMPLATE_PACK,
+        **kwargs: Any,
+    ) -> SafeString:
+        """Draw the text, rendered against the page's context."""
+        return render_to_string(
+            self.get_template_name(template_pack),
+            {
+                "css_id": self.css_id,
+                "classes": " ".join(
+                    filter(
+                        None,
+                        [
+                            self.sizes[self.size],
+                            self.variants[self.variant],
+                            self.css_class,
+                        ],
+                    )
+                ),
+                "attrs": self.flat_attrs,
+                "text": Template(str(self.text)).render(context),
+            },
+        )

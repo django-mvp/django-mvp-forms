@@ -206,7 +206,7 @@ Read-only is the browser's and exists only on text inputs and textareas. Set `re
 
 ### Layout objects
 
-The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import the structural and button objects from `crispy_forms.layout`, as django-crispy-forms' documentation says. Import the rest from `mvp_forms.layout`: `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal`, `Alert`, `FormActions`, `StrictButton`, `InlineRadios`, `InlineCheckboxes`, `UneditableField` and `InlineField` are django-crispy-forms' own, passed through unchanged from its `crispy_forms.bootstrap` module, which is named for the framework its own templates were written for. This package adds two of its own, `Choice` (see "One field's own choice") and `Join` (see "Joined groups"), and a `Fieldset` that takes everything django-crispy-forms' `Fieldset` takes and can also collapse and carry a description (see [Collapsible fieldsets and descriptions](https://github.com/django-mvp/django-mvp-forms#collapsible-fieldsets-and-descriptions)). The structural and button objects are below:
+The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import the structural and button objects from `crispy_forms.layout`, as django-crispy-forms' documentation says. Import the rest from `mvp_forms.layout`: `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal`, `Alert`, `FormActions`, `StrictButton`, `InlineRadios`, `InlineCheckboxes`, `UneditableField` and `InlineField` are django-crispy-forms' own, passed through unchanged from its `crispy_forms.bootstrap` module, which is named for the framework its own templates were written for. This package adds its own as well: `Choice` (see "One field's own choice") and `Join` (see "Joined groups"), a `Fieldset` that takes everything django-crispy-forms' `Fieldset` takes and can also collapse and carry a description (see [Collapsible fieldsets and descriptions](https://github.com/django-mvp/django-mvp-forms#collapsible-fieldsets-and-descriptions)), and `FormText`, a passage of text about the form or a group of its fields (see [Form text](https://github.com/django-mvp/django-mvp-forms#form-text)). The structural and button objects are below:
 
 ```python
 from crispy_forms.helper import FormHelper
@@ -263,13 +263,44 @@ layout = Layout(
 )
 ```
 
-- `description` is help text drawn at the top of the fieldset, before its first field, in the style of a field's help text. The fieldset's `aria-describedby` names it, so assistive technology reads it with the fieldset. It is drawn as you write it, with markup escaped.
+- `description` is text about the fieldset, drawn at the top of it, before its first field. It is drawn as form text with no size and no variant (see [Form text](https://github.com/django-mvp/django-mvp-forms#form-text)), so a replaced `daisyui/layout/form_text.html` changes both. The fieldset's `aria-describedby` names it, so assistive technology reads it with the fieldset. It is drawn as you write it, with markup escaped.
 - `collapsible=True` lets a person open and close the fieldset by its legend. Open, the legend sits on the border as on any fieldset. Closed, it is the title inside the panel and the fields are hidden. A minus or a plus beside the legend shows which way it will go.
 - `open=True` draws a collapsible fieldset open at first, as the `open` attribute of `<details>` does. Without it the fieldset starts closed, as a collapsed fieldset does in the admin.
 - A collapsible fieldset that holds a field in error, a hidden one included, is drawn open whatever `open` says, with an error mark beside its legend that assistive technology reads.
 - `open=True` on a fieldset that is not collapsible, and a collapsible fieldset with no legend, raise `ValueError` when the layout is built.
 
 The control is a checkbox, labelled by the legend, placed before it in the `<fieldset>`. Opening, closing and moving the legend are done by Tailwind utilities on the fieldset's parts, including the `peer-checked:` variant, so the page needs no script. A host project with its own Tailwind build gets them by scanning the package, as for every class the pack writes. The ids the fieldset writes start with its `css_id`, or else with its legend made into a slug, and with the form's prefix, so the forms of a formset do not share them.
+
+#### Form text
+
+`FormText` from `mvp_forms.layout` puts a passage of text in a layout: an introduction to the form, a note about the fields that follow, or the small print before the button. It is more prominent than a field's help text, which belongs to one field.
+
+```python
+from crispy_forms.layout import Layout
+from mvp_forms.layout import Fieldset, FormText
+
+layout = Layout(
+    FormText("Tell us about the event you are planning.", size="large"),
+    Fieldset(
+        "About you",
+        "name",
+        FormText("We only use this to reply to you."),
+        "email",
+    ),
+    FormText(
+        "Nothing is booked until we have replied.", size="small", variant="muted"
+    ),
+)
+```
+
+- The text is drawn in a `<div>` at its place in the layout, inside any container, in the theme's text colour.
+- With no `size` it is `text-sm`, the size of the text in an input. `size="small"` draws it `text-xs`, the size of a field's help text, and `size="large"` draws it `text-base`.
+- `variant="muted"` draws it `text-base-content/90`, a lighter shade of the text colour for text a person can pass over. It is the lightest of daisyUI's shades, in steps of ten percent, that still reads at 4.5 to 1, on the page and on a fieldset's panel, under all 35 of its built-in themes.
+- Any other size or variant raises `ValueError` when the layout is built.
+- The text is rendered as a template against the page's context, as a `Fieldset` legend is. Markup you write in it is drawn, and markup in a context value is escaped. Text built from anything a person typed must be escaped before it goes in.
+- `css_id`, `css_class` and other keyword arguments are kept on the `<div>`, and your classes come after the pack's. `template=` draws it with a template of your own.
+- Form text is not tied to a field. It can sit above several, so assistive technology reads it in page order, like any paragraph. Text that belongs to one field is that field's `help_text`.
+- The sizes and the muted shade are Tailwind utilities, as daisyUI has no text component. A host project with its own Tailwind build gets them by scanning the package.
 
 Tabs are daisyUI's `tabs`. `TabHolder` and `Tab` come from `mvp_forms.layout`:
 
@@ -1116,6 +1147,7 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/required_marker.html` | The marker a required field's label and a required column's heading carry, and nothing for an optional field. | `field` | `TEMPLATES` |
 | `daisyui/multifield.html` | A field inside a `MultiField`, drawn as any field is: it reads nothing itself and passes `field` on to `daisyui/field.html`. | `field` | `TEMPLATES` |
 | `daisyui/layout/fieldset.html` | A `Fieldset`: a daisyUI fieldset drawn as a panel, with its legend, its description and its fields, and for a collapsible one the checkbox that opens and closes it. | `fields`, `fieldset`, `fieldset_id`, `fieldset_in_error`, `fieldset_open`, `legend` | `TEMPLATES` |
+| `daisyui/layout/form_text.html` | A `FormText`, and the description of a `Fieldset`: the text in a `<div>` with its size, its colour and your classes. | `attrs`, `classes`, `css_id`, `text` | `TEMPLATES` |
 | `daisyui/layout/div.html` | A `Div`: a `<div>` holding its fields, or the pane of a tab when it is one. | `div`, `fields` | `TEMPLATES` |
 | `daisyui/layout/row.html` | A `Row`: a `<div>` that lays its fields out along a row. | `div`, `fields` | `TEMPLATES` |
 | `daisyui/layout/column.html` | A `Column`: a `<div>` that takes an equal share of its row and holds its fields. | `div`, `fields` | `TEMPLATES` |
@@ -2426,7 +2458,7 @@ The widgets need no script and no stylesheet of the package's.
 
 ### Themes
 
-The pack names only daisyUI's semantic colours, so a form follows whichever theme the host project chooses, and the pack sets none. Under each of the 35 themes built into daisyUI 5.7.47, light and dark, every piece of text the pack colours by its own choice can be read: labels, legends, help text, attached text, table headers, tabs and the alert that holds a form's errors. What is left is daisyUI's own drawing of a control, or a colour you chose for it.
+The pack names only daisyUI's semantic colours, so a form follows whichever theme the host project chooses, and the pack sets none. Under each of the 35 themes built into daisyUI 5.7.47, light and dark, every piece of text the pack colours by its own choice can be read: labels, legends, help text, form text, muted or not, attached text, table headers, tabs and the alert that holds a form's errors. What is left is daisyUI's own drawing of a control, or a colour you chose for it.
 
 The test suite draws every form state the pack has and calculates the contrast of each piece of text, and of each part of a control that shows what it is and what state it is in, against the surface directly behind it, from the colours daisyUI publishes for each theme. The standard is [WCAG 2.2](https://www.w3.org/TR/WCAG22/) level AA: 4.5 to 1 for text, and 3 to 1 for the part of a control that shows what it is or its state. Those parts are the border of an input, a select, a textarea and a file input, the border of a checkbox or radio that is off, a toggle that is off, the mark and fill of each when on, a rating's stars, lit and unlit, a range's track and thumb, the arrow of a select and of an accordion group, the bar under the chosen tab, and the dot that marks a tab or an accordion group holding an error. A button is held by its text alone. A field drawn with the ghost variant has no border by daisyUI's design, so none is measured for it.
 

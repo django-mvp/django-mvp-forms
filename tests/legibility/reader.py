@@ -47,12 +47,15 @@ class InkRule(NamedTuple):
         argument: The ink's name, or the share to keep.
         own: Whether the result is a choice of the pack's that a class could change.
         wins: Whether the class beats every component rule, as a utility does.
+        share: The share of a set ink kept, below 1 for a utility with an opacity,
+            such as `text-base-content/90`.
     """
 
     mode: str
     argument: str | float
     own: bool
     wins: bool = False
+    share: float = 1.0
 
 
 class Paint(NamedTuple):
@@ -128,6 +131,10 @@ class Reader:
         "label": Paint(ink=InkRule("fade", 0.6, own=True)),
         "text-base-content": Paint(
             ink=InkRule("set", "base-content", own=True, wins=True)
+        ),
+        # Muted form text.
+        "text-base-content/90": Paint(
+            ink=InkRule("set", "base-content", own=True, wins=True, share=0.9)
         ),
         "bg-base-200": Paint(surface="base-200"),
         "bg-base-100": Paint(surface="base-100"),
@@ -219,6 +226,7 @@ class Reader:
             "shrink-0",
             "size-8",
             "text-center",
+            "text-base",
             "text-sm",
             "text-xs",
             "transition-opacity",
@@ -393,7 +401,10 @@ class Reader:
             The ink, or None when no utility states one.
         """
         winning = [paint.ink for paint in paints if paint.ink and paint.ink.wins]
-        return Ink(str(winning[-1].argument)) if winning else None
+        if not winning:
+            return None
+        ink = Ink(str(winning[-1].argument))
+        return ink if winning[-1].share == 1 else ink.faded(winning[-1].share)
 
     def inherit(
         self, tag: Tag, state: Inherited, paints: list[Paint], override: Ink | None

@@ -45,7 +45,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 import mvp_forms
 from mvp_forms.choices import Choice, FormChoices, Modifiers
 from mvp_forms.layout import Fieldset as PanelFieldset
-from mvp_forms.layout import Join
+from mvp_forms.layout import FormText, Join
 from tests.forms import (
     ButtonedForm,
     CheckboxForm,
@@ -194,6 +194,8 @@ LAYOUT_UTILITIES = {
     "sr-only",
     "top-1/2",
     "w-[0.125em]",
+    # Form text, sized and shaded where daisyUI has no text component (ADR 0067).
+    "text-base",
 }
 
 
@@ -257,6 +259,19 @@ def collapsed(data=None):
             ),
             PanelFieldset("Contact", "second", collapsible=True),
             PanelFieldset("", "third", description="Kept private."),
+        ),
+    )
+
+
+def texted(data=None):
+    return StructureForm(
+        data,
+        layout=(
+            FormText("Read this first.", size="large"),
+            "first",
+            FormText("Between the fields."),
+            "second",
+            FormText("The small print.", size="small", variant="muted"),
         ),
     )
 
@@ -676,6 +691,7 @@ STATES = [
         id="all thirteen objects, invalid",
     ),
     pytest.param("{% crispy form %}", collapsed, NOTHING, id="collapsible fieldsets"),
+    pytest.param("{% crispy form %}", texted, NOTHING, id="form text at each size"),
     pytest.param(
         "{% crispy form %}",
         lambda: collapsed({}),

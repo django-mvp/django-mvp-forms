@@ -9,14 +9,14 @@
   </legend>
   {% if fieldset_in_error %}<span id="{{ fieldset_id }}-error" hidden>{% translate "Contains a field with an error" %}</span>{% endif %}
   <div class="hidden gap-1.5 p-4 peer-checked:grid">
-    {% if fieldset.description %}<p id="{{ fieldset_id }}-description" class="label text-base-content text-wrap">{{ fieldset.description }}</p>{% endif %}
+    {% if fieldset.description %}{% include "daisyui/layout/form_text.html" with css_id=fieldset_id|add:"-description" classes="text-sm text-base-content" attrs="" text=fieldset.description %}{% endif %}
     {{ fields }}
   </div>
 </fieldset>
 {% else %}
 <fieldset{% if fieldset.css_id %} id="{{ fieldset.css_id }}"{% endif %} class="fieldset bg-base-200 border-base-300 rounded-box border p-4 mb-4{% if fieldset.css_class %} {{ fieldset.css_class }}{% endif %}"{% if fieldset.description %} aria-describedby="{{ fieldset_id }}-description"{% endif %}{{ fieldset.flat_attrs }}>
   {% if legend %}<legend class="fieldset-legend">{{ legend }}</legend>{% endif %}
-  {% if fieldset.description %}<p id="{{ fieldset_id }}-description" class="label text-base-content text-wrap">{{ fieldset.description }}</p>{% endif %}
+  {% if fieldset.description %}{% include "daisyui/layout/form_text.html" with css_id=fieldset_id|add:"-description" classes="text-sm text-base-content" attrs="" text=fieldset.description %}{% endif %}
   {{ fields }}
 </fieldset>
 {% endif %}

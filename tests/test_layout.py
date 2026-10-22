@@ -17,6 +17,7 @@ from django.utils.safestring import mark_safe
 from mvp_forms.choices import INHERIT, Choice
 from mvp_forms.layout import (
     Fieldset,
+    FormText,
     GroupButton,
     GroupText,
     InvalidMember,
@@ -261,6 +262,11 @@ class TestJoinLabelText:
         assert Join().label_text == ""
 
 
+def drawn_form_text(draw, form_text, **context):
+    form = StructureForm(layout=(form_text,))
+    return draw("{% crispy form %}", form=form, **context).find("div")
+
+
 def toggle_of(fieldset):
     return fieldset.find("input", type="checkbox", class_="peer")
 
@@ -300,12 +306,8 @@ class TestFieldsetDescription:
             draw, Fieldset(LEGEND, "first", "second", description=DESCRIPTION)
         )
 
-        drawn = [
-            tag
-            for tag in fieldset.find_all(["p", "input"])
-            if tag.name == "input" or tag.get_text(strip=True) == DESCRIPTION
-        ]
-        assert [tag.get("id", tag.name) for tag in drawn[:2]] == [
+        drawn = fieldset.find_all(id=["account-description", "id_first"])
+        assert [tag["id"] for tag in drawn] == [
             "account-description",
             "id_first",
         ]
@@ -334,6 +336,16 @@ class TestFieldsetDescription:
 
         assert fieldset.find("b") is None
         assert "<b>Bold</b>" in fieldset.get_text()
+
+    def test_it_is_drawn_as_form_text_with_no_size(self, draw):
+        fieldset = drawn_fieldset(
+            draw, Fieldset(LEGEND, "first", description=DESCRIPTION)
+        )
+        form_text = drawn_form_text(draw, FormText(DESCRIPTION))
+
+        description = fieldset.find(id="account-description")
+        assert description.name == form_text.name
+        assert description["class"] == form_text["class"]
 
     def test_with_none_nothing_describes_the_fieldset(self, draw):
         fieldset = drawn_fieldset(draw, Fieldset(LEGEND, "first"))
@@ -437,3 +449,71 @@ class TestCollapsibleFieldset:
         ]
 
         assert ids[0] != ids[1]
+
+
+class TestFormText:
+    def test_it_is_drawn_at_its_place_in_the_layout(self, draw_layout):
+        soup = draw_layout("first", FormText("Between"), "second")
+
+        text = soup.find(string="Between")
+        assert text.find_previous("input")["name"] == "first"
+        assert text.find_next("input")["name"] == "second"
+
+    def test_it_is_drawn_inside_a_fieldset(self, draw_layout):
+        soup = draw_layout(Fieldset(LEGEND, "first", FormText("Inside"), "second"))
+
+        assert soup.find(string="Inside").find_parent("fieldset") is not None
+
+    def test_markup_in_the_text_is_drawn(self, draw):
+        form_text = drawn_form_text(draw, FormText("<b>Bold</b> and plain"))
+
+        assert form_text.find("b").get_text() == "Bold"
+
+    def test_a_context_value_in_it_is_filled_in_and_escaped(self, draw_layout):
+        soup = draw_layout(FormText("Written for {{ who }}"), who="<i>Ann</i>")
+
+        assert soup.find("i") is None
+        assert soup.find(string="Written for <i>Ann</i>") is not None
+
+    @pytest.mark.parametrize(
+        ("size", "drawn"),
+        [("small", "text-xs"), (None, "text-sm"), ("large", "text-base")],
+    )
+    def test_each_size_draws_its_text_size(self, draw, size, drawn):
+        form_text = drawn_form_text(draw, FormText("Sized", size=size))
+
+        sizes = {"text-xs", "text-sm", "text-base"}
+        assert sizes & set(form_text["class"]) == {drawn}
+
+    @pytest.mark.parametrize(
+        ("variant", "drawn"),
+        [(None, "text-base-content"), ("muted", "text-base-content/90")],
+    )
+    def test_each_variant_draws_its_text_colour(self, draw, variant, drawn):
+        form_text = drawn_form_text(draw, FormText("Shaded", variant=variant))
+
+        colours = {"text-base-content", "text-base-content/90"}
+        assert colours & set(form_text["class"]) == {drawn}
+
+    def test_an_unknown_size_raises(self):
+        with pytest.raises(ValueError, match="size"):
+            FormText("Sized", size="md")
+
+    def test_an_unknown_variant_raises(self):
+        with pytest.raises(ValueError, match="variant"):
+            FormText("Shaded", variant="soft")
+
+    def test_a_template_of_your_own_draws_it(self, draw_layout):
+        soup = draw_layout(FormText("Mine", template="tests/own_form_text.html"))
+
+        assert soup.find(id="mine").get_text() == "Mine"
+
+    def test_its_id_classes_and_attributes_are_kept(self, draw):
+        form_text = drawn_form_text(
+            draw,
+            FormText("Kept", css_id="note", css_class="mine", data_role="note"),
+        )
+
+        assert form_text["id"] == "note"
+        assert form_text["class"][-1] == "mine"
+        assert form_text["data-role"] == "note"
