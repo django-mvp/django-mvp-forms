@@ -176,14 +176,14 @@ Several fields a developer names in a layout with `Join`, drawn as one daisyUI
 join under one label. It is the package's own layout object. Its inputs sit side
 by side as the direct children of one element, in one fieldset whose legend is
 the group's label, and only an input or a select can be one. It can hold buttons
-as well, each drawn in its place in the join.
+and text as well, each drawn in its place in the join.
 _Avoid_: input group (that is Bootstrap's name), compound field, field group.
 
 **Member**:
 One field of a joined group. It has no label of its own and is named by an
 `aria-label` that is its field's label, and it keeps its own help text, errors
 and place in the cleaned data. A hidden member is drawn beside the join and takes
-no place in it. A button in the group is not a member.
+no place in it. A button or text in the group is not a member.
 _Avoid_: item, child, part (a part is one widget of a multi-widget field).
 
 **Boolean field**:

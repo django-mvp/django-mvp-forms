@@ -645,14 +645,14 @@ class ContactForm(forms.Form):
         )
 ```
 
-- A group holds field names, `Field` objects, `Choice` objects and buttons, in the order they are drawn. A `Field` gives its attributes and its `css_class` to the input of each name it holds, and a `Choice` states its size, colour and variant for the names and buttons it holds. A member has no frame of its own, so a `Field` given a `wrapper_class` or a `template` raises `InvalidMember` with `Field` as `member`. Anything else in a group raises `InvalidMember` too, when the form is drawn, with the class name as `member`: a `Div`, a `PrependedText`, an `InlineField`, a `Hidden`, another `Join`, and a subclass of `Field` such as `MultiWidgetField`.
+- A group holds field names, `Field` objects, `Choice` objects, buttons and `HTML`, in the order they are drawn. A `Field` gives its attributes and its `css_class` to the input of each name it holds, and a `Choice` states its size, colour and variant for the names and buttons it holds. A member has no frame of its own, so a `Field` given a `wrapper_class` or a `template` raises `InvalidMember` with `Field` as `member`. Anything else in a group raises `InvalidMember` too, when the form is drawn, with the class name as `member`: a `Div`, a `PrependedText`, an `InlineField`, a `Hidden`, another `Join`, and a subclass of `Field` such as `MultiWidgetField`. A subclass of `HTML` raises as well.
 - A member is an input or a select drawn on its own. A checkbox, a toggle, a radio group, a checkbox group, a textarea, a file input, a multi-widget field, a date drawn as three selects, a rating, a range and a field whose widget the pack does not draw as an input raise `InvalidMember` with the field's name as `member`. A hidden field is accepted.
 - The group is one `<fieldset>`. Its `label` is the `<legend>`, as escaped text, with the required marker when any member is required, and a group with no label has no legend. A member draws no label of its own: its input is named by an `aria-label` that is its own field's label, and an `aria-label` you wrote on the widget or on the `Field` is kept. With the helper's `form_show_labels` off the legend is not drawn and the fieldset takes the group's label as its `aria-label`.
 - Each member keeps its own help text and errors. They are drawn after the join, inside the fieldset, once for each member, with the ids Django gives them, `<id>_helptext` and `<id>_error`. A member's input is described by its own help text and errors only, and only the member that failed is `aria-invalid`.
 - The inputs are the direct children of the one element that carries `join`, in the order the group holds them. A hidden member is drawn as its hidden input after that element, inside the fieldset, because daisyUI squares the first and last child of a join whatever they are. A disabled member stays in its place disabled, and a read-only member keeps its attribute.
 - The `css_id`, `css_class` and attributes you give `Join` are on the element that carries `join`, so `Join("width", "height", css_class="join-vertical")` stacks the inputs. A class written for another template pack is dropped. A name the form lacks is left to django-crispy-forms: it logs it, or raises when `CRISPY_FAIL_SILENTLY` is `False`, and draws nothing for it.
-- `Join.members()` returns the fields a group holds as a list of `Member`, one for each field name in order, each with its `name`, the `attrs` of the `Field` that held it and the `choice` around it. `Join.contents()` returns the same members with a `GroupButton` in the place of each button, carrying the `button` and the `choice` around it. Both raise `InvalidMember` for a layout object the group cannot hold, so a layout can be checked without drawing a form.
-- A group that holds nothing draws nothing, and a group with no visible member and no button draws the hidden inputs of its members alone.
+- `Join.members()` returns the fields a group holds as a list of `Member`, one for each field name in order, each with its `name`, the `attrs` of the `Field` that held it and the `choice` around it. `Join.contents()` returns the same members with a `GroupButton` in the place of each button, carrying the `button` and the `choice` around it, and a `GroupText` in the place of each `HTML`, carrying the `text` and the `choice` around it. Both raise `InvalidMember` for a layout object the group cannot hold, so a layout can be checked without drawing a form.
+- A group that holds nothing draws nothing, and a group with no visible member and no button draws the hidden inputs of its members alone, even when it holds text.
 - The join fills its width. An input takes the room the others leave and a select takes its own width. A width class of your own on a widget or a `Field`, such as `w-24`, is kept and the pack adds none.
 - A floating label never applies to a member. The form's `label="floating"` passes it over, and the same statement on a member raises `InvalidChoice` with `kind="label"`.
 - Size, colour and variant apply to each member as they do on any field, in the order under "One field's own choice". A `Choice` around the group states them for every member. A `Choice` around one member, or an entry for it in `FormChoices(fields=...)`, wins for that member, and the form's statement applies to every member the others leave alone. A member's own size wins for that member, and the group enforces no one size. A member in error carries its error modifier and no colour modifier, and the other members keep the colour.
@@ -686,6 +686,32 @@ class SearchForm(forms.Form):
 - A button in a group takes the form's `size`, `button_color` and `button_variant`, as the buttons of a `FieldWithButtons` do. A `Choice` around the group is stated for its members and its buttons alike, so state only what both have: a variant that only buttons have, such as `outline`, raises `InvalidChoice` for an input. A `Choice` around one button inside the group is stated for that button alone, and wins over the one around the group.
 - Your `css_class`, `css_id` and attributes are kept on every button, and a `join-item` you wrote is not written twice.
 - The members of a group that holds buttons are drawn exactly as in a group that holds none: the label, the required marker, each member's help text and errors and the cleaned data are unchanged.
+
+A group can hold text between its fields too, such as a measurement and its uncertainty written with a `±` between them. Put django-crispy-forms' own `HTML` where the text goes:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import HTML, Layout
+from django import forms
+from mvp_forms.layout import Join
+
+
+class HeatFlowForm(forms.Form):
+    value = forms.FloatField()
+    uncertainty = forms.FloatField(min_value=0)
+    unit = forms.ChoiceField(choices=[("mW/m²", "mW/m²"), ("W/m²", "W/m²")])
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Join("value", HTML("±"), "uncertainty", "unit", label="Heat flow"),
+        )
+```
+
+- The text sits in the join in the place you gave it, inside `<span class="input join-item w-auto">`, so it is framed and as tall as the inputs beside it and takes the width of its text. The `HTML` is rendered with the form's context, as it is anywhere else, and its markup is kept.
+- The text takes the size, colour and variant an input of the group takes: the form's `size`, `color` and `variant`, then a `Choice` around the group or around the text. A `Choice` around the text that states a `label` or a `drawing` raises `InvalidChoice`, because text has neither.
+- Text is not a member and has no label, help text or error, and it posts nothing. The members of a group that holds text are drawn and cleaned exactly as in a group that holds none.
 
 ### Size, colour and variant
 

@@ -11,7 +11,7 @@ inputs, are reachable from a layout)
 
 **Roadmap**: R7 (daisyUI's other form components)
 
-**Issue**: #87, and #94 for the buttons a joined group holds
+**Issue**: #87, #94 for the buttons a joined group holds, and #221 for its text
 
 **Depends on**: FS-007 (#11) for the size, colour and variant choices and for the place in Python
 where a choice is stated. FS-004 (#8) for the field frame a decorated field is drawn in. Through
@@ -247,6 +247,41 @@ the text input alone, and the cleaned data is what the form gives without the bu
 
 ---
 
+### User Story 5 - A developer puts text between the fields of a joined group (Priority: P5)
+
+A developer records a measurement with its uncertainty and its unit, which is written as a value,
+a `±`, the uncertainty and the unit in one row. In the layout they put django-crispy-forms' own
+`HTML` in the joined group where the `±` goes. The text is drawn in its place in the join, framed
+and sized as the inputs beside it, and the fields are drawn exactly as they are in a group without
+text.
+
+**Why this priority**: It extends the group the second story built and needs nothing else from
+this feature. Without it, the nearest drawing is a disabled button, which reads as a control where
+the reader expects plain text.
+
+**Independent Test**: Join a value, a `±`, an uncertainty and a unit, state a size for the form,
+and submit it once valid and once with the uncertainty missing. The four are drawn in one join in
+the layout's order, the text carries the form's size, the error is on the uncertainty alone, and
+the cleaned data is what the form gives without the text.
+
+**Acceptance Scenarios**:
+
+1. **Given** a layout that joins two fields with `HTML` between them, **When** the pack draws the
+   form, **Then** the first input, the text and the second input are the children of one daisyUI
+   join, in that order, and the text is drawn as an item of the join, framed as an input.
+2. **Given** `HTML` holding markup or reading the form's context, **When** the pack draws it in a
+   joined group, **Then** it is rendered as `HTML` is anywhere else.
+3. **Given** a form with a size, a colour or a variant stated, or a choice around the group or
+   around the text, **When** the pack draws the text, **Then** it takes them as an input of the
+   group does.
+4. **Given** a joined group holding text and no visible field, **When** the pack draws it,
+   **Then** no join is drawn.
+5. **Given** a joined group holding fields and text, **When** the pack draws and submits it,
+   **Then** each field is drawn, labelled, described, marked and cleaned exactly as in a group
+   that holds no text.
+
+---
+
 ### Edge Cases
 
 - A floating label is stated on one field by name and the field is a checkbox, a toggle, a radio
@@ -265,6 +300,8 @@ the text input alone, and the cleaned data is what the form gives without the bu
   nothing.
 - A joined group holds a button and no visible field, because its fields are hidden or the form
   lacks them. The button is drawn in the join, and the hidden fields beside it.
+- A joined group holds text and no visible field or button. The text has nothing to stand
+  between, so no join is drawn, and the hidden fields are drawn alone.
 - A `Hidden` from django-crispy-forms is named in a joined group. It is not a button, so the group
   raises an error naming it.
 - A button follows the joined group in the layout rather than being in it. It is not part of the
@@ -359,7 +396,7 @@ the text input alone, and the cleaned data is what the form gives without the bu
 #### Mistakes with a joined group
 
 - **FR-021**: A joined group that names a field the pack cannot join, or holds a layout object
-  other than the wrappers FR-013 allows and the buttons FR-030 allows, MUST raise an error that
+  other than the wrappers FR-013 allows, the buttons FR-030 allows and the text FR-034 allows, MUST raise an error that
   names it, no later than when the form is drawn.
 
 #### Buttons in a joined group
@@ -374,6 +411,17 @@ the text input alone, and the cleaned data is what the form gives without the bu
   it.
 - **FR-033**: A field in a joined group that holds buttons MUST be drawn, labelled, described and
   cleaned exactly as it is in a group that holds none, under FR-013 to FR-019 and FR-023.
+
+#### Text in a joined group
+
+- **FR-034**: A joined group MUST accept django-crispy-forms' `HTML`, alone or in a choice,
+  anywhere among its fields. The pack MUST draw it in its place in the join, rendered as `HTML` is
+  anywhere else, inside an element that is an item of the join and is framed as an input.
+- **FR-035**: Text in a joined group MUST take the size, colour and variant an input of the group
+  takes under FR-023. A choice around the text that states a label or a drawing MUST raise.
+- **FR-036**: A field in a joined group that holds text MUST be drawn, labelled, described and
+  cleaned exactly as it is in a group that holds none. A group with text and no visible field or
+  button MUST draw no join.
 
 #### Size, colour and variant
 
@@ -400,7 +448,7 @@ the text input alone, and the cleaned data is what the form gives without the bu
 - **FR-028**: The demo project MUST gain a Floating labels page in its Modifiers group and a
   Joined groups page in its Layout objects group, each with live examples. Between them they MUST
   show the kinds of field that take a floating label, a joined group, a joined group with a
-  button, the states from FR-005, FR-007, FR-016 and FR-019 that matter for each, and the sizes,
+  button, a joined group with text, the states from FR-005, FR-007, FR-016 and FR-019 that matter for each, and the sizes,
   colours and variants from FR-022, FR-023 and FR-031.
 - **FR-029**: The README's public surface MUST say how a floating label is stated and how fields
   are joined, what each is refused for, and what is passed over. The CHANGELOG MUST record the
@@ -415,6 +463,7 @@ the text input alone, and the cleaned data is what the form gives without the bu
 | US-2: A developer joins several fields into one group | FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029 |
 | US-3: Floating labels and joined groups take the form's choices | FR-022, FR-023, FR-024, FR-028 |
 | US-4: A developer puts buttons in a joined group | FR-030, FR-031, FR-032, FR-033, FR-024, FR-025, FR-028, FR-029 |
+| US-5: A developer puts text between the fields of a joined group | FR-034, FR-035, FR-036, FR-021, FR-024, FR-025, FR-028, FR-029 |
 
 FR-028 and FR-029 land with the first story and are extended by the stories that follow, so each
 story shows its own behaviour in the demo project and documents its own surface.
@@ -424,9 +473,9 @@ story shows its own behaviour in the demo project and documents its own surface.
 - **Floating label**: daisyUI's label that is drawn inside a field's frame in place of the label
   above the input, and is shown at the input's edge once the input has focus or a value. A
   choice, stated for a form or for one field. A field that states none has its ordinary label.
-- **Joined group**: several fields, and any buttons with them, that a layout names to be drawn as
+- **Joined group**: several fields, and any buttons and text with them, that a layout names to be drawn as
   one daisyUI join, side by side, under one label. Each member stays a field of its own.
-- **Member**: one field of a joined group. A button in the group is not a member.
+- **Member**: one field of a joined group. A button or text in the group is not a member.
 
 ## Success Criteria *(mandatory)*
 

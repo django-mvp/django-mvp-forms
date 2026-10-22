@@ -47,6 +47,7 @@ from demo.examples.layout_objects.buttons import ActionsForm, HolderForm
 from demo.examples.layout_objects.fieldsets_rows_columns import DetailsForm
 from demo.examples.layout_objects.joined_groups import PhoneForm
 from demo.examples.layout_objects.joined_search import JoinedSearchForm
+from demo.examples.layout_objects.joined_text import HeatFlowForm
 from demo.examples.layout_objects.marked_errors import ApplicationForm
 from demo.examples.layout_objects.modal import AddressForm as ModalForm
 from demo.examples.layout_objects.multi_widget_field import EventForm
@@ -118,6 +119,7 @@ urlpatterns = [
     path("form-actions/", ExampleView.as_view(form_class=ActionsForm)),
     path("joined-groups/", ExampleView.as_view(form_class=PhoneForm)),
     path("joined-search/", ExampleView.as_view(form_class=JoinedSearchForm)),
+    path("joined-text/", ExampleView.as_view(form_class=HeatFlowForm)),
     path("multi-widget-field/", ExampleView.as_view(form_class=EventForm)),
     path("accordion/", ExampleView.as_view(form_class=AccordionForm)),
     path("accordion-chosen/", ExampleView.as_view(form_class=ChosenGroupForm)),

@@ -15,7 +15,7 @@ from crispy_forms.layout import (
 from django.utils.safestring import mark_safe
 
 from mvp_forms.choices import INHERIT, Choice
-from mvp_forms.layout import GroupButton, InvalidMember, Join, Member
+from mvp_forms.layout import GroupButton, GroupText, InvalidMember, Join, Member
 from tests.forms import StructureForm, StructureHiddenForm
 
 
@@ -125,7 +125,6 @@ class TestJoinMembers:
             PrependedText("first", "$"),
             InlineField("first"),
             Hidden("go", "Go"),
-            HTML("<hr>"),
             MultiWidgetField("first", attrs={}),
             Join("first"),
         ],
@@ -171,6 +170,24 @@ class TestJoinContents:
 
         assert member.choice.size == "sm"
         assert (held.choice.size, held.choice.color) == ("sm", "error")
+
+    def test_text_is_held_in_its_place_and_not_a_member(self):
+        text = HTML("±")
+        group = Join("first", text, "second")
+
+        contents = group.contents()
+
+        assert [type(held) for held in contents] == [Member, GroupText, Member]
+        assert contents[1].text is text
+        assert contents[1].choice is None
+        assert names_of(group) == ["first", "second"]
+
+    def test_text_in_a_choice_carries_the_merged_choice(self):
+        group = Join(Choice("first", Choice(HTML("±"), variant="ghost"), size="sm"))
+
+        member, held = group.contents()
+
+        assert (held.choice.size, held.choice.variant) == ("sm", "ghost")
 
     def test_a_group_of_fields_holds_its_members_alone(self):
         group = Join("first", Field("second", css_class="x"))
