@@ -135,7 +135,10 @@ class GroupText:
                 raise InvalidChoice(kind, stated, ())
         resolved = (
             Modifiers.resolve(
-                kind, self.component, own=getattr(own, kind), form=getattr(choices, kind)
+                kind,
+                self.component,
+                own=getattr(own, kind),
+                form=getattr(choices, kind),
             )
             for kind in ("size", "color", "variant")
         )

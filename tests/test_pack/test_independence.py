@@ -908,6 +908,19 @@ STATES = [
     ),
     *[
         pytest.param(
+            "{% crispy form %}",
+            partial(
+                JoinedForm,
+                layout=[Join("number", HTML("±"), "extension")],
+                choices=FormChoices(**{kind: name}),
+            ),
+            NOTHING,
+            id=f"joined group with text at {kind} {name}",
+        )
+        for kind, name in CHOSEN
+    ],
+    *[
+        pytest.param(
             "{{ form|crispy }}",
             partial(
                 FloatingForm, choices=FormChoices(label="floating", **{kind: name})
