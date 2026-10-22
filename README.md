@@ -696,6 +696,8 @@ django-crispy-forms' `PrependedText`, `AppendedText`, `PrependedAppendedText` an
 
 The text was drawn inside the input's daisyUI wrapper and is now an item of the join beside the input. A `Field` as the first item of a `FieldWithButtons` becomes a `Field` member of the group, and its `css_id`, `css_class` and attributes go to the `Join`. A size, colour or variant reaches the input, the text and the buttons as described above.
 
+Python shows a `DeprecationWarning` under a test runner, or when you run with `python -W default`, so run your tests to find the layouts that need changing. The pack records the four in `mvp_forms.deprecation.RETIRING`, with what replaces each, and warns through `mvp_forms.deprecation.retiring_layout_object` when it draws one, so you call neither.
+
 ### Size, colour and variant
 
 State a size, a colour and a variant once, in Python, and the pack adds daisyUI's modifier for each to every input it draws for the form. You write no class on any widget. The statement is a `FormChoices`, set as the `daisyui` attribute of the form's helper:
