@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.8.0] - 2026-10-22
+
 ### Added
 
 - The forms of a formset can carry a legend and collapse, stated on the helper with `FormChoices(forms=StackedForms(...))` for the stacked layout and `FormChoices(table=TablePanel(...))` for the table, both from `mvp_forms.choices`. A stacked form's legend is a template that can use `number`, the form's place, and `form`, so `"Line {{ number }}"` numbers them and `'{{ form.name.value|default:"New line" }}'` names each by a value. The table's legend can use `formset`. `collapsible=True` lets a person open and close each form, or the whole table, by its legend, and `open=True` draws it open at first. A form or a table holding an error is drawn open. The statement is read from `formset.helper` too, so it reaches `{{ formset|crispy }}`.
