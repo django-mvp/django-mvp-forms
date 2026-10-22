@@ -1367,7 +1367,9 @@ def daisyui_stacked_form(
     choices = FormChoices.lookup(context, formset)
     panel = choices.forms if choices else StackedForms()
     with context.push(form=form, number=number, include_media=False):
-        drawn = render_to_string("daisyui/display_form.html", context.flatten())
+        drawn = render_to_string(
+            "daisyui/display_form.html", cast(dict[str, Any], context.flatten())
+        )
         return draw_panel(
             context, panel, drawn, f"{form.prefix}-panel", bool(form.errors)
         )
@@ -1385,7 +1387,8 @@ def daisyui_table_panel(context: Context, formset: BaseFormSet) -> str:
     panel = choices.table if choices else TablePanel()
     with context.push(formset=formset):
         drawn = render_to_string(
-            "daisyui/table_inline_formset_table.html", context.flatten()
+            "daisyui/table_inline_formset_table.html",
+            cast(dict[str, Any], context.flatten()),
         )
         if not drawn.strip():
             return ""
