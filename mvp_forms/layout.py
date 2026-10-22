@@ -31,8 +31,8 @@ from crispy_forms.utils import TEMPLATE_PACK, flatatt, render_field
 from django.template import Context, Template
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from django.utils.text import slugify
 from django.utils.safestring import SafeData, SafeString
+from django.utils.text import slugify
 
 from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice, Modifiers
 
@@ -560,4 +560,4 @@ class Fieldset(CrispyFieldset):
             }
         )
         template = self.get_template_name(template_pack)
-        return render_to_string(template, context.flatten())
+        return render_to_string(template, cast(dict[str, Any], context.flatten()))

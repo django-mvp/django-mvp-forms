@@ -354,18 +354,14 @@ class TestCollapsibleFieldset:
         assert toggle_of(fieldset) is None
 
     def test_its_legend_holds_the_label_of_its_toggle(self, draw):
-        fieldset = drawn_fieldset(
-            draw, Fieldset(LEGEND, "first", collapsible=True)
-        )
+        fieldset = drawn_fieldset(draw, Fieldset(LEGEND, "first", collapsible=True))
 
         label = fieldset.find("legend").find("label")
         assert label["for"] == toggle_of(fieldset)["id"]
         assert label.get_text(strip=True) == LEGEND
 
     def test_the_toggle_comes_before_the_legend_and_the_fields(self, draw):
-        fieldset = drawn_fieldset(
-            draw, Fieldset(LEGEND, "first", collapsible=True)
-        )
+        fieldset = drawn_fieldset(draw, Fieldset(LEGEND, "first", collapsible=True))
 
         toggle = toggle_of(fieldset)
         assert toggle.find_next_sibling("legend") is not None

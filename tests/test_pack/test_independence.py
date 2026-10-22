@@ -675,9 +675,7 @@ STATES = [
         NOTHING,
         id="all thirteen objects, invalid",
     ),
-    pytest.param(
-        "{% crispy form %}", collapsed, NOTHING, id="collapsible fieldsets"
-    ),
+    pytest.param("{% crispy form %}", collapsed, NOTHING, id="collapsible fieldsets"),
     pytest.param(
         "{% crispy form %}",
         lambda: collapsed({}),
