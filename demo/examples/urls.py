@@ -37,6 +37,14 @@ from demo.examples.custom_widgets.range_input import (
 )
 from demo.examples.custom_widgets.regex_mask import AccountForm
 from demo.examples.custom_widgets.tom_select import TopicsForm
+from demo.examples.formsets.collapsible import (
+    MEMBERS,
+    MemberFormSet,
+    NamedHelper,
+    NumberedHelper,
+    TitledHelper,
+    sent_back,
+)
 from demo.examples.formsets.stacked import OrderHelper, OrderLineFormSet
 from demo.examples.formsets.table import OrderHelper as TableOrderHelper
 from demo.examples.formsets.table import OrderLineFormSet as TableOrderLineFormSet
@@ -142,6 +150,33 @@ urlpatterns = [
         "formset-stacked/",
         FormsetExampleView.as_view(
             form_class=OrderLineFormSet, helper_class=OrderHelper
+        ),
+    ),
+    path(
+        "formset-collapsible/",
+        FormsetExampleView.as_view(
+            form_class=MemberFormSet, helper_class=NamedHelper, initial=MEMBERS
+        ),
+    ),
+    path(
+        "formset-collapsible-numbered/",
+        FormsetExampleView.as_view(
+            form_class=MemberFormSet, helper_class=NumberedHelper, initial=MEMBERS
+        ),
+    ),
+    path(
+        "formset-collapsible-error/",
+        FormsetExampleView.as_view(
+            form_class=MemberFormSet,
+            helper_class=NamedHelper,
+            initial=MEMBERS,
+            sent_data=sent_back(),
+        ),
+    ),
+    path(
+        "formset-titled/",
+        FormsetExampleView.as_view(
+            form_class=MemberFormSet, helper_class=TitledHelper, initial=MEMBERS
         ),
     ),
     path(

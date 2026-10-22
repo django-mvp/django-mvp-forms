@@ -508,6 +508,45 @@ class Choice(LayoutObject):
         return cast(SafeString, write_size(drawn, placed.size))
 
 
+class StackedForms:
+    """How each form of a stacked formset is drawn, stated as ``FormChoices(forms=...)``.
+
+    Each form is drawn as a panel, as a ``Fieldset`` is. The legend is a
+    template, rendered against the page's context with two names added:
+    ``number``, the form's position counting from one, and ``form``, the form.
+
+    Args:
+        legend: The legend of each form. Empty, the panels have no heading.
+        collapsible: Whether a person can open and close each form.
+        open: Whether a collapsible form is first drawn open. A form holding an
+            error is drawn open whatever this says.
+
+    Raises:
+        ValueError: ``open`` is true for forms that are not collapsible, or
+            collapsible forms have no legend to open them by.
+    """
+
+    css_id = ""
+    css_class = ""
+    flat_attrs = ""
+    description = ""
+
+    def __init__(
+        self,
+        *,
+        legend: str = "",
+        collapsible: bool = False,
+        open: bool = False,  # noqa: A002 - named as <details> names it
+    ) -> None:
+        if open and not collapsible:
+            raise ValueError("Only collapsible forms can be drawn open")
+        if collapsible and not legend:
+            raise ValueError("Collapsible forms need a legend to open them by")
+        self.legend = legend
+        self.collapsible = collapsible
+        self.open = open
+
+
 class FormChoices:
     """The choices a form states once, set as ``helper.daisyui``.
 
@@ -525,6 +564,7 @@ class FormChoices:
         label: ``"floating"`` to draw the label of every input, textarea and
             select as daisyUI's floating label. Every other field is passed over.
         fields: A ``Choice`` for a field, by the field's name.
+        forms: How each form of a stacked formset is drawn.
     """
 
     attribute = "daisyui"
@@ -539,6 +579,7 @@ class FormChoices:
         button_variant: str | None = None,
         label: str | None = None,
         fields: dict[str, Choice] | None = None,
+        forms: StackedForms | None = None,
     ) -> None:
         self.size = size
         self.color = color
@@ -547,6 +588,7 @@ class FormChoices:
         self.button_variant = button_variant
         self.label = label
         self.fields = dict(fields or {})
+        self.forms = forms or StackedForms()
 
     def check(self) -> None:
         """Raise when the statement holds a name daisyUI does not have.

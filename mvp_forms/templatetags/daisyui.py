@@ -12,6 +12,7 @@ from django.forms.boundfield import BoundField
 from django.forms.formsets import BaseFormSet
 from django.forms.widgets import ChoiceWidget
 from django.template import Context, Template
+from django.template.loader import render_to_string
 from django.utils.html import escape, strip_tags
 from django.utils.safestring import SafeData, SafeString
 from django.utils.translation import gettext_lazy
@@ -21,6 +22,7 @@ from mvp_forms.choices import (
     Choice,
     FormChoices,
     InvalidChoice,
+    StackedForms,
     Modifiers,
     write_size,
 )
@@ -1322,6 +1324,36 @@ def retiring_decoration(decoration: dict[str, Any]) -> str | None:
     if appended:
         return "AppendedText"
     return None
+
+
+@register.simple_tag(takes_context=True)
+def daisyui_stacked_form(context: Context, form: forms.Form, number: int) -> str:
+    """Draw one form of a stacked formset as a panel, as a fieldset is drawn.
+
+    A form holding an error is drawn open, with the fieldset's error mark.
+
+    Args:
+        context: The template context.
+        form: The form to draw.
+        number: The form's position in the formset, counting from one.
+    """
+    choices = context.get(FormChoices.attribute)
+    stacked = choices.forms if isinstance(choices, FormChoices) else StackedForms()
+    with context.push(form=form, number=number, include_media=False):
+        fields = render_to_string("daisyui/display_form.html", context.flatten())
+        legend = Template(stacked.legend).render(context) if stacked.legend else ""
+    in_error = bool(form.errors)
+    return render_to_string(
+        "daisyui/layout/fieldset.html",
+        {
+            "fieldset": stacked,
+            "legend": SafeString(legend),
+            "fields": SafeString(fields),
+            "fieldset_id": f"{form.prefix or 'form'}-panel",
+            "fieldset_in_error": in_error,
+            "fieldset_open": stacked.open or in_error,
+        },
+    )
 
 
 @register.simple_tag(takes_context=True)
