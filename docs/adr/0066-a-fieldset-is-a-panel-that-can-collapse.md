@@ -36,6 +36,10 @@ chosen. Only a `<legend>` can sit on a fieldset's border, and it has to be the f
 so the control is a checkbox beside it. A stylesheet of the package's own would also have done it,
 and the constitution allows one only for a supported package's controls.
 
+The cost is in what assistive technology announces. A checkbox is read as checked or not checked,
+where a `<summary>` is read as expanded or collapsed. The checkbox is labelled by the legend and
+reachable and operable from the keyboard, so nothing is out of reach, but the words are less exact.
+
 The ids start with the fieldset's `css_id` or its legend made into a slug, as django-crispy-forms
 names an accordion group, and with the form's prefix, because the forms of a formset draw the same
 layout.
