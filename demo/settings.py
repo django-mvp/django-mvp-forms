@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     # django-mvp and listed below it: both ship an `icon` component, and the
     # one in `mvp` must be found first.
     "daisy_cotton",
+    # django-mvp's list pages take their search, sort and filters from it.
+    "django_filters",
     # Serves the pages under demo/docs inside the shell.
     "mvp_sphinx",
     "easy_icons",
