@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A `Join` holds text between its fields: put django-crispy-forms' `HTML` where it goes, as in `Join("value", HTML("±"), "uncertainty", "unit")`. The text is drawn in its place as an item of the join, framed and sized as the inputs beside it, and takes the form's size, colour and variant for inputs or those of a `Choice` around it. Before, `HTML` in a `Join` raised `InvalidMember`. `Join.contents()` gives it as a `GroupText`.
+
 ## [v0.7.0] - 2026-10-21
 
 ### Added

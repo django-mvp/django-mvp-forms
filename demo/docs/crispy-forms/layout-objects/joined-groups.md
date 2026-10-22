@@ -28,6 +28,21 @@ Send the form with no words to see the error on the text input alone.
 ../../../examples/layout_objects/joined_search.py
 ```
 
-A member must be an input or a select, and a button must be a `StrictButton`,
-`Submit`, `Button` or `Reset`. Anything else in the group, such as a `Div`,
-raises `InvalidMember` when the form is drawn.
+## With text between the fields
+
+A measurement and its uncertainty are written with a `±` between them. Put
+django-crispy-forms' own `HTML` in the group where the text goes. It is drawn
+in its place in the join, framed like the inputs beside it, and takes the
+form's size, colour and variant for inputs, or those of a `Choice` around it.
+The text is rendered with the form's context, as `HTML` is anywhere else.
+
+```{live-example} /examples/joined-text/
+:title: A measurement with its uncertainty
+
+../../../examples/layout_objects/joined_text.py
+```
+
+A member must be an input or a select, a button must be a `StrictButton`,
+`Submit`, `Button` or `Reset`, and text must be `HTML`. Anything else in the
+group, such as a `Div`, raises `InvalidMember` when the form is drawn. A
+`Choice` around text that states a label or a drawing raises `InvalidChoice`.

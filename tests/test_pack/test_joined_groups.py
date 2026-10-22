@@ -2,7 +2,7 @@
 
 import pytest
 from crispy_forms.bootstrap import PrependedText, StrictButton
-from crispy_forms.layout import Button, Div, Field, Submit
+from crispy_forms.layout import HTML, Button, Div, Field, Submit
 from django.utils.safestring import mark_safe
 
 from mvp_forms.choices import Choice, FormChoices, InvalidChoice, Modifiers
@@ -640,3 +640,86 @@ class TestJoinedGroupButtons:
 
         assert form.is_valid()
         assert form.cleaned_data["number"] == "5550100"
+
+
+def text_in(group):
+    return [tag for tag in children_of(group) if tag.name == "span"]
+
+
+def names_in_inputs(group):
+    return [tag["name"] for tag in children_of(group) if tag.name != "span"]
+
+
+class TestJoinedGroupText:
+    def test_text_between_members_is_an_item_of_the_join_in_its_place(self, draw):
+        soup = draw(TAG, form=joined("number", HTML("±"), "extension"))
+
+        group = join_of(soup)
+
+        assert [tag.name for tag in children_of(group)] == ["input", "span", "input"]
+        (text,) = text_in(group)
+        assert text.get_text(strip=True) == "±"
+        assert {"input", "join-item"} <= set(text["class"])
+        assert names_in_inputs(group) == ["number", "extension"]
+
+    def test_text_keeps_its_markup(self, draw):
+        soup = draw(TAG, form=joined("number", HTML('<abbr title="metres">m</abbr>')))
+
+        (text,) = text_in(join_of(soup))
+        assert text.find("abbr")["title"] == "metres"
+
+    def test_text_is_drawn_with_the_forms_context(self, draw):
+        soup = draw(TAG, form=joined("number", HTML("{{ form.prefix|default:'x' }}")))
+
+        (text,) = text_in(join_of(soup))
+        assert text.get_text(strip=True) == "x"
+
+    @pytest.mark.parametrize(("kind", "value"), STATED)
+    def test_the_forms_choice_reaches_the_text_as_it_reaches_an_input(
+        self, draw, kind, value
+    ):
+        form = JoinedForm(
+            layout=[Join("number", HTML("±"))],
+            choices=FormChoices(**{kind: value}),
+        )
+
+        soup = draw(TAG, form=form)
+
+        (text,) = text_in(join_of(soup))
+        assert Modifiers.tables[kind]["input"][value] in text["class"]
+
+    def test_a_choice_around_the_group_wins_over_the_forms_for_the_text(self, draw):
+        form = JoinedForm(
+            layout=[Join(Choice("number", HTML("±"), size="xs"))],
+            choices=FormChoices(size="lg"),
+        )
+
+        soup = draw(TAG, form=form)
+
+        (text,) = text_in(join_of(soup))
+        assert "input-xs" in text["class"]
+        assert "input-lg" not in text["class"]
+
+    def test_a_choice_stating_a_label_for_the_text_raises(self, draw):
+        form = joined("number", Choice(HTML("±"), label="floating"))
+
+        with pytest.raises(InvalidChoice):
+            draw(TAG, form=form)
+
+    def test_a_group_of_hidden_members_and_text_draws_no_join(self, draw):
+        soup = draw(TAG, form=joined("token", HTML("±")))
+
+        assert join_of(soup) is None
+        assert soup.find(attrs={"name": "token"})["type"] == "hidden"
+
+    def test_a_form_posted_from_a_group_with_text_cleans_to_the_same_data(
+        self, draw, posted
+    ):
+        layout = [Join("country_code", "number", HTML("±"), "extension")]
+        data = {"country_code": "+44", "number": "5550100", "extension": "12"}
+
+        soup = draw(TAG, form=JoinedForm(data, layout=layout))
+        form = JoinedForm(posted(soup), layout=layout)
+
+        assert form.is_valid()
+        assert form.cleaned_data["extension"] == "12"

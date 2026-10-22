@@ -5,14 +5,14 @@ from html import unescape
 from typing import Any, cast
 
 from crispy_forms.bootstrap import StrictButton
-from crispy_forms.layout import BaseInput, Field, LayoutObject
+from crispy_forms.layout import HTML, BaseInput, Field, LayoutObject
 from crispy_forms.utils import TEMPLATE_PACK, flatatt, render_field
 from django.template import Context
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
 
-from mvp_forms.choices import Choice
+from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice, Modifiers
 
 
 class InvalidMember(ValueError):
@@ -21,7 +21,8 @@ class InvalidMember(ValueError):
     Args:
         member: The name of the field, when its widget is not an input or a
             select, or the class name of the layout object, when the group holds
-            anything but field names, ``Field``, ``Choice`` and buttons.
+            anything but field names, ``Field``, ``Choice``, buttons and
+            ``HTML``.
     """
 
     def __init__(self, member: str) -> None:
@@ -29,7 +30,7 @@ class InvalidMember(ValueError):
         super().__init__(
             f"{member!r} cannot be a member of a joined group: only a field drawn "
             "as an input or a select can, named alone, in a Field or in a Choice, "
-            "and a button"
+            "a button and HTML"
         )
 
 
@@ -91,6 +92,59 @@ class GroupButton:
         return isinstance(item, BaseInput) and item.input_type != "hidden"
 
 
+@dataclass(frozen=True)
+class GroupText:
+    """Text of a joined group, with the choice the group states for it.
+
+    Args:
+        text: The ``HTML`` layout object that holds the text.
+        choice: The ``Choice`` around the text in the group, merged over any
+            ``Choice`` further out in the group, or None when none is.
+    """
+
+    # The component the text is drawn as, so that it is framed and sized as the
+    # inputs beside it are.
+    component = "input"
+    template = "%s/layout/join_text.html"
+
+    text: HTML
+    choice: Choice | None
+
+    def classes(self, choices: FormChoices) -> list[str]:
+        """Return the classes of the size, colour and variant the text takes.
+
+        The text takes them as an input of the group does: the form's, then a
+        ``Choice`` around it in the group.
+
+        Args:
+            choices: The form's statement.
+
+        Returns:
+            The classes for size, colour and variant, in that order, for each
+            one that resolves to a class.
+
+        Raises:
+            InvalidChoice: A size, colour or variant stated is not one daisyUI
+                has for an input, or the ``Choice`` around the text states a
+                drawing or a label, which text has none of.
+        """
+        own = Choice() if self.choice is None else self.choice
+        for kind in ("drawing", "label"):
+            stated = getattr(own, kind)
+            if stated is not None and stated is not INHERIT:
+                raise InvalidChoice(kind, stated, ())
+        resolved = (
+            Modifiers.resolve(
+                kind,
+                self.component,
+                own=getattr(own, kind),
+                form=getattr(choices, kind),
+            )
+            for kind in ("size", "color", "variant")
+        )
+        return [modifier for modifier in resolved if modifier]
+
+
 class Join(LayoutObject):
     """Several fields drawn as one daisyUI join under one label.
 
@@ -100,7 +154,9 @@ class Join(LayoutObject):
     it. A ``Field`` holds the names it gives attributes to, and a ``Choice`` the
     names and buttons it states a size, colour or variant for. A button is drawn
     in its place in the join, as it is drawn anywhere else, with ``join-item``
-    added. Nothing else is held, and a ``Field`` with a ``wrapper_class`` or a
+    added. ``HTML`` is text between the inputs, such as a ``±`` between a value
+    and its uncertainty, drawn in its place in the join, framed and sized as an
+    input. Nothing else is held, and a ``Field`` with a ``wrapper_class`` or a
     ``template`` of its own is refused, because a member has no frame for either
     to apply to.
 
@@ -110,8 +166,9 @@ class Join(LayoutObject):
     are about this.
 
     Args:
-        *fields: The field names, ``Field`` objects, ``Choice`` objects and
-            buttons that make up the group, in the order they are drawn.
+        *fields: The field names, ``Field`` objects, ``Choice`` objects,
+            buttons and ``HTML`` that make up the group, in the order they are
+            drawn.
         label: The group's one label, as text. A group without one has no
             legend.
         css_id: The id of the element that carries ``join``.
@@ -169,16 +226,17 @@ class Join(LayoutObject):
         """
         return [entry for entry in self.contents() if isinstance(entry, Member)]
 
-    def contents(self) -> list[Member | GroupButton]:
-        """Return the fields and the buttons the group holds, in order.
+    def contents(self) -> list[Member | GroupButton | GroupText]:
+        """Return the fields, the buttons and the text the group holds, in order.
 
         Returns:
-            The members, as ``members`` gives them, and one ``GroupButton`` for
-            each button, in the order the group holds them.
+            The members, as ``members`` gives them, one ``GroupButton`` for
+            each button and one ``GroupText`` for each ``HTML``, in the order
+            the group holds them.
 
         Raises:
             InvalidMember: The group holds a layout object other than ``Field``,
-                ``Choice`` and a button, which includes a subclass of ``Field``
+                ``Choice``, a button and ``HTML``, which includes a subclass of ``Field``
                 and a ``Hidden``, or a ``Field`` with a ``wrapper_class`` or a
                 ``template`` of its own, which a member has no frame for.
         """
@@ -186,7 +244,7 @@ class Join(LayoutObject):
 
     def contents_of(
         self, held: list[Any], outer: Choice | None
-    ) -> list[Member | GroupButton]:
+    ) -> list[Member | GroupButton | GroupText]:
         """Return the contents of one level of the group.
 
         Args:
@@ -199,12 +257,14 @@ class Join(LayoutObject):
         Raises:
             InvalidMember: See ``contents``.
         """
-        found: list[Member | GroupButton] = []
+        found: list[Member | GroupButton | GroupText] = []
         for item in held:
             if isinstance(item, str):
                 found.append(Member(item, {}, outer))
             elif GroupButton.accepts(item):
                 found.append(GroupButton(item, outer))
+            elif type(item) is HTML:
+                found.append(GroupText(item, outer))
             elif type(item) is Field:
                 if item.wrapper_class or item.template != Field.template:
                     raise InvalidMember(type(item).__name__)
@@ -220,7 +280,7 @@ class Join(LayoutObject):
 
     def draw(
         self,
-        entry: Member | GroupButton,
+        entry: Member | GroupButton | GroupText,
         form: Any,
         context: Context,
         template_pack: str,
@@ -233,17 +293,35 @@ class Join(LayoutObject):
         and deals with a name the form lacks. A button is rendered by
         ``render_field`` as it is anywhere else, with the group placed in the
         context so that it is drawn as an item of the join. Either is drawn
-        inside the entry's ``Choice`` when it has one.
+        inside the entry's ``Choice`` when it has one. Text is drawn by its
+        ``HTML`` with the form's context, inside an element that is an item of
+        the join and takes the size, colour and variant an input would.
 
         Args:
-            entry: The member or the button to draw.
+            entry: The member, the button or the text to draw.
             form: The form being drawn.
             context: The template context.
             template_pack: The template pack drawing the layout.
 
         Returns:
             The entry's markup, empty for a name the form lacks.
+
+        Raises:
+            InvalidChoice: See ``GroupText.classes``.
         """
+        if isinstance(entry, GroupText):
+            choices = FormChoices.lookup(context, form) or FormChoices()
+            return SafeString(
+                render_to_string(
+                    entry.template % template_pack,
+                    {
+                        "text": entry.text.render(
+                            form, context, template_pack=template_pack
+                        ),
+                        "classes": " ".join(entry.classes(choices)),
+                    },
+                )
+            )
         held: Any = (
             entry.button
             if isinstance(entry, GroupButton)
@@ -273,8 +351,9 @@ class Join(LayoutObject):
         first and last child of the element that carries ``join``, whatever
         they are. Whether a member is hidden is read after it is drawn, because
         ``Field("name", type="hidden")`` makes it so while it is drawn. A name
-        the form lacks is neither a visible nor a hidden member. A button is
-        drawn in the join in its place.
+        the form lacks is neither a visible nor a hidden member. A button and
+        text are drawn in the join in their place. Text has nothing to stand
+        between without a visible member or a button, so it alone draws no join.
 
         Args:
             form: The form being drawn.
@@ -295,10 +374,15 @@ class Join(LayoutObject):
         inputs: list[str] = []
         hidden: list[str] = []
         shown: list[Any] = []
+        has_control = False
         for entry in self.contents():
             drawn = self.draw(entry, form, context, template_pack)
+            if isinstance(entry, GroupText):
+                inputs.append(drawn)
+                continue
             if isinstance(entry, GroupButton):
                 inputs.append(drawn)
+                has_control = True
                 continue
             if entry.name not in form.fields:
                 continue
@@ -308,7 +392,8 @@ class Join(LayoutObject):
             else:
                 inputs.append(drawn)
                 shown.append(bound)
-        if not inputs:
+                has_control = True
+        if not has_control:
             return SafeString("".join(hidden))
         required = next((bound for bound in shown if bound.field.required), None)
         markup: SafeString = SafeString(
