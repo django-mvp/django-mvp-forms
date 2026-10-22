@@ -508,22 +508,21 @@ class Choice(LayoutObject):
         return cast(SafeString, write_size(drawn, placed.size))
 
 
-class StackedForms:
-    """How each form of a stacked formset is drawn, stated as ``FormChoices(forms=...)``.
+class FormsetPanel:
+    """How a formset's panels are set out: their legend, and whether they collapse.
 
-    Each form is drawn as a panel, as a ``Fieldset`` is. The legend is a
-    template, rendered against the page's context with two names added:
-    ``number``, the form's position counting from one, and ``form``, the form.
+    A panel is drawn as a ``Fieldset`` is. Its legend is a template, rendered
+    against the page's context with the names each kind of panel adds.
 
     Args:
-        legend: The legend of each form. Empty, the panels have no heading.
-        collapsible: Whether a person can open and close each form.
-        open: Whether a collapsible form is first drawn open. A form holding an
-            error is drawn open whatever this says.
+        legend: The legend. Empty, the panel has no heading.
+        collapsible: Whether a person can open and close the panel.
+        open: Whether a collapsible panel is first drawn open. A panel holding
+            an error is drawn open whatever this says.
 
     Raises:
-        ValueError: ``open`` is true for forms that are not collapsible, or
-            collapsible forms have no legend to open them by.
+        ValueError: ``open`` is true for a panel that is not collapsible, or a
+            collapsible panel has no legend to open it by.
     """
 
     css_id = ""
@@ -539,51 +538,31 @@ class StackedForms:
         open: bool = False,  # noqa: A002 - named as <details> names it
     ) -> None:
         if open and not collapsible:
-            raise ValueError("Only collapsible forms can be drawn open")
+            raise ValueError("Only a collapsible panel can be drawn open")
         if collapsible and not legend:
-            raise ValueError("Collapsible forms need a legend to open them by")
+            raise ValueError("A collapsible panel needs a legend to open it by")
         self.legend = legend
         self.collapsible = collapsible
         self.open = open
 
 
-class TablePanel:
-    """How the panel a formset's table is drawn in is set out, stated as ``FormChoices(table=...)``.
+class StackedForms(FormsetPanel):
+    """Each form of a stacked formset as a panel, stated as ``FormChoices(forms=...)``.
 
-    The table is drawn inside one panel, as a ``Fieldset`` is, and every form
-    stays one row of it. The legend is a template, rendered against the page's
-    context with ``formset`` added.
-
-    Args:
-        legend: The panel's legend. Empty, the panel has no heading.
-        collapsible: Whether a person can open and close the table.
-        open: Whether a collapsible table is first drawn open. A table holding
-            an error is drawn open whatever this says.
-
-    Raises:
-        ValueError: ``open`` is true for a table that is not collapsible, or a
-            collapsible table has no legend to open it by.
+    The legend is rendered with two names added: ``number``, the form's
+    position counting from one, and ``form``, the form.
     """
 
-    css_id = ""
-    css_class = "min-w-0"
-    flat_attrs = ""
-    description = ""
 
-    def __init__(
-        self,
-        *,
-        legend: str = "",
-        collapsible: bool = False,
-        open: bool = False,  # noqa: A002 - named as <details> names it
-    ) -> None:
-        if open and not collapsible:
-            raise ValueError("Only a collapsible table can be drawn open")
-        if collapsible and not legend:
-            raise ValueError("A collapsible table needs a legend to open it by")
-        self.legend = legend
-        self.collapsible = collapsible
-        self.open = open
+class TablePanel(FormsetPanel):
+    """The panel a formset's table is drawn in, stated as ``FormChoices(table=...)``.
+
+    Every form stays one row of the table, so it is the whole table that takes
+    a legend and collapses. The legend is rendered with ``formset`` added. The
+    panel carries ``min-w-0``, so the table can still scroll sideways inside it.
+    """
+
+    css_class = "min-w-0"
 
 
 class FormChoices:

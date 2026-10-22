@@ -123,6 +123,27 @@ A developer deciding whether to use the pack, or a contributor changing it, open
 
 ---
 
+### User Story 6 - Each form of a formset is a panel that can carry a legend and collapse (Priority: P3)
+
+A developer drawing a formset sees each form, stacked, set out as a panel the way a fieldset is drawn, and in the table layout the whole table inside one such panel. They give each stacked form a legend, numbered by its place or taken from a value the form holds, and give the table a legend of its own. They let a person open and close each form, or the whole table, and choose whether it starts open. A form or a table holding an error is drawn open, so no error is hidden.
+
+**Why this priority**: The forms of a stacked formset were told apart only by a divider, and once fieldsets became panels that collapse, a formset's forms looked like the one grouping in a form that could not. It changes how both layouts are drawn and adds nothing a formset could not already do.
+
+**Independent Test**: Draw a formset stacked and as a table with a legend and collapsing stated on the helper, and with nothing stated. Check the panels, their legends, which start open and closed, and that a form holding an error is open.
+
+**Acceptance Scenarios**:
+
+1. **Given** a formset drawn stacked with nothing stated, **When** it is drawn, **Then** each form is a panel of its own with no legend.
+2. **Given** a stacked formset whose helper states a legend that uses the form's place, **When** it is drawn, **Then** each panel's legend carries that form's place, counting from one.
+3. **Given** a stacked formset whose helper states a legend that reads a value of the form, **When** it is drawn, **Then** each panel's legend shows that form's value, escaped, and a form with no value shows the default the legend gives.
+4. **Given** a formset whose forms are stated collapsible, **When** it is drawn, **Then** each legend opens and closes its own form, and every form starts closed unless the helper asks for them open.
+5. **Given** a bound formset with collapsible forms in which one form holds a field error or a form-wide error, **When** it is drawn, **Then** that form is drawn open and marked as holding an error, and the others keep their starting state.
+6. **Given** a formset drawn as a table, **When** it is drawn, **Then** the table sits inside one panel, every form is still one row, and a formset with no forms draws no panel.
+7. **Given** a table whose helper states a legend and makes it collapsible, **When** it is drawn, **Then** the legend can read the formset, the table starts closed unless asked for open, and a table holding an error in any row is drawn open and marked.
+8. **Given** a statement on the helper the formset carries, **When** the formset is drawn through the filter, **Then** the statement is followed.
+
+---
+
 ### Edge Cases
 
 - A formset with no forms draws its management form and nothing else that could fail, and submits as a valid empty formset.
@@ -160,16 +181,18 @@ A developer deciding whether to use the pack, or a contributor changing it, open
 - **FR-018**: The pack MUST NOT add or remove formset rows in the browser, ship a script for doing so, or draw a spare empty form for one. It MUST NOT ship a view, a URL or a page template for a formset.
 - **FR-019**: The demo project MUST gain one page per layout in its Formsets group, Stacked and As a table, each with a live example of a formset with deletion and ordering turned on, and each redisplaying with field, form-wide and formset-wide errors after an invalid submission.
 - **FR-020**: The README's public surface MUST state how a formset is handed to the pack and how each layout is chosen, and the CHANGELOG MUST record the addition.
+- **FR-022**: Each form of a stacked formset MUST be drawn as a panel, as a fieldset is, and the table of the table layout MUST be drawn inside one panel. A legend for each stacked form, a legend for the table, and whether either collapses and starts open, MUST be stated on the helper and nowhere else.
+- **FR-023**: A collapsible form, or a collapsible table, that holds an error of any kind MUST be drawn open and marked as holding an error.
 - **FR-021**: The repository's glossary (CONTEXT.md) MUST define formset, stacked layout and table layout as this package uses them, and MUST stop listing formset as a word this package does not use. The glossary MUST keep the line between drawing a formset, which is this package's, and handling one, which is django-mvp's.
 
-Requirements map to stories as follows. US1: FR-001, FR-002, FR-004, FR-005, FR-006, FR-009, FR-016, FR-017, FR-018. US2: FR-002, FR-003, FR-004, FR-005, FR-007, FR-008, FR-009, FR-017. US3: FR-010 to FR-013. US4: FR-014, FR-015. US5: FR-019, FR-020, FR-021.
+Requirements map to stories as follows. US1: FR-001, FR-002, FR-004, FR-005, FR-006, FR-009, FR-016, FR-017, FR-018. US2: FR-002, FR-003, FR-004, FR-005, FR-007, FR-008, FR-009, FR-017. US3: FR-010 to FR-013. US4: FR-014, FR-015. US5: FR-019, FR-020, FR-021. US6: FR-022, FR-023.
 
 ### Key Entities
 
 - **Formset**: A set of forms of one kind that Django builds, validates and saves together. The pack receives one already built and draws it. It covers plain formsets, model formsets and inline formsets alike.
 - **Management form**: The hidden form Django adds to every formset to record how many forms were drawn. Without it the submission cannot be read.
-- **Stacked layout**: A formset drawn with its forms one after another, each drawn as a single form would be.
-- **Table layout**: A formset drawn as one table, with a row per form and a column per visible field.
+- **Stacked layout**: A formset drawn with its forms one after another, each drawn as a single form would be, inside a panel of its own.
+- **Table layout**: A formset drawn as one table inside a panel, with a row per form and a column per visible field.
 - **Form-wide error**: An error on one form that belongs to no single field.
 - **Formset-wide error**: An error that belongs to the formset as a whole and to no one form.
 - **Delete input and order input**: The checkbox and the number input Django adds to each form when deletion or ordering is turned on for the formset.
