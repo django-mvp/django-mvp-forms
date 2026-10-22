@@ -774,3 +774,16 @@ class TestJoinedGroupOfOneField:
 
         assert soup.find("label", attrs={"for": "id_number"}) is not None
         assert join_of(soup).find_parent("fieldset") is None
+
+    @pytest.mark.parametrize("on", ["field", "widget"])
+    def test_an_aria_label_the_developer_wrote_wins_over_the_groups_label(
+        self, draw, on
+    ):
+        member = Field("number", aria_label="Mine") if on == "field" else "number"
+        form = joined(member, HTML("kg"), label="Weight")
+        if on == "widget":
+            form.fields["number"].widget.attrs["aria-label"] = "Mine"
+
+        soup = draw(TAG, form=form)
+
+        assert soup.find(id="id_number")["aria-label"] == "Mine"

@@ -373,7 +373,12 @@ class Join(LayoutObject):
             if isinstance(entry, GroupButton)
             else entry.field(self.member_template % template_pack)
         )
-        if lone and self.label is not None:
+        if (
+            lone
+            and self.label is not None
+            and isinstance(entry, Member)
+            and "aria-label" not in form.fields[entry.name].widget.attrs
+        ):
             held.attrs.setdefault("aria-label", self.label_text)
         if entry.choice is not None:
             chosen = entry.choice.over(Choice())
