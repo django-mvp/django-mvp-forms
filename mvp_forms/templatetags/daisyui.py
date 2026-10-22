@@ -23,6 +23,7 @@ from mvp_forms.choices import (
     FormChoices,
     InvalidChoice,
     StackedForms,
+    TablePanel,
     Modifiers,
     write_size,
 )
@@ -1352,6 +1353,40 @@ def daisyui_stacked_form(context: Context, form: forms.Form, number: int) -> str
             "fieldset_id": f"{form.prefix or 'form'}-panel",
             "fieldset_in_error": in_error,
             "fieldset_open": stacked.open or in_error,
+        },
+    )
+
+
+@register.simple_tag(takes_context=True)
+def daisyui_table_panel(context: Context, formset: BaseFormSet) -> str:
+    """Draw a formset's table inside a panel, as a fieldset is drawn.
+
+    A table holding an error in any of its rows is drawn open, with the
+    fieldset's error mark. A formset with no forms draws nothing.
+
+    Args:
+        context: The template context.
+        formset: The formset to draw.
+    """
+    choices = context.get(FormChoices.attribute)
+    panel = choices.table if isinstance(choices, FormChoices) else TablePanel()
+    with context.push(formset=formset):
+        table = render_to_string(
+            "daisyui/table_inline_formset_table.html", context.flatten()
+        )
+        legend = Template(panel.legend).render(context) if panel.legend else ""
+    if not table.strip():
+        return ""
+    in_error = any(form.errors for form in formset)
+    return render_to_string(
+        "daisyui/layout/fieldset.html",
+        {
+            "fieldset": panel,
+            "legend": SafeString(legend),
+            "fields": SafeString(table),
+            "fieldset_id": f"{formset.prefix}-table",
+            "fieldset_in_error": in_error,
+            "fieldset_open": panel.open or in_error,
         },
     )
 

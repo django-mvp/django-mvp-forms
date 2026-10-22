@@ -547,6 +547,45 @@ class StackedForms:
         self.open = open
 
 
+class TablePanel:
+    """How the panel a formset's table is drawn in is set out, stated as ``FormChoices(table=...)``.
+
+    The table is drawn inside one panel, as a ``Fieldset`` is, and every form
+    stays one row of it. The legend is a template, rendered against the page's
+    context with ``formset`` added.
+
+    Args:
+        legend: The panel's legend. Empty, the panel has no heading.
+        collapsible: Whether a person can open and close the table.
+        open: Whether a collapsible table is first drawn open. A table holding
+            an error is drawn open whatever this says.
+
+    Raises:
+        ValueError: ``open`` is true for a table that is not collapsible, or a
+            collapsible table has no legend to open it by.
+    """
+
+    css_id = ""
+    css_class = "min-w-0"
+    flat_attrs = ""
+    description = ""
+
+    def __init__(
+        self,
+        *,
+        legend: str = "",
+        collapsible: bool = False,
+        open: bool = False,  # noqa: A002 - named as <details> names it
+    ) -> None:
+        if open and not collapsible:
+            raise ValueError("Only a collapsible table can be drawn open")
+        if collapsible and not legend:
+            raise ValueError("A collapsible table needs a legend to open it by")
+        self.legend = legend
+        self.collapsible = collapsible
+        self.open = open
+
+
 class FormChoices:
     """The choices a form states once, set as ``helper.daisyui``.
 
@@ -565,6 +604,7 @@ class FormChoices:
             select as daisyUI's floating label. Every other field is passed over.
         fields: A ``Choice`` for a field, by the field's name.
         forms: How each form of a stacked formset is drawn.
+        table: How the panel a formset's table is drawn in is set out.
     """
 
     attribute = "daisyui"
@@ -580,6 +620,7 @@ class FormChoices:
         label: str | None = None,
         fields: dict[str, Choice] | None = None,
         forms: StackedForms | None = None,
+        table: TablePanel | None = None,
     ) -> None:
         self.size = size
         self.color = color
@@ -589,6 +630,7 @@ class FormChoices:
         self.label = label
         self.fields = dict(fields or {})
         self.forms = forms or StackedForms()
+        self.table = table or TablePanel()
 
     def check(self) -> None:
         """Raise when the statement holds a name daisyUI does not have.

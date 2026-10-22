@@ -46,7 +46,10 @@ from demo.examples.formsets.collapsible import (
     sent_back,
 )
 from demo.examples.formsets.stacked import OrderHelper, OrderLineFormSet
+from demo.examples.formsets.table import LINES, CollapsibleHelper
 from demo.examples.formsets.table import OrderHelper as TableOrderHelper
+from demo.examples.formsets.table import TitledHelper as TableTitledHelper
+from demo.examples.formsets.table import sent_back as table_sent_back
 from demo.examples.formsets.table import OrderLineFormSet as TableOrderLineFormSet
 from demo.examples.layout_objects.accordion import ChosenGroupForm
 from demo.examples.layout_objects.accordion import ProfileForm as AccordionForm
@@ -183,6 +186,31 @@ urlpatterns = [
         "formset-table/",
         FormsetExampleView.as_view(
             form_class=TableOrderLineFormSet, helper_class=TableOrderHelper
+        ),
+    ),
+    path(
+        "formset-table-titled/",
+        FormsetExampleView.as_view(
+            form_class=TableOrderLineFormSet,
+            helper_class=TableTitledHelper,
+            initial=LINES,
+        ),
+    ),
+    path(
+        "formset-table-collapsible/",
+        FormsetExampleView.as_view(
+            form_class=TableOrderLineFormSet,
+            helper_class=CollapsibleHelper,
+            initial=LINES,
+        ),
+    ),
+    path(
+        "formset-table-collapsible-error/",
+        FormsetExampleView.as_view(
+            form_class=TableOrderLineFormSet,
+            helper_class=CollapsibleHelper,
+            initial=LINES,
+            sent_data=table_sent_back(),
         ),
     ),
     path("partial-date-field/", ExampleView.as_view(form_class=SampleForm)),
