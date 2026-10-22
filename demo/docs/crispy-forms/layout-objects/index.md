@@ -7,6 +7,7 @@ where crispy keeps it, and drawn by the pack as the matching daisyUI component.
 ```{toctree}
 
 fieldsets
+form-text
 rows-columns
 joined-groups
 multi-widget-field

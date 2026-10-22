@@ -16,7 +16,7 @@
 
 A developer who writes a `Layout` for a form can group and arrange its fields, put their own HTML between them, and end the form with buttons. They write that layout with django-crispy-forms' own layout objects, exactly as its documentation describes, and the pack draws each one as daisyUI markup.
 
-The layout objects this feature covers are `Fieldset`, `Div`, `Row`, `Column`, `MultiField`, `HTML`, `Submit`, `Reset`, `Button`, `StrictButton`, `Hidden`, `ButtonHolder` and `FormActions`.
+The layout objects this feature covers are `Fieldset`, `Div`, `Row`, `Column`, `MultiField`, `HTML`, `Submit`, `Reset`, `Button`, `StrictButton`, `Hidden`, `ButtonHolder` and `FormActions`, and the package's own `FormText`.
 
 It draws nothing inside them. A field placed in any of these objects is drawn by the pack's field drawing, which FS-001 (issue #5) delivers and which this feature depends on.
 
@@ -126,6 +126,23 @@ A developer has a long form whose fieldsets need a word of explanation, and some
 5. **Given** a `Fieldset` with `open=True` that is not collapsible, or a collapsible one with no legend, **When** the layout is built, **Then** it raises `ValueError`.
 6. **Given** a formset whose forms each hold a collapsible `Fieldset`, **When** it is drawn, **Then** each form's fieldset opens and closes on its own.
 
+### User Story 6 - Put text about the form between its fields (Priority: P3)
+
+A developer wants to introduce a form, say something about the fields that follow, or add the small print before the button. They put a `FormText` from `mvp_forms.layout` where the text belongs, and choose a smaller or larger size, or a muted shade, for the job it does. A person filling in the form reads the text in place, more prominent than a field's help text unless the developer made it small.
+
+**Why this priority**: A form works without it. Before it, the only way to put text between fields was an `HTML` object whose styling the developer had to write.
+
+**Independent Test**: Draw a form whose layout has a `FormText` between two fields and one inside a `Fieldset`, at each size and shade, and check each is in place with the size and shade it was given.
+
+**Acceptance Scenarios**:
+
+1. **Given** a `FormText` between two fields, or inside a `Fieldset`, **When** the form is drawn, **Then** its text is in that place in the layout.
+2. **Given** a `FormText` with no size, with `size="small"` and with `size="large"`, **When** the form is drawn, **Then** each is drawn at the size of the text in an input, a smaller size and a larger size respectively.
+3. **Given** a `FormText` with `variant="muted"`, **When** the form is drawn, **Then** it is drawn in a lighter shade of the text colour that still meets the pack's legibility standard under every theme.
+4. **Given** a `FormText` with any other size or variant, **When** the layout is built, **Then** it raises `ValueError`.
+5. **Given** a `FormText` whose text holds markup and a value from the page context, **When** the form is drawn, **Then** the markup is drawn and the context value is escaped.
+6. **Given** a `Fieldset` with a description, **When** the form is drawn, **Then** the description is drawn as a `FormText` with no size or variant is.
+
 ---
 
 ### Edge Cases
@@ -170,11 +187,11 @@ A developer has a long form whose fieldsets need a word of explanation, and some
 
 #### Across all of them
 
-- **FR-018**: A layout written from django-crispy-forms' documentation with these layout objects MUST work with the pack without changing the layout code. The one layout class this feature adds, `mvp_forms.layout.Fieldset`, takes everything django-crispy-forms' `Fieldset` takes.
+- **FR-018**: A layout written from django-crispy-forms' documentation with these layout objects MUST work with the pack without changing the layout code. The layout classes this feature adds are `mvp_forms.layout.Fieldset`, which takes everything django-crispy-forms' `Fieldset` takes, and `mvp_forms.layout.FormText`, which django-crispy-forms has no counterpart for.
 - **FR-019**: Where a layout object was given a template of the developer's own, that template MUST be used.
 - **FR-020**: Every template this feature adds MUST be a plain Django template. None may use django-cotton or daisy-cotton, and nothing this feature adds may import from django-mvp.
 - **FR-021**: The markup this feature draws MUST use daisyUI's own classes and modifiers, and Tailwind utilities where daisyUI has no class for the job, so that it works on a page that loads only what FS-001 requires of a host project, with no build step.
-- **FR-022**: The demo project MUST have a Fieldsets page and a Rows and columns page in its Layout objects group, with live examples that between them show every layout object and every fieldset option in this feature, including a form drawn with errors.
+- **FR-022**: The demo project MUST have a Fieldsets page, a Form text page and a Rows and columns page in its Layout objects group, with live examples that between them show every layout object, every fieldset option and every size and variant of form text in this feature, including a form drawn with errors.
 - **FR-023**: The README's public surface MUST list every layout object this feature draws, and the CHANGELOG MUST record the addition.
 
 #### Fieldset options
@@ -186,6 +203,14 @@ A developer has a long form whose fieldsets need a word of explanation, and some
 - **FR-028**: `open=True` on a `Fieldset` that is not collapsible, and a collapsible `Fieldset` with no legend, MUST raise `ValueError` when the layout is built.
 - **FR-029**: The ids a `Fieldset` writes MUST differ between the forms of a formset.
 
+#### Form text
+
+- **FR-030**: `mvp_forms.layout` MUST provide `FormText`, drawn at its place in a layout, inside any container, with its text rendered as a template against the page's context. Markup in the text is drawn, and any page-context value used in it MUST be escaped.
+- **FR-031**: `FormText` MUST take `size`, none, `"small"` or `"large"`, and `variant`, none or `"muted"`, and MUST raise `ValueError` for any other value when the layout is built.
+- **FR-032**: `FormText` with no size MUST be drawn at the size of the text in an input, larger than a field's help text. Muted form text MUST meet the legibility standard of FS-012 under every theme it measures.
+- **FR-033**: A `Fieldset`'s description MUST be drawn through the same template as `FormText`, with no size or variant.
+- **FR-034**: `FormText` MUST carry the id, classes and other HTML attributes the developer gave it, with the developer's classes after the pack's.
+
 ### Requirement to story map
 
 | Story | Requirements |
@@ -195,6 +220,7 @@ A developer has a long form whose fieldsets need a word of explanation, and some
 | US3, raw HTML and hidden values | FR-015, FR-016, FR-017 |
 | US4, shared label | FR-001, FR-004, FR-006, FR-008 |
 | US5, described and collapsible fieldsets | FR-024, FR-025, FR-026, FR-027, FR-028, FR-029 |
+| US6, form text | FR-030, FR-031, FR-032, FR-033, FR-034 |
 | Every story | FR-018, FR-019, FR-020, FR-021, FR-022, FR-023 |
 
 ### Out of scope
