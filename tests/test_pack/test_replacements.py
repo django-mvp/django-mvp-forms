@@ -142,6 +142,12 @@ class TestTheReplaceFixture:
         assert MARKER not in outside.get_text()
 
 
+def frames(soup):
+    return soup.find_all(
+        class_="fieldset", id=lambda value: value and value.startswith("div_")
+    )
+
+
 def found(soup, name):
     return soup.find_all(attrs={"data-replaced": name})
 
@@ -271,9 +277,9 @@ class TestReplacingOneTemplate:
         with replace({"daisyui/frame.html": FRAME}):
             after = draw(source, form=build())
 
-        assert before.find_all(class_="fieldset")
+        assert frames(before)
         assert found(after, "frame")
-        assert not after.find_all(class_="fieldset")
+        assert not frames(after)
 
     @pytest.mark.parametrize(
         ("path", "replacement", "source", "build"),

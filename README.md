@@ -1043,8 +1043,8 @@ A formset is drawn when you hand it to the pack, as a form is, and it needs no w
 What is drawn:
 
 - the management form, once, as its four hidden inputs, ahead of the forms
-- each form in a `<div>` of its own that holds that form's fields and no other form's, with a daisyUI `divider` between one form and the next
-- every hidden field of every form, such as a model formset's primary key or an inline formset's foreign key, inside its form's `<div>`
+- each form in a `<fieldset>` of its own that holds that form's fields and no other form's, drawn as a panel exactly as a `Fieldset` is, through `daisyui/layout/fieldset.html`
+- every hidden field of every form, such as a model formset's primary key or an inline formset's foreign key, inside its form's `<fieldset>`
 - each form's fields as the pack draws them in a single form, with the same label, required marker, help text, errors and input
 - one `<form>` element around the whole formset, never one per form, unless the helper's `form_tag` is off, and the CSRF token once for a post form
 - through `{% crispy formset %}`, the formset's media once, unless `include_media` is off, and the helper's buttons once, after the last form. `{{ formset|crispy }}` draws neither, as for a single form
@@ -1064,6 +1064,25 @@ A layout that names `DELETE` or `ORDER` needs every form to have that field. Wit
 
 The two templates are `daisyui/whole_uni_formset.html`, which `{% crispy formset %}` asks for, and `daisyui/uni_formset.html`, which `{{ formset|crispy }}` asks for and the first includes.
 
+#### A legend for each form, and forms that collapse
+
+How each form's panel is drawn is stated on the helper, with `StackedForms` from `mvp_forms.choices` as the `forms` of the helper's `FormChoices`:
+
+```python
+from mvp_forms.choices import FormChoices, StackedForms
+
+helper.daisyui = FormChoices(
+    forms=StackedForms(legend="Line {{ number }}", collapsible=True)
+)
+```
+
+- `legend` is drawn as each panel's legend. It is a template rendered against the page's context with `number`, the form's position counting from one, and `form`, the form, so `'{{ form.name.value|default:"New member" }}'` names each form by a value it holds. With no legend the panels have none.
+- `collapsible` makes each legend open and close its form, as it does for a collapsible `Fieldset`. A collapsible form starts closed unless `open=True`.
+- a form holding an error of any kind is drawn open, with the error mark a collapsible fieldset carries beside its legend, whatever `open` says
+- the ids of a form's panel start with the form's prefix, so no two forms share one
+
+`StackedForms` raises `ValueError` for `open=True` on forms that are not collapsible, and for collapsible forms with no legend to open them by. The statement is read from the helper the formset carries as `formset.helper` too, so it reaches `{{ formset|crispy }}`.
+
 #### As a table
 
 To draw the same formset as a table, set the helper's template. Nothing else changes, and `{% crispy formset helper %}` stays as it is:
@@ -1080,7 +1099,22 @@ What is drawn:
 - each input named by an `aria-label` equal to its label, and described by its help text when it has any. A radio or checkbox group keeps its `<fieldset>`, which carries the `aria-label`
 - every hidden field in the first cell of its form's row, with no heading and no cell of its own
 - the management form, the `<form>` element, the CSRF token, the media and the helper's buttons as in the stacked layout
-- no table at all for a formset with no forms, though the management form is still drawn so the formset can be posted back
+- the table inside one panel, drawn as a `Fieldset` is, which carries Tailwind's `min-w-0` so the table can still scroll inside it
+- no table and no panel at all for a formset with no forms, though the management form is still drawn so the formset can be posted back
+
+Every form stays one row, so it is the whole table that takes a legend and collapses. State it with `TablePanel` from `mvp_forms.choices` as the `table` of the helper's `FormChoices`:
+
+```python
+from mvp_forms.choices import FormChoices, TablePanel
+
+helper.daisyui = FormChoices(
+    table=TablePanel(
+        legend="Order lines ({{ formset.initial_form_count }})", collapsible=True
+    )
+)
+```
+
+The legend is a template rendered against the page's context with `formset` added. A collapsible table starts closed unless `open=True`, and a table holding an error in any of its rows is drawn open, with the error mark beside its legend. `TablePanel` raises `ValueError` as `StackedForms` does. Both take their three arguments and their checks from `FormsetPanel`, which is not stated on a helper itself.
 
 A helper's layout is not applied in a table: every visible field of the form gets a column. The columns are the first form's visible fields and every form is taken to have the same ones. A form that lacks one of them has an empty cell there.
 
@@ -1173,9 +1207,10 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/layout/radioselect_inline.html` | An `InlineRadios`: a radio group with its options along a line, in the field's frame. | `field` | `TEMPLATES` |
 | `daisyui/layout/checkboxselectmultiple_inline.html` | An `InlineCheckboxes`: a checkbox group with its options along a line, in the field's frame. | `field` | `TEMPLATES` |
 | `daisyui/whole_uni_formset.html` | The whole formset that `{% crispy formset %}` draws: the `<form>` element when the helper asks for one, a CSRF token for a post, the forms and the helper's buttons. | `csrf_token`, `disable_csrf`, `flat_attrs`, `formset`, `formset_method`, `formset_tag` | `TEMPLATES` |
-| `daisyui/uni_formset.html` | The formset's media, its management form, its formset-wide errors and its forms one after another with a divider between them, which is what the `crispy` filter asks for when it is given a formset. | `form_show_errors`, `formset`, `include_media` | `TEMPLATES` |
+| `daisyui/uni_formset.html` | The formset's media, its management form, its formset-wide errors and its forms one after another, each drawn as a panel through `daisyui/layout/fieldset.html`, which is what the `crispy` filter asks for when it is given a formset. | `form_show_errors`, `formset`, `include_media` | `TEMPLATES` |
 | `daisyui/errors_formset.html` | The errors of the formset as a whole in one alert under the helper's formset error title, and nothing for a formset that has none. | `formset`, `formset_error_title` | `TEMPLATES` |
-| `daisyui/table_inline_formset.html` | A formset as one table with a row for each form and a column for each visible field, chosen by setting the helper's `template`. | `csrf_token`, `disable_csrf`, `field_template`, `flat_attrs`, `form_show_errors`, `formset`, `formset_method`, `formset_tag`, `include_media` | `TEMPLATES` |
+| `daisyui/table_inline_formset.html` | A formset as one table inside a panel, chosen by setting the helper's `template`: the `<form>` element, the management form, the formset-wide errors and the helper's buttons around it. | `csrf_token`, `disable_csrf`, `flat_attrs`, `form_show_errors`, `formset`, `formset_method`, `formset_tag`, `include_media` | `TEMPLATES` |
+| `daisyui/table_inline_formset_table.html` | The table itself, with a row for each form and a column for each visible field, drawn inside the panel through `daisyui/layout/fieldset.html`. | `field_template`, `form_show_errors`, `formset` | `TEMPLATES` |
 | `daisyui/widgets/group.html` | A radio group or a checkbox group with its options one under another. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/inline_group.html` | A radio group or a checkbox group with its options along a line, wrapping onto the next line. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/group_options.html` | The options of a radio group or a checkbox group, each an input in a label of its own, under a nested fieldset where the choices have group names, which the two group templates include. | `widget` | `FORM_RENDERER` |

@@ -3,6 +3,7 @@
 import pytest
 from crispy_forms.layout import Submit
 
+from mvp_forms.choices import FormChoices, StackedForms, TablePanel
 from tests.forms import (
     ChoiceLineFormSet,
     KeptLineFormSet,
@@ -57,7 +58,7 @@ class TestStackedFormset:
         assert [names_in(tag) for tag in containers] == [
             names_of(form) for form in formset.forms
         ]
-        assert all(tag.name == "div" for tag in containers)
+        assert all(tag.name == "fieldset" for tag in containers)
         drawn = [tag["name"] for tag in soup.find_all(attrs={"name": True})]
         assert [n for n in drawn if n.endswith("-name")] == [
             form.add_prefix("name") for form in formset.forms
@@ -126,7 +127,9 @@ class TestStackedFormset:
         soup = draw("{% crispy formset %}", formset=formset)
 
         assert len(soup.find_all("form")) == 1
-        assert [container_of(soup, formset, i).name for i in range(3)] == ["div"] * 3
+        assert [container_of(soup, formset, i).name for i in range(3)] == [
+            "fieldset"
+        ] * 3
 
     def test_one_form_element_wraps_the_whole_formset(self, draw, plain_formset):
         formset = plain_formset()
@@ -763,3 +766,229 @@ class TestDeleteAndOrder:
         (unmarked,) = drawn_inputs(soup, failed, 2, "DELETE")
         assert marked.has_attr("checked")
         assert not unmarked.has_attr("checked")
+
+
+def stated(**choices):
+    helper = formset_helper(form_tag=False)
+    helper.daisyui = FormChoices(**choices)
+    return helper
+
+
+def panels(soup):
+    return soup.find_all("fieldset", recursive=True, class_="bg-base-200")
+
+
+def legend_text(panel):
+    return panel.find("legend").get_text(" ", strip=True)
+
+
+def toggle_of(panel):
+    return panel.find("input", type="checkbox", class_="peer")
+
+
+def sent(*lines):
+    return RuledLineFormSet(ruled_data(*lines))
+
+
+class TestStackedFormsOptions:
+    def test_open_on_forms_that_are_not_collapsible_raises(self):
+        with pytest.raises(ValueError, match="collapsible"):
+            StackedForms(legend="Line", open=True)
+
+    def test_collapsible_forms_with_no_legend_raise(self):
+        with pytest.raises(ValueError, match="legend"):
+            StackedForms(collapsible=True)
+
+
+class TestTablePanelOptions:
+    def test_open_on_a_table_that_is_not_collapsible_raises(self):
+        with pytest.raises(ValueError, match="collapsible"):
+            TablePanel(legend="Lines", open=True)
+
+    def test_a_collapsible_table_with_no_legend_raises(self):
+        with pytest.raises(ValueError, match="legend"):
+            TablePanel(collapsible=True)
+
+
+@pytest.mark.django_db
+class TestStackedPanels:
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_with_nothing_stated_each_form_is_a_panel_with_no_legend(
+        self, draw, plain_formset, source
+    ):
+        formset = plain_formset()
+
+        soup = draw(source, formset=formset)
+
+        for index in range(3):
+            panel = container_of(soup, formset, index)
+            assert panel.find("legend") is None
+            assert toggle_of(panel) is None
+
+    def test_the_legend_is_numbered_by_the_form_s_place(self, draw, plain_formset):
+        soup = draw(
+            TAG,
+            formset=plain_formset(),
+            helper=stated(forms=StackedForms(legend="Line {{ number }}")),
+        )
+
+        assert [legend_text(panel) for panel in panels(soup)] == [
+            "Line 1",
+            "Line 2",
+            "Line 3",
+        ]
+
+    def test_the_legend_can_read_a_value_of_the_form(self, draw):
+        formset = RuledLineFormSet(initial=[{"name": "Pens"}, {"name": "Ink"}])
+        legend = '{{ form.name.value|default:"New line" }}'
+
+        soup = draw(
+            TAG, formset=formset, helper=stated(forms=StackedForms(legend=legend))
+        )
+
+        assert [legend_text(panel) for panel in panels(soup)] == [
+            "Pens",
+            "Ink",
+            "New line",
+            "New line",
+            "New line",
+        ]
+
+    def test_a_value_in_the_legend_is_escaped(self, draw):
+        formset = RuledLineFormSet(initial=[{"name": "<b>Pens</b>"}])
+
+        soup = draw(
+            TAG,
+            formset=formset,
+            helper=stated(forms=StackedForms(legend="{{ form.name.value }}")),
+        )
+
+        assert panels(soup)[0].find("legend").find("b") is None
+        assert legend_text(panels(soup)[0]) == "<b>Pens</b>"
+
+    def test_the_statement_on_the_formset_s_helper_reaches_the_filter(
+        self, draw, plain_formset
+    ):
+        formset = plain_formset()
+        formset.helper = stated(forms=StackedForms(legend="Line {{ number }}"))
+
+        soup = draw("{{ formset|crispy }}", formset=formset)
+
+        assert legend_text(panels(soup)[0]) == "Line 1"
+
+    def test_collapsible_forms_start_closed(self, draw, plain_formset):
+        forms = StackedForms(legend="Line {{ number }}", collapsible=True)
+
+        soup = draw(TAG, formset=plain_formset(), helper=stated(forms=forms))
+
+        toggles = [toggle_of(panel) for panel in panels(soup)]
+        assert all(toggles)
+        assert not any(toggle.has_attr("checked") for toggle in toggles)
+
+    def test_collapsible_forms_start_open_when_asked(self, draw, plain_formset):
+        forms = StackedForms(legend="Line {{ number }}", collapsible=True, open=True)
+
+        soup = draw(TAG, formset=plain_formset(), helper=stated(forms=forms))
+
+        assert all(toggle_of(panel).has_attr("checked") for panel in panels(soup))
+
+    def test_each_legend_opens_its_own_form(self, draw, plain_formset):
+        formset = plain_formset()
+        forms = StackedForms(legend="Line {{ number }}", collapsible=True)
+
+        soup = draw(TAG, formset=formset, helper=stated(forms=forms))
+
+        ids = []
+        for index, form in enumerate(formset.forms):
+            panel = container_of(soup, formset, index)
+            toggle = toggle_of(panel)
+            assert panel.find("label", attrs={"for": toggle["id"]})
+            assert toggle["id"].startswith(form.prefix + "-")
+            ids.append(toggle["id"])
+        assert len(set(ids)) == len(ids)
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            pytest.param({"name": "Pens", "quantity": "many"}, id="field error"),
+            pytest.param({"name": "whole"}, id="form-wide error"),
+        ],
+    )
+    def test_a_form_holding_an_error_is_drawn_open_and_marked(self, draw, line):
+        formset = sent({"name": "Ink"}, line, {"name": "Paper"})
+        forms = StackedForms(legend="Line {{ number }}", collapsible=True)
+
+        soup = draw(TAG, formset=formset, helper=stated(forms=forms))
+
+        toggles = [toggle_of(panel) for panel in panels(soup)]
+        assert [toggle.has_attr("checked") for toggle in toggles] == [
+            False,
+            True,
+            False,
+        ]
+        described = soup.find(id=toggles[1]["aria-describedby"])
+        assert described is not None
+        assert described.has_attr("hidden")
+        assert not toggles[0].has_attr("aria-describedby")
+
+
+@pytest.mark.django_db
+class TestTablePanel:
+    @pytest.mark.parametrize("helper", [table_helper, lambda: stated()])
+    def test_the_table_is_drawn_inside_one_panel(self, draw, plain_formset, helper):
+        built = helper()
+        built.template = TABLE
+
+        soup = draw(TAG, formset=plain_formset(), helper=built)
+
+        table = soup.find("table")
+        assert len(panels(soup)) == 1
+        assert table.find_parent("fieldset") is panels(soup)[0]
+
+    def test_no_forms_draws_no_panel(self, draw, no_forms_formset):
+        helper = stated(table=TablePanel(legend="Lines"))
+        helper.template = TABLE
+
+        soup = draw(TAG, formset=no_forms_formset(), helper=helper)
+
+        assert panels(soup) == []
+
+    def test_the_legend_can_read_the_formset(self, draw):
+        helper = stated(
+            table=TablePanel(legend="Lines ({{ formset.initial_form_count }})")
+        )
+        helper.template = TABLE
+        formset = RuledLineFormSet(initial=[{"name": "Pens"}, {"name": "Ink"}])
+
+        soup = draw(TAG, formset=formset, helper=helper)
+
+        assert legend_text(panels(soup)[0]) == "Lines (2)"
+
+    @pytest.mark.parametrize("open_", [False, True])
+    def test_a_collapsible_table_starts_as_asked(self, draw, plain_formset, open_):
+        helper = stated(table=TablePanel(legend="Lines", collapsible=True, open=open_))
+        helper.template = TABLE
+
+        soup = draw(TAG, formset=plain_formset(), helper=helper)
+
+        assert toggle_of(panels(soup)[0]).has_attr("checked") is open_
+
+    def test_a_table_holding_an_error_in_any_row_is_drawn_open_and_marked(self, draw):
+        helper = stated(table=TablePanel(legend="Lines", collapsible=True))
+        helper.template = TABLE
+        formset = sent({"name": "Ink"}, {"name": "Pens", "quantity": "many"})
+
+        soup = draw(TAG, formset=formset, helper=helper)
+
+        toggle = toggle_of(panels(soup)[0])
+        assert toggle.has_attr("checked")
+        assert soup.find(id=toggle["aria-describedby"]).has_attr("hidden")
+
+    def test_the_statement_on_the_formset_s_helper_is_read(self, draw, plain_formset):
+        formset = plain_formset()
+        formset.helper = stated(table=TablePanel(legend="Lines"))
+        formset.helper.template = TABLE
+
+        soup = draw("{% crispy formset %}", formset=formset)
+
+        assert legend_text(panels(soup)[0]) == "Lines"

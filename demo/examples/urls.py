@@ -37,9 +37,20 @@ from demo.examples.custom_widgets.range_input import (
 )
 from demo.examples.custom_widgets.regex_mask import AccountForm
 from demo.examples.custom_widgets.tom_select import TopicsForm
+from demo.examples.formsets.collapsible import (
+    MEMBERS,
+    MemberFormSet,
+    NamedHelper,
+    NumberedHelper,
+    TitledHelper,
+    sent_back,
+)
 from demo.examples.formsets.stacked import OrderHelper, OrderLineFormSet
+from demo.examples.formsets.table import LINES, CollapsibleHelper
 from demo.examples.formsets.table import OrderHelper as TableOrderHelper
 from demo.examples.formsets.table import OrderLineFormSet as TableOrderLineFormSet
+from demo.examples.formsets.table import TitledHelper as TableTitledHelper
+from demo.examples.formsets.table import sent_back as table_sent_back
 from demo.examples.layout_objects.accordion import ChosenGroupForm
 from demo.examples.layout_objects.accordion import ProfileForm as AccordionForm
 from demo.examples.layout_objects.alert import NoticeForm
@@ -145,9 +156,61 @@ urlpatterns = [
         ),
     ),
     path(
+        "formset-collapsible/",
+        FormsetExampleView.as_view(
+            form_class=MemberFormSet, helper_class=NamedHelper, initial=MEMBERS
+        ),
+    ),
+    path(
+        "formset-collapsible-numbered/",
+        FormsetExampleView.as_view(
+            form_class=MemberFormSet, helper_class=NumberedHelper, initial=MEMBERS
+        ),
+    ),
+    path(
+        "formset-collapsible-error/",
+        FormsetExampleView.as_view(
+            form_class=MemberFormSet,
+            helper_class=NamedHelper,
+            initial=MEMBERS,
+            sent_data=sent_back(),
+        ),
+    ),
+    path(
+        "formset-titled/",
+        FormsetExampleView.as_view(
+            form_class=MemberFormSet, helper_class=TitledHelper, initial=MEMBERS
+        ),
+    ),
+    path(
         "formset-table/",
         FormsetExampleView.as_view(
             form_class=TableOrderLineFormSet, helper_class=TableOrderHelper
+        ),
+    ),
+    path(
+        "formset-table-titled/",
+        FormsetExampleView.as_view(
+            form_class=TableOrderLineFormSet,
+            helper_class=TableTitledHelper,
+            initial=LINES,
+        ),
+    ),
+    path(
+        "formset-table-collapsible/",
+        FormsetExampleView.as_view(
+            form_class=TableOrderLineFormSet,
+            helper_class=CollapsibleHelper,
+            initial=LINES,
+        ),
+    ),
+    path(
+        "formset-table-collapsible-error/",
+        FormsetExampleView.as_view(
+            form_class=TableOrderLineFormSet,
+            helper_class=CollapsibleHelper,
+            initial=LINES,
+            sent_data=table_sent_back(),
         ),
     ),
     path("partial-date-field/", ExampleView.as_view(form_class=SampleForm)),

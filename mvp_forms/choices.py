@@ -508,6 +508,63 @@ class Choice(LayoutObject):
         return cast(SafeString, write_size(drawn, placed.size))
 
 
+class FormsetPanel:
+    """How a formset's panels are set out: their legend, and whether they collapse.
+
+    A panel is drawn as a ``Fieldset`` is. Its legend is a template, rendered
+    against the page's context with the names each kind of panel adds.
+
+    Args:
+        legend: The legend. Empty, the panel has no heading.
+        collapsible: Whether a person can open and close the panel.
+        open: Whether a collapsible panel is first drawn open. A panel holding
+            an error is drawn open whatever this says.
+
+    Raises:
+        ValueError: ``open`` is true for a panel that is not collapsible, or a
+            collapsible panel has no legend to open it by.
+    """
+
+    css_id = ""
+    css_class = ""
+    flat_attrs = ""
+    description = ""
+
+    def __init__(
+        self,
+        *,
+        legend: str = "",
+        collapsible: bool = False,
+        open: bool = False,  # noqa: A002 - named as <details> names it
+    ) -> None:
+        if open and not collapsible:
+            raise ValueError("Only a collapsible panel can be drawn open")
+        if collapsible and not legend:
+            raise ValueError("A collapsible panel needs a legend to open it by")
+        self.legend = legend
+        self.collapsible = collapsible
+        self.open = open
+
+
+class StackedForms(FormsetPanel):
+    """Each form of a stacked formset as a panel, stated as ``FormChoices(forms=...)``.
+
+    The legend is rendered with two names added: ``number``, the form's
+    position counting from one, and ``form``, the form.
+    """
+
+
+class TablePanel(FormsetPanel):
+    """The panel a formset's table is drawn in, stated as ``FormChoices(table=...)``.
+
+    Every form stays one row of the table, so it is the whole table that takes
+    a legend and collapses. The legend is rendered with ``formset`` added. The
+    panel carries ``min-w-0``, so the table can still scroll sideways inside it.
+    """
+
+    css_class = "min-w-0"
+
+
 class FormChoices:
     """The choices a form states once, set as ``helper.daisyui``.
 
@@ -525,6 +582,8 @@ class FormChoices:
         label: ``"floating"`` to draw the label of every input, textarea and
             select as daisyUI's floating label. Every other field is passed over.
         fields: A ``Choice`` for a field, by the field's name.
+        forms: How each form of a stacked formset is drawn.
+        table: How the panel a formset's table is drawn in is set out.
     """
 
     attribute = "daisyui"
@@ -539,6 +598,8 @@ class FormChoices:
         button_variant: str | None = None,
         label: str | None = None,
         fields: dict[str, Choice] | None = None,
+        forms: StackedForms | None = None,
+        table: TablePanel | None = None,
     ) -> None:
         self.size = size
         self.color = color
@@ -547,6 +608,8 @@ class FormChoices:
         self.button_variant = button_variant
         self.label = label
         self.fields = dict(fields or {})
+        self.forms = forms or StackedForms()
+        self.table = table or TablePanel()
 
     def check(self) -> None:
         """Raise when the statement holds a name daisyUI does not have.

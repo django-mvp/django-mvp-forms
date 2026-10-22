@@ -12,6 +12,7 @@ from django.forms.boundfield import BoundField
 from django.forms.formsets import BaseFormSet
 from django.forms.widgets import ChoiceWidget
 from django.template import Context, Template
+from django.template.loader import render_to_string
 from django.utils.html import escape, strip_tags
 from django.utils.safestring import SafeData, SafeString
 from django.utils.translation import gettext_lazy
@@ -20,8 +21,11 @@ from mvp_forms.choices import (
     INHERIT,
     Choice,
     FormChoices,
+    FormsetPanel,
     InvalidChoice,
     Modifiers,
+    StackedForms,
+    TablePanel,
     write_size,
 )
 from mvp_forms.deprecation import host_template, retiring_layout_object
@@ -1322,6 +1326,74 @@ def retiring_decoration(decoration: dict[str, Any]) -> str | None:
     if appended:
         return "AppendedText"
     return None
+
+
+def draw_panel(
+    context: Context, panel: FormsetPanel, drawn: str, panel_id: str, in_error: bool
+) -> str:
+    """Draw what a formset's panel holds inside it, as a fieldset is drawn.
+
+    The legend is rendered against the context as it stands, so the caller
+    pushes the names the legend may use before calling. A panel holding an
+    error is drawn open, with the fieldset's error mark.
+    """
+    legend = Template(panel.legend).render(context) if panel.legend else ""
+    return render_to_string(
+        "daisyui/layout/fieldset.html",
+        {
+            "fieldset": panel,
+            "legend": SafeString(legend),
+            "fields": SafeString(drawn),
+            "fieldset_id": panel_id,
+            "fieldset_in_error": in_error,
+            "fieldset_open": panel.open or in_error,
+        },
+    )
+
+
+@register.simple_tag(takes_context=True)
+def daisyui_stacked_form(
+    context: Context, formset: BaseFormSet, form: forms.Form, number: int
+) -> str:
+    """Draw one form of a stacked formset as a panel.
+
+    Args:
+        context: The template context.
+        formset: The formset the form belongs to, whose helper may state how
+            its forms are drawn.
+        form: The form to draw.
+        number: The form's position in the formset, counting from one.
+    """
+    choices = FormChoices.lookup(context, formset)
+    panel = choices.forms if choices else StackedForms()
+    with context.push(form=form, number=number, include_media=False):
+        drawn = render_to_string(
+            "daisyui/display_form.html", cast(dict[str, Any], context.flatten())
+        )
+        return draw_panel(
+            context, panel, drawn, f"{form.prefix}-panel", bool(form.errors)
+        )
+
+
+@register.simple_tag(takes_context=True)
+def daisyui_table_panel(context: Context, formset: BaseFormSet) -> str:
+    """Draw a formset's table inside a panel, and nothing for a formset with no forms.
+
+    Args:
+        context: The template context.
+        formset: The formset to draw.
+    """
+    choices = FormChoices.lookup(context, formset)
+    panel = choices.table if choices else TablePanel()
+    with context.push(formset=formset):
+        drawn = render_to_string(
+            "daisyui/table_inline_formset_table.html",
+            cast(dict[str, Any], context.flatten()),
+        )
+        if not drawn.strip():
+            return ""
+        in_error = any(form.errors for form in formset)
+        return draw_panel(context, panel, drawn, f"{formset.prefix}-table", in_error)
 
 
 @register.simple_tag(takes_context=True)

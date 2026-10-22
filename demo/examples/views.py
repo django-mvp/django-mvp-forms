@@ -37,6 +37,11 @@ class FormsetExampleView(ExampleView):
 
     template_name = "demo/examples/formset.html"
     helper_class = None
+    initial = None
+
+    def get_initial(self):
+        """Hand the formset the forms it starts out holding."""
+        return list(self.initial or [])
 
     def get_context_data(self, **kwargs):
         """Add the helper the template hands to the crispy tag."""

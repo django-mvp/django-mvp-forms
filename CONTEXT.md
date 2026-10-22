@@ -105,13 +105,13 @@ _Avoid_: form set, form list.
 
 **Stacked layout**:
 The way the pack draws a formset when nothing else is chosen: every form one
-after another, each in a container of its own and drawn exactly as a single
-form is.
+after another, each in a panel of its own, drawn as a fieldset is, holding the
+form drawn exactly as a single form is.
 _Avoid_: list layout, vertical layout.
 
 **Table layout**:
-The way the pack draws a formset when the helper chooses it: one table, a row
-per form and a column per visible field.
+The way the pack draws a formset when the helper chooses it: one table inside a
+panel, a row per form and a column per visible field.
 _Avoid_: grid, inline layout.
 
 **Field**:

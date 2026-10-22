@@ -1,0 +1,35 @@
+{% load daisyui %}{% daisyui_formset_table formset as table %}
+{% if table.rows %}
+  <div class="overflow-x-auto">
+    <table class="table">
+      <thead class="text-base-content">
+        <tr>
+          {% for column in table.columns %}
+            <th scope="col">{{ column.label }}{% with field=column %}{% include "daisyui/required_marker.html" %}{% endwith %}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in table.rows %}
+          {% with errors=row.form.get_context.errors %}
+          <tr{% if errors and form_show_errors != False %} aria-describedby="{{ row.form.prefix }}_errors"{% endif %}>
+            {% for field in row.cells %}
+              <td>
+                {% if forloop.first %}
+                  {% for hidden in row.form.hidden_fields %}{{ hidden }}{% endfor %}
+                  {% if errors and form_show_errors != False %}
+                    <div id="{{ row.form.prefix }}_errors" role="alert">
+                      {% for error in errors %}<p>{{ error }}</p>{% endfor %}
+                    </div>
+                  {% endif %}
+                {% endif %}
+                {% if field %}{% include field_template with form_show_labels=False %}{% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+          {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
