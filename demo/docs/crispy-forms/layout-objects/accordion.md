@@ -2,7 +2,7 @@
 
 `Accordion` and `AccordionGroup` stack groups of fields that open and close.
 They are the browser's own `<details>`, so they need no script. Both come from
-`crispy_forms.bootstrap`.
+`mvp_forms.layout`.
 
 Send the form empty. The second and third groups have required fields, so the
 second opens. Both headings carry a dot in the error colour, and a screen reader says the group

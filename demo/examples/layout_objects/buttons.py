@@ -1,6 +1,5 @@
 """Forms whose buttons come from the layout: a button holder and form actions."""
 
-from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
     Button,
@@ -11,6 +10,8 @@ from crispy_forms.layout import (
     Submit,
 )
 from django import forms
+
+from mvp_forms.layout import FormActions
 
 
 class HolderForm(forms.Form):

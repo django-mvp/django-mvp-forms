@@ -206,7 +206,7 @@ Read-only is the browser's and exists only on text inputs and textareas. Set `re
 
 ### Layout objects
 
-The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import them from django-crispy-forms as its documentation says. This package adds two of its own, `Choice` (see "One field's own choice") and `Join` (see "Joined groups"). `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, all from `crispy_forms.bootstrap`, are supported along with the structural and button objects below:
+The layout objects of django-crispy-forms are drawn as daisyUI too, so a form with a `Layout` needs nothing more than the pack selected. Import the structural and button objects from `crispy_forms.layout`, as django-crispy-forms' documentation says. Import the rest from `mvp_forms.layout`: `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal`, `Alert`, `FormActions`, `StrictButton`, `InlineRadios`, `InlineCheckboxes`, `UneditableField` and `InlineField` are django-crispy-forms' own, passed through unchanged from its `crispy_forms.bootstrap` module, which is named for the framework its own templates were written for. This package adds two of its own, `Choice` (see "One field's own choice") and `Join` (see "Joined groups"). The structural and button objects are below:
 
 ```python
 from crispy_forms.helper import FormHelper
@@ -242,13 +242,13 @@ Build the layout in the form's `__init__`, as above, so each form has its own. d
 
 Each of the five holds its fields and further layout objects in the order the layout gives, and can be nested to any depth. The `css_id`, `css_class` and attributes you give one are kept on its element, and your classes come after the pack's. Every field inside is still drawn with its own label, help text and errors. An empty container is drawn, and `template=` draws a container with a template of your own.
 
-Tabs are daisyUI's `tabs`. `TabHolder` and `Tab` come from `crispy_forms.bootstrap`, where django-crispy-forms keeps them:
+Tabs are daisyUI's `tabs`. `TabHolder` and `Tab` come from `mvp_forms.layout`:
 
 ```python
-from crispy_forms.bootstrap import Tab, TabHolder
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
+from mvp_forms.layout import Tab, TabHolder
 
 
 class AccountForm(forms.Form):
@@ -275,13 +275,13 @@ class AccountForm(forms.Form):
 - The `css_id`, `css_class` and attributes you give a `TabHolder` are kept on its element, and those you give a `Tab` on its `tab-content` element. A `Tab` takes its id from its name unless you give one. The name is escaped. `active` and `tab-pane`, which django-crispy-forms writes for other template packs, are not drawn.
 - A browser will not submit a form whose empty required input is in a tab that is not open. Set `self.helper.attrs = {"novalidate": True}` to let the server answer and open the tab that holds the error.
 
-An accordion is a stack of daisyUI `collapse` elements. `Accordion` and `AccordionGroup` come from `crispy_forms.bootstrap` too:
+An accordion is a stack of daisyUI `collapse` elements. `Accordion` and `AccordionGroup` come from `mvp_forms.layout` too:
 
 ```python
-from crispy_forms.bootstrap import Accordion, AccordionGroup
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
+from mvp_forms.layout import Accordion, AccordionGroup
 
 
 class ProfileForm(forms.Form):
@@ -308,13 +308,13 @@ class ProfileForm(forms.Form):
 - The `css_id`, `css_class` and attributes you give an `Accordion` are kept on its element, and those you give an `AccordionGroup` on its `<details>`. The group's name is escaped. An `Accordion` you give no id gets one from django-crispy-forms.
 - A browser will not submit a form whose empty required input is in a group that is closed. Set `self.helper.attrs = {"novalidate": True}` to let the server answer and open the group that holds the error.
 
-A modal is a daisyUI `modal`, drawn as a `<dialog>`. `Modal` comes from `crispy_forms.bootstrap` too:
+A modal is a daisyUI `modal`, drawn as a `<dialog>`. `Modal` comes from `mvp_forms.layout` too:
 
 ```python
-from crispy_forms.bootstrap import Modal
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
+from mvp_forms.layout import Modal
 
 
 class ProfileForm(forms.Form):
@@ -346,13 +346,13 @@ class ProfileForm(forms.Form):
 - The `css_class` and attributes you give a `Modal` are kept on its `<dialog>`. A `Modal` you give no id gets `modal_id` from django-crispy-forms, so give each its own.
 - A browser will not submit a form whose empty required input is in a closed modal. Set `self.helper.attrs = {"novalidate": True}` to let the server answer and open the modal that holds the error.
 
-An alert is a daisyUI `alert`. `Alert` comes from `crispy_forms.bootstrap` too:
+An alert is a daisyUI `alert`. `Alert` comes from `mvp_forms.layout` too:
 
 ```python
-from crispy_forms.bootstrap import Alert
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
+from mvp_forms.layout import Alert
 
 
 class ProfileForm(forms.Form):
@@ -389,11 +389,11 @@ Two of the buttons above run a line of script written on the button itself, in i
 - A project that keeps its policy strict can draw the buttons its own way (see [Replacing one template](https://github.com/django-mvp/django-mvp-forms#replacing-one-template)). A close button written as `<button type="button" class="btn daisyui-size" commandfor="{{ modal.css_id }}" command="close">` in your own `daisyui/layout/modal.html` closes the dialog with no script, in a browser that has the `command` and `commandfor` attributes. Chrome, Firefox and Safari all gained them during 2025, and an older browser draws a button that does nothing. `Alert(..., dismiss=False)` draws an alert with no button.
 - The button in the example above that opens the modal is an inline handler too. Under such a policy write it as `<button type="button" commandfor="name-modal" command="show-modal">Edit name</button>`, or open the modal from a script file of your own.
 
-Buttons are drawn as daisyUI buttons. `FormActions` and `StrictButton` come from `crispy_forms.bootstrap`, where django-crispy-forms keeps them:
+Buttons are drawn as daisyUI buttons. `FormActions` and `StrictButton` come from `mvp_forms.layout`:
 
 ```python
-from crispy_forms.bootstrap import FormActions, StrictButton
 from crispy_forms.layout import Button, ButtonHolder, Reset, Submit
+from mvp_forms.layout import FormActions, StrictButton
 
 FormActions(
     Submit("save", "Save"),
@@ -426,47 +426,19 @@ Layout(
 
 ### Layout objects that decorate a field
 
-Some layout objects of django-crispy-forms draw one field with something added to it. The first three attach text to an input. `PrependedText`, `AppendedText` and `PrependedAppendedText` come from `crispy_forms.bootstrap`:
+Some layout objects draw one field with something added to it. Text or buttons attached to an input are a `Join` of one field (see "Text or buttons attached to one field" under "Joined groups").
 
-```python
-from crispy_forms.bootstrap import AppendedText, PrependedAppendedText, PrependedText
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout
-from django import forms
-
-
-class PriceForm(forms.Form):
-    amount = forms.CharField()
-    weight = forms.CharField()
-    budget = forms.CharField()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.helper.layout = Layout(
-            PrependedText("amount", "$"),
-            AppendedText("weight", "kg"),
-            PrependedAppendedText("budget", "$", ".00"),
-        )
-```
-
-- The field is drawn in its usual frame, with its label, help text and errors, and its input sits in one daisyUI `input` wrapper, which is a `<label>`, beside a `<span class="label">` for each text that is set: before the input for the prepended text and after it for the appended one. The input inside has no `input` class of its own, because the wrapper has it. On a select the wrapper is `select` instead. Because the wrapper is a label, assistive technology announces the text as part of the field's name. That holds while the form draws labels: with `form_show_labels` off the input is named by an `aria-label` holding the field's label alone, which takes the place of every label, so put the unit in the field's label if it has to be announced.
-- A text that is an empty string or `None` draws nothing, and a field with neither text is drawn as it is without the layout object. The error modifier, `input-error` or `select-error`, is on the wrapper, and the input is marked invalid as before.
-- The text is markup. It is written into the page as it is, so `"<b>US</b>"` is drawn as a bold element and a currency symbol such as `&euro;` works. When you build it from anything a person typed, escape it first, for example with `django.utils.html.escape` or `format_html`. The label, the help text, the errors and the value stay escaped.
-- On a checkbox, a radio group, a date drawn as three selects, a textarea or a file input there is nowhere to attach the text, so the field is drawn exactly as it is without the layout object. A hidden field is drawn as its hidden input alone.
-- `css_class` and extra attributes go to the input, as they do for `Field`. `template=` draws your own template. `input_size` and `active` are accepted and do nothing.
-- The wrapper takes the size of the field. With a size stated for the form, or with a `Choice` around the layout object, the size class (`input-lg`, or `select-lg` on a select) is on the wrapper and the input inside carries none, so the text and the input read as one control.
-- `wrapper_class` works on any field, not only on these three: it is added to the class of the frame's outer element, whether that is a `<div>` or a `<fieldset>`. `Field("name", wrapper_class="wide")` draws `class="fieldset wide"`. The one place it does not reach is a `Field` given as the first item of `FieldWithButtons`, because django-crispy-forms passes on only that `Field`'s attributes.
+`wrapper_class` works on any field: it is added to the class of the frame's outer element, whether that is a `<div>` or a `<fieldset>`. `Field("name", wrapper_class="wide")` draws `class="fieldset wide"`.
 
 #### Choices in a line
 
-`InlineRadios` and `InlineCheckboxes` come from `crispy_forms.bootstrap`. They draw a radio group or a checkbox group with its options along a line instead of one under another:
+`InlineRadios` and `InlineCheckboxes` come from `mvp_forms.layout`. They draw a radio group or a checkbox group with its options along a line instead of one under another:
 
 ```python
-from crispy_forms.bootstrap import InlineCheckboxes, InlineRadios
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
+from mvp_forms.layout import InlineCheckboxes, InlineRadios
 
 
 class SurveyForm(forms.Form):
@@ -491,49 +463,15 @@ class SurveyForm(forms.Form):
 - A widget that names a template or an option template of its own is drawn by it. A field with no choices is drawn with its frame and no option, and a field that is not a group, such as a text field, is drawn as it is without the layout object.
 - `css_class` and extra attributes go to every option, as they do for `Field`. `wrapper_class` reaches the frame's outer element and `template=` draws your own template.
 
-#### A field with buttons
-
-`FieldWithButtons` comes from `crispy_forms.bootstrap`. It draws one field with any number of buttons joined to it, such as a search box with a button beside it. The first item is the field, as a name or as a `Field`, and the rest are the buttons:
-
-```python
-from crispy_forms.bootstrap import FieldWithButtons, StrictButton
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Button, Field, Layout
-from django import forms
-
-
-class SearchForm(forms.Form):
-    query = forms.CharField()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.helper.layout = Layout(
-            FieldWithButtons(
-                Field("query", css_class="mine"),
-                StrictButton("Go", type="submit", name="go"),
-                Button("clear", "Clear"),
-            ),
-        )
-```
-
-- The field is drawn in its usual frame, with its label, help text and errors. Inside it one daisyUI `join` element holds the input, which carries `join-item`, and then every button in the order you gave them. The buttons are the ones `StrictButton`, `Submit` and `Button` draw anywhere else, and each is drawn once, so a `Submit` keeps its name and value and a button whose content holds markup or `{{ ... }}` from a value is escaped, never evaluated.
-- With no buttons the group holds the input alone. A failing field has its error modifier on the input, which is marked invalid and described by the error element in the frame.
-- A `Field` as the first item gives its class and attributes to the input. `css_id`, `css_class` and any other attribute go to the `join` element, and a class written for another template pack is dropped from it. `template=` draws your own template. `input_size` is accepted and does nothing.
-- On a select the group is drawn as it is on an input. On a checkbox or a radio group both the field and the buttons are drawn, and no option of a group carries `join-item`. A hidden field is drawn as its hidden input alone.
-- The input and the buttons take the same size. State it for the whole form, or put a `Choice` around the layout object: `Choice(FieldWithButtons("query", StrictButton("Go")), size="lg")` gives the input `input-lg` and the button `btn-lg`. A size stated for one field by name, `FormChoices(fields={"query": Choice(size="lg")})`, reaches the input and cannot reach its buttons, which django-crispy-forms draws before the field, so for a field with buttons state the size with `Choice` around the `FieldWithButtons` or for the whole form.
-- Give a button `css_class="join-item"` to close the doubled border where the joined parts meet.
-- A `Choice` around the layout object is stated for the input and for the buttons alike, so state only what both have. A size is safe. A variant that only buttons have, such as `outline`, raises `InvalidChoice` for the input.
-
 #### An uneditable field
 
-`UneditableField` comes from `crispy_forms.bootstrap`. It draws one field with its current value shown and the input disabled, such as an account number on a profile form:
+`UneditableField` comes from `mvp_forms.layout`. It draws one field with its current value shown and the input disabled, such as an account number on a profile form:
 
 ```python
-from crispy_forms.bootstrap import UneditableField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
+from mvp_forms.layout import UneditableField
 
 
 class ProfileForm(forms.Form):
@@ -559,13 +497,13 @@ class ProfileForm(forms.Form):
 
 #### An inline field
 
-`InlineField` comes from `crispy_forms.bootstrap`. It draws one field with no visible label, for a form that sits in a line such as a search bar. The input is named by an `aria-label` and the label is offered as its placeholder:
+`InlineField` comes from `mvp_forms.layout`. It draws one field with no visible label, for a form that sits in a line such as a search bar. The input is named by an `aria-label` and the label is offered as its placeholder:
 
 ```python
-from crispy_forms.bootstrap import InlineField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
+from mvp_forms.layout import InlineField
 
 
 class SearchForm(forms.Form):
@@ -590,7 +528,7 @@ class SearchForm(forms.Form):
 
 #### A multi-widget field
 
-`MultiWidgetField` comes from `crispy_forms.layout`, not `crispy_forms.bootstrap`. It draws a field whose widget is several widgets, such as a `SplitDateTimeField`, and lets you give each part attributes of its own:
+`MultiWidgetField` comes from `crispy_forms.layout`. It draws a field whose widget is several widgets, such as a `SplitDateTimeField`, and lets you give each part attributes of its own:
 
 ```python
 from crispy_forms.helper import FormHelper
@@ -645,9 +583,9 @@ class ContactForm(forms.Form):
         )
 ```
 
-- A group holds field names, `Field` objects, `Choice` objects, buttons and `HTML`, in the order they are drawn. A `Field` gives its attributes and its `css_class` to the input of each name it holds, and a `Choice` states its size, colour and variant for the names and buttons it holds. A member has no frame of its own, so a `Field` given a `wrapper_class` or a `template` raises `InvalidMember` with `Field` as `member`. Anything else in a group raises `InvalidMember` too, when the form is drawn, with the class name as `member`: a `Div`, a `PrependedText`, an `InlineField`, a `Hidden`, another `Join`, and a subclass of `Field` such as `MultiWidgetField`. A subclass of `HTML` raises as well.
+- A group holds field names, `Field` objects, `Choice` objects, buttons and `HTML`, in the order they are drawn. A `Field` gives its attributes and its `css_class` to the input of each name it holds, and a `Choice` states its size, colour and variant for the names and buttons it holds. A member has no frame of its own, so a `Field` given a `wrapper_class` or a `template` raises `InvalidMember` with `Field` as `member`. Anything else in a group raises `InvalidMember` too, when the form is drawn, with the class name as `member`: a `Div`, an `InlineField`, a `Hidden`, another `Join`, and a subclass of `Field` such as `MultiWidgetField`. A subclass of `HTML` raises as well.
 - A member is an input or a select drawn on its own. A checkbox, a toggle, a radio group, a checkbox group, a textarea, a file input, a multi-widget field, a date drawn as three selects, a rating, a range and a field whose widget the pack does not draw as an input raise `InvalidMember` with the field's name as `member`. A hidden field is accepted.
-- The group is one `<fieldset>`. Its `label` is the `<legend>`, as escaped text, with the required marker when any member is required, and a group with no label has no legend. A member draws no label of its own: its input is named by an `aria-label` that is its own field's label, and an `aria-label` you wrote on the widget or on the `Field` is kept. With the helper's `form_show_labels` off the legend is not drawn and the fieldset takes the group's label as its `aria-label`.
+- A group of several fields is one `<fieldset>`. Its `label` is the `<legend>`, as escaped text, with the required marker when any member is required, and a group with no label has no legend. A group of one field is drawn differently, as the next section says. A member draws no label of its own: its input is named by an `aria-label` that is its own field's label, and an `aria-label` you wrote on the widget or on the `Field` is kept. With the helper's `form_show_labels` off the legend is not drawn and the fieldset takes the group's label as its `aria-label`.
 - Each member keeps its own help text and errors. They are drawn after the join, inside the fieldset, once for each member, with the ids Django gives them, `<id>_helptext` and `<id>_error`. A member's input is described by its own help text and errors only, and only the member that failed is `aria-invalid`.
 - The inputs are the direct children of the one element that carries `join`, in the order the group holds them. A hidden member is drawn as its hidden input after that element, inside the fieldset, because daisyUI squares the first and last child of a join whatever they are. A disabled member stays in its place disabled, and a read-only member keeps its attribute.
 - The `css_id`, `css_class` and attributes you give `Join` are on the element that carries `join`, so `Join("width", "height", css_class="join-vertical")` stacks the inputs. A class written for another template pack is dropped. A name the form lacks is left to django-crispy-forms: it logs it, or raises when `CRISPY_FAIL_SILENTLY` is `False`, and draws nothing for it.
@@ -661,12 +599,11 @@ class ContactForm(forms.Form):
 A group can hold buttons as well as fields, so a select, a text input and a button make one search bar:
 
 ```python
-from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
 from mvp_forms.choices import FormChoices
-from mvp_forms.layout import Join
+from mvp_forms.layout import Join, StrictButton
 
 
 class SearchForm(forms.Form):
@@ -683,7 +620,7 @@ class SearchForm(forms.Form):
 ```
 
 - A button is a `StrictButton`, a `Submit`, a `Button` or a `Reset`, and it sits in the join in the place you gave it, among the inputs. It is drawn by the same code as a button anywhere else, so a `Submit` keeps its name and value, and the pack adds `join-item` to it, so the parts meet as one piece. A button after the `Join` in the layout is not part of the group and takes no `join-item`.
-- A button in a group takes the form's `size`, `button_color` and `button_variant`, as the buttons of a `FieldWithButtons` do. A `Choice` around the group is stated for its members and its buttons alike, so state only what both have: a variant that only buttons have, such as `outline`, raises `InvalidChoice` for an input. A `Choice` around one button inside the group is stated for that button alone, and wins over the one around the group.
+- A button in a group takes the form's `size`, `button_color` and `button_variant`, as any other button does. A `Choice` around the group is stated for its members and its buttons alike, so state only what both have: a variant that only buttons have, such as `outline`, raises `InvalidChoice` for an input. A `Choice` around one button inside the group is stated for that button alone, and wins over the one around the group.
 - Your `css_class`, `css_id` and attributes are kept on every button, and a `join-item` you wrote is not written twice.
 - The members of a group that holds buttons are drawn exactly as in a group that holds none: the label, the required marker, each member's help text and errors and the cleaned data are unchanged.
 
@@ -712,6 +649,52 @@ class HeatFlowForm(forms.Form):
 - The text sits in the join in the place you gave it, inside `<span class="input join-item w-auto">`, so it is framed and as tall as the inputs beside it and takes the width of its text. The `HTML` is rendered with the form's context, as it is anywhere else, and its markup is kept.
 - The text takes the size, colour and variant an input of the group takes: the form's `size`, `color` and `variant`, then a `Choice` around the group or around the text. A `Choice` around the text that states a `label` or a `drawing` raises `InvalidChoice`, because text has neither.
 - Text is not a member and has no label, help text or error, and it posts nothing. The members of a group that holds text are drawn and cleaned exactly as in a group that holds none.
+
+#### Text or buttons attached to one field
+
+A group of one field is how text or a button is attached to an input, such as a currency, a unit or a search button:
+
+```python
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import HTML, Layout
+from django import forms
+from mvp_forms.layout import Join, StrictButton
+
+
+class PriceForm(forms.Form):
+    amount = forms.DecimalField(help_text="Before tax")
+    weight = forms.DecimalField()
+    budget = forms.IntegerField()
+    query = forms.CharField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Join(HTML("$"), "amount"),
+            Join("weight", HTML("kg")),
+            Join(HTML("$"), "budget", HTML(".00")),
+            Join("query", StrictButton("Search", type="submit")),
+        )
+```
+
+- A group whose one visible member is a field is drawn in that field's frame, as the field is drawn anywhere else: a `<label>` for its input, then the join, then the field's help text and errors. Its hidden members are drawn after the join. The frame's outer element is a `<div>` with the id `div_<id>`.
+- The label is the group's `label` when you give one, and otherwise the field's own label, with the required marker when the field is required. A group's `label` also becomes the input's `aria-label`, unless you wrote one. With the helper's `form_show_labels` off no label is drawn and the input is named by its `aria-label`.
+- The text and the buttons are items of the join, drawn as in any group. The text is not part of the input's name, so put a unit in the field's label if it has to be announced.
+- A floating label never applies, as for any member.
+
+#### Attached text and a field with buttons, deprecated
+
+django-crispy-forms' `PrependedText`, `AppendedText`, `PrependedAppendedText` and `FieldWithButtons` are deprecated. The pack still draws them in this version, with a `DeprecationWarning` each time, and stops in the next minor version. Each is a `Join` of one field:
+
+| Deprecated | Write instead |
+|---|---|
+| `PrependedText("amount", "$")` | `Join(HTML("$"), "amount")` |
+| `AppendedText("weight", "kg")` | `Join("weight", HTML("kg"))` |
+| `PrependedAppendedText("budget", "$", ".00")` | `Join(HTML("$"), "budget", HTML(".00"))` |
+| `FieldWithButtons("query", StrictButton("Go"))` | `Join("query", StrictButton("Go"))` |
+
+The text was drawn inside the input's daisyUI wrapper and is now an item of the join beside the input. A `Field` as the first item of a `FieldWithButtons` becomes a `Field` member of the group, and its `css_id`, `css_class` and attributes go to the `Join`. A size, colour or variant reaches the input, the text and the buttons as described above.
 
 ### Size, colour and variant
 
@@ -802,11 +785,11 @@ When both are given for a field, the `Choice` in the layout wins over the one in
 A `Submit`, `Reset`, `Button` or `StrictButton` takes the form's `size`, `button_color` and `button_variant`, in a layout and when added with `helper.add_input`. The names are the sizes and colours listed above and the variants `outline`, `dash`, `soft`, `ghost` and `link`. A choice is stated for one button by wrapping it in a `Choice`, as below, and for every button in the form by `size`, `button_color` and `button_variant` of `FormChoices`.
 
 ```python
-from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Reset, Submit
 from django import forms
 from mvp_forms.choices import Choice, FormChoices
+from mvp_forms.layout import StrictButton
 
 
 class ConfirmForm(forms.Form):
@@ -1117,9 +1100,9 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `daisyui/layout/formactions.html` | `FormActions`: a row holding its buttons. | `fields_output`, `formactions` | `TEMPLATES` |
 | `daisyui/layout/button.html` | A `StrictButton`: a `<button>` element holding its content. | `button` | `TEMPLATES` |
 | `daisyui/layout/baseinput.html` | A `Submit`, `Button`, `Reset` or `Hidden`: one `<input>` with the type, name and value the layout object gives it. | `input` | `TEMPLATES` |
-| `daisyui/layout/prepended_appended_text.html` | A `PrependedText`, `AppendedText` or `PrependedAppendedText`: a field with text before or after its input, in the field's frame. | `crispy_appended_text`, `crispy_prepended_text`, `field` | `TEMPLATES` |
-| `daisyui/layout/field_with_buttons.html` | A `FieldWithButtons`: a field's input joined to its buttons, in the field's frame. | `div`, `field` | `TEMPLATES` |
-| `daisyui/layout/join.html` | A `Join`: a fieldset with the group's label as its legend, the visible members, the buttons and the text as the children of one element that carries `join`, the hidden members after it and the help text and errors of each member. | `form_show_labels`, `hidden`, `inputs`, `join`, `label_class`, `members`, `required` | `TEMPLATES` |
+| `daisyui/layout/prepended_appended_text.html` | A `PrependedText`, `AppendedText` or `PrependedAppendedText`: a field with text before or after its input, in the field's frame. Deprecated with them. | `crispy_appended_text`, `crispy_prepended_text`, `field` | `TEMPLATES` |
+| `daisyui/layout/field_with_buttons.html` | A `FieldWithButtons`: a field's input joined to its buttons, in the field's frame. Deprecated with it. | `div`, `field` | `TEMPLATES` |
+| `daisyui/layout/join.html` | A `Join`: the visible members, the buttons and the text as the children of one element that carries `join`, the hidden members after it and the help text and errors of each member. A group of several fields is a fieldset with the group's label as its legend. A group of one field, `lone`, is drawn in that field's frame under a label for its input. | `form_show_labels`, `hidden`, `inputs`, `join`, `label_class`, `lone`, `members`, `required` | `TEMPLATES` |
 | `daisyui/layout/join_member.html` | One member of a `Join`: a field drawn as an input or a select of the join, or as its hidden input when it is hidden. | `field` | `TEMPLATES` |
 | `daisyui/layout/join_text.html` | The text of an `HTML` in a `Join`: an item of the join framed as an input, with the size, colour and variant an input of the group takes. | `classes`, `text` | `TEMPLATES` |
 | `daisyui/layout/inline_field.html` | An `InlineField`: a field with no visible label, named by an `aria-label`, in the field's frame. | `field` | `TEMPLATES` |

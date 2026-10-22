@@ -1,4 +1,16 @@
 {% load daisyui %}{% with join_class=join.css_class|daisyui_classes %}
+{% if lone %}
+<div{% if lone.auto_id %} id="div_{{ lone.auto_id }}"{% endif %} class="fieldset">
+  {% if form_show_labels != False and join.label or form_show_labels != False and lone.label %}
+    <label{% if lone.id_for_label %} for="{{ lone.id_for_label }}"{% endif %} class="fieldset-legend{% if label_class %} {{ label_class }}{% endif %}">
+      {% if join.label %}{{ join.label }}{% else %}{{ lone.label }}{% endif %}{% with field=lone %}{% include "daisyui/required_marker.html" %}{% endwith %}
+    </label>
+  {% endif %}
+  <div{% if join.css_id %} id="{{ join.css_id }}"{% endif %} class="join w-full{% if join_class %} {{ join_class }}{% endif %}"{{ join.flat_attrs }}>{{ inputs }}</div>
+  {{ hidden }}
+  {% with field=lone %}{% include "daisyui/field_messages.html" %}{% endwith %}
+</div>
+{% else %}
 <fieldset class="fieldset"{% if join.label and form_show_labels == False %} aria-label="{{ join.label_text }}"{% endif %}>
   {% if join.label and form_show_labels != False %}
     <legend class="fieldset-legend{% if label_class %} {{ label_class }}{% endif %}">
@@ -8,4 +20,5 @@
   <div{% if join.css_id %} id="{{ join.css_id }}"{% endif %} class="join w-full{% if join_class %} {{ join_class }}{% endif %}"{{ join.flat_attrs }}>{{ inputs }}</div>
   {{ hidden }}
   {% for field in members %}{% include "daisyui/field_messages.html" %}{% endfor %}
-</fieldset>{% endwith %}
+</fieldset>
+{% endif %}{% endwith %}

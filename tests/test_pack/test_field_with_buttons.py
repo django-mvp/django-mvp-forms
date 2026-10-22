@@ -336,3 +336,11 @@ class TestFieldWithButtonsSize:
         assert "input-sm" in parts[0]["class"]
         assert "input-lg" not in parts[0]["class"]
         assert all("btn-sm" in part["class"] for part in parts[1:])
+
+
+class TestFieldWithButtonsDeprecated:
+    def test_drawing_it_warns_and_names_join_as_its_replacement(self, draw):
+        with pytest.warns(DeprecationWarning, match=r"^FieldWithButtons .*Join\("):
+            soup = draw_form(draw, FieldWithButtons("amount", StrictButton("Go")))
+
+        assert join_of(soup) is not None

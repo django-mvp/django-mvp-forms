@@ -1,9 +1,10 @@
 """A form whose address fields sit in a modal."""
 
-from crispy_forms.bootstrap import Modal
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit
 from django import forms
+
+from mvp_forms.layout import Modal
 
 DIALOG_ID = "address-dialog"
 

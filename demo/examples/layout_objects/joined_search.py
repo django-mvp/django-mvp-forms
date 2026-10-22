@@ -1,12 +1,11 @@
 """A select, a text input and a button joined into one search bar."""
 
-from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
 
 from mvp_forms.choices import FormChoices
-from mvp_forms.layout import Join
+from mvp_forms.layout import Join, StrictButton
 
 SCOPES = [("all", "Everything"), ("people", "People"), ("places", "Places")]
 

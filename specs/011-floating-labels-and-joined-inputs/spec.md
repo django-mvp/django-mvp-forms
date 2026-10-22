@@ -11,7 +11,8 @@ inputs, are reachable from a layout)
 
 **Roadmap**: R7 (daisyUI's other form components)
 
-**Issue**: #87, #94 for the buttons a joined group holds, and #221 for its text
+**Issue**: #87, #94 for the buttons a joined group holds, #221 for its text, and #224 for a group
+of one field
 
 **Depends on**: FS-007 (#11) for the size, colour and variant choices and for the place in Python
 where a choice is stated. FS-004 (#8) for the field frame a decorated field is drawn in. Through
@@ -217,8 +218,7 @@ in the join, takes the form's size, colour and variant for buttons as any button
 fields are drawn exactly as they are in a group without buttons.
 
 **Why this priority**: It extends the group the second story built and needs nothing else from
-this feature. `FieldWithButtons` already joins buttons to one field, and this lets a group of
-fields do the same.
+this feature.
 
 **Independent Test**: Join a select, a text field and a button, state a button colour and a size
 for the form, and submit it once valid and once with the text missing. The three are drawn in one
@@ -234,8 +234,7 @@ the text input alone, and the cleaned data is what the form gives without the bu
    **When** the pack draws it, **Then** the button is drawn as it is anywhere else, so a `Submit`
    keeps its name and value.
 3. **Given** a form with a size, a button colour or a button variant stated, **When** the pack
-   draws a button in a joined group, **Then** the button takes it, as the buttons of a
-   `FieldWithButtons` do.
+   draws a button in a joined group, **Then** the button takes it, as any other button does.
 4. **Given** a choice stated around a joined group that holds a button, **When** the pack draws
    it, **Then** the members and the button take it, over the form's, and a choice stated around
    the button alone reaches the button and no member.
@@ -282,6 +281,39 @@ the cleaned data is what the form gives without the text.
 
 ---
 
+### User Story 6 - A developer attaches text or a button to one field (Priority: P6)
+
+A developer has an amount with a currency in front of it, a weight with its unit after it, or a
+search box with a button on the end. They put the one field in a joined group with the text or
+the button beside it. The field is drawn as it is anywhere else, under its own label, with its
+help text and errors, and the text or the button is joined to its input.
+
+**Why this priority**: It replaces FS-004's attached text and `FieldWithButtons`, which are
+deprecated (#224), so one layout object attaches anything to an input.
+
+**Independent Test**: Join a currency before an amount and a button after a search field, with no
+group label, and submit the form once valid and once empty. Each field has a label for its input
+holding its own label and required marker, the text and the button are items of its join, its
+help text and error sit in its frame, and the cleaned data is what the form gives without the
+group.
+
+**Acceptance Scenarios**:
+
+1. **Given** a joined group of one field and some text, with no group label, **When** the pack
+   draws the form, **Then** the field's own label is a label for its input, and no fieldset or
+   legend is drawn for the group.
+2. **Given** a joined group of one field with a group label, **When** the pack draws it, **Then**
+   the group's label is the label for the input and names it for assistive technology.
+3. **Given** a joined group of one field that fails validation, **When** the pack draws it,
+   **Then** the field's help text and error are in its frame, as for any field.
+4. **Given** a form whose helper draws no labels, **When** the pack draws a joined group of one
+   field, **Then** no label is drawn and the input is named by its label.
+5. **Given** django-crispy-forms' `PrependedText`, `AppendedText`, `PrependedAppendedText` or
+   `FieldWithButtons`, **When** the pack draws it, **Then** it is drawn as before, with a
+   deprecation warning naming the joined group that replaces it.
+
+---
+
 ### Edge Cases
 
 - A floating label is stated on one field by name and the field is a checkbox, a toggle, a radio
@@ -296,8 +328,8 @@ the cleaned data is what the form gives without the text.
   as FS-001 draws a field with no label.
 - A formset is drawn as a table. A field's label is its column heading there, and a layout is not
   applied, so a floating label has no effect, a joined group is not drawn, and neither raises.
-- A joined group holds one field. It is drawn as a group of one. A group that holds nothing draws
-  nothing.
+- A joined group holds one visible field. It is drawn in that field's frame under a label for its
+  input, as FR-037 says. A group that holds nothing draws nothing.
 - A joined group holds a button and no visible field, because its fields are hidden or the form
   lacks them. The button is drawn in the join, and the hidden fields beside it.
 - A joined group holds text and no visible field or button. The text has nothing to stand
@@ -378,7 +410,7 @@ the cleaned data is what the form gives without the text.
   MUST also accept such a field wrapped only to pass it attributes or a choice.
 - **FR-014**: A joined group MUST be framed the way the pack frames a group of inputs, with the
   group's label as the one visible label. No member's own label is drawn beside it. With no group
-  label given, none is drawn.
+  label given, none is drawn. A group of one visible field is framed as FR-037 says instead.
 - **FR-015**: Each input in a joined group MUST be named for assistive technology by its own
   field's label, unless the developer wrote a name on the widget, which is kept.
 - **FR-016**: Each member's help text and errors MUST be drawn once, with the group, and each MUST
@@ -405,8 +437,7 @@ the cleaned data is what the form gives without the text.
   alone or in a choice, anywhere among its fields. The pack MUST draw it in its place in the join,
   as an item of the join, and draw it as it draws that button anywhere else.
 - **FR-031**: A button in a joined group MUST take the form's size, button colour and button
-  variant, and a choice stated around the group or around the button, exactly as the buttons of a
-  `FieldWithButtons` do. A choice around the group is stated for its fields and its buttons alike.
+  variant, and a choice stated around the group or around the button, exactly as any other button does. A choice around the group is stated for its fields and its buttons alike.
 - **FR-032**: A button in a joined group MUST keep any class, id and attribute the developer gave
   it.
 - **FR-033**: A field in a joined group that holds buttons MUST be drawn, labelled, described and
@@ -422,6 +453,17 @@ the cleaned data is what the form gives without the text.
 - **FR-036**: A field in a joined group that holds text MUST be drawn, labelled, described and
   cleaned exactly as it is in a group that holds none. A group with text and no visible field or
   button MUST draw no join.
+
+#### A joined group of one field
+
+- **FR-037**: A joined group whose one visible member is a field MUST be drawn as the pack draws
+  that field anywhere else: one label for its input, then the join, then the field's help text
+  and errors. The label is the group's label when the developer gives one, and otherwise the
+  field's own, with the required marker when the field is required. The group's label also names
+  the input for assistive technology unless the developer named it.
+- **FR-038**: The pack MUST draw `PrependedText`, `AppendedText`, `PrependedAppendedText` and
+  `FieldWithButtons` as FS-004 specifies, with a deprecation warning that names the joined group
+  replacing each, for one minor version, and then stop.
 
 #### Size, colour and variant
 
@@ -464,6 +506,7 @@ the cleaned data is what the form gives without the text.
 | US-3: Floating labels and joined groups take the form's choices | FR-022, FR-023, FR-024, FR-028 |
 | US-4: A developer puts buttons in a joined group | FR-030, FR-031, FR-032, FR-033, FR-024, FR-025, FR-028, FR-029 |
 | US-5: A developer puts text between the fields of a joined group | FR-034, FR-035, FR-036, FR-021, FR-024, FR-025, FR-028, FR-029 |
+| US-6: A developer attaches text or a button to one field | FR-037, FR-038, FR-028, FR-029 |
 
 FR-028 and FR-029 land with the first story and are extended by the stories that follow, so each
 story shows its own behaviour in the demo project and documents its own surface.
@@ -509,8 +552,9 @@ story shows its own behaviour in the demo project and documents its own surface.
   wherever FS-007 puts a choice. How it is spelt in Python is for the plan.
 - Joining is stated in a layout only. A form drawn without a layout has no way to join fields,
   because joining names several fields at once and is not a statement about one.
-- One field with buttons is still `FieldWithButtons`, which FS-004 delivers. A joined group is
-  for several fields, with or without buttons.
+- One field with text or buttons is a joined group of one field. It replaces FS-004's
+  `PrependedText`, `AppendedText`, `PrependedAppendedText` and `FieldWithButtons`, which are
+  deprecated (#224).
 - A joined group is drawn side by side. A developer who wants it stacked writes daisyUI's own
   class on the group, which FR-020 keeps. How the width is shared between the members is a matter
   for the build, and a width the developer sets on a member is kept as it is on any input.

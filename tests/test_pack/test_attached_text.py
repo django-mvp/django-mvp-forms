@@ -373,3 +373,25 @@ class TestAttachedTextSize:
 
         assert "select-sm" in wrapper_of(frame, "select")["class"]
         assert "select-sm" not in frame.find(id="id_country").get("class", [])
+
+
+class TestAttachedTextDeprecated:
+    @pytest.mark.parametrize(
+        ("layout", "name"),
+        [
+            pytest.param(lambda: PrependedText("amount", "$"), "PrependedText"),
+            pytest.param(lambda: AppendedText("amount", "kg"), "AppendedText"),
+            pytest.param(
+                lambda: PrependedAppendedText("amount", "$", ".00"),
+                "PrependedAppendedText",
+            ),
+        ],
+        ids=["prepended", "appended", "both"],
+    )
+    def test_drawing_it_warns_and_names_join_as_its_replacement(
+        self, draw, layout, name
+    ):
+        with pytest.warns(DeprecationWarning, match=rf"^{name} .*Join\("):
+            soup = draw_form(draw, layout())
+
+        assert wrapper_of(frame_of(soup)) is not None

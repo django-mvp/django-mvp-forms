@@ -1,9 +1,10 @@
 """Fields with no visible label, for a form that sits in a line."""
 
-from crispy_forms.bootstrap import InlineField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit
 from django import forms
+
+from mvp_forms.layout import InlineField
 
 
 class FilterForm(forms.Form):

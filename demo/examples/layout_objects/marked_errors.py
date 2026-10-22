@@ -1,9 +1,10 @@
 """A form that arrives with errors in two of its tabs and two of its groups."""
 
-from crispy_forms.bootstrap import Accordion, AccordionGroup, Tab, TabHolder
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit
 from django import forms
+
+from mvp_forms.layout import Accordion, AccordionGroup, Tab, TabHolder
 
 
 class ApplicationForm(forms.Form):

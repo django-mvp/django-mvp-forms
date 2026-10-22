@@ -24,7 +24,7 @@ from mvp_forms.choices import (
     Modifiers,
     write_size,
 )
-from mvp_forms.deprecation import host_template
+from mvp_forms.deprecation import host_template, retiring_layout_object
 from mvp_forms.layout import InvalidMember, Join
 from mvp_forms.widgets import RangeInput, TomSelect
 
@@ -1279,7 +1279,15 @@ def daisyui_field(context: Context, field: BoundField, **decoration: Any) -> Fie
             lone input or select.
         TypeError: The form's helper holds a ``daisyui`` attribute that is not a
             ``FormChoices``.
+
+    Warns:
+        DeprecationWarning: The field is drawn for one of django-crispy-forms'
+            ``PrependedText``, ``AppendedText``, ``PrependedAppendedText`` or
+            ``FieldWithButtons``, which ``Join`` replaces.
     """
+    retiring = retiring_decoration(decoration)
+    if retiring is not None:
+        retiring_layout_object(retiring)
     placed = context.get(Choice.context_name)
     return FieldInput(
         field,
@@ -1290,6 +1298,30 @@ def daisyui_field(context: Context, field: BoundField, **decoration: Any) -> Fie
         wrapper_class=context.get("wrapper_class") or "",
         **decoration,
     )
+
+
+def retiring_decoration(decoration: dict[str, Any]) -> str | None:
+    """Return the retiring layout object a field's decoration comes from, if any.
+
+    Args:
+        decoration: The options a layout object's template gave ``daisyui_field``.
+
+    Returns:
+        The name of the layout object of django-crispy-forms that passes those
+        options, or None when the decoration comes from none the pack is
+        retiring.
+    """
+    if decoration.get("join") is not None:
+        return "FieldWithButtons"
+    prepended = decoration.get("prepended") is not None
+    appended = decoration.get("appended") is not None
+    if prepended and appended:
+        return "PrependedAppendedText"
+    if prepended:
+        return "PrependedText"
+    if appended:
+        return "AppendedText"
+    return None
 
 
 @register.simple_tag(takes_context=True)

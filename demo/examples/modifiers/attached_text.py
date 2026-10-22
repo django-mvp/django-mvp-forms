@@ -1,9 +1,10 @@
 """Text before, after, or on both sides of an input."""
 
-from crispy_forms.bootstrap import AppendedText, PrependedAppendedText, PrependedText
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Submit
+from crispy_forms.layout import HTML, Layout, Submit
 from django import forms
+
+from mvp_forms.layout import Join
 
 
 class PriceForm(forms.Form):
@@ -18,8 +19,8 @@ class PriceForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
-            PrependedText("amount", "$"),
-            AppendedText("weight", "kg"),
-            PrependedAppendedText("budget", "$", ".00"),
+            Join(HTML("$"), "amount"),
+            Join("weight", HTML("kg")),
+            Join(HTML("$"), "budget", HTML(".00")),
         )
         self.helper.add_input(Submit("submit", "Save"))

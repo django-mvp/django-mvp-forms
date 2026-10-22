@@ -27,6 +27,11 @@ field that way as daisyUI markup. The field keeps its label, required marker, he
 errors, still tied to its input, and the form submits the same data it would without the layout
 object.
 
+`PrependedText`, `AppendedText`, `PrependedAppendedText` and `FieldWithButtons` are deprecated
+(#224): a joined group of one field, from FS-011, draws the same thing, and the pack draws these
+four with a deprecation warning for one minor version before it stops. The other five are
+imported from `mvp_forms.layout`, which passes them through unchanged.
+
 This feature draws those nine and nothing else. The inputs themselves come from FS-001 (#5) and
 FS-002 (#6). The buttons attached to a field come from FS-003 (#7). Size, colour and variant
 choices are FS-007 (#11).
@@ -61,6 +66,9 @@ A developer has an amount field and wants the currency shown in front of it, or 
 with the unit after it, or a username with a domain on the end. They wrap the field's name in
 `PrependedText`, `AppendedText` or `PrependedAppendedText` in the layout. The pack draws the text
 attached to the input as one unit, using daisyUI's own way of attaching things to an input.
+
+This story is deprecated (#224). A joined group of one field (FS-011) attaches text with `HTML`,
+and these three layout objects are drawn with a deprecation warning until the next minor version.
 
 **Why this priority**: GOALS.md names prepended and appended text in G2, and it is the most used
 of the nine. It also establishes how something is attached to an input, which User Story 3 reuses.
@@ -141,6 +149,9 @@ same data.
 A developer wants a search box with its button joined to it, or a code field with an "apply"
 button on the end. They put the field and one or more button layout objects in `FieldWithButtons`.
 The pack draws the input and the buttons as one attached group.
+
+This story is deprecated (#224). A joined group of one field (FS-011) holds the field and its
+buttons, and `FieldWithButtons` is drawn with a deprecation warning until the next minor version.
 
 **Why this priority**: Common, but it needs the buttons FS-003 delivers, so it cannot land before
 them.
