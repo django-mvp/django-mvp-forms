@@ -1,4 +1,4 @@
-"""Tests for the ``Join`` layout object: what it holds and what it draws."""
+"""Tests for the layout objects of ``mvp_forms.layout``: what they hold and draw."""
 
 import pytest
 from crispy_forms.bootstrap import InlineField, PrependedText, StrictButton
@@ -15,8 +15,18 @@ from crispy_forms.layout import (
 from django.utils.safestring import mark_safe
 
 from mvp_forms.choices import INHERIT, Choice
-from mvp_forms.layout import GroupButton, GroupText, InvalidMember, Join, Member
+from mvp_forms.layout import (
+    Fieldset,
+    GroupButton,
+    GroupText,
+    InvalidMember,
+    Join,
+    Member,
+)
 from tests.forms import StructureForm, StructureHiddenForm
+
+LEGEND = "Account"
+DESCRIPTION = "Only the account holder can change these."
 
 
 def names_of(group):
@@ -249,3 +259,181 @@ class TestJoinLabelText:
 
     def test_no_label_is_an_empty_string(self):
         assert Join().label_text == ""
+
+
+def toggle_of(fieldset):
+    return fieldset.find("input", type="checkbox", class_="peer")
+
+
+def drawn_fieldset(draw, *layout, bound=False, prefix=None):
+    form = StructureForm({} if bound else None, layout=layout, prefix=prefix)
+    return draw("{% crispy form %}", form=form).find("fieldset")
+
+
+class TestFieldsetOptions:
+    def test_open_on_a_fieldset_that_is_not_collapsible_raises(self):
+        with pytest.raises(ValueError, match="collapsible"):
+            Fieldset(LEGEND, "first", open=True)
+
+    def test_a_collapsible_fieldset_with_no_legend_raises(self):
+        with pytest.raises(ValueError, match="legend"):
+            Fieldset("", "first", collapsible=True)
+
+    def test_the_options_are_not_written_as_attributes(self, draw):
+        fieldset = drawn_fieldset(
+            draw,
+            Fieldset(
+                LEGEND,
+                "first",
+                collapsible=True,
+                open=True,
+                description=DESCRIPTION,
+            ),
+        )
+
+        assert not {"collapsible", "open", "description"} & set(fieldset.attrs)
+
+
+class TestFieldsetDescription:
+    def test_it_is_drawn_before_the_first_field(self, draw):
+        fieldset = drawn_fieldset(
+            draw, Fieldset(LEGEND, "first", "second", description=DESCRIPTION)
+        )
+
+        drawn = [
+            tag
+            for tag in fieldset.find_all(["p", "input"])
+            if tag.name == "input" or tag.get_text(strip=True) == DESCRIPTION
+        ]
+        assert [tag.get("id", tag.name) for tag in drawn[:2]] == [
+            "account-description",
+            "id_first",
+        ]
+
+    def test_it_describes_the_fieldset(self, draw):
+        fieldset = drawn_fieldset(
+            draw, Fieldset(LEGEND, "first", description=DESCRIPTION)
+        )
+
+        described_by = fieldset["aria-describedby"]
+        assert fieldset.find(id=described_by).get_text(strip=True) == DESCRIPTION
+
+    def test_it_describes_a_collapsible_fieldset_too(self, draw):
+        fieldset = drawn_fieldset(
+            draw,
+            Fieldset(LEGEND, "first", collapsible=True, description=DESCRIPTION),
+        )
+
+        described_by = fieldset["aria-describedby"]
+        assert fieldset.find(id=described_by).get_text(strip=True) == DESCRIPTION
+
+    def test_markup_in_it_is_escaped(self, draw):
+        fieldset = drawn_fieldset(
+            draw, Fieldset(LEGEND, "first", description="<b>Bold</b>")
+        )
+
+        assert fieldset.find("b") is None
+        assert "<b>Bold</b>" in fieldset.get_text()
+
+    def test_with_none_nothing_describes_the_fieldset(self, draw):
+        fieldset = drawn_fieldset(draw, Fieldset(LEGEND, "first"))
+
+        assert not fieldset.has_attr("aria-describedby")
+
+
+class TestCollapsibleFieldset:
+    def test_a_plain_fieldset_has_no_toggle(self, draw):
+        fieldset = drawn_fieldset(draw, Fieldset(LEGEND, "first"))
+
+        assert toggle_of(fieldset) is None
+
+    def test_its_legend_holds_the_label_of_its_toggle(self, draw):
+        fieldset = drawn_fieldset(draw, Fieldset(LEGEND, "first", collapsible=True))
+
+        label = fieldset.find("legend").find("label")
+        assert label["for"] == toggle_of(fieldset)["id"]
+        assert label.get_text(strip=True) == LEGEND
+
+    def test_the_toggle_comes_before_the_legend_and_the_fields(self, draw):
+        fieldset = drawn_fieldset(draw, Fieldset(LEGEND, "first", collapsible=True))
+
+        toggle = toggle_of(fieldset)
+        assert toggle.find_next_sibling("legend") is not None
+        assert toggle.find_next_sibling("div").find("input", id="id_first")
+
+    @pytest.mark.parametrize("open_", [True, False])
+    def test_open_says_whether_it_is_drawn_open(self, draw, open_):
+        fieldset = drawn_fieldset(
+            draw, Fieldset(LEGEND, "first", collapsible=True, open=open_)
+        )
+
+        assert toggle_of(fieldset).has_attr("checked") is open_
+
+    def test_it_is_drawn_closed_unless_told_otherwise(self, draw):
+        fieldset = drawn_fieldset(draw, Fieldset(LEGEND, "first", collapsible=True))
+
+        assert not toggle_of(fieldset).has_attr("checked")
+
+    def test_one_holding_a_field_in_error_is_drawn_open(self, draw):
+        fieldset = drawn_fieldset(
+            draw,
+            Fieldset(LEGEND, "first", collapsible=True),
+            bound=True,
+        )
+
+        toggle = toggle_of(fieldset)
+        assert toggle.has_attr("checked")
+        assert fieldset.find(id=toggle["aria-describedby"]) is not None
+
+    def test_one_holding_a_hidden_field_in_error_is_drawn_open(self, draw):
+        form = StructureHiddenForm(
+            {"first": "a"},
+            layout=[Fieldset(LEGEND, "first", "token", collapsible=True)],
+        )
+
+        fieldset = draw("{% crispy form %}", form=form).find("fieldset")
+
+        assert toggle_of(fieldset).has_attr("checked")
+
+    def test_one_holding_a_nested_field_in_error_is_drawn_open(self, draw):
+        fieldset = drawn_fieldset(
+            draw,
+            Fieldset(LEGEND, Div("first"), collapsible=True),
+            bound=True,
+        )
+
+        assert toggle_of(fieldset).has_attr("checked")
+
+    def test_one_holding_no_field_in_error_keeps_its_state(self, draw):
+        form = StructureForm(
+            {"first": "a"},
+            layout=[
+                Fieldset(LEGEND, "first", collapsible=True),
+                "second",
+            ],
+        )
+
+        fieldset = draw("{% crispy form %}", form=form).find("fieldset")
+
+        toggle = toggle_of(fieldset)
+        assert not toggle.has_attr("checked")
+        assert not toggle.has_attr("aria-describedby")
+
+    def test_its_toggle_id_starts_with_its_css_id(self, draw):
+        fieldset = drawn_fieldset(
+            draw, Fieldset(LEGEND, "first", collapsible=True, css_id="group")
+        )
+
+        assert toggle_of(fieldset)["id"] == "group-toggle"
+
+    def test_the_toggle_ids_of_two_forms_in_a_formset_differ(self, draw):
+        ids = [
+            toggle_of(
+                drawn_fieldset(
+                    draw, Fieldset(LEGEND, "first", collapsible=True), prefix=prefix
+                )
+            )["id"]
+            for prefix in ["form-0", "form-1"]
+        ]
+
+        assert ids[0] != ids[1]

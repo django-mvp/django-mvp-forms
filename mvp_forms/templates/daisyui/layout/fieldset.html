@@ -1,4 +1,22 @@
-<fieldset{% if fieldset.css_id %} id="{{ fieldset.css_id }}"{% endif %} class="fieldset{% if fieldset.css_class %} {{ fieldset.css_class }}{% endif %}"{{ fieldset.flat_attrs }}>
+{% load i18n %}{% if fieldset.collapsible %}
+<fieldset{% if fieldset.css_id %} id="{{ fieldset.css_id }}"{% endif %} class="fieldset bg-base-200 border-base-300 rounded-box border p-0 mb-4{% if fieldset.css_class %} {{ fieldset.css_class }}{% endif %}"{% if fieldset.description %} aria-describedby="{{ fieldset_id }}-description"{% endif %}{{ fieldset.flat_attrs }}>
+  <input type="checkbox" id="{{ fieldset_id }}-toggle" class="peer sr-only"{% if fieldset_in_error %} aria-describedby="{{ fieldset_id }}-error"{% endif %}{% if fieldset_open %} checked{% endif %} />
+  <legend class="fieldset-legend float-left w-full p-4 text-sm peer-checked:float-none peer-checked:w-auto peer-checked:ms-3 peer-checked:px-1 peer-checked:py-2 peer-checked:text-xs peer-focus-visible:outline-2">
+    <label for="{{ fieldset_id }}-toggle" class="flex items-baseline gap-2 cursor-pointer">
+      {% if fieldset_in_error %}<span class="indicator">{{ legend }}<span class="indicator-item status status-error" aria-hidden="true"></span></span>{% else %}<span>{{ legend }}</span>{% endif %}
+      <span class="relative size-[1cap] shrink-0 mx-1" aria-hidden="true"><span class="absolute inset-x-0 top-1/2 h-[0.125em] -translate-y-1/2 bg-current"></span><span class="absolute inset-y-0 left-1/2 w-[0.125em] -translate-x-1/2 bg-current [.peer:checked~legend_&]:hidden"></span></span>
+    </label>
+  </legend>
+  {% if fieldset_in_error %}<span id="{{ fieldset_id }}-error" hidden>{% translate "Contains a field with an error" %}</span>{% endif %}
+  <div class="hidden gap-1.5 p-4 peer-checked:grid">
+    {% if fieldset.description %}<p id="{{ fieldset_id }}-description" class="label text-base-content text-wrap">{{ fieldset.description }}</p>{% endif %}
+    {{ fields }}
+  </div>
+</fieldset>
+{% else %}
+<fieldset{% if fieldset.css_id %} id="{{ fieldset.css_id }}"{% endif %} class="fieldset bg-base-200 border-base-300 rounded-box border p-4 mb-4{% if fieldset.css_class %} {{ fieldset.css_class }}{% endif %}"{% if fieldset.description %} aria-describedby="{{ fieldset_id }}-description"{% endif %}{{ fieldset.flat_attrs }}>
   {% if legend %}<legend class="fieldset-legend">{{ legend }}</legend>{% endif %}
+  {% if fieldset.description %}<p id="{{ fieldset_id }}-description" class="label text-base-content text-wrap">{{ fieldset.description }}</p>{% endif %}
   {{ fields }}
 </fieldset>
+{% endif %}

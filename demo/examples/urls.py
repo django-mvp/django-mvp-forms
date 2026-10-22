@@ -44,13 +44,15 @@ from demo.examples.layout_objects.accordion import ChosenGroupForm
 from demo.examples.layout_objects.accordion import ProfileForm as AccordionForm
 from demo.examples.layout_objects.alert import NoticeForm
 from demo.examples.layout_objects.buttons import ActionsForm, HolderForm
-from demo.examples.layout_objects.fieldsets_rows_columns import DetailsForm
+from demo.examples.layout_objects.collapsible_fieldsets import BookingForm
+from demo.examples.layout_objects.fieldsets import OrderForm
 from demo.examples.layout_objects.joined_groups import PhoneForm
 from demo.examples.layout_objects.joined_search import JoinedSearchForm
 from demo.examples.layout_objects.joined_text import HeatFlowForm
 from demo.examples.layout_objects.marked_errors import ApplicationForm
 from demo.examples.layout_objects.modal import AddressForm as ModalForm
 from demo.examples.layout_objects.multi_widget_field import EventForm
+from demo.examples.layout_objects.rows_columns import DetailsForm
 from demo.examples.layout_objects.tabs import ProfileForm
 from demo.examples.modifiers.attached_text import PriceForm
 from demo.examples.modifiers.colour import ColouredForm
@@ -114,7 +116,9 @@ urlpatterns = [
         "marked-errors/",
         ExampleView.as_view(form_class=ApplicationForm, sent_empty=True),
     ),
-    path("fieldsets-rows-columns/", ExampleView.as_view(form_class=DetailsForm)),
+    path("fieldsets/", ExampleView.as_view(form_class=OrderForm)),
+    path("collapsible-fieldsets/", ExampleView.as_view(form_class=BookingForm)),
+    path("rows-columns/", ExampleView.as_view(form_class=DetailsForm)),
     path("button-holder/", ExampleView.as_view(form_class=HolderForm)),
     path("form-actions/", ExampleView.as_view(form_class=ActionsForm)),
     path("joined-groups/", ExampleView.as_view(form_class=PhoneForm)),
