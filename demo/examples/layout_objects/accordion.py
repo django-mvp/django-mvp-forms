@@ -1,9 +1,10 @@
 """A form whose fields sit in three accordion groups."""
 
-from crispy_forms.bootstrap import Accordion, AccordionGroup
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit
 from django import forms
+
+from mvp_forms.layout import Accordion, AccordionGroup
 
 
 class ProfileForm(forms.Form):

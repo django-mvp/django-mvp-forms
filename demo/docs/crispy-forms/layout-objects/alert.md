@@ -1,7 +1,7 @@
 # Alert
 
 `Alert` draws a daisyUI alert between fields. It comes from
-`crispy_forms.bootstrap`. It has a dismiss button unless you pass
+`mvp_forms.layout`. It has a dismiss button unless you pass
 `dismiss=False`, and a daisyUI colour such as `alert-success` in `css_class`.
 
 Dismiss the first alert, then send the form empty. The alerts are drawn again

@@ -1,9 +1,10 @@
 """A radio group and a checkbox group drawn along one line."""
 
-from crispy_forms.bootstrap import InlineCheckboxes, InlineRadios
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit
 from django import forms
+
+from mvp_forms.layout import InlineCheckboxes, InlineRadios
 
 
 class SurveyForm(forms.Form):

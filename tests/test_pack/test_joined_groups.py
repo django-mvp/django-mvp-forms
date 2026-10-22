@@ -152,7 +152,9 @@ class TestJoinedGroups:
         assert legend.find(attrs={"aria-hidden": "true"}) is not None
 
     def test_a_group_of_optional_members_has_no_marker(self, draw):
-        soup = draw(TAG, form=joined("extension"))
+        form = JoinedForm(layout=[Join("notes", "extension", label=GROUP_LABEL)])
+
+        soup = draw(TAG, form=form)
 
         legend = join_of(soup).find_parent("fieldset").find("legend")
         assert legend.find(attrs={"aria-hidden": "true"}) is None
@@ -253,12 +255,13 @@ class TestJoinedGroupEdges:
         self, draw
     ):
         label = mark_safe('Tel <abbr title="number">no.</abbr>')
-        form = JoinedForm(layout=[Join("number", label=label)], show_labels=False)
+        join = Join("country_code", "number", label=label)
+        form = JoinedForm(layout=[join], show_labels=False)
 
         soup = draw(TAG, form=form)
 
         fieldset = join_of(soup).find_parent("fieldset")
-        assert fieldset["aria-label"] == Join("number", label=label).label_text
+        assert fieldset["aria-label"] == join.label_text
         assert fieldset.find("abbr") is None
         assert set(fieldset.attrs) == {"class", "aria-label"}
 
@@ -723,3 +726,64 @@ class TestJoinedGroupText:
 
         assert form.is_valid()
         assert form.cleaned_data["extension"] == "12"
+
+
+class TestJoinedGroupOfOneField:
+    def test_the_fields_own_label_is_a_label_for_its_input(self, draw):
+        soup = draw(TAG, form=joined("number", HTML("kg"), label=None))
+
+        label = soup.find("label", attrs={"for": "id_number"})
+        assert label.get_text(strip=True).rstrip("*") == "Number"
+        assert join_of(soup).find_parent("fieldset") is None
+
+    def test_a_label_given_to_the_group_is_the_label_and_names_the_input(self, draw):
+        soup = draw(TAG, form=joined("number", HTML("kg"), label="Weight"))
+
+        label = soup.find("label", attrs={"for": "id_number"})
+        assert label.get_text(strip=True).rstrip("*") == "Weight"
+        assert soup.find(id="id_number")["aria-label"] == "Weight"
+
+    def test_a_required_field_puts_the_marker_in_the_label(self, draw):
+        soup = draw(TAG, form=joined("number", label=None))
+
+        label = soup.find("label", attrs={"for": "id_number"})
+        assert label.find(attrs={"aria-hidden": "true"}) is not None
+
+    def test_the_field_keeps_its_help_text_and_error_in_its_frame(self, draw):
+        form = JoinedForm({"number": ""}, layout=[Join("number", HTML("kg"))])
+
+        soup = draw(TAG, form=form)
+
+        frame = join_of(soup).parent
+        assert frame["id"] == "div_id_number"
+        assert len(frame.find_all(id="id_number_helptext")) == 1
+        assert len(frame.find_all(id="id_number_error")) == 1
+
+    def test_with_the_helpers_labels_off_no_label_is_drawn_and_the_input_is_named(
+        self, draw
+    ):
+        form = JoinedForm(layout=[Join("number", HTML("kg"))], show_labels=False)
+
+        soup = draw(TAG, form=form)
+
+        assert soup.find("label") is None
+        assert soup.find(id="id_number")["aria-label"] == "Number"
+
+    def test_a_hidden_member_beside_it_leaves_it_one_field(self, draw):
+        soup = draw(TAG, form=joined("number", "token", label=None))
+
+        assert soup.find("label", attrs={"for": "id_number"}) is not None
+        assert join_of(soup).find_parent("fieldset") is None
+
+    @pytest.mark.parametrize("on", ["field", "widget"])
+    def test_an_aria_label_the_developer_wrote_wins_over_the_groups_label(
+        self, draw, on
+    ):
+        member = Field("number", aria_label="Mine") if on == "field" else "number"
+        form = joined(member, HTML("kg"), label="Weight")
+        if on == "widget":
+            form.fields["number"].widget.attrs["aria-label"] = "Mine"
+
+        soup = draw(TAG, form=form)
+
+        assert soup.find(id="id_number")["aria-label"] == "Mine"

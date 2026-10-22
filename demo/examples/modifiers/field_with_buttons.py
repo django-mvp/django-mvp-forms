@@ -1,9 +1,10 @@
-"""A search box with buttons joined to it."""
+"""A search box with a button joined to it."""
 
-from crispy_forms.bootstrap import FieldWithButtons, StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from django import forms
+
+from mvp_forms.layout import Join, StrictButton
 
 
 class SearchForm(forms.Form):
@@ -16,8 +17,5 @@ class SearchForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
-            FieldWithButtons(
-                "query",
-                StrictButton("Go", type="submit", css_class="btn-primary join-item"),
-            ),
+            Join("query", StrictButton("Go", type="submit", css_class="btn-primary")),
         )

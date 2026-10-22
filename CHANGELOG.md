@@ -25,6 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - A `Join` holds text between its fields: put django-crispy-forms' `HTML` where it goes, as in `Join("value", HTML("±"), "uncertainty", "unit")`. The text is drawn in its place as an item of the join, framed and sized as the inputs beside it, and takes the form's size, colour and variant for inputs or those of a `Choice` around it. Before, `HTML` in a `Join` raised `InvalidMember`. `Join.contents()` gives it as a `GroupText`.
+- `mvp_forms.layout` passes through the layout objects of `crispy_forms.bootstrap` that the pack draws, unchanged: `Accordion`, `AccordionGroup`, `Alert`, `FormActions`, `InlineCheckboxes`, `InlineField`, `InlineRadios`, `Modal`, `StrictButton`, `Tab`, `TabHolder` and `UneditableField`. Import them from `mvp_forms.layout`, beside `Join`. Importing them from `crispy_forms.bootstrap` still works, since they are the same classes, and the README and the demo now use the new path throughout.
+
+### Changed
+
+- A `Join` whose one visible member is a field is drawn as that field is drawn anywhere else: a `<div class="fieldset">` with the id `div_<id>`, a `<label>` for the input, the join, and the field's help text and errors. The label is the group's `label`, which also becomes the input's `aria-label` unless you wrote one, or else the field's own label, with the required marker. Before, every group was a `<fieldset>` with a `<legend>`, and a group of one with no `label` had no visible label at all. A group of several fields is drawn as before. If you replaced `daisyui/layout/join.html`, it now receives `lone`, the bound field of a group of one, and None otherwise.
+
+### Deprecated
+
+- `PrependedText`, `AppendedText`, `PrependedAppendedText` and `FieldWithButtons` from `crispy_forms.bootstrap`. Each is still drawn as before in this version, with a `DeprecationWarning` naming its replacement, and the next minor version stops drawing them and removes `daisyui/layout/prepended_appended_text.html` and `daisyui/layout/field_with_buttons.html`. Write a `Join` of one field instead: `PrependedText("amount", "$")` becomes `Join(HTML("$"), "amount")`, `AppendedText("weight", "kg")` becomes `Join("weight", HTML("kg"))`, `PrependedAppendedText("budget", "$", ".00")` becomes `Join(HTML("$"), "budget", HTML(".00"))`, and `FieldWithButtons("query", StrictButton("Go"))` becomes `Join("query", StrictButton("Go"))`. The text is now an item of the join beside the input, not inside the input's wrapper.
 
 ## [v0.7.0] - 2026-10-21
 

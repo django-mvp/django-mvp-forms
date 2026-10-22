@@ -1,10 +1,29 @@
-"""Layout objects the package defines, beside those of django-crispy-forms."""
+"""The layout objects a form uses, beyond those of ``crispy_forms.layout``.
+
+``Join`` is the package's own. The others come from django-crispy-forms'
+``crispy_forms.bootstrap`` module, which is named for the framework its own
+templates were written for, and are passed through unchanged so that a form
+imports them from here. The ``daisyui`` template pack draws each of them.
+"""
 
 from dataclasses import dataclass
 from html import unescape
 from typing import Any, cast
 
-from crispy_forms.bootstrap import StrictButton
+from crispy_forms.bootstrap import (
+    Accordion,
+    AccordionGroup,
+    Alert,
+    FormActions,
+    InlineCheckboxes,
+    InlineField,
+    InlineRadios,
+    Modal,
+    StrictButton,
+    Tab,
+    TabHolder,
+    UneditableField,
+)
 from crispy_forms.layout import HTML, BaseInput, Field, LayoutObject
 from crispy_forms.utils import TEMPLATE_PACK, flatatt, render_field
 from django.template import Context
@@ -13,6 +32,26 @@ from django.utils.html import strip_tags
 from django.utils.safestring import SafeData, SafeString
 
 from mvp_forms.choices import INHERIT, Choice, FormChoices, InvalidChoice, Modifiers
+
+__all__ = [
+    "Accordion",
+    "AccordionGroup",
+    "Alert",
+    "FormActions",
+    "GroupButton",
+    "GroupText",
+    "InlineCheckboxes",
+    "InlineField",
+    "InlineRadios",
+    "InvalidMember",
+    "Join",
+    "Member",
+    "Modal",
+    "StrictButton",
+    "Tab",
+    "TabHolder",
+    "UneditableField",
+]
 
 
 class InvalidMember(ValueError):
@@ -146,9 +185,13 @@ class GroupText:
 
 
 class Join(LayoutObject):
-    """Several fields drawn as one daisyUI join under one label.
+    """Fields, text and buttons drawn as one daisyUI join under one label.
 
-    The group is a fieldset whose legend is the label. Each member is an input
+    A group of several fields is a fieldset whose legend is the label. A group
+    of one field is drawn as that field is anywhere else: a label for its input,
+    which is the group's label or else the field's own, the join, and the
+    field's help text and errors. Text before or after one input, such as
+    ``Join("price", HTML("$"))``, is a group of one field. Each member is an input
     or a select, named for assistive technology by its own label, and keeps its
     own help text and errors. A hidden member is drawn beside the join, not in
     it. A ``Field`` holds the names it gives attributes to, and a ``Choice`` the
@@ -160,17 +203,17 @@ class Join(LayoutObject):
     ``template`` of its own is refused, because a member has no frame for either
     to apply to.
 
-    This is the group of several fields. ``FieldWithButtons`` is the one field
-    that has buttons joined to it, and ``FieldInput``'s ``join`` option and
-    ``is_joined`` property are about that, while ``member`` and ``is_member``
-    are about this.
+    ``FieldInput``'s ``member`` and ``is_member`` are about this. Its ``join``
+    option and ``is_joined`` property are about django-crispy-forms'
+    ``FieldWithButtons``, which this replaces.
 
     Args:
         *fields: The field names, ``Field`` objects, ``Choice`` objects,
             buttons and ``HTML`` that make up the group, in the order they are
             drawn.
-        label: The group's one label, as text. A group without one has no
-            legend.
+        label: The group's one label, as text. A group of several fields
+            without one has no legend, and a group of one field without one
+            takes the field's label.
         css_id: The id of the element that carries ``join``.
         css_class: Classes for the element that carries ``join``.
         **attrs: Attributes for the element that carries ``join``. Underscores
@@ -284,6 +327,7 @@ class Join(LayoutObject):
         form: Any,
         context: Context,
         template_pack: str,
+        lone: bool = False,
     ) -> SafeString:
         """Draw one entry through django-crispy-forms.
 
@@ -302,6 +346,8 @@ class Join(LayoutObject):
             form: The form being drawn.
             context: The template context.
             template_pack: The template pack drawing the layout.
+            lone: Whether the entry is the group's one field, which the group's
+                label names, unless the developer wrote an ``aria-label``.
 
         Returns:
             The entry's markup, empty for a name the form lacks.
@@ -327,6 +373,13 @@ class Join(LayoutObject):
             if isinstance(entry, GroupButton)
             else entry.field(self.member_template % template_pack)
         )
+        if (
+            lone
+            and self.label is not None
+            and isinstance(entry, Member)
+            and "aria-label" not in form.fields[entry.name].widget.attrs
+        ):
+            held.attrs.setdefault("aria-label", self.label_text)
         if entry.choice is not None:
             chosen = entry.choice.over(Choice())
             chosen.fields = [held]
@@ -347,7 +400,8 @@ class Join(LayoutObject):
     ) -> SafeString:
         """Draw the group.
 
-        A hidden member is drawn beside the join, because daisyUI squares the
+        A group of one visible field is drawn in that field's frame, under a
+        label for its input. A hidden member is drawn beside the join, because daisyUI squares the
         first and last child of the element that carries ``join``, whatever
         they are. Whether a member is hidden is read after it is drawn, because
         ``Field("name", type="hidden")`` makes it so while it is drawn. A name
@@ -375,8 +429,18 @@ class Join(LayoutObject):
         hidden: list[str] = []
         shown: list[Any] = []
         has_control = False
-        for entry in self.contents():
-            drawn = self.draw(entry, form, context, template_pack)
+        contents = self.contents()
+        visible = [
+            entry
+            for entry in contents
+            if isinstance(entry, Member)
+            and entry.name in form.fields
+            and not form[entry.name].is_hidden
+            and entry.attrs.get("type") != "hidden"
+        ]
+        lone = visible[0] if len(visible) == 1 else None
+        for entry in contents:
+            drawn = self.draw(entry, form, context, template_pack, entry is lone)
             if isinstance(entry, GroupText):
                 inputs.append(drawn)
                 continue
@@ -405,6 +469,7 @@ class Join(LayoutObject):
                     "inputs": SafeString("".join(inputs)),
                     "hidden": SafeString("".join(hidden)),
                     "members": shown,
+                    "lone": shown[0] if len(shown) == 1 else None,
                     "required": required,
                 },
             )

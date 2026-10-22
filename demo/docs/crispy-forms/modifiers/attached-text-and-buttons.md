@@ -1,14 +1,14 @@
 # Attached text and buttons
 
-Some layout objects attach something to the edge of an input. `PrependedText`,
-`AppendedText` and `PrependedAppendedText` put text before it, after it, or
-both, such as a currency or a unit. `FieldWithButtons` joins buttons to it, such
-as a search box with a button beside it.
+Text or a button is attached to the edge of an input with a `Join` of one field,
+from `mvp_forms.layout`. Put `HTML` before the field, after it or on both sides
+for a currency or a unit, and a button after it for a search box. The field
+keeps its own label, help text and errors, as it has anywhere else.
 
 ## Text before and after
 
-The text is markup, written into the page as it is, so escape anything a person
-typed before you pass it in.
+The text is rendered as `HTML` is anywhere else, markup and the form's context
+included, so escape anything a person typed before you put it in.
 
 Send the form empty to see all three fields in error with the text still
 attached, then enter some numbers.
@@ -21,8 +21,8 @@ attached, then enter some numbers.
 
 ## Buttons
 
-`FieldWithButtons` takes the field first and then any number of buttons. Give
-each button `join-item` so the borders where the parts meet are not doubled.
+A button goes in the group in its place, as a `StrictButton`, `Submit`, `Button`
+or `Reset`, and is drawn as one piece with the input.
 
 Send an empty search to see the error, then type something.
 
@@ -32,6 +32,14 @@ Send an empty search to see the error, then type something.
 ../../../examples/modifiers/field_with_buttons.py
 ```
 
-The input and the buttons share one size. State it for the whole form, or put a
-`Choice` around the `FieldWithButtons`: a size stated for the field by name does
-not reach its buttons.
+The input, the text and the buttons take the form's size. A `Choice` around the
+`Join` states a size for all of them at once.
+
+## Before this
+
+`PrependedText`, `AppendedText`, `PrependedAppendedText` and `FieldWithButtons`
+from django-crispy-forms are deprecated. They are still drawn in this version,
+with a `DeprecationWarning`, and stop being drawn in the next minor version.
+`PrependedText("amount", "$")` becomes `Join(HTML("$"), "amount")`, and
+`FieldWithButtons("query", StrictButton("Go"))` becomes
+`Join("query", StrictButton("Go"))`.

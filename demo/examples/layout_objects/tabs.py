@@ -1,9 +1,10 @@
 """A form whose fields sit behind three tabs."""
 
-from crispy_forms.bootstrap import Tab, TabHolder
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit
 from django import forms
+
+from mvp_forms.layout import Tab, TabHolder
 
 
 class ProfileForm(forms.Form):

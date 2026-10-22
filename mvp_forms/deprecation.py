@@ -1,4 +1,5 @@
-"""The paths the pack has moved away from, and a host project's templates at them."""
+"""What the pack is moving away from: templates it has moved, layout objects it
+will stop drawing, and the warnings that say so."""
 
 import warnings
 from collections.abc import Callable
@@ -50,3 +51,30 @@ def host_template(path: str, get_template: Callable[[str], object]) -> str:
             stacklevel=2,
         )
     return path
+
+
+# A layout object of django-crispy-forms the pack still draws for this version,
+# and what replaces it.
+RETIRING: dict[str, str] = {
+    "PrependedText": 'Join("field", HTML("text"))',
+    "AppendedText": 'Join("field", HTML("text"))',
+    "PrependedAppendedText": 'Join(HTML("before"), "field", HTML("after"))',
+    "FieldWithButtons": 'Join("field", StrictButton("label"))',
+}
+
+
+def retiring_layout_object(name: str) -> None:
+    """Warn that the pack is drawing a layout object it will stop drawing.
+
+    Args:
+        name: A name in ``RETIRING``.
+
+    Raises:
+        KeyError: ``name`` is not in ``RETIRING``.
+    """
+    warnings.warn(
+        f"{name} is deprecated and the daisyui pack stops drawing it in the next "
+        f"minor version. Use {RETIRING[name]} from mvp_forms.layout.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
