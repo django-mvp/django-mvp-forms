@@ -256,7 +256,7 @@ layout = Layout(
         "name",
         "email",
         collapsible=True,
-        state="open",
+        open=True,
         description="We use these only to send your booking confirmation.",
     ),
     Fieldset("Billing address", "street", "town", collapsible=True),
@@ -265,9 +265,9 @@ layout = Layout(
 
 - `description` is help text drawn at the top of the fieldset, before its first field, in the style of a field's help text. The fieldset's `aria-describedby` names it, so assistive technology reads it with the fieldset. It is drawn as you write it, with markup escaped.
 - `collapsible=True` lets a person open and close the fieldset by its legend. Open, the legend sits on the border as on any fieldset. Closed, it is the title inside the panel and the fields are hidden. A minus or a plus beside the legend shows which way it will go.
-- `state` is `"open"` or `"closed"`, how a collapsible fieldset is first drawn. With no state it starts closed, as a collapsed fieldset does in the admin.
-- A collapsible fieldset that holds a field in error, a hidden one included, is drawn open whatever its state, with an error mark beside its legend that assistive technology reads.
-- A `state` other than the two above, a `state` on a fieldset that is not collapsible, and a collapsible fieldset with no legend raise `ValueError` when the layout is built.
+- `open=True` draws a collapsible fieldset open at first, as the `open` attribute of `<details>` does. Without it the fieldset starts closed, as a collapsed fieldset does in the admin.
+- A collapsible fieldset that holds a field in error, a hidden one included, is drawn open whatever `open` says, with an error mark beside its legend that assistive technology reads.
+- `open=True` on a fieldset that is not collapsible, and a collapsible fieldset with no legend, raise `ValueError` when the layout is built.
 
 The control is a checkbox, labelled by the legend, placed before it in the `<fieldset>`. Opening, closing and moving the legend are done by Tailwind utilities on the fieldset's parts, including the `peer-checked:` variant, so the page needs no script. A host project with its own Tailwind build gets them by scanning the package, as for every class the pack writes. The ids the fieldset writes start with its `css_id`, or else with its legend made into a slug, and with the form's prefix, so the forms of a formset do not share them.
 

@@ -32,7 +32,7 @@ class BookingForm(forms.Form):
                 "name",
                 "email",
                 collapsible=True,
-                state="open",
+                open=True,
                 description="We use these only to send your booking confirmation.",
             ),
             Fieldset(
@@ -48,7 +48,7 @@ class BookingForm(forms.Form):
                 "gift_wrap",
                 "gift_message",
                 collapsible=True,
-                state="closed",
+                open=False,
             ),
         )
         self.helper.add_input(Submit("submit", "Book"))

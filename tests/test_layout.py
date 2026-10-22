@@ -271,15 +271,9 @@ def drawn_fieldset(draw, *layout, bound=False, prefix=None):
 
 
 class TestFieldsetOptions:
-    @pytest.mark.parametrize("state", ["shut", "Open", ""])
-    def test_a_state_other_than_open_or_closed_raises(self, state):
-        with pytest.raises(ValueError, match="state"):
-            Fieldset(LEGEND, "first", collapsible=True, state=state)
-
-    @pytest.mark.parametrize("state", ["open", "closed"])
-    def test_a_state_on_a_fieldset_that_is_not_collapsible_raises(self, state):
+    def test_open_on_a_fieldset_that_is_not_collapsible_raises(self):
         with pytest.raises(ValueError, match="collapsible"):
-            Fieldset(LEGEND, "first", state=state)
+            Fieldset(LEGEND, "first", open=True)
 
     def test_a_collapsible_fieldset_with_no_legend_raises(self):
         with pytest.raises(ValueError, match="legend"):
@@ -292,12 +286,12 @@ class TestFieldsetOptions:
                 LEGEND,
                 "first",
                 collapsible=True,
-                state="open",
+                open=True,
                 description=DESCRIPTION,
             ),
         )
 
-        assert not {"collapsible", "state", "description"} & set(fieldset.attrs)
+        assert not {"collapsible", "open", "description"} & set(fieldset.attrs)
 
 
 class TestFieldsetDescription:
@@ -367,20 +361,23 @@ class TestCollapsibleFieldset:
         assert toggle.find_next_sibling("legend") is not None
         assert toggle.find_next_sibling("div").find("input", id="id_first")
 
-    @pytest.mark.parametrize(
-        ("state", "checked"), [("open", True), ("closed", False), (None, False)]
-    )
-    def test_its_state_says_whether_it_is_drawn_open(self, draw, state, checked):
+    @pytest.mark.parametrize("open_", [True, False])
+    def test_open_says_whether_it_is_drawn_open(self, draw, open_):
         fieldset = drawn_fieldset(
-            draw, Fieldset(LEGEND, "first", collapsible=True, state=state)
+            draw, Fieldset(LEGEND, "first", collapsible=True, open=open_)
         )
 
-        assert toggle_of(fieldset).has_attr("checked") is checked
+        assert toggle_of(fieldset).has_attr("checked") is open_
+
+    def test_it_is_drawn_closed_unless_told_otherwise(self, draw):
+        fieldset = drawn_fieldset(draw, Fieldset(LEGEND, "first", collapsible=True))
+
+        assert not toggle_of(fieldset).has_attr("checked")
 
     def test_one_holding_a_field_in_error_is_drawn_open(self, draw):
         fieldset = drawn_fieldset(
             draw,
-            Fieldset(LEGEND, "first", collapsible=True, state="closed"),
+            Fieldset(LEGEND, "first", collapsible=True),
             bound=True,
         )
 

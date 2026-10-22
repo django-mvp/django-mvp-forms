@@ -486,47 +486,40 @@ class Fieldset(CrispyFieldset):
 
     Everything django-crispy-forms' own ``Fieldset`` takes is taken here and kept
     as it is. A collapsible fieldset is opened and closed by its legend, and one
-    holding a field in error is drawn open whatever its state.
+    holding a field in error is drawn open whatever ``open`` says.
 
     Args:
         legend: The fieldset's legend, rendered as a template against the page's
             context.
         *fields: The fields and layout objects it holds.
         collapsible: Whether a person can open and close it.
-        state: ``"open"`` or ``"closed"``, how a collapsible fieldset is first
-            drawn. A collapsible fieldset with no state is drawn closed.
+        open: Whether a collapsible fieldset is first drawn open. It is drawn
+            closed unless this is true, as ``<details>`` is.
         description: Help text drawn at the top of the fieldset, before its
             first field, and read out with the fieldset's name.
         **kwargs: Passed to django-crispy-forms' ``Fieldset``.
 
     Raises:
-        ValueError: The state is not ``"open"`` or ``"closed"``, a state is given
-            for a fieldset that is not collapsible, or a collapsible fieldset has
-            no legend to open it by.
+        ValueError: ``open`` is true for a fieldset that is not collapsible, or
+            a collapsible fieldset has no legend to open it by.
     """
-
-    states = ("open", "closed")
 
     def __init__(
         self,
         legend: str,
         *fields: Any,
         collapsible: bool = False,
-        state: str | None = None,
+        open: bool = False,  # noqa: A002 - named as <details> names it
         description: str = "",
         **kwargs: Any,
     ) -> None:
-        if state is not None and state not in self.states:
-            raise ValueError(
-                f"{state!r} is not a fieldset state: use 'open' or 'closed'"
-            )
-        if state is not None and not collapsible:
-            raise ValueError("A fieldset has a state only when it is collapsible")
+        if open and not collapsible:
+            raise ValueError("Only a collapsible fieldset can be drawn open")
         if collapsible and not legend:
             raise ValueError("A collapsible fieldset needs a legend to open it by")
         super().__init__(legend, *fields, **kwargs)
         self.collapsible = collapsible
-        self.state = state or "closed"
+        self.open = open
         self.description = description
 
     def render(
@@ -556,7 +549,7 @@ class Fieldset(CrispyFieldset):
                 "fields": fields,
                 "fieldset_id": f"{prefix}{name or 'fieldset'}",
                 "fieldset_in_error": in_error,
-                "fieldset_open": self.state == "open" or in_error,
+                "fieldset_open": self.open or in_error,
             }
         )
         template = self.get_template_name(template_pack)

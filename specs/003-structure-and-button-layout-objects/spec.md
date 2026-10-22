@@ -111,7 +111,7 @@ A developer has a few fields that make sense only together, such as the parts of
 
 ### User Story 5 - Describe a fieldset and let people collapse it (Priority: P3)
 
-A developer has a long form whose fieldsets need a word of explanation, and some of which most people never need to fill in. They import `Fieldset` from `mvp_forms.layout`, give a fieldset a description, and make the rarely used ones collapsible and closed. A person filling in the form reads the description with the group, opens a closed fieldset by its legend when they need it, and finds any fieldset holding a mistake already open when the form comes back with errors.
+A developer has a long form whose fieldsets need a word of explanation, and some of which most people never need to fill in. They import `Fieldset` from `mvp_forms.layout`, give a fieldset a description, and make the rarely used ones collapsible, starting closed. A person filling in the form reads the description with the group, opens a closed fieldset by its legend when they need it, and finds any fieldset holding a mistake already open when the form comes back with errors.
 
 **Why this priority**: Every form works without it. It is what the Django admin offers its fieldsets, and a long form without it is harder to read.
 
@@ -120,10 +120,10 @@ A developer has a long form whose fieldsets need a word of explanation, and some
 **Acceptance Scenarios**:
 
 1. **Given** a `Fieldset` with a description, **When** the form is drawn, **Then** the description is drawn before the fieldset's first field, and assistive technology reads it as describing the fieldset.
-2. **Given** a collapsible `Fieldset` with the state `open`, **When** the form is drawn, **Then** its fields are shown, and a person can close it by its legend.
-3. **Given** a collapsible `Fieldset` with the state `closed`, or with no state, **When** the form is drawn, **Then** its fields are hidden, and a person can open it by its legend.
+2. **Given** a collapsible `Fieldset` drawn with `open=True`, **When** the form is drawn, **Then** its fields are shown, and a person can close it by its legend.
+3. **Given** a collapsible `Fieldset` drawn without `open=True`, **When** the form is drawn, **Then** its fields are hidden, and a person can open it by its legend.
 4. **Given** a closed collapsible `Fieldset` holding a field in error, a hidden field included, **When** the form is drawn again, **Then** the fieldset is open, and assistive technology is told it holds an error.
-5. **Given** a `Fieldset` with a state but not collapsible, with a state other than `open` or `closed`, or collapsible with no legend, **When** the layout is built, **Then** it raises `ValueError`.
+5. **Given** a `Fieldset` with `open=True` that is not collapsible, or a collapsible one with no legend, **When** the layout is built, **Then** it raises `ValueError`.
 6. **Given** a formset whose forms each hold a collapsible `Fieldset`, **When** it is drawn, **Then** each form's fieldset opens and closes on its own.
 
 ---
@@ -179,11 +179,11 @@ A developer has a long form whose fieldsets need a word of explanation, and some
 
 #### Fieldset options
 
-- **FR-024**: `mvp_forms.layout` MUST provide a `Fieldset` that takes everything django-crispy-forms' `Fieldset` takes, draws the same, and adds `description`, `collapsible` and `state`. None of the three may be written to the page as an HTML attribute.
+- **FR-024**: `mvp_forms.layout` MUST provide a `Fieldset` that takes everything django-crispy-forms' `Fieldset` takes, draws the same, and adds `description`, `collapsible` and `open`. None of the three may be written to the page as an HTML attribute.
 - **FR-025**: A `Fieldset`'s description MUST be drawn before its first field and named by the fieldset's `aria-describedby`. Markup in it MUST be escaped.
-- **FR-026**: A collapsible `Fieldset` MUST be opened and closed by its legend, with the keyboard as well as the pointer, and with no script. Its state MUST say how it is first drawn, and with no state it MUST start closed.
-- **FR-027**: A collapsible `Fieldset` holding a field in error MUST be drawn open whatever its state, with the error announced to assistive technology.
-- **FR-028**: A state on a `Fieldset` that is not collapsible, a state other than `open` or `closed`, and a collapsible `Fieldset` with no legend MUST raise `ValueError` when the layout is built.
+- **FR-026**: A collapsible `Fieldset` MUST be opened and closed by its legend, with the keyboard as well as the pointer, and with no script. It MUST start closed unless `open=True` is given.
+- **FR-027**: A collapsible `Fieldset` holding a field in error MUST be drawn open whatever `open` says, with the error announced to assistive technology.
+- **FR-028**: `open=True` on a `Fieldset` that is not collapsible, and a collapsible `Fieldset` with no legend, MUST raise `ValueError` when the layout is built.
 - **FR-029**: The ids a `Fieldset` writes MUST differ between the forms of a formset.
 
 ### Requirement to story map

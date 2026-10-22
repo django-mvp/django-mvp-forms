@@ -21,13 +21,13 @@ that holds them.
 ## Collapsible fieldsets
 
 Import `Fieldset` from `mvp_forms.layout` to make one collapsible. Its legend
-becomes the control that opens and closes it. `state` says how it is first
-drawn, `"open"` or `"closed"`, and a collapsible fieldset with no state starts
-closed. A fieldset that holds a field in error is drawn open, with a mark beside
-its legend, whatever its state.
+becomes the control that opens and closes it. `open=True` draws it open at
+first, and without it a collapsible fieldset starts closed. A fieldset that
+holds a field in error is drawn open, with a mark beside its legend, whatever
+`open` says.
 
 ```python
-Fieldset("Contact", "name", "email", collapsible=True, state="open")
+Fieldset("Contact", "name", "email", collapsible=True, open=True)
 ```
 
 Send the form empty. The billing address starts closed, and opens to show the

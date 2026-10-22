@@ -252,7 +252,7 @@ def collapsed(data=None):
                 "Account",
                 "first",
                 collapsible=True,
-                state="open",
+                open=True,
                 description="Only the holder can change these.",
             ),
             PanelFieldset("Contact", "second", collapsible=True),
