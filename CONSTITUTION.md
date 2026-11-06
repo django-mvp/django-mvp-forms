@@ -83,6 +83,12 @@ hard-coded user-visible string is a blocking review comment.
 A package with no user-facing strings satisfies this trivially, and should not
 carry an empty `locale/` directory to look as though it does.
 
+This article covers the package (`mvp_forms/`) only. The `demo/` app is never
+translated: its strings are plain text, and translation markup there is a
+blocking review comment. `makemessages` runs from inside `mvp_forms/`, never
+over `demo/`. The demo's `LocaleMiddleware` and language switching stay, so the
+package's own translations can be seen working.
+
 ### Article IX — Data-model conventions
 
 Every model field is a deliberate indexing decision. A consuming project cannot

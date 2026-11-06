@@ -2,7 +2,6 @@
 
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.utils.translation import gettext_lazy as _
 from django.views.generic import FormView
 
 
@@ -28,7 +27,7 @@ class ExampleView(FormView):
 
     def form_valid(self, form):
         """Say the form was accepted and come back to the same address."""
-        messages.success(self.request, _("Accepted. Nothing was kept."))
+        messages.success(self.request, "Accepted. Nothing was kept.")
         return redirect(self.request.path)
 
 
