@@ -138,7 +138,7 @@ class TestTomSelectMultiple:
 
         for each in tom.find_all("select", attrs={"data-tom-select": True}):
             del each["data-tom-select"]
-        for each in tom.find_all("script"):
+        for each in tom.find_all(["script", "link"]):
             each.decompose()
 
         def lines(soup):
@@ -152,8 +152,11 @@ class TestTomSelectMultiple:
 
         assert soup.find_all(attrs={"data-tom-select": True}) == []
 
-    def test_the_form_media_names_the_script_once(self):
-        assert TomSelectMultipleForm().media._js == ["mvp_forms/tomselect.js"]
+    def test_the_form_media_names_tom_select_and_the_script_once(self):
+        assert TomSelectMultipleForm().media._js == [
+            "mvp_forms/vendor/tom-select/tom-select.complete.min.js",
+            "mvp_forms/tomselect.js",
+        ]
 
     def test_the_media_of_a_form_without_the_widgets_names_no_script(self):
         assert StockMultipleForm().media._js == []
@@ -260,7 +263,7 @@ class TestTomSelect:
 
         for each in tom.find_all("select", attrs={"data-tom-select": True}):
             del each["data-tom-select"]
-        for each in tom.find_all("script"):
+        for each in tom.find_all(["script", "link"]):
             each.decompose()
 
         def lines(soup):
@@ -274,8 +277,11 @@ class TestTomSelect:
 
         assert soup.find_all(attrs={"data-tom-select": True}) == []
 
-    def test_the_form_media_names_the_script_once(self):
-        assert TomSelectSingleForm().media._js == ["mvp_forms/tomselect.js"]
+    def test_the_form_media_names_tom_select_and_the_script_once(self):
+        assert TomSelectSingleForm().media._js == [
+            "mvp_forms/vendor/tom-select/tom-select.complete.min.js",
+            "mvp_forms/tomselect.js",
+        ]
 
     def test_the_media_of_a_form_without_the_widgets_names_no_script(self):
         assert StockSingleForm().media._js == []
