@@ -22,7 +22,14 @@ DJANGO_TOMSELECT = (
 )
 HTMX = Path(__file__).parent / "data" / "htmx-2.0.10.min.js"
 README = Path(__file__).parents[1] / "README.md"
+# Marks the Tom Select a page loads itself, so a test can tell it from the
+# package's copy.
+PAGE_COPY = b"\nwindow.TomSelect.pageCopy = true;\n"
 STARTED = "(id) => document.getElementById(id).tomselect !== undefined"
+# Whether the select's control was built by the Tom Select the page holds now.
+BUILT_BY_THE_PAGES_COPY = (
+    "(id) => document.getElementById(id).tomselect instanceof window.TomSelect"
+)
 WRAPPERS = "document.querySelectorAll('.ts-wrapper').length"
 SELECTS = "document.querySelectorAll('select[data-tom-select]').length"
 ENTRIES = "Object.fromEntries(new FormData(document.getElementById('page')))"
@@ -145,7 +152,9 @@ def choices_page(page, page_errors, live_server):
     """Open a page of the test project, with Tom Select answered from files."""
     page.route(
         TOM_SELECT_URL,
-        lambda route: route.fulfill(path=TOM_SELECT, content_type="text/javascript"),
+        lambda route: route.fulfill(
+            body=TOM_SELECT.read_bytes() + PAGE_COPY, content_type="text/javascript"
+        ),
     )
     page.route(
         f"**{DJANGO_TOMSELECT_URL}",
@@ -217,12 +226,6 @@ class TestAControlForEachSelect:
         assert page.evaluate(STARTED, "id_country") is False
         assert page.evaluate(STARTED, "id_fruit") is True
 
-    def test_a_page_that_loads_django_tomselects_script_alone_starts_the_control(
-        self, choices_page
-    ):
-        page = choices_page("choices-page-django-tomselect")
-
-        assert page.evaluate(STARTED, "id_fruit") is True
 
     def test_a_page_with_a_strict_policy_starts_the_control(
         self, choices_page, page_errors
@@ -341,7 +344,59 @@ class TestTheSingleWidget:
         assert '"optional": [""]' in page.inner_text("body")
 
 
-class TestAPageWithoutTomSelect:
+class TestTomSelectComesWithTheMedia:
+    def test_a_page_with_nothing_but_the_forms_media_starts_every_control(
+        self, page, live_server, choices_page, page_errors
+    ):
+        asked = []
+        page.on("request", lambda request: asked.append(request.url))
+        page = choices_page()
+
+        names = ["id_fruit", "id_cities", "id_single", "id_optional"]
+        assert [page.evaluate(STARTED, name) for name in names] == [True] * 4
+        assert [url for url in asked if not url.startswith(live_server.url)] == []
+        assert page_errors == []
+
+    def test_a_tom_select_the_page_loaded_first_is_kept_and_starts_the_controls(
+        self, choices_page, page_errors
+    ):
+        page = choices_page("choices-page-own-first")
+
+        assert page.evaluate("window.TomSelect.pageCopy") is True
+        assert page.evaluate(BUILT_BY_THE_PAGES_COPY, "id_fruit") is True
+        assert page_errors == []
+
+    def test_a_tom_select_the_page_loads_after_the_media_starts_the_controls(
+        self, choices_page, page_errors
+    ):
+        page = choices_page("choices-page-own-after")
+
+        assert page.evaluate("window.TomSelect.pageCopy") is True
+        assert page.evaluate(BUILT_BY_THE_PAGES_COPY, "id_fruit") is True
+        assert page_errors == []
+
+    def test_django_tomselects_copy_is_kept_when_its_script_comes_first(
+        self, choices_page, page_errors
+    ):
+        page = choices_page("choices-page-django-tomselect-first")
+
+        # django-tomselect defines this plugin on its own copy of Tom Select.
+        assert page.evaluate("'dropdown_footer' in window.TomSelect.plugins") is True
+        assert page.evaluate(STARTED, "id_country") is True
+        assert page.evaluate(BUILT_BY_THE_PAGES_COPY, "id_fruit") is True
+        assert page_errors == []
+
+    def test_django_tomselects_script_after_the_media_starts_the_control(
+        self, choices_page, page_errors
+    ):
+        page = choices_page("choices-page-django-tomselect")
+
+        assert page.evaluate("'dropdown_footer' in window.TomSelect.plugins") is True
+        assert page.evaluate(BUILT_BY_THE_PAGES_COPY, "id_fruit") is True
+        assert page_errors == []
+
+
+class TestAPageWithTheScriptAndNoTomSelect:
     def test_nothing_is_started_and_the_form_submits_the_stock_values(
         self, choices_page, page_errors, script_errors
     ):
@@ -398,6 +453,9 @@ class TestTheSettings:
         items = "document.getElementById('id_clearable').tomselect.items"
         assert page.evaluate(items) == ["a"]
 
+        # Tom Select's stylesheet lets the button be pressed while the control is
+        # hovered, as it is under a pointer on its way to the button.
+        page.locator("#id_clearable + .ts-wrapper").hover()
         page.locator("#id_clearable + .ts-wrapper .clear-button").click()
 
         assert page.evaluate(items) == []
@@ -407,6 +465,9 @@ class TestTheSettings:
         items = "document.getElementById('id_clearable_single').tomselect.items"
         assert page.evaluate(items) == ["b"]
 
+        # Tom Select's stylesheet lets the button be pressed while the control is
+        # hovered, as it is under a pointer on its way to the button.
+        page.locator("#id_clearable_single + .ts-wrapper").hover()
         page.locator("#id_clearable_single + .ts-wrapper .clear-button").click()
 
         assert page.evaluate(items) == []

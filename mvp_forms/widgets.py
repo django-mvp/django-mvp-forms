@@ -3,7 +3,8 @@
 Each mask widget writes its options on the input as JSON in ``data-imask``, and
 the script named in its media hands them to IMask. A Tom Select widget writes its
 settings on the select as JSON in ``data-tom-select``, and its script starts a
-Tom Select control. The host project loads IMask and Tom Select.
+Tom Select control. The host project loads IMask. Tom Select comes with the
+widgets' media, from a copy the package ships.
 """
 
 import datetime
@@ -1036,11 +1037,22 @@ class TomSelect(forms.Select):
 
     The select is drawn as Django draws it, holding every choice of its field.
     The attribute ``data-tom-select`` marks it for the script named in the
-    media, and holds the settings stated as JSON.
+    media, and holds the settings stated as JSON. The media also names the copy
+    of Tom Select the package ships, its stylesheet and the package's own, so a
+    page that renders the form's media needs nothing else.
     """
 
     class Media:
-        js = ["mvp_forms/tomselect.js"]
+        css = {
+            "all": [
+                "mvp_forms/vendor/tom-select/tom-select.min.css",
+                "mvp_forms/tomselect.css",
+            ]
+        }
+        js = [
+            "mvp_forms/vendor/tom-select/tom-select.complete.min.js",
+            "mvp_forms/tomselect.js",
+        ]
 
     def __init__(self, attrs=None, choices=(), *, placeholder=None, clear_button=None):
         """Keep the settings that were stated.

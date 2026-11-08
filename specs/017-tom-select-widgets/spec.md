@@ -21,7 +21,8 @@ parts that FS-014 shipped.
 **Input**: A developer should be able to put a [Tom Select](https://tom-select.js.org/) control
 on an ordinary Django choice field by naming a widget, with the options written into the page
 along with the form. There is a widget for a single choice and one for several. Neither needs a
-view, a URL or django-tomselect. The host project loads Tom Select itself.
+view, a URL or django-tomselect. Tom Select comes with the widgets' media, from a copy the
+package ships ([#240](https://github.com/django-mvp/django-mvp-forms/issues/240)).
 
 ## Why
 
@@ -50,11 +51,11 @@ constitution and the decision records. Longer rationale is in `decisions.md`.
   `SelectMultiple`, which they stand in for. Recorded as FR-001.
 
 - **Q: Who supplies Tom Select?**
-  A: The host project, as it supplies IMask for the mask widgets. The package ships the widgets
-  and one script that starts a control on each select they draw. django-tomselect's own script
-  already puts Tom Select on the page, so a page that loads it needs no second copy. A page
-  without django-tomselect loads Tom Select from wherever the project keeps it. Recorded as
-  FR-016 to FR-021.
+  A: The package, decided in [#240](https://github.com/django-mvp/django-mvp-forms/issues/240).
+  It ships a pinned copy of Tom Select's complete build and its stylesheet, and the widgets'
+  media names them with the package's stylesheet and the script that starts each control, so a
+  page that renders the form's media needs nothing else. A Tom Select the page already holds,
+  django-tomselect's included, is kept. Recorded as FR-012, FR-016 to FR-021 and FR-025.
 
 - **Q: Which of Tom Select's settings can be stated from Python?**
   A: A placeholder, a clear button, a remove button on each chosen value, and the largest number
@@ -123,7 +124,7 @@ reason for the feature. This story also sets up what every other story uses: the
 options reach it, and the control drawn as one of the pack's own.
 
 **Independent Test**: Define a form with a `MultipleChoiceField` using the multiple widget, load
-Tom Select, the stylesheets and the form's media on the page, choose two values and submit. The
+the form's media on the page, choose two values and submit. The
 form can be drawn, filled in and submitted with no other story delivered.
 
 **Acceptance Scenarios**:
@@ -131,7 +132,7 @@ form can be drawn, filled in and submitted with no other story delivered.
 1. **Given** a `MultipleChoiceField` using the multiple widget, **When** its form is drawn,
    **Then** the page holds a multiple select with every choice of the field as an option, drawn
    as the pack draws any select, and marked so the script can find it.
-2. **Given** a page that loads Tom Select and the form's media, **When** it has loaded, **Then**
+2. **Given** a page that loads the form's media, **When** it has loaded, **Then**
    the select is a Tom Select control whose options are the ones written in the page, and no
    request is made for them.
 3. **Given** such a control, **When** a person types part of an option's label, **Then** the
@@ -149,9 +150,9 @@ form can be drawn, filled in and submitted with no other story delivered.
 9. **Given** a control on a page, **When** a person activates the field's label or reaches the
    field with the keyboard, **Then** the control takes focus and assistive technology announces
    the label.
-10. **Given** a page that draws the form and does not load Tom Select, **When** a person fills in
-    and submits the form, **Then** the field is a stock multiple select that works, and no error
-    is raised in the browser.
+10. **Given** a page that loads the form's media and nothing else, **When** it has loaded,
+    **Then** the field is a Tom Select control that works, and every file it needed came from the
+    site itself.
 
 ---
 
@@ -172,7 +173,7 @@ a page that loads Tom Select, and submit.
 1. **Given** a `ChoiceField` using the single widget, **When** its form is drawn, **Then** the
    page holds a select with every choice of the field as an option, drawn as the pack draws any
    select, and marked so the script can find it.
-2. **Given** a page that loads Tom Select and the form's media, **When** a person picks an
+2. **Given** a page that loads the form's media, **When** a person picks an
    option and submits the form, **Then** the field receives that one value.
 3. **Given** a control holding a value, **When** a person picks another option, **Then** the new
    value takes the place of the old one.
@@ -256,7 +257,7 @@ choose a value in the new row.
 
 **Acceptance Scenarios**:
 
-1. **Given** a page that loads Tom Select and the form's media, **When** a select of one of these
+1. **Given** a page that loads the form's media, **When** a select of one of these
    widgets is added to the page after it has loaded, by any script, **Then** a control is started
    on it.
 2. **Given** a formset using one of these widgets, **When** a row is added by copying the
@@ -293,7 +294,7 @@ and call a method of the instance it carries.
 
 **Acceptance Scenarios**:
 
-1. **Given** a page that loads Tom Select and the form's media, **When** a control is started on
+1. **Given** a page that loads the form's media, **When** a control is started on
    a select, **Then** an event is sent from that select, reaches a listener on the document, and
    carries the Tom Select instance.
 2. **Given** a select added to the page after it has loaded, **When** its control is started,
@@ -323,7 +324,7 @@ options and submit.
    widget was given.
 2. **Given** a counted widget, **When** its form is drawn, **Then** the select holds the two
    words of the control, translated by default, or the ones the developer stated.
-3. **Given** a page that loads Tom Select and the form's media, **When** a counted control has
+3. **Given** a page that loads the form's media, **When** a counted control has
    started, **Then** the box that holds its chosen values carries the two words.
 4. **Given** a counted control and the package's stylesheet, **When** it holds no value, **Then**
    it shows the first word, and **When** it holds values, **Then** it shows their number
@@ -339,13 +340,13 @@ options and submit.
 
 ### Edge Cases
 
-- The page loads the form's media and never loads Tom Select. Every field is a stock select, no
-  error is raised in the browser, and the form submits (FR-020).
-- The page loads Tom Select and not `mvp_forms/tomselect.css`. The control works and is drawn by
-  Tom Select's own stylesheet, and daisyUI cuts its dropdown off, as it does for a
-  django-tomselect control. The README says so (FR-030).
-- A page holds a control from this package and a django-tomselect control. Both work, they look
-  the same, and the page loads Tom Select once (FR-013, FR-017).
+- The page loads the script that starts the controls and not Tom Select. Every field is a stock
+  select, no error is raised in the browser, and the form submits (FR-020).
+- The page loads a Tom Select of its own before the form's media. The page's copy is kept and
+  starts the controls, and the package's copy does not run (FR-017).
+- A page holds a control from this package and a django-tomselect control. Both work and they
+  look the same, whichever of the two scripts comes first. django-tomselect's copy of Tom Select,
+  with the plugins it defines, is the one the page ends with (FR-013, FR-017).
 - A select drawn by django-tomselect's widgets is on the page. The script leaves it alone. It
   starts a control only on a select one of this package's widgets drew (FR-018).
 - A `ModelChoiceField` over a large table writes every row into the page. Nothing stops it. The
@@ -369,8 +370,6 @@ options and submit.
 
 ### Out of scope
 
-- Tom Select itself. The package does not distribute it, load it or name a CDN outside the demo
-  and the README's example.
 - Options loaded from a view as a person types. That is django-tomselect's, which the pack
   already draws.
 - Adding a value that is not among the field's choices. The field would reject it.
@@ -421,8 +420,8 @@ options and submit.
 - **FR-011**: Choices grouped as Django allows MUST be listed under their group's heading. An
   option drawn with the `disabled` attribute MUST be shown and MUST NOT be choosable.
 - **FR-012**: A control MUST be drawn by `mvp_forms/tomselect.css`, the stylesheet the package
-  already ships for Tom Select's parts. The package MUST NOT ship a second stylesheet, and no
-  widget's media may name the first. The host project loads it.
+  already ships for Tom Select's parts. The package MUST NOT ship a second stylesheet of its own.
+  Each widget's media MUST name it after Tom Select's own stylesheet.
 - **FR-013**: A control from one of these widgets and a django-tomselect control of the same
   kind, size, colour and variant MUST be drawn alike on one page.
 - **FR-014**: An option's label and value MUST be shown as text. Neither may be read as markup,
@@ -434,11 +433,14 @@ options and submit.
 #### The script
 
 - **FR-016**: The package MUST ship one script that starts a Tom Select control on every select
-  these widgets draw, using the settings the widget wrote. Each widget MUST name the script in
-  its media, so a page that renders the form's media loads it and a page with none of these
-  widgets does not.
-- **FR-017**: The script MUST use the Tom Select the page provides under the name Tom Select
-  publishes. A page that loads django-tomselect's script MUST need no other copy.
+  these widgets draw, using the settings the widget wrote. Each widget MUST name, in its media,
+  the copy of Tom Select the package ships and then the script, so a page that renders the
+  form's media gets a working control with nothing else loaded, and a page with none of these
+  widgets loads none of it.
+- **FR-017**: The script MUST use the Tom Select the page holds under the name Tom Select
+  publishes once the document has loaded. The copy the package ships MUST run only on a page
+  that has no Tom Select yet, so that a copy loaded before it, django-tomselect's included, is
+  kept with the plugins it defines.
 - **FR-018**: The script MUST start a control only on a select one of these widgets drew. It MUST
   leave every other select alone, including one drawn by django-tomselect's widgets.
 - **FR-019**: The script MUST start a control on a select added to the page after it has loaded,
@@ -462,9 +464,10 @@ options and submit.
 
 #### Constraints the package keeps
 
-- **FR-025**: Neither Tom Select nor django-tomselect may become a dependency of the package, and
-  no module of the package may import django-tomselect. Tom Select MUST NOT be distributed with
-  the package.
+- **FR-025**: django-tomselect MUST NOT become a dependency of the package, and no module of the
+  package may import it. The package MUST distribute a pinned copy of Tom Select's complete build
+  and its stylesheet as static files, with Tom Select's licence, and no Python dependency for
+  it.
 - **FR-026**: The pack's own templates MUST still need no script. A page that loads daisyUI and
   nothing else MUST draw every form that uses none of these widgets exactly as before.
 - **FR-027**: A django-tomselect control MUST be drawn and MUST behave as it did before the
@@ -475,10 +478,10 @@ options and submit.
 
 #### Shipping it
 
-- **FR-030**: The README MUST gain a section on the widgets: each widget and its settings, what
-  the host project loads and in which order, the major version of Tom Select the widgets are
-  written for, the event and what it carries, what a page without Tom Select or without the
-  stylesheet does, how a page that also uses django-tomselect is set up, which list the widgets
+- **FR-030**: The README MUST gain a section on the widgets: each widget and its settings, the files
+  the widgets' media brings and in which order, the version of Tom Select the package ships and
+  its licence, the event and what it carries, what a page that already holds a Tom Select does,
+  how a page that also uses django-tomselect behaves, which list the widgets
   suit and when to use django-tomselect, and what is not supported. Each widget MUST appear in
   the README's public surface.
 - **FR-031**: The demo MUST gain a Tom Select page in its Custom widgets group, with live
@@ -546,15 +549,15 @@ options and submit.
 
 - **SC-001**: A developer turns a stock select or multiple select into a Tom Select control by
   naming one widget on the field, and writes no view, no URL and no JavaScript.
-- **SC-002**: A project that already uses django-tomselect adds at most the form's media to a
-  page to make every one of these controls on it work. A project without it adds Tom Select, its
-  stylesheet and the package's stylesheet.
+- **SC-002**: A project adds at most the form's media to a page to make every one of these
+  controls on it work, whether or not it uses django-tomselect.
 - **SC-003**: A form whose fields use these widgets cleans to the same data as the same form
   with stock selects, for every field kind of FR-002.
 - **SC-004**: A control from this package beside a django-tomselect control of the same kind and
   size has the same height, colours and dropdown under the light and the dark theme.
-- **SC-005**: A page that loads none of Tom Select draws and submits every form that uses these
-  widgets, with no error in the browser.
+- **SC-005**: A page that loads nothing but the form's media draws a working control for every
+  field that uses these widgets and submits the form, with no error in the browser and no request
+  outside the site.
 - **SC-006**: Every form in the suite and the demo that uses none of these widgets is drawn with
   the same markup as before the feature, and the package still installs with no new dependency.
 - **SC-007**: A control works in a formset row added in the browser, in a modal and in content

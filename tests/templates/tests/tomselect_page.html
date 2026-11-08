@@ -1,8 +1,9 @@
-{% load crispy_forms_tags %}<!doctype html>
+{% load crispy_forms_tags static %}<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <title>Tom Select widgets</title>
+    {% if tomselect_url and first %}<script src="{{ tomselect_url }}"></script>{% endif %}
   </head>
   <body>
     <form id="page" method="post" action="">
@@ -13,7 +14,7 @@
       <button type="submit">Send</button>
     </form>
     <template id="line">{{ line.as_div }}</template>
-    {% for copy in copies %}{{ form.media }}{% endfor %}
-    {% if tomselect_url %}<script src="{{ tomselect_url }}"></script>{% endif %}
+    {% if script_only %}<script src="{% static 'mvp_forms/tomselect.js' %}"></script>{% else %}{% for copy in copies %}{{ form.media }}{% endfor %}{% endif %}
+    {% if tomselect_url and not first %}<script src="{{ tomselect_url }}"></script>{% endif %}
   </body>
 </html>

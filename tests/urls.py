@@ -28,11 +28,11 @@ from tests.forms import (
 # a copy under tests/data/ and nothing is fetched.
 IMASK_ORIGIN = "https://cdn.jsdelivr.net"
 IMASK_URL = f"{IMASK_ORIGIN}/npm/imask@7.6.1/dist/imask.min.js"
-# Where the browser tests' pages ask for Tom Select, and for django-tomselect's
-# script, which carries its own copy. The tests answer both from files.
-TOM_SELECT_ORIGIN = "https://cdn.jsdelivr.net"
+# Where a browser test's page asks for a Tom Select of its own, as a project that
+# loads one already would, and for django-tomselect's script, which carries its
+# own copy. The tests answer the first from a file under tests/data/.
 TOM_SELECT_URL = (
-    f"{TOM_SELECT_ORIGIN}/npm/tom-select@2.5.2/dist/js/tom-select.complete.min.js"
+    "https://cdn.jsdelivr.net/npm/tom-select@2.5.2/dist/js/tom-select.complete.min.js"
 )
 DJANGO_TOMSELECT_URL = "/static/django_tomselect/js/django-tomselect.min.js"
 # Where the boosted pages ask for htmx. The tests answer it from a file.
@@ -145,7 +145,11 @@ class ChoicesPage(TemplateView):
     """A page of Tom Select widgets, which answers a post with the entries it got."""
 
     template_name = "tests/tomselect_page.html"
-    tomselect_url = TOM_SELECT_URL
+    # A Tom Select the page loads itself, after the form's media or before it.
+    tomselect_url = None
+    first = False
+    # Only the script that starts the controls, and not the rest of the media.
+    script_only = False
     copies = 1
     policy = ""
     foreign = False
@@ -159,6 +163,8 @@ class ChoicesPage(TemplateView):
             line=TomSelectLineFormSet().empty_form,
             dialog=TomSelectDialogForm(),
             tomselect_url=self.tomselect_url,
+            first=self.first,
+            script_only=self.script_only,
             copies=range(self.copies),
             refused=self.refused,
             **kwargs,
@@ -185,7 +191,6 @@ class UnlabelledPage(TemplateView):
         """Draw the form's selects, leaving out django-tomselect's."""
         return super().get_context_data(
             form=UnlabelledSelectsForm(layout=["plain", "single", "counted"]),
-            tomselect_url=TOM_SELECT_URL,
             **kwargs,
         )
 
@@ -202,7 +207,6 @@ class BoostedPage(TemplateView):
             form=TomSelectTagsForm(),
             other=self.other,
             htmx_url=HTMX_URL,
-            tomselect_url=TOM_SELECT_URL,
             **kwargs,
         )
 
@@ -242,8 +246,18 @@ urlpatterns = [
     ),
     path(
         "choices-page/without-tom-select/",
-        ChoicesPage.as_view(tomselect_url=None),
+        ChoicesPage.as_view(script_only=True),
         name="choices-page-bare",
+    ),
+    path(
+        "choices-page/own-tom-select-first/",
+        ChoicesPage.as_view(tomselect_url=TOM_SELECT_URL, first=True),
+        name="choices-page-own-first",
+    ),
+    path(
+        "choices-page/own-tom-select-after/",
+        ChoicesPage.as_view(tomselect_url=TOM_SELECT_URL),
+        name="choices-page-own-after",
     ),
     path(
         "choices-page/django-tomselect/",
@@ -251,8 +265,15 @@ urlpatterns = [
         name="choices-page-django-tomselect",
     ),
     path(
+        "choices-page/django-tomselect-first/",
+        ChoicesPage.as_view(
+            tomselect_url=DJANGO_TOMSELECT_URL, first=True, foreign=True
+        ),
+        name="choices-page-django-tomselect-first",
+    ),
+    path(
         "choices-page/strict-policy/",
-        ChoicesPage.as_view(policy=f"script-src 'self' {TOM_SELECT_ORIGIN}"),
+        ChoicesPage.as_view(policy="script-src 'self'"),
         name="choices-page-strict",
     ),
     path(
