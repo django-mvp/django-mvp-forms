@@ -193,12 +193,20 @@ class names of its own, where no template of the pack's can reach them. For
 such a package, and for no other reason, this package may ship one optional
 stylesheet. It styles that package's controls and nothing else, takes every
 colour from the daisyUI theme, and is loaded by the host project, never by the
-pack. Each supported package has a stylesheet of its own. There is never one
-stylesheet for several packages.
+pack's templates. Each supported package has a stylesheet of its own. There is
+never one stylesheet for several packages.
 
 The stylesheet shipped for django-tomselect styles the controls Tom Select
 builds. The package's own Tom Select widgets build the same controls and are
 drawn by that stylesheet. They get no stylesheet of their own.
+
+The package's Tom Select widgets bring Tom Select with them. The package
+ships a pinned copy of Tom Select and of Tom Select's own stylesheet, with its
+licence, as static files and never as a Python dependency. The widgets' media
+names them, and the stylesheet for Tom Select controls after them, so a page
+that renders the form's media needs nothing else. A copy of Tom Select the page
+already holds is kept. Any other library a widget needs is loaded by the host
+project.
 
 Where django-crispy-forms documents how a layout object behaves, the pack
 matches it. A host project moving from another pack should find the same
@@ -235,4 +243,4 @@ Read at planning and at review; applies to every change.
 
 ---
 
-**Version**: 2.3.0 | **Ratified**: 2026-10-03 | **Last Amended**: 2026-10-12
+**Version**: 2.4.0 | **Ratified**: 2026-10-03 | **Last Amended**: 2026-11-08
