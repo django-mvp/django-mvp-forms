@@ -226,7 +226,6 @@ class TestAControlForEachSelect:
         assert page.evaluate(STARTED, "id_country") is False
         assert page.evaluate(STARTED, "id_fruit") is True
 
-
     def test_a_page_with_a_strict_policy_starts_the_control(
         self, choices_page, page_errors
     ):
