@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.9.0] - 2026-11-08
+
 ### Changed
 
 - The `TomSelect` and `TomSelectMultiple` widgets bring Tom Select with them. The package now ships Tom Select 2.7.0's complete build and its stylesheet, with Tom Select's licence, under `mvp_forms/vendor/tom-select/`, and the widgets' media names them, `mvp_forms/tomselect.css` and the script that starts each control. A page that renders the form's media gets a working control with nothing else loaded, and a django-mvp page renders it for every form. Before, the project had to load Tom Select itself, and a page that did not showed a plain select. You can remove the `<script>` and `<link>` you added for Tom Select. A page that loads its own Tom Select before the form's media keeps it, and a page that also draws a django-tomselect field keeps django-tomselect's copy with its plugins, whichever of the two scripts comes first.
