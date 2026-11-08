@@ -1496,6 +1496,19 @@ class TestPartialDateSelect(ThreePartWidget):
 
 
 FRUIT = [("a", "Apple"), ("b", "Banana"), ("c", "Cherry")]
+# What a Tom Select widget's media names: the copy of Tom Select the package
+# ships before the script that starts it, and Tom Select's stylesheet before
+# the package's.
+TOM_SELECT_JS = [
+    "mvp_forms/vendor/tom-select/tom-select.complete.min.js",
+    "mvp_forms/tomselect.js",
+]
+TOM_SELECT_CSS = {
+    "all": [
+        "mvp_forms/vendor/tom-select/tom-select.min.css",
+        "mvp_forms/tomselect.css",
+    ]
+}
 
 
 def select_of(widget, value=None):
@@ -1522,11 +1535,11 @@ class TestTomSelectMultiple:
 
         assert json.loads(select["data-tom-select"]) == {}
 
-    def test_its_media_names_the_script_and_no_stylesheet(self):
+    def test_its_media_names_tom_select_before_the_script(self):
         media = TomSelectMultiple().media
 
-        assert media._js == ["mvp_forms/tomselect.js"]
-        assert media._css == {}
+        assert media._js == TOM_SELECT_JS
+        assert media._css == TOM_SELECT_CSS
 
     def test_the_developers_attrs_are_kept_beside_the_attribute(self):
         widget = TomSelectMultiple(
@@ -1546,7 +1559,7 @@ class TestTomSelectMultiple:
         select = select_of(Teams(choices=FRUIT))
 
         assert json.loads(select["data-tom-select"]) == {}
-        assert Teams().media._js == ["mvp_forms/tomselect.js"]
+        assert Teams().media._js == TOM_SELECT_JS
 
     def test_grouped_choices_are_drawn_as_option_groups(self):
         widget = TomSelectMultiple(
@@ -1657,11 +1670,11 @@ class TestTomSelect:
 
         assert json.loads(select["data-tom-select"]) == {}
 
-    def test_its_media_names_the_script_and_no_stylesheet(self):
+    def test_its_media_names_tom_select_before_the_script(self):
         media = TomSelect().media
 
-        assert media._js == ["mvp_forms/tomselect.js"]
-        assert media._css == {}
+        assert media._js == TOM_SELECT_JS
+        assert media._css == TOM_SELECT_CSS
 
     def test_the_developers_attrs_are_kept_beside_the_attribute(self):
         widget = TomSelect(
@@ -1681,7 +1694,7 @@ class TestTomSelect:
         select = select_of(Teams(choices=FRUIT))
 
         assert json.loads(select["data-tom-select"]) == {}
-        assert Teams().media._js == ["mvp_forms/tomselect.js"]
+        assert Teams().media._js == TOM_SELECT_JS
 
     def test_grouped_choices_are_drawn_as_option_groups(self):
         widget = TomSelect(

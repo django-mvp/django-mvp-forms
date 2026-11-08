@@ -33,9 +33,9 @@ the swap, so it looks and works as it does on a page loaded in full.
 | `none_text` | `TomSelectMultiple` | What a counted control shows while nothing is chosen. |
 | `count_text` | `TomSelectMultiple` | What a counted control shows after the count. |
 
-The page loads Tom Select's complete build and the package's stylesheet
-`mvp_forms/tomselect.css`. The widget brings its own small script with the
-form's media.
+The page loads nothing for these controls. The form's media brings Tom Select,
+which the package ships, its stylesheet, the package's stylesheet
+`mvp_forms/tomselect.css` and the script that starts each control.
 
 ## A count in place of the chosen values
 

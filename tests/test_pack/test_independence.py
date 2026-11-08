@@ -1147,9 +1147,7 @@ class TestDistributedFiles:
     def test_no_module_imports_django_mvp_or_cotton(self, path):
         assert not imported_modules(path) & FORBIDDEN_MODULES
 
-    def test_the_package_static_directory_holds_only_the_stylesheet_and_the_scripts(
-        self,
-    ):
+    def test_the_package_static_directory_holds_its_own_files_and_tom_select(self):
         files = sorted(
             path.relative_to(PACKAGE / "static").as_posix()
             for path in (PACKAGE / "static").rglob("*")
@@ -1162,6 +1160,10 @@ class TestDistributedFiles:
             "mvp_forms/partial-date.js",
             "mvp_forms/tomselect.css",
             "mvp_forms/tomselect.js",
+            "mvp_forms/vendor/tom-select/LICENSE",
+            "mvp_forms/vendor/tom-select/README.md",
+            "mvp_forms/vendor/tom-select/tom-select.complete.min.js",
+            "mvp_forms/vendor/tom-select/tom-select.min.css",
         ]
         assert [path for path in PACKAGE.rglob("static") if path.is_dir()] == [
             PACKAGE / "static"

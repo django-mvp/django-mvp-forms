@@ -57,7 +57,7 @@ INSTALLED_APPS = [
 ]
 ```
 
-The host project supplies daisyUI itself. The pack's templates are markup and need no stylesheet of ours; the package's one stylesheet, for django-tomselect's controls, is optional and is described under [django-tomselect](https://github.com/django-mvp/django-mvp-forms#django-tomselect). Pages that draw these forms must load daisyUI 5, from the minor release named in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions) upward. Its CDN build needs no build step, so daisyUI's own CDN install in the page's `<head>` is enough:
+The host project supplies daisyUI itself. The pack's templates are markup and need no stylesheet of ours; the package's one stylesheet, for Tom Select controls, comes with the media of the package's own Tom Select widgets and is optional for django-tomselect's, as described under [django-tomselect](https://github.com/django-mvp/django-mvp-forms#django-tomselect). Pages that draw these forms must load daisyUI 5, from the minor release named in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions) upward. Its CDN build needs no build step, so daisyUI's own CDN install in the page's `<head>` is enough:
 
 ```html
 <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
@@ -1433,7 +1433,7 @@ This is the public surface:
 - `mvp_forms.widgets.TomSelectMultiple`, for a field where a person picks several values
 - the attribute `data-tom-select`, which holds the settings the script reads as JSON on the widget's `<select>`
 - the attributes `data-none-text` and `data-count-text`, which hold the two words of a [counted control](https://github.com/django-mvp/django-mvp-forms#a-counted-control) on its `<select>`, and which the script copies to the box Tom Select builds to hold the chosen values
-- the script `mvp_forms/tomselect.js`, which the widget names in its media
+- the script `mvp_forms/tomselect.js` and the copy of Tom Select the package ships, which the widget names in its media with both stylesheets
 - the event `mvp-forms:tomselect`, which the script sends from each select once its control has started, with the Tom Select instance in `event.detail.tomselect`
 
 ```python
@@ -1502,7 +1502,7 @@ The settings arrive in `data-tom-select` under Tom Select's own names. The examp
 
 A widget refuses a setting that cannot be right when the form class is defined, so the mistake shows at import and not on a page. A `ValueError` names the argument for a placeholder, a `none_text` or a `count_text` that is not text or is empty, for `clear_button`, `remove_button` or `counted` that is not `True` or `False`, and for a `max_items` that is a boolean, is not a whole number or is below one. It also names `none_text` or `count_text` given to a widget that is not counted, and `remove_button` on a counted widget, whose values are not shown. `TomSelect` has none of the settings only `TomSelectMultiple` has, and given one it raises `TypeError`.
 
-Tom Select does not search a single control by typing while it holds a value, so a person clears it or clicks an option, and the clear button makes that visible. `max_items=1` makes Tom Select draw the control as a single one while the form still receives a list. The two buttons are Tom Select plugins, so the page needs the complete build or django-tomselect's script, as [What to load](https://github.com/django-mvp/django-mvp-forms#what-to-load) says.
+Tom Select does not search a single control by typing while it holds a value, so a person clears it or clicks an option, and the clear button makes that visible. `max_items=1` makes Tom Select draw the control as a single one while the form still receives a list. The two buttons are Tom Select plugins, which the copy of Tom Select the package ships carries, as [What to load](https://github.com/django-mvp/django-mvp-forms#what-to-load) says.
 
 #### A counted control
 
@@ -1571,30 +1571,30 @@ The same override works on `TomSelect`. The attribute is for the browser. The fi
 
 #### What to load
 
-Tom Select is not a dependency of the package and the package does not distribute it. The widgets are written for Tom Select 2, and the package's tests run against 2.5.2. Three things have to be on a page that draws one of them: Tom Select, the pack's stylesheet and the form's media.
+The form's media brings everything a control needs: a copy of [Tom Select](https://tom-select.js.org/) 2.7.0 that the package ships, Tom Select's own stylesheet, the pack's stylesheet `mvp_forms/tomselect.css`, and the script that starts each control. A page that renders the form's media needs nothing else, and a django-mvp page renders it for every form it draws.
 
 ```django
-{% load static %}
-<link rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/tom-select@2.5.2/dist/css/tom-select.default.min.css"
-      integrity="sha384-ysUSQKRs8NxL3MLtPxj9HZ7KmGXzQJwr8rfFRR8iT5A26QF3slDzsChy8nZ7Q1W2"
-      crossorigin="anonymous">
-<link rel="stylesheet" href="{% static 'mvp_forms/tomselect.css' %}">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.5.2/dist/js/tom-select.complete.min.js"
-        integrity="sha384-zpRmcxaWZMsftDGxJwwTBxLTwPZrI4VJXe2bYlo01xaeBAdQjHP/nPlVH83BCW0U"
-        crossorigin="anonymous"></script>
 {{ form.media }}
 ```
 
-- Load Tom Select's complete build, which carries the plugins the script can name. The base build does not.
-- A page that already loads django-tomselect's script needs no other copy of Tom Select, because that script puts Tom Select on the page under the name Tom Select publishes. Load its stylesheets and `mvp_forms/tomselect.css` as [django-tomselect](https://github.com/django-mvp/django-mvp-forms#django-tomselect) describes, and one stylesheet draws both kinds of control.
-- `{% crispy form %}` writes the form's media inside the form. `{{ form|crispy }}`, `{{ field|as_crispy_field }}` and Django's own form rendering write none, so render `{{ form.media }}` in the page template, or load `{% static 'mvp_forms/tomselect.js' %}` yourself.
-- The script waits for the document to finish loading before it looks for Tom Select, so it may be written before or after Tom Select, as long as Tom Select is loaded by then. A Tom Select loaded later than that, with `async` for example, is not found. A project that bundles Tom Select exposes it as `window.TomSelect`, and the widget works as it does with a copy from a CDN.
-- The widget names no stylesheet. The control is drawn by `mvp_forms/tomselect.css`, which your page loads. Without it the control still works and is drawn by Tom Select's own stylesheet, and daisyUI cuts its dropdown off, as it does for a django-tomselect control.
-- The script is a file and the widget writes no inline script and no inline handler. A page whose Content Security Policy allows scripts from its own origin and from the origin serving Tom Select, and forbids inline script, starts every control.
-- A project that uses none of these widgets never loads the script. The pack's own templates still need no script.
+The widget's media names these files, in this order:
 
-A page that does not load Tom Select draws every select as a stock select. Nothing is started, no error is raised in the browser, and the form submits.
+| Kind | File |
+|---|---|
+| Stylesheet | `mvp_forms/vendor/tom-select/tom-select.min.css` |
+| Stylesheet | `mvp_forms/tomselect.css` |
+| Script | `mvp_forms/vendor/tom-select/tom-select.complete.min.js` |
+| Script | `mvp_forms/tomselect.js` |
+
+- The copy is Tom Select's complete build, which registers every plugin the widgets can name. Its licence, the Apache License 2.0, is beside it in `mvp_forms/vendor/tom-select/`. Tom Select is a static file inside the package, not a dependency to install.
+- The copy runs only on a page that has no Tom Select yet. A page that loads its own Tom Select before the form's media keeps it, and the widgets' controls are started with it. That copy must be a complete build, or one that registers the plugins the widgets name.
+- A page that also draws a django-tomselect field loads Tom Select twice and nothing breaks. django-tomselect's script carries its own copy, with plugins of its own. When its script comes first, the package's copy does not run and django-tomselect's is kept. When it comes after, it replaces the package's copy before any control has started. Either way both kinds of control start, and one stylesheet draws both.
+- `{% crispy form %}` writes the form's media inside the form. `{{ form|crispy }}`, `{{ field|as_crispy_field }}` and Django's own form rendering write none, so render `{{ form.media }}` in the page template.
+- The script waits for the document to finish loading before it starts the controls, with whichever Tom Select the page holds by then. A Tom Select the page loads later than that, with `async` for example, is not used.
+- The script is a file and the widget writes no inline script and no inline handler. A page whose Content Security Policy allows scripts from its own origin, and forbids inline script, starts every control.
+- A project that uses none of these widgets never loads any of these files. The pack's own templates still need no script.
+
+A page that renders the script and not Tom Select, by loading `{% static 'mvp_forms/tomselect.js' %}` alone, draws every select as a stock select. Nothing is started, no error is raised in the browser, and the form submits.
 
 #### What the script does
 
@@ -1604,7 +1604,7 @@ It then watches the document for elements added afterwards. A select that your o
 
 It destroys the control of a select that leaves the page, alone or inside an element that is removed, as a form swapped out by htmx is. Tom Select keeps listeners on the document and the window for each control until it is destroyed, so a page that swaps forms in and out would otherwise keep the listeners of every control it had shown. The script looks once each batch of changes has been made, so a select moved within the page is back in it by then and keeps its control. A select that is put back after it was removed gets a new control.
 
-The attribute holds a JSON object, and a widget that states no setting writes `{}`. The script reads three names from it and hands them to Tom Select: `placeholder`, `maxItems` and `plugins`. It also hands Tom Select `maxOptions: null`, so that every option of the field can be found by typing however many there are. Nothing else in the attribute is passed on. A plugin named in `plugins` has to be in the Tom Select the page loads. The complete build and django-tomselect's script carry `clear_button`, `remove_button`, `checkbox_options` and `dropdown_input`, and Tom Select's base build does not. The script also copies `data-none-text` and `data-count-text`, where the select has them, to the box that holds the chosen values.
+The attribute holds a JSON object, and a widget that states no setting writes `{}`. The script reads three names from it and hands them to Tom Select: `placeholder`, `maxItems` and `plugins`. It also hands Tom Select `maxOptions: null`, so that every option of the field can be found by typing however many there are. Nothing else in the attribute is passed on. A plugin named in `plugins` has to be in the Tom Select the page holds. The copy the package ships, Tom Select's complete build, and django-tomselect's script carry `clear_button`, `remove_button`, `checkbox_options` and `dropdown_input`, and Tom Select's base build does not. The script also copies `data-none-text` and `data-count-text`, where the select has them, to the box that holds the chosen values.
 
 Tom Select moves the label's `for` to the control's own input, and the script copies the select's `aria-describedby` to that input, so the label, the help text and the errors name the element that takes focus. A select that Tom Select refuses is left as it is, the error is reported in the browser's console, and the script goes on to the next select.
 
@@ -1657,7 +1657,6 @@ Every option of the field is written into the page each time the form is drawn. 
 - Adding a value that is not among the field's choices. The field would reject it.
 - Options loaded from a view. That is django-tomselect's.
 - A Tom Select setting other than `placeholder`, `maxItems` and `plugins`, including every setting that is a JavaScript function. The event `mvp-forms:tomselect` is the way to reach those.
-- Tom Select itself. The package does not distribute it or name a CDN outside this README and the demo.
 
 ### django-countries
 

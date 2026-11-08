@@ -19,19 +19,19 @@ duplicate them. Two widgets follow Django's `Select` and `SelectMultiple`, whose
 
 **ADR:** none — two widgets beside Django's own is the ordinary shape, nobody would ask why
 
-## D2. The host project loads Tom Select
+## D2. The package ships Tom Select
 
-**Chosen:** the package ships the widgets and one script. Tom Select comes from the page.
+**Chosen:** the package ships the widgets, one script, and a pinned copy of Tom Select's complete
+build and its stylesheet with Tom Select's licence. The widgets' media names all of them, with the
+package's stylesheet, and the copy runs only on a page that has no Tom Select yet. Decided by the
+maintainer in [#240](https://github.com/django-mvp/django-mvp-forms/issues/240).
 
-**Why:** the mask widgets already work this way with IMask (ADR 0045), and a package that
-distributed Tom Select would have to follow its releases. django-tomselect's script puts Tom
-Select on the page under the name Tom Select publishes, so a project that uses both loads it
-once.
-
-**Confirmed by the maintainer** as to who loads it. That django-tomselect's copy can serve both
-was checked against django-tomselect 2026.6.2 and is to be proved again at planning. If a later
-release stops exposing it, such a page loads Tom Select a second time and FR-017's second sentence
-is withdrawn.
+**Why:** django-mvp depends on this package, and a django-mvp page gets every other asset its
+components need from the packages it installs. A widget that worked only after the project found,
+pinned and loaded Tom Select was the exception, and a page without it showed a plain select. The
+complete build is the one that registers every plugin the widgets name. django-tomselect's script
+defines plugins of its own on its copy, so the package's copy keeps a copy the page already holds
+rather than replacing it.
 
 **ADR:** docs/adr/0054-the-tom-select-widgets-bring-one-script-that-starts-controls.md
 

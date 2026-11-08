@@ -2,10 +2,12 @@
 // the page as it loads and on each select added to it afterwards, and destroys
 // the control of each select that leaves the page. A select htmx swaps in is
 // started once the swap has settled. The widget writes its settings on the
-// select as JSON in data-tom-select. The page loads Tom Select itself, and on a
-// page without it this script does nothing and each select stays a stock
-// select. Once a control has started, the select sends mvp-forms:tomselect,
-// which carries the Tom Select instance.
+// select as JSON in data-tom-select. The widget's media names the copy of Tom
+// Select the package ships before this script. The control is started with
+// whichever Tom Select the page holds once it has loaded, and on a page with
+// none this script does nothing and each select stays a stock select. Once a
+// control has started, the select sends mvp-forms:tomselect, which carries the
+// Tom Select instance.
 (function () {
   "use strict";
 

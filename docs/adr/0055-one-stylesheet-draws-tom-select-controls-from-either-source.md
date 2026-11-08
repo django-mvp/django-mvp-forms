@@ -10,8 +10,10 @@ own widgets get no stylesheet of their own.
 
 Everything else ADR 0042 decided still holds:
 
-- The host project loads the stylesheet. No pack template, no template tag and no widget's
-  media names it.
+- No pack template and no template tag names the stylesheet. The media of the package's own
+  Tom Select widgets names it, after Tom Select's own stylesheet, which the package ships with
+  Tom Select ([#240](https://github.com/django-mvp/django-mvp-forms/issues/240)). A page that
+  draws only django-tomselect's controls loads it itself.
 - It applies only to Tom Select controls, their dropdown, the element django-tomselect
   announces a choice in, and a box that holds an open control and would otherwise cut its
   dropdown off. A page with no control is drawn as before.
@@ -32,8 +34,9 @@ against the parts Tom Select builds, and the package's own widgets start Tom Sel
 ordinary select, so they build the same parts. A second file would repeat every rule and the two
 would drift apart. A page that used both kinds of control would load both.
 
-What ADR 0042 protected is unchanged. A project loads one file when it uses a Tom Select
-control and none when it does not.
+What ADR 0042 protected is unchanged. A page holds the file when it has a Tom Select control
+and never when it has none. A control from the package's own widgets is complete only with the
+file, so their media brings it, as it brings Tom Select.
 
 One file is also what makes the two kinds of control look the same on a page, which is the
 reason for offering the widgets beside django-tomselect's fields.

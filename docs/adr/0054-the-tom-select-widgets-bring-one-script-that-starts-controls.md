@@ -1,17 +1,26 @@
-# ADR 0054 — The Tom Select widgets bring one script, and it starts the controls
+# ADR 0054 — The Tom Select widgets bring Tom Select and one script that starts the controls
 
 **Status:** accepted
 
 ## Decision
 
 `TomSelect` and `TomSelectMultiple` in `mvp_forms.widgets` draw Django's own select and write
-their settings on it as JSON in `data-tom-select`. They name one script,
+their settings on it as JSON in `data-tom-select`. They name one script of the package's own,
 `mvp_forms/tomselect.js`, in their media. Nothing else in the package loads it, and the pack's
 own templates still need no script.
 
-The host project loads Tom Select. The script uses whatever the page provides as
-`window.TomSelect`, which django-tomselect's own script also sets, and does nothing on a page
-without it.
+The package ships Tom Select ([#240](https://github.com/django-mvp/django-mvp-forms/issues/240)).
+A pinned copy of Tom Select's complete build and its stylesheet, with Tom Select's licence, sits
+under `mvp_forms/static/mvp_forms/vendor/tom-select/`. The widgets' media names the copy before
+`mvp_forms/tomselect.js`, and Tom Select's stylesheet before the package's, so a page that
+renders the form's media needs nothing else. The copy is the complete build because it is the
+one that registers every plugin the widgets name: `clear_button`, `remove_button`,
+`checkbox_options` and `dropdown_input`.
+
+The copy is wrapped so that it runs only when the page has no `window.TomSelect` yet. The script
+uses whatever the page holds as `window.TomSelect` once the document has loaded, which may be
+the package's copy, one the page loaded itself or django-tomselect's, and does nothing on a page
+with none.
 
 The script follows [ADR 0045](0045-mask-widgets-bring-one-script-that-acts-once.md): it is a
 file, it sets a flag on `window` so that only its first copy acts, and it waits for the document
@@ -30,7 +39,8 @@ to finish loading. Beyond that it:
 - sends `mvp-forms:tomselect` from the select, with the instance in `event.detail.tomselect`
 
 It is tested in Chrome, as [ADR 0046](0046-the-mask-script-is-tested-in-a-browser.md) decided
-for the mask script, against a copy of Tom Select kept under `tests/data/`.
+for the mask script, against the copy the package ships, and against an older copy kept under
+`tests/data/` for a page that loads its own Tom Select.
 
 ## Why
 
@@ -39,8 +49,18 @@ over a short list known when the form is built had to write an endpoint for each
 already writes such a field's options into the page, and Tom Select reads them from the select,
 so a widget needs only to mark the select and a script to start the control.
 
-Distributing Tom Select would mean following its releases, and a project that uses
-django-tomselect would load it twice.
+django-mvp depends on this package and every other asset a django-mvp page needs arrives with
+the packages it installs. A widget whose control works only after the project finds, pins and
+loads a library is the one exception, and a page that forgot it showed a plain select with no
+error. Shipping the library costs following Tom Select's releases, which is a version bump of
+two static files.
+
+django-tomselect's script carries its own Tom Select and defines plugins of its own on it,
+`dropdown_footer` among them, before setting `window.TomSelect`. A stock copy loaded after it
+would replace that class, and every django-tomselect control started afterwards would fail for a
+missing plugin. The guard keeps whichever copy arrived first. When django-tomselect's script
+comes after the package's copy, it replaces it before any control has started, which is
+harmless.
 
 Tom Select offers at most 50 options unless told otherwise. A field with more could not show
 them all, so the limit is removed.
@@ -67,6 +87,6 @@ every removal as the end of the control.
 
 ## Revisit if
 
-Tom Select stops reading options, groups or the `disabled` attribute from a select, or
-django-tomselect stops exposing Tom Select to the page, which would have a page that uses both
-load it twice.
+Tom Select stops reading options, groups or the `disabled` attribute from a select, or Tom
+Select gains a way to load a second copy without replacing the first, which would make the
+guard unnecessary.
