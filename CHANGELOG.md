@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `mvp_forms.widgets.TimeZoneSelect` draws django-timezone-field's `TimeZoneFormField` as a searchable Tom Select control with the timezones listed under their regions: `TimeZoneFormField(widget=TimeZoneSelect)`. A name with no region, such as `UTC`, is listed under "Other", last. The field keeps its own choices, validation and cleaning. The widget takes `TomSelect`'s settings and brings Tom Select with its media. Install django-timezone-field with the new `timezone` extra, `django-mvp-forms[timezone]`. No module of the package imports it, so a project without it is unaffected.
+
 ## [v0.9.0] - 2026-11-08
 
 ### Changed

@@ -7,6 +7,7 @@ Tom Select control. The host project loads IMask. Tom Select comes with the
 widgets' media, from a copy the package ships.
 """
 
+import copy
 import datetime
 import json
 import re
@@ -1184,6 +1185,46 @@ class TomSelectMultiple(TomSelect, forms.SelectMultiple):
             attrs["data-none-text"] = str(self.none_text)
             attrs["data-count-text"] = str(self.count_text)
         return attrs
+
+
+class TimeZoneSelect(TomSelect):
+    """A Tom Select control for a timezone, its options grouped by region.
+
+    Made for django-timezone-field's ``TimeZoneFormField``, which keeps its
+    choices, validation and cleaning. It draws any single choice field whose
+    values are IANA names: each option goes under a heading for the part of its
+    value before the first slash, ``Europe`` for ``Europe/Berlin``, with the
+    regions in alphabetical order. A name with no region, such as ``UTC``, goes
+    under "Other", last. The empty choice stays first, outside every group, and
+    each option keeps the label its field gave it. Choices already written in
+    groups are drawn as they are.
+    """
+
+    def optgroups(self, name, value, attrs=None):
+        """Return the option groups of the choices grouped by region."""
+        grouped = copy.copy(self)
+        grouped.choices = self.choices_by_region()
+        return super(TimeZoneSelect, grouped).optgroups(name, value, attrs)
+
+    def choices_by_region(self):
+        """Return the widget's choices with each timezone under its region."""
+        choices = list(self.choices)
+        if any(isinstance(label, (list, tuple)) for _value, label in choices):
+            return choices
+        ungrouped, regions, other = [], {}, []
+        for value, label in choices:
+            timezone = "" if value is None else str(value)
+            if not timezone:
+                ungrouped.append((value, label))
+            elif "/" in timezone:
+                region = timezone.split("/", 1)[0]
+                regions.setdefault(region, []).append((value, label))
+            else:
+                other.append((value, label))
+        grouped = [*ungrouped, *sorted(regions.items())]
+        if other:
+            grouped.append((_("Other"), other))
+        return grouped
 
 
 # daisyUI's masks, written out so that a host project's Tailwind build finds

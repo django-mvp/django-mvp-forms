@@ -32,6 +32,11 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 
+[project.optional-dependencies]
+# The release of django-timezone-field that TimeZoneSelect is tested against.
+# No module here imports it: the widget draws the choices of its form field.
+timezone = ["django-timezone-field>=7.2"]
+
 [project.urls]
 Homepage = "https://github.com/django-mvp/django-mvp-forms"
 Repository = "https://github.com/django-mvp/django-mvp-forms"
@@ -68,6 +73,7 @@ dev = [
     "sphinx>=8.1",
     "myst-parser>=4.0",
     "pillow>=13.0.0",
+    "django-timezone-field>=7.2.2",
 ]
 
 [tool.uv.sources]
@@ -154,7 +160,11 @@ extend_exclude = ["tests/", "demo/", "docs/"]
 # django-crispy-forms is a real runtime dependency that no Python module here
 # imports yet. The dependency is at the template level: the pack's templates
 # are loaded by crispy-forms' template tags and render nothing without it.
-DEP002 = ["django-crispy-forms"]
+#
+# django-timezone-field is an extra that states the release TimeZoneSelect is
+# tested against. The widget draws its form field's choices and never imports
+# it, so a project without it is unaffected.
+DEP002 = ["django-crispy-forms", "django-timezone-field"]
 
 [tool.forge.conformance]
 # None has a module under mvp_forms/ to mirror: the first covers the app

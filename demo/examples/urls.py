@@ -89,6 +89,7 @@ from demo.examples.third_party.pint import (
     QuantitiesForm,
     SizedForm,
 )
+from demo.examples.third_party.timezone import MeetingForm
 from demo.examples.third_party.tomselect import ResearchForm
 from demo.examples.views import (
     ExampleView,
@@ -309,4 +310,5 @@ urlpatterns = [
     path("pint-sizes/", ExampleView.as_view(form_class=SizedForm)),
     path("pint-disabled/", ExampleView.as_view(form_class=DisabledForm)),
     path("pint-named-unit/", ExampleView.as_view(form_class=NamedUnitForm)),
+    path("timezone/", ExampleView.as_view(form_class=MeetingForm)),
 ]

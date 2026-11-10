@@ -13,7 +13,7 @@
 
 A daisyUI template pack for django-crispy-forms, with form fields and widgets for django-mvp projects.
 
-> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table, and it draws the select controls of django-tomselect and the fields of django-countries and django-pint. Nothing is published to PyPI. The versions of Django, django-crispy-forms and daisyUI it supports are in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions).
+> **Status: pre-release.** The template pack draws text-like fields, choices, booleans, file inputs and hidden inputs, every layout object django-crispy-forms ships, including the nine that decorate a field and `TabHolder`, `Tab`, `Accordion`, `AccordionGroup`, `Modal` and `Alert`, and formsets drawn stacked or as a table, and it draws the select controls of django-tomselect and the fields of django-countries, django-pint and django-timezone-field. The versions of Django, django-crispy-forms and daisyUI it supports are in [Supported versions](https://github.com/django-mvp/django-mvp-forms#supported-versions).
 
 ## Why
 
@@ -41,11 +41,11 @@ When two reasonable designs conflict, stock daisyUI markup wins over custom styl
 
 ## Installation
 
-Nothing is published to PyPI yet, so install it from GitHub:
-
 ```bash
-pip install git+https://github.com/django-mvp/django-mvp-forms
+pip install django-mvp-forms
 ```
+
+The `timezone` extra adds [django-timezone-field](https://github.com/django-mvp/django-mvp-forms#django-timezone-field) at the release the package is tested against: `pip install "django-mvp-forms[timezone]"`.
 
 Then add it to `INSTALLED_APPS` alongside crispy-forms:
 
@@ -1431,6 +1431,7 @@ This is the public surface:
 
 - `mvp_forms.widgets.TomSelect`, for a field where a person picks one value
 - `mvp_forms.widgets.TomSelectMultiple`, for a field where a person picks several values
+- `mvp_forms.widgets.TimeZoneSelect`, a `TomSelect` that lists timezones under their regions, described under [django-timezone-field](https://github.com/django-mvp/django-mvp-forms#django-timezone-field)
 - the attribute `data-tom-select`, which holds the settings the script reads as JSON on the widget's `<select>`
 - the attributes `data-none-text` and `data-count-text`, which hold the two words of a [counted control](https://github.com/django-mvp/django-mvp-forms#a-counted-control) on its `<select>`, and which the script copies to the box Tom Select builds to hold the chosen values
 - the script `mvp_forms/tomselect.js` and the copy of Tom Select the package ships, which the widget names in its media with both stylesheets
@@ -1756,6 +1757,41 @@ class SampleForm(forms.Form):
 ```
 
 The support is tested against django-pint 1.0.4, which the development dependencies name as the least release. Which releases of django-pint are supported is stated here and is not part of the [support window](https://github.com/django-mvp/django-mvp-forms#supported-versions).
+
+### django-timezone-field
+
+[django-timezone-field](https://github.com/mfogel/django-timezone-field) gives a form `TimeZoneFormField`, a choice of every timezone Python's `zoneinfo` knows. The pack draws it as a daisyUI select, as it draws any select, but several hundred names in one plain list are hard to use. `mvp_forms.widgets.TimeZoneSelect` draws the field as a searchable [Tom Select control](https://github.com/django-mvp/django-mvp-forms#tom-select-widgets) with the timezones listed under their regions:
+
+```python
+from django import forms
+from timezone_field import TimeZoneFormField
+
+from mvp_forms.widgets import TimeZoneSelect
+
+
+class MeetingForm(forms.Form):
+    timezone = TimeZoneFormField(widget=TimeZoneSelect)
+```
+
+Install the package with the `timezone` extra, which names the release of django-timezone-field the widget is tested against:
+
+```bash
+pip install "django-mvp-forms[timezone]"
+```
+
+The field keeps its own choices, validation and cleaning, so the form receives a `zoneinfo.ZoneInfo` as it would with django-timezone-field's own select. The widget changes only how the options are drawn:
+
+- Each option goes under a heading for the part of its name before the first slash, `Europe` for `Europe/Berlin` and `America` for `America/Argentina/Buenos_Aires`, with the regions in alphabetical order.
+- A name with no region, such as `UTC`, goes under "Other", after every region. The heading is translatable.
+- Each option keeps the label the field gave it, so `choices_display="WITH_GMT_OFFSET"` still shows each name with its offset from GMT, under its region.
+- An empty choice, which a model form writes for an optional model field, stays first and outside every group.
+- Choices already written in groups are drawn as they are.
+
+`TimeZoneSelect` is a `TomSelect`, so it takes the same settings, such as `placeholder` and `clear_button`, and brings Tom Select with its media. Every option is written into the page, so no view or URL answers for them. For a model's `TimeZoneField`, name the widget in the model form's `Meta.widgets`.
+
+No module of the package imports django-timezone-field. `TimeZoneSelect` draws any single choice field whose values are timezone names, and a project that has not installed django-timezone-field imports and uses the package as before.
+
+The support is tested against django-timezone-field 7.2.2, which the development dependencies name as the least release. Which releases of django-timezone-field are supported is stated here and is not part of the [support window](https://github.com/django-mvp/django-mvp-forms#supported-versions).
 
 ### Input masks
 
