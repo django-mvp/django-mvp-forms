@@ -82,7 +82,6 @@ from demo.examples.special_fields.inline_choices import SurveyForm
 from demo.examples.special_fields.rating_and_range import ReviewForm
 from demo.examples.standard_fields import StandardFieldsForm
 from demo.examples.third_party.countries import AddressForm
-from demo.examples.third_party.timezone import MeetingForm
 from demo.examples.third_party.pint import (
     SENT,
     DisabledForm,
@@ -90,6 +89,7 @@ from demo.examples.third_party.pint import (
     QuantitiesForm,
     SizedForm,
 )
+from demo.examples.third_party.timezone import MeetingForm
 from demo.examples.third_party.tomselect import ResearchForm
 from demo.examples.views import (
     ExampleView,
