@@ -82,6 +82,7 @@ from demo.examples.special_fields.inline_choices import SurveyForm
 from demo.examples.special_fields.rating_and_range import ReviewForm
 from demo.examples.standard_fields import StandardFieldsForm
 from demo.examples.third_party.countries import AddressForm
+from demo.examples.third_party.timezone import MeetingForm
 from demo.examples.third_party.pint import (
     SENT,
     DisabledForm,
@@ -309,4 +310,5 @@ urlpatterns = [
     path("pint-sizes/", ExampleView.as_view(form_class=SizedForm)),
     path("pint-disabled/", ExampleView.as_view(form_class=DisabledForm)),
     path("pint-named-unit/", ExampleView.as_view(form_class=NamedUnitForm)),
+    path("timezone/", ExampleView.as_view(form_class=MeetingForm)),
 ]

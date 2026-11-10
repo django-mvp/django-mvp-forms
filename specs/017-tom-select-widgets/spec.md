@@ -8,7 +8,8 @@
 
 **Serves**: G11 (the package offers its own fields and widgets, each looking native beside the
 pack's own inputs) and G4 (the variant, colour and size of any form component can be set from
-Python)
+Python). User Story 8 also serves G12 (fields and widgets from popular third-party Django
+packages draw well in the pack)
 
 **Roadmap**: none. Fields and widgets carry no roadmap item (Article XV).
 
@@ -338,6 +339,39 @@ options and submit.
 
 ---
 
+### User Story 8 - A developer gives django-timezone-field's form field a grouped, searchable control (Priority: P3)
+
+A developer has a form with django-timezone-field's `TimeZoneFormField`, a choice of several
+hundred timezone names that a plain select lists in one long column. They name `TimeZoneSelect`
+as the field's widget. A person types part of a city's name and finds it, listed under its
+region. The field chooses, validates and cleans the value as it did, and a project that has not
+installed django-timezone-field imports the package as before.
+
+**Why this priority**: The control works without it, as a Tom Select control with every name in
+one list. Projects built on the package each wrote the same grouping by region for their own
+timezone field ([#245](https://github.com/django-mvp/django-mvp-forms/issues/245)).
+
+**Independent Test**: Define a form with `TimeZoneFormField(widget=TimeZoneSelect)`, draw it,
+read the option groups, then send it a timezone name and an unknown name.
+
+**Acceptance Scenarios**:
+
+1. **Given** a `TimeZoneFormField` with `TimeZoneSelect`, **When** its form is drawn, **Then**
+   each timezone is listed under the region its name starts with, the regions in alphabetical
+   order, and a name with no region under "Other", last.
+2. **Given** such a field drawn with `choices_display="WITH_GMT_OFFSET"`, **When** its form is
+   drawn, **Then** each option keeps the label the field gave it and is still under its region.
+3. **Given** choices with an empty choice, or choices already written in groups, **When** the
+   form is drawn, **Then** the empty choice is first and outside every group, and groups already
+   written are drawn as they are.
+4. **Given** such a field, **When** the form is sent a timezone name, **Then** it cleans to that
+   timezone, and **When** it is sent a name that is no timezone, **Then** the form is in error.
+5. **Given** a project in which django-timezone-field cannot be imported, **When** the package's
+   widgets are imported and `TimeZoneSelect` draws a choice field of timezone names, **Then** it
+   draws the grouped select with no error.
+
+---
+
 ### Edge Cases
 
 - The page loads the script that starts the controls and not Tom Select. Every field is a stock
@@ -513,6 +547,19 @@ options and submit.
   tags.
 - **FR-038**: The demo's Tom Select page MUST show counted controls: a short list, a long list to
   search, options with long labels and a disabled field.
+- **FR-039**: The package MUST offer `TimeZoneSelect`, a single widget that draws a field's
+  timezone choices as `TomSelect` draws them, each under a group for the part of its value before
+  the first slash. Regions MUST be in alphabetical order, and a value with no slash MUST be listed
+  under a translatable "Other" group, after every region. Each option MUST keep its field's label.
+- **FR-040**: `TimeZoneSelect` MUST leave an empty choice first and outside every group, and MUST
+  draw choices already written in groups as they are.
+- **FR-041**: `TimeZoneSelect` MUST add no validation, so django-timezone-field's
+  `TimeZoneFormField` cleans and validates as it does with its own select.
+- **FR-042**: django-timezone-field MUST NOT become a dependency of the package, and no module of
+  the package may import it. A `timezone` extra MUST name the release the widget is tested
+  against.
+- **FR-043**: The README MUST gain a django-timezone-field section, and the demo a
+  django-timezone-field page in its Third-party support group.
 
 ### Requirement coverage
 
@@ -525,6 +572,7 @@ options and submit.
 | US-5 | FR-019, FR-031 |
 | US-6 | FR-022, FR-030 |
 | US-7 | FR-034 to FR-038 |
+| US-8 | FR-039 to FR-043 |
 
 ### Key Entities
 
@@ -540,6 +588,8 @@ options and submit.
   of the dropdown.
 - **Option group**: The heading a dropdown lists a set of options under. For these widgets it is
   a group in Django's grouped choices.
+- **Region**: The part of a timezone's name before its first slash, `Europe` for
+  `Europe/Berlin`, under which `TimeZoneSelect` lists it.
 - **Form's media**: The scripts and stylesheets Django collects from a form's widgets, which the
   host project's template renders.
 

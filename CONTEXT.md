@@ -41,7 +41,8 @@ list's second table. A supported package whose controls are built by script gets
 at most one optional stylesheet, which the host project loads, and never shares it
 with another package. The stylesheet for Tom Select controls also arrives with the
 media of the package's own Tom Select widgets, which bring Tom Select with them. django-tomselect is the first and django-countries the
-second. A supported package is never a dependency.
+second. A supported package is never a required dependency. An extra may name the
+release the pack is tested against, as `timezone` does for django-timezone-field.
 _Avoid_: integration, add-on.
 
 **Tagging**:
@@ -56,7 +57,8 @@ an option joins a group by carrying an `optgroup` key whose value is the heading
 The pack's template for django-tomselect reads that key, which needs `mvp_forms`
 listed before `django_tomselect` in `INSTALLED_APPS`. For a Tom Select widget of
 this package a group is one written as Django's grouped choices, and Tom Select reads
-it from the `<optgroup>` elements of the select.
+it from the `<optgroup>` elements of the select. `TimeZoneSelect` writes the groups
+itself, one for each region: the part of a timezone's name before its first slash.
 _Avoid_: category, optgroup (that is the key and the HTML element, not the term).
 
 **Tom Select control**:

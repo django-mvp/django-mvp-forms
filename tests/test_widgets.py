@@ -2,8 +2,13 @@
 
 import datetime
 import json
+import os
 import re
+import subprocess
+import sys
+import zoneinfo
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
@@ -13,6 +18,7 @@ from django.http import QueryDict
 from django.utils import translation
 from django.utils.dates import MONTHS
 from django.utils.translation import gettext_lazy
+from timezone_field import TimeZoneFormField
 
 from mvp_forms.fields import LatitudeField, LongitudeField, PartialDateField, PointField
 from mvp_forms.widgets import (
@@ -32,6 +38,7 @@ from mvp_forms.widgets import (
     RangeBlock,
     RangeInput,
     RegexMaskInput,
+    TimeZoneSelect,
     TomSelect,
     TomSelectMultiple,
 )
@@ -2056,6 +2063,143 @@ class Marker:
         self.y = y
         self.srid = srid
         self.z = z
+
+
+class TestTimeZoneSelect:
+    @staticmethod
+    def groups(select):
+        """Return each option group's label with the values it holds."""
+        return {
+            group["label"]: [each["value"] for each in group.find_all("option")]
+            for group in select.find_all("optgroup")
+        }
+
+    def test_it_groups_the_timezone_fields_choices_by_region(self):
+        field = TimeZoneFormField(widget=TimeZoneSelect)
+
+        groups = self.groups(select_of(field.widget))
+
+        assert "Europe/Berlin" in groups["Europe"]
+        assert "America/Argentina/Buenos_Aires" in groups["America"]
+        assert "Europe/Berlin" not in groups["America"]
+
+    def test_regions_are_in_alphabetical_order_with_other_last(self):
+        field = TimeZoneFormField(widget=TimeZoneSelect)
+
+        labels = list(self.groups(select_of(field.widget)))
+
+        assert labels[-1] == "Other"
+        assert labels[:-1] == sorted(labels[:-1])
+
+    def test_a_name_with_no_region_is_listed_under_other(self):
+        field = TimeZoneFormField(widget=TimeZoneSelect)
+
+        groups = self.groups(select_of(field.widget))
+
+        assert "UTC" in groups["Other"]
+
+    def test_every_choice_is_drawn_once(self):
+        field = TimeZoneFormField(widget=TimeZoneSelect)
+
+        drawn = [each["value"] for each in select_of(field.widget).find_all("option")]
+
+        assert sorted(drawn) == sorted(str(value) for value, _ in field.choices)
+
+    def test_each_option_keeps_the_label_the_field_gave_it(self):
+        field = TimeZoneFormField(
+            widget=TimeZoneSelect, choices_display="WITH_GMT_OFFSET"
+        )
+        labels = {str(value): label for value, label in field.choices}
+
+        option = select_of(field.widget).find("option", value="Asia/Kolkata")
+
+        assert option.text == labels["Asia/Kolkata"]
+        assert option.find_parent("optgroup")["label"] == "Asia"
+
+    def test_the_empty_choice_is_drawn_first_outside_every_group(self):
+        widget = TimeZoneSelect(
+            choices=[("", "No timezone"), ("Europe/Paris", "Europe/Paris")]
+        )
+
+        first = select_of(widget).find("option")
+
+        assert first["value"] == ""
+        assert first.find_parent("optgroup") is None
+
+    def test_choices_already_in_groups_are_drawn_as_they_are(self):
+        widget = TimeZoneSelect(
+            choices=[("Home", [("Europe/Berlin", "Berlin")]), ("UTC", "UTC")]
+        )
+
+        select = select_of(widget)
+
+        assert self.groups(select) == {"Home": ["Europe/Berlin"]}
+        assert select.find("option", value="UTC").find_parent("optgroup") is None
+
+    def test_a_timezone_object_is_drawn_as_chosen(self):
+        field = TimeZoneFormField(widget=TimeZoneSelect)
+
+        select = select_of(field.widget, zoneinfo.ZoneInfo("Europe/Berlin"))
+
+        assert selected_values(select) == ["Europe/Berlin"]
+
+    def test_it_is_a_tom_select_control_with_the_settings_stated(self):
+        widget = TimeZoneSelect(placeholder="Pick a timezone", choices=[("UTC", "UTC")])
+
+        select = select_of(widget)
+
+        assert json.loads(select["data-tom-select"]) == {
+            "placeholder": "Pick a timezone"
+        }
+        assert widget.media._js == TOM_SELECT_JS
+        assert widget.media._css == TOM_SELECT_CSS
+
+    def test_the_field_cleans_the_chosen_name_to_a_timezone(self):
+        class PlaceForm(forms.Form):
+            timezone = TimeZoneFormField(widget=TimeZoneSelect)
+
+        form = PlaceForm(data={"timezone": "Asia/Tokyo"})
+
+        assert form.is_valid()
+        assert form.cleaned_data["timezone"] == zoneinfo.ZoneInfo("Asia/Tokyo")
+
+    def test_the_field_rejects_a_name_that_is_no_timezone(self):
+        class PlaceForm(forms.Form):
+            timezone = TimeZoneFormField(widget=TimeZoneSelect)
+
+        form = PlaceForm(data={"timezone": "Europe/Atlantis"})
+
+        assert not form.is_valid()
+
+    def test_it_draws_without_django_timezone_field_installed(self):
+        # A fresh interpreter in which django-timezone-field cannot be imported,
+        # as in a project that has not installed it.
+        script = (
+            "import sys, zoneinfo\n"
+            "sys.modules['timezone_field'] = None\n"
+            "import django\n"
+            "django.setup()\n"
+            "from django import forms\n"
+            "from mvp_forms.widgets import TimeZoneSelect\n"
+            "names = sorted(zoneinfo.available_timezones())\n"
+            "field = forms.ChoiceField(\n"
+            "    choices=[(name, name) for name in names], widget=TimeZoneSelect\n"
+            ")\n"
+            "html = field.widget.render('timezone', 'Europe/Berlin')\n"
+            "assert '<optgroup label=\"Europe\">' in html\n"
+            "assert 'selected' in html\n"
+        )
+
+        result = subprocess.run(  # noqa: S603 - runs this interpreter on a fixed script
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=Path(__file__).resolve().parent.parent,
+            env={**os.environ, "DJANGO_SETTINGS_MODULE": "tests.settings"},
+        )
+
+        assert result.returncode == 0, result.stderr
 
 
 class TestPointInput:

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-mvp-forms\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 18:38+0200\n"
+"POT-Creation-Date: 2026-11-10 16:55+0100\n"
 "PO-Revision-Date: 2026-10-03 18:41+0200\n"
 "Last-Translator: django-mvp-forms\n"
 "Language-Team: English\n"
@@ -115,6 +115,7 @@ msgid "Enter the longitude as well as the latitude."
 msgstr ""
 
 #: templates/daisyui/accordion-group.html:2
+#: templates/daisyui/layout/fieldset.html:10
 #: templates/daisyui/layout/tab-pane.html:9
 msgid "Contains a field with an error"
 msgstr ""
@@ -169,63 +170,67 @@ msgstr ""
 msgid "This file cannot be shown as an image."
 msgstr ""
 
-#: templatetags/daisyui.py:34 widgets.py:948 widgets.py:949 widgets.py:1003
-#: widgets.py:1026
+#: templatetags/daisyui.py:38 widgets.py:952 widgets.py:953 widgets.py:1007
+#: widgets.py:1030
 msgid "Year"
 msgstr ""
 
-#: templatetags/daisyui.py:35 widgets.py:918 widgets.py:922
+#: templatetags/daisyui.py:39 widgets.py:922 widgets.py:926
 msgid "Month"
 msgstr ""
 
-#: templatetags/daisyui.py:36 widgets.py:929 widgets.py:933
+#: templatetags/daisyui.py:40 widgets.py:933 widgets.py:937
 msgid "Day"
 msgstr ""
 
-#: templatetags/daisyui.py:39
+#: templatetags/daisyui.py:43
 msgid "Date"
 msgstr ""
 
-#: templatetags/daisyui.py:39
+#: templatetags/daisyui.py:43
 msgid "Time"
 msgstr ""
 
-#: widgets.py:632
+#: widgets.py:634
 msgid "Latitude"
 msgstr ""
 
-#: widgets.py:633
+#: widgets.py:635
 msgid "Longitude"
 msgstr ""
 
-#: widgets.py:723
+#: widgets.py:727
 msgid "Min"
 msgstr ""
 
-#: widgets.py:723
+#: widgets.py:727
 msgid "Max"
 msgstr ""
 
-#: widgets.py:798 widgets.py:808
+#: widgets.py:802 widgets.py:812
 msgid "From"
 msgstr ""
 
-#: widgets.py:798 widgets.py:808
+#: widgets.py:802 widgets.py:812
 msgid "To"
 msgstr ""
 
-#: widgets.py:1150
+#: widgets.py:1165
 msgid "Nothing selected"
 msgstr ""
 
-#: widgets.py:1151
+#: widgets.py:1166
 msgid "selected"
 msgstr ""
 
-#: widgets.py:1194
+#: widgets.py:1226
+msgid "Other"
+msgstr ""
+
+#: widgets.py:1249
 msgid "Remove image"
 msgstr ""
 
-#: widgets.py:1195
+#: widgets.py:1250
 msgid "Current image"
 msgstr ""
