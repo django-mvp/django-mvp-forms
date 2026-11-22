@@ -25,8 +25,12 @@ from timezone_field import TimeZoneFormField
 
 from mvp_forms.fields import LatitudeField, LongitudeField, PartialDateField, PointField
 from mvp_forms.widgets import (
+    CHARACTERS_LEFT_FROM,
     CardSelect,
     CardSelectMultiple,
+    CharactersLeft,
+    CharactersLeftInput,
+    CharactersLeftTextarea,
     ChipSelect,
     ChipSelectMultiple,
     CoordinateMaskInput,
@@ -3249,3 +3253,168 @@ class TestChoiceWidgetsCleanData:
             return form.is_valid(), form.cleaned_data
 
         assert clean(CardSelect()) == clean(forms.RadioSelect())
+
+SCRIPT = "mvp_forms/characters-left.js"
+LIMITED_WIDGETS = [CharactersLeftInput, CharactersLeftTextarea]
+
+
+def limited(widget, **attrs):
+    """Return the control a widget draws with a limit of ten characters."""
+    html = widget.render("title", "", attrs={"maxlength": 10, **attrs})
+    return BeautifulSoup(html, "html.parser").find(["input", "textarea"])
+
+
+def russian_plurals(monkeypatch):
+    """Make ``ngettext`` choose among the three forms Russian has."""
+
+    def ngettext(singular, plural, n):
+        form = 0 if n % 10 == 1 and n % 100 != 11 else 1
+        if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14):
+            form = 2
+        return f"{singular} {form}"
+
+    monkeypatch.setattr("mvp_forms.widgets.ngettext", ngettext)
+
+
+class TestCharactersLeft:
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_it_is_a_mixin_of_both_widgets(self, widget):
+        assert issubclass(widget, CharactersLeft)
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_the_number_defaults_to_the_packages(self, widget):
+        control = limited(widget())
+
+        assert control["data-characters-left-from"] == str(CHARACTERS_LEFT_FROM)
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_the_number_a_developer_states_is_written(self, widget):
+        control = limited(widget(show_from=3))
+
+        assert control["data-characters-left-from"] == "3"
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    @pytest.mark.parametrize("value", [0, -1, 2.5, "8", True])
+    def test_a_number_that_is_not_a_whole_number_above_zero_raises_naming_it(
+        self, widget, value
+    ):
+        with pytest.raises(ValueError, match="show_from"):
+            widget(show_from=value)
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_a_limit_stated_on_the_widget_raises_naming_it(self, widget):
+        with pytest.raises(ValueError, match="maxlength"):
+            widget(attrs={"maxlength": 5})
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_a_field_with_no_limit_raises_naming_the_field(self, widget):
+        with pytest.raises(ValueError, match="title"):
+            widget().render("title", "")
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_a_field_with_a_max_length_is_drawn_with_it_as_the_limit(self, widget):
+        class Form(forms.Form):
+            title = forms.CharField(max_length=40, widget=widget)
+
+        drawn = BeautifulSoup(str(Form()["title"]), "html.parser")
+        control = drawn.find(["input", "textarea"])
+
+        assert control["maxlength"] == "40"
+        assert "data-characters-left-from" in control.attrs
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_the_words_hold_one_entry_for_each_count_up_to_the_number(self, widget):
+        control = limited(widget(show_from=3))
+
+        words = json.loads(control["data-characters-left-words"])
+
+        assert len(words) == 4
+        assert [entry.split()[0] for entry in words] == ["0", "1", "2", "3"]
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_the_words_stop_at_the_limit_when_it_is_below_the_number(self, widget):
+        html = widget(show_from=8).render("title", "", attrs={"maxlength": 3})
+        control = BeautifulSoup(html, "html.parser").find(["input", "textarea"])
+
+        assert len(json.loads(control["data-characters-left-words"])) == 4
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_the_words_follow_the_plural_forms_of_the_language(
+        self, widget, monkeypatch
+    ):
+        russian_plurals(monkeypatch)
+
+        words = json.loads(limited(widget(show_from=5))["data-characters-left-words"])
+
+        assert [entry.rsplit(" ", 1)[1] for entry in words] == [
+            "1",
+            "0",
+            "2",
+            "2",
+            "2",
+            "1",
+        ]
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_the_over_phrase_keeps_the_number_for_the_script(self, widget):
+        control = limited(widget())
+
+        assert "%(n)s" in control["data-characters-left-over"]
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_the_media_names_the_script_once(self, widget):
+        assert widget().media._js == [SCRIPT]
+
+    def test_a_form_with_none_of_the_widgets_names_no_script(self):
+        class Form(forms.Form):
+            title = forms.CharField(max_length=40)
+
+        assert SCRIPT not in str(Form().media)
+
+    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
+    def test_a_subclass_writes_the_attributes_of_its_parent(self, widget):
+        class Subclass(widget):
+            pass
+
+        control = limited(Subclass(show_from=4))
+
+        assert control["data-characters-left-from"] == "4"
+        assert Subclass().media._js == [SCRIPT]
+
+
+class TestCharactersLeftTextarea:
+    def test_line_breaks_are_read_as_one_character(self):
+        widget = CharactersLeftTextarea()
+
+        data = {"text": "ab\r\ncd\ref"}
+
+        assert widget.value_from_datadict(data, {}, "text") == "ab\ncd\nef"
+
+    def test_a_missing_value_stays_missing(self):
+        assert CharactersLeftTextarea().value_from_datadict({}, {}, "text") is None
+
+    def test_text_with_line_breaks_to_the_limit_is_valid_and_cleans_with_newlines(
+        self,
+    ):
+        class Form(forms.Form):
+            text = forms.CharField(max_length=5, widget=CharactersLeftTextarea)
+
+        form = Form(QueryDict("text=ab%0D%0Acd"))
+
+        assert form.is_valid()
+        assert form.cleaned_data["text"] == "ab\ncd"
+
+    def test_text_over_the_limit_is_refused_with_max_length(self):
+        class Form(forms.Form):
+            text = forms.CharField(max_length=5, widget=CharactersLeftTextarea)
+
+        form = Form(QueryDict("text=ab%0D%0Acde"))
+
+        assert form.errors["text"].as_data()[0].code == "max_length"
+
+
+class TestCharactersLeftInput:
+    def test_it_does_not_change_the_text_it_receives(self):
+        widget = CharactersLeftInput()
+
+        assert widget.value_from_datadict({"text": "ab\ncd"}, {}, "text") == "ab\ncd"

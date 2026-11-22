@@ -241,3 +241,14 @@ msgid "{n} more"
 msgid_plural "{n} more"
 msgstr[0] ""
 msgstr[1] ""
+#: widgets.py:1396
+#, python-format
+msgid "%(n)s character left"
+msgid_plural "%(n)s characters left"
+msgstr[0] ""
+msgstr[1] ""
+
+#: widgets.py:1401
+#, python-format
+msgid "Over the limit by %(n)s"
+msgstr ""
