@@ -81,7 +81,9 @@ def line_of(page, field_id):
 def shown_text(page, field_id):
     """The visible line's text when it is shown, and None when it is hidden."""
     visible = line_of(page, field_id).locator("[aria-hidden]")
-    return visible.text_content() if visible.is_visible() else None
+    if visible.evaluate("element => element.hidden"):
+        return None
+    return visible.text_content()
 
 
 def announced(page, field_id):

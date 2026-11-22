@@ -34,7 +34,7 @@ character states a number at least as large as the limit.
 
 **Self-resolved.**
 
-**ADR:** expected, together with D3, for the shape of the setting
+**ADR:** docs/adr/0071-the-characters-left-line-follows-max-length-and-appears-near-the-limit.md
 
 ## D3. The limit on a text field is `max_length` and nothing else
 
@@ -47,7 +47,7 @@ the line and the browser promise more, or less, than the field accepts. Django a
 
 **Self-resolved.**
 
-**ADR:** expected, with D2
+**ADR:** docs/adr/0071-the-characters-left-line-follows-max-length-and-appears-near-the-limit.md
 
 ## D4. No Tom Select control in this feature
 
@@ -92,7 +92,7 @@ planning.
 
 **Self-resolved.**
 
-**ADR:** expected, since it touches what a field with the line accepts
+**ADR:** docs/adr/0072-a-textarea-with-the-characters-left-line-counts-line-breaks-as-the-browser-does.md
 
 ## D7. A value over the limit is reported, not cut
 
@@ -146,7 +146,7 @@ then says it is over while the field accepts it.
 
 **Self-resolved at the design review.** Amends FR-009 and one edge case of the specification.
 
-**ADR:** none — covered by the line-break ADR
+**ADR:** docs/adr/0071-the-characters-left-line-follows-max-length-and-appears-near-the-limit.md
 
 ## D11. Design-review findings carried into the plan
 
