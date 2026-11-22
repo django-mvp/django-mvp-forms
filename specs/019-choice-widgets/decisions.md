@@ -126,3 +126,37 @@ Reordering choices in the browser, folding by count, a second tap that clears, h
 choices once one is chosen (daisyUI's filter does that, and a question needs its choices in view),
 an icon set, and icons on pills, chips or the scale. Each can be a request of its own if a project
 needs it.
+
+## D12. The widgets name their own component and the tag resolves from it
+
+**Chosen:** each widget carries the name of the component it is drawn as (`choice-button` for the
+scale, pills and chips, `choice-card` for cards). The tag reads that name before it matches the
+widget's class, so a subclass of `RadioSelect` is no longer a `radio`. Size and colour come from
+two new entries in the existing tables, and the resolved classes are written onto each option in
+the widget's own context.
+
+**Why:** the class match would give these inputs the `radio` class and the modifiers of a radio,
+which draws a native radio mark inside a button. The rating already resolves into its context for
+the same reason.
+
+**ADR:** docs/adr/ — written in T005, graduated at convergence
+
+## D13. The fold is a native details element
+
+**Chosen:** one `details` with a `summary` for every chip and card widget, single or multiple. The
+script only moves a chosen choice out of a closed fold and rewrites the count.
+
+**Why:** the disclosure, its keyboard operation and its open state for assistive technology come
+from the browser, and without the script every folded choice is still reachable (FR-018).
+
+**ADR:** none — local to this feature, nothing downstream inherits it
+
+## D14. A choice is named by its label through `aria-label`
+
+**Chosen:** the scale, pills and chips draw each choice as an input drawn as `btn`, named by an
+`aria-label` holding the label as plain text, as daisyUI documents a join of radio buttons.
+
+**Why:** it is daisyUI's own markup and needs no wrapper. If a browser fails to wrap or tick a label
+drawn this way, the build falls back to a `label` holding a hidden input and records it here.
+
+**ADR:** none — local to this feature, nothing downstream inherits it
