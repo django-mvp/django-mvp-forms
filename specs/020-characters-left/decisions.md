@@ -20,7 +20,8 @@ things, so they are scenarios rather than stories.
 
 **Self-resolved.**
 
-**ADR:** none
+**ADR:** none — the shape of the work, nothing downstream inherits it
+
 
 ## D2. The line appears only near the limit
 
@@ -64,7 +65,8 @@ create an option is ever specified, the line comes with it, with that limit.
 **Decided at the specification's review.** Replaces the first reading, which offered the line on
 the package's widgets with a limit the developer stated.
 
-**ADR:** none
+**ADR:** none — a scope boundary the specification states, not a design others build on
+
 
 ## D5. Polite announcements at a few moments
 
@@ -105,7 +107,8 @@ before then.
 
 **Self-resolved.**
 
-**ADR:** none
+**ADR:** none — local to this feature and visible in its requirements
+
 
 ## D8. No wording setting
 
@@ -118,7 +121,8 @@ is wrong in many languages.
 
 **Self-resolved.**
 
-**ADR:** none
+**ADR:** none — a scope boundary with no cross-cutting effect
+
 
 ## D9. No masked inputs
 
@@ -129,7 +133,8 @@ a person can act on. Promising it would make the line answer to every mask kind.
 
 **Self-resolved.**
 
-**ADR:** none
+**ADR:** none — a scope boundary the specification states
+
 
 ## D10. The line counts as the browser's limit counts
 
@@ -160,4 +165,5 @@ the page heavier.
 
 **Self-resolved.**
 
-**ADR:** none
+**ADR:** none — carries review findings into this plan only
+
