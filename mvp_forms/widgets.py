@@ -1,23 +1,28 @@
-"""Widgets for IMask input masks and for Tom Select controls.
+"""Widgets for IMask input masks, Tom Select controls and choice layouts.
 
 Each mask widget writes its options on the input as JSON in ``data-imask``, and
 the script named in its media hands them to IMask. A Tom Select widget writes its
 settings on the select as JSON in ``data-tom-select``, and its script starts a
 Tom Select control. The host project loads IMask. Tom Select comes with the
-widgets' media, from a copy the package ships.
+widgets' media, from a copy the package ships. The scale, pill, chip and card
+widgets draw the choices of a radio or checkbox group as large toggles.
 """
 
 import copy
 import datetime
+import html
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from decimal import Decimal, InvalidOperation
 
 from django import forms
 from django.utils.dates import MONTHS
 from django.utils.functional import Promise
+from django.utils.html import strip_tags
+from django.utils.safestring import SafeData
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 
 
 class Check:
@@ -119,6 +124,25 @@ class Check:
         """
         if not isinstance(value, str) or len(value) > 1:
             raise ValueError(f"{option} must be one character or empty, not {value!r}.")
+
+    @staticmethod
+    def values(option, value):
+        """Refuse a value that is not a collection of values.
+
+        Text is refused although it can be iterated, since its characters are
+        never the values meant.
+
+        Args:
+            option: The option's name, for the message.
+            value: What was stated.
+
+        Raises:
+            ValueError: The value is text, bytes or cannot be iterated.
+        """
+        if isinstance(value, str | bytes) or not isinstance(value, Iterable):
+            raise ValueError(  # noqa: TRY004
+                f"{option} must be a collection of values, not {value!r}."
+            )
 
     @staticmethod
     def number(option, value):
@@ -1333,3 +1357,355 @@ class ImageInput(forms.ClearableFileInput):
         if widget["is_initial"]:
             widget["file_name"] = str(value.name).rsplit("/", 1)[-1]
         return context
+
+
+class ChoiceLayout:
+    """What the scale, pill, chip and card widgets share.
+
+    The widgets draw each choice as an input that is a toggle rather than a
+    radio or checkbox mark. A subclass names the classes its inputs carry and
+    the component the pack resolves its size and colour from. The mixin goes
+    before ``RadioSelect`` or ``CheckboxSelectMultiple``.
+
+    The context gains ``options``, the choices in the field's order with the
+    names of groups left out, and ``clearing``, the choice whose value is the
+    empty string, for a single-choice widget. It is drawn after the others as
+    the way to clear the field, and a multiple widget draws it as any other.
+
+    Attributes:
+        choice_component: ``"choice-button"``, or ``"choice-card"`` for cards.
+        input_classes: The classes each input carries, before the developer's.
+    """
+
+    choice_component = "choice-button"
+    input_classes = ""
+
+    def create_option(
+        self, name, value, label, selected, index, subindex=None, attrs=None
+    ):
+        """Name the option by its label and give it the layout's classes."""
+        option = super().create_option(
+            name, value, label, selected, index, subindex, attrs
+        )
+        option_attrs = option["attrs"]
+        option_attrs["class"] = " ".join(
+            filter(None, [self.input_classes, option_attrs.get("class")])
+        )
+        option_attrs["aria-label"] = self.plain_text(label)
+        return option
+
+    @staticmethod
+    def plain_text(label):
+        """Return a label as the plain text a person reads.
+
+        Args:
+            label: A choice's label, marked safe or not.
+
+        Returns:
+            The label with its tags dropped and its entities read when it is
+            marked safe, and as it is otherwise.
+        """
+        if isinstance(label, SafeData):
+            return html.unescape(strip_tags(label))
+        return str(label)
+
+    def get_context(self, name, value, attrs):
+        """Add the flat list of options and the clearing choice."""
+        context = super().get_context(name, value, attrs)
+        widget = context["widget"]
+        options = [option for group in widget.pop("optgroups") for option in group[1]]
+        clearing = None
+        if not self.allow_multiple_selected:
+            for position, option in enumerate(options):
+                if str(option["value"]) == "":
+                    clearing = options.pop(position)
+                    break
+        widget["options"] = options
+        widget["clearing"] = clearing
+        return context
+
+
+class FoldedChoices(ChoiceLayout):
+    """Chip and card widgets: some choices on show, the rest in a fold.
+
+    A choice is folded when ``show`` is set, its value is not in it and it is
+    not chosen. The clearing choice of a single-choice widget is never folded.
+    A fold that holds every choice with none chosen is open, and a fold that
+    would hold none is not drawn. The context gains ``shown``, ``folded``,
+    ``fold_open`` and ``fold_label``, the developer's words for the fold or the
+    package's own with the count.
+
+    Args:
+        attrs: HTML attributes for each input.
+        choices: The choices to draw.
+        show: The values of the choices that stay on show, or ``None`` for
+            every choice. It is read as text, so a model's primary key matches,
+            and a value the field does not offer is passed over. Set it on a
+            form's own copy of the widget in its ``__init__`` to follow the
+            person using the form.
+        fold_label: The words for the fold's control, shown with the count of
+            choices it holds. Empty for the package's own words.
+        **settings: Settings of the widget's own, passed on.
+
+    Raises:
+        ValueError: ``show`` is not a collection of values, or ``fold_label``
+            is not text. The message names the setting.
+    """
+
+    def __init__(self, attrs=None, choices=(), *, show=None, fold_label="", **settings):
+        """Keep the settings that were stated."""
+        if show is not None:
+            Check.values("show", show)
+        Check.of_type("fold_label", fold_label, (str, Promise), "text")
+        super().__init__(attrs, choices, **settings)
+        self.show = None if show is None else {str(each) for each in show}
+        self.fold_label = fold_label
+
+    def values_on_show(self):
+        """Return the values that stay on show, read as text.
+
+        Returns:
+            A set of text, or ``None`` when every choice is on show.
+
+        Raises:
+            ValueError: ``show`` was replaced by something that is not a
+                collection of values.
+        """
+        if self.show is None:
+            return None
+        Check.values("show", self.show)
+        return {str(each) for each in self.show}
+
+    def get_context(self, name, value, attrs):
+        """Split the options into those on show and those in the fold."""
+        context = super().get_context(name, value, attrs)
+        widget = context["widget"]
+        on_show = self.values_on_show()
+        shown, folded = [], []
+        for option in widget["options"]:
+            hidden = (
+                on_show is not None
+                and str(option["value"]) not in on_show
+                and not option["selected"]
+            )
+            (folded if hidden else shown).append(option)
+        widget["shown"] = shown
+        widget["folded"] = folded
+        widget["fold_open"] = bool(folded) and not shown
+        widget["fold_label"] = self.fold_label or ngettext(
+            "%(count)d more", "%(count)d more", len(folded)
+        ) % {"count": len(folded)}
+        return context
+
+
+class CardChoices(FoldedChoices):
+    """Card widgets: a description, an icon and a short line for each choice.
+
+    Each option gains ``description``, ``icon`` and ``meta``, found by its value
+    read as text, and the context gains ``columns``. A text that is not marked
+    safe is escaped when drawn. An icon is drawn as the markup given, so the
+    developer marks it safe.
+
+    Args:
+        attrs: HTML attributes for each input.
+        choices: The choices to draw.
+        show: As for ``FoldedChoices``.
+        fold_label: As for ``FoldedChoices``.
+        descriptions: A mapping from a choice's value to the softer text drawn
+            under its label.
+        icons: A mapping from a choice's value to the markup of its icon.
+        meta: A mapping from a choice's value to the short line drawn above its
+            label.
+        columns: The number of cards across on a wide screen: 1, 2 or 3. One
+            card sits across on a narrow screen.
+
+    Raises:
+        ValueError: A mapping is not a mapping, or ``columns`` is not 1, 2 or
+            3. The message names the setting.
+    """
+
+    choice_component = "choice-card"
+
+    def __init__(
+        self,
+        attrs=None,
+        choices=(),
+        *,
+        descriptions=None,
+        icons=None,
+        meta=None,
+        columns=2,
+        **settings,
+    ):
+        """Keep the settings that were stated."""
+        for setting, mapping in (
+            ("descriptions", descriptions),
+            ("icons", icons),
+            ("meta", meta),
+        ):
+            if mapping is not None:
+                Check.of_type(setting, mapping, Mapping, "a mapping")
+        Check.one_of("columns", columns, (1, 2, 3))
+        super().__init__(attrs, choices, **settings)
+        self.descriptions = descriptions
+        self.icons = icons
+        self.meta = meta
+        self.columns = columns
+
+    @staticmethod
+    def extra_of(mapping, value):
+        """Return what a mapping holds for a choice's value, read as text.
+
+        Args:
+            mapping: The mapping stated, or ``None``.
+            value: The choice's value.
+
+        Returns:
+            What the mapping holds for the value, or ``None``.
+        """
+        if not mapping:
+            return None
+        wanted = str(value)
+        for key, extra in mapping.items():
+            if str(key) == wanted:
+                return extra
+        return None
+
+    def create_option(
+        self, name, value, label, selected, index, subindex=None, attrs=None
+    ):
+        """Add the description, icon and short line given for the value."""
+        option = super().create_option(
+            name, value, label, selected, index, subindex, attrs
+        )
+        option["description"] = self.extra_of(self.descriptions, value)
+        option["icon"] = self.extra_of(self.icons, value)
+        option["meta"] = self.extra_of(self.meta, value)
+        return option
+
+    def get_context(self, name, value, attrs):
+        """Add the number of cards across."""
+        context = super().get_context(name, value, attrs)
+        context["widget"]["columns"] = self.columns
+        return context
+
+
+class ScaleSelect(ChoiceLayout, forms.RadioSelect):
+    """A single choice drawn as one row of segments, such as a 1 to 5 scale.
+
+    The words for the two ends are drawn under the row. The first and last
+    segments are named by their own label and by the words at their end. The
+    choice whose value is the empty string is drawn after the row, to clear the
+    field.
+
+    Args:
+        attrs: HTML attributes for each input.
+        choices: The choices to draw.
+        low: The words under the first segment.
+        high: The words under the last segment.
+
+    Raises:
+        ValueError: ``low`` or ``high`` is not text. The message names it.
+    """
+
+    template_name = "mvp_forms/widgets/scale.html"
+    input_classes = "btn join-item flex-1 h-12"
+
+    def __init__(self, attrs=None, choices=(), *, low="", high=""):
+        """Keep the words for the ends."""
+        Check.of_type("low", low, (str, Promise), "text")
+        Check.of_type("high", high, (str, Promise), "text")
+        super().__init__(attrs, choices)
+        self.low = low
+        self.high = high
+
+    def get_context(self, name, value, attrs):
+        """Name the first and last segments by the words at their end."""
+        context = super().get_context(name, value, attrs)
+        widget = context["widget"]
+        base = widget["attrs"].get("id", "")
+        widget["low"] = self.low
+        widget["high"] = self.high
+        widget["low_id"] = f"{base}_low" if base and self.low else ""
+        widget["high_id"] = f"{base}_high" if base and self.high else ""
+        options = widget["options"]
+        if options:
+            for option, end_id in (
+                (options[0], widget["low_id"]),
+                (options[-1], widget["high_id"]),
+            ):
+                if end_id:
+                    option_attrs = option["attrs"]
+                    named_by = option_attrs.get("aria-labelledby") or option_attrs["id"]
+                    option_attrs["aria-labelledby"] = f"{named_by} {end_id}"
+        return context
+
+
+class PillSelect(ChoiceLayout, forms.RadioSelect):
+    """A single choice drawn as a wrapping row of rounded toggles.
+
+    The choice whose value is the empty string is drawn last, to clear the
+    field.
+
+    Args:
+        attrs: HTML attributes for each input.
+        choices: The choices to draw.
+    """
+
+    template_name = "mvp_forms/widgets/pills.html"
+    input_classes = "btn rounded-full h-11"
+
+
+class PillSelectMultiple(ChoiceLayout, forms.CheckboxSelectMultiple):
+    """Several choices drawn as a wrapping row of rounded toggles.
+
+    A chosen pill shows a tick before its label. The choice whose value is the
+    empty string is drawn as any other.
+
+    Args:
+        attrs: HTML attributes for each input.
+        choices: The choices to draw.
+    """
+
+    template_name = "mvp_forms/widgets/pills.html"
+    input_classes = "btn rounded-full h-11 checked:before:content-['✓']"
+
+
+class ChipSelect(FoldedChoices, forms.RadioSelect):
+    """A single choice drawn as large toggles that show a long label in full.
+
+    The choices not named in ``show`` are drawn in a fold. See
+    ``FoldedChoices`` for the settings.
+    """
+
+    template_name = "mvp_forms/widgets/chips.html"
+    input_classes = "btn rounded-3xl h-auto min-h-12 whitespace-normal"
+
+
+class ChipSelectMultiple(FoldedChoices, forms.CheckboxSelectMultiple):
+    """Several choices drawn as large toggles that show a long label in full.
+
+    The choices not named in ``show`` are drawn in a fold. See
+    ``FoldedChoices`` for the settings.
+    """
+
+    template_name = "mvp_forms/widgets/chips.html"
+    input_classes = "btn rounded-3xl h-auto min-h-12 whitespace-normal"
+
+
+class CardSelect(CardChoices, forms.RadioSelect):
+    """A single choice drawn as cards with an icon, a description and a mark.
+
+    See ``CardChoices`` for the settings.
+    """
+
+    template_name = "mvp_forms/widgets/cards.html"
+
+
+class CardSelectMultiple(CardChoices, forms.CheckboxSelectMultiple):
+    """Several choices drawn as cards with an icon, a description and a mark.
+
+    See ``CardChoices`` for the settings.
+    """
+
+    template_name = "mvp_forms/widgets/cards.html"
