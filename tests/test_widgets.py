@@ -3254,6 +3254,7 @@ class TestChoiceWidgetsCleanData:
 
         assert clean(CardSelect()) == clean(forms.RadioSelect())
 
+
 SCRIPT = "mvp_forms/characters-left.js"
 LIMITED_WIDGETS = [CharactersLeftInput, CharactersLeftTextarea]
 

@@ -22,9 +22,8 @@ from django.utils.functional import Promise
 from django.utils.html import strip_tags
 from django.utils.safestring import SafeData
 from django.utils.text import normalize_newlines
-from django.utils.translation import gettext
+from django.utils.translation import gettext, ngettext
 from django.utils.translation import gettext_lazy as _
-from django.utils.translation import ngettext
 
 
 class Check:
