@@ -3363,7 +3363,7 @@ class TestCharactersLeft:
 
     @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
     def test_the_media_names_the_script_once(self, widget):
-        assert widget().media._js == [SCRIPT]
+        assert str(widget().media).count(SCRIPT) == 1
 
     def test_a_form_with_none_of_the_widgets_names_no_script(self):
         class Form(forms.Form):
@@ -3379,7 +3379,7 @@ class TestCharactersLeft:
         control = limited(Subclass(show_from=4))
 
         assert control["data-characters-left-from"] == "4"
-        assert Subclass().media._js == [SCRIPT]
+        assert str(Subclass().media).count(SCRIPT) == 1
 
 
 class TestCharactersLeftTextarea:

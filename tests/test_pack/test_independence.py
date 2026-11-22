@@ -1247,6 +1247,7 @@ class TestDistributedFiles:
         )
 
         assert files == [
+            "mvp_forms/characters-left.js",
             "mvp_forms/choice-fold.js",
             "mvp_forms/image-input.js",
             "mvp_forms/imask.js",
