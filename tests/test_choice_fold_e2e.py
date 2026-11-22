@@ -306,6 +306,14 @@ def values_folded(page, field):
     )
 
 
+def settle(page):
+    """Wait until the toggle event of a fold just closed has been heard."""
+    page.evaluate(
+        "() => new Promise((done) => requestAnimationFrame("
+        "() => requestAnimationFrame(done)))"
+    )
+
+
 def fold_and_tap(page, field, *values):
     """Open a field's fold, choose the given choices in it and close it again."""
     fold = fold_of(page, field)
@@ -315,6 +323,7 @@ def fold_and_tap(page, field, *values):
     for value in values:
         option(page, field, value).click()
     summary.click()
+    settle(page)
 
 
 class TestFoldScript:
@@ -505,6 +514,7 @@ def tap_first_folded(fold):
     fold.locator("summary").click()
     fold.locator("input").first.click()
     fold.locator("summary").click()
+    settle(fold.page)
 
 
 class TestAddedLater:
