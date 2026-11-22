@@ -196,6 +196,11 @@ class TestScaleEnds:
         assert soup.select("[aria-hidden]") == []
         assert all(not i.has_attr("aria-labelledby") for i in soup.find_all("input"))
 
+    def test_the_end_words_are_drawn_when_given(self, drawn):
+        soup = drawn(ScaleSelect(low="Never", high="Always"))
+
+        assert len(soup.select("[aria-hidden]")) == 2
+
     def test_one_end_alone_is_drawn_alone(self, drawn):
         soup = drawn(ScaleSelect(high="Always"))
 
@@ -405,6 +410,18 @@ class TestCardExtras:
 
         assert "One's note" in self.label_of(soup, "1").get_text()
 
+    @pytest.mark.parametrize("widget_class", CARDS)
+    def test_extras_keyed_by_text_are_found_for_a_value_that_is_not_text(
+        self, drawn, widget_class
+    ):
+        soup = drawn(
+            widget_class(descriptions={"1": "One's note"}),
+            choices=[(1, "One"), (2, "Two")],
+        )
+
+        assert "One's note" in self.label_of(soup, "1").get_text()
+        assert "One's note" not in self.label_of(soup, "2").get_text()
+
     @pytest.mark.parametrize("columns", [1, 2, 3])
     @pytest.mark.parametrize("widget_class", CARDS)
     def test_the_columns_select_the_matching_wide_screen_grid(
@@ -541,7 +558,7 @@ class TestFold:
         choices = [*self.LETTERS, ("", "None")]
         if widget_class in CHIP_AND_CARD_MULTIPLES:
             choices = self.LETTERS
-        soup = drawn(widget_class(show={"a"}), choices=choices)
+        soup = drawn(widget_class(show={"a"}), choices=choices, initial="a")
 
         assert "" not in self.values_in(self.fold_of(soup))
 

@@ -2959,36 +2959,55 @@ class TestFoldedChoicesContext:
     def test_the_empty_choice_of_a_single_widget_is_never_folded(self):
         widget = ChipSelect(show={"a"}, choices=[("", "None"), *LETTERS])
 
-        context = options_of(widget)
+        context = options_of(widget, "a")
 
         assert context["clearing"]["value"] == ""
+        assert context["clearing"]["selected"] is False
         assert values_of(context["folded"]) == ["b", "c"]
 
     def test_the_fold_is_drawn_in_the_fields_order_by_index(self):
-        widget = ChipSelect(show={"c"}, choices=LETTERS)
+        widget = ChipSelect(show={"a"}, choices=LETTERS)
 
         context = options_of(widget)
 
-        assert [o["index"] for o in context["folded"]] == ["0", "1"]
+        assert [o["position"] for o in context["shown"]] == [0]
+        assert [o["position"] for o in context["folded"]] == [1, 2]
 
     def test_the_developers_words_for_the_fold_are_given_as_they_are(self):
         widget = ChipSelect(show={"a"}, fold_label="Others", choices=LETTERS)
 
-        assert options_of(widget)["fold_label"] == "Others"
+        context = options_of(widget)
+
+        assert context["fold_label"] == "Others"
+        assert context["fold_custom"] is True
 
     def test_the_package_words_for_the_fold_carry_the_count(self):
         widget = ChipSelect(show={"a"}, choices=LETTERS)
 
-        label = str(options_of(widget)["fold_label"])
+        context = options_of(widget)
 
-        assert "2" in label
+        assert str(context["fold_label"]) == context["fold_other"].replace("{n}", "2")
+        assert context["fold_custom"] is False
+
+    def test_the_clearing_choice_carries_the_clearing_classes_after_the_layouts(self):
+        class Clearing(ChipSelect):
+            clearing_classes = "clear-me"
+
+        context = options_of(Clearing(choices=[("", "None"), *LETTERS]))
+
+        clearing = context["clearing"]["attrs"]["class"].split()
+        assert clearing[-1] == "clear-me"
+        assert clearing[: len(ChipSelect.input_classes.split())] == (
+            ChipSelect.input_classes.split()
+        )
+        assert all("clear-me" not in o["attrs"]["class"] for o in context["options"])
 
     def test_the_package_words_for_the_fold_have_a_form_for_one(self):
         widget = ChipSelect(show={"a", "b"}, choices=LETTERS)
 
-        label = str(options_of(widget)["fold_label"])
+        context = options_of(widget)
 
-        assert "1" in label
+        assert str(context["fold_label"]) == context["fold_one"].replace("{n}", "1")
 
     def test_setting_the_values_on_show_changes_one_forms_widget_alone(self):
         class LettersForm(forms.Form):

@@ -348,6 +348,16 @@ class TestFoldScript:
 
         assert values_on_show(page, field) == ["1", "2", "4"]
 
+    def test_a_choice_taken_from_the_fold_goes_before_a_later_one_on_show(
+        self, choice_page
+    ):
+        page = choice_page(bound="1", chips="3")
+        assert values_on_show(page, "chips") == ["1", "3"]
+
+        fold_and_tap(page, "chips", "2")
+
+        assert values_on_show(page, "chips") == ["1", "2", "3"]
+
     def test_the_count_is_the_number_of_choices_still_folded(self, choice_page):
         page = choice_page()
 
