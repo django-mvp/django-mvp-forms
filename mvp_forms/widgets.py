@@ -1531,12 +1531,17 @@ class CardChoices(FoldedChoices):
         columns: The number of cards across on a wide screen: 1, 2 or 3. One
             card sits across on a narrow screen.
 
+    Attributes:
+        edge_classes: The classes of a chosen card's edge and tint when the
+            pack states no colour.
+
     Raises:
         ValueError: A mapping is not a mapping, or ``columns`` is not 1, 2 or
             3. The message names the setting.
     """
 
     choice_component = "choice-card"
+    edge_classes = "has-checked:border-primary has-checked:bg-primary/10"
 
     def __init__(
         self,
@@ -1599,6 +1604,7 @@ class CardChoices(FoldedChoices):
         """Add the number of cards across."""
         context = super().get_context(name, value, attrs)
         context["widget"]["columns"] = self.columns
+        context["widget"]["choice_class"] = self.edge_classes
         return context
 
 

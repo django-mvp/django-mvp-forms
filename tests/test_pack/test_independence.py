@@ -50,6 +50,7 @@ from tests.forms import (
     ButtonedForm,
     CheckboxForm,
     CheckboxGroupsForm,
+    ChoiceWidgetsForm,
     CountriesForm,
     DateSelectsForm,
     DecoratedFieldsForm,
@@ -196,6 +197,80 @@ LAYOUT_UTILITIES = {
     "w-[0.125em]",
     # Form text, sized and shaded where daisyUI has no text component (ADR 0067).
     "text-base",
+    # The scale, pills, chips and cards: what a chosen choice takes in each colour
+    # and the layout around them, where daisyUI has no class for the job.
+    "checked:bg-neutral",
+    "checked:border-neutral",
+    "checked:text-neutral-content",
+    "has-checked:bg-neutral/10",
+    "has-checked:border-neutral",
+    "checked:bg-primary",
+    "checked:border-primary",
+    "checked:text-primary-content",
+    "has-checked:bg-primary/10",
+    "has-checked:border-primary",
+    "checked:bg-secondary",
+    "checked:border-secondary",
+    "checked:text-secondary-content",
+    "has-checked:bg-secondary/10",
+    "has-checked:border-secondary",
+    "checked:bg-accent",
+    "checked:border-accent",
+    "checked:text-accent-content",
+    "has-checked:bg-accent/10",
+    "has-checked:border-accent",
+    "checked:bg-info",
+    "checked:border-info",
+    "checked:text-info-content",
+    "has-checked:bg-info/10",
+    "has-checked:border-info",
+    "checked:bg-success",
+    "checked:border-success",
+    "checked:text-success-content",
+    "has-checked:bg-success/10",
+    "has-checked:border-success",
+    "checked:bg-warning",
+    "checked:border-warning",
+    "checked:text-warning-content",
+    "has-checked:bg-warning/10",
+    "has-checked:border-warning",
+    "checked:bg-error",
+    "checked:border-error",
+    "checked:text-error-content",
+    "has-checked:bg-error/10",
+    "has-checked:border-error",
+    "border-current",
+    "checked:before:content-['✓']",
+    "font-medium",
+    "font-semibold",
+    "grid-cols-1",
+    "group-has-checked:bg-primary",
+    "group-has-checked:text-primary-content",
+    "group-open:hidden",
+    "group-open:inline",
+    "grow",
+    "h-11",
+    "h-12",
+    "has-focus-visible:outline",
+    "inline-flex",
+    "inline-grid",
+    "justify-between",
+    "leading-none",
+    "min-h-11",
+    "min-h-12",
+    "p-3",
+    "place-items-center",
+    "pt-1",
+    "rounded-3xl",
+    "rounded-full",
+    "size-5",
+    "size-9",
+    "sm:grid-cols-1",
+    "sm:grid-cols-3",
+    "text-end",
+    "tracking-wide",
+    "uppercase",
+    "whitespace-normal",
 }
 
 
@@ -548,6 +623,8 @@ CHOSEN_IN_ERROR = [(kind, name) for kind, name in CHOSEN if kind == "color"]
 ONE_MEMBER_FAILS = {"country_code": "+49", "number": ""}
 ERRORS_ONLY = "{{ form|as_crispy_errors }}"
 
+CHOICE_WIDGETS_SIZED = FormChoices(size="sm", color="success")
+
 STATES = [
     pytest.param(
         "{% crispy form %}", CountriesForm, FLAG, id="django-countries' fields"
@@ -892,6 +969,18 @@ STATES = [
         id="a toggle and a switch with a size and a colour in error, through the tag",
     ),
     pytest.param(
+        "{% crispy form %}",
+        ChoiceWidgetsForm,
+        NOTHING,
+        id="choice widgets, through the tag",
+    ),
+    pytest.param(
+        "{{ form|crispy }}",
+        partial(ChoiceWidgetsForm, {"pill": "2"}, choices=CHOICE_WIDGETS_SIZED),
+        NOTHING,
+        id="choice widgets with a size and a colour, one in error, through the filter",
+    ),
+    pytest.param(
         "{{ form|crispy }}",
         lambda: RatingsForm(choices=RATINGS),
         NOTHING,
@@ -1059,7 +1148,9 @@ class TestModifierTables:
         written = {
             name
             for modifiers in Modifiers.tables[kind].values()
-            for name in modifiers.values()
+            for entry in modifiers.values()
+            for name in entry.split()
+            if name not in LAYOUT_UTILITIES
         }
 
         assert written

@@ -140,6 +140,13 @@ class Modifiers:
             "lg": "range-lg",
             "xl": "range-xl",
         },
+        "choice-button": {
+            "xs": "btn-xs",
+            "sm": "btn-sm",
+            "md": "btn-md",
+            "lg": "btn-lg",
+            "xl": "btn-xl",
+        },
         "btn": {
             "xs": "btn-xs",
             "sm": "btn-sm",
@@ -238,6 +245,41 @@ class Modifiers:
             "success": "range-success",
             "warning": "range-warning",
             "error": "range-error",
+        },
+        "choice-button": {
+            "neutral": (
+                "checked:bg-neutral checked:border-neutral checked:text-neutral-content"
+            ),
+            "primary": (
+                "checked:bg-primary checked:border-primary checked:text-primary-content"
+            ),
+            "secondary": (
+                "checked:bg-secondary checked:border-secondary "
+                "checked:text-secondary-content"
+            ),
+            "accent": (
+                "checked:bg-accent checked:border-accent checked:text-accent-content"
+            ),
+            "info": ("checked:bg-info checked:border-info checked:text-info-content"),
+            "success": (
+                "checked:bg-success checked:border-success checked:text-success-content"
+            ),
+            "warning": (
+                "checked:bg-warning checked:border-warning checked:text-warning-content"
+            ),
+            "error": (
+                "checked:bg-error checked:border-error checked:text-error-content"
+            ),
+        },
+        "choice-card": {
+            "neutral": "has-checked:border-neutral has-checked:bg-neutral/10",
+            "primary": "has-checked:border-primary has-checked:bg-primary/10",
+            "secondary": "has-checked:border-secondary has-checked:bg-secondary/10",
+            "accent": "has-checked:border-accent has-checked:bg-accent/10",
+            "info": "has-checked:border-info has-checked:bg-info/10",
+            "success": "has-checked:border-success has-checked:bg-success/10",
+            "warning": "has-checked:border-warning has-checked:bg-warning/10",
+            "error": "has-checked:border-error has-checked:bg-error/10",
         },
         "btn": {
             "neutral": "btn-neutral",

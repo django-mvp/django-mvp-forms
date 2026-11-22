@@ -2,11 +2,22 @@
 
 import pytest
 from bs4 import BeautifulSoup
+from crispy_forms.bootstrap import (
+    Accordion,
+    AccordionGroup,
+    InlineCheckboxes,
+    InlineRadios,
+    Modal,
+    Tab,
+    TabHolder,
+)
+from crispy_forms.layout import Column, Fieldset, Row
 from django import forms
 from django.contrib.auth.models import Group
 from django.http import QueryDict
 from django.utils.safestring import mark_safe
 
+from mvp_forms.choices import Choice, FormChoices, InvalidChoice, Modifiers
 from mvp_forms.widgets import (
     CardSelect,
     CardSelectMultiple,
@@ -15,6 +26,11 @@ from mvp_forms.widgets import (
     PillSelect,
     PillSelectMultiple,
     ScaleSelect,
+)
+from tests.forms import (
+    ChoiceWidgetLineFormSet,
+    ChoiceWidgetsForm,
+    formset_helper,
 )
 
 NUMBERS = [("1", "One"), ("2", "Two"), ("3", "Three"), ("4", "Four")]
@@ -606,3 +622,418 @@ class TestFold:
             str(groups[0].pk),
             str(groups[2].pk),
         ]
+
+
+SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
+TAG = "{% crispy form %}"
+TABLE = "daisyui/table_inline_formset.html"
+SIZES = ("xs", "sm", "md", "lg", "xl")
+COLORS = (
+    "neutral",
+    "primary",
+    "secondary",
+    "accent",
+    "info",
+    "success",
+    "warning",
+    "error",
+)
+BUTTON_FIELDS = ["scale", "pill", "pills", "chip", "chips", "locked"]
+CARD_MARKS = {"card": "radio", "cards": "checkbox"}
+EVERY_FIELD = [*BUTTON_FIELDS, *CARD_MARKS]
+
+
+def inputs_of(soup, name):
+    return soup.find(id=f"id_{name}").find_all("input")
+
+
+def classes_of(tag):
+    return set(tag["class"])
+
+
+def signature(tags):
+    return [
+        (
+            tag["type"],
+            tag["value"],
+            tag.has_attr("checked"),
+            tag.has_attr("disabled"),
+            tag.get("aria-label"),
+            tuple(tag["class"]),
+        )
+        for tag in tags
+    ]
+
+
+def refused(draw, source, form):
+    with pytest.raises(InvalidChoice) as caught:
+        draw(source, form=form)
+    return caught.value
+
+
+def label_of(tag):
+    return tag.find_parent("label")
+
+
+class TestPackSizeAndColour:
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("size", SIZES)
+    def test_every_size_reaches_every_input_of_every_widget(self, draw, source, size):
+        soup = draw(source, form=ChoiceWidgetsForm(choices=FormChoices(size=size)))
+
+        for name in BUTTON_FIELDS:
+            assert all(f"btn-{size}" in classes_of(i) for i in inputs_of(soup, name))
+        for name, mark in CARD_MARKS.items():
+            assert all(f"{mark}-{size}" in classes_of(i) for i in inputs_of(soup, name))
+
+    @pytest.mark.parametrize("color", COLORS)
+    def test_every_colour_reaches_every_input_and_the_label_of_a_card(
+        self, draw, color
+    ):
+        soup = draw(TAG, form=ChoiceWidgetsForm(choices=FormChoices(color=color)))
+
+        chosen = set(Modifiers.colors["choice-button"][color].split())
+        edge = set(Modifiers.colors["choice-card"][color].split())
+        for name in BUTTON_FIELDS:
+            assert all(chosen <= classes_of(i) for i in inputs_of(soup, name))
+        for name, mark in CARD_MARKS.items():
+            for tag in inputs_of(soup, name):
+                assert f"{mark}-{color}" in classes_of(tag)
+                assert edge <= classes_of(label_of(tag))
+
+    def test_a_size_and_a_colour_stated_for_the_field_win_over_the_forms(self, draw):
+        choices = FormChoices(
+            size="xl",
+            color="primary",
+            fields={"scale": Choice(size="xs", color="error")},
+        )
+
+        soup = draw(TAG, form=ChoiceWidgetsForm(choices=choices))
+
+        stated = set(Modifiers.colors["choice-button"]["error"].split())
+        for tag in inputs_of(soup, "scale"):
+            assert {"btn-xs"} | stated <= classes_of(tag)
+            assert "btn-xl" not in classes_of(tag)
+        assert all("btn-xl" in classes_of(i) for i in inputs_of(soup, "pill"))
+
+    def test_a_card_takes_its_size_on_the_mark_only(self, draw):
+        choices = FormChoices(fields={"card": Choice(size="lg")})
+
+        soup = draw(TAG, form=ChoiceWidgetsForm(choices=choices))
+
+        for tag in inputs_of(soup, "card"):
+            assert "radio-lg" in classes_of(tag)
+            assert not any(name.startswith("btn-") for name in classes_of(tag))
+
+    def test_nothing_stated_writes_no_size_and_no_colour(self, draw):
+        soup = draw(TAG, form=ChoiceWidgetsForm())
+
+        for name in BUTTON_FIELDS:
+            written = {n for i in inputs_of(soup, name) for n in classes_of(i)}
+            assert not written & {f"btn-{size}" for size in SIZES}
+            assert not any(n.startswith("checked:bg-") for n in written)
+        for name, mark in CARD_MARKS.items():
+            written = {n for i in inputs_of(soup, name) for n in classes_of(i)}
+            assert not any(n.startswith(f"{mark}-") for n in written)
+
+    def test_no_input_drawn_as_a_button_is_also_a_radio_or_a_checkbox(self, draw):
+        soup = draw(TAG, form=ChoiceWidgetsForm(choices=FormChoices(size="sm")))
+
+        for name in BUTTON_FIELDS:
+            assert all(
+                not {"radio", "checkbox"} & classes_of(i) for i in inputs_of(soup, name)
+            )
+
+    def test_the_clearing_choice_takes_the_size_and_the_colour(self, draw):
+        soup = draw(
+            TAG,
+            form=ChoiceWidgetsForm(choices=FormChoices(size="sm", color="accent")),
+        )
+
+        clearing = [i for i in inputs_of(soup, "pill") if i["value"] == ""]
+
+        assert len(clearing) == 1
+        assert "btn-sm" in classes_of(clearing[0])
+
+    def test_the_developers_own_class_stays_before_the_packs(self, draw):
+        class OwnClassForm(ChoiceWidgetsForm):
+            pill = forms.ChoiceField(
+                choices=NUMBERS,
+                widget=PillSelect(attrs={"class": "mine"}),
+                required=False,
+            )
+
+        soup = draw(TAG, form=OwnClassForm(choices=FormChoices(size="sm")))
+
+        for tag in inputs_of(soup, "pill"):
+            assert {"mine", "btn-sm"} <= classes_of(tag)
+            assert tag["class"].index("mine") < tag["class"].index("btn-sm")
+
+
+class TestPackErrorState:
+    BOUND = {"pill": "2"}
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_a_field_in_error_takes_the_error_colour_and_never_the_forms(
+        self, draw, source
+    ):
+        choices = FormChoices(color="primary")
+
+        soup = draw(source, form=ChoiceWidgetsForm(self.BOUND, choices=choices))
+
+        error = set(Modifiers.colors["choice-button"]["error"].split())
+        stated = set(Modifiers.colors["choice-button"]["primary"].split())
+        for tag in inputs_of(soup, "scale"):
+            assert error <= classes_of(tag)
+            assert not stated & classes_of(tag)
+        for tag in inputs_of(soup, "pill"):
+            assert stated <= classes_of(tag)
+            assert not error & classes_of(tag)
+
+    def test_a_card_in_error_takes_the_error_colour_on_its_label_and_mark(self, draw):
+        soup = draw(
+            TAG,
+            form=ChoiceWidgetsForm(self.BOUND, choices=FormChoices(color="primary")),
+        )
+
+        error = set(Modifiers.colors["choice-card"]["error"].split())
+        stated = set(Modifiers.colors["choice-card"]["primary"].split())
+        for name, mark in CARD_MARKS.items():
+            for tag in inputs_of(soup, name):
+                assert f"{mark}-error" in classes_of(tag)
+                assert f"{mark}-primary" not in classes_of(tag)
+                assert error <= classes_of(label_of(tag))
+                assert not stated & classes_of(label_of(tag))
+
+    def test_a_field_in_error_keeps_its_size(self, draw):
+        soup = draw(
+            TAG,
+            form=ChoiceWidgetsForm(self.BOUND, choices=FormChoices(size="sm")),
+        )
+
+        assert all("btn-sm" in classes_of(i) for i in inputs_of(soup, "scale"))
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_every_input_of_a_field_in_error_is_invalid_and_no_other_is(
+        self, draw, source
+    ):
+        soup = draw(source, form=ChoiceWidgetsForm(self.BOUND))
+
+        for name in ("scale", "card", "cards"):
+            assert all(
+                tag.get("aria-invalid") == "true" for tag in inputs_of(soup, name)
+            )
+        for name in ("pill", "pills", "chip", "chips"):
+            assert not any(
+                tag.has_attr("aria-invalid") for tag in inputs_of(soup, name)
+            )
+
+
+class TestPackFramesTheGroup:
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("name", EVERY_FIELD)
+    def test_the_choices_are_one_group_with_a_legend(self, draw, source, name):
+        form = ChoiceWidgetsForm()
+
+        soup = draw(source, form=form)
+
+        group = soup.find("fieldset", id=f"div_id_{name}")
+        assert form[name].label in group.find("legend").get_text()
+        assert group.find(id=f"id_{name}") is not None
+
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("name", ["scale", "card"])
+    def test_the_help_text_and_the_errors_describe_the_group(self, draw, source, name):
+        soup = draw(source, form=ChoiceWidgetsForm({}))
+
+        group = soup.find("fieldset", id=f"div_id_{name}")
+        described = group["aria-describedby"].split()
+
+        assert f"id_{name}_helptext" in described
+        assert f"id_{name}_error" in described
+        assert all(soup.find(id=ident) is not None for ident in described)
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_legend_of_a_required_field_holds_the_marker(self, draw, source):
+        soup = draw(source, form=ChoiceWidgetsForm())
+
+        required = soup.find("fieldset", id="div_id_scale").find("legend")
+        optional = soup.find("fieldset", id="div_id_pill").find("legend")
+
+        assert required.find(attrs={"aria-hidden": "true"}) is not None
+        assert optional.find(attrs={"aria-hidden": "true"}) is None
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_every_input_of_a_disabled_field_is_disabled(self, draw, source):
+        soup = draw(source, form=ChoiceWidgetsForm())
+
+        locked = inputs_of(soup, "locked")
+
+        assert len(locked) == len(NUMBERS)
+        assert all(tag.has_attr("disabled") for tag in locked)
+        assert not any(tag.has_attr("disabled") for tag in inputs_of(soup, "pill"))
+
+    def test_with_labels_off_the_group_is_named_by_an_aria_label(self, draw):
+        form = ChoiceWidgetsForm(show_labels=False)
+
+        soup = draw(TAG, form=form)
+
+        group = soup.find("fieldset", id="div_id_scale")
+        assert group["aria-label"] == form["scale"].label
+        assert group.find("legend") is None
+
+
+class TestPackDrawsTheWidgetAsItIs:
+    @pytest.mark.parametrize("name", EVERY_FIELD)
+    def test_the_widget_is_the_same_drawing_as_the_widget_alone(self, draw, name):
+        form = ChoiceWidgetsForm()
+        alone = BeautifulSoup(str(form[name]), "html.parser")
+
+        soup = draw(TAG, form=form)
+
+        assert str(soup.find(id=f"id_{name}")) == str(alone.find(id=f"id_{name}"))
+
+    def test_the_fields_own_widget_is_not_changed_by_drawing(self, draw):
+        form = ChoiceWidgetsForm(choices=FormChoices(size="sm", color="error"))
+        before = str(BeautifulSoup(str(form["pill"]), "html.parser"))
+
+        draw(TAG, form=form)
+
+        assert str(BeautifulSoup(str(form["pill"]), "html.parser")) == before
+
+    def test_a_form_using_none_of_the_widgets_draws_no_choice_classes(self, draw):
+        class PlainForm(forms.Form):
+            pick = forms.ChoiceField(choices=NUMBERS, widget=forms.RadioSelect)
+
+        soup = draw(TAG, form=PlainForm())
+
+        radios = soup.find_all("input", type="radio")
+        assert radios
+        assert all("radio" in classes_of(i) for i in radios)
+        assert not soup.find_all(class_="join")
+
+    @pytest.mark.parametrize("source", SOURCES)
+    def test_the_same_inputs_are_drawn_through_the_filter_and_the_tag(
+        self, draw, source
+    ):
+        choices = FormChoices(size="sm", color="info")
+        reference = draw(TAG, form=ChoiceWidgetsForm(choices=choices))
+
+        soup = draw(source, form=ChoiceWidgetsForm(choices=choices))
+
+        for name in EVERY_FIELD:
+            assert signature(inputs_of(soup, name)) == signature(
+                inputs_of(reference, name)
+            )
+
+    def test_one_field_through_as_crispy_field_is_the_same_drawing(self, draw):
+        form = ChoiceWidgetsForm(choices=FormChoices(size="sm", color="info"))
+        reference = draw(TAG, form=form)
+
+        soup = draw("{{ form.pill|as_crispy_field }}", form=form)
+
+        assert signature(soup.find_all("input")) == signature(
+            inputs_of(reference, "pill")
+        )
+
+    @pytest.mark.parametrize("template", [None, TABLE], ids=["stacked", "table"])
+    def test_every_form_of_a_formset_draws_the_widgets_with_the_size(
+        self, draw, template
+    ):
+        settings = {} if template is None else {"template": template}
+        helper = formset_helper(**settings)
+        helper.daisyui = FormChoices(size="sm")
+
+        soup = draw(
+            "{% crispy formset helper %}",
+            formset=ChoiceWidgetLineFormSet(),
+            helper=helper,
+        )
+
+        names = []
+        for row in range(2):
+            pills = soup.find(id=f"id_form-{row}-pill").find_all("input")
+            chips = soup.find(id=f"id_form-{row}-chips").find_all("input")
+            assert len(pills) == len(chips) == len(NUMBERS)
+            assert all("btn-sm" in classes_of(i) for i in [*pills, *chips])
+            names.extend({tag["name"] for tag in [*pills, *chips]})
+        assert len(names) == len(set(names)) == 4
+
+    @pytest.mark.parametrize(
+        "wrap",
+        [
+            lambda name: Row(Column(name)),
+            lambda name: Fieldset("Pick", name),
+            lambda name: TabHolder(Tab("Pick", name)),
+            lambda name: Accordion(AccordionGroup("Pick", name)),
+            lambda name: Modal(name, css_id="box", title="Pick"),
+        ],
+        ids=["row", "fieldset", "tab", "accordion group", "modal"],
+    )
+    @pytest.mark.parametrize("name", ["scale", "chips", "card"])
+    def test_inside_another_layout_object_it_is_drawn_as_it_is_outside_one(
+        self, draw, wrap, name
+    ):
+        choices = FormChoices(size="sm", color="info")
+        alone = draw(TAG, form=ChoiceWidgetsForm(layout=[name], choices=choices))
+
+        inside = draw(TAG, form=ChoiceWidgetsForm(layout=[wrap(name)], choices=choices))
+
+        assert signature(inputs_of(inside, name)) == signature(inputs_of(alone, name))
+
+    @pytest.mark.parametrize(
+        ("wrap", "name"),
+        [(InlineRadios, "pill"), (InlineCheckboxes, "pills")],
+        ids=["radios", "checkboxes"],
+    )
+    def test_a_layout_object_that_draws_choices_along_a_line_draws_the_widget(
+        self, draw, wrap, name
+    ):
+        choices = FormChoices(size="sm")
+        alone = draw(TAG, form=ChoiceWidgetsForm(layout=[name], choices=choices))
+
+        inline = draw(TAG, form=ChoiceWidgetsForm(layout=[wrap(name)], choices=choices))
+
+        assert signature(inputs_of(inline, name)) == signature(inputs_of(alone, name))
+        assert all("btn-sm" in classes_of(i) for i in inputs_of(inline, name))
+
+    def test_a_host_projects_replacement_template_is_used(self, replace, draw):
+        marker = '<i data-replaced="pills"></i>'
+
+        with replace({"mvp_forms/widgets/pills.html": marker}):
+            soup = draw(SOURCES[0], form=ChoiceWidgetsForm())
+
+        assert len(soup.find_all(attrs={"data-replaced": "pills"})) == 3
+        assert inputs_of(soup, "scale")
+
+
+class TestPackMistakes:
+    @pytest.mark.parametrize("source", SOURCES)
+    @pytest.mark.parametrize("variant", ["ghost"])
+    def test_a_variant_stated_for_the_form_is_passed_over(self, draw, source, variant):
+        soup = draw(
+            source, form=ChoiceWidgetsForm(choices=FormChoices(variant=variant))
+        )
+
+        for name in EVERY_FIELD:
+            written = {n for i in inputs_of(soup, name) for n in classes_of(i)}
+            assert not any(n.endswith(f"-{variant}") for n in written)
+
+    @pytest.mark.parametrize("name", ["scale", "chips", "card", "cards"])
+    def test_a_variant_stated_on_the_field_raises_naming_it(self, draw, name):
+        form = ChoiceWidgetsForm(layout=[Choice(name, variant="ghost")])
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.allowed) == ("variant", "ghost", ())
+        assert error.target == name
+
+    @pytest.mark.parametrize("name", ["scale", "pill", "pills", "chip", "card"])
+    @pytest.mark.parametrize("drawing", ["rating", "toggle"])
+    def test_a_drawing_stated_for_the_field_raises_naming_it(self, draw, name, drawing):
+        form = ChoiceWidgetsForm(layout=[Choice(name, drawing=drawing)])
+
+        error = refused(draw, TAG, form)
+
+        assert (error.kind, error.value, error.allowed) == ("drawing", drawing, ())
+        assert error.target == name

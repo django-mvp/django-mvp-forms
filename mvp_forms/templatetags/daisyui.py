@@ -30,7 +30,7 @@ from mvp_forms.choices import (
 )
 from mvp_forms.deprecation import host_template, retiring_layout_object
 from mvp_forms.layout import InvalidMember, Join
-from mvp_forms.widgets import RangeInput, TomSelect
+from mvp_forms.widgets import ChoiceLayout, RangeInput, TomSelect
 
 register = template.Library()
 
@@ -226,7 +226,16 @@ class FieldInput:
         self.modifiers = (
             []
             if field.is_hidden or self.is_multi_widget
-            else self.resolve_modifiers(self.choices, self.own, self.component)
+            else self.resolve_modifiers(
+                self.choices, self.own, self.component, self.own_kinds
+            )
+        )
+        self.mark_modifiers = (
+            self.resolve_modifiers(
+                self.choices, self.own, self.mark_component, ("size", "color")
+            )
+            if self.mark_component
+            else []
         )
         self.removal_modifiers = (
             self.resolve_modifiers(
@@ -471,12 +480,39 @@ class FieldInput:
             widget: The field's widget, or one part of a multi-widget.
 
         Returns:
-            The component the widget is drawn as.
+            The component the widget is drawn as. A choice widget of the
+            package names its own.
         """
+        if isinstance(widget, ChoiceLayout):
+            return widget.choice_component
         for widget_class, component in self.components.items():
             if isinstance(widget, widget_class):
                 return component
         return None
+
+    @property
+    def is_choice_layout(self) -> bool:
+        """Whether the field's widget is one of the package's choice widgets."""
+        return isinstance(self.field.field.widget, ChoiceLayout)
+
+    @property
+    def own_kinds(self) -> tuple[str, ...]:
+        """The kinds the field's own component resolves.
+
+        A card has no size of its own: its size is its mark's.
+        """
+        if self.component == "choice-card":
+            return ("color", "variant")
+        return ("size", "color", "variant")
+
+    @property
+    def mark_component(self) -> str | None:
+        """The component of a card's mark, a radio or a checkbox, or None."""
+        if self.component != "choice-card":
+            return None
+        return (
+            "checkbox" if self.field.field.widget.allow_multiple_selected else "radio"
+        )
 
     @property
     def template_name(self) -> str | None:
@@ -506,6 +542,8 @@ class FieldInput:
         ``range``.
         """
         widget: forms.Widget = self.field.field.widget
+        if isinstance(widget, ChoiceLayout):
+            return self.choice_widget(widget)
         if self.drawing == "rating" and isinstance(widget, ChoiceWidget):
             return self.rating_widget(widget)
         if self.drawing == "range" and isinstance(widget, forms.NumberInput):
@@ -582,6 +620,86 @@ class FieldInput:
         return bool(visible) and all(
             self.component_of(part) in self.member_widths for part in visible
         )
+
+    def choice_widget(self, widget: ChoiceLayout) -> forms.Widget:
+        """Return the copy of a choice widget that is drawn for this render.
+
+        Args:
+            widget: The field's scale, pill, chip or card widget.
+
+        Returns:
+            A copy whose context carries what the pack resolved. The field's
+            own widget is not changed.
+        """
+        drawn = cast(forms.Widget, copy.copy(widget))
+        drawn.get_context = self.choice_context(  # type: ignore[method-assign]
+            drawn.get_context
+        )
+        return drawn
+
+    def choice_context(self, get_context: Callable[..., dict]) -> Callable[..., dict]:
+        """Wrap a choice widget's context so that it carries what the pack resolved.
+
+        The widget names its own inputs, so only the resolved classes are
+        added: to each input, the clearing choice's too, and as
+        ``choice_class`` for the card's label, which is not an input.
+
+        Args:
+            get_context: The copy's own ``get_context``.
+
+        Returns:
+            A function that returns the same context with the size, the colour
+            and the error written.
+        """
+
+        def with_choices(*args: Any, **kwargs: Any) -> dict:
+            context = get_context(*args, **kwargs)
+            widget = context["widget"]
+            options = [*widget["options"]]
+            if widget["clearing"]:
+                options.append(widget["clearing"])
+            for option in options:
+                attrs = option["attrs"]
+                attrs["class"] = " ".join(
+                    filter(None, [attrs.get("class"), *self.choice_input_classes])
+                )
+            if self.choice_label_classes:
+                widget["choice_class"] = " ".join(self.choice_label_classes)
+            return context
+
+        return with_choices
+
+    @property
+    def choice_colors(self) -> list[str]:
+        """The colour classes of the field's component: the form's or the error's."""
+        if self.is_in_error:
+            return [Modifiers.colors[str(self.component)]["error"]]
+        return self.resolve_modifiers(
+            self.choices, self.own, self.component, ("color",)
+        )
+
+    @property
+    def choice_input_classes(self) -> list[str]:
+        """The classes each input of a choice widget takes, after its own.
+
+        A button takes its size and its colour. A card's input is its mark,
+        which takes the size and the colour of a radio or a checkbox. A field
+        in error takes the error colour and no other.
+        """
+        if not self.mark_component:
+            sizes = self.resolve_modifiers(
+                self.choices, self.own, self.component, ("size",)
+            )
+            return [*sizes, *self.choice_colors]
+        marks = [*self.mark_modifiers]
+        if self.is_in_error:
+            marks.append(self.error_modifiers[self.mark_component])
+        return marks
+
+    @property
+    def choice_label_classes(self) -> list[str]:
+        """The classes a card's label takes, its edge and tint. None for a button."""
+        return self.choice_colors if self.mark_component else []
 
     def rating_widget(self, widget: ChoiceWidget) -> forms.RadioSelect:
         """Return the widget a rating is drawn through, made for this render.
@@ -889,7 +1007,7 @@ class FieldInput:
         attrs: dict[str, str | bool] = {}
         if self.component and self.has_attached_text:
             attrs["class"] = " ".join(self.own_classes) or False
-        elif self.component and self.drawing != "rating":
+        elif self.component and self.drawing != "rating" and not self.is_choice_layout:
             attrs["class"] = self.css_class
         if self.drawing == "switch":
             attrs["role"] = "switch"

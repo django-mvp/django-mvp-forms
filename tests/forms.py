@@ -31,6 +31,10 @@ from quantityfield.fields import QuantityFormField
 from mvp_forms.fields import PartialDateField
 from mvp_forms.layout import Join
 from mvp_forms.widgets import (
+    CardSelect,
+    CardSelectMultiple,
+    ChipSelect,
+    ChipSelectMultiple,
     DateRangeInput,
     DateTimeRangeInput,
     DynamicMaskInput,
@@ -42,9 +46,12 @@ from mvp_forms.widgets import (
     PartialDateSelect,
     PatternBlock,
     PatternMaskInput,
+    PillSelect,
+    PillSelectMultiple,
     RangeBlock,
     RangeInput,
     RegexMaskInput,
+    ScaleSelect,
     TomSelect,
     TomSelectMultiple,
 )
@@ -1719,3 +1726,72 @@ class RangeInputsForm(forms.Form):
         self.helper.form_show_labels = show_labels
         if choices:
             self.helper.daisyui = choices
+
+
+WIDGET_CHOICES = [("1", "One"), ("2", "Two"), ("3", "Three"), ("4", "Four")]
+CLEARABLE_WIDGET_CHOICES = [*WIDGET_CHOICES, ("", "None")]
+
+
+class ChoiceWidgetsForm(forms.Form):
+    """Every choice widget: some required, a fold, a clearing choice, one locked."""
+
+    scale = forms.ChoiceField(
+        choices=WIDGET_CHOICES,
+        widget=ScaleSelect(low="Low", high="High"),
+        help_text="Pick one",
+    )
+    pill = forms.ChoiceField(
+        choices=CLEARABLE_WIDGET_CHOICES, widget=PillSelect, required=False
+    )
+    pills = forms.MultipleChoiceField(
+        choices=WIDGET_CHOICES, widget=PillSelectMultiple, required=False
+    )
+    chip = forms.ChoiceField(
+        choices=CLEARABLE_WIDGET_CHOICES,
+        widget=ChipSelect(show={"1"}),
+        required=False,
+    )
+    chips = forms.MultipleChoiceField(
+        choices=WIDGET_CHOICES,
+        widget=ChipSelectMultiple(show={"1"}, fold_label="Others"),
+        required=False,
+    )
+    card = forms.ChoiceField(
+        choices=CLEARABLE_WIDGET_CHOICES,
+        widget=CardSelect(
+            show={"1", "2"},
+            descriptions={"1": "First"},
+            icons={"1": mark_safe("<svg></svg>")},
+            meta={"1": "Short"},
+        ),
+        help_text="Pick a card",
+    )
+    cards = forms.MultipleChoiceField(
+        choices=WIDGET_CHOICES,
+        widget=CardSelectMultiple(show={"1"}, columns=3),
+    )
+    locked = forms.ChoiceField(
+        choices=WIDGET_CHOICES, widget=PillSelect, required=False, disabled=True
+    )
+
+    def __init__(self, *args, layout=None, choices=None, show_labels=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.form_show_labels = show_labels
+        if layout is not None:
+            self.helper.layout = Layout(*layout)
+        if choices is not None:
+            self.helper.daisyui = choices
+
+
+class ChoiceWidgetLineForm(forms.Form):
+    """One line of a formset: a pill choice and a chip choice."""
+
+    pill = forms.ChoiceField(choices=WIDGET_CHOICES, widget=PillSelect)
+    chips = forms.MultipleChoiceField(
+        choices=WIDGET_CHOICES, widget=ChipSelectMultiple, required=False
+    )
+
+
+ChoiceWidgetLineFormSet = formset_factory(ChoiceWidgetLineForm, extra=2)
