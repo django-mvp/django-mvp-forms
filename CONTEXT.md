@@ -225,6 +225,44 @@ widget. A range always submits a number, so an optional number field drawn as a
 range is never submitted empty.
 _Avoid_: slider field.
 
+**Scale**:
+The `ScaleSelect` widget: a single choice drawn as one row of segments, one radio
+input for each choice, with optional words under the first and the last segment.
+It suits an ordered set of up to eleven short choices.
+_Avoid_: slider, stepper.
+
+**Pill**:
+A choice drawn by `PillSelect` or `PillSelectMultiple` as a rounded toggle in a
+wrapping row, for a short set of short labels. A pill of a multiple field shows a
+tick when chosen.
+_Avoid_: tag, badge.
+
+**Chip**:
+A choice drawn by `ChipSelect` or `ChipSelectMultiple` as a large toggle that
+shows a label of any length in full. A chip widget can keep some of its choices
+in a fold.
+_Avoid_: token.
+
+**Card**:
+A choice drawn by `CardSelect` or `CardSelectMultiple` as a card that holds the
+choice's label with, where the developer gives them, an icon, a short line above
+the label and a description under it. A card widget can keep some of its choices
+in a fold.
+_Avoid_: tile.
+
+**Fold**:
+The native `details` element of a chip or card widget that holds the choices not
+on show. Its control shows how many choices it holds. One script keeps a choice
+chosen inside it on show and keeps the count true, and without the script every
+folded choice can still be reached by opening the fold.
+_Avoid_: accordion, "show more" link.
+
+**Choices on show**:
+The choices of a chip or card widget that are drawn outside the fold: those whose
+values the developer names in `show`, and every chosen choice. Naming none puts
+every choice on show.
+_Avoid_: visible choices, pinned choices.
+
 **Form state**:
 One thing the pack draws, in one condition a person can meet it in: a text input
 that is empty, filled, invalid, disabled or read-only, a help text, a field error,

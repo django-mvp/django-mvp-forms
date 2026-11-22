@@ -975,6 +975,123 @@ A range is one `<input type="range">` with the field's name and id and the class
 
 A field that cannot be drawn as a rating or a range raises `InvalidChoice` with `kind="drawing"` when the form is drawn, naming the field as `target`. For a rating that is a multiple select, a checkbox group, a null-boolean select, a text input, a number input, a boolean field, and a select or a radio group whose widget names a template of its own, because the pack cannot draw a rating through a template it does not own. For a range it is a field whose widget is not a number input, which includes a localised `IntegerField`, `FloatField` or `DecimalField`, whose widget is a text input, and a rating or one of a boolean field's drawings stated for a number field. The names `allowed` are the field's own: `rating` for a field that holds one choice, `range` for a number field, the three drawings of a boolean field for a checkbox, and none for the others.
 
+### Choice widgets
+
+A choice field can be drawn with large choices instead of a select or a column of small radios: as one row of segments, as rounded toggles, as large toggles that show a long label in full, or as cards that say what each choice means. Name one of seven widgets on the field. Each draws one `<input type="radio">` or `<input type="checkbox">` for each choice with the field's name and the choice's value, so the field validates and cleans exactly as it does with `RadioSelect` or `CheckboxSelectMultiple`. The widgets use daisyUI's classes and Tailwind's utilities and no stylesheet of the package's.
+
+This is the public surface:
+
+- `mvp_forms.widgets.ScaleSelect`, a single choice drawn as one row of segments
+- `mvp_forms.widgets.PillSelect` and `mvp_forms.widgets.PillSelectMultiple`, one choice and several drawn as rounded toggles
+- `mvp_forms.widgets.ChipSelect` and `mvp_forms.widgets.ChipSelectMultiple`, one choice and several drawn as large toggles
+- `mvp_forms.widgets.CardSelect` and `mvp_forms.widgets.CardSelectMultiple`, one choice and several drawn as cards
+- the settings `low` and `high` of `ScaleSelect`, `show` and `fold_label` of the chip and card widgets, and `descriptions`, `icons`, `meta` and `columns` of the card widgets
+- the templates `mvp_forms/widgets/scale.html`, `mvp_forms/widgets/pills.html`, `mvp_forms/widgets/chips.html`, `mvp_forms/widgets/cards.html` and `mvp_forms/widgets/card_option.html`
+- the script `mvp_forms/choice-fold.js`, which the chip and card widgets name in their media
+
+```python
+from django import forms
+
+from mvp_forms.widgets import CardSelect, ChipSelectMultiple, PillSelect, ScaleSelect
+
+
+class SurveyForm(forms.Form):
+    recommend = forms.ChoiceField(
+        choices=[(score, str(score)) for score in range(11)],
+        widget=ScaleSelect(low="Not at all likely", high="Extremely likely"),
+    )
+    colour = forms.ChoiceField(
+        choices=[("red", "Red"), ("green", "Green"), ("blue", "Blue")],
+        widget=PillSelect,
+    )
+    interests = forms.MultipleChoiceField(
+        choices=INTERESTS,
+        widget=ChipSelectMultiple(show=["cycling", "cooking"]),
+    )
+    plan = forms.ChoiceField(
+        choices=[("basic", "Basic"), ("premium", "Premium")],
+        widget=CardSelect(descriptions={"basic": "One user."}, columns=2),
+    )
+```
+
+Every setting is keyword-only. A setting a widget does not have, or a value a setting cannot take, raises an error that names the setting when the widget is made. The widgets work on every field Django draws with a radio group or a checkbox group: `ChoiceField`, `TypedChoiceField`, `ModelChoiceField`, `MultipleChoiceField`, `TypedMultipleChoiceField` and `ModelMultipleChoiceField`. A scale holds one value, so it has no multiple widget.
+
+#### Which lists each suits
+
+| Widget | Suits |
+|---|---|
+| `ScaleSelect` | An ordered set of up to eleven short choices, such as 0 to 10. The segments narrow as their number grows. |
+| `PillSelect`, `PillSelectMultiple` | A short set of short labels, such as colours. A long label does not wrap. |
+| `ChipSelect`, `ChipSelectMultiple` | A longer set, or labels of any length. A chip shows its label in full and wraps it. |
+| `CardSelect`, `CardSelectMultiple` | Choices that need explaining, with an icon, a short line and a description. |
+
+#### Settings
+
+| Widget | Setting | Takes | What it does |
+|---|---|---|---|
+| `ScaleSelect` | `low`, `high` | text, or a lazy translation | The words under the first and the last segment. Each is optional, and a scale with none draws none. A screen reader reads the words with the first and the last choice. |
+| chip and card widgets | `show` | a collection of values | The values of the choices that stay on show. With none given every choice is on show. It is read as text, so a primary key matches, and a value the field does not offer is passed over. |
+| chip and card widgets | `fold_label` | text, or a lazy translation | The words on the fold's control, shown with the count of choices it holds. The package's own words are translatable. |
+| card widgets | `descriptions` | a mapping from a value to text | The softer text under a choice's label. It is escaped unless marked safe. |
+| card widgets | `icons` | a mapping from a value to markup | The icon of a choice, drawn as the markup given, so mark it safe. The package names no icon set. |
+| card widgets | `meta` | a mapping from a value to text | A short line above a choice's label. It is escaped unless marked safe. |
+| card widgets | `columns` | `1`, `2` or `3` | The number of cards across on a wide screen, 2 by default. One card sits across on a narrow screen. Any other number raises when the widget is made. |
+
+Each mapping is optional for every choice, and a choice a mapping does not name is drawn with its label alone. A mapping is read by the choice's value as text, so a `ModelChoiceField` is keyed by primary key. A mapping keyed by a value the field does not offer is passed over.
+
+#### Clearing a single choice
+
+A choice whose value is the empty string is not drawn among the others. A single-choice widget draws it after them as the way to say "none", and choosing it submits the field empty. A model choice field's empty label is that choice, and a `ChoiceField` is given `("", "No answer")`. A field with no empty choice offers no way to clear it. A multiple widget draws such a choice as any other, since clearing a multiple field is unticking its choices. A choice whose value is `0` is drawn among the others.
+
+#### The fold
+
+A chip or card widget given `show` draws the choices it names, and every chosen choice, in the field's order. It draws the rest inside a native `<details>` element after them, whose `<summary>` is the control and says how many choices it holds, such as "3 more". A chosen choice is never folded, so a bound or initial value is always on show. A fold that would hold every choice, because none is named and none is chosen, is drawn open, and a fold that would hold none is not drawn.
+
+Which choices matter often depends on the person, so `show` can be set on the form's own copy of the widget in `__init__`. Another form made from the same class is not affected.
+
+```python
+class InterestsForm(forms.Form):
+    interests = forms.MultipleChoiceField(
+        choices=INTERESTS, widget=ChipSelectMultiple, required=False
+    )
+
+    def __init__(self, *args, usual=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["interests"].widget.show = set(usual)
+```
+
+- The disclosure, its keyboard operation and its open state for assistive technology come from the browser. The control is a native `<summary>`.
+- Without the script every choice can still be reached: a person opens the fold, chooses any choice and submits the form.
+- The script is what keeps a chosen choice on show and keeps the count true. When a person chooses a choice inside the fold and closes it, the script moves that choice out of the fold, and the count is the number of choices still folded.
+- The script acts on a fold added to the page after it has loaded, such as a row added to a formset or a form that htmx swaps in, and acts once on each fold however many times the page includes it. It writes no inline script and uses no inline handler.
+- A disabled field's fold still opens, so a person can read the folded choices, and none can be chosen.
+- A form drawn again after a failed submission draws every choice the person had chosen on show.
+
+The widgets of the chip and the card name `mvp_forms/choice-fold.js` in their media, and the scale and the pills name no script. Render `{{ form.media }}` in the page template, or load `{% static 'mvp_forms/choice-fold.js' %}` yourself. `{% crispy form %}` writes the form's media inside the form, and `{{ form|crispy }}`, `{{ field|as_crispy_field }}` and Django's own form rendering write none. A project that uses no chip or card widget never loads the script.
+
+#### Size and colour
+
+The widgets take the form's size and colour and the field's own, as any input does, and have no variant. A variant stated for the form is passed over for them, and one stated on the field raises `InvalidChoice` with `kind="variant"`. A drawing stated for a field that uses one of them raises `InvalidChoice` with `kind="drawing"`, since the widget is already the drawing.
+
+- A scale, the pills and the chips are drawn as daisyUI's `btn`. The size is the button's size modifier, such as `btn-sm`, and the colour is written on a chosen choice with Tailwind's `checked:` state utilities, such as `checked:bg-primary`, because daisyUI has no modifier that colours a checked button.
+- A card holds its label and its extras, and its mark is daisyUI's `radio` or `checkbox`, which takes the form's size and colour like any radio or checkbox. A card has no size of its own, so its size is its mark's. The card's edge and tint take the colour through `has-checked:` utilities, and with no colour stated they are drawn in the primary colour.
+- A field in error is drawn in the error colour in place of the stated one, a card's edge and mark included, and the size still applies.
+
+#### Frame, errors and where they are drawn
+
+Each widget is a group: a fieldset named by a legend that holds the field's label and the required marker, with the help text and the errors describing it. Each input is `aria-invalid` when the field is in error and disabled when the field is. A choice is named by an `aria-label` that holds its label as plain text, unless the widget already gives it one, and a scale names its first and last choice by the words at their end as well. A class or an attribute you set on the widget is kept on every input, the one that clears included.
+
+The widgets are drawn the same through `{{ form|crispy }}` and `{% crispy form %}`, in a formset stacked or as a table, and inside a `Row`, a `Fieldset`, a `Tab`, an `AccordionGroup` or a `Modal`. A host project replaces any of their templates as it replaces any other of the pack's (see [Replacing one template](https://github.com/django-mvp/django-mvp-forms#replacing-one-template)). A subclass of one of the widgets is drawn as its parent is. Choices in named groups are drawn in the field's order and the names of the groups are not drawn.
+
+#### What is not supported
+
+- A second tap on a chosen single choice that clears it. The empty choice is the way to clear.
+- Reordering the choices in the browser, and folding by a count of choices instead of by named values.
+- Hiding the other choices once one is chosen.
+- An icon set, and icons on pills, chips or a scale.
+- Headings for choices in named groups.
+- A stylesheet of the package's own.
+
 ### Floating labels
 
 A floating label is daisyUI's own: the label sits inside the field and takes the place of its placeholder while the field is empty, then moves to the field's edge once it is focused or holds a value. State it once for the form, or for one field, the same two ways as a size or a colour. You write no template and no class. The statement is `label="floating"`, in `FormChoices` for the form and in `Choice` for a field:
