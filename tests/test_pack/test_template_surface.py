@@ -160,6 +160,8 @@ class TestRendererRoute:
             "mvp_forms/widgets/partial_date.html",
             "mvp_forms/widgets/point.html",
             "mvp_forms/widgets/pills.html",
+            "mvp_forms/widgets/chips.html",
+            "mvp_forms/widgets/cards.html",
             "mvp_forms/widgets/range.html",
             "mvp_forms/widgets/scale.html",
         }

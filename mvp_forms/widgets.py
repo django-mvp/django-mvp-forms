@@ -1375,10 +1375,12 @@ class ChoiceLayout:
     Attributes:
         choice_component: ``"choice-button"``, or ``"choice-card"`` for cards.
         input_classes: The classes each input carries, before the developer's.
+        clearing_classes: The classes the clearing choice carries after those.
     """
 
     choice_component = "choice-button"
     input_classes = ""
+    clearing_classes = ""
 
     def create_option(
         self, name, value, label, selected, index, subindex=None, attrs=None
@@ -1414,11 +1416,18 @@ class ChoiceLayout:
         context = super().get_context(name, value, attrs)
         widget = context["widget"]
         options = [option for group in widget.pop("optgroups") for option in group[1]]
+        for position, option in enumerate(options):
+            option["position"] = position
         clearing = None
         if not self.allow_multiple_selected:
             for position, option in enumerate(options):
                 if str(option["value"]) == "":
                     clearing = options.pop(position)
+                    clearing["attrs"]["class"] = " ".join(
+                        filter(
+                            None, [clearing["attrs"]["class"], self.clearing_classes]
+                        )
+                    )
                     break
         widget["options"] = options
         widget["clearing"] = clearing
@@ -1432,8 +1441,9 @@ class FoldedChoices(ChoiceLayout):
     not chosen. The clearing choice of a single-choice widget is never folded.
     A fold that holds every choice with none chosen is open, and a fold that
     would hold none is not drawn. The context gains ``shown``, ``folded``,
-    ``fold_open`` and ``fold_label``, the developer's words for the fold or the
-    package's own with the count.
+    ``fold_open``, ``fold_label``, the developer's words for the fold or the
+    package's own with the count, ``fold_count``, the number of folded choices,
+    and ``fold_custom``, true when the words are the developer's.
 
     Args:
         attrs: HTML attributes for each input.
@@ -1492,6 +1502,8 @@ class FoldedChoices(ChoiceLayout):
         widget["shown"] = shown
         widget["folded"] = folded
         widget["fold_open"] = bool(folded) and not shown
+        widget["fold_count"] = len(folded)
+        widget["fold_custom"] = bool(self.fold_label)
         widget["fold_label"] = self.fold_label or ngettext(
             "%(count)d more", "%(count)d more", len(folded)
         ) % {"count": len(folded)}
@@ -1680,6 +1692,7 @@ class ChipSelect(FoldedChoices, forms.RadioSelect):
 
     template_name = "mvp_forms/widgets/chips.html"
     input_classes = "btn rounded-3xl h-auto min-h-12 whitespace-normal"
+    clearing_classes = "btn-dash text-base-content/90"
 
 
 class ChipSelectMultiple(FoldedChoices, forms.CheckboxSelectMultiple):
@@ -1700,6 +1713,7 @@ class CardSelect(CardChoices, forms.RadioSelect):
     """
 
     template_name = "mvp_forms/widgets/cards.html"
+    input_classes = "radio shrink-0"
 
 
 class CardSelectMultiple(CardChoices, forms.CheckboxSelectMultiple):
@@ -1709,3 +1723,4 @@ class CardSelectMultiple(CardChoices, forms.CheckboxSelectMultiple):
     """
 
     template_name = "mvp_forms/widgets/cards.html"
+    input_classes = "checkbox shrink-0"
