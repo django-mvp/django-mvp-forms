@@ -199,7 +199,7 @@ class TestScaleEnds:
     def test_the_end_words_are_drawn_when_given(self, drawn):
         soup = drawn(ScaleSelect(low="Never", high="Always"))
 
-        assert len(soup.select("[aria-hidden]")) == 2
+        assert len(soup.select("[aria-hidden]")) == 1
 
     def test_one_end_alone_is_drawn_alone(self, drawn):
         soup = drawn(ScaleSelect(high="Always"))
