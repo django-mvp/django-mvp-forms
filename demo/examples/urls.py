@@ -4,6 +4,13 @@ from django.urls import path
 
 from demo.examples.custom_fields.coordinate_fields import SiteForm
 from demo.examples.custom_fields.partial_date_field import SampleForm
+from demo.examples.custom_widgets.characters_left import (
+    NoteLineFormSet,
+    NoteLineHelper,
+    OverTheLimitForm,
+    SummaryForm,
+    TitleForm,
+)
 from demo.examples.custom_widgets.choice_widgets import (
     CardsForm,
     ChipsForm,
@@ -250,6 +257,20 @@ urlpatterns = [
     path(
         "partial-date-mask/",
         ExampleView.as_view(form_class=MaskedDatesForm, template_name=MASKED),
+    ),
+    path("characters-left/", ExampleView.as_view(form_class=TitleForm)),
+    path("characters-left-textarea/", ExampleView.as_view(form_class=SummaryForm)),
+    path(
+        "characters-left-formset/",
+        FormsetExampleView.as_view(
+            form_class=NoteLineFormSet,
+            helper_class=NoteLineHelper,
+            template_name="demo/examples/characters_left_formset.html",
+        ),
+    ),
+    path(
+        "characters-left-over/",
+        StoredFilesExampleView.as_view(form_class=OverTheLimitForm),
     ),
     path(
         "image-input/",
