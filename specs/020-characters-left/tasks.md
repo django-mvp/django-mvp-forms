@@ -26,7 +26,7 @@ current state. README links are absolute. Every `ValueError` names the option at
 
 ## Phase 1: User Story 1 — A developer shows how many characters are left under a field (P1)
 
-Issue: #253. Delivers FR-001 to FR-006, FR-009, FR-010, FR-013, FR-019 to FR-021, FR-023; SC-001, SC-003, SC-006.
+Issue: #253. Delivers FR-001 to FR-003, FR-005, FR-006, FR-009 (the field's half), FR-010, FR-012, FR-013, FR-019 to FR-021, FR-023; SC-001, SC-003, SC-006.
 
 - [ ] T001 [US1] The mixin, the two widgets and their words
 
@@ -68,7 +68,7 @@ Plan, *The tests*, *Documentation and the demo*.
 
 ## Phase 2: User Story 2 — A person sees how many characters are left as they type (P1)
 
-Issue: #254. Delivers FR-007, FR-008, FR-011, FR-014, FR-015, FR-017, FR-018, FR-022; SC-002, SC-004, SC-005.
+Issue: #254. Delivers FR-004, FR-007, FR-008, FR-009 (the browser's half), FR-011, FR-014, FR-015, FR-017, FR-018, FR-022; SC-002, SC-004, SC-005.
 
 - [ ] T003 [US2] The script
 
@@ -80,7 +80,8 @@ Plan, *The script*, *The tests*.
 - Write the browser tests first for each scenario of the spec's US-2 and watch them fail with
   the placeholder script, then write the script until they pass. Look at `tests/test_imask_e2e.py`
   and `tests/test_partial_date_e2e.py` for the page, the fixtures and how Chrome is found.
-- Behaviour to build, from the plan: marker, count by code point, line placement after the
+- Also: a `Join` of two marked members each keep their own line; an emoji typed to the limit says none left. Watch items: create the status region before the first write, clear it when the line hides, write words with `textContent` only.
+- Behaviour to build, from the plan: marker, count in UTF-16 code units as the browser does, line placement after the
   outermost `.join` or `label` ancestor, the visible line and the status region, the three
   announcement moments, the document listeners, the observer, one line per input, nothing cut.
 

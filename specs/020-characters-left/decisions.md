@@ -130,3 +130,34 @@ a person can act on. Promising it would make the line answer to every mask kind.
 **Self-resolved.**
 
 **ADR:** none
+
+## D10. The line counts as the browser's limit counts
+
+**Chosen:** the script counts UTF-16 code units (`input.value.length`), as the browser's
+`maxlength` does, and not code points.
+
+**Why:** found at the design review, checked in Chromium: with an emoji in the text the field
+stops taking characters while a code-point count still says some are left, which is the silent
+stop this feature exists to end. A code-unit count is never smaller than a code-point count, so a
+text the line says fits is still accepted by the field's validation. Replaces the first reading
+of D6's count for characters outside the Basic Multilingual Plane. A value drawn with such
+characters can be within `max_length` by Django's count and over by the browser's, and the line
+then says it is over while the field accepts it.
+
+**Self-resolved at the design review.** Amends FR-009 and one edge case of the specification.
+
+**ADR:** none — covered by the line-break ADR
+
+## D11. Design-review findings carried into the plan
+
+**Chosen:** the line records which input it serves, so two marked fields in one joined group each
+keep their own line. The script opens with the once-only window flag the package's other scripts
+use. The textarea normalises with Django's `normalize_newlines`. A value stored with CRLF reads as
+changed until saved once, and the README says so, as it says a `show_from` near a long limit makes
+the page heavier.
+
+**Why:** design review findings DR-002 to DR-007.
+
+**Self-resolved.**
+
+**ADR:** none

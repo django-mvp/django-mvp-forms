@@ -53,10 +53,11 @@ existing entries were.
 
 Plain script, one immediately invoked function, no inline handler, no dependency.
 
+- **Opens with** `if (window.mvpFormsCharactersLeft) return; window.mvpFormsCharactersLeft = true;`, as `imask.js` does, so a second copy never acts or announces twice.
 - **Finds** `[data-characters-left-from]` inputs and textareas only. A Tom Select typing box
   never carries it, so it is left alone (FR-015).
 - **Count and limit.** Limit is `input.maxLength`, and an input with none (`-1`) is left alone.
-  Count is `Array.from(input.value).length`, which is Python's `len` for the same text. Left is
+  Count is `input.value.length`, UTF-16 code units, as the browser's `maxlength` counts (D10). Left is
   limit less count.
 - **Listeners** on the document, in the capture phase, for `input` and `focusin`, so rows added
   later, modals and htmx swaps need nothing (FR-014). A `MutationObserver` on the document element
@@ -64,9 +65,7 @@ Plain script, one immediately invoked function, no inline handler, no dependency
   is ready, so a value drawn near its limit shows the line before anything is typed (FR-007).
 - **The line.** One wrapper element `<div data-characters-left-line>` placed after the input's
   nearest `.join` or `label` ancestor, or after the input, whichever is outermost
-  (this keeps it under a floating label, attached text and a joined group). Found again by
-  looking at the next sibling, so a second copy of the script or a second pass draws no second
-  line (FR-014). It holds:
+  (this keeps it under a floating label, attached text and a joined group). The wrapper records the id (or name) of the input it serves, and is found again by searching the wrappers after the anchor for that record, never by taking the next sibling, so two marked members of one `Join` each keep a line and a second pass draws no second line (FR-014). It holds:
   - a visible `<p class="label text-base-content text-wrap" aria-hidden="true">`, hidden while
     more than the number are left, showing the entry from the words table, or the over phrase
     with the number replaced when the count is above the limit (FR-004, FR-007, FR-008);
@@ -83,7 +82,7 @@ Plain script, one immediately invoked function, no inline handler, no dependency
 ## Documentation and the demo
 
 - **README**: a section "Characters left" in the widgets part: how to turn it on for each of the
-  two widgets and for a subclass, where the limit comes from, the number and `show_from`, the
+  two widgets and for a subclass, where the limit comes from, the number and `show_from` (one phrase is written per count, so a `show_from` near a long limit makes the page heavier), the
   line break rule, what assistive technology hears, and what is not supported (Tom Select
   controls, masked and number inputs). Both widget names and `CHARACTERS_LEFT_FROM` join the
   public surface the README lists.
@@ -108,7 +107,7 @@ unit, files mirroring the source, no wording, no classes used only for looks.
   (Russian, from a catalogue entry the test supplies through `translation.override` and a
   temporary catalogue), the media, the missing `max_length` error, the textarea's line break rule
   through a form (`ab\r\ncd` with `max_length=5` is valid, the cleaned value has `\n`).
-- `tests/test_pack/test_characters_left.py`: through `{{ form|crispy }}`, `{% crispy form %}`,
+- `tests/test_pack/test_characters_left.py`: the input keeps the `aria-describedby` the pack writes (FR-012); through `{{ form|crispy }}`, `{% crispy form %}`,
   `{{ form.field|as_crispy_field }}` and `{{ form.as_div }}` the same attributes are written, a
   form with none of the widgets names no script in its media, and a field without the widget is
   drawn as before.
@@ -121,7 +120,7 @@ unit, files mirroring the source, no wording, no classes used only for looks.
   beside a marked input is left alone; no script loaded means the field still stops at its limit
   and nothing throws.
 - A **mutation** for each browser test is run at converge (S5): remove the observer, drop the
-  hide, count code units, announce on every key.
+  hide, count code points, announce on every key.
 - The legibility check: the line's classes are the help text's, so no new pairing is added; the
   task confirms that and, if the catalogue lists classes the pack writes, adds them.
 

@@ -62,7 +62,7 @@ Checked on 2026-11-22 against `origin/main`, Django 6.1.3.
 - The visually hidden class: `sr-only`, a Tailwind utility the pack already writes
   (`layout/fieldset.html`). **Tailwind.**
 - Following content added later: a `MutationObserver` on the document. **The browser.**
-- Counting as the field counts, by code point: `Array.from(value).length` in JavaScript against
-  Python's `len`. **The browser.**
+- Line break normalisation: `django.utils.text.normalize_newlines`. **Django.**
+- Counting as the browser's limit counts: `input.value.length`. **The browser.**
 - The line itself, its script and its attributes. **New code**, because no maintained package
   offers a count line drawn in daisyUI markup.

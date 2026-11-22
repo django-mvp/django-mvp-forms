@@ -163,8 +163,8 @@ turned on until it is full, and read the line and the field's value at each step
 - A field's text is changed by a script rather than by typing. The line is brought up to date the
   next time the person types or the field takes focus.
 - A person types characters made of more than one code unit, such as an emoji. The line counts as
-  the field's validation counts, so the number it shows never lets through a text the field
-  refuses (FR-009).
+  the browser's limit counts, which is never fewer than the field's validation counts, so the
+  number it shows never lets through a text the field refuses (FR-009).
 - The limit is lowered below the number from which the line appears. The line is shown from the
   first character.
 - A masked input of FS-015 is a text input. The line is not promised on it, because its mask
@@ -211,7 +211,8 @@ turned on until it is full, and read the line and the field's value at each step
   loaded, for a value drawn with the form.
 - **FR-008**: For a value longer than its limit the line MUST say that it is over and by how many
   characters. Nothing MUST cut a value that is already there.
-- **FR-009**: The line MUST count as the field's validation counts. A text the line says fits,
+- **FR-009**: The line MUST count as the browser's limit counts, so the field stops taking
+  characters exactly when the line says none are left. A text the line says fits,
   line breaks included, MUST be accepted by the field when it is submitted.
 - **FR-010**: The line's words MUST be translatable, in the package's catalogue, with the plural
   forms of the language the page is drawn in.
