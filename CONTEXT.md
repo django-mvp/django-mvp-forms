@@ -399,6 +399,16 @@ The year, the month or the day of a partial date. In the three-part widget each
 is one widget of a multi-widget field.
 _Avoid_: segment, unit, field (the field is the whole partial date).
 
+**Characters-left line**:
+The line under a text input or a textarea that says how many characters the
+field has left before its limit. It is hidden until only a few are left, and
+says by how many characters a value is over its limit.
+_Avoid_: counter, character count, remaining text.
+
+**Limit**:
+The most characters a field takes, which is its `max_length` and nothing else.
+_Avoid_: maximum, cap, maxlength (that is the attribute that carries the limit).
+
 ## Terms deliberately not used
 
 **Component**:

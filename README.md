@@ -2615,6 +2615,70 @@ The mask classes daisyUI has today are written out in `mvp_forms/widgets.py`, so
 
 `mvp_forms/image-input.js` comes with the form's media, needs nothing else on the page and acts once however often the page includes it. It listens on the document, so an image input added later, by a formset or by htmx, is covered with nothing to call. Without it the stored image, the file input and the removal checkbox all work, and only the preview, the revert button, the status line and the thumbnail as a picker are missing.
 
+### Characters left
+
+`CharactersLeftInput` and `CharactersLeftTextarea` draw a field with a line under it that says how many characters are left before the field's limit. The line stays hidden while plenty is left, appears once only a few are, follows every character typed, deleted, pasted or cut, and says by how many characters a value is over its limit. A developer turns it on by naming the widget. The widgets write a few `data-` attributes on the control, the script in their media draws the line, and the field validates and cleans as it did.
+
+This is the public surface:
+
+- `mvp_forms.widgets.CharactersLeftInput`, a text input
+- `mvp_forms.widgets.CharactersLeftTextarea`, a textarea
+- `mvp_forms.widgets.CharactersLeft`, the mixin both are built on, for a widget of your own
+- `mvp_forms.widgets.CHARACTERS_LEFT_FROM`, the number of characters left from which the line appears when a field states none
+- the script `mvp_forms/characters-left.js`
+
+```python
+from django import forms
+
+from mvp_forms.widgets import CharactersLeftInput, CharactersLeftTextarea
+
+
+class PostForm(forms.Form):
+    title = forms.CharField(max_length=80, widget=CharactersLeftInput)
+    summary = forms.CharField(
+        max_length=300, widget=CharactersLeftTextarea(show_from=40)
+    )
+```
+
+A subclass of either widget, or a widget of your own that lists `CharactersLeft` before its Django base, shows the line as its parent does.
+
+#### The limit
+
+The limit is the field's `max_length`, which Django writes on the control as `maxlength`. Nothing else sets it, so the line can never promise more than the field accepts. Stating `maxlength` in the widget's `attrs` raises a `ValueError` when the widget is made, and a field with no `max_length` raises a `ValueError` naming the field when the form is drawn.
+
+#### Where the line appears
+
+`CharactersLeftInput(attrs=None, *, show_from=None)` and `CharactersLeftTextarea(attrs=None, *, show_from=None)`. `show_from` is the number of characters left at which the line appears. Without it the line appears at `CHARACTERS_LEFT_FROM`, which is 8. A value that is not a whole number above zero raises a `ValueError` naming `show_from`. A limit below the number shows the line from the first character. To show it from the first character always, state a number at least as large as the limit.
+
+The widget writes one phrase for each count from zero up to the smaller of the number and the limit, so that each is translated with the plural forms of the language the page is drawn in. A `show_from` close to a long limit therefore makes the page heavier. The phrases are the package's, in its catalogue, and a project changes them through its own translation catalogue. There is no setting for other words.
+
+#### What the person sees
+
+- A value drawn close to its limit shows the line before anything is typed.
+- A value longer than its limit shows how far over it is. Nothing cuts it, and the field's own validation refuses it when it is submitted.
+- A control that is disabled or read-only shows the line only when its value is already close to the limit or over it.
+- The line is drawn from daisyUI's own classes, as the field's help text is, and needs no stylesheet.
+
+#### Line breaks in a textarea
+
+The browser counts a line break in a textarea as one character, and a form submits it as two, so a text that fills the box could be refused after it is sent. `CharactersLeftTextarea`, and a textarea of your own built on `CharactersLeft`, reads every submitted `\r\n` and `\r` as `\n`, so the browser, the line and the field count alike, and the cleaned value holds `\n`. A value stored with `\r\n` reads as changed until it is saved once.
+
+The line counts as the browser's `maxlength` counts, in UTF-16 code units, so a character such as an emoji counts as two. That is never fewer than the field's validation counts, so a text the line says fits is accepted.
+
+#### What assistive technology hears
+
+The line is hidden from assistive technology, and a separate polite status message carries the number. It is written when the line first appears from typing, a second after the person stops typing, and at once when no characters are left. It is never written for each key.
+
+#### What the script does
+
+`mvp_forms/characters-left.js` comes with the form's media, needs nothing else on the page and acts once however often the page includes it. It listens on the document, so a field added later, by a formset, a modal or htmx, is covered with nothing to call. A form that uses none of the widgets names no script. Without the script the field has its `maxlength`, the `data-` attributes and nothing else, so it still stops at its limit.
+
+`{% crispy form %}` writes the form's media inside the form. `{{ form|crispy }}`, `{{ field|as_crispy_field }}` and Django's own form rendering write none, so render `{{ form.media }}` in the page template or load `{% static 'mvp_forms/characters-left.js' %}` yourself.
+
+#### What is not supported
+
+The line is for a text input and a textarea. The Tom Select widgets, the masked inputs, number inputs and every other widget do not offer it. The package's masked inputs fix what can be typed, and a Tom Select control's typing box only searches the field's choices.
+
 ### Range inputs
 
 `RangeInput`, `DateRangeInput` and `DateTimeRangeInput` draw a low and a high end as one field: two number inputs, two `date` inputs or two `datetime-local` inputs. Either end may be left empty, so "at least 60" and "up to 2500" can both be written.

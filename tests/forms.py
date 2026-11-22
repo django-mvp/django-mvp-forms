@@ -33,6 +33,8 @@ from mvp_forms.layout import Join
 from mvp_forms.widgets import (
     CardSelect,
     CardSelectMultiple,
+    CharactersLeftInput,
+    CharactersLeftTextarea,
     ChipSelect,
     ChipSelectMultiple,
     DateRangeInput,
@@ -1830,3 +1832,42 @@ class ChoiceLongLabelForm(forms.Form):
         required=False,
         disabled=True,
     )
+
+
+class CharactersLeftPageForm(forms.Form):
+    title = forms.CharField(required=False, max_length=20, widget=CharactersLeftInput)
+    note = forms.CharField(required=False, max_length=20, widget=CharactersLeftTextarea)
+    first = forms.CharField(required=False, max_length=10, widget=CharactersLeftInput)
+    second = forms.CharField(required=False, max_length=10, widget=CharactersLeftInput)
+    choice = forms.MultipleChoiceField(
+        choices=FRUIT, widget=TomSelectMultiple, required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.include_media = False
+        self.helper.layout = Layout(
+            "title", "note", Join("first", "second", label="Pair"), "choice"
+        )
+
+
+class CharactersLeftLineForm(forms.Form):
+    code = forms.CharField(max_length=20, widget=CharactersLeftInput)
+
+
+CharactersLeftLineFormSet = formset_factory(CharactersLeftLineForm, extra=1)
+
+
+class CharactersLeftDialogForm(forms.Form):
+    aside = forms.CharField(required=False, max_length=20, widget=CharactersLeftInput)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.include_media = False
+        self.helper.layout = Layout(
+            Modal("aside", css_id="aside-dialog", title="Aside")
+        )

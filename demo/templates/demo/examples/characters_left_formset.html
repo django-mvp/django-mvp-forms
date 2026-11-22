@@ -1,0 +1,28 @@
+{% extends "demo/examples/base.html" %}
+{% load crispy_forms_tags %}
+{% block example %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.management_form }}
+    <div id="rows">
+      {% for row in form %}{% crispy row helper %}{% endfor %}
+    </div>
+    <template id="empty-row">{% crispy form.empty_form helper %}</template>
+    <div class="flex gap-2">
+      <button type="button" id="add-row" class="btn">Add row</button>
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+  </form>
+  {{ form.media }}
+  {# Adding a row to a formset is the project's job, so this page does it with a few lines of its own. #}
+  <script>
+    document.getElementById("add-row").addEventListener("click", function () {
+      var total = document.getElementById("id_form-TOTAL_FORMS");
+      var row = document
+        .getElementById("empty-row")
+        .innerHTML.replaceAll("__prefix__", total.value);
+      document.getElementById("rows").insertAdjacentHTML("beforeend", row);
+      total.value = Number(total.value) + 1;
+    });
+  </script>
+{% endblock example %}
