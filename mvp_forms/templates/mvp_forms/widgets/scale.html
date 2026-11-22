@@ -1,0 +1,20 @@
+<div{% if widget.attrs.id %} id="{{ widget.attrs.id }}"{% endif %}>
+  <div class="join w-full">
+    {% for option in widget.options %}
+      <input type="{{ option.type }}" name="{{ option.name }}" value="{{ option.value|stringformat:'s' }}"{% include "daisyui/widgets/attrs.html" with widget=option %}>
+    {% endfor %}
+  </div>
+  {% if widget.low or widget.high %}
+    <div class="flex justify-between gap-4 pt-1 text-xs text-base-content/90" aria-hidden="true">
+      <span{% if widget.low_id %} id="{{ widget.low_id }}"{% endif %}>{{ widget.low }}</span>
+      <span{% if widget.high_id %} id="{{ widget.high_id }}"{% endif %} class="text-end">{{ widget.high }}</span>
+    </div>
+  {% endif %}
+  {% with option=widget.clearing %}
+    {% if option %}
+      <div class="mt-2">
+        <input type="{{ option.type }}" name="{{ option.name }}" value="{{ option.value|stringformat:'s' }}"{% include "daisyui/widgets/attrs.html" with widget=option %}>
+      </div>
+    {% endif %}
+  {% endwith %}
+</div>

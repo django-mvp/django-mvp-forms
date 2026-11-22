@@ -23,7 +23,14 @@ from django.template.loader_tags import IncludeNode
 from django.templatetags.i18n import BlockTranslateNode
 
 from mvp_forms.templatetags.daisyui import FieldInput
-from mvp_forms.widgets import ImageInput, PartialDateInput, PointInput, RangeInput
+from mvp_forms.widgets import (
+    ImageInput,
+    PartialDateInput,
+    PillSelect,
+    PointInput,
+    RangeInput,
+    ScaleSelect,
+)
 
 LIST_HEADING = "### Replacing one template"
 SUPPORTED_HEADING = "#### A supported package's templates"
@@ -133,8 +140,10 @@ class TemplateSurface:
             FieldInput.joined_parts_template,
             ImageInput.template_name,
             PartialDateInput.template_name,
+            PillSelect.template_name,
             PointInput.template_name,
             RangeInput.template_name,
+            ScaleSelect.template_name,
         ]
         while pending:
             path = pending.pop()
