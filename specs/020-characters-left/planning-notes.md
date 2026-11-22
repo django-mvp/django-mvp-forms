@@ -7,11 +7,9 @@ field saying how many, driven by `data-` attributes on the input and a script th
 document, so it survives htmx swaps and rows added later. Eight characters left is the number it
 was designed and tried with.
 
-The package's Tom Select widgets (FS-017, `mvp_forms/static/mvp_forms/tomselect.js`) are the one
-place the line has to reach inside a control a script builds. Tom Select gives its typing box the
-select's `id` followed by `-ts-control`, and empties the box when a typed value is used, which
-raises no `input` event. How the line attaches there, and how it behaves whichever of the two
-scripts runs first, is for research.
+The line is not offered on Tom Select controls (`decisions.md`, D4). The script must leave a Tom
+Select control's typing box alone, including one inside a field that also has a text input with
+the line turned on.
 
 The line is announced to screen readers politely, not on every keystroke.
 

@@ -49,21 +49,20 @@ the line and the browser promise more, or less, than the field accepts. Django a
 
 **ADR:** expected, with D2
 
-## D4. Tom Select: the package's own widgets only, with a stated limit
+## D4. No Tom Select control in this feature
 
-**Chosen:** the line works on the typing box of `TomSelect` and `TomSelectMultiple`, with a limit
-the developer states. django-tomselect's controls are out of scope.
+**Chosen:** the line is not offered on the package's `TomSelect` and `TomSelectMultiple`, though the
+issue names them. django-tomselect's controls are not covered either.
 
-**Why:** the issue names the package's Tom Select widgets. A choice field has no `max_length`, so
-the limit cannot come from the field. The pack draws django-tomselect's controls but has never
-added behaviour to them, and doing so would tie the line to that package's media.
+**Why:** on a Tom Select control the line matters only where a person can create an option by
+typing it, as on a tags field that accepts new entries, and there its limit is the length of a new
+option's text. Where creating is off, the typing box only searches and a count bounds nothing a
+person keeps, so the line is not offered. The package's widgets let a person choose only among
+the field's choices (FS-017), so creating is off on all of them. If a setting that lets a person
+create an option is ever specified, the line comes with it, with that limit.
 
-The package's widgets take no value that is not among the field's choices (FS-017), so their
-typing box only searches, and on them the line bounds a search. That is what the issue asks for.
-Whether the package's widgets should also let a person add what they type is a separate feature
-and is not opened here.
-
-**Self-resolved.** The most likely decision to be overturned.
+**Decided at the specification's review.** Replaces the first reading, which offered the line on
+the package's widgets with a limit the developer stated.
 
 **ADR:** none
 

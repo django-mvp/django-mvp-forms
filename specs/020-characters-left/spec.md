@@ -15,7 +15,7 @@ tied to their inputs, so forms work with assistive technology)
 **Issue**: #251
 
 **Depends on**: nothing still to be delivered. It builds on the text input and textarea the pack
-already draws (FS-001) and the Tom Select widgets of FS-017.
+already draws (FS-001).
 
 **Input**: A field with a maximum length tells the person only when they submit too much. A line
 under the field counting down the characters left lets them fit their text as they type. A
@@ -46,15 +46,16 @@ records. Longer rationale is in `decisions.md`.
   number for one field. Recorded as FR-004 and FR-005.
 
 - **Q: Where does the limit come from?**
-  A: On a text input or a textarea, from the field's own `max_length` and nowhere else, so the
-  line can never promise more than the field accepts. A Tom Select control's typing box belongs
-  to a choice field, which has no `max_length`, so there the developer states the limit. Recorded
-  as FR-002 and FR-003.
+  A: From the field's own `max_length` and nowhere else, so the line can never promise more than
+  the field accepts. Recorded as FR-002.
 
-- **Q: Which Tom Select controls are covered?**
-  A: The package's own `TomSelect` and `TomSelectMultiple`, as the issue asks. django-tomselect's
-  controls are left out: the pack draws them but does not add to how they behave. Recorded as
-  FR-003 and under Out of scope.
+- **Q: Is the line offered on the package's Tom Select widgets, as the issue asks?**
+  A: Not by this feature. On a Tom Select control the line matters only where a person can create
+  an option by typing it, and its limit would then be the length of a new option's text. The
+  package's `TomSelect` and `TomSelectMultiple` let a person choose only among the field's
+  choices (FS-017), so their typing box only searches, and the line is not offered on them. It is
+  added with the setting that lets a person create an option, if one is ever specified. Recorded
+  under Out of scope.
 
 - **Q: What does assistive technology hear?**
   A: The number left, announced politely, when the line first appears, when the person stops
@@ -74,11 +75,10 @@ records. Longer rationale is in `decisions.md`.
 
 ### User Story 1 - A developer shows how many characters are left under a field (Priority: P1)
 
-A developer has a field with a maximum length: a short name, a title, a summary written in a
-textarea, or the typing box of a Tom Select control. They turn on the characters-left line for
-the field from Python, on its widget, and write no script and no template. They may state from
-how many characters left the line appears. On a Tom Select control they state the limit, since
-a choice field has none of its own.
+A developer has a field with a maximum length: a short name, a title, or a summary written in a
+textarea. They turn on the characters-left line for the field from Python, on its widget, and
+write no script and no template. They may state from how many characters left the line
+appears.
 
 **Why this priority**: It is the whole of the developer's side of the feature. Without it there is
 no line to see.
@@ -99,16 +99,12 @@ with the line turned on, render it with its form's media, and read the page.
 4. **Given** a field that states from how many characters left the line appears, **When** its
    form is drawn, **Then** that number is written for it, and **Given** one that states none,
    **Then** the package's number is.
-5. **Given** a `TomSelect` or `TomSelectMultiple` with the line turned on and a limit stated,
-   **When** its form is drawn, **Then** the select carries the limit and the mark, and the
-   control's typing box takes no more than the limit once the control has started.
-6. **Given** a text input or textarea with the line turned on, on a field with no `max_length`,
-   or a Tom Select widget with the line turned on and no limit, **When** the form is drawn,
-   **Then** an error is raised that names the field.
-7. **Given** a number from which the line appears that is not a whole number above zero, or a
-   limit stated on a text input or textarea, **When** the form class is defined, **Then** an
-   error is raised that names the setting.
-8. **Given** a field with the line turned on, **When** it is drawn through the pack, through
+5. **Given** a field with no `max_length` whose widget has the line turned on, **When** the form
+   is drawn, **Then** an error is raised that names the field.
+6. **Given** a number from which the line appears that is not a whole number above zero, or a
+   limit stated on the widget, **When** the form class is defined, **Then** an error is raised
+   that names the setting.
+7. **Given** a field with the line turned on, **When** it is drawn through the pack, through
    another template pack or through Django's own form rendering, **Then** the same attributes
    are written.
 
@@ -145,20 +141,17 @@ turned on until it is full, and read the line and the field's value at each step
    is not cut.
 7. **Given** a textarea with the line turned on, **When** a person writes text holding line
    breaks until the line says none are left and submits, **Then** the field accepts the text.
-8. **Given** a Tom Select control with the line turned on, **When** a person types into its typing
-   box, **Then** the line counts down under the control as it does under a text input, and
-   **When** what they typed is cleared or chosen, **Then** the line follows the emptied box.
-9. **Given** a person using a screen reader, **When** the line first appears, when they stop
+8. **Given** a person using a screen reader, **When** the line first appears, when they stop
    typing, and when no characters are left, **Then** the number left is announced politely, and
    it is not announced for each key they press.
-10. **Given** the line, **When** it is shown under any daisyUI theme the pack's legibility check
+9. **Given** the line, **When** it is shown under any daisyUI theme the pack's legibility check
     covers, **Then** it can be read against the page.
-11. **Given** a field with the line turned on in a formset row added in the browser, in a `Modal`,
+10. **Given** a field with the line turned on in a formset row added in the browser, in a `Modal`,
     or in a form that htmx swaps into the page, **When** a person types into it, **Then** the
     line works as it does on a page loaded in full, with no script written by the developer.
-12. **Given** a page that holds the script more than once, **When** a person types into a field,
+11. **Given** a page that holds the script more than once, **When** a person types into a field,
     **Then** there is one line under it.
-13. **Given** a page that does not load the script, **When** a person types into the field,
+12. **Given** a page that does not load the script, **When** a person types into the field,
     **Then** the field still stops at its limit, no line is shown and no error is raised.
 
 ---
@@ -182,9 +175,10 @@ turned on until it is full, and read the line and the field's value at each step
 
 ### Out of scope
 
-- django-tomselect's controls, and any Tom Select control not drawn by the package's own widgets.
-- Masked inputs, number inputs, and every widget other than a text input, a textarea and the
-  package's Tom Select widgets.
+- Tom Select controls, the package's own and django-tomselect's. The line belongs on a control
+  only where a person can create an option by typing it, with the length of a new option's text
+  as its limit. The package's Tom Select widgets cannot create options.
+- Masked inputs, number inputs, and every widget other than a text input and a textarea.
 - Counting words, lines or bytes rather than characters.
 - A lower limit, or a count of characters typed rather than characters left.
 - Wording a developer states for the line. Its words are the package's, translated.
@@ -197,16 +191,12 @@ turned on until it is full, and read the line and the field's value at each step
 #### Turning it on
 
 - **FR-001**: A developer MUST be able to turn the line on for one field from Python, on its
-  widget, for a text input, a textarea and the package's `TomSelect` and `TomSelectMultiple`,
-  writing no script and no template.
-- **FR-002**: On a text input or a textarea the limit MUST be the field's own `max_length`. A
-  limit stated for one of them MUST raise an error when the form class is defined, and turning
-  the line on for a field with no `max_length` MUST raise an error naming the field no later
-  than when the form is drawn.
-- **FR-003**: On a Tom Select widget the developer MUST state the limit, as a whole number above
-  zero. Turning the line on without one MUST raise an error naming the field no later than when
-  the form is drawn. Once the control has started, its typing box MUST take no more than the
-  limit.
+  widget, for a text input and a textarea, writing no script and no template.
+- **FR-002**: The limit MUST be the field's own `max_length`. A limit stated on the widget MUST
+  raise an error when the form class is defined, and turning the line on for a field with no
+  `max_length` MUST raise an error naming the field no later than when the form is drawn.
+- **FR-003**: The line MUST NOT be offered on the package's Tom Select widgets, which let a person
+  choose only among the field's choices.
 - **FR-004**: The line MUST appear once the characters left are at or below a number the package
   sets, and MUST be hidden while more are left.
 - **FR-005**: A developer MUST be able to state that number for one field. A value that is not a
@@ -239,8 +229,8 @@ turned on until it is full, and read the line and the field's value at each step
 - **FR-014**: The script MUST work on fields added to the page after it has loaded, by any script,
   including formset rows, modals and content swapped in by htmx. A page that holds the script more
   than once MUST draw one line under each field.
-- **FR-015**: On a Tom Select control the script MUST count the control's typing box, and MUST
-  work whether the line's script or the Tom Select script runs first.
+- **FR-015**: The script MUST leave every input alone that no widget marked for the line,
+  including a Tom Select control's typing box.
 - **FR-016**: The widgets and the script MUST use no inline script and no inline event handler.
 - **FR-017**: A page that does not load the script MUST draw the field as it would without the
   line, still stopping at its limit, and MUST raise no error.
@@ -261,7 +251,7 @@ turned on until it is full, and read the line and the field's value at each step
   technology hears, and what is not supported. Whatever the developer names MUST appear in the
   README's public surface.
 - **FR-022**: The demo MUST gain a page in its Custom widgets group, with live examples of the line
-  on a text input, a textarea, a Tom Select control, a formset whose rows can be added, and a
+  on a text input, a textarea, a formset whose rows can be added, and a
   field drawn with a value already over its limit.
 - **FR-023**: `CONTEXT.md` MUST gain the terms under Key Entities.
 
@@ -276,9 +266,7 @@ turned on until it is full, and read the line and the field's value at each step
 
 - **Characters-left line**: The line under a field's control that says how many characters the
   field has left before its limit, shown once only a few are left.
-- **Limit**: The most characters a field takes: its `max_length` on a text input or a textarea,
-  the number the developer states on a Tom Select control's typing box.
-- **Typing box**: The input inside a Tom Select control that a person types into to search.
+- **Limit**: The most characters a field takes, its `max_length`.
 
 ## Success Criteria *(mandatory)*
 
