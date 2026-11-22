@@ -160,3 +160,9 @@ from the browser, and without the script every folded choice is still reachable 
 drawn this way, the build falls back to a `label` holding a hidden input and records it here.
 
 **ADR:** none — local to this feature, nothing downstream inherits it
+
+## D15. Design review corrections
+
+The scale's end words name the first and last inputs through `aria-labelledby`, since `aria-label` is the visible text of an input drawn as `btn`. The colour entries for the two components are Tailwind state utilities, so the class test accepts names in `LAYOUT_UTILITIES`, and the decision record extends ADRs 0003 and 0020. A card's mark takes the existing `radio` or `checkbox` tables. The widget writes its own `aria-label`. The `fixed_size` entries and the inline-layout contingency are dropped. Quiet text starts at `text-base-content/90`.
+
+**ADR:** none — recorded in the feature's decision record

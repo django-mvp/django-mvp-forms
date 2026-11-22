@@ -44,7 +44,7 @@ widget's, `aria_label` as plain text with a scale's end words on its first and l
 by name, `show` set on one form's widget leaves another form untouched, a value keyed by a
 choice the field does not offer is passed over, a model choice matched by primary key, the context
 for a bound and an initial value, `cleaned_data` equal to a radio group's and a checkbox group's for
-the same submissions.
+the same submissions, grouped choices drawn in the field's order with no group name, and a multiple widget drawing an empty-string choice among the others.
 
 - [ ] T002 [US1] The scale and pill templates
 
@@ -90,7 +90,7 @@ and the errors describing it, every input `aria-invalid` and `disabled` as the f
 drawing through `{{ form|crispy }}`, `{% crispy form %}`, `|as_crispy_field`, a stacked and a
 table formset, `Row`, `Fieldset`, `Tab`, `AccordionGroup`, `Modal`, `InlineRadios` and
 `InlineCheckboxes`; a host project's replacement template is used. Every existing test in the
-suite still passes without edits (FR-026): this is the check that no other form's markup moved.
+suite still passes (FR-026), with one edit: `TestModifierTables` in `tests/test_pack/test_independence.py` splits an entry on whitespace and accepts names in `LAYOUT_UTILITIES`, each utility the widgets write being added there. A form holding the seven widgets (with a fold, a clearing choice and one in error) joins `STATES` in that file, so the class test covers FR-003. Assert each template has `summary` inside `details` and no `script` element or `on*` attribute.
 
 ### Group 4 — shipping the widgets
 
