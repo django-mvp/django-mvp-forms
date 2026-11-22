@@ -9,6 +9,8 @@ import sys
 import zoneinfo
 from decimal import Decimal
 from pathlib import Path
+from unittest.mock import patch
+from urllib.parse import urlencode
 
 import pytest
 from bs4 import BeautifulSoup
@@ -17,11 +19,16 @@ from django.contrib.auth.models import Group
 from django.http import QueryDict
 from django.utils import translation
 from django.utils.dates import MONTHS
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy
 from timezone_field import TimeZoneFormField
 
 from mvp_forms.fields import LatitudeField, LongitudeField, PartialDateField, PointField
 from mvp_forms.widgets import (
+    CardSelect,
+    CardSelectMultiple,
+    ChipSelect,
+    ChipSelectMultiple,
     CoordinateMaskInput,
     DateRangeInput,
     DateTimeRangeInput,
@@ -34,10 +41,13 @@ from mvp_forms.widgets import (
     PartialDateSelect,
     PatternBlock,
     PatternMaskInput,
+    PillSelect,
+    PillSelectMultiple,
     PointInput,
     RangeBlock,
     RangeInput,
     RegexMaskInput,
+    ScaleSelect,
     TimeZoneSelect,
     TomSelect,
     TomSelectMultiple,
@@ -2599,3 +2609,643 @@ class TestImageInput:
 
         for hook in ("frame", "preview", "empty", "status", "revert", "actions"):
             assert group.find(attrs={f"data-image-input-{hook}": True}) is not None
+
+
+SINGLE_CHOICE_WIDGETS = [ScaleSelect, PillSelect, ChipSelect, CardSelect]
+MULTIPLE_CHOICE_WIDGETS = [PillSelectMultiple, ChipSelectMultiple, CardSelectMultiple]
+FOLDING_WIDGETS = [ChipSelect, ChipSelectMultiple, CardSelect, CardSelectMultiple]
+CARD_WIDGETS = [CardSelect, CardSelectMultiple]
+LETTERS = [("a", "Alpha"), ("b", "Beta"), ("c", "Gamma")]
+
+
+def options_of(widget, value=None, name="field"):
+    """Return the context the widget draws, with its id as a form gives it."""
+    return widget.get_context(name, value, {"id": f"id_{name}"})["widget"]
+
+
+def values_of(options):
+    return [option["value"] for option in options]
+
+
+class TestChoiceWidgetSettings:
+    @pytest.mark.parametrize("widget_class", SINGLE_CHOICE_WIDGETS)
+    def test_a_single_choice_widget_is_a_radio_select(self, widget_class):
+        assert issubclass(widget_class, forms.RadioSelect)
+
+    @pytest.mark.parametrize("widget_class", MULTIPLE_CHOICE_WIDGETS)
+    def test_a_multiple_widget_is_a_checkbox_select_multiple(self, widget_class):
+        assert issubclass(widget_class, forms.CheckboxSelectMultiple)
+
+    @pytest.mark.parametrize(
+        ("widget_class", "setting"),
+        [
+            (ScaleSelect, "show"),
+            (PillSelect, "show"),
+            (PillSelectMultiple, "fold_label"),
+            (ChipSelect, "columns"),
+            (ChipSelectMultiple, "descriptions"),
+            (CardSelect, "colour"),
+            (PillSelect, "low"),
+        ],
+    )
+    def test_a_setting_the_widget_does_not_have_raises_naming_it(
+        self, widget_class, setting
+    ):
+        with pytest.raises(TypeError, match=setting):
+            widget_class(**{setting: "x"})
+
+    @pytest.mark.parametrize(
+        ("widget_class", "setting", "value"),
+        [
+            *[
+                (widget, "columns", value)
+                for widget in CARD_WIDGETS
+                for value in (0, 4, "2", True, None)
+            ],
+            *[
+                (widget, "show", value)
+                for widget in FOLDING_WIDGETS
+                for value in ("abc", 5, b"ab")
+            ],
+            *[(widget, "descriptions", ["a"]) for widget in CARD_WIDGETS],
+            *[(widget, "icons", "a") for widget in CARD_WIDGETS],
+            *[(widget, "meta", ("a",)) for widget in CARD_WIDGETS],
+            (ScaleSelect, "low", 3),
+            (ScaleSelect, "high", ["x"]),
+            *[(widget, "fold_label", 3) for widget in FOLDING_WIDGETS],
+        ],
+    )
+    def test_a_value_a_setting_cannot_take_raises_naming_it(
+        self, widget_class, setting, value
+    ):
+        with pytest.raises(ValueError, match=setting):
+            widget_class(**{setting: value})
+
+    def test_settings_are_taken_by_name_only(self):
+        with pytest.raises(TypeError):
+            ScaleSelect({}, (), "low")
+
+    def test_the_card_settings_are_kept_as_given(self):
+        widget = CardSelect(
+            descriptions={"a": "x"}, icons={"a": "i"}, meta={"a": "m"}, columns=3
+        )
+
+        assert widget.descriptions == {"a": "x"}
+        assert widget.icons == {"a": "i"}
+        assert widget.meta == {"a": "m"}
+        assert widget.columns == 3
+
+    def test_a_card_widget_has_two_columns_when_none_are_given(self):
+        assert CardSelect().columns == 2
+
+
+class TestChoiceWidgetOptions:
+    @pytest.mark.parametrize(
+        "widget_class", SINGLE_CHOICE_WIDGETS + MULTIPLE_CHOICE_WIDGETS
+    )
+    def test_the_choices_come_in_the_fields_order(self, widget_class):
+        widget = widget_class(choices=LETTERS)
+
+        assert values_of(options_of(widget)["options"]) == ["a", "b", "c"]
+
+    @pytest.mark.parametrize(
+        "widget_class", SINGLE_CHOICE_WIDGETS + MULTIPLE_CHOICE_WIDGETS
+    )
+    def test_grouped_choices_are_flattened_in_the_fields_order(self, widget_class):
+        widget = widget_class(
+            choices=[
+                ("a", "Alpha"),
+                ("Group", [("b", "Beta"), ("c", "Gamma")]),
+                ("d", "Delta"),
+            ]
+        )
+
+        context = options_of(widget)
+
+        assert values_of(context["options"]) == ["a", "b", "c", "d"]
+        assert "Group" not in str(context)
+
+    @pytest.mark.parametrize("widget_class", SINGLE_CHOICE_WIDGETS)
+    def test_a_single_widget_gives_the_empty_choice_as_clearing(self, widget_class):
+        widget = widget_class(choices=[("", "None"), *LETTERS])
+
+        context = options_of(widget)
+
+        assert values_of(context["options"]) == ["a", "b", "c"]
+        assert context["clearing"]["value"] == ""
+
+    @pytest.mark.parametrize("widget_class", SINGLE_CHOICE_WIDGETS)
+    def test_a_single_widget_without_an_empty_choice_has_no_clearing(
+        self, widget_class
+    ):
+        assert options_of(widget_class(choices=LETTERS))["clearing"] is None
+
+    @pytest.mark.parametrize("widget_class", MULTIPLE_CHOICE_WIDGETS)
+    def test_a_multiple_widget_keeps_the_empty_choice_among_the_others(
+        self, widget_class
+    ):
+        widget = widget_class(choices=[("a", "Alpha"), ("", "None"), ("b", "Beta")])
+
+        context = options_of(widget)
+
+        assert values_of(context["options"]) == ["a", "", "b"]
+        assert context["clearing"] is None
+
+    @pytest.mark.parametrize("widget_class", SINGLE_CHOICE_WIDGETS)
+    def test_a_single_value_is_selected_for_a_bound_value(self, widget_class):
+        widget = widget_class(choices=LETTERS)
+
+        options = options_of(widget, "b")["options"]
+
+        assert [option["selected"] for option in options] == [False, True, False]
+
+    @pytest.mark.parametrize("widget_class", MULTIPLE_CHOICE_WIDGETS)
+    def test_every_value_of_a_multiple_widget_is_selected(self, widget_class):
+        widget = widget_class(choices=LETTERS)
+
+        options = options_of(widget, ["a", "c"])["options"]
+
+        assert [option["selected"] for option in options] == [True, False, True]
+
+    def test_the_empty_choice_is_selected_when_the_value_is_empty(self):
+        widget = PillSelect(choices=[("", "None"), *LETTERS])
+
+        assert options_of(widget, "")["clearing"]["selected"] is True
+
+    @pytest.mark.parametrize(
+        "widget_class",
+        [
+            widget_class
+            for widget_class in SINGLE_CHOICE_WIDGETS + MULTIPLE_CHOICE_WIDGETS
+            if widget_class not in CARD_WIDGETS
+        ],
+    )
+    def test_each_option_is_named_by_its_label_alone(self, widget_class):
+        widget = widget_class(choices=LETTERS)
+
+        options = options_of(widget)["options"]
+
+        assert [option["attrs"]["aria-label"] for option in options] == [
+            "Alpha",
+            "Beta",
+            "Gamma",
+        ]
+
+    def test_a_label_marked_safe_is_named_as_plain_text(self):
+        label = mark_safe("<b>Fish</b> &amp; chips")
+        widget = PillSelect(choices=[("a", label)])
+
+        option = options_of(widget)["options"][0]
+
+        assert option["attrs"]["aria-label"] == "Fish & chips"
+
+    def test_a_label_not_marked_safe_is_named_as_it_is(self):
+        widget = PillSelect(choices=[("a", "R&D <b>")])
+
+        option = options_of(widget)["options"][0]
+
+        assert option["attrs"]["aria-label"] == "R&D <b>"
+
+    def test_the_layouts_classes_come_before_the_developers(self):
+        widget = PillSelect(attrs={"class": "mine"}, choices=LETTERS)
+
+        classes = options_of(widget)["options"][0]["attrs"]["class"].split()
+
+        assert classes[:-1] == widget.input_classes.split()
+        assert classes[-1] == "mine"
+
+    def test_the_layouts_classes_stand_alone_without_the_developers(self):
+        widget = PillSelect(choices=LETTERS)
+
+        classes = options_of(widget)["options"][0]["attrs"]["class"]
+
+        assert classes == widget.input_classes
+
+    @pytest.mark.parametrize(
+        "widget_class", SINGLE_CHOICE_WIDGETS + MULTIPLE_CHOICE_WIDGETS
+    )
+    def test_the_widget_writes_the_name_and_values_a_radio_group_does(
+        self, widget_class
+    ):
+        base = (
+            forms.RadioSelect
+            if widget_class in SINGLE_CHOICE_WIDGETS
+            else forms.CheckboxSelectMultiple
+        )
+        ours = options_of(widget_class(choices=LETTERS))["options"]
+        theirs = [
+            option
+            for group in options_of(base(choices=LETTERS))["optgroups"]
+            for option in group[1]
+        ]
+
+        assert [(o["name"], o["value"], o["type"]) for o in ours] == [
+            (o["name"], o["value"], o["type"]) for o in theirs
+        ]
+
+
+class TestScaleSelectContext:
+    def test_the_first_and_last_inputs_are_named_with_their_end_words(self):
+        widget = ScaleSelect(choices=LETTERS, low="Never", high="Always")
+
+        context = options_of(widget)
+        first, middle, last = context["options"]
+
+        assert first["attrs"]["aria-labelledby"].split() == [
+            first["attrs"]["id"],
+            context["low_id"],
+        ]
+        assert "aria-labelledby" not in middle["attrs"]
+        assert last["attrs"]["aria-labelledby"].split() == [
+            last["attrs"]["id"],
+            context["high_id"],
+        ]
+
+    def test_an_end_given_no_words_names_nothing_more(self):
+        widget = ScaleSelect(choices=LETTERS, high="Always")
+
+        context = options_of(widget)
+        first, last = context["options"][0], context["options"][-1]
+
+        assert "aria-labelledby" not in first["attrs"]
+        assert context["low"] == ""
+        assert context["high"] == "Always"
+        assert last["attrs"]["aria-labelledby"]
+
+    def test_a_scale_of_one_choice_is_named_by_both_ends(self):
+        widget = ScaleSelect(choices=[("a", "Alpha")], low="Never", high="Always")
+
+        context = options_of(widget)
+
+        assert context["options"][0]["attrs"]["aria-labelledby"].split() == [
+            context["options"][0]["attrs"]["id"],
+            context["low_id"],
+            context["high_id"],
+        ]
+
+    def test_the_clearing_choice_is_not_an_end_of_the_scale(self):
+        widget = ScaleSelect(
+            choices=[("", "None"), *LETTERS], low="Never", high="Always"
+        )
+
+        context = options_of(widget)
+
+        assert "aria-labelledby" not in context["clearing"]["attrs"]
+        assert context["options"][-1]["value"] == "c"
+        assert context["options"][-1]["attrs"]["aria-labelledby"]
+
+    def test_a_scale_with_no_id_names_nothing_through_the_ends(self):
+        widget = ScaleSelect(choices=LETTERS, low="Never", high="Always")
+
+        context = widget.get_context("field", None, {})["widget"]
+
+        assert all("aria-labelledby" not in o["attrs"] for o in context["options"])
+
+
+class TestFoldedChoicesContext:
+    @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
+    def test_every_choice_is_on_show_when_none_are_named(self, widget_class):
+        context = options_of(widget_class(choices=LETTERS))
+
+        assert values_of(context["shown"]) == ["a", "b", "c"]
+        assert context["folded"] == []
+        assert context["fold_open"] is False
+
+    @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
+    def test_the_choices_not_named_are_folded(self, widget_class):
+        context = options_of(widget_class(show={"b"}, choices=LETTERS))
+
+        assert values_of(context["shown"]) == ["b"]
+        assert values_of(context["folded"]) == ["a", "c"]
+        assert context["fold_open"] is False
+
+    @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
+    def test_a_chosen_choice_is_always_on_show(self, widget_class):
+        value = ["c"] if widget_class in MULTIPLE_CHOICE_WIDGETS else "c"
+        widget = widget_class(show={"a"}, choices=LETTERS)
+
+        context = options_of(widget, value)
+
+        assert values_of(context["shown"]) == ["a", "c"]
+        assert values_of(context["folded"]) == ["b"]
+
+    @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
+    def test_a_fold_holding_every_choice_with_none_chosen_is_open(self, widget_class):
+        context = options_of(widget_class(show=[], choices=LETTERS))
+
+        assert context["shown"] == []
+        assert values_of(context["folded"]) == ["a", "b", "c"]
+        assert context["fold_open"] is True
+
+    @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
+    def test_a_fold_that_would_hold_nothing_is_not_drawn(self, widget_class):
+        context = options_of(widget_class(show={"a", "b", "c"}, choices=LETTERS))
+
+        assert context["folded"] == []
+        assert context["fold_open"] is False
+
+    @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
+    def test_a_value_the_field_does_not_offer_is_passed_over(self, widget_class):
+        widget = widget_class(show={"a", "zzz"}, choices=LETTERS)
+
+        context = options_of(widget)
+
+        assert values_of(context["shown"]) == ["a"]
+        assert values_of(context["folded"]) == ["b", "c"]
+
+    @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
+    def test_the_values_on_show_are_read_as_text(self, widget_class):
+        widget = widget_class(show=[1], choices=[(1, "One"), (2, "Two")])
+
+        context = options_of(widget)
+
+        assert values_of(context["shown"]) == [1]
+        assert values_of(context["folded"]) == [2]
+
+    def test_the_empty_choice_of_a_single_widget_is_never_folded(self):
+        widget = ChipSelect(show={"a"}, choices=[("", "None"), *LETTERS])
+
+        context = options_of(widget, "a")
+
+        assert context["clearing"]["value"] == ""
+        assert context["clearing"]["selected"] is False
+        assert values_of(context["folded"]) == ["b", "c"]
+
+    def test_the_fold_is_drawn_in_the_fields_order_by_index(self):
+        widget = ChipSelect(show={"a"}, choices=LETTERS)
+
+        context = options_of(widget)
+
+        assert [o["position"] for o in context["shown"]] == [0]
+        assert [o["position"] for o in context["folded"]] == [1, 2]
+
+    def test_the_developers_words_for_the_fold_are_given_as_they_are(self):
+        widget = ChipSelect(show={"a"}, fold_label="Others", choices=LETTERS)
+
+        context = options_of(widget)
+
+        assert context["fold_label"] == "Others"
+        assert context["fold_custom"] is True
+
+    def test_the_package_words_for_the_fold_carry_the_count(self):
+        widget = ChipSelect(show={"a"}, choices=LETTERS)
+
+        context = options_of(widget)
+
+        assert str(context["fold_label"]) == context["fold_other"].replace("{n}", "2")
+        assert context["fold_custom"] is False
+
+    def test_the_clearing_choice_carries_the_clearing_classes_after_the_layouts(self):
+        class Clearing(ChipSelect):
+            clearing_classes = "clear-me"
+
+        context = options_of(Clearing(choices=[("", "None"), *LETTERS]))
+
+        clearing = context["clearing"]["attrs"]["class"].split()
+        assert clearing[-1] == "clear-me"
+        assert clearing[: len(ChipSelect.input_classes.split())] == (
+            ChipSelect.input_classes.split()
+        )
+        assert all("clear-me" not in o["attrs"]["class"] for o in context["options"])
+
+    def test_the_package_words_for_the_fold_have_a_form_for_one(self):
+        widget = ChipSelect(show={"a", "b"}, choices=LETTERS)
+
+        context = options_of(widget)
+
+        assert str(context["fold_label"]) == context["fold_one"].replace("{n}", "1")
+
+    def test_setting_the_values_on_show_changes_one_forms_widget_alone(self):
+        class LettersForm(forms.Form):
+            letter = forms.ChoiceField(choices=LETTERS, widget=ChipSelect(show={"a"}))
+
+        first = LettersForm()
+        second = LettersForm()
+        first.fields["letter"].widget.show = {"b"}
+
+        first_shown = options_of(first.fields["letter"].widget)["shown"]
+        second_shown = options_of(second.fields["letter"].widget)["shown"]
+
+        assert values_of(first_shown) == ["b"]
+        assert values_of(second_shown) == ["a"]
+        assert LettersForm.base_fields["letter"].widget.show == {"a"}
+
+    @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
+    def test_changing_the_values_on_show_in_place_changes_one_form_alone(
+        self, widget_class
+    ):
+        class LettersForm(forms.Form):
+            letter = forms.MultipleChoiceField(
+                choices=LETTERS, widget=widget_class(show={"a"})
+            )
+
+        first = LettersForm()
+        second = LettersForm()
+        first.fields["letter"].widget.show.add("b")
+
+        assert second.fields["letter"].widget.show == {"a"}
+        assert LettersForm.base_fields["letter"].widget.show == {"a"}
+
+    @pytest.mark.parametrize("widget_class", CARD_WIDGETS)
+    def test_changing_the_extras_in_place_changes_one_form_alone(self, widget_class):
+        class LettersForm(forms.Form):
+            letter = forms.MultipleChoiceField(
+                choices=LETTERS,
+                widget=widget_class(
+                    descriptions={"a": "One"}, icons={"a": "x"}, meta={"a": "y"}
+                ),
+            )
+
+        first = LettersForm()
+        second = LettersForm()
+        widget = first.fields["letter"].widget
+        widget.descriptions["b"] = "Two"
+        widget.icons["b"] = "z"
+        widget.meta["b"] = "w"
+
+        other = second.fields["letter"].widget
+        assert (other.descriptions, other.icons, other.meta) == (
+            {"a": "One"},
+            {"a": "x"},
+            {"a": "y"},
+        )
+
+    @pytest.mark.parametrize("widget_class", CARD_WIDGETS)
+    def test_a_card_option_has_no_aria_label_of_its_own(self, widget_class):
+        options = options_of(widget_class(choices=LETTERS))["options"]
+
+        assert all("aria-label" not in option["attrs"] for option in options)
+
+    def test_the_fold_words_are_chosen_for_the_count_of_folded_choices(self):
+        widget = ChipSelectMultiple(show=[], choices=[(n, str(n)) for n in range(5)])
+        counts = []
+
+        def record(singular, plural, number):
+            counts.append(number)
+            return singular
+
+        with patch("mvp_forms.widgets.ngettext", record):
+            options_of(widget)
+
+        assert 5 in counts
+
+    def test_the_set_given_is_not_changed_by_drawing(self):
+        given = {"a"}
+        widget = ChipSelectMultiple(show=given, choices=LETTERS)
+
+        options_of(widget, ["c"])
+
+        assert given == {"a"}
+        assert widget.show == {"a"}
+
+    def test_a_value_on_show_that_is_not_a_collection_raises_when_drawn(self):
+        widget = ChipSelect(choices=LETTERS)
+        widget.show = "abc"
+
+        with pytest.raises(ValueError, match="show"):
+            options_of(widget)
+
+
+class TestCardChoicesContext:
+    def test_each_option_carries_the_extras_given_for_its_value(self):
+        widget = CardSelect(
+            descriptions={"a": "About a"},
+            icons={"b": mark_safe("<svg></svg>")},
+            meta={"a": "Short", "c": "Line"},
+            choices=LETTERS,
+        )
+
+        first, second, third = options_of(widget)["options"]
+
+        assert (first["description"], first["icon"], first["meta"]) == (
+            "About a",
+            None,
+            "Short",
+        )
+        assert (second["description"], second["icon"], second["meta"]) == (
+            None,
+            mark_safe("<svg></svg>"),
+            None,
+        )
+        assert (third["description"], third["icon"], third["meta"]) == (
+            None,
+            None,
+            "Line",
+        )
+
+    def test_extras_are_found_by_the_value_read_as_text(self):
+        widget = CardSelectMultiple(
+            descriptions={1: "One", "2": "Two"}, choices=[(1, "A"), (2, "B")]
+        )
+
+        first, second = options_of(widget)["options"]
+
+        assert (first["description"], second["description"]) == ("One", "Two")
+
+    def test_extras_keyed_by_a_value_the_field_does_not_offer_are_passed_over(self):
+        widget = CardSelect(
+            descriptions={"zzz": "x"},
+            icons={"zzz": "x"},
+            meta={"zzz": "x"},
+            choices=LETTERS,
+        )
+
+        options = options_of(widget)["options"]
+
+        assert all(
+            (o["description"], o["icon"], o["meta"]) == (None, None, None)
+            for o in options
+        )
+
+    def test_the_clearing_choice_carries_its_extras_too(self):
+        widget = CardSelect(descriptions={"": "Nothing"}, choices=[("", "None")])
+
+        assert options_of(widget)["clearing"]["description"] == "Nothing"
+
+    def test_the_columns_are_in_the_context(self):
+        assert options_of(CardSelect(columns=3, choices=LETTERS))["columns"] == 3
+        assert options_of(CardSelect(choices=LETTERS))["columns"] == 2
+
+    @pytest.mark.django_db
+    def test_a_model_choice_is_matched_by_its_primary_key(self):
+        groups = [Group.objects.create(name=name) for name in ("One", "Two", "Three")]
+        field = forms.ModelMultipleChoiceField(
+            queryset=Group.objects.order_by("pk"),
+            widget=CardSelectMultiple(
+                show={groups[1].pk},
+                descriptions={groups[2].pk: "Third"},
+            ),
+        )
+
+        context = options_of(field.widget, [str(groups[0].pk)])
+
+        assert [o["value"].value for o in context["shown"]] == [
+            groups[0].pk,
+            groups[1].pk,
+        ]
+        assert [o["value"].value for o in context["folded"]] == [groups[2].pk]
+        assert context["options"][2]["description"] == "Third"
+
+
+class TestChoiceWidgetsCleanData:
+    SUBMISSIONS = [{}, {"field": "a"}, {"field": "c"}, {"field": "zzz"}, {"field": ""}]
+
+    @pytest.mark.parametrize("widget_class", SINGLE_CHOICE_WIDGETS)
+    @pytest.mark.parametrize("submission", SUBMISSIONS)
+    @pytest.mark.parametrize("required", [True, False])
+    def test_a_single_choice_cleans_as_a_radio_group_does(
+        self, widget_class, submission, required
+    ):
+        def clean(widget):
+            form_class = type(
+                "ChoiceForm",
+                (forms.Form,),
+                {
+                    "field": forms.ChoiceField(
+                        choices=LETTERS, widget=widget, required=required
+                    )
+                },
+            )
+            form = form_class(QueryDict(urlencode(submission)))
+            return form.is_valid(), form.cleaned_data, form.errors.as_data()
+
+        assert clean(widget_class()) == clean(forms.RadioSelect())
+
+    @pytest.mark.parametrize("widget_class", MULTIPLE_CHOICE_WIDGETS)
+    @pytest.mark.parametrize(
+        "submission",
+        [[], ["a"], ["a", "c"], ["zzz"], ["a", "zzz"]],
+    )
+    @pytest.mark.parametrize("required", [True, False])
+    def test_a_multiple_choice_cleans_as_a_checkbox_group_does(
+        self, widget_class, submission, required
+    ):
+        def clean(widget):
+            form_class = type(
+                "ChoiceForm",
+                (forms.Form,),
+                {
+                    "field": forms.MultipleChoiceField(
+                        choices=LETTERS, widget=widget, required=required
+                    )
+                },
+            )
+            form = form_class(QueryDict("&".join(f"field={v}" for v in submission)))
+            return form.is_valid(), form.cleaned_data, form.errors.as_data()
+
+        assert clean(widget_class()) == clean(forms.CheckboxSelectMultiple())
+
+    @pytest.mark.django_db
+    def test_a_model_choice_cleans_as_a_radio_group_does(self):
+        group = Group.objects.create(name="One")
+
+        def clean(widget):
+            class ModelForm(forms.Form):
+                field = forms.ModelChoiceField(
+                    queryset=Group.objects.all(), widget=widget
+                )
+
+            form = ModelForm(QueryDict(f"field={group.pk}"))
+            return form.is_valid(), form.cleaned_data
+
+        assert clean(CardSelect()) == clean(forms.RadioSelect())

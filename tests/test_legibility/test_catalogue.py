@@ -3,6 +3,8 @@ import pytest
 from mvp_forms.choices import Modifiers
 from mvp_forms.templatetags.daisyui import FieldInput
 from tests.legibility.catalogue import Catalogue
+from tests.legibility.pairings import Ink
+from tests.legibility.reader import Reader
 from tests.test_pack.test_independence import STATES
 
 
@@ -41,7 +43,8 @@ class TestCatalogue:
             name
             for table in Modifiers.tables.values()
             for modifiers in table.values()
-            for name in modifiers.values()
+            for entry in modifiers.values()
+            for name in entry.split()
         }
 
         assert named
@@ -115,3 +118,66 @@ class TestCatalogue:
         names = {state.name for state in Catalogue.states()}
 
         assert {m.form_state for m in Catalogue.measurements()} <= names
+
+
+class TestCatalogueChoiceWidgets:
+    @pytest.mark.parametrize("colour", list(Modifiers.colors["choice-button"]))
+    def test_a_chosen_choice_button_is_measured_in_every_colour(self, colour):
+        found = {
+            (m.pairing.part, m.pairing.ink)
+            for m in Catalogue.measurements()
+            if m.form_state == f"choice widgets, color {colour}"
+            and m.element.kind == "btn"
+        }
+
+        assert ("button text", Ink(f"{colour}-content")) in found
+        assert ("mark", Ink(colour)) in found
+
+    @pytest.mark.parametrize("colour", list(Modifiers.colors["choice-card"]))
+    def test_a_chosen_card_is_measured_in_every_colour(self, colour):
+        found = {
+            (m.element.kind, m.pairing.part, m.pairing.ink)
+            for m in Catalogue.measurements()
+            if m.form_state == f"choice widgets, color {colour}"
+        }
+
+        assert ("card", "mark", Ink(colour)) in found
+
+    def test_the_text_of_a_chosen_card_is_measured_on_its_tint(self):
+        tint = Ink("primary").faded(0.1).over(Ink("base-100"))
+
+        assert any(
+            m.pairing.part == "text" and m.pairing.surface == tint
+            for m in Catalogue.measurements()
+            if m.form_state == "choice widgets, through the tag"
+        )
+
+    def test_the_icon_tile_is_measured_on_its_fill(self):
+        found = {
+            (m.pairing.ink, m.pairing.surface)
+            for m in Catalogue.measurements()
+            if m.element.kind == "tile"
+        }
+
+        assert (Ink("primary-content"), Ink("primary")) in found
+
+    def test_a_disabled_choice_widget_is_measured_and_not_held(self):
+        found = [
+            m
+            for m in Catalogue.measurements()
+            if m.form_state == "disabled choice widgets" and m.element.kind == "btn"
+        ]
+
+        assert found
+        assert not any(m.held for m in found)
+
+    def test_no_colour_utility_of_the_choice_widgets_is_left_silent(self):
+        named = {
+            name
+            for component in ("choice-button", "choice-card")
+            for entry in Modifiers.colors[component].values()
+            for name in entry.split()
+        }
+
+        assert named <= set(Reader.paints), named - set(Reader.paints)
+        assert not named & Reader.silent

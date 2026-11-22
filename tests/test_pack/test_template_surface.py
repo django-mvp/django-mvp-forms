@@ -159,7 +159,11 @@ class TestRendererRoute:
             "mvp_forms/widgets/image.html",
             "mvp_forms/widgets/partial_date.html",
             "mvp_forms/widgets/point.html",
+            "mvp_forms/widgets/pills.html",
+            "mvp_forms/widgets/chips.html",
+            "mvp_forms/widgets/cards.html",
             "mvp_forms/widgets/range.html",
+            "mvp_forms/widgets/scale.html",
         }
 
     def test_an_include_by_a_name_is_not_followed(self, template_surface):

@@ -287,9 +287,7 @@ layout = Layout(
         FormText("We only use this to reply to you."),
         "email",
     ),
-    FormText(
-        "Nothing is booked until we have replied.", size="small", variant="muted"
-    ),
+    FormText("Nothing is booked until we have replied.", size="small", variant="muted"),
 )
 ```
 
@@ -675,7 +673,9 @@ class SearchForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.daisyui = FormChoices(button_color="primary")
         self.helper.layout = Layout(
-            Join("scope", "query", StrictButton("Search", type="submit"), label="Search"),
+            Join(
+                "scope", "query", StrictButton("Search", type="submit"), label="Search"
+            ),
         )
 ```
 
@@ -975,6 +975,131 @@ A range is one `<input type="range">` with the field's name and id and the class
 
 A field that cannot be drawn as a rating or a range raises `InvalidChoice` with `kind="drawing"` when the form is drawn, naming the field as `target`. For a rating that is a multiple select, a checkbox group, a null-boolean select, a text input, a number input, a boolean field, and a select or a radio group whose widget names a template of its own, because the pack cannot draw a rating through a template it does not own. For a range it is a field whose widget is not a number input, which includes a localised `IntegerField`, `FloatField` or `DecimalField`, whose widget is a text input, and a rating or one of a boolean field's drawings stated for a number field. The names `allowed` are the field's own: `rating` for a field that holds one choice, `range` for a number field, the three drawings of a boolean field for a checkbox, and none for the others.
 
+### Choice widgets
+
+A choice field can be drawn with large choices instead of a select or a column of small radios: as one row of segments, as rounded toggles, as large toggles that show a long label in full, or as cards that say what each choice means. Name one of seven widgets on the field. Each draws one `<input type="radio">` or `<input type="checkbox">` for each choice with the field's name and the choice's value, so the field validates and cleans exactly as it does with `RadioSelect` or `CheckboxSelectMultiple`. The widgets use daisyUI's classes and Tailwind's utilities and no stylesheet of the package's.
+
+This is the public surface:
+
+- `mvp_forms.widgets.ScaleSelect`, a single choice drawn as one row of segments
+- `mvp_forms.widgets.PillSelect` and `mvp_forms.widgets.PillSelectMultiple`, one choice and several drawn as rounded toggles
+- `mvp_forms.widgets.ChipSelect` and `mvp_forms.widgets.ChipSelectMultiple`, one choice and several drawn as large toggles
+- `mvp_forms.widgets.CardSelect` and `mvp_forms.widgets.CardSelectMultiple`, one choice and several drawn as cards
+- the settings `low` and `high` of `ScaleSelect`, `show` and `fold_label` of the chip and card widgets, and `descriptions`, `icons`, `meta` and `columns` of the card widgets
+- the templates `mvp_forms/widgets/scale.html`, `mvp_forms/widgets/pills.html`, `mvp_forms/widgets/chips.html`, `mvp_forms/widgets/cards.html` and `mvp_forms/widgets/card_option.html`
+- the script `mvp_forms/choice-fold.js`, which the chip and card widgets name in their media
+
+```python
+from django import forms
+
+from mvp_forms.widgets import CardSelect, ChipSelectMultiple, PillSelect, ScaleSelect
+
+
+class SurveyForm(forms.Form):
+    recommend = forms.ChoiceField(
+        choices=[(score, str(score)) for score in range(11)],
+        widget=ScaleSelect(low="Not at all likely", high="Extremely likely"),
+    )
+    colour = forms.ChoiceField(
+        choices=[("red", "Red"), ("green", "Green"), ("blue", "Blue")],
+        widget=PillSelect,
+    )
+    interests = forms.MultipleChoiceField(
+        choices=INTERESTS,
+        widget=ChipSelectMultiple(show=["cycling", "cooking"]),
+    )
+    plan = forms.ChoiceField(
+        choices=[("basic", "Basic"), ("premium", "Premium")],
+        widget=CardSelect(descriptions={"basic": "One user."}, columns=2),
+    )
+```
+
+Every setting is keyword-only. A setting a widget does not have, or a value a setting cannot take, raises an error that names the setting when the widget is made. The widgets work on every field Django draws with a radio group or a checkbox group: `ChoiceField`, `TypedChoiceField`, `ModelChoiceField`, `MultipleChoiceField`, `TypedMultipleChoiceField` and `ModelMultipleChoiceField`. A scale holds one value, so it has no multiple widget.
+
+#### Which lists each suits
+
+| Widget | Suits |
+|---|---|
+| `ScaleSelect` | An ordered set of up to eleven short choices, such as 0 to 10. The segments narrow as their number grows. |
+| `PillSelect`, `PillSelectMultiple` | A short set of short labels, such as colours. A long label does not wrap. |
+| `ChipSelect`, `ChipSelectMultiple` | A longer set, or labels of any length. A chip shows its label in full and wraps it. |
+| `CardSelect`, `CardSelectMultiple` | Choices that need explaining, with an icon, a short line and a description. |
+
+#### Settings
+
+| Widget | Setting | Takes | What it does |
+|---|---|---|---|
+| `ScaleSelect` | `low`, `high` | text, or a lazy translation | The words under the first and the last segment. Each is optional, and a scale with none draws none. A screen reader reads the words with the first and the last choice. |
+| chip and card widgets | `show` | a collection of values | The values of the choices that stay on show. With none given every choice is on show. It is read as text, so a primary key matches, and a value the field does not offer is passed over. |
+| chip and card widgets | `fold_label` | text, or a lazy translation | The words on the fold's control, shown with the count of choices it holds. The package's own words are translatable. |
+| card widgets | `descriptions` | a mapping from a value to text | The softer text under a choice's label. It is escaped unless marked safe. |
+| card widgets | `icons` | a mapping from a value to markup | The icon of a choice, drawn as the markup given, so mark it safe. The package names no icon set. |
+| card widgets | `meta` | a mapping from a value to text | A short line above a choice's label. It is escaped unless marked safe. |
+| card widgets | `columns` | `1`, `2` or `3` | The number of cards across on a wide screen, 2 by default. One card sits across on a narrow screen. Any other number raises when the widget is made. |
+
+Each mapping is optional for every choice, and a choice a mapping does not name is drawn with its label alone. A mapping is read by the choice's value as text, so a `ModelChoiceField` is keyed by primary key. A mapping keyed by a value the field does not offer is passed over.
+
+#### Clearing a single choice
+
+A choice whose value is the empty string is not drawn among the others. A single-choice widget draws it after them as the way to say "none", and choosing it submits the field empty. A model choice field's empty label is that choice when the field is given `blank=True`, because Django drops the empty label of a field drawn as a radio group otherwise, and a `ChoiceField` is given `("", "No answer")`. A field with no empty choice offers no way to clear it. A multiple widget draws such a choice as any other, since clearing a multiple field is unticking its choices. A choice whose value is `0` is drawn among the others.
+
+#### The fold
+
+A chip or card widget given `show` draws the choices it names, and every chosen choice, in the field's order. It draws the rest inside a native `<details>` element after them, whose `<summary>` is the control and says how many choices it holds, such as "3 more". A chosen choice is never folded, so a bound or initial value is always on show. A fold that would hold every choice, because none is named and none is chosen, is drawn open, and a fold that would hold none is not drawn.
+
+Which choices matter often depends on the person, so `show` can be set on the form's own copy of the widget in `__init__`. Another form made from the same class is not affected.
+
+```python
+class InterestsForm(forms.Form):
+    interests = forms.MultipleChoiceField(
+        choices=INTERESTS, widget=ChipSelectMultiple, required=False
+    )
+
+    def __init__(self, *args, usual=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["interests"].widget.show = set(usual)
+```
+
+- The disclosure, its keyboard operation and its open state for assistive technology come from the browser. The control is a native `<summary>`.
+- Without the script every choice can still be reached: a person opens the fold, chooses any choice and submits the form.
+- The script is what keeps a chosen choice on show and keeps the count true. When a person chooses a choice inside the fold and closes it, the script moves that choice, with its card or chip, out of the fold into the choices on show in the field's order, and the count is the number of choices still folded. When none is left the script removes the fold. The count is its own element, marked `data-choice-count`. The package's own words are drawn with the count by the server and are held on the summary as `data-choice-one` and `data-choice-other`, each with `{n}` where the count goes, so the script writes them again in the person's language. Words given as `fold_label` stay as given, followed by the count.
+- The script acts on a fold added to the page after it has loaded, such as a row added to a formset or a form that htmx swaps in, and acts once on each fold however many times the page includes it. It writes no inline script and uses no inline handler.
+- A disabled field's fold still opens, so a person can read the folded choices, and none can be chosen.
+- A form drawn again after a failed submission draws every choice the person had chosen on show.
+
+The widgets of the chip and the card name `mvp_forms/choice-fold.js` in their media, and the scale and the pills name no script. Render `{{ form.media }}` in the page template, or load `{% static 'mvp_forms/choice-fold.js' %}` yourself. `{% crispy form %}` writes the form's media inside the form, and `{{ form|crispy }}`, `{{ field|as_crispy_field }}` and Django's own form rendering write none. A project that uses no chip or card widget never loads the script.
+
+#### Size and colour
+
+The widgets take the form's size and colour and the field's own, as any input does, and have no variant. A variant stated for the form is passed over for them, and one stated on the field raises `InvalidChoice` with `kind="variant"`. A drawing stated for a field that uses one of them raises `InvalidChoice` with `kind="drawing"`, since the widget is already the drawing.
+
+- A scale, the pills and the chips are drawn as daisyUI's `btn`. The size is the button's size modifier, such as `btn-sm`, and the colour is written on a chosen choice with Tailwind's `checked:` state utilities, such as `checked:bg-primary`, because daisyUI has no modifier that colours a checked button.
+- A card holds its label and its extras, and its mark is daisyUI's `radio` or `checkbox`, which takes the form's size and colour like any radio or checkbox. A card has no size of its own, so its size is its mark's. The card's edge and tint take the colour through `has-checked:` utilities, and with no colour stated they are drawn in the primary colour.
+- A field in error is drawn in the error colour in place of the stated one, a card's edge and mark included, and the size still applies.
+
+#### Frame, errors and where they are drawn
+
+Each widget is a group: a fieldset named by a legend that holds the field's label and the required marker, with the help text and the errors describing it. Each input is `aria-invalid` when the field is in error and disabled when the field is. A choice is named by an `aria-label` that holds its label as plain text, unless the widget already gives it one, and a scale names its first and last choice by the words at their end as well. A class or an attribute you set on the widget is kept on every input, the one that clears included.
+
+The widgets are drawn the same through `{{ form|crispy }}` and `{% crispy form %}`, in a formset stacked or as a table, and inside a `Row`, a `Fieldset`, a `Tab`, an `AccordionGroup` or a `Modal`. A host project replaces any of their templates as it replaces any other of the pack's (see [Replacing one template](https://github.com/django-mvp/django-mvp-forms#replacing-one-template)). A subclass of one of the widgets is drawn as its parent is. Choices in named groups are drawn in the field's order and the names of the groups are not drawn.
+
+#### The classes the widgets share
+
+Three classes in `mvp_forms.widgets` hold what the seven share, for a project that writes a choice widget of its own in the same shape:
+
+- `ChoiceLayout` goes before `RadioSelect` or `CheckboxSelectMultiple`. It lists the choices in the field's order without the names of groups, names each input by its label, and sets the empty choice of a single-choice widget apart as `clearing`. A subclass sets `choice_component` and `input_classes`.
+- `FoldedChoices` builds on `ChoiceLayout` and adds `show`, `fold_label` and the split of the choices into those on show and those in the fold.
+- `CardChoices` builds on `FoldedChoices` and adds `descriptions`, `icons`, `meta` and `columns`.
+
+#### What is not supported
+
+- A second tap on a chosen single choice that clears it. The empty choice is the way to clear.
+- Reordering the choices in the browser, and folding by a count of choices instead of by named values.
+- Hiding the other choices once one is chosen.
+- An icon set, and icons on pills, chips or a scale.
+- Headings for choices in named groups.
+- A stylesheet of the package's own.
+
 ### Floating labels
 
 A floating label is daisyUI's own: the label sits inside the field and takes the place of its placeholder while the field is empty, then moves to the field's edge once it is focused or holds a value. State it once for the form, or for one field, the same two ways as a size or a colour. You write no template and no class. The statement is `label="floating"`, in `FormChoices` for the form and in `Choice` for a field:
@@ -1221,6 +1346,11 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `mvp_forms/widgets/image.html` | An image field drawn by `ImageInput`: a thumbnail of the stored image, the file input or, with `show_input=False`, a button over the thumbnail that opens the file picker, the removal checkbox of an optional field, a revert button and a status line, each carrying the `data-image-input-` hook its script reads. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/point.html` | A point drawn by `PointInput`: a latitude input and a longitude input, each inside its own daisyUI `input` frame that shows its name before it. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/range.html` | A range drawn by `RangeInput`, `DateRangeInput` or `DateTimeRangeInput`: two inputs, each inside its own daisyUI `input` frame that shows its end's name, the two frames joined when `joined` is set, or both inputs in one frame with the separator between them when `compact` is set. In a form with labels off, the field's label in the first frame. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/scale.html` | A single choice drawn by `ScaleSelect`: one row of segments, one radio input for each choice, the words for the two ends under the row where they are given, and the choice that clears the field after it, where `widget` also holds `options`, the choices in the order they are drawn without the one that clears, and `clearing`. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/pills.html` | A choice drawn by `PillSelect` or `PillSelectMultiple`: a wrapping row of toggles, one radio or checkbox input for each choice, where `widget` also holds `options` and `clearing`, which a single choice draws last. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/chips.html` | A choice drawn by `ChipSelect` or `ChipSelectMultiple`: a wrapping row of large toggles, one radio or checkbox input for each choice on show, a native `details` holding the choices not on show with the count of them (the developer's words and the count when `fold_label` is given), and the choice that clears a single choice after them, where `widget` also holds `shown`, `folded`, `fold_open`, `fold_label`, `fold_one`, `fold_other`, `fold_count`, `fold_custom` and `clearing`. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/cards.html` | A choice drawn by `CardSelect` or `CardSelectMultiple`: a grid of cards with the fold of `chips.html`, one to three cards across on a wide screen by `columns`, and the choice that clears a single choice after them, where `widget` also holds `shown`, `folded`, `fold_open`, `fold_label`, `fold_one`, `fold_other`, `fold_count`, `fold_custom`, `columns`, `choice_class` and `clearing`. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/card_option.html` | One card drawn by `cards.html`: a label holding the icon tile where an icon is given, the short line, the choice's label and the description where given, and the input as the card's mark, the label taking the classes of `widget.choice_class` for its edge and tint. | `option`, `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 
@@ -1697,9 +1827,7 @@ FLAG_BESIDE = (
 
 
 class AddressForm(forms.Form):
-    residence = CountryField().formfield(
-        widget=CountrySelectWidget(layout=FLAG_BESIDE)
-    )
+    residence = CountryField().formfield(widget=CountrySelectWidget(layout=FLAG_BESIDE))
 ```
 
 The select takes the width the flag leaves. The image keeps the class and the `id` django-countries gives it, which its handler finds the image by, and leaves out the inline margin of django-countries' own layout. The three utilities are Tailwind's and the string is in your code, so a Tailwind build of your own finds them there. daisyUI's CDN install with Tailwind's browser build needs nothing.
@@ -2534,6 +2662,8 @@ The test suite draws every form state the pack has and calculates the contrast o
 
 An error message is drawn in the text colour, not in daisyUI's error colour, which falls short against the page under many themes. An invalid input is marked by its border, which takes the error colour, a tab or group holding one by a dot in the error colour, and the errors of a form as a whole are gathered in an alert at the top of it. The border of an invalid input is measured like any other and appears in the list below where it falls short.
 
+The scale, pills, chips and cards are measured chosen and not chosen, in each colour. A chosen choice is filled in the colour you set, or in `primary` when you set none, and a chosen card's text is measured on the card's tint as well as on its plain surface. The text of a card's short line and description is drawn at 90% of the text colour and takes the full text colour once the card is chosen.
+
 A disabled control is dimmed by daisyUI. Its own content, such as its text, border and mark, is measured and reported, and is never held to the standard. Its label and help text are held. daisyUI does not dim a disabled rating, but its stars are measured and not held in the same way.
 
 A theme your project writes or alters is not measured: the suite reads the themes of the pinned daisyUI version and no others. The pack's own text is drawn in the theme's `base-content` on `base-100` and `base-200`, and in the error alert on its tinted fill, so a theme whose `base-content` reaches 4.5 to 1 on both reads the same. The borders, marks and buttons that take a colour of the theme, and a colour or variant you state with `FormChoices` or `Choice`, depend on that theme's own colours, and the list below shows which of daisyUI's colours fall short on `base-100` under the shipped themes.
@@ -2545,6 +2675,7 @@ Where daisyUI's own drawing, or a colour you chose for a control, falls short un
 | --- | --- | --- |
 | border, `accent` at 10% on `base-100` | range | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `accent` at 20% on `base-100` | rating | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
+| border, `accent` on `accent` at 10% over `base-100` | checkbox, radio | light, cupcake, emerald, retro, cyberpunk, valentine, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, acid, lemonade, coffee, nord, abyss |
 | border, `accent` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | light, cupcake, emerald, retro, cyberpunk, valentine, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, acid, lemonade, coffee, nord, abyss |
 | border, `base-content` at 10% on `base-100` | range | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `base-content` at 20% on `base-100` | checkbox, file-input, input, radio, rating, select, textarea | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
@@ -2554,24 +2685,31 @@ Where daisyUI's own drawing, or a colour you chose for a control, falls short un
 | border, `error` at 20% on `base-100` | rating | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `error` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | light, bumblebee, corporate, retro, cyberpunk, garden, lofi, pastel, business, lemonade, winter, caramellatte, silk |
 | border, `error` on `base-200` | input | light, bumblebee, emerald, corporate, retro, cyberpunk, garden, lofi, pastel, fantasy, business, lemonade, winter, caramellatte, silk |
+| border, `error` on `error` at 10% over `base-100` | checkbox, radio | light, bumblebee, emerald, corporate, retro, cyberpunk, garden, lofi, pastel, fantasy, business, lemonade, winter, caramellatte, silk |
 | border, `info` at 10% on `base-100` | range | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `info` at 20% on `base-100` | rating | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `info` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | light, cupcake, bumblebee, emerald, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, black, cmyk, autumn, lemonade, winter, nord, silk |
+| border, `info` on `info` at 10% over `base-100` | checkbox, radio | light, cupcake, bumblebee, emerald, retro, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, black, cmyk, autumn, lemonade, winter, nord, silk |
 | border, `neutral` at 10% on `base-100` | range | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `neutral` at 20% on `base-100` | rating | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `neutral` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | dark, synthwave, halloween, forest, aqua, wireframe, black, luxury, dracula, business, night, coffee, dim, sunset, abyss |
+| border, `neutral` on `neutral` at 10% over `base-100` | checkbox, radio | dark, synthwave, halloween, forest, aqua, wireframe, black, luxury, dracula, business, night, coffee, dim, sunset, abyss |
 | border, `primary` at 10% on `base-100` | range | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `primary` at 20% on `base-100` | rating | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `primary` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | cupcake, bumblebee, emerald, retro, cyberpunk, pastel, wireframe, black, cmyk, business, acid |
+| border, `primary` on `primary` at 10% over `base-100` | checkbox, radio | cupcake, bumblebee, emerald, retro, cyberpunk, valentine, garden, pastel, wireframe, black, cmyk, business, acid |
 | border, `secondary` at 10% on `base-100` | range | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `secondary` at 20% on `base-100` | rating | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `secondary` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | cupcake, bumblebee, retro, cyberpunk, halloween, aqua, pastel, wireframe, black, luxury, acid, lemonade, coffee, nord |
+| border, `secondary` on `secondary` at 10% over `base-100` | checkbox, radio | cupcake, bumblebee, retro, cyberpunk, halloween, aqua, pastel, wireframe, black, luxury, acid, lemonade, coffee, nord |
 | border, `success` at 10% on `base-100` | range | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `success` at 20% on `base-100` | rating | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `success` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | light, cupcake, bumblebee, cyberpunk, valentine, garden, lofi, pastel, acid, lemonade, winter, nord, silk |
+| border, `success` on `success` at 10% over `base-100` | checkbox, radio | light, cupcake, bumblebee, emerald, corporate, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, autumn, acid, lemonade, winter, nord, silk |
 | border, `warning` at 10% on `base-100` | range | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `warning` at 20% on `base-100` | rating | light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 | border, `warning` on `base-100` | checkbox, file-input, input, radio, select, textarea, toggle | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk |
+| border, `warning` on `warning` at 10% over `base-100` | checkbox, radio | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk |
 | button text, `accent-content` on `accent` | btn, file-input | corporate, retro, garden, pastel |
 | button text, `accent` on 8% `accent` in `base-100` | btn | light, cupcake, emerald, corporate, retro, cyberpunk, valentine, garden, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, acid, lemonade, coffee, winter, nord, abyss |
 | button text, `accent` on `base-100` | btn | light, cupcake, emerald, corporate, retro, cyberpunk, valentine, garden, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, acid, lemonade, coffee, winter, nord, abyss |
@@ -2596,15 +2734,15 @@ Where daisyUI's own drawing, or a colour you chose for a control, falls short un
 | button text, `warning-content` on `warning` | btn, file-input | retro, pastel |
 | button text, `warning` on 8% `warning` in `base-100` | btn | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk |
 | button text, `warning` on `base-100` | btn | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk |
-| mark, `accent` on `base-100` | radio, range, rating, toggle | light, cupcake, emerald, retro, cyberpunk, valentine, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, acid, lemonade, coffee, nord, abyss |
-| mark, `error` on `base-100` | radio, range, rating, status, toggle | light, bumblebee, corporate, retro, cyberpunk, garden, lofi, pastel, business, lemonade, winter, caramellatte, silk |
+| mark, `accent` on `base-100` | btn, card, radio, range, rating, toggle | light, cupcake, emerald, retro, cyberpunk, valentine, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, acid, lemonade, coffee, nord, abyss |
+| mark, `error` on `base-100` | btn, card, radio, range, rating, status, toggle | light, bumblebee, corporate, retro, cyberpunk, garden, lofi, pastel, business, lemonade, winter, caramellatte, silk |
 | mark, `error` on `base-200` | status | light, bumblebee, emerald, corporate, retro, cyberpunk, garden, lofi, pastel, fantasy, business, lemonade, winter, caramellatte, silk |
-| mark, `info` on `base-100` | radio, range, rating, toggle | light, cupcake, bumblebee, emerald, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, black, cmyk, autumn, lemonade, winter, nord, silk |
-| mark, `neutral` on `base-100` | radio, range, rating, toggle | dark, synthwave, halloween, forest, aqua, wireframe, black, luxury, dracula, business, night, coffee, dim, sunset, abyss |
-| mark, `primary` on `base-100` | radio, range, rating, toggle | cupcake, bumblebee, emerald, retro, cyberpunk, pastel, wireframe, black, cmyk, business, acid |
-| mark, `secondary` on `base-100` | radio, range, rating, toggle | cupcake, bumblebee, retro, cyberpunk, halloween, aqua, pastel, wireframe, black, luxury, acid, lemonade, coffee, nord |
-| mark, `success` on `base-100` | radio, range, rating, toggle | light, cupcake, bumblebee, cyberpunk, valentine, garden, lofi, pastel, acid, lemonade, winter, nord, silk |
-| mark, `warning` on `base-100` | radio, range, rating, toggle | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk |
+| mark, `info` on `base-100` | btn, card, radio, range, rating, toggle | light, cupcake, bumblebee, emerald, cyberpunk, valentine, garden, aqua, lofi, pastel, fantasy, black, cmyk, autumn, lemonade, winter, nord, silk |
+| mark, `neutral` on `base-100` | btn, card, radio, range, rating, toggle | dark, synthwave, halloween, forest, aqua, wireframe, black, luxury, dracula, business, night, coffee, dim, sunset, abyss |
+| mark, `primary` on `base-100` | btn, card, radio, range, rating, toggle | cupcake, bumblebee, emerald, retro, cyberpunk, pastel, wireframe, black, cmyk, business, acid |
+| mark, `secondary` on `base-100` | btn, card, radio, range, rating, toggle | cupcake, bumblebee, retro, cyberpunk, halloween, aqua, pastel, wireframe, black, luxury, acid, lemonade, coffee, nord |
+| mark, `success` on `base-100` | btn, card, radio, range, rating, toggle | light, cupcake, bumblebee, cyberpunk, valentine, garden, lofi, pastel, acid, lemonade, winter, nord, silk |
+| mark, `warning` on `base-100` | btn, card, radio, range, rating, toggle | light, cupcake, bumblebee, emerald, corporate, retro, cyberpunk, valentine, garden, lofi, pastel, fantasy, cmyk, autumn, acid, lemonade, winter, nord, caramellatte, silk |
 | placeholder, `base-content` at 50% on `base-100` | input, textarea | light, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk |
 <!-- known-exceptions:end -->
 

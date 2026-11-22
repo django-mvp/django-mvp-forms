@@ -15,6 +15,7 @@ from mvp_forms.choices import Choice, FormChoices, Modifiers
 from tests.forms import (
     STAR_CHOICES,
     ButtonedForm,
+    ChoiceWidgetsForm,
     DisabledInputsForm,
     EveryInputForm,
     RangesForm,
@@ -72,6 +73,15 @@ class DisabledRatingAndRangeForm(forms.Form):
                 "volume": Choice(drawing="range"),
             }
         )
+
+
+class DisabledChoiceWidgetsForm(ChoiceWidgetsForm):
+    """The seven choice widgets, every field disabled."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.disabled = True
 
 
 @dataclass(frozen=True)
@@ -150,6 +160,7 @@ class Catalogue:
         yield "disabled file input", FILTER, DisabledFileForm()
         yield "disabled toggle and switch", TAG, DisabledBooleansForm()
         yield "disabled rating and range", TAG, DisabledRatingAndRangeForm()
+        yield "disabled choice widgets", TAG, DisabledChoiceWidgetsForm()
         yield (
             "disabled buttons",
             TAG,
@@ -184,7 +195,8 @@ class Catalogue:
 
     @classmethod
     def sweeps(cls) -> Iterator[tuple[str, forms.BaseForm]]:
-        """Describe a rating and a range, each drawn once per colour and size.
+        """Describe the choice widgets, a rating and a range, each drawn once per
+        colour and size.
 
         Returns:
             The name and the form of each.
@@ -194,6 +206,10 @@ class Catalogue:
             ("range", RangesForm, ("volume", "ratio")),
         )
         tables = (("color", Modifiers.colors), ("size", Modifiers.sizes))
+        for kind, table in tables:
+            for name in table["choice-button"]:
+                form = ChoiceWidgetsForm(choices=FormChoices(**{kind: name}))
+                yield f"choice widgets, {kind} {name}", form
         for drawing, form_class, names in drawn:
             for kind, table in tables:
                 for name in table[drawing]:

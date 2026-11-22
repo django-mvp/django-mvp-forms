@@ -700,3 +700,161 @@ class TestReaderOwn:
         assert found.element.id == "id_a"
         assert found.element.kind == "input"
         assert found.form_state == "fragment"
+
+
+PRIMARY = Ink("primary")
+SUCCESS = Ink("success")
+
+
+def choice_button(extra="", kind="radio", attrs=""):
+    return f'<input type="{kind}" class="btn h-11 {extra}" aria-label="One"{attrs}>'
+
+
+def success_button(extra=""):
+    return choice_button(
+        "checked:bg-success checked:border-success "
+        f"checked:text-success-content {extra}"
+    )
+
+
+def tint(name):
+    return Ink(name).faded(0.1).over(BASE_100)
+
+
+CARD = (
+    '<label class="card card-border group has-checked:border-{c} '
+    'has-checked:bg-{c}/10">'
+    '<div class="grid bg-base-200 group-has-checked:bg-primary '
+    'group-has-checked:text-primary-content"><svg></svg></div>'
+    '<div class="font-semibold">Label</div>'
+    '<div class="text-sm text-base-content/90">Detail</div>'
+    '<input type="radio" class="radio shrink-0"></label>'
+)
+
+
+class TestReaderChoiceWidgets:
+    def test_an_unchosen_choice_button_is_base_content_on_base_200(self):
+        found = of(choice_button(), "button text", CONTENT, BASE_200)
+
+        assert found.held
+        assert not found.own
+
+    def test_a_chosen_choice_button_is_primary_when_no_colour_is_stated(self):
+        found = pairs(choice_button())
+
+        assert ("button text", Ink("primary-content"), PRIMARY) in found
+        assert ("mark", PRIMARY, BASE_100) in found
+
+    def test_a_chosen_choice_button_takes_the_colour_the_widget_states(self):
+        found = pairs(success_button())
+
+        assert ("button text", Ink("success-content"), SUCCESS) in found
+        assert ("mark", SUCCESS, BASE_100) in found
+        assert ("mark", PRIMARY, BASE_100) not in found
+
+    def test_the_mark_of_a_chosen_button_stands_on_the_surface_around_it(self):
+        html = f'<div class="bg-base-200">{choice_button()}</div>'
+
+        assert ("mark", PRIMARY, BASE_200) in pairs(html)
+
+    def test_a_checkbox_drawn_as_a_button_is_read_as_a_radio_is(self):
+        assert pairs(choice_button(kind="checkbox")) == pairs(choice_button())
+
+    def test_a_button_that_is_not_a_choice_has_no_chosen_state(self):
+        html = '<input type="submit" class="btn" value="Go">'
+
+        assert pairs(html) == {("button text", CONTENT, BASE_200)}
+
+    def test_a_quiet_choice_keeps_its_ink_when_chosen_and_marks_with_its_border(self):
+        quiet = Ink("base-content").faded(0.9)
+        found = pairs(choice_button("btn-dash text-base-content/90"))
+
+        assert found == {
+            ("button text", quiet, BASE_100),
+            ("mark", PRIMARY, BASE_100),
+        }
+
+    def test_a_quiet_choice_that_states_a_colour_is_filled_when_chosen(self):
+        found = pairs(success_button("btn-dash text-base-content/90"))
+
+        assert ("button text", Ink("success-content"), SUCCESS) in found
+        assert ("button text", Ink("base-content").faded(0.9), BASE_100) in found
+
+    def test_the_text_of_a_quiet_choice_is_the_packs_to_repair(self):
+        found = of(
+            choice_button("btn-dash text-base-content/90"),
+            "button text",
+            CONTENT.faded(0.9),
+            BASE_100,
+        )
+
+        assert found.own
+
+    def test_a_disabled_choice_button_has_no_chosen_state_to_hold(self):
+        found = read(choice_button(attrs=" disabled"))
+
+        assert len(found) == 1
+        assert not found[0].held
+
+    def test_a_card_stands_on_base_100_and_its_text_is_read_there(self):
+        found = pairs(CARD.format(c="primary"))
+
+        assert ("text", CONTENT, BASE_100) in found
+        assert ("text", CONTENT.faded(0.9), BASE_100) in found
+
+    def test_a_chosen_card_is_tinted_and_its_text_is_read_on_the_tint(self):
+        found = pairs(CARD.format(c="success"))
+
+        assert ("text", CONTENT, tint("success")) in found
+        assert ("text", CONTENT.faded(0.9), tint("success")) in found
+
+    def test_quiet_text_that_turns_full_strength_when_chosen_is_read_both_ways(self):
+        html = CARD.format(c="success").replace(
+            "text-sm text-base-content/90",
+            "text-sm text-base-content/90 group-has-checked:text-base-content",
+        )
+        found = pairs(html)
+
+        assert ("text", CONTENT.faded(0.9), BASE_100) in found
+        assert ("text", CONTENT, tint("success")) in found
+        assert ("text", CONTENT.faded(0.9), tint("success")) not in found
+
+    def test_the_edge_of_a_chosen_card_is_a_mark_on_the_surface_around_it(self):
+        html = f'<div class="bg-base-200">{CARD.format(c="success")}</div>'
+
+        assert ("mark", SUCCESS, BASE_200) in pairs(html)
+
+    def test_the_radio_in_a_chosen_card_is_read_on_the_tint_too(self):
+        found = pairs(CARD.format(c="success"))
+
+        assert ("border", CONTENT, BASE_100) in found
+        assert ("border", CONTENT, tint("success")) in found
+        assert ("border", CONTENT.faded(0.2), tint("success")) not in found
+
+    def test_the_checkbox_in_a_chosen_card_is_read_chosen_on_the_tint(self):
+        html = CARD.format(c="success").replace(
+            'type="radio" class="radio', 'type="checkbox" class="checkbox'
+        )
+        found = pairs(html)
+
+        assert ("border", CONTENT.faded(0.2), BASE_100) in found
+        assert ("border", CONTENT, tint("success")) in found
+        assert ("border", CONTENT.faded(0.2), tint("success")) not in found
+
+    def test_the_icon_tile_is_read_on_its_fill_chosen_and_not(self):
+        found = pairs(CARD.format(c="success"))
+
+        assert ("mark", CONTENT, BASE_200) in found
+        assert ("mark", Ink("primary-content"), PRIMARY) in found
+
+    def test_the_tile_does_not_take_the_cards_tint(self):
+        found = pairs(CARD.format(c="success"))
+
+        assert ("text", CONTENT, tint("success")) in found
+        assert not any(
+            surface == tint("success") and ink == PRIMARY for _, ink, surface in found
+        )
+
+    def test_a_card_colour_the_reader_has_no_row_for_raises_uncovered(self):
+        with pytest.raises(Uncovered):
+            read(CARD.format(c="pink"))

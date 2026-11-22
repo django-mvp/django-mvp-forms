@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Choice widgets</title>
+    {% if htmx %}<script src="{{ htmx_url }}"></script>{% endif %}
+    {# Stands in for daisyUI's button, which draws an input's aria-label as its text. #}
+    <style>
+      input.btn { appearance: none; display: inline-flex; border: 1px solid; padding: 0 1rem; }
+      input.btn::after { content: attr(aria-label); }
+      input.whitespace-normal { white-space: normal; max-width: 12rem; }
+      input.h-auto { height: auto; }
+    </style>
+  </head>
+  <body>
+    <form id="page" method="post" action="" novalidate>
+      {{ form.as_div }}
+      <button type="submit">Send</button>
+    </form>
+    <div id="long">{{ long.as_div }}</div>
+    <div id="lines"></div>
+    <template id="line">{{ line.as_div }}</template>
+    {% if htmx %}
+      <button type="button" id="swap" hx-get="{% url 'choice-fragment' %}" hx-target="#lines" hx-swap="beforeend">Add</button>
+    {% endif %}
+    {% if script %}{% for copy in copies %}{{ form.media }}{% endfor %}{% endif %}
+  </body>
+</html>

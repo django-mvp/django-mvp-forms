@@ -4,6 +4,18 @@ from django.urls import path
 
 from demo.examples.custom_fields.coordinate_fields import SiteForm
 from demo.examples.custom_fields.partial_date_field import SampleForm
+from demo.examples.custom_widgets.choice_widgets import (
+    CardsForm,
+    ChipsForm,
+    FoldedCardsForm,
+    ParcelFormSet,
+    ParcelHelper,
+    PersonalFoldForm,
+    PillsForm,
+    ScaleForm,
+)
+from demo.examples.custom_widgets.choice_widgets import SmallForm as SmallChoicesForm
+from demo.examples.custom_widgets.choice_widgets import StatesForm as ChoiceStatesForm
 from demo.examples.custom_widgets.counted_select import FieldworkForm
 from demo.examples.custom_widgets.dynamic_mask import PhoneForm as DynamicPhoneForm
 from demo.examples.custom_widgets.filter_toolbar import (
@@ -301,6 +313,25 @@ urlpatterns = [
     path("range-input-small/", ExampleView.as_view(form_class=SmallRangesForm)),
     path("range-input-joined/", ExampleView.as_view(form_class=JoinedRangesForm)),
     path("range-input-compact/", ExampleView.as_view(form_class=CompactRangesForm)),
+    path("choice-scale/", ExampleView.as_view(form_class=ScaleForm)),
+    path("choice-pills/", ExampleView.as_view(form_class=PillsForm)),
+    path("choice-chips/", ExampleView.as_view(form_class=ChipsForm)),
+    path("choice-fold-in-init/", ExampleView.as_view(form_class=PersonalFoldForm)),
+    path("choice-cards/", ExampleView.as_view(form_class=CardsForm)),
+    path("choice-cards-folded/", ExampleView.as_view(form_class=FoldedCardsForm)),
+    path(
+        "choice-states/",
+        ExampleView.as_view(form_class=ChoiceStatesForm, sent_empty=True),
+    ),
+    path("choice-small/", ExampleView.as_view(form_class=SmallChoicesForm)),
+    path(
+        "choice-formset/",
+        FormsetExampleView.as_view(
+            form_class=ParcelFormSet,
+            helper_class=ParcelHelper,
+            template_name="demo/examples/choice_formset.html",
+        ),
+    ),
     path(
         "django-tomselect/",
         ExampleView.as_view(form_class=ResearchForm, template_name=DJANGO_TOMSELECT),

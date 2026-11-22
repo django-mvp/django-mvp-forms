@@ -61,6 +61,7 @@ custom-widgets/input-masks
 custom-widgets/tom-select
 custom-widgets/image-input
 custom-widgets/range-inputs
+custom-widgets/choice-widgets
 ```
 
 ```{toctree}

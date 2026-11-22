@@ -1,0 +1,26 @@
+{% extends "demo/examples/base.html" %}
+{% load crispy_forms_tags %}
+{% block example %}
+  {# The page writes the form element, so rows can be added inside it. The empty form is kept in a template element and each row is made from it, never by copying a row that is already on the page. #}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div id="parcels">
+      {% crispy form helper %}
+    </div>
+    <template id="parcel-template">{{ form.empty_form|crispy }}</template>
+    <div class="mt-4 flex gap-2">
+      <button type="button" class="btn" id="add-parcel">Add a parcel</button>
+      <button type="submit" class="btn btn-primary">Send</button>
+    </div>
+  </form>
+  <script>
+    document.getElementById("add-parcel").addEventListener("click", function () {
+      var total = document.getElementById("id_{{ form.prefix }}-TOTAL_FORMS");
+      var markup = document.getElementById("parcel-template").innerHTML;
+      document
+        .getElementById("parcels")
+        .insertAdjacentHTML("beforeend", markup.replaceAll("__prefix__", total.value));
+      total.value = Number(total.value) + 1;
+    });
+  </script>
+{% endblock example %}
