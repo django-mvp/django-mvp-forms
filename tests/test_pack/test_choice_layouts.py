@@ -14,6 +14,7 @@ from crispy_forms.bootstrap import (
 from crispy_forms.layout import Column, Fieldset, Row
 from django import forms
 from django.contrib.auth.models import Group
+from django.contrib.staticfiles import finders
 from django.http import QueryDict
 from django.utils.safestring import mark_safe
 
@@ -1037,3 +1038,103 @@ class TestPackMistakes:
 
         assert (error.kind, error.value, error.allowed) == ("drawing", drawing, ())
         assert error.target == name
+
+
+class TestFoldCount:
+    LETTERS = TestFold.LETTERS
+
+    def summary_of(self, soup):
+        return soup.find("details", attrs={"data-choice-fold": True}).find("summary")
+
+    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
+    def test_the_count_is_always_its_own_element(self, drawn, widget_class):
+        soup = drawn(widget_class(show={"a"}), choices=self.LETTERS)
+        custom = drawn(
+            widget_class(show={"a"}, fold_label="Others"), choices=self.LETTERS
+        )
+
+        for each in (soup, custom):
+            assert (
+                len(self.summary_of(each).find_all(attrs={"data-choice-count": True}))
+                == 1
+            )
+
+    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
+    def test_the_package_words_are_carried_with_a_placeholder_for_the_count(
+        self, drawn, widget_class
+    ):
+        summary = self.summary_of(drawn(widget_class(show={"a"}), choices=self.LETTERS))
+
+        assert "{n}" in summary["data-choice-one"]
+        assert "{n}" in summary["data-choice-other"]
+
+    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
+    def test_the_package_words_are_drawn_with_the_count_without_the_script(
+        self, drawn, widget_class
+    ):
+        summary = self.summary_of(drawn(widget_class(show={"a"}), choices=self.LETTERS))
+        count = summary.find(attrs={"data-choice-count": True})
+
+        assert count.get_text() == summary["data-choice-other"].replace("{n}", "3")
+
+    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
+    def test_the_form_for_one_is_drawn_for_a_single_folded_choice(
+        self, drawn, widget_class
+    ):
+        summary = self.summary_of(
+            drawn(widget_class(show={"a", "b", "c"}), choices=self.LETTERS)
+        )
+        count = summary.find(attrs={"data-choice-count": True})
+
+        assert count.get_text() == summary["data-choice-one"].replace("{n}", "1")
+
+    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
+    def test_the_developers_words_carry_no_words_for_the_script_to_rewrite(
+        self, drawn, widget_class
+    ):
+        summary = self.summary_of(
+            drawn(widget_class(show={"a"}, fold_label="Others"), choices=self.LETTERS)
+        )
+
+        assert not summary.has_attr("data-choice-one")
+        assert not summary.has_attr("data-choice-other")
+
+    @pytest.mark.parametrize("widget_class", CHIP_AND_CARD_SINGLES)
+    def test_the_clearing_choice_carries_no_place_in_the_order(
+        self, drawn, widget_class
+    ):
+        soup = drawn(widget_class(show={"a"}), choices=[*self.LETTERS, ("", "None")])
+
+        clearing = soup.find("input", value="")
+
+        assert clearing.find_parent(attrs={"data-choice-index": True}) is None
+        assert not clearing.has_attr("data-choice-index")
+
+
+class TestScript:
+    SCRIPT = "mvp_forms/choice-fold.js"
+
+    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
+    def test_the_chip_and_card_widgets_name_the_script_and_no_other(self, widget_class):
+        scripts = widget_class().media.render_js()
+
+        assert len(scripts) == 1
+        assert self.SCRIPT in scripts[0]
+
+    @pytest.mark.parametrize(
+        "widget_class", [ScaleSelect, PillSelect, PillSelectMultiple]
+    )
+    def test_the_scale_and_the_pills_name_no_script(self, widget_class):
+        assert widget_class().media.render_js() == []
+
+    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
+    def test_the_script_is_named_once_for_a_form_of_several_widgets(self, widget_class):
+        class Both(forms.Form):
+            one = forms.ChoiceField(choices=NUMBERS, widget=widget_class)
+            two = forms.ChoiceField(choices=NUMBERS, widget=widget_class)
+
+        assert len(Both().media.render_js()) == 1
+
+    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
+    def test_the_script_is_a_file_of_the_package(self, widget_class):
+        assert finders.find(self.SCRIPT)

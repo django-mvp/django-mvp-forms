@@ -287,9 +287,7 @@ layout = Layout(
         FormText("We only use this to reply to you."),
         "email",
     ),
-    FormText(
-        "Nothing is booked until we have replied.", size="small", variant="muted"
-    ),
+    FormText("Nothing is booked until we have replied.", size="small", variant="muted"),
 )
 ```
 
@@ -675,7 +673,9 @@ class SearchForm(forms.Form):
         self.helper = FormHelper(self)
         self.helper.daisyui = FormChoices(button_color="primary")
         self.helper.layout = Layout(
-            Join("scope", "query", StrictButton("Search", type="submit"), label="Search"),
+            Join(
+                "scope", "query", StrictButton("Search", type="submit"), label="Search"
+            ),
         )
 ```
 
@@ -1062,7 +1062,7 @@ class InterestsForm(forms.Form):
 
 - The disclosure, its keyboard operation and its open state for assistive technology come from the browser. The control is a native `<summary>`.
 - Without the script every choice can still be reached: a person opens the fold, chooses any choice and submits the form.
-- The script is what keeps a chosen choice on show and keeps the count true. When a person chooses a choice inside the fold and closes it, the script moves that choice out of the fold, and the count is the number of choices still folded.
+- The script is what keeps a chosen choice on show and keeps the count true. When a person chooses a choice inside the fold and closes it, the script moves that choice, with its card or chip, out of the fold into the choices on show in the field's order, and the count is the number of choices still folded. When none is left the script removes the fold. The count is its own element, marked `data-choice-count`. The package's own words are drawn with the count by the server and are held on the summary as `data-choice-one` and `data-choice-other`, each with `{n}` where the count goes, so the script writes them again in the person's language. Words given as `fold_label` stay as given, followed by the count.
 - The script acts on a fold added to the page after it has loaded, such as a row added to a formset or a form that htmx swaps in, and acts once on each fold however many times the page includes it. It writes no inline script and uses no inline handler.
 - A disabled field's fold still opens, so a person can read the folded choices, and none can be chosen.
 - A form drawn again after a failed submission draws every choice the person had chosen on show.
@@ -1340,8 +1340,8 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `mvp_forms/widgets/range.html` | A range drawn by `RangeInput`, `DateRangeInput` or `DateTimeRangeInput`: two inputs, each inside its own daisyUI `input` frame that shows its end's name, the two frames joined when `joined` is set, or both inputs in one frame with the separator between them when `compact` is set. In a form with labels off, the field's label in the first frame. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/scale.html` | A single choice drawn by `ScaleSelect`: one row of segments, one radio input for each choice, the words for the two ends under the row where they are given, and the choice that clears the field after it, where `widget` also holds `options`, the choices in the order they are drawn without the one that clears, and `clearing`. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/pills.html` | A choice drawn by `PillSelect` or `PillSelectMultiple`: a wrapping row of toggles, one radio or checkbox input for each choice, where `widget` also holds `options` and `clearing`, which a single choice draws last. | `widget` | `FORM_RENDERER` |
-| `mvp_forms/widgets/chips.html` | A choice drawn by `ChipSelect` or `ChipSelectMultiple`: a wrapping row of large toggles, one radio or checkbox input for each choice on show, a native `details` holding the choices not on show with the count of them (the developer's words and the count when `fold_label` is given), and the choice that clears a single choice after them, where `widget` also holds `shown`, `folded`, `fold_open`, `fold_label`, `fold_count`, `fold_custom` and `clearing`. | `widget` | `FORM_RENDERER` |
-| `mvp_forms/widgets/cards.html` | A choice drawn by `CardSelect` or `CardSelectMultiple`: a grid of cards with the fold of `chips.html`, one to three cards across on a wide screen by `columns`, and the choice that clears a single choice after them, where `widget` also holds `shown`, `folded`, `fold_open`, `fold_label`, `fold_count`, `fold_custom`, `columns`, `choice_class` and `clearing`. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/chips.html` | A choice drawn by `ChipSelect` or `ChipSelectMultiple`: a wrapping row of large toggles, one radio or checkbox input for each choice on show, a native `details` holding the choices not on show with the count of them (the developer's words and the count when `fold_label` is given), and the choice that clears a single choice after them, where `widget` also holds `shown`, `folded`, `fold_open`, `fold_label`, `fold_one`, `fold_other`, `fold_count`, `fold_custom` and `clearing`. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/cards.html` | A choice drawn by `CardSelect` or `CardSelectMultiple`: a grid of cards with the fold of `chips.html`, one to three cards across on a wide screen by `columns`, and the choice that clears a single choice after them, where `widget` also holds `shown`, `folded`, `fold_open`, `fold_label`, `fold_one`, `fold_other`, `fold_count`, `fold_custom`, `columns`, `choice_class` and `clearing`. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/card_option.html` | One card drawn by `cards.html`: a label holding the icon tile where an icon is given, the short line, the choice's label and the description where given, and the input as the card's mark, the label taking the classes of `widget.choice_class` for its edge and tint. | `option`, `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
@@ -1819,9 +1819,7 @@ FLAG_BESIDE = (
 
 
 class AddressForm(forms.Form):
-    residence = CountryField().formfield(
-        widget=CountrySelectWidget(layout=FLAG_BESIDE)
-    )
+    residence = CountryField().formfield(widget=CountrySelectWidget(layout=FLAG_BESIDE))
 ```
 
 The select takes the width the flag leaves. The image keeps the class and the `id` django-countries gives it, which its handler finds the image by, and leaves out the inline margin of django-countries' own layout. The three utilities are Tailwind's and the string is in your code, so a Tailwind build of your own finds them there. daisyUI's CDN install with Tailwind's browser build needs nothing.

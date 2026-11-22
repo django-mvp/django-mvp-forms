@@ -1423,6 +1423,7 @@ class ChoiceLayout:
             for position, option in enumerate(options):
                 if str(option["value"]) == "":
                     clearing = options.pop(position)
+                    del clearing["position"]
                     clearing["attrs"]["class"] = " ".join(
                         filter(
                             None, [clearing["attrs"]["class"], self.clearing_classes]
@@ -1443,7 +1444,10 @@ class FoldedChoices(ChoiceLayout):
     would hold none is not drawn. The context gains ``shown``, ``folded``,
     ``fold_open``, ``fold_label``, the developer's words for the fold or the
     package's own with the count, ``fold_count``, the number of folded choices,
-    and ``fold_custom``, true when the words are the developer's.
+    and ``fold_custom``, true when the words are the developer's. The package's
+    own words are given as ``fold_one`` and ``fold_other``, each with ``{n}``
+    where the count goes, for the script to write again when the count changes.
+    The widget's media names the script that keeps a chosen choice on show.
 
     Args:
         attrs: HTML attributes for each input.
@@ -1461,6 +1465,9 @@ class FoldedChoices(ChoiceLayout):
         ValueError: ``show`` is not a collection of values, or ``fold_label``
             is not text. The message names the setting.
     """
+
+    class Media:
+        js = ["mvp_forms/choice-fold.js"]
 
     def __init__(self, attrs=None, choices=(), *, show=None, fold_label="", **settings):
         """Keep the settings that were stated."""
@@ -1504,9 +1511,11 @@ class FoldedChoices(ChoiceLayout):
         widget["fold_open"] = bool(folded) and not shown
         widget["fold_count"] = len(folded)
         widget["fold_custom"] = bool(self.fold_label)
-        widget["fold_label"] = self.fold_label or ngettext(
-            "%(count)d more", "%(count)d more", len(folded)
-        ) % {"count": len(folded)}
+        widget["fold_one"] = ngettext("{n} more", "{n} more", 1)
+        widget["fold_other"] = ngettext("{n} more", "{n} more", 2)
+        widget["fold_label"] = self.fold_label or (
+            widget["fold_one"] if len(folded) == 1 else widget["fold_other"]
+        ).replace("{n}", str(len(folded)))
         return context
 
 

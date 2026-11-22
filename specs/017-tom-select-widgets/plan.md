@@ -31,11 +31,22 @@ or template tags changes.
 
 ```python
 class TomSelect(forms.Select):
-    def __init__(self, attrs=None, choices=(), *, placeholder=None, clear_button=None): ...
+    def __init__(
+        self, attrs=None, choices=(), *, placeholder=None, clear_button=None
+    ): ...
+
 
 class TomSelectMultiple(TomSelect, forms.SelectMultiple):
-    def __init__(self, attrs=None, choices=(), *, placeholder=None, clear_button=None,
-                 remove_button=None, max_items=None): ...
+    def __init__(
+        self,
+        attrs=None,
+        choices=(),
+        *,
+        placeholder=None,
+        clear_button=None,
+        remove_button=None,
+        max_items=None,
+    ): ...
 ```
 
 - Settings are keyword-only. `placeholder` is text and not empty. `clear_button` and

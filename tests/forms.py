@@ -1814,7 +1814,7 @@ ChoiceFoldLineFormSet = formset_factory(ChoiceFoldLineForm, extra=1)
 
 
 class ChoiceLongLabelForm(forms.Form):
-    """A chip choice whose label is long, beside one that is short."""
+    """A chip choice whose label is long, and a disabled chip field with a fold."""
 
     chip = forms.ChoiceField(
         choices=[
@@ -1823,4 +1823,10 @@ class ChoiceLongLabelForm(forms.Form):
         ],
         widget=ChipSelect,
         required=False,
+    )
+    locked_chips = forms.MultipleChoiceField(
+        choices=WIDGET_CHOICES,
+        widget=ChipSelectMultiple(show={"1"}),
+        required=False,
+        disabled=True,
     )
