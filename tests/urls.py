@@ -10,6 +10,10 @@ from django_tomselect.autocompletes import AutocompleteModelView
 
 from demo.urls import urlpatterns as demo_urlpatterns
 from tests.forms import (
+    CharactersLeftDialogForm,
+    CharactersLeftLineForm,
+    CharactersLeftLineFormSet,
+    CharactersLeftPageForm,
     ChoiceFoldLineForm,
     ChoiceFoldLineFormSet,
     ChoiceLongLabelForm,
@@ -90,6 +94,51 @@ class MaskedPage(TemplateView):
                 {name: str(value) for name, value in form.cleaned_data.items()}
             )
         return JsonResponse({name: request.POST.getlist(name) for name in request.POST})
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class CharactersLeftPage(TemplateView):
+    """A page of fields with the line, which answers a post with how it cleaned."""
+
+    template_name = "tests/characters_left_page.html"
+    script = True
+    copies = 1
+
+    def get_context_data(self, **kwargs):
+        """Draw the form, with its initial values taken from the query string."""
+        return super().get_context_data(
+            form=CharactersLeftPageForm(initial=self.request.GET.dict()),
+            dialog=CharactersLeftDialogForm(),
+            line=CharactersLeftLineFormSet().empty_form,
+            script=self.script,
+            htmx_url=HTMX_URL,
+            copies=range(self.copies),
+            **kwargs,
+        )
+
+    def post(self, request, *args, **kwargs):
+        """Return whether the form was valid, its error codes and what it cleaned."""
+        form = CharactersLeftPageForm(request.POST)
+        form.full_clean()
+        return JsonResponse(
+            {
+                "errors": {
+                    name: [error.code for error in errors]
+                    for name, errors in form.errors.as_data().items()
+                },
+                "note": form.cleaned_data.get("note"),
+            }
+        )
+
+
+class CharactersLeftFragment(TemplateView):
+    """A form with the line, as htmx swaps it into a page."""
+
+    template_name = "tests/characters_left_fragment.html"
+
+    def get_context_data(self, **kwargs):
+        """Draw one field."""
+        return super().get_context_data(form=CharactersLeftLineForm(), **kwargs)
 
 
 class ImagePage(TemplateView):
@@ -265,6 +314,22 @@ class BoostedPage(TemplateView):
 urlpatterns = [
     path("autocomplete/groups/", GroupAutocomplete.as_view(), name="ac-groups"),
     path("masked/", MaskedPage.as_view(), name="masked"),
+    path("characters-left/", CharactersLeftPage.as_view(), name="characters-left"),
+    path(
+        "characters-left/two-scripts/",
+        CharactersLeftPage.as_view(copies=2),
+        name="characters-left-twice",
+    ),
+    path(
+        "characters-left/without-script/",
+        CharactersLeftPage.as_view(script=False),
+        name="characters-left-bare",
+    ),
+    path(
+        "characters-left/fragment/",
+        CharactersLeftFragment.as_view(),
+        name="characters-left-fragment",
+    ),
     path("images/", ImagePage.as_view(), name="images"),
     path("images/without-script/", ImagePage.as_view(script=False), name="images-bare"),
     path("dates/", PartialDatePage.as_view(), name="dates"),
