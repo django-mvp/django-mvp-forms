@@ -1083,6 +1083,14 @@ Each widget is a group: a fieldset named by a legend that holds the field's labe
 
 The widgets are drawn the same through `{{ form|crispy }}` and `{% crispy form %}`, in a formset stacked or as a table, and inside a `Row`, a `Fieldset`, a `Tab`, an `AccordionGroup` or a `Modal`. A host project replaces any of their templates as it replaces any other of the pack's (see [Replacing one template](https://github.com/django-mvp/django-mvp-forms#replacing-one-template)). A subclass of one of the widgets is drawn as its parent is. Choices in named groups are drawn in the field's order and the names of the groups are not drawn.
 
+#### The classes the widgets share
+
+Three classes in `mvp_forms.widgets` hold what the seven share, for a project that writes a choice widget of its own in the same shape:
+
+- `ChoiceLayout` goes before `RadioSelect` or `CheckboxSelectMultiple`. It lists the choices in the field's order without the names of groups, names each input by its label, and sets the empty choice of a single-choice widget apart as `clearing`. A subclass sets `choice_component` and `input_classes`.
+- `FoldedChoices` builds on `ChoiceLayout` and adds `show`, `fold_label` and the split of the choices into those on show and those in the fold.
+- `CardChoices` builds on `FoldedChoices` and adds `descriptions`, `icons`, `meta` and `columns`.
+
 #### What is not supported
 
 - A second tap on a chosen single choice that clears it. The empty choice is the way to clear.
