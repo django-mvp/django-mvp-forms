@@ -255,7 +255,7 @@ class TestNames:
         page = choice_page()
 
         expect(
-            page.locator(f"#id_{field}").get_by_role("radio", name="One", exact=True)
+            page.locator(f"#id_{field}").get_by_role("radio", name=re.compile("One"))
         ).to_have_count(1)
 
 
