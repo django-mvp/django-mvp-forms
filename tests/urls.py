@@ -1,7 +1,7 @@
 """The suite's urlconf: the demo project's routes plus any test-only route."""
 
 from django.contrib.auth.models import Group
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.urls import path
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -10,6 +10,10 @@ from django_tomselect.autocompletes import AutocompleteModelView
 
 from demo.urls import urlpatterns as demo_urlpatterns
 from tests.forms import (
+    ChoiceFoldLineForm,
+    ChoiceFoldLineFormSet,
+    ChoiceLongLabelForm,
+    ChoiceWidgetsForm,
     ImagePageForm,
     MaskedDialogForm,
     MaskedLineFormSet,
@@ -141,6 +145,51 @@ class PartialDatePage(TemplateView):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
+class ChoicePage(TemplateView):
+    """A page of every choice widget, which answers a valid post with what it got."""
+
+    template_name = "tests/choice_page.html"
+    script = True
+    copies = 1
+    htmx = False
+
+    def get_context_data(self, **kwargs):
+        """Draw the form, bound when the query string says it was sent."""
+        entries = self.request.GET.copy()
+        bound = entries.pop("bound", None)
+        form = ChoiceWidgetsForm(entries) if bound else ChoiceWidgetsForm()
+        return super().get_context_data(
+            form=form,
+            line=ChoiceFoldLineFormSet().empty_form,
+            long=ChoiceLongLabelForm(),
+            script=self.script,
+            copies=range(self.copies),
+            htmx=self.htmx,
+            htmx_url=HTMX_URL,
+            **kwargs,
+        )
+
+    def post(self, request, *args, **kwargs):
+        """Answer with the entries when the form is valid, else draw it again."""
+        form = ChoiceWidgetsForm(request.POST)
+        if not form.is_valid():
+            context = self.get_context_data()
+            context["form"] = form
+            return self.render_to_response(context)
+        return JsonResponse(
+            {
+                "entries": {name: request.POST.getlist(name) for name in request.POST},
+                "cleaned": {name: str(v) for name, v in form.cleaned_data.items()},
+            }
+        )
+
+
+def choice_fragment(request):
+    """Return the fields of one line of a formset, as a form swapped in by htmx."""
+    return HttpResponse(ChoiceFoldLineForm().as_div())
+
+
+@method_decorator(csrf_exempt, name="dispatch")
 class ChoicesPage(TemplateView):
     """A page of Tom Select widgets, which answers a post with the entries it got."""
 
@@ -225,6 +274,23 @@ urlpatterns = [
         PartialDatePage.as_view(script=False),
         name="dates-bare",
     ),
+    path("choice-widgets/", ChoicePage.as_view(), name="choice-widgets"),
+    path(
+        "choice-widgets/without-script/",
+        ChoicePage.as_view(script=False),
+        name="choice-widgets-bare",
+    ),
+    path(
+        "choice-widgets/three-copies/",
+        ChoicePage.as_view(copies=3),
+        name="choice-widgets-copies",
+    ),
+    path(
+        "choice-widgets/htmx/",
+        ChoicePage.as_view(htmx=True),
+        name="choice-widgets-htmx",
+    ),
+    path("choice-widgets/fragment/", choice_fragment, name="choice-fragment"),
     path("masked/three-copies/", MaskedPage.as_view(copies=3), name="masked-copies"),
     path("masked/cleaned/", MaskedPage.as_view(cleaned=True), name="masked-cleaned"),
     path("masked/without-imask/", MaskedPage.as_view(imask=False), name="masked-bare"),

@@ -1795,3 +1795,32 @@ class ChoiceWidgetLineForm(forms.Form):
 
 
 ChoiceWidgetLineFormSet = formset_factory(ChoiceWidgetLineForm, extra=2)
+
+
+class ChoiceFoldLineForm(forms.Form):
+    """One line of a formset whose chips keep one choice on show and fold the rest."""
+
+    chips = forms.MultipleChoiceField(
+        choices=WIDGET_CHOICES,
+        widget=ChipSelectMultiple(show={"1"}),
+        required=False,
+    )
+    card = forms.ChoiceField(
+        choices=WIDGET_CHOICES, widget=CardSelect(show={"1"}), required=False
+    )
+
+
+ChoiceFoldLineFormSet = formset_factory(ChoiceFoldLineForm, extra=1)
+
+
+class ChoiceLongLabelForm(forms.Form):
+    """A chip choice whose label is long, beside one that is short."""
+
+    chip = forms.ChoiceField(
+        choices=[
+            ("short", "Short"),
+            ("long", "A label long enough that it has to run over several lines"),
+        ],
+        widget=ChipSelect,
+        required=False,
+    )
