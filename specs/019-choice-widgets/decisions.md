@@ -166,3 +166,9 @@ drawn this way, the build falls back to a `label` holding a hidden input and rec
 The scale's end words name the first and last inputs through `aria-labelledby`, since `aria-label` is the visible text of an input drawn as `btn`. The colour entries for the two components are Tailwind state utilities, so the class test accepts names in `LAYOUT_UTILITIES`, and the decision record extends ADRs 0003 and 0020. A card's mark takes the existing `radio` or `checkbox` tables. The widget writes its own `aria-label`. The `fixed_size` entries and the inline-layout contingency are dropped. Quiet text starts at `text-base-content/90`.
 
 **ADR:** none — recorded in the feature's decision record
+
+## D16. Existing tests edited for the new modifier entries
+
+The colour entries for the scale, pills, chips and cards are Tailwind state utilities. `TestModifierTables` and the legibility catalogue's table test split an entry on whitespace and accept each name in `LAYOUT_UTILITIES`, and the legibility reader's silent list names the utilities until the measurement pairings are added. No assertion was weakened: each still fails for a class that is neither daisyUI's nor a named utility.
+
+**ADR:** none — covered by the feature's decision record
