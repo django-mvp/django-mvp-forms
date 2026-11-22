@@ -195,7 +195,8 @@ class Catalogue:
 
     @classmethod
     def sweeps(cls) -> Iterator[tuple[str, forms.BaseForm]]:
-        """Describe a rating and a range, each drawn once per colour and size.
+        """Describe the choice widgets, a rating and a range, each drawn once per
+        colour and size.
 
         Returns:
             The name and the form of each.
@@ -205,6 +206,10 @@ class Catalogue:
             ("range", RangesForm, ("volume", "ratio")),
         )
         tables = (("color", Modifiers.colors), ("size", Modifiers.sizes))
+        for kind, table in tables:
+            for name in table["choice-button"]:
+                form = ChoiceWidgetsForm(choices=FormChoices(**{kind: name}))
+                yield f"choice widgets, {kind} {name}", form
         for drawing, form_class, names in drawn:
             for kind, table in tables:
                 for name in table[drawing]:

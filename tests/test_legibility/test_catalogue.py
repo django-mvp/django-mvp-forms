@@ -41,7 +41,8 @@ class TestCatalogue:
             name
             for table in Modifiers.tables.values()
             for modifiers in table.values()
-            for name in modifiers.values()
+            for entry in modifiers.values()
+            for name in entry.split()
         }
 
         assert named
