@@ -3,9 +3,9 @@
     <div class="grid size-9 shrink-0 place-items-center rounded-field bg-base-200 group-has-checked:bg-primary group-has-checked:text-primary-content">{{ option.icon }}</div>
   {% endif %}
   <div class="min-w-0 grow">
-    {% if option.meta %}<div class="text-xs font-medium uppercase tracking-wide text-base-content/90">{{ option.meta }}</div>{% endif %}
+    {% if option.meta %}<div class="text-xs font-medium uppercase tracking-wide text-base-content/90 group-has-checked:text-base-content">{{ option.meta }}</div>{% endif %}
     <div class="font-semibold">{{ option.label }}</div>
-    {% if option.description %}<div class="text-sm text-base-content/90">{{ option.description }}</div>{% endif %}
+    {% if option.description %}<div class="text-sm text-base-content/90 group-has-checked:text-base-content">{{ option.description }}</div>{% endif %}
   </div>
   <input type="{{ option.type }}" name="{{ option.name }}" value="{{ option.value|stringformat:'s' }}"{% include "daisyui/widgets/attrs.html" with widget=option %}>
 </label>

@@ -67,6 +67,9 @@ class Paint(NamedTuple):
         control: The control it makes.
         colour: The theme colour it states.
         variant: The variant it states.
+        chosen: The theme colour a chosen choice takes.
+        tint: The theme colour that tints a card behind its text when chosen.
+        lit: The theme colour the text takes once the card around it is chosen.
     """
 
     ink: InkRule | None = None
@@ -74,6 +77,9 @@ class Paint(NamedTuple):
     control: str | None = None
     colour: str | None = None
     variant: str | None = None
+    chosen: str | None = None
+    tint: str | None = None
+    lit: str | None = None
 
 
 class Uncovered(Exception):
@@ -102,6 +108,9 @@ class Inherited:
         bordered: Whether a tab here has a bar under it.
         table: Whether the element is inside a table.
         alert: Whether the element is inside an alert.
+        chosen: The surface behind the element when the card around it is chosen,
+            or None when it is not inside a card.
+        lit: The ink the text takes once the card around it is chosen, if it changes.
     """
 
     ink: Ink = CONTENT
@@ -111,6 +120,8 @@ class Inherited:
     bordered: bool = False
     table: bool = False
     alert: bool = False
+    chosen: Ink | None = None
+    lit: Ink | None = None
 
 
 class Reader:
@@ -138,6 +149,12 @@ class Reader:
         ),
         "bg-base-200": Paint(surface="base-200"),
         "bg-base-100": Paint(surface="base-100"),
+        "card": Paint(surface="base-100"),
+        # A card's icon tile, whose fill turns primary when the card is chosen.
+        "group-has-checked:bg-primary": Paint(control="tile"),
+        "group-has-checked:text-primary-content": Paint(),
+        "border-current": Paint(control="arrow"),
+        "group-has-checked:text-base-content": Paint(lit="base-content"),
         "modal-box": Paint(surface="base-100"),
         # A floating label's text sits on a patch of base-100 over the border.
         "floating-label": Paint(surface="base-100"),
@@ -158,6 +175,17 @@ class Reader:
             for colour in COLOURS
         },
         **{f"bg-{colour}": Paint(colour=colour) for colour in COLOURS},
+        **{
+            name: Paint(chosen=colour)
+            for colour in COLOURS
+            for name in (
+                f"checked:bg-{colour}",
+                f"checked:border-{colour}",
+                f"checked:text-{colour}-content",
+                f"has-checked:border-{colour}",
+            )
+        },
+        **{f"has-checked:bg-{colour}/10": Paint(tint=colour) for colour in COLOURS},
         **{f"{control}-ghost": Paint(variant="ghost") for control in FIELDS},
         **{f"btn-{variant}": Paint(variant=variant) for variant in BUTTON_VARIANTS},
     }
@@ -258,15 +286,13 @@ class Reader:
             "peer-checked:text-xs",
             "peer-checked:w-auto",
             "peer-focus-visible:outline-2",
-            # The scale, pills, chips and cards, not yet measured.
+            # The scale, pills, chips and cards: layout and a card's border.
             "p-3",
-            "border-current",
+            "card-border",
             "checked:before:content-['✓']",
             "font-medium",
             "font-semibold",
             "grid-cols-1",
-            "group-has-checked:bg-primary",
-            "group-has-checked:text-primary-content",
             "group-open:hidden",
             "group-open:inline",
             "grow",
@@ -291,49 +317,7 @@ class Reader:
             "tracking-wide",
             "uppercase",
             "whitespace-normal",
-            "card",
-            "card-border",
             "rounded-field",
-            "checked:bg-neutral",
-            "checked:border-neutral",
-            "checked:text-neutral-content",
-            "has-checked:bg-neutral/10",
-            "has-checked:border-neutral",
-            "checked:bg-primary",
-            "checked:border-primary",
-            "checked:text-primary-content",
-            "has-checked:bg-primary/10",
-            "has-checked:border-primary",
-            "checked:bg-secondary",
-            "checked:border-secondary",
-            "checked:text-secondary-content",
-            "has-checked:bg-secondary/10",
-            "has-checked:border-secondary",
-            "checked:bg-accent",
-            "checked:border-accent",
-            "checked:text-accent-content",
-            "has-checked:bg-accent/10",
-            "has-checked:border-accent",
-            "checked:bg-info",
-            "checked:border-info",
-            "checked:text-info-content",
-            "has-checked:bg-info/10",
-            "has-checked:border-info",
-            "checked:bg-success",
-            "checked:border-success",
-            "checked:text-success-content",
-            "has-checked:bg-success/10",
-            "has-checked:border-success",
-            "checked:bg-warning",
-            "checked:border-warning",
-            "checked:text-warning-content",
-            "has-checked:bg-warning/10",
-            "has-checked:border-warning",
-            "checked:bg-error",
-            "checked:border-error",
-            "checked:text-error-content",
-            "has-checked:bg-error/10",
-            "has-checked:border-error",
             "size-[1cap]",
             "sr-only",
             "top-1/2",
@@ -433,10 +417,15 @@ class Reader:
             self.measure(found, element, "mark", ink, here.surface)
         elif control == "arrow":
             self.measure(found, element, "mark", here.ink, here.surface, own=here.own)
+        elif control == "tile":
+            self.measure(found, element, "mark", here.ink, here.surface)
+            self.measure(found, element, "mark", Ink("primary-content"), Ink("primary"))
         elif control == "alert":
             below = self.read_alert(paints, override, here)
         elif control is None and tag.name in FIELDS:
             self.read_bare(tag, here, element, found)
+        elif control is None and any(paint.chosen for paint in paints):
+            self.read_card(paints, state, element, found)
         if (
             here.read_text
             and control not in {"btn", "select"}
@@ -510,15 +499,22 @@ class Reader:
             ink, own = CONTENT.faded(0.6), True
         if override:
             ink, own = override, True
-        surface = state.surface
+        surface, chosen, lit = state.surface, state.chosen, state.lit
         for paint in paints:
             if paint.surface:
-                surface = Ink(paint.surface)
+                surface, chosen, lit = Ink(paint.surface), None, None
+        for paint in paints:
+            if paint.tint:
+                chosen = Ink(paint.tint).faded(0.1).over(surface)
+            if paint.lit:
+                lit = Ink(paint.lit)
         return replace(
             state,
             ink=ink,
             own=own,
             surface=surface,
+            chosen=chosen,
+            lit=lit,
             bordered=state.bordered or any(p.variant == "border" for p in paints),
             table=state.table or any(p.control == "table" for p in paints),
         )
@@ -574,6 +570,27 @@ class Reader:
         """
         if any(type(c) is NavigableString and c.strip() for c in tag.children):
             self.measure(found, element, "text", here.ink, here.surface, own=here.own)
+            if here.chosen is not None:
+                ink = here.lit or here.ink
+                self.measure(found, element, "text", ink, here.chosen, own=here.own)
+
+    def read_card(
+        self,
+        paints: list[Paint],
+        state: Inherited,
+        element: Element,
+        found: list[Measurement],
+    ) -> None:
+        """Read the edge a card takes when it is chosen.
+
+        Args:
+            paints: The paints of the element's classes.
+            state: What its parent passes down, the surface around the card.
+            element: The element, for the measurement.
+            found: The measurements so far, added to.
+        """
+        colour = next(paint.chosen for paint in paints if paint.chosen)
+        self.measure(found, element, "mark", Ink(colour), state.surface)
 
     def read_bare(
         self, tag: Tag, here: Inherited, element: Element, found: list[Measurement]
@@ -687,37 +704,42 @@ class Reader:
             found: The measurements so far, added to.
         """
         colour, _ = self.modifiers(paints)
-        outer = here.surface
         stated = Ink(colour) if colour else None
-        # Each row: part, ink, the surface it stands on, whether the pack chose the ink.
-        rows: list[tuple[str, Ink, Ink, bool]]
-        if control == "checkbox":
-            rows = [("border", stated or CONTENT.faded(0.2), outer, False)]
-            if colour:
-                rows.append(("mark", Ink(f"{colour}-content"), Ink(colour), False))
-            else:
-                rows.append(("mark", CONTENT, outer, False))
-        elif control == "radio":
-            text = stated or here.ink
-            chosen = here.own and not colour
-            rows = [
-                ("border", stated or here.ink.faded(0.2), outer, False),
-                ("border", text, outer, chosen),
-                ("mark", text, BASE_100, chosen),
-            ]
-        else:
-            lit = stated or CONTENT
-            rows = [
-                ("border", CONTENT.faded(0.5), outer, False),
-                ("border", lit, outer, False),
-                ("mark", lit, BASE_100, False),
-            ]
         disabled = tag.has_attr("disabled")
         opacity = 0.3 if control == "toggle" else 0.2
-        for part, ink, surface, own in dict.fromkeys(rows):
-            if disabled:
-                ink, surface = self.dimmed(ink, surface, outer, opacity)
-            self.measure(found, element, part, ink, surface, not disabled, own)
+        # A choice in a chosen card is chosen too, and stands on the card's tint.
+        for outer in dict.fromkeys((here.surface, here.chosen or here.surface)):
+            tinted = outer != here.surface
+            # Each row: part, ink, the surface it stands on, whether the pack chose it.
+            rows: list[tuple[str, Ink, Ink, bool]]
+            if control == "checkbox":
+                edge = stated or (CONTENT if tinted else CONTENT.faded(0.2))
+                rows = [("border", edge, outer, False)]
+                if colour:
+                    rows.append(("mark", Ink(f"{colour}-content"), Ink(colour), False))
+                else:
+                    rows.append(("mark", CONTENT, outer, False))
+            elif control == "radio":
+                text = stated or here.ink
+                chosen = here.own and not colour
+                rows = [
+                    ("border", stated or here.ink.faded(0.2), outer, False),
+                    ("border", text, outer, chosen),
+                    ("mark", text, BASE_100, chosen),
+                ]
+                if tinted:
+                    rows = rows[1:]
+            else:
+                lit = stated or CONTENT
+                rows = [
+                    ("border", CONTENT.faded(0.5), outer, False),
+                    ("border", lit, outer, False),
+                    ("mark", lit, BASE_100, False),
+                ]
+            for part, ink, surface, own in dict.fromkeys(rows):
+                if disabled:
+                    ink, surface = self.dimmed(ink, surface, outer, opacity)
+                self.measure(found, element, part, ink, surface, not disabled, own)
 
     def read_range(
         self,
@@ -838,16 +860,55 @@ class Reader:
             fill = (
                 None if variant in {"ghost", "link"} else CONTENT.faded(0.1).over(outer)
             )
+        override = self.override(paints)
+        if override:
+            ink = override
+        held = not tag.has_attr("disabled")
         self.measure(
             found,
             element,
             "button text",
             ink,
             fill or outer,
-            not tag.has_attr("disabled"),
-            here.alert,
+            held,
+            here.alert or bool(override),
         )
+        if held and tag.get("type") in {"radio", "checkbox"}:
+            self.read_chosen(paints, variant, ink, outer, element, found)
         return replace(here, surface=fill or outer, read_text=False)
+
+    def read_chosen(
+        self,
+        paints: list[Paint],
+        variant: str | None,
+        ink: Ink,
+        outer: Ink,
+        element: Element,
+        found: list[Measurement],
+    ) -> None:
+        """Read a choice drawn as a button once it is chosen.
+
+        A chosen button is filled in the colour the widget states, and in primary when
+        it states none. A button with no fill keeps its text ink and shows the choice
+        by its border.
+
+        Args:
+            paints: The paints of the element's classes.
+            variant: The variant the button states.
+            ink: The text ink of the button when it is not chosen.
+            outer: The surface around the button.
+            element: The element, for the measurement.
+            found: The measurements so far, added to.
+        """
+        stated = next((paint.chosen for paint in paints if paint.chosen), None)
+        colour = stated or "primary"
+        if stated or variant not in {"outline", "dash", "ghost", "soft", "link"}:
+            self.measure(
+                found, element, "button text", Ink(f"{colour}-content"), Ink(colour)
+            )
+        else:
+            self.measure(found, element, "button text", ink, outer)
+        self.measure(found, element, "mark", Ink(colour), outer)
 
     def read_tab(
         self,

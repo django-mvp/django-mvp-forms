@@ -246,6 +246,7 @@ LAYOUT_UTILITIES = {
     "grid-cols-1",
     "group-has-checked:bg-primary",
     "group-has-checked:text-primary-content",
+    "group-has-checked:text-base-content",
     "group-open:hidden",
     "group-open:inline",
     "grow",
