@@ -231,6 +231,7 @@ CHIP_AND_CARD_SINGLES = [ChipSelect, CardSelect]
 CHIP_AND_CARD_MULTIPLES = [ChipSelectMultiple, CardSelectMultiple]
 CHIP_AND_CARDS = [*CHIP_AND_CARD_SINGLES, *CHIP_AND_CARD_MULTIPLES]
 CARDS = [CardSelect, CardSelectMultiple]
+CHIPS = [ChipSelect, ChipSelectMultiple]
 LONG_LABEL = "A choice whose label runs on, and on, and on, " * 4
 
 
@@ -259,13 +260,21 @@ class TestChipAndCardInputs:
             ("checkbox", "field", value) for value in VALUES
         ]
 
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_each_input_is_named_by_its_label_alone(self, drawn, widget_class):
+    @pytest.mark.parametrize("widget_class", CHIPS)
+    def test_each_chip_is_named_by_its_label_alone(self, drawn, widget_class):
         soup = drawn(widget_class(), choices=NUMBERS)
 
         assert [i["aria-label"] for i in soup.find_all("input")] == LABELS
 
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
+    @pytest.mark.parametrize("widget_class", CARDS)
+    def test_each_card_is_named_by_the_label_that_holds_it(self, drawn, widget_class):
+        soup = drawn(widget_class(), choices=NUMBERS)
+
+        inputs = soup.find_all("input")
+        assert all(i.get("aria-label") is None for i in inputs)
+        assert [i.find_parent("label").get_text().strip() for i in inputs] == LABELS
+
+    @pytest.mark.parametrize("widget_class", CHIPS)
     def test_a_label_of_any_length_is_given_in_full(self, drawn, widget_class):
         soup = drawn(widget_class(), choices=[("a", LONG_LABEL)])
 
@@ -313,11 +322,18 @@ class TestChipAndCardInputs:
 
         assert all(i.has_attr("disabled") for i in soup.find_all("input"))
 
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_a_label_is_escaped(self, drawn, widget_class):
+    @pytest.mark.parametrize("widget_class", CHIPS)
+    def test_a_chips_label_is_escaped(self, drawn, widget_class):
         soup = drawn(widget_class(), choices=[("a", "<b>R&D</b>")])
 
         assert soup.find("input")["aria-label"] == "<b>R&D</b>"
+        assert soup.find("b") is None
+
+    @pytest.mark.parametrize("widget_class", CARDS)
+    def test_a_cards_label_is_escaped(self, drawn, widget_class):
+        soup = drawn(widget_class(), choices=[("a", "<b>R&D</b>")])
+
+        assert "<b>R&D</b>" in soup.find("label").get_text()
         assert soup.find("b") is None
 
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)

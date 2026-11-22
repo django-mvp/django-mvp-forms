@@ -712,7 +712,8 @@ def choice_button(extra="", kind="radio", attrs=""):
 
 def success_button(extra=""):
     return choice_button(
-        f"checked:bg-success checked:border-success checked:text-success-content {extra}"
+        "checked:bg-success checked:border-success "
+        f"checked:text-success-content {extra}"
     )
 
 
@@ -721,7 +722,8 @@ def tint(name):
 
 
 CARD = (
-    '<label class="card card-border group has-checked:border-{c} has-checked:bg-{c}/10">'
+    '<label class="card card-border group has-checked:border-{c} '
+    'has-checked:bg-{c}/10">'
     '<div class="grid bg-base-200 group-has-checked:bg-primary '
     'group-has-checked:text-primary-content"><svg></svg></div>'
     '<div class="font-semibold">Label</div>'

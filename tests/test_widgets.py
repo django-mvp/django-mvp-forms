@@ -9,6 +9,7 @@ import sys
 import zoneinfo
 from decimal import Decimal
 from pathlib import Path
+from unittest.mock import patch
 from urllib.parse import urlencode
 
 import pytest
@@ -2772,7 +2773,12 @@ class TestChoiceWidgetOptions:
         assert options_of(widget, "")["clearing"]["selected"] is True
 
     @pytest.mark.parametrize(
-        "widget_class", SINGLE_CHOICE_WIDGETS + MULTIPLE_CHOICE_WIDGETS
+        "widget_class",
+        [
+            widget_class
+            for widget_class in SINGLE_CHOICE_WIDGETS + MULTIPLE_CHOICE_WIDGETS
+            if widget_class not in CARD_WIDGETS
+        ],
     )
     def test_each_option_is_named_by_its_label_alone(self, widget_class):
         widget = widget_class(choices=LETTERS)
@@ -3023,6 +3029,65 @@ class TestFoldedChoicesContext:
         assert values_of(first_shown) == ["b"]
         assert values_of(second_shown) == ["a"]
         assert LettersForm.base_fields["letter"].widget.show == {"a"}
+
+    @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
+    def test_changing_the_values_on_show_in_place_changes_one_form_alone(
+        self, widget_class
+    ):
+        class LettersForm(forms.Form):
+            letter = forms.MultipleChoiceField(
+                choices=LETTERS, widget=widget_class(show={"a"})
+            )
+
+        first = LettersForm()
+        second = LettersForm()
+        first.fields["letter"].widget.show.add("b")
+
+        assert second.fields["letter"].widget.show == {"a"}
+        assert LettersForm.base_fields["letter"].widget.show == {"a"}
+
+    @pytest.mark.parametrize("widget_class", CARD_WIDGETS)
+    def test_changing_the_extras_in_place_changes_one_form_alone(self, widget_class):
+        class LettersForm(forms.Form):
+            letter = forms.MultipleChoiceField(
+                choices=LETTERS,
+                widget=widget_class(
+                    descriptions={"a": "One"}, icons={"a": "x"}, meta={"a": "y"}
+                ),
+            )
+
+        first = LettersForm()
+        second = LettersForm()
+        widget = first.fields["letter"].widget
+        widget.descriptions["b"] = "Two"
+        widget.icons["b"] = "z"
+        widget.meta["b"] = "w"
+
+        other = second.fields["letter"].widget
+        assert (other.descriptions, other.icons, other.meta) == (
+            {"a": "One"},
+            {"a": "x"},
+            {"a": "y"},
+        )
+
+    @pytest.mark.parametrize("widget_class", CARD_WIDGETS)
+    def test_a_card_option_has_no_aria_label_of_its_own(self, widget_class):
+        options = options_of(widget_class(choices=LETTERS))["options"]
+
+        assert all("aria-label" not in option["attrs"] for option in options)
+
+    def test_the_fold_words_are_chosen_for_the_count_of_folded_choices(self):
+        widget = ChipSelectMultiple(show=[], choices=[(n, str(n)) for n in range(5)])
+        counts = []
+
+        def record(singular, plural, number):
+            counts.append(number)
+            return singular
+
+        with patch("mvp_forms.widgets.ngettext", record):
+            options_of(widget)
+
+        assert 5 in counts
 
     def test_the_set_given_is_not_changed_by_drawing(self):
         given = {"a"}

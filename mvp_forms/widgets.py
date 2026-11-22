@@ -1393,7 +1393,9 @@ class ChoiceLayout:
         option_attrs["class"] = " ".join(
             filter(None, [self.input_classes, option_attrs.get("class")])
         )
-        option_attrs["aria-label"] = self.plain_text(label)
+        if self.choice_component != "choice-card":
+            # A card's label holds its description, which names the input too.
+            option_attrs["aria-label"] = self.plain_text(label)
         return option
 
     @staticmethod
@@ -1513,10 +1515,16 @@ class FoldedChoices(ChoiceLayout):
         widget["fold_custom"] = bool(self.fold_label)
         widget["fold_one"] = ngettext("{n} more", "{n} more", 1)
         widget["fold_other"] = ngettext("{n} more", "{n} more", 2)
-        widget["fold_label"] = self.fold_label or (
-            widget["fold_one"] if len(folded) == 1 else widget["fold_other"]
+        widget["fold_label"] = self.fold_label or ngettext(
+            "{n} more", "{n} more", len(folded)
         ).replace("{n}", str(len(folded)))
         return context
+
+    def __deepcopy__(self, memo):
+        """Copy the values on show too, so a form's copy changes that form alone."""
+        copied = super().__deepcopy__(memo)
+        copied.show = None if self.show is None else set(self.show)
+        return copied
 
 
 class CardChoices(FoldedChoices):
@@ -1577,6 +1585,14 @@ class CardChoices(FoldedChoices):
         self.icons = icons
         self.meta = meta
         self.columns = columns
+
+    def __deepcopy__(self, memo):
+        """Copy the mappings too, so a form's copy changes that form alone."""
+        copied = super().__deepcopy__(memo)
+        for setting in ("descriptions", "icons", "meta"):
+            mapping = getattr(self, setting)
+            setattr(copied, setting, None if mapping is None else dict(mapping))
+        return copied
 
     @staticmethod
     def extra_of(mapping, value):

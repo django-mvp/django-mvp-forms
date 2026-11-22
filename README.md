@@ -1041,7 +1041,7 @@ Each mapping is optional for every choice, and a choice a mapping does not name 
 
 #### Clearing a single choice
 
-A choice whose value is the empty string is not drawn among the others. A single-choice widget draws it after them as the way to say "none", and choosing it submits the field empty. A model choice field's empty label is that choice, and a `ChoiceField` is given `("", "No answer")`. A field with no empty choice offers no way to clear it. A multiple widget draws such a choice as any other, since clearing a multiple field is unticking its choices. A choice whose value is `0` is drawn among the others.
+A choice whose value is the empty string is not drawn among the others. A single-choice widget draws it after them as the way to say "none", and choosing it submits the field empty. A model choice field's empty label is that choice when the field is given `blank=True`, because Django drops the empty label of a field drawn as a radio group otherwise, and a `ChoiceField` is given `("", "No answer")`. A field with no empty choice offers no way to clear it. A multiple widget draws such a choice as any other, since clearing a multiple field is unticking its choices. A choice whose value is `0` is drawn among the others.
 
 #### The fold
 
