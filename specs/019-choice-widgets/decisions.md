@@ -14,7 +14,7 @@ Each decision says here whether it is expected to earn one.
 chips or cards by naming a widget, and a person filling in a form can answer by tapping large
 choices and unfold the ones not on show. No spec describes either.
 
-**ADR:** none
+**ADR:** none — local to this feature, nothing downstream inherits it
 
 ## D2. Seven widgets, not drawings
 
@@ -38,7 +38,7 @@ the rarely used choices away.
 **Why:** they answer different questions. Merging them would give the pill a fold it never needs
 and the chip a size setting to make it a pill.
 
-**ADR:** none
+**ADR:** none — follows from D2, local to this feature
 
 ## D4. A single choice is cleared by the field's own empty choice
 
@@ -62,7 +62,7 @@ not offer is passed over.
 known only when the form is built. A count would fold by position, which says nothing about which
 choices matter. Model choices change with the data, so an unknown value is not an error.
 
-**ADR:** none
+**ADR:** none — local to this feature, nothing downstream inherits it
 
 ## D6. Only the fold needs a script, and it is an addition
 
@@ -74,8 +74,7 @@ is a native disclosure that opens and closes, and every choice is reachable.
 date, Tom Select and image widgets already ship one each, named in their media, so a project that
 uses none of them never loads one. Following the same rule keeps the scale and pills script-free.
 
-**ADR:** expected — a short record that the chip and card widgets bring one script, beside the
-existing records for the other widget scripts
+**ADR:** docs/adr/0070-choice-layouts-are-widgets-whose-size-and-colour-the-pack-resolves-into-their-context.md
 
 ## D7. A card's icon is markup the developer gives
 
@@ -84,7 +83,7 @@ existing records for the other widget scripts
 **Why:** the package depends on no icon set, and must work in any daisyUI project (G6). Markup
 lets a project use whatever icons it already draws.
 
-**ADR:** none
+**ADR:** none — local to this feature, nothing downstream inherits it
 
 ## D8. Group names are not drawn
 
@@ -95,7 +94,7 @@ draws them.
 fold would make a person open a fold to scan headings. A developer who needs headings uses the
 pack's checkbox or radio group.
 
-**ADR:** none
+**ADR:** none — follows the pack's existing rule for groups, nothing new to inherit
 
 ## D9. Size and colour, no variant, no drawing
 
@@ -118,7 +117,7 @@ widget the developer chose.
 **Why:** the README's scope rules out a stylesheet of the pack's own, and stock daisyUI markup wins
 over custom styling when the two conflict.
 
-**ADR:** none
+**ADR:** none — local to this feature, nothing downstream inherits it
 
 ## D11. Out of scope
 
@@ -126,6 +125,8 @@ Reordering choices in the browser, folding by count, a second tap that clears, h
 choices once one is chosen (daisyUI's filter does that, and a question needs its choices in view),
 an icon set, and icons on pills, chips or the scale. Each can be a request of its own if a project
 needs it.
+
+**ADR:** none — a list of what is left out, nothing downstream inherits it
 
 ## D12. The widgets name their own component and the tag resolves from it
 
@@ -139,7 +140,7 @@ the widget's own context.
 which draws a native radio mark inside a button. The rating already resolves into its context for
 the same reason.
 
-**ADR:** docs/adr/ — written in T005, graduated at convergence
+**ADR:** docs/adr/0070-choice-layouts-are-widgets-whose-size-and-colour-the-pack-resolves-into-their-context.md
 
 ## D13. The fold is a native details element
 
