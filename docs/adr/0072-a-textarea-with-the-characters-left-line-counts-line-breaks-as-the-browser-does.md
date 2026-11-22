@@ -4,7 +4,7 @@
 
 ## Decision
 
-`CharactersLeftTextarea.value_from_datadict` returns the submitted text through Django's
+`CharactersLeft.value_from_datadict`, which every widget with the line shares, returns the submitted text through Django's
 `normalize_newlines`, so every `\r\n` and `\r` is read as `\n`. The field then counts a line break
 as one character, as the browser's `maxlength` does, and a text the line says fits is accepted
 when it is submitted.

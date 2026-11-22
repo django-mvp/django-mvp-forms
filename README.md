@@ -2661,7 +2661,7 @@ The widget writes one phrase for each count from zero up to the smaller of the n
 
 #### Line breaks in a textarea
 
-The browser counts a line break in a textarea as one character, and a form submits it as two, so a text that fills the box could be refused after it is sent. `CharactersLeftTextarea` reads every submitted `\r\n` and `\r` as `\n`, so the browser, the line and the field count alike, and the cleaned value holds `\n`. A value stored with `\r\n` reads as changed until it is saved once.
+The browser counts a line break in a textarea as one character, and a form submits it as two, so a text that fills the box could be refused after it is sent. `CharactersLeftTextarea`, and a textarea of your own built on `CharactersLeft`, reads every submitted `\r\n` and `\r` as `\n`, so the browser, the line and the field count alike, and the cleaned value holds `\n`. A value stored with `\r\n` reads as changed until it is saved once.
 
 The line counts as the browser's `maxlength` counts, in UTF-16 code units, so a character such as an emoji counts as two. That is never fewer than the field's validation counts, so a text the line says fits is accepted.
 

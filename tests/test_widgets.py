@@ -3278,9 +3278,17 @@ def russian_plurals(monkeypatch):
 
 
 class TestCharactersLeft:
-    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
-    def test_it_is_a_mixin_of_both_widgets(self, widget):
-        assert issubclass(widget, CharactersLeft)
+    def test_a_textarea_built_on_the_mixin_reads_line_breaks_as_one_character(self):
+        class OwnTextarea(CharactersLeft, forms.Textarea):
+            pass
+
+        class Form(forms.Form):
+            text = forms.CharField(max_length=5, widget=OwnTextarea)
+
+        form = Form(QueryDict("text=ab%0D%0Acd"))
+
+        assert form.is_valid()
+        assert form.cleaned_data["text"] == "ab\ncd"
 
     @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
     def test_the_number_defaults_to_the_packages(self, widget):

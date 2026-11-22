@@ -93,7 +93,7 @@ Plain script, one immediately invoked function, no inline handler, no dependency
   rows can be added (the rows are added by a script of the demo's own, since adding rows is
   django-mvp's and not this package's), and a field drawn with initial data over its limit. A
   route for each.
-- **ADRs**, written at converge, numbered on from origin/main's highest:
+- **ADRs**, written at convergence, numbered on from origin/main's highest:
   - the line follows `max_length` alone and appears only near the limit (D2, D3);
   - a textarea's line breaks are counted as the browser counts them (D6).
 
@@ -119,7 +119,7 @@ unit, files mirroring the source, no wording, no classes used only for looks.
   htmx swap added later; the script twice on one page gives one line; a Tom Select typing box
   beside a marked input is left alone; no script loaded means the field still stops at its limit
   and nothing throws.
-- A **mutation** for each browser test is run at converge (S5): remove the observer, drop the
+- A **mutation** for each browser test is run at convergence: remove the observer, drop the
   hide, count code points, announce on every key.
 - The legibility check: the line's classes are the help text's, so no new pairing is added; the
   task confirms that and, if the catalogue lists classes the pack writes, adds them.

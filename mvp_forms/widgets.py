@@ -1822,18 +1822,19 @@ class CharactersLeft:
         written["data-characters-left-over"] = gettext("Over the limit by %(n)s")
         return context
 
+    def value_from_datadict(self, data, files, name):
+        """Return the submitted text with every line break as ``\\n``.
+
+        The browser counts a line break as one character, so the field has to
+        count it as one too, or a text the line says fits is refused.
+        """
+        value = super().value_from_datadict(data, files, name)
+        return None if value is None else normalize_newlines(value)
+
 
 class CharactersLeftInput(CharactersLeft, forms.TextInput):
     """A text input with the number of characters left shown under it."""
 
 
 class CharactersLeftTextarea(CharactersLeft, forms.Textarea):
-    """A textarea with the number of characters left shown under it.
-
-    A line break is counted as one character, as the browser counts it.
-    """
-
-    def value_from_datadict(self, data, files, name):
-        """Return the submitted text with every line break as ``\\n``."""
-        value = super().value_from_datadict(data, files, name)
-        return None if value is None else normalize_newlines(value)
+    """A textarea with the number of characters left shown under it."""

@@ -210,6 +210,7 @@ class TestTheStatusRegion:
         page.evaluate(RECORD_WRITES, "id_title")
 
         type_into(page, "#id_title", "x" * 14)
+        assert announced(page, "id_title") == words_of(page, "id_title")[8]
         page.wait_for_function(
             "(text) => document.querySelector("
             "'[data-characters-left-line=id_title] [role=status]')"

@@ -27,7 +27,7 @@
 
   // The name each line records for the input it serves.
   function keyOf(input) {
-    if (!input.id && !input.name) {
+    if (!input.id && !input.name && !input.dataset.charactersLeftKey) {
       unnamed += 1;
       input.dataset.charactersLeftKey = "unnamed-" + unnamed;
     }
