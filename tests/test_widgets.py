@@ -25,7 +25,6 @@ from timezone_field import TimeZoneFormField
 
 from mvp_forms.fields import LatitudeField, LongitudeField, PartialDateField, PointField
 from mvp_forms.widgets import (
-    CHARACTERS_LEFT_FROM,
     CardSelect,
     CardSelectMultiple,
     CharactersLeft,
@@ -3291,12 +3290,6 @@ class TestCharactersLeft:
         assert form.cleaned_data["text"] == "ab\ncd"
 
     @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
-    def test_the_number_defaults_to_the_packages(self, widget):
-        control = limited(widget())
-
-        assert control["data-characters-left-from"] == str(CHARACTERS_LEFT_FROM)
-
-    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
     def test_the_number_a_developer_states_is_written(self, widget):
         control = limited(widget(show_from=3))
 
@@ -3329,23 +3322,16 @@ class TestCharactersLeft:
         control = drawn.find(["input", "textarea"])
 
         assert control["maxlength"] == "40"
-        assert "data-characters-left-from" in control.attrs
+        assert "data-characters-left-words" in control.attrs
 
     @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
-    def test_the_words_hold_one_entry_for_each_count_up_to_the_number(self, widget):
-        control = limited(widget(show_from=3))
+    def test_the_words_hold_one_entry_for_each_count_up_to_the_limit(self, widget):
+        html = widget().render("title", "", attrs={"maxlength": 3})
+        control = BeautifulSoup(html, "html.parser").find(["input", "textarea"])
 
         words = json.loads(control["data-characters-left-words"])
 
-        assert len(words) == 4
         assert [entry.split()[0] for entry in words] == ["0", "1", "2", "3"]
-
-    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
-    def test_the_words_stop_at_the_limit_when_it_is_below_the_number(self, widget):
-        html = widget(show_from=8).render("title", "", attrs={"maxlength": 3})
-        control = BeautifulSoup(html, "html.parser").find(["input", "textarea"])
-
-        assert len(json.loads(control["data-characters-left-words"])) == 4
 
     @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
     def test_the_words_follow_the_plural_forms_of_the_language(
@@ -3353,7 +3339,10 @@ class TestCharactersLeft:
     ):
         russian_plurals(monkeypatch)
 
-        words = json.loads(limited(widget(show_from=5))["data-characters-left-words"])
+        html = widget().render("title", "", attrs={"maxlength": 5})
+        control = BeautifulSoup(html, "html.parser").find(["input", "textarea"])
+
+        words = json.loads(control["data-characters-left-words"])
 
         assert [entry.rsplit(" ", 1)[1] for entry in words] == [
             "1",
@@ -3363,12 +3352,6 @@ class TestCharactersLeft:
             "2",
             "1",
         ]
-
-    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
-    def test_the_over_phrase_keeps_the_number_for_the_script(self, widget):
-        control = limited(widget())
-
-        assert "%(n)s" in control["data-characters-left-over"]
 
     @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
     def test_the_media_names_the_script_once(self, widget):

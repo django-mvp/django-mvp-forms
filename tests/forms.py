@@ -1835,8 +1835,14 @@ class ChoiceLongLabelForm(forms.Form):
 
 
 class CharactersLeftPageForm(forms.Form):
-    title = forms.CharField(required=False, max_length=20, widget=CharactersLeftInput)
-    note = forms.CharField(required=False, max_length=20, widget=CharactersLeftTextarea)
+    title = forms.CharField(
+        required=False, max_length=20, widget=CharactersLeftInput(show_from=8)
+    )
+    note = forms.CharField(
+        required=False, max_length=20, widget=CharactersLeftTextarea(show_from=8)
+    )
+    free = forms.CharField(required=False, max_length=20, widget=CharactersLeftInput)
+    long = forms.CharField(required=False, max_length=500, widget=CharactersLeftInput)
     first = forms.CharField(required=False, max_length=10, widget=CharactersLeftInput)
     second = forms.CharField(required=False, max_length=10, widget=CharactersLeftInput)
     choice = forms.MultipleChoiceField(
@@ -1849,7 +1855,12 @@ class CharactersLeftPageForm(forms.Form):
         self.helper.form_tag = False
         self.helper.include_media = False
         self.helper.layout = Layout(
-            "title", "note", Join("first", "second", label="Pair"), "choice"
+            "title",
+            "note",
+            "free",
+            "long",
+            Join("first", "second", label="Pair"),
+            "choice",
         )
 
 

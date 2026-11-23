@@ -22,8 +22,8 @@ from django.utils.functional import Promise
 from django.utils.html import strip_tags
 from django.utils.safestring import SafeData
 from django.utils.text import normalize_newlines
-from django.utils.translation import gettext, ngettext
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 
 
 class Check:
@@ -1758,20 +1758,22 @@ class CardSelectMultiple(CardChoices, forms.CheckboxSelectMultiple):
     input_classes = "checkbox shrink-0"
 
 
-CHARACTERS_LEFT_FROM = 8
-
-
 class CharactersLeft:
     """A mixin for a text widget that shows the characters left under it.
 
     The limit is the field's ``max_length``, which Django writes on the control
-    as ``maxlength``. The widget writes the number from which the line appears
-    and the line's words on the control, and the script named in its media draws
-    the line.
+    as ``maxlength``. The widget writes the line's words and, when it states
+    one, the number of characters left from which the line appears on the
+    control, and the script named in its media draws the line. The line says
+    "n characters remaining", with a minus before the number for a value over
+    the limit.
     """
 
     class Media:
         js = ["mvp_forms/characters-left.js"]
+
+    #: Counts above this are written with the words of 100 + count % 100.
+    WORDS_UP_TO = 199
 
     def __init__(self, attrs=None, *, show_from=None):
         """State from how many characters left the line appears.
@@ -1779,17 +1781,16 @@ class CharactersLeft:
         Args:
             attrs: The control's attributes. They may not hold ``maxlength``.
             show_from: The number of characters left at which the line appears.
-                Without one the line appears at ``CHARACTERS_LEFT_FROM``.
+                Without one the line is shown from the start.
 
         Raises:
             ValueError: ``show_from`` is not a whole number above zero, or
                 ``attrs`` holds ``maxlength``.
         """
-        if show_from is None:
-            show_from = CHARACTERS_LEFT_FROM
-        Check.whole_number("show_from", show_from)
-        if show_from < 1:
-            raise ValueError(f"show_from must be above zero, not {show_from!r}.")
+        if show_from is not None:
+            Check.whole_number("show_from", show_from)
+            if show_from < 1:
+                raise ValueError(f"show_from must be above zero, not {show_from!r}.")
         if attrs and "maxlength" in attrs:
             raise ValueError(
                 "maxlength is the limit of the field and is not stated on the "
@@ -1799,7 +1800,7 @@ class CharactersLeft:
         self.show_from = show_from
 
     def get_context(self, name, value, attrs):
-        """Write the number and the words on the control.
+        """Write the words, and the number the line appears from, on the control.
 
         Raises:
             ValueError: The control has no ``maxlength``, because its field has
@@ -1814,12 +1815,13 @@ class CharactersLeft:
             )
         limit = int(written["maxlength"])
         words = [
-            ngettext("%(n)s character left", "%(n)s characters left", n) % {"n": n}
-            for n in range(min(self.show_from, limit) + 1)
+            ngettext("%(n)s character remaining", "%(n)s characters remaining", n)
+            % {"n": n}
+            for n in range(min(limit, self.WORDS_UP_TO) + 1)
         ]
-        written["data-characters-left-from"] = self.show_from
+        if self.show_from is not None:
+            written["data-characters-left-from"] = self.show_from
         written["data-characters-left-words"] = json.dumps(words)
-        written["data-characters-left-over"] = gettext("Over the limit by %(n)s")
         return context
 
     def value_from_datadict(self, data, files, name):

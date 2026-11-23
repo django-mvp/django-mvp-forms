@@ -244,12 +244,7 @@ msgstr[1] ""
 
 #: widgets.py:1817
 #, python-format
-msgid "%(n)s character left"
-msgid_plural "%(n)s characters left"
+msgid "%(n)s character remaining"
+msgid_plural "%(n)s characters remaining"
 msgstr[0] ""
 msgstr[1] ""
-
-#: widgets.py:1822
-#, python-format
-msgid "Over the limit by %(n)s"
-msgstr ""

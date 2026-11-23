@@ -41,9 +41,9 @@ six ambiguities. Each was resolved from the issue, the goals, the constitution a
 records. Longer rationale is in `decisions.md`.
 
 - **Q: Is the line there all the time, or only near the limit?**
-  A: Only once a few characters are left. A count that is always on is noise for a field that is
-  nowhere near its limit. The package sets how many "a few" is, and a developer can state another
-  number for one field. Recorded as FR-004 and FR-005.
+  A: There from the start. A line that appears only near the limit gives no sign that a limit
+  exists until a person is close to it. A developer can state from how many characters left it
+  appears for one field. Recorded as FR-004 and FR-005.
 
 - **Q: Where does the limit come from?**
   A: From the field's own `max_length` and nowhere else, so the line can never promise more than
@@ -78,7 +78,7 @@ records. Longer rationale is in `decisions.md`.
 A developer has a field with a maximum length: a short name, a title, or a summary written in a
 textarea. They turn on the characters-left line for the field from Python, on its widget, and
 write no script and no template. They may state from how many characters left the line
-appears.
+appears, and without that it is shown from the start.
 
 **Why this priority**: It is the whole of the developer's side of the feature. Without it there is
 no line to see.
@@ -98,7 +98,7 @@ with the line turned on, render it with its form's media, and read the page.
    **Then** the form's media does not name it.
 4. **Given** a field that states from how many characters left the line appears, **When** its
    form is drawn, **Then** that number is written for it, and **Given** one that states none,
-   **Then** the package's number is.
+   **Then** none is written and the line is shown from the start.
 5. **Given** a field with no `max_length` whose widget has the line turned on, **When** the form
    is drawn, **Then** an error is raised that names the field.
 6. **Given** a number from which the line appears that is not a whole number above zero, or a
@@ -112,9 +112,8 @@ with the line turned on, render it with its form's media, and read the page.
 
 ### User Story 2 - A person sees how many characters are left as they type (Priority: P1)
 
-A person filling in a form types into a field with a limit. While plenty of room is left, nothing
-is shown. Once only a few characters are left, a line under the field says how many, and it
-counts down as they type, and up again as they delete. When none are left the field takes no
+A person filling in a form types into a field with a limit. A line under the field says how many characters
+remain, and it counts down as they type, and up again as they delete. When none are left the field takes no
 more. A person using a screen reader hears the number when it matters, not on every key.
 
 **Why this priority**: This is what the feature is for. A developer's setting with no line a
@@ -125,20 +124,22 @@ turned on until it is full, and read the line and the field's value at each step
 
 **Acceptance Scenarios**:
 
-1. **Given** a field with the line turned on, **When** it holds fewer characters than the limit
-   less the number from which the line appears, **Then** no line is shown.
-2. **Given** such a field, **When** a person types until that number of characters or fewer is
-   left, **Then** a line under the field says how many are left, and **When** they type or delete
-   another, **Then** the number follows.
-3. **Given** such a field, **When** a person deletes until more than that number is left,
-   **Then** the line is hidden again.
+1. **Given** a field with the line turned on that states no number to appear from, **When**
+   the page has loaded, **Then** a line under the field says how many characters remain.
+2. **Given** such a field, **When** a person types or deletes a character, **Then** the number
+   follows.
+3. **Given** a field that states from how many characters left the line appears, **When** more
+   are left, **Then** no line is shown, and **When** a person types until that number or fewer
+   is left, **Then** the line is shown, and **When** they delete until more is left, **Then** it
+   is hidden again.
 4. **Given** a field with no characters left, **When** a person types or pastes more, **Then**
    the field takes none of it and the line says that none are left.
 5. **Given** a form drawn with an initial or submitted value close to the limit, **When** the
    page has loaded, **Then** the line is shown with the number left before anything is typed.
 6. **Given** a field holding a value longer than its limit, **When** the page has loaded,
-   **Then** the line says the value is over the limit and by how many characters, and the value
-   is not cut.
+   **Then** the line says how many characters remain as a negative number, in the error colour,
+   and the value is not cut. **Given** it is then shortened to the limit or below, **Then** the
+   line loses the error colour.
 7. **Given** a textarea with the line turned on, **When** a person writes text holding line
    breaks until the line says none are left and submits, **Then** the field accepts the text.
 8. **Given** a person using a screen reader, **When** the line first appears, when they stop
@@ -197,8 +198,8 @@ turned on until it is full, and read the line and the field's value at each step
   `max_length` MUST raise an error naming the field no later than when the form is drawn.
 - **FR-003**: The line MUST NOT be offered on the package's Tom Select widgets, which let a person
   choose only among the field's choices.
-- **FR-004**: The line MUST appear once the characters left are at or below a number the package
-  sets, and MUST be hidden while more are left.
+- **FR-004**: The line MUST be shown from the start, unless the developer states a number, and
+  then MUST be hidden while more characters than that are left.
 - **FR-005**: A developer MUST be able to state that number for one field. A value that is not a
   whole number above zero MUST raise an error naming the setting when the form class is defined.
 - **FR-006**: The attributes written MUST be the same whether the form is drawn through the pack,
@@ -209,13 +210,13 @@ turned on until it is full, and read the line and the field's value at each step
 - **FR-007**: The line MUST say how many characters are left, under the field's control, and MUST
   follow every character typed, deleted, pasted or cut. It MUST be up to date when the page has
   loaded, for a value drawn with the form.
-- **FR-008**: For a value longer than its limit the line MUST say that it is over and by how many
-  characters. Nothing MUST cut a value that is already there.
+- **FR-008**: For a value longer than its limit the line MUST say how many characters remain as a
+  negative number, in the error colour. Nothing MUST cut a value that is already there.
 - **FR-009**: The line MUST count as the browser's limit counts, so the field stops taking
   characters exactly when the line says none are left. A text the line says fits,
   line breaks included, MUST be accepted by the field when it is submitted.
 - **FR-010**: The line's words MUST be translatable, in the package's catalogue, with the plural
-  forms of the language the page is drawn in.
+  forms of the language the page is drawn in, for a count of any size.
 - **FR-011**: The line MUST be announced to assistive technology politely: when it first appears,
   when the person stops typing, and when no characters are left. It MUST NOT be announced for
   each key pressed.

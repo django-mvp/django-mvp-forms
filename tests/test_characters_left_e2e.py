@@ -35,7 +35,7 @@ document.getElementById("rows").append(
   document.getElementById("line").content.cloneNode(true));
 """
 MARKED_IDS = """
-[...document.querySelectorAll("[data-characters-left-from]")].map((node) => node.id)
+[...document.querySelectorAll("[data-characters-left-words]")].map((node) => node.id)
 """
 SERVED_IDS = """
 [...document.querySelectorAll("[data-characters-left-line]")]
@@ -96,8 +96,12 @@ def words_of(page, field_id):
 
 
 def over_phrase(page, field_id, number):
-    phrase = page.locator(f"#{field_id}").get_attribute("data-characters-left-over")
-    return phrase.replace("%(n)s", str(number))
+    """The words for a count with a minus before the number."""
+    return words_of(page, field_id)[number].replace(str(number), f"-{number}")
+
+
+def line_classes(page, field_id):
+    return line_of(page, field_id).locator("[aria-hidden]").get_attribute("class")
 
 
 class TestTheLine:
@@ -172,7 +176,51 @@ class TestTheLine:
         page = characters_page(title="x" * 25)
 
         assert shown_text(page, "id_title") == over_phrase(page, "id_title", 5)
+        assert shown_text(page, "id_title").startswith("-5")
         assert page.locator("#id_title").input_value() == "x" * 25
+
+    def test_the_line_is_in_the_error_colour_only_while_over_the_limit(
+        self, characters_page
+    ):
+        page = characters_page(title="x" * 22)
+        over = line_classes(page, "id_title").split()
+        field = page.locator("#id_title")
+        field.focus()
+        field.press("End")
+        for _ in range(3):
+            field.press("Backspace")
+        within = line_classes(page, "id_title").split()
+
+        assert "text-error" in over and "text-base-content" not in over
+        assert "text-base-content" in within and "text-error" not in within
+
+    def test_a_value_over_the_limit_by_more_than_the_limit_keeps_its_number(
+        self, characters_page
+    ):
+        page = characters_page(title="x" * 120)
+
+        assert shown_text(page, "id_title").startswith("-100 ")
+
+    def test_a_field_without_a_number_shows_the_line_from_the_start(
+        self, characters_page
+    ):
+        page = characters_page()
+
+        assert shown_text(page, "id_free") == words_of(page, "id_free")[20]
+        type_into(page, "#id_free", "xxx")
+        assert shown_text(page, "id_free") == words_of(page, "id_free")[17]
+
+    def test_a_count_above_the_words_written_is_said_with_its_own_number(
+        self, characters_page
+    ):
+        page = characters_page()
+
+        assert len(words_of(page, "id_long")) == 200
+        assert shown_text(page, "id_long") == words_of(page, "id_long")[100].replace(
+            "100", "500"
+        )
+        type_into(page, "#id_long", "x" * 3)
+        assert shown_text(page, "id_long").startswith("497 ")
 
     def test_a_field_without_a_value_near_the_limit_shows_nothing(
         self, characters_page

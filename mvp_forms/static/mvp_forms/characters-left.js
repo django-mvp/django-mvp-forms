@@ -1,7 +1,8 @@
 // Draws the line that says how many characters are left under every input and
-// textarea a characters-left widget draws. The widget writes the number from
-// which the line appears, the words for each count and the limit (maxlength)
-// on the control. The script only reads them, and never changes the value.
+// textarea a characters-left widget draws. The widget writes the words for the
+// counts from 0 up to the limit or 199, the limit (maxlength) and, when the line
+// is not shown from the start, the number of characters left it appears from.
+// The script only reads them, and never changes the value.
 (function () {
   "use strict";
 
@@ -9,7 +10,7 @@
   if (window.mvpFormsCharactersLeft) return;
   window.mvpFormsCharactersLeft = true;
 
-  const SELECTOR = "input[data-characters-left-from], textarea[data-characters-left-from]";
+  const SELECTOR = "input[data-characters-left-words], textarea[data-characters-left-words]";
   // How long after the last key the status region is written.
   const PAUSE = 1000;
   const timers = new WeakMap();
@@ -23,6 +24,21 @@
     } catch (error) {
       return [];
     }
+  }
+
+  // The words for a count, with a minus before the number when the value is
+  // over the limit. A count with no words of its own takes the words of
+  // 100 + count % 100, which every plural formula puts in the same form, and
+  // the number in them is replaced by the count.
+  function textFor(input, left) {
+    const words = wordsOf(input);
+    const count = Math.abs(left);
+    let index = count;
+    if (index >= words.length) index = 100 + (count % 100);
+    if (index >= words.length) index = words.length - 1;
+    if (index < 0) return "";
+    const number = (left < 0 ? "-" : "") + String(count);
+    return words[index].replace(String(index), number);
   }
 
   // The name each line records for the input it serves.
@@ -90,7 +106,8 @@
     const left = limit - input.value.length;
     const line = lineOf(input);
     const shown = line.querySelector("[aria-hidden]");
-    if (left > Number(input.dataset.charactersLeftFrom)) {
+    const from = input.dataset.charactersLeftFrom;
+    if (from !== undefined && left > Number(from)) {
       shown.hidden = true;
       shown.textContent = "";
       stopWaiting(line);
@@ -98,11 +115,10 @@
       return;
     }
     const wasHidden = shown.hidden;
-    const text =
-      left < 0
-        ? input.dataset.charactersLeftOver.replace("%(n)s", String(-left))
-        : wordsOf(input)[left] || "";
+    const text = textFor(input, left);
     shown.textContent = text;
+    shown.classList.toggle("text-error", left < 0);
+    shown.classList.toggle("text-base-content", left >= 0);
     shown.hidden = false;
     if (!typing) return;
     stopWaiting(line);

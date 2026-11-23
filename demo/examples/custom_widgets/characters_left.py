@@ -25,7 +25,7 @@ class TitleForm(SampleForm):
     title = forms.CharField(
         max_length=40,
         widget=CharactersLeftInput,
-        help_text="The line appears when 8 characters or fewer are left.",
+        help_text="The line is there from the start.",
     )
 
 
@@ -70,7 +70,7 @@ class OverTheLimitForm(SampleForm):
     title = forms.CharField(
         max_length=20,
         widget=CharactersLeftInput,
-        help_text="The saved title is longer than 20 characters. It is not cut.",
+        help_text="The saved title is 24 characters over the limit. It is not cut.",
     )
 
     initial_values = {"title": "A title written before the limit was lowered"}
