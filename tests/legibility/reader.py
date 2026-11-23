@@ -150,6 +150,7 @@ class Reader:
         "bg-base-200": Paint(surface="base-200"),
         "bg-base-100": Paint(surface="base-100"),
         "card": Paint(surface="base-100"),
+        "card-dash": Paint(),
         # A card's icon tile, whose fill turns primary when the card is chosen.
         "group-has-checked:bg-primary": Paint(control="tile"),
         "group-has-checked:text-primary-content": Paint(),
@@ -240,6 +241,7 @@ class Reader:
             "h-auto",
             "inset-x-0",
             "items-center",
+            "justify-center",
             "items-end",
             "items-start",
             "max-h-full",

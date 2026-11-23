@@ -2669,6 +2669,11 @@ class TestChoiceWidgetSettings:
                 for widget in FOLDING_WIDGETS
                 for value in ("abc", 5, b"ab")
             ],
+            *[
+                (widget, "mark", value)
+                for widget in CARD_WIDGETS
+                for value in ("middle", "", "START", 1, None)
+            ],
             *[(widget, "descriptions", ["a"]) for widget in CARD_WIDGETS],
             *[(widget, "icons", "a") for widget in CARD_WIDGETS],
             *[(widget, "meta", ("a",)) for widget in CARD_WIDGETS],
@@ -2696,6 +2701,20 @@ class TestChoiceWidgetSettings:
         assert widget.icons == {"a": "i"}
         assert widget.meta == {"a": "m"}
         assert widget.columns == 3
+
+    @pytest.mark.parametrize("widget_class", CARD_WIDGETS)
+    def test_a_card_widget_has_its_mark_at_the_end_when_none_is_given(
+        self, widget_class
+    ):
+        assert widget_class().mark == "end"
+
+    @pytest.mark.parametrize("widget_class", CARD_WIDGETS)
+    @pytest.mark.parametrize("mark", ["start", "end"])
+    def test_the_mark_is_kept_as_given_and_is_in_the_context(self, widget_class, mark):
+        widget = widget_class(mark=mark, choices=LETTERS)
+
+        assert widget.mark == mark
+        assert options_of(widget)["mark"] == mark
 
     def test_a_card_widget_has_two_columns_when_none_are_given(self):
         assert CardSelect().columns == 2

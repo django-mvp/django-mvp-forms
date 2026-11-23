@@ -438,6 +438,40 @@ class TestCardExtras:
         assert "One's note" in self.label_of(soup, "1").get_text()
         assert "One's note" not in self.label_of(soup, "2").get_text()
 
+    @staticmethod
+    def order_in(label):
+        """The kinds of children of a card label, in the order they are drawn."""
+        kinds = []
+        for child in label.find_all(["input", "div"], recursive=False):
+            if child.name == "input":
+                kinds.append("mark")
+            elif child.find("svg"):
+                kinds.append("icon")
+            else:
+                kinds.append("text")
+        return kinds
+
+    @pytest.mark.parametrize("widget_class", CARDS)
+    def test_the_mark_is_drawn_after_the_icon_and_the_text_by_default(
+        self, drawn, widget_class
+    ):
+        widget = widget_class(icons={"a": mark_safe("<svg></svg>")})
+
+        soup = drawn(widget, choices=self.CHOICES)
+
+        assert self.order_in(self.label_of(soup, "a")) == ["icon", "text", "mark"]
+
+    @pytest.mark.parametrize("widget_class", CARDS)
+    def test_a_mark_at_the_start_is_drawn_before_the_icon_and_the_text(
+        self, drawn, widget_class
+    ):
+        widget = widget_class(mark="start", icons={"a": mark_safe("<svg></svg>")})
+
+        soup = drawn(widget, choices=self.CHOICES)
+
+        assert self.order_in(self.label_of(soup, "a")) == ["mark", "icon", "text"]
+        assert self.order_in(self.label_of(soup, "b")) == ["mark", "text"]
+
     @pytest.mark.parametrize("columns", [1, 2, 3])
     @pytest.mark.parametrize("widget_class", CARDS)
     def test_the_columns_select_the_matching_wide_screen_grid(

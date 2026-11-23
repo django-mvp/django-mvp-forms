@@ -223,6 +223,31 @@ and then by keyboard alone, press the button of the chip and card fields, and su
 
 ---
 
+### User Story 3 - A developer places the mark of a card at its start (Priority: P3)
+
+A developer draws a list of cards where the radio or checkbox is the first thing a person looks
+for, such as a list of plans or of permissions. They set one setting on the card widget, `mark`,
+to `"start"`, and each card draws its mark, then its icon, then its text. Without it the card
+draws its icon, its text, then its mark, as before.
+
+**Why this priority**: It is a placement of what story 1 draws. The cards work without it.
+
+**Independent Test**: Draw a `CardSelect` and a `CardSelectMultiple` with `mark="start"`, an icon
+for one choice and none for another, and read the order of the parts of each card.
+
+**Acceptance Scenarios**:
+
+1. **Given** a card widget with `mark="start"`, **When** its form is drawn, **Then** each card
+   holds its input first, then its icon where one is given, then its text.
+2. **Given** a card widget with `mark="end"`, or with no `mark`, **When** its form is drawn,
+   **Then** each card holds its icon where one is given, then its text, then its input.
+3. **Given** a card widget given a `mark` other than `"start"` or `"end"`, **When** the widget is
+   made, **Then** an error is raised that names `mark`.
+4. **Given** a card widget with `mark="start"`, **When** a person taps a card or uses the
+   keyboard, **Then** the card behaves as it does with the mark at the end.
+
+---
+
 ### Edge Cases
 
 - A field has no choices. The widget is drawn with its frame and no inputs, and a chip or card
@@ -371,8 +396,9 @@ and then by keyboard alone, press the button of the chip and card fields, and su
 
 | Story | Requirements |
 |---|---|
-| US-1 | FR-001 to FR-015, FR-017, FR-021 to FR-027, FR-029 to FR-032 |
+| US-1 | FR-001 to FR-015, FR-017, FR-021 to FR-027, FR-029 to FR-031 |
 | US-2 | FR-004, FR-007, FR-013, FR-016, FR-018 to FR-020, FR-028, FR-030 |
+| US-3 | FR-032 |
 
 ### Key Entities
 

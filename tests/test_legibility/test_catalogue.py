@@ -165,7 +165,9 @@ class TestCatalogueChoiceWidgets:
         found = [
             m
             for m in Catalogue.measurements()
-            if m.form_state == "disabled choice widgets" and m.element.kind == "btn"
+            if m.form_state == "disabled choice widgets"
+            and m.element.kind == "btn"
+            and m.element.tag == "input"
         ]
 
         assert found

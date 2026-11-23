@@ -985,7 +985,7 @@ This is the public surface:
 - `mvp_forms.widgets.PillSelect` and `mvp_forms.widgets.PillSelectMultiple`, one choice and several drawn as rounded toggles
 - `mvp_forms.widgets.ChipSelect` and `mvp_forms.widgets.ChipSelectMultiple`, one choice and several drawn as large toggles
 - `mvp_forms.widgets.CardSelect` and `mvp_forms.widgets.CardSelectMultiple`, one choice and several drawn as cards
-- the settings `low` and `high` of `ScaleSelect`, `show` and `fold_label` of the chip and card widgets, and `descriptions`, `icons`, `meta` and `columns` of the card widgets
+- the settings `low` and `high` of `ScaleSelect`, `show` and `fold_label` of the chip and card widgets, and `descriptions`, `icons`, `meta`, `columns` and `mark` of the card widgets
 - the templates `mvp_forms/widgets/scale.html`, `mvp_forms/widgets/pills.html`, `mvp_forms/widgets/chips.html`, `mvp_forms/widgets/cards.html` and `mvp_forms/widgets/card_option.html`
 - the script `mvp_forms/choice-fold.js`, which the chip and card widgets name in their media
 
@@ -1036,6 +1036,7 @@ Every setting is keyword-only. A setting a widget does not have, or a value a se
 | card widgets | `icons` | a mapping from a value to markup | The icon of a choice, drawn as the markup given, so mark it safe. The package names no icon set. |
 | card widgets | `meta` | a mapping from a value to text | A short line above a choice's label. It is escaped unless marked safe. |
 | card widgets | `columns` | `1`, `2` or `3` | The number of cards across on a wide screen, 2 by default. One card sits across on a narrow screen. Any other number raises when the widget is made. |
+| card widgets | `mark` | `"end"` or `"start"` | The side of the card the radio or checkbox is drawn on. With `"end"`, the default, a card draws its icon, its text and then its mark. With `"start"` it draws the mark, the icon and then the text. Any other value raises a `ValueError` naming `mark` when the widget is made. |
 
 Each mapping is optional for every choice, and a choice a mapping does not name is drawn with its label alone. A mapping is read by the choice's value as text, so a `ModelChoiceField` is keyed by primary key. A mapping keyed by a value the field does not offer is passed over.
 
@@ -1089,7 +1090,7 @@ Three classes in `mvp_forms.widgets` hold what the seven share, for a project th
 
 - `ChoiceLayout` goes before `RadioSelect` or `CheckboxSelectMultiple`. It lists the choices in the field's order without the names of groups, names each input by its label, and sets the empty choice of a single-choice widget apart as `clearing`. A subclass sets `choice_component` and `input_classes`.
 - `FoldedChoices` builds on `ChoiceLayout` and adds `show`, `fold_label` and the split of the choices into those on show and those in the fold.
-- `CardChoices` builds on `FoldedChoices` and adds `descriptions`, `icons`, `meta` and `columns`.
+- `CardChoices` builds on `FoldedChoices` and adds `descriptions`, `icons`, `meta`, `columns` and `mark`.
 
 #### What is not supported
 
@@ -1349,8 +1350,8 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `mvp_forms/widgets/scale.html` | A single choice drawn by `ScaleSelect`: one row of segments, one radio input for each choice, the words for the two ends under the row where they are given, and the choice that clears the field after it, where `widget` also holds `options`, the choices in the order they are drawn without the one that clears, and `clearing`. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/pills.html` | A choice drawn by `PillSelect` or `PillSelectMultiple`: a wrapping row of toggles, one radio or checkbox input for each choice, where `widget` also holds `options` and `clearing`, which a single choice draws last. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/chips.html` | A choice drawn by `ChipSelect` or `ChipSelectMultiple`: a wrapping row of large toggles, every choice in the one row with the folded ones marked `data-choice-folded`, a hidden button that shows them, and the choice that clears a single choice after the row, where `widget` also holds `shown`, `folded`, `fold_label` and `clearing`. | `widget` | `FORM_RENDERER` |
-| `mvp_forms/widgets/cards.html` | A choice drawn by `CardSelect` or `CardSelectMultiple`: a grid of cards with the folded cards marked and the hidden button of `chips.html` drawn as a card-shaped tile, one to three cards across on a wide screen by `columns`, and the choice that clears a single choice after the grid, where `widget` also holds `shown`, `folded`, `fold_label`, `columns`, `choice_class` and `clearing`. | `widget` | `FORM_RENDERER` |
-| `mvp_forms/widgets/card_option.html` | One card drawn by `cards.html`: a label holding the icon tile where an icon is given, the short line, the choice's label and the description where given, and the input as the card's mark, the label taking the classes of `widget.choice_class` for its edge and tint. | `option`, `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/cards.html` | A choice drawn by `CardSelect` or `CardSelectMultiple`: a grid of cards with the folded cards marked and the hidden button of `chips.html` drawn as a card-shaped tile, one to three cards across on a wide screen by `columns`, and the choice that clears a single choice after the grid, where `widget` also holds `shown`, `folded`, `fold_label`, `columns`, `mark`, `choice_class` and `clearing`. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/card_option.html` | One card drawn by `cards.html`: a label holding the icon tile where an icon is given, the short line, the choice's label and the description where given, and the input as the card's mark, before the icon or after the text by `widget.mark`, the label drawn on the page's base background with a base-300 edge and taking the classes of `widget.choice_class` for the edge and tint of a chosen card. | `option`, `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 

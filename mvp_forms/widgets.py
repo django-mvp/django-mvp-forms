@@ -1529,7 +1529,7 @@ class CardChoices(FoldedChoices):
     """Card widgets: a description, an icon and a short line for each choice.
 
     Each option gains ``description``, ``icon`` and ``meta``, found by its value
-    read as text, and the context gains ``columns``. A text that is not marked
+    read as text, and the context gains ``columns`` and ``mark``. A text that is not marked
     safe is escaped when drawn. An icon is drawn as the markup given, so the
     developer marks it safe.
 
@@ -1545,14 +1545,17 @@ class CardChoices(FoldedChoices):
             label.
         columns: The number of cards across on a wide screen: 1, 2 or 3. One
             card sits across on a narrow screen.
+        mark: The side of the card the radio or checkbox mark is drawn on:
+            ``"end"``, after the text, or ``"start"``, before the icon.
 
     Attributes:
         edge_classes: The classes of a chosen card's edge and tint when the
             pack states no colour.
 
     Raises:
-        ValueError: A mapping is not a mapping, or ``columns`` is not 1, 2 or
-            3. The message names the setting.
+        ValueError: A mapping is not a mapping, ``columns`` is not 1, 2 or 3,
+            or ``mark`` is not ``"start"`` or ``"end"``. The message names the
+            setting.
     """
 
     choice_component = "choice-card"
@@ -1567,6 +1570,7 @@ class CardChoices(FoldedChoices):
         icons=None,
         meta=None,
         columns=2,
+        mark="end",
         **settings,
     ):
         """Keep the settings that were stated."""
@@ -1578,11 +1582,13 @@ class CardChoices(FoldedChoices):
             if mapping is not None:
                 Check.of_type(setting, mapping, Mapping, "a mapping")
         Check.one_of("columns", columns, (1, 2, 3))
+        Check.one_of("mark", mark, ("start", "end"))
         super().__init__(attrs, choices, **settings)
         self.descriptions = descriptions
         self.icons = icons
         self.meta = meta
         self.columns = columns
+        self.mark = mark
 
     def __deepcopy__(self, memo):
         """Copy the mappings too, so a form's copy changes that form alone."""
@@ -1624,9 +1630,10 @@ class CardChoices(FoldedChoices):
         return option
 
     def get_context(self, name, value, attrs):
-        """Add the number of cards across."""
+        """Add the number of cards across and the side of the mark."""
         context = super().get_context(name, value, attrs)
         context["widget"]["columns"] = self.columns
+        context["widget"]["mark"] = self.mark
         context["widget"]["choice_class"] = self.edge_classes
         return context
 

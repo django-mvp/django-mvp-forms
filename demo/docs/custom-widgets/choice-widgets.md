@@ -104,10 +104,18 @@ the label, the icon's markup and the short line above the label. Each is
 optional for every choice. An icon is drawn as the markup you give, so mark it
 safe, and the package names no icon set. A description is escaped. `columns` is
 the number of cards across on a wide screen, 1, 2 or 3, and one card sits across
-on a narrow screen.
+on a narrow screen. `mark` is the side of the card the radio or checkbox is
+drawn on: `"end"`, the default, or `"start"`, which draws the mark, then the
+icon, then the text.
 
 ```{live-example} /examples/choice-cards/
 :title: Cards in three, two and one column
+
+../../examples/custom_widgets/choice_widgets.py
+```
+
+```{live-example} /examples/choice-cards-mark-start/
+:title: Cards with the mark at the start
 
 ../../examples/custom_widgets/choice_widgets.py
 ```
