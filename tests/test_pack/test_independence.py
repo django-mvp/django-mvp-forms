@@ -144,6 +144,7 @@ LAYOUT_UTILITIES = {
     "h-auto",
     "inset-x-0",
     "items-center",
+    "justify-center",
     "items-end",
     "items-start",
     "max-h-full",
@@ -195,6 +196,9 @@ LAYOUT_UTILITIES = {
     "sr-only",
     "top-1/2",
     "w-[0.125em]",
+    # A card whose input is disabled is faded and takes no pointer.
+    "has-disabled:cursor-not-allowed",
+    "has-disabled:opacity-60",
     # Form text, sized and shaded where daisyUI has no text component (ADR 0067).
     "text-base",
     # The scale, pills, chips and cards: what a chosen choice takes in each colour

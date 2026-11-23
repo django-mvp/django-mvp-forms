@@ -159,7 +159,7 @@ class ChipsForm(DemoForm):
         choices=INTERESTS,
         widget=ChipSelectMultiple(show=USUAL_INTERESTS, fold_label="Other hobbies"),
         required=False,
-        help_text="The fold's control says what it holds, in words you give.",
+        help_text="The button after the chips has the words you give.",
     )
 
 
@@ -203,6 +203,31 @@ class CardsForm(DemoForm):
         widget=CardSelectMultiple(columns=1),
         required=False,
         help_text="One across, with several chosen.",
+    )
+
+
+class CardMarkForm(DemoForm):
+    """Cards with the mark at the start: mark, text, then icon."""
+
+    plan = forms.ChoiceField(
+        label="Plan",
+        choices=PLANS,
+        widget=CardSelect(
+            columns=2,
+            mark="start",
+            descriptions=PLAN_DESCRIPTIONS,
+            icons=PLAN_ICONS,
+            meta=PLAN_META,
+        ),
+        initial="standard",
+        help_text="The radio is drawn at the start and the icon at the end.",
+    )
+    extras = forms.MultipleChoiceField(
+        label="Extras",
+        choices=ADDONS,
+        widget=CardSelectMultiple(columns=1, mark="start"),
+        required=False,
+        help_text="The checkbox is drawn before the text.",
     )
 
 

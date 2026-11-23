@@ -251,14 +251,14 @@ in a fold.
 _Avoid_: tile.
 
 **Fold**:
-The native `details` element of a chip or card widget that holds the choices not
-on show. Its control shows how many choices it holds. One script keeps a choice
-chosen inside it on show and keeps the count true, and without the script every
-folded choice can still be reached by opening the fold.
+The choices of a chip or card widget that are not on show. They are drawn in the
+same row or grid as the others and marked, with a "More options" button after
+them. One script hides them and shows the button, and the button shows them
+again in place. Without the script every choice is shown.
 _Avoid_: accordion, "show more" link.
 
 **Choices on show**:
-The choices of a chip or card widget that are drawn outside the fold: those whose
+The choices of a chip or card widget that are not folded: those whose
 values the developer names in `show`, and every chosen choice. Naming none puts
 every choice on show.
 _Avoid_: visible choices, pinned choices.

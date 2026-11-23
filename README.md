@@ -985,7 +985,7 @@ This is the public surface:
 - `mvp_forms.widgets.PillSelect` and `mvp_forms.widgets.PillSelectMultiple`, one choice and several drawn as rounded toggles
 - `mvp_forms.widgets.ChipSelect` and `mvp_forms.widgets.ChipSelectMultiple`, one choice and several drawn as large toggles
 - `mvp_forms.widgets.CardSelect` and `mvp_forms.widgets.CardSelectMultiple`, one choice and several drawn as cards
-- the settings `low` and `high` of `ScaleSelect`, `show` and `fold_label` of the chip and card widgets, and `descriptions`, `icons`, `meta` and `columns` of the card widgets
+- the settings `low` and `high` of `ScaleSelect`, `show` and `fold_label` of the chip and card widgets, and `descriptions`, `icons`, `meta`, `columns` and `mark` of the card widgets
 - the templates `mvp_forms/widgets/scale.html`, `mvp_forms/widgets/pills.html`, `mvp_forms/widgets/chips.html`, `mvp_forms/widgets/cards.html` and `mvp_forms/widgets/card_option.html`
 - the script `mvp_forms/choice-fold.js`, which the chip and card widgets name in their media
 
@@ -1031,11 +1031,12 @@ Every setting is keyword-only. A setting a widget does not have, or a value a se
 |---|---|---|---|
 | `ScaleSelect` | `low`, `high` | text, or a lazy translation | The words under the first and the last segment. Each is optional, and a scale with none draws none. A screen reader reads the words with the first and the last choice. |
 | chip and card widgets | `show` | a collection of values | The values of the choices that stay on show. With none given every choice is on show. It is read as text, so a primary key matches, and a value the field does not offer is passed over. |
-| chip and card widgets | `fold_label` | text, or a lazy translation | The words on the fold's control, shown with the count of choices it holds. The package's own words are translatable. |
+| chip and card widgets | `fold_label` | text, or a lazy translation | The words on the button that shows the folded choices, after a plus sign. Without it the button says "More options", which is translatable. |
 | card widgets | `descriptions` | a mapping from a value to text | The softer text under a choice's label. It is escaped unless marked safe. |
 | card widgets | `icons` | a mapping from a value to markup | The icon of a choice, drawn as the markup given, so mark it safe. The package names no icon set. |
 | card widgets | `meta` | a mapping from a value to text | A short line above a choice's label. It is escaped unless marked safe. |
 | card widgets | `columns` | `1`, `2` or `3` | The number of cards across on a wide screen, 2 by default. One card sits across on a narrow screen. Any other number raises when the widget is made. |
+| card widgets | `mark` | `"end"` or `"start"` | The side of the card the radio or checkbox is drawn on. With `"end"`, the default, a card draws its icon, its text and then its mark. With `"start"` it draws the mark, the icon and then the text. Any other value raises a `ValueError` naming `mark` when the widget is made. |
 
 Each mapping is optional for every choice, and a choice a mapping does not name is drawn with its label alone. A mapping is read by the choice's value as text, so a `ModelChoiceField` is keyed by primary key. A mapping keyed by a value the field does not offer is passed over.
 
@@ -1045,7 +1046,7 @@ A choice whose value is the empty string is not drawn among the others. A single
 
 #### The fold
 
-A chip or card widget given `show` draws the choices it names, and every chosen choice, in the field's order. It draws the rest inside a native `<details>` element after them, whose `<summary>` is the control and says how many choices it holds, such as "3 more". A chosen choice is never folded, so a bound or initial value is always on show. A fold that would hold every choice, because none is named and none is chosen, is drawn open, and a fold that would hold none is not drawn.
+A chip or card widget given `show` draws every choice in one row or grid, in the field's order. A choice that is not named and not chosen carries `data-choice-folded`, and a `<button type="button">` follows the choices, hidden in the markup. For chips the button is drawn as a chip, and for cards as a card-shaped tile, each with a plus sign and "More options" or the words in `fold_label`. A chosen choice is never folded, so a bound or initial value is always on show. When no choice would stay on show, nothing is folded, and when none would be folded, no button is drawn.
 
 Which choices matter often depends on the person, so `show` can be set on the form's own copy of the widget in `__init__`. Another form made from the same class is not affected.
 
@@ -1060,11 +1061,11 @@ class InterestsForm(forms.Form):
         self.fields["interests"].widget.show = set(usual)
 ```
 
-- The disclosure, its keyboard operation and its open state for assistive technology come from the browser. The control is a native `<summary>`.
-- Without the script every choice can still be reached: a person opens the fold, chooses any choice and submits the form.
-- The script is what keeps a chosen choice on show and keeps the count true. When a person chooses a choice inside the fold and closes it, the script moves that choice, with its card or chip, out of the fold into the choices on show in the field's order, and the count is the number of choices still folded. When none is left the script removes the fold. The count is its own element, marked `data-choice-count`. The package's own words are drawn with the count by the server and are held on the summary as `data-choice-one` and `data-choice-other`, each with `{n}` where the count goes, so the script writes them again in the person's language. Words given as `fold_label` stay as given, followed by the count.
-- The script acts on a fold added to the page after it has loaded, such as a row added to a formset or a form that htmx swaps in, and acts once on each fold however many times the page includes it. It writes no inline script and uses no inline handler.
-- A disabled field's fold still opens, so a person can read the folded choices, and none can be chosen.
+- The control is a native `<button>`, so the keyboard operates it.
+- Without the script every choice is shown and the button stays hidden, so a person chooses any choice and submits the form.
+- With the script, the choices marked as folded that are not chosen are hidden on load, and the button is shown. Pressing it shows them in place, in the field's order, removes the button and moves the focus to the first choice shown.
+- The script acts on choices added to the page after it has loaded, such as a row added to a formset or a form that htmx swaps in, and acts once on each button however many times the page includes it. It writes no inline script and uses no inline handler.
+- A disabled field's button still shows the folded choices, so a person can read them, and none can be chosen.
 - A form drawn again after a failed submission draws every choice the person had chosen on show.
 
 The widgets of the chip and the card name `mvp_forms/choice-fold.js` in their media, and the scale and the pills name no script. Render `{{ form.media }}` in the page template, or load `{% static 'mvp_forms/choice-fold.js' %}` yourself. `{% crispy form %}` writes the form's media inside the form, and `{{ form|crispy }}`, `{{ field|as_crispy_field }}` and Django's own form rendering write none. A project that uses no chip or card widget never loads the script.
@@ -1089,7 +1090,7 @@ Three classes in `mvp_forms.widgets` hold what the seven share, for a project th
 
 - `ChoiceLayout` goes before `RadioSelect` or `CheckboxSelectMultiple`. It lists the choices in the field's order without the names of groups, names each input by its label, and sets the empty choice of a single-choice widget apart as `clearing`. A subclass sets `choice_component` and `input_classes`.
 - `FoldedChoices` builds on `ChoiceLayout` and adds `show`, `fold_label` and the split of the choices into those on show and those in the fold.
-- `CardChoices` builds on `FoldedChoices` and adds `descriptions`, `icons`, `meta` and `columns`.
+- `CardChoices` builds on `FoldedChoices` and adds `descriptions`, `icons`, `meta`, `columns` and `mark`.
 
 #### What is not supported
 
@@ -1348,9 +1349,9 @@ Two tags carry the form's size to the buttons the pack draws inside a container.
 | `mvp_forms/widgets/range.html` | A range drawn by `RangeInput`, `DateRangeInput` or `DateTimeRangeInput`: two inputs, each inside its own daisyUI `input` frame that shows its end's name, the two frames joined when `joined` is set, or both inputs in one frame with the separator between them when `compact` is set. In a form with labels off, the field's label in the first frame. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/scale.html` | A single choice drawn by `ScaleSelect`: one row of segments, one radio input for each choice, the words for the two ends under the row where they are given, and the choice that clears the field after it, where `widget` also holds `options`, the choices in the order they are drawn without the one that clears, and `clearing`. | `widget` | `FORM_RENDERER` |
 | `mvp_forms/widgets/pills.html` | A choice drawn by `PillSelect` or `PillSelectMultiple`: a wrapping row of toggles, one radio or checkbox input for each choice, where `widget` also holds `options` and `clearing`, which a single choice draws last. | `widget` | `FORM_RENDERER` |
-| `mvp_forms/widgets/chips.html` | A choice drawn by `ChipSelect` or `ChipSelectMultiple`: a wrapping row of large toggles, one radio or checkbox input for each choice on show, a native `details` holding the choices not on show with the count of them (the developer's words and the count when `fold_label` is given), and the choice that clears a single choice after them, where `widget` also holds `shown`, `folded`, `fold_open`, `fold_label`, `fold_one`, `fold_other`, `fold_count`, `fold_custom` and `clearing`. | `widget` | `FORM_RENDERER` |
-| `mvp_forms/widgets/cards.html` | A choice drawn by `CardSelect` or `CardSelectMultiple`: a grid of cards with the fold of `chips.html`, one to three cards across on a wide screen by `columns`, and the choice that clears a single choice after them, where `widget` also holds `shown`, `folded`, `fold_open`, `fold_label`, `fold_one`, `fold_other`, `fold_count`, `fold_custom`, `columns`, `choice_class` and `clearing`. | `widget` | `FORM_RENDERER` |
-| `mvp_forms/widgets/card_option.html` | One card drawn by `cards.html`: a label holding the icon tile where an icon is given, the short line, the choice's label and the description where given, and the input as the card's mark, the label taking the classes of `widget.choice_class` for its edge and tint. | `option`, `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/chips.html` | A choice drawn by `ChipSelect` or `ChipSelectMultiple`: a wrapping row of large toggles, every choice in the one row with the folded ones marked `data-choice-folded`, a hidden button that shows them, and the choice that clears a single choice after the row, where `widget` also holds `shown`, `folded`, `fold_label` and `clearing`. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/cards.html` | A choice drawn by `CardSelect` or `CardSelectMultiple`: a grid of cards with the folded cards marked and the hidden button of `chips.html` drawn as a card-shaped tile, one to three cards across on a wide screen by `columns`, and the choice that clears a single choice after the grid, where `widget` also holds `shown`, `folded`, `fold_label`, `columns`, `mark`, `choice_class` and `clearing`. | `widget` | `FORM_RENDERER` |
+| `mvp_forms/widgets/card_option.html` | One card drawn by `cards.html`: a label holding the icon tile where an icon is given, the short line, the choice's label and the description where given, and the input as the card's mark, at the start with the icon moved to the end, or at the end, by `widget.mark`, the label drawn on the page's base background with a base-300 edge, drawn faded when its input is disabled, and taking the classes of `widget.choice_class` for the edge and tint of a chosen card. | `option`, `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/clearable_file_input.html` | A clearable file input: the link to the file held, a removal checkbox when the field is optional, and the file input, where `widget` also holds `removal_class`, which the pack adds for the removal checkbox's size and colour. | `widget` | `FORM_RENDERER` |
 | `daisyui/widgets/attrs.html` | The attributes of a widget or of one of its options, written inside the tag that includes it. | `widget` | `FORM_RENDERER` |
 
@@ -2617,14 +2618,13 @@ The mask classes daisyUI has today are written out in `mvp_forms/widgets.py`, so
 
 ### Characters left
 
-`CharactersLeftInput` and `CharactersLeftTextarea` draw a field with a line under it that says how many characters are left before the field's limit. The line stays hidden while plenty is left, appears once only a few are, follows every character typed, deleted, pasted or cut, and says by how many characters a value is over its limit. A developer turns it on by naming the widget. The widgets write a few `data-` attributes on the control, the script in their media draws the line, and the field validates and cleans as it did.
+`CharactersLeftInput` and `CharactersLeftTextarea` draw a field with a line under it that says how many characters are left before the field's limit. The line is shown from the start, follows every character typed, deleted, pasted or cut, and shows a value over its limit as a negative number, such as "-24 characters remaining", in the error colour. A developer turns it on by naming the widget. The widgets write a few `data-` attributes on the control, the script in their media draws the line, and the field validates and cleans as it did.
 
 This is the public surface:
 
 - `mvp_forms.widgets.CharactersLeftInput`, a text input
 - `mvp_forms.widgets.CharactersLeftTextarea`, a textarea
 - `mvp_forms.widgets.CharactersLeft`, the mixin both are built on, for a widget of your own
-- `mvp_forms.widgets.CHARACTERS_LEFT_FROM`, the number of characters left from which the line appears when a field states none
 - the script `mvp_forms/characters-left.js`
 
 ```python
@@ -2648,14 +2648,14 @@ The limit is the field's `max_length`, which Django writes on the control as `ma
 
 #### Where the line appears
 
-`CharactersLeftInput(attrs=None, *, show_from=None)` and `CharactersLeftTextarea(attrs=None, *, show_from=None)`. `show_from` is the number of characters left at which the line appears. Without it the line appears at `CHARACTERS_LEFT_FROM`, which is 8. A value that is not a whole number above zero raises a `ValueError` naming `show_from`. A limit below the number shows the line from the first character. To show it from the first character always, state a number at least as large as the limit.
+`CharactersLeftInput(attrs=None, *, show_from=None)` and `CharactersLeftTextarea(attrs=None, *, show_from=None)`. `show_from` is the number of characters left at which the line appears. Without it the line is shown from the start. A value that is not a whole number above zero raises a `ValueError` naming `show_from`.
 
-The widget writes one phrase for each count from zero up to the smaller of the number and the limit, so that each is translated with the plural forms of the language the page is drawn in. A `show_from` close to a long limit therefore makes the page heavier. The phrases are the package's, in its catalogue, and a project changes them through its own translation catalogue. There is no setting for other words.
+The widget writes one phrase for each count from zero up to the smaller of the limit and 199, so that each is translated with the plural forms of the language the page is drawn in. The script says a larger count with the phrase for 100 plus the count's last two digits, which takes the same plural form in every language. The phrases are the package's, in its catalogue, and a project changes them through its own translation catalogue. There is no setting for other words.
 
 #### What the person sees
 
 - A value drawn close to its limit shows the line before anything is typed.
-- A value longer than its limit shows how far over it is. Nothing cuts it, and the field's own validation refuses it when it is submitted.
+- A value longer than its limit shows how far over it is, with a minus before the number and in the error colour. Nothing cuts it, and the field's own validation refuses it when it is submitted.
 - A control that is disabled or read-only shows the line only when its value is already close to the limit or over it.
 - The line is drawn from daisyUI's own classes, as the field's help text is, and needs no stylesheet.
 

@@ -51,12 +51,16 @@ def option(page, field, value):
     return page.locator(f'[name="{field}"][value="{value}"]')
 
 
+def more_of(page, field):
+    """Return the button that shows the folded choices of a field."""
+    return page.locator(f"#id_{field} [data-choice-more]")
+
+
 def tap(page, field, value):
-    """Tap a choice, opening the field's fold first when the choice is in it."""
+    """Tap a choice, showing the field's folded choices first when it is one."""
     target = option(page, field, value)
-    fold = page.locator(f"#id_{field} details")
-    if not target.is_visible() and fold.count():
-        fold.locator("summary").click()
+    if not target.is_visible() and more_of(page, field).count():
+        more_of(page, field).click()
     target.click()
 
 
@@ -129,7 +133,7 @@ class TestTapping:
     def test_tapping_a_chip_in_the_fold_chooses_it(self, choice_page):
         page = choice_page()
 
-        page.locator("#id_chips summary").click()
+        more_of(page, "chips").click()
         option(page, "chips", "3").click()
 
         assert checked(page, "chips") == ["3"]
@@ -204,18 +208,13 @@ class TestKeyboard:
 
         assert page.evaluate(f"{ACTIVE}.matches(':focus-visible')")
 
-    def test_the_fold_is_opened_and_closed_from_the_keyboard(self, choice_page):
+    def test_the_more_button_is_pressed_from_the_keyboard(self, choice_page):
         page = choice_page()
-        fold = page.locator("#id_chips details")
 
-        tab_to(page, "#id_chips summary")
+        tab_to(page, "#id_chips [data-choice-more]")
         page.keyboard.press("Enter")
 
-        expect(fold).to_have_attribute("open", "")
-
-        page.keyboard.press("Enter")
-
-        expect(fold).not_to_have_attribute("open", "")
+        assert page.evaluate(f'{ACTIVE}.name === "chips" && {ACTIVE}.value === "2"')
 
 
 class TestNames:
@@ -287,157 +286,91 @@ class TestDisabled:
         assert page_errors == []
 
 
-def fold_of(page, field):
-    """Return the fold of a field."""
-    return page.locator(f"#id_{field} details[data-choice-fold]")
+def visible_values(page, field):
+    """Return the values of the choices that can be seen, in the order drawn."""
+    return page.locator(f"#id_{field} [data-choice-row] input").evaluate_all(
+        "(nodes) => nodes.filter((node) => node.checkVisibility()).map("
+        "(node) => node.value)"
+    )
 
 
-def values_on_show(page, field):
-    """Return the values of the choices on show, in the order they are drawn."""
-    return page.locator(f"#id_{field} > [data-choice-shown] input").evaluate_all(
+def all_values(page, field):
+    """Return the values of every choice in the row, in the order drawn."""
+    return page.locator(f"#id_{field} [data-choice-row] input").evaluate_all(
         "(nodes) => nodes.map((node) => node.value)"
     )
-
-
-def values_folded(page, field):
-    """Return the values of the choices in the fold, in the order they are drawn."""
-    return page.locator(f"#id_{field} details input").evaluate_all(
-        "(nodes) => nodes.map((node) => node.value)"
-    )
-
-
-def settle(page):
-    """Wait until the toggle event of a fold just closed has been heard."""
-    page.evaluate(
-        "() => new Promise((done) => requestAnimationFrame("
-        "() => requestAnimationFrame(done)))"
-    )
-
-
-def fold_and_tap(page, field, *values):
-    """Open a field's fold, choose the given choices in it and close it again."""
-    fold = fold_of(page, field)
-    summary = fold.locator("summary")
-    summary.click()
-    expect(fold).to_have_attribute("open", "")
-    for value in values:
-        option(page, field, value).click()
-    summary.click()
-    settle(page)
 
 
 class TestFoldScript:
     @pytest.mark.parametrize("field", ["chips", "cards", "chip", "card"])
-    def test_a_choice_chosen_in_the_fold_is_on_show_when_the_fold_closes(
+    def test_the_choices_not_on_show_are_hidden_and_the_button_is_shown(
         self, choice_page, field
     ):
         page = choice_page()
-        folded = values_folded(page, field)
 
-        fold_and_tap(page, field, folded[1])
+        assert len(visible_values(page, field)) < len(all_values(page, field)) - (
+            field in ("chip", "card")
+        )
+        expect(more_of(page, field)).to_be_visible()
 
-        assert folded[1] in values_on_show(page, field)
-        assert folded[1] not in values_folded(page, field)
-        assert checked(page, field) == [folded[1]]
-
-    @pytest.mark.parametrize("field", ["chips", "cards"])
-    def test_choices_are_on_show_in_the_fields_order(self, choice_page, field):
-        page = choice_page()
-
-        fold_and_tap(page, field, "4", "2")
-
-        assert values_on_show(page, field) == ["1", "2", "4"]
-
-    def test_a_choice_taken_from_the_fold_goes_before_a_later_one_on_show(
-        self, choice_page
-    ):
-        page = choice_page(bound="1", chips="3")
-        assert values_on_show(page, "chips") == ["1", "3"]
-
-        fold_and_tap(page, "chips", "2")
-
-        assert values_on_show(page, "chips") == ["1", "2", "3"]
-
-    def test_the_count_is_the_number_of_choices_still_folded(self, choice_page):
-        page = choice_page()
-
-        fold_and_tap(page, "chips", "3")
-
-        assert fold_of(page, "chips").locator("[data-choice-count]").inner_text() == "2"
-
-    @pytest.mark.parametrize("field", ["chip", "card"])
-    def test_the_package_words_are_rewritten_with_the_count(self, choice_page, field):
-        page = choice_page()
-        summary = fold_of(page, field).locator("summary")
-        one = summary.get_attribute("data-choice-one")
-        other = summary.get_attribute("data-choice-other")
-        folded = values_folded(page, field)
-
-        fold_and_tap(page, field, folded[0])
-
-        left = len(folded) - 1
-        words = one if left == 1 else other
-        count = fold_of(page, field).locator("[data-choice-count]")
-        assert count.inner_text() == words.replace("{n}", str(left))
-
-    def test_the_package_words_use_the_form_for_one(self, choice_page):
-        page = choice_page()
-        summary = fold_of(page, "card").locator("summary")
-        one = summary.get_attribute("data-choice-one")
-
-        fold_and_tap(page, "card", "3")
-
-        count = fold_of(page, "card").locator("[data-choice-count]")
-        assert count.inner_text() == one.replace("{n}", "1")
-
-    @pytest.mark.parametrize("field", ["chips", "cards"])
-    def test_the_fold_is_removed_when_no_choice_is_left_in_it(self, choice_page, field):
-        page = choice_page()
-
-        fold_and_tap(page, field, "2", "3", "4")
-
-        expect(fold_of(page, field)).to_have_count(0)
-        assert values_on_show(page, field) == ["1", "2", "3", "4"]
-
-    def test_a_fold_closed_with_nothing_chosen_keeps_its_choices(self, choice_page):
-        page = choice_page()
-
-        fold_and_tap(page, "chips")
-
-        assert values_folded(page, "chips") == ["2", "3", "4"]
-        assert fold_of(page, "chips").locator("[data-choice-count]").inner_text() == "3"
-
-    def test_the_clearing_choice_stays_outside_the_fold_and_the_script(
-        self, choice_page
+    @pytest.mark.parametrize("field", ["chips", "cards", "chip", "card"])
+    def test_the_button_shows_the_hidden_choices_in_place_and_goes(
+        self, choice_page, field
     ):
         page = choice_page()
+        order = all_values(page, field)
 
-        fold_and_tap(page, "chip", "2")
+        more_of(page, field).click()
+
+        assert visible_values(page, field) == order
+        assert all_values(page, field) == order
+        expect(more_of(page, field)).to_have_count(0)
+
+    @pytest.mark.parametrize("field", ["chips", "cards"])
+    def test_the_focus_goes_to_the_first_choice_shown(self, choice_page, field):
+        page = choice_page()
+        on_show = visible_values(page, field)
+        first = next(v for v in all_values(page, field) if v not in on_show)
+
+        more_of(page, field).click()
+
+        assert page.evaluate(f'{ACTIVE}.name === "{field}" && {ACTIVE}.value') == first
+
+    def test_a_choice_that_is_chosen_is_never_hidden(self, choice_page):
+        page = choice_page(bound="1", chips="3", cards="4")
+
+        assert visible_values(page, "chips") == ["1", "3"]
+        assert visible_values(page, "cards") == ["1", "4"]
+
+    def test_a_choice_checked_by_the_browser_before_the_script_runs_stays_on_show(
+        self, choice_page
+    ):
+        page = choice_page(bound="1", chips="4")
+
+        assert "4" in visible_values(page, "chips")
+        expect(more_of(page, "chips")).to_be_visible()
+
+    def test_no_button_is_left_when_every_folded_choice_is_chosen(self, choice_page):
+        page = choice_page(bound="1", chips="2&chips=3&chips=4")
+
+        expect(more_of(page, "chips")).to_have_count(0)
+        assert visible_values(page, "chips") == ["1", "2", "3", "4"]
+
+    def test_the_clearing_choice_is_left_alone(self, choice_page):
+        page = choice_page()
+
         clearing = option(page, "chip", "")
 
-        assert clearing.evaluate("(node) => node.closest('details') === null")
-        assert clearing.evaluate(
-            "(node) => node.closest('[data-choice-shown]') === null"
-        )
-        assert not clearing.evaluate("(node) => node.hasAttribute('data-choice-index')")
-        expect(option(page, "chip", "2")).to_be_checked()
-
-    def test_the_clearing_choice_of_a_card_field_is_left_alone(self, choice_page):
-        page = choice_page()
-
-        fold_and_tap(page, "card", "3")
-
-        assert page.locator("#id_card [data-choice-index]").count() == 4
-        assert (
-            not option(page, "card", "")
-            .locator("xpath=..")
-            .evaluate("(node) => node.hasAttribute('data-choice-index')")
+        expect(clearing).to_be_visible()
+        assert clearing.evaluate("(node) => node.closest('[data-choice-row]') === null")
+        assert not clearing.evaluate(
+            "(node) => node.hasAttribute('data-choice-folded')"
         )
 
-    def test_a_chosen_choice_can_still_be_changed_once_on_show(self, choice_page):
+    def test_a_chosen_choice_can_still_be_changed_once_shown(self, choice_page):
         page = choice_page()
 
-        fold_and_tap(page, "chip", "3")
+        tap(page, "chip", "3")
         option(page, "chip", "").click()
 
         assert checked(page, "chip") == [""]
@@ -445,40 +378,40 @@ class TestFoldScript:
     def test_the_script_raises_no_error_while_folding(self, choice_page, page_errors):
         page = choice_page()
 
-        fold_and_tap(page, "chips", "2")
+        more_of(page, "chips").click()
 
         assert page_errors == []
 
-    def test_what_was_chosen_in_the_fold_is_received_by_the_form(self, choice_page):
+    def test_what_was_chosen_among_the_folded_is_received_by_the_form(
+        self, choice_page
+    ):
         page = choice_page()
 
-        fold_and_tap(page, "chips", "3", "4")
+        tap(page, "chips", "3")
+        tap(page, "chips", "4")
         answer = send(page)
 
         assert answer["entries"]["chips"] == ["3", "4"]
 
 
 class TestWithoutTheScript:
-    def test_the_fold_opens_and_a_folded_choice_is_submitted(self, choice_page):
+    def test_every_choice_is_shown_and_the_button_stays_hidden(self, choice_page):
         page = choice_page("choice-widgets-bare")
 
-        fold_of(page, "chips").locator("summary").click()
+        assert visible_values(page, "chips") == ["1", "2", "3", "4"]
+        expect(more_of(page, "chips")).to_be_hidden()
+
+    def test_a_folded_choice_is_submitted(self, choice_page):
+        page = choice_page("choice-widgets-bare")
+
         option(page, "chips", "3").click()
         answer = send(page)
 
         assert answer["entries"]["chips"] == ["3"]
 
-    def test_a_folded_choice_stays_folded_when_the_fold_closes(self, choice_page):
-        page = choice_page("choice-widgets-bare")
-
-        fold_and_tap(page, "chips", "3")
-
-        assert values_folded(page, "chips") == ["2", "3", "4"]
-
     def test_a_folded_card_is_submitted(self, choice_page):
         page = choice_page("choice-widgets-bare")
 
-        fold_of(page, "cards").locator("summary").click()
         option(page, "cards", "4").click()
         answer = send(page)
 
@@ -486,112 +419,76 @@ class TestWithoutTheScript:
 
 
 class TestDrawnAgain:
-    def test_a_form_drawn_again_after_a_failed_submission_shows_every_choice_chosen(
+    def test_a_form_drawn_again_after_a_failed_submission_shows_what_was_chosen(
         self, choice_page
     ):
         page = choice_page("choice-widgets-bare")
 
-        fold_and_tap(page, "chips", "3")
-        fold_of(page, "card").locator("summary").click()
+        option(page, "chips", "3").click()
         option(page, "card", "4").click()
         with page.expect_navigation():
             page.click("button[type=submit]")
 
-        assert "3" in values_on_show(page, "chips")
-        assert "4" in values_on_show(page, "card")
         assert checked(page, "chips") == ["3"]
         assert checked(page, "card") == ["4"]
-        assert "3" not in values_folded(page, "chips")
-
-    def test_a_chosen_choice_is_on_show_when_the_page_is_drawn_with_the_script(
-        self, choice_page
-    ):
-        page = choice_page(bound="1", chips="4", cards="3")
-
-        assert "4" in values_on_show(page, "chips")
-        assert "3" in values_on_show(page, "cards")
-        assert fold_of(page, "chips").locator("[data-choice-count]").inner_text() == "2"
-
-
-def folded_count(fold):
-    """Return the number a fold's summary says is still folded."""
-    text = fold.locator("[data-choice-count]").inner_text()
-    return int(re.search(r"\d+", text).group())
-
-
-def tap_first_folded(fold):
-    """Open a fold, choose the first choice in it and close it again."""
-    fold.locator("summary").click()
-    fold.locator("input").first.click()
-    fold.locator("summary").click()
-    settle(fold.page)
+        assert "3" in visible_values(page, "chips")
+        assert "4" in visible_values(page, "card")
 
 
 class TestAddedLater:
-    def test_a_fold_in_a_row_added_by_a_script_behaves_as_on_load(self, choice_page):
+    def test_a_row_added_by_a_script_is_folded_as_on_load(self, choice_page):
         page = choice_page()
         page.evaluate(INSERT_LINE)
-        row = page.locator("#lines")
+        row = page.locator("#lines [data-choice-row]").first
 
-        tap_first_folded(row.locator("details").first)
+        button = row.locator("[data-choice-more]")
 
-        assert row.locator("[data-choice-shown] input:checked").count() == 1
-        assert folded_count(row.locator("details").first) == 2
+        expect(button).to_be_visible()
+        assert row.locator("input:visible").count() == 1
+        button.click()
+        assert row.locator("input:visible").count() == 4
 
     def test_a_row_added_by_a_script_is_independent_of_the_first(self, choice_page):
         page = choice_page()
         page.evaluate(INSERT_LINE)
         page.evaluate(INSERT_LINE)
-        rows = page.locator("#lines details[data-choice-fold]")
-        assert rows.count() == 4
+        buttons = page.locator("#lines [data-choice-more]")
+        assert buttons.count() == 4
 
-        tap_first_folded(rows.first)
+        buttons.first.click()
 
-        assert rows.count() == 4
-        assert folded_count(rows.first) == 2
-        assert folded_count(rows.nth(1)) == 3
+        assert buttons.count() == 3
 
-    def test_a_fold_in_a_form_swapped_in_by_htmx_behaves_as_on_load(self, choice_page):
+    def test_a_form_swapped_in_by_htmx_is_folded_as_on_load(self, choice_page):
         page = choice_page("choice-widgets-htmx")
 
         page.click("#swap")
-        page.wait_for_selector("#lines details")
-        fold = page.locator("#lines details").first
-        tap_first_folded(fold)
+        page.wait_for_selector("#lines [data-choice-more]:visible")
+        row = page.locator("#lines [data-choice-row]").first
 
-        assert page.locator("#lines [data-choice-shown] input:checked").count() == 1
-        assert folded_count(fold) == 2
+        assert row.locator("input:visible").count() == 1
+        row.locator("[data-choice-more]").click()
+        assert row.locator("input:visible").count() == 4
 
-    def test_the_script_included_twice_acts_once(self, page, choice_page):
-        page.add_init_script(
-            """
-            window.listeners = [];
-            const add = EventTarget.prototype.addEventListener;
-            EventTarget.prototype.addEventListener = function (type, ...rest) {
-              if (type === "toggle") window.listeners.push(type);
-              return add.call(this, type, ...rest);
-            };
-            """
-        )
-        choice_page("choice-widgets-copies")
+    def test_the_script_included_twice_acts_once(self, choice_page, page_errors):
+        page = choice_page("choice-widgets-copies")
 
-        fold_and_tap(page, "chips", "3")
+        more_of(page, "chips").click()
 
-        assert page.evaluate("window.listeners.length") == 1
-        assert values_on_show(page, "chips") == ["1", "3"]
+        assert visible_values(page, "chips") == ["1", "2", "3", "4"]
+        assert page_errors == []
 
 
 class TestDisabledFold:
-    def test_the_fold_of_a_disabled_field_opens_and_holds_no_choice_to_choose(
+    def test_the_choices_of_a_disabled_field_are_shown_and_all_disabled(
         self, choice_page
     ):
         page = choice_page()
-        fold = fold_of(page, "locked_chips")
 
-        fold.locator("summary").click()
+        more_of(page, "locked_chips").click()
 
-        expect(fold).to_have_attribute("open", "")
-        inputs = fold.locator("input")
+        inputs = page.locator('[name="locked_chips"]')
         for position in range(inputs.count()):
             expect(inputs.nth(position)).to_be_disabled()
+            expect(inputs.nth(position)).to_be_visible()
         assert checked(page, "locked_chips") == []

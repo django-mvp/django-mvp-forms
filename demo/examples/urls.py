@@ -12,6 +12,7 @@ from demo.examples.custom_widgets.characters_left import (
     TitleForm,
 )
 from demo.examples.custom_widgets.choice_widgets import (
+    CardMarkForm,
     CardsForm,
     ChipsForm,
     FoldedCardsForm,
@@ -339,6 +340,7 @@ urlpatterns = [
     path("choice-chips/", ExampleView.as_view(form_class=ChipsForm)),
     path("choice-fold-in-init/", ExampleView.as_view(form_class=PersonalFoldForm)),
     path("choice-cards/", ExampleView.as_view(form_class=CardsForm)),
+    path("choice-cards-mark-start/", ExampleView.as_view(form_class=CardMarkForm)),
     path("choice-cards-folded/", ExampleView.as_view(form_class=FoldedCardsForm)),
     path(
         "choice-states/",

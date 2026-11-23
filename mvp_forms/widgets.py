@@ -1439,18 +1439,18 @@ class ChoiceLayout:
 
 
 class FoldedChoices(ChoiceLayout):
-    """Chip and card widgets: some choices on show, the rest in a fold.
+    """Chip and card widgets: some choices on show, the rest behind a button.
 
     A choice is folded when ``show`` is set, its value is not in it and it is
     not chosen. The clearing choice of a single-choice widget is never folded.
-    A fold that holds every choice with none chosen is open, and a fold that
-    would hold none is not drawn. The context gains ``shown``, ``folded``,
-    ``fold_open``, ``fold_label``, the developer's words for the fold or the
-    package's own with the count, ``fold_count``, the number of folded choices,
-    and ``fold_custom``, true when the words are the developer's. The package's
-    own words are given as ``fold_one`` and ``fold_other``, each with ``{n}``
-    where the count goes, for the script to write again when the count changes.
-    The widget's media names the script that keeps a chosen choice on show.
+    When no choice would stay on show, none is folded. Every choice is drawn in
+    the one row or grid, a folded one marked ``data-choice-folded``, followed
+    by a hidden "More options" button. The script hides the marked choices and
+    shows the button, and the button shows them again in place. Without the
+    script every choice is on show and the button stays hidden. The context
+    gains ``shown``, ``folded`` and ``fold_label``, the developer's words for
+    the button or the package's own. Each option gains ``folded``. The widget's
+    media names the script.
 
     Args:
         attrs: HTML attributes for each input.
@@ -1460,8 +1460,8 @@ class FoldedChoices(ChoiceLayout):
             and a value the field does not offer is passed over. Set it on a
             form's own copy of the widget in its ``__init__`` to follow the
             person using the form.
-        fold_label: The words for the fold's control, shown with the count of
-            choices it holds. Empty for the package's own words.
+        fold_label: The words for the button that shows the folded choices.
+            Empty for the package's own words.
         **settings: Settings of the widget's own, passed on.
 
     Raises:
@@ -1509,16 +1509,13 @@ class FoldedChoices(ChoiceLayout):
                 and not option["selected"]
             )
             (folded if hidden else shown).append(option)
+        if not shown:
+            shown, folded = folded, []
+        for option in folded:
+            option["folded"] = True
         widget["shown"] = shown
         widget["folded"] = folded
-        widget["fold_open"] = bool(folded) and not shown
-        widget["fold_count"] = len(folded)
-        widget["fold_custom"] = bool(self.fold_label)
-        widget["fold_one"] = ngettext("{n} more", "{n} more", 1)
-        widget["fold_other"] = ngettext("{n} more", "{n} more", 2)
-        widget["fold_label"] = self.fold_label or ngettext(
-            "{n} more", "{n} more", len(folded)
-        ).replace("{n}", str(len(folded)))
+        widget["fold_label"] = self.fold_label or gettext("More options")
         return context
 
     def __deepcopy__(self, memo):
@@ -1532,9 +1529,9 @@ class CardChoices(FoldedChoices):
     """Card widgets: a description, an icon and a short line for each choice.
 
     Each option gains ``description``, ``icon`` and ``meta``, found by its value
-    read as text, and the context gains ``columns``. A text that is not marked
-    safe is escaped when drawn. An icon is drawn as the markup given, so the
-    developer marks it safe.
+    read as text, and the context gains ``columns`` and ``mark``. A text that
+    is not marked safe is escaped when drawn. An icon is drawn as the markup
+    given, so the developer marks it safe.
 
     Args:
         attrs: HTML attributes for each input.
@@ -1548,14 +1545,18 @@ class CardChoices(FoldedChoices):
             label.
         columns: The number of cards across on a wide screen: 1, 2 or 3. One
             card sits across on a narrow screen.
+        mark: The side of the card the radio or checkbox mark is drawn on:
+            ``"end"``, after the text, or ``"start"``, before the text,
+            with the icon moved after it.
 
     Attributes:
         edge_classes: The classes of a chosen card's edge and tint when the
             pack states no colour.
 
     Raises:
-        ValueError: A mapping is not a mapping, or ``columns`` is not 1, 2 or
-            3. The message names the setting.
+        ValueError: A mapping is not a mapping, ``columns`` is not 1, 2 or 3,
+            or ``mark`` is not ``"start"`` or ``"end"``. The message names the
+            setting.
     """
 
     choice_component = "choice-card"
@@ -1570,6 +1571,7 @@ class CardChoices(FoldedChoices):
         icons=None,
         meta=None,
         columns=2,
+        mark="end",
         **settings,
     ):
         """Keep the settings that were stated."""
@@ -1581,11 +1583,13 @@ class CardChoices(FoldedChoices):
             if mapping is not None:
                 Check.of_type(setting, mapping, Mapping, "a mapping")
         Check.one_of("columns", columns, (1, 2, 3))
+        Check.one_of("mark", mark, ("start", "end"))
         super().__init__(attrs, choices, **settings)
         self.descriptions = descriptions
         self.icons = icons
         self.meta = meta
         self.columns = columns
+        self.mark = mark
 
     def __deepcopy__(self, memo):
         """Copy the mappings too, so a form's copy changes that form alone."""
@@ -1627,9 +1631,10 @@ class CardChoices(FoldedChoices):
         return option
 
     def get_context(self, name, value, attrs):
-        """Add the number of cards across."""
+        """Add the number of cards across and the side of the mark."""
         context = super().get_context(name, value, attrs)
         context["widget"]["columns"] = self.columns
+        context["widget"]["mark"] = self.mark
         context["widget"]["choice_class"] = self.edge_classes
         return context
 
@@ -1758,20 +1763,22 @@ class CardSelectMultiple(CardChoices, forms.CheckboxSelectMultiple):
     input_classes = "checkbox shrink-0"
 
 
-CHARACTERS_LEFT_FROM = 8
-
-
 class CharactersLeft:
     """A mixin for a text widget that shows the characters left under it.
 
     The limit is the field's ``max_length``, which Django writes on the control
-    as ``maxlength``. The widget writes the number from which the line appears
-    and the line's words on the control, and the script named in its media draws
-    the line.
+    as ``maxlength``. The widget writes the line's words and, when it states
+    one, the number of characters left from which the line appears on the
+    control, and the script named in its media draws the line. The line says
+    "n characters remaining", with a minus before the number for a value over
+    the limit.
     """
 
     class Media:
         js = ["mvp_forms/characters-left.js"]
+
+    #: Counts above this are written with the words of 100 + count % 100.
+    WORDS_UP_TO = 199
 
     def __init__(self, attrs=None, *, show_from=None):
         """State from how many characters left the line appears.
@@ -1779,17 +1786,16 @@ class CharactersLeft:
         Args:
             attrs: The control's attributes. They may not hold ``maxlength``.
             show_from: The number of characters left at which the line appears.
-                Without one the line appears at ``CHARACTERS_LEFT_FROM``.
+                Without one the line is shown from the start.
 
         Raises:
             ValueError: ``show_from`` is not a whole number above zero, or
                 ``attrs`` holds ``maxlength``.
         """
-        if show_from is None:
-            show_from = CHARACTERS_LEFT_FROM
-        Check.whole_number("show_from", show_from)
-        if show_from < 1:
-            raise ValueError(f"show_from must be above zero, not {show_from!r}.")
+        if show_from is not None:
+            Check.whole_number("show_from", show_from)
+            if show_from < 1:
+                raise ValueError(f"show_from must be above zero, not {show_from!r}.")
         if attrs and "maxlength" in attrs:
             raise ValueError(
                 "maxlength is the limit of the field and is not stated on the "
@@ -1799,7 +1805,7 @@ class CharactersLeft:
         self.show_from = show_from
 
     def get_context(self, name, value, attrs):
-        """Write the number and the words on the control.
+        """Write the words, and the number the line appears from, on the control.
 
         Raises:
             ValueError: The control has no ``maxlength``, because its field has
@@ -1814,12 +1820,13 @@ class CharactersLeft:
             )
         limit = int(written["maxlength"])
         words = [
-            ngettext("%(n)s character left", "%(n)s characters left", n) % {"n": n}
-            for n in range(min(self.show_from, limit) + 1)
+            ngettext("%(n)s character remaining", "%(n)s characters remaining", n)
+            % {"n": n}
+            for n in range(min(limit, self.WORDS_UP_TO) + 1)
         ]
-        written["data-characters-left-from"] = self.show_from
+        if self.show_from is not None:
+            written["data-characters-left-from"] = self.show_from
         written["data-characters-left-words"] = json.dumps(words)
-        written["data-characters-left-over"] = gettext("Over the limit by %(n)s")
         return context
 
     def value_from_datadict(self, data, files, name):

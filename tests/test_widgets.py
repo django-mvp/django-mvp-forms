@@ -9,7 +9,6 @@ import sys
 import zoneinfo
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import patch
 from urllib.parse import urlencode
 
 import pytest
@@ -25,7 +24,6 @@ from timezone_field import TimeZoneFormField
 
 from mvp_forms.fields import LatitudeField, LongitudeField, PartialDateField, PointField
 from mvp_forms.widgets import (
-    CHARACTERS_LEFT_FROM,
     CardSelect,
     CardSelectMultiple,
     CharactersLeft,
@@ -2671,6 +2669,11 @@ class TestChoiceWidgetSettings:
                 for widget in FOLDING_WIDGETS
                 for value in ("abc", 5, b"ab")
             ],
+            *[
+                (widget, "mark", value)
+                for widget in CARD_WIDGETS
+                for value in ("middle", "", "START", 1, None)
+            ],
             *[(widget, "descriptions", ["a"]) for widget in CARD_WIDGETS],
             *[(widget, "icons", "a") for widget in CARD_WIDGETS],
             *[(widget, "meta", ("a",)) for widget in CARD_WIDGETS],
@@ -2698,6 +2701,20 @@ class TestChoiceWidgetSettings:
         assert widget.icons == {"a": "i"}
         assert widget.meta == {"a": "m"}
         assert widget.columns == 3
+
+    @pytest.mark.parametrize("widget_class", CARD_WIDGETS)
+    def test_a_card_widget_has_its_mark_at_the_end_when_none_is_given(
+        self, widget_class
+    ):
+        assert widget_class().mark == "end"
+
+    @pytest.mark.parametrize("widget_class", CARD_WIDGETS)
+    @pytest.mark.parametrize("mark", ["start", "end"])
+    def test_the_mark_is_kept_as_given_and_is_in_the_context(self, widget_class, mark):
+        widget = widget_class(mark=mark, choices=LETTERS)
+
+        assert widget.mark == mark
+        assert options_of(widget)["mark"] == mark
 
     def test_a_card_widget_has_two_columns_when_none_are_given(self):
         assert CardSelect().columns == 2
@@ -2913,7 +2930,6 @@ class TestFoldedChoicesContext:
 
         assert values_of(context["shown"]) == ["a", "b", "c"]
         assert context["folded"] == []
-        assert context["fold_open"] is False
 
     @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
     def test_the_choices_not_named_are_folded(self, widget_class):
@@ -2921,7 +2937,6 @@ class TestFoldedChoicesContext:
 
         assert values_of(context["shown"]) == ["b"]
         assert values_of(context["folded"]) == ["a", "c"]
-        assert context["fold_open"] is False
 
     @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
     def test_a_chosen_choice_is_always_on_show(self, widget_class):
@@ -2934,19 +2949,17 @@ class TestFoldedChoicesContext:
         assert values_of(context["folded"]) == ["b"]
 
     @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
-    def test_a_fold_holding_every_choice_with_none_chosen_is_open(self, widget_class):
+    def test_nothing_is_folded_when_no_choice_would_stay_on_show(self, widget_class):
         context = options_of(widget_class(show=[], choices=LETTERS))
 
-        assert context["shown"] == []
-        assert values_of(context["folded"]) == ["a", "b", "c"]
-        assert context["fold_open"] is True
+        assert values_of(context["shown"]) == ["a", "b", "c"]
+        assert context["folded"] == []
 
     @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
     def test_a_fold_that_would_hold_nothing_is_not_drawn(self, widget_class):
         context = options_of(widget_class(show={"a", "b", "c"}, choices=LETTERS))
 
         assert context["folded"] == []
-        assert context["fold_open"] is False
 
     @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
     def test_a_value_the_field_does_not_offer_is_passed_over(self, widget_class):
@@ -2989,15 +3002,6 @@ class TestFoldedChoicesContext:
         context = options_of(widget)
 
         assert context["fold_label"] == "Others"
-        assert context["fold_custom"] is True
-
-    def test_the_package_words_for_the_fold_carry_the_count(self):
-        widget = ChipSelect(show={"a"}, choices=LETTERS)
-
-        context = options_of(widget)
-
-        assert str(context["fold_label"]) == context["fold_other"].replace("{n}", "2")
-        assert context["fold_custom"] is False
 
     def test_the_clearing_choice_carries_the_clearing_classes_after_the_layouts(self):
         class Clearing(ChipSelect):
@@ -3011,13 +3015,6 @@ class TestFoldedChoicesContext:
             ChipSelect.input_classes.split()
         )
         assert all("clear-me" not in o["attrs"]["class"] for o in context["options"])
-
-    def test_the_package_words_for_the_fold_have_a_form_for_one(self):
-        widget = ChipSelect(show={"a", "b"}, choices=LETTERS)
-
-        context = options_of(widget)
-
-        assert str(context["fold_label"]) == context["fold_one"].replace("{n}", "1")
 
     def test_setting_the_values_on_show_changes_one_forms_widget_alone(self):
         class LettersForm(forms.Form):
@@ -3079,19 +3076,6 @@ class TestFoldedChoicesContext:
         options = options_of(widget_class(choices=LETTERS))["options"]
 
         assert all("aria-label" not in option["attrs"] for option in options)
-
-    def test_the_fold_words_are_chosen_for_the_count_of_folded_choices(self):
-        widget = ChipSelectMultiple(show=[], choices=[(n, str(n)) for n in range(5)])
-        counts = []
-
-        def record(singular, plural, number):
-            counts.append(number)
-            return singular
-
-        with patch("mvp_forms.widgets.ngettext", record):
-            options_of(widget)
-
-        assert 5 in counts
 
     def test_the_set_given_is_not_changed_by_drawing(self):
         given = {"a"}
@@ -3291,12 +3275,6 @@ class TestCharactersLeft:
         assert form.cleaned_data["text"] == "ab\ncd"
 
     @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
-    def test_the_number_defaults_to_the_packages(self, widget):
-        control = limited(widget())
-
-        assert control["data-characters-left-from"] == str(CHARACTERS_LEFT_FROM)
-
-    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
     def test_the_number_a_developer_states_is_written(self, widget):
         control = limited(widget(show_from=3))
 
@@ -3329,23 +3307,16 @@ class TestCharactersLeft:
         control = drawn.find(["input", "textarea"])
 
         assert control["maxlength"] == "40"
-        assert "data-characters-left-from" in control.attrs
+        assert "data-characters-left-words" in control.attrs
 
     @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
-    def test_the_words_hold_one_entry_for_each_count_up_to_the_number(self, widget):
-        control = limited(widget(show_from=3))
+    def test_the_words_hold_one_entry_for_each_count_up_to_the_limit(self, widget):
+        html = widget().render("title", "", attrs={"maxlength": 3})
+        control = BeautifulSoup(html, "html.parser").find(["input", "textarea"])
 
         words = json.loads(control["data-characters-left-words"])
 
-        assert len(words) == 4
         assert [entry.split()[0] for entry in words] == ["0", "1", "2", "3"]
-
-    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
-    def test_the_words_stop_at_the_limit_when_it_is_below_the_number(self, widget):
-        html = widget(show_from=8).render("title", "", attrs={"maxlength": 3})
-        control = BeautifulSoup(html, "html.parser").find(["input", "textarea"])
-
-        assert len(json.loads(control["data-characters-left-words"])) == 4
 
     @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
     def test_the_words_follow_the_plural_forms_of_the_language(
@@ -3353,7 +3324,10 @@ class TestCharactersLeft:
     ):
         russian_plurals(monkeypatch)
 
-        words = json.loads(limited(widget(show_from=5))["data-characters-left-words"])
+        html = widget().render("title", "", attrs={"maxlength": 5})
+        control = BeautifulSoup(html, "html.parser").find(["input", "textarea"])
+
+        words = json.loads(control["data-characters-left-words"])
 
         assert [entry.rsplit(" ", 1)[1] for entry in words] == [
             "1",
@@ -3363,12 +3337,6 @@ class TestCharactersLeft:
             "2",
             "1",
         ]
-
-    @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
-    def test_the_over_phrase_keeps_the_number_for_the_script(self, widget):
-        control = limited(widget())
-
-        assert "%(n)s" in control["data-characters-left-over"]
 
     @pytest.mark.parametrize("widget", LIMITED_WIDGETS)
     def test_the_media_names_the_script_once(self, widget):

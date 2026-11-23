@@ -65,17 +65,18 @@ from the issue, the goals, the constitution and the decision records. Longer rat
   special. Recorded as FR-007.
 
 - **Q: How does a developer say which choices stay on show?**
-  A: By naming their values, for a chip or a card widget. The rest are folded behind a control
-  that says how many there are. The values can be named when the widget is made or in the form's
+  A: By naming their values, for a chip or a card widget. The rest are folded behind a "More
+  options" button. The values can be named when the widget is made or in the form's
   `__init__`, since which choices matter often depends on who is filling in the form. A chosen
   choice is always on show, whether or not it was named. Naming none shows every choice. Recorded
   as FR-011 to FR-015.
 
 - **Q: Which part needs a script, and what happens without it?**
   A: Only the fold. The package ships one script for it, named in the media of the chip and card
-  widgets. Without the script every choice can still be reached, chosen and submitted: the folded
-  choices are opened by the fold control. What the script adds is that a choice chosen from the
-  fold stays on show when the fold is closed again, and the count of folded choices stays true.
+  widgets. Every choice is drawn in the same row or grid, and the folded ones are marked. Without
+  the script every choice is on show and the button that would show the folded ones stays hidden.
+  What the script adds is that it hides the marked choices and shows the button, and the button
+  shows them again in place.
   The scale and the pill widgets need no script. Recorded as FR-016 to FR-020.
 
 - **Q: Where does a card's icon come from?**
@@ -133,13 +134,13 @@ a page that loads daisyUI and nothing from this package but the form's media, su
    screen, **Then** at most that many cards sit side by side, and on a narrow screen one does.
    A number other than 1, 2 or 3 raises an error when the widget is made.
 6. **Given** a chip or card widget given the values that stay on show, **When** its form is drawn,
-   **Then** those choices and every chosen choice are on show in the field's order, the rest are
-   inside a fold, and the fold's control says how many choices it holds.
+   **Then** every choice is drawn in the one row or grid in the field's order, those not named
+   and not chosen are marked as folded, and a button that shows them follows the choices.
 7. **Given** a chip or card widget whose values on show are set in the form's `__init__`, **When**
    the form is drawn, **Then** the fold follows what was set there for that form alone, and
    another form using the same form class is not affected.
 8. **Given** a chip or card widget given words of the developer's own for the fold, **When** its
-   form is drawn, **Then** the control shows those words and the count.
+   form is drawn, **Then** the button shows those words, and without them it shows the package's own.
 9. **Given** a single-choice widget whose field has a choice whose value is the empty string,
    **When** its form is drawn, **Then** that choice is drawn after the others as the way to clear
    the field, and choosing it submits the field empty.
@@ -178,7 +179,7 @@ a page that loads daisyUI and nothing from this package but the form's media, su
 
 A person filling in a form on a phone or at a desk sees the question's choices laid out as the
 developer chose, taps the one they mean, or several, and sees at once which are chosen. They can
-clear a single choice where the developer offered a way to, open the fold to find a choice not on
+clear a single choice where the developer offered a way to, press the button to find a choice not on
 show, and do all of it with a keyboard or a screen reader as well as by touch. A choice they have
 made is never hidden from them.
 
@@ -186,7 +187,7 @@ made is never hidden from them.
 story draws, so it is tested once that exists.
 
 **Independent Test**: In a browser, on the demo's choice widgets page, answer every field by touch
-and then by keyboard alone, fold and unfold the chip and card fields, and submit.
+and then by keyboard alone, press the button of the chip and card fields, and submit.
 
 **Acceptance Scenarios**:
 
@@ -202,32 +203,59 @@ and then by keyboard alone, fold and unfold the chip and card fields, and submit
 5. **Given** a screen reader, **When** a person reaches a widget, **Then** it announces the
    group's label, each choice's label, whether it is chosen, and for a scale the words of its ends
    on the first and last choices.
-6. **Given** a chip or card widget with a fold, **When** a person opens it, **Then** every folded
-   choice is shown and can be chosen, and the fold control tells assistive technology whether it
-   is open.
-7. **Given** a page that loads the form's media, **When** a person chooses a choice inside the
-   fold and closes the fold again, **Then** that choice stays on show outside the fold, and the
-   count on the control is the number of choices still folded.
+6. **Given** a page that loads the form's media and a chip or card widget with folded choices,
+   **When** the page has loaded, **Then** the folded choices that are not chosen are hidden and
+   the "More options" button is shown after the choices.
+7. **Given** that button, **When** a person presses it by touch, mouse or keyboard, **Then** the
+   hidden choices are shown in place, in the field's order, the button goes, and the focus moves
+   to the first choice shown.
 8. **Given** a page that does not load the package's script, **When** a person answers a chip or
-   card field with a fold, **Then** they can open the fold, choose any choice and submit the form.
+   card field with folded choices, **Then** every choice is shown, the button is not, and they
+   can choose any choice and submit the form.
 9. **Given** a form drawn again after a failed submission, **When** the page loads, **Then** every
-   choice the person had chosen is on show and chosen, folded or not.
+   choice the person had chosen is shown and chosen, folded or not.
 10. **Given** a chip or card field in a formset row added in the browser, or in a form swapped
-    into the page by htmx, **When** a person uses its fold, **Then** it behaves as on a field drawn
-    with the page, with no script written by the developer.
+    into the page by htmx, **When** the row arrives, **Then** its folded choices are hidden and
+    its button works as on a field drawn with the page, with no script written by the developer.
 11. **Given** each of the daisyUI themes the test suite measures, **When** a widget is drawn,
     **Then** the text of every choice and the mark that shows a choice is chosen meet the standard
     against the surface behind them, or are published as known exceptions.
 
 ---
 
+### User Story 3 - A developer places the mark of a card at its start (Priority: P3)
+
+A developer draws a list of cards where the radio or checkbox is the first thing a person looks
+for, such as a list of plans or of permissions. They set one setting on the card widget, `mark`,
+to `"start"`, and each card draws its mark, then its text, then its icon: the mark and the icon
+change places. Without it the card
+draws its icon, its text, then its mark, as before.
+
+**Why this priority**: It is a placement of what story 1 draws. The cards work without it.
+
+**Independent Test**: Draw a `CardSelect` and a `CardSelectMultiple` with `mark="start"`, an icon
+for one choice and none for another, and read the order of the parts of each card.
+
+**Acceptance Scenarios**:
+
+1. **Given** a card widget with `mark="start"`, **When** its form is drawn, **Then** each card
+   holds its input first, then its text, then its icon where one is given.
+2. **Given** a card widget with `mark="end"`, or with no `mark`, **When** its form is drawn,
+   **Then** each card holds its icon where one is given, then its text, then its input.
+3. **Given** a card widget given a `mark` other than `"start"` or `"end"`, **When** the widget is
+   made, **Then** an error is raised that names `mark`.
+4. **Given** a card widget with `mark="start"`, **When** a person taps a card or uses the
+   keyboard, **Then** the card behaves as it does with the mark at the end.
+
+---
+
 ### Edge Cases
 
 - A field has no choices. The widget is drawn with its frame and no inputs, and a chip or card
-  widget draws no fold.
-- Every choice is folded by the developer's setting and none is chosen. The fold is drawn open, so
-  the field never shows as empty.
-- The values on show name every choice, or the choices folded number zero. No fold is drawn.
+  widget draws no button.
+- Every choice is folded by the developer's setting and none is chosen. Nothing is folded, so the
+  field never shows as empty.
+- The values on show name every choice, or the choices folded number zero. No button is drawn.
 - A scale has any number of choices. It is drawn as one row of that many segments, and the words
   at the ends belong to the first and last. The README recommends a scale for an ordered set of up
   to eleven choices, since segments narrow as their number grows.
@@ -244,11 +272,11 @@ and then by keyboard alone, fold and unfold the chip and card fields, and submit
 - `InlineRadios` or `InlineCheckboxes` is placed around a field using one of the widgets. The
   widget is drawn as it is anywhere else.
 - The page holds several forms drawn with `{% crispy %}`, so the script is included more than
-  once. It acts once on each fold.
-- A disabled field has a fold. The fold still opens, so the folded choices can be read, and none
+  once. It acts once on each button.
+- A disabled field has folded choices. The button still shows them, so they can be read, and none
   can be chosen.
 - A form is drawn with Django's own form rendering and no crispy-forms. The widgets still draw
-  their inputs, labels, extras and fold, without the size, colour and frame the pack adds.
+  their inputs, labels, extras and button, without the size, colour and frame the pack adds.
 
 ### Out of scope
 
@@ -299,31 +327,39 @@ and then by keyboard alone, fold and unfold the chip and card fields, and submit
 - **FR-011**: A card widget MUST take the number of cards that sit across on a wide screen, 1, 2 or
   3, with 2 when none is given, and MUST draw one across on a narrow screen.
 
+- **FR-032**: A card widget MUST take the side of the card on which the radio or checkbox mark is
+  drawn, `mark`, "end" or "start", with "end" when none is given. A value other than those two
+  MUST raise an error naming `mark` when the widget is made. With "start" the card draws the
+  mark, the text and then the icon, in that order, and with "end" the icon, the text and then
+  the mark.
+
 #### The fold
 
 - **FR-012**: A chip or card widget MUST take the values of the choices that stay on show, when the
   widget is made or afterwards on the form's own copy of the widget. With none given, every choice
   MUST be on show.
 - **FR-013**: A chosen choice MUST always be on show, whether or not its value was named.
-- **FR-014**: The choices not on show MUST be drawn inside a fold whose control shows how many
-  choices it holds, in the package's words or in words the developer gives. The package's words
-  MUST be translatable.
-- **FR-015**: A fold that holds every choice of a field with nothing chosen MUST be drawn open. A
-  fold that would hold no choice MUST NOT be drawn.
-- **FR-016**: The fold's control MUST be operable by keyboard and MUST tell assistive technology
-  whether the fold is open.
+- **FR-014**: Every choice MUST be drawn in the same row of chips or grid of cards in the field's
+  order, the choices not on show marked as folded, followed by a button, hidden in the markup,
+  that shows a plus sign and the words "More options" or the words the developer gives. The
+  package's words MUST be translatable. A chip button MUST be drawn as a chip, and a card button
+  as a card-shaped tile.
+- **FR-015**: When no choice would stay on show, nothing MUST be folded. When no choice would be
+  folded, no button MUST be drawn.
+- **FR-016**: The button MUST be a native button, operable by keyboard.
 
 #### The script
 
 - **FR-017**: The package MUST ship one script for the fold, and the chip and card widgets MUST
   name it in their media. The scale and pill widgets MUST name no script.
-- **FR-018**: Without the script, every folded choice MUST still be reachable by opening the fold,
-  and the form MUST be answerable and submittable.
-- **FR-019**: With the script, a choice chosen from inside the fold MUST stay on show when the fold
-  is closed, and the count on the control MUST be the number of choices still folded.
-- **FR-020**: The script MUST act on a fold added to the page after it has loaded, whichever script
-  added it, MUST act once on each fold however many times the page includes it, and MUST use no
-  inline script and no inline event handler.
+- **FR-018**: Without the script, every choice MUST be shown, the button MUST stay hidden, and the
+  form MUST be answerable and submittable.
+- **FR-019**: With the script, the folded choices that are not chosen MUST be hidden and the
+  button shown on load. Pressing the button MUST show them in place and remove the button, and
+  MUST move the focus to the first choice shown.
+- **FR-020**: The script MUST act on choices added to the page after it has loaded, whichever
+  script added them, MUST act once on each button however many times the page includes it, and
+  MUST use no inline script and no inline event handler.
 
 #### Choices the pack applies
 
@@ -363,6 +399,7 @@ and then by keyboard alone, fold and unfold the chip and card fields, and submit
 |---|---|
 | US-1 | FR-001 to FR-015, FR-017, FR-021 to FR-027, FR-029 to FR-031 |
 | US-2 | FR-004, FR-007, FR-013, FR-016, FR-018 to FR-020, FR-028, FR-030 |
+| US-3 | FR-032 |
 
 ### Key Entities
 
@@ -372,8 +409,8 @@ and then by keyboard alone, fold and unfold the chip and card fields, and submit
 - **Chip**: A choice drawn as a large toggle that shows a label of any length in full.
 - **Card**: A choice drawn as a card holding its label and, where given, a description, an icon
   and a short line above the label.
-- **Fold**: The part of a chip or card widget that holds the choices not on show, behind a control
-  that says how many there are.
+- **Fold**: The choices of a chip or card widget that are not on show, marked in the row or grid
+  with a button after them that shows them.
 - **Choices on show**: The choices a developer names to be drawn outside the fold, together with
   every chosen choice.
 
@@ -388,7 +425,7 @@ and then by keyboard alone, fold and unfold the chip and card fields, and submit
 - **SC-003**: For every widget and every submission, `cleaned_data` equals what Django's radio or
   checkbox group gives for the same choices.
 - **SC-004**: A chosen choice is on show in every drawn form, and, on a page with the script, after
-  every closing of the fold.
+  every load of the page.
 - **SC-005**: On a page that does not load the script, every choice of every widget can be reached,
   chosen and submitted.
 - **SC-006**: A person can answer every widget on the demo page with a keyboard alone.

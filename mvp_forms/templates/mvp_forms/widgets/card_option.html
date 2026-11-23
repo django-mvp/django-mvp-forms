@@ -1,5 +1,8 @@
-<label class="card card-border group cursor-pointer flex-row items-center gap-3 p-3 {{ widget.choice_class }} has-focus-visible:outline"{% if option.position is not None %} data-choice-index="{{ option.position }}"{% endif %}>
-  {% if option.icon %}
+<label class="card card-border bg-base-100 border-base-300 group cursor-pointer flex-row items-center gap-3 p-3 {{ widget.choice_class }} has-focus-visible:outline has-disabled:cursor-not-allowed has-disabled:opacity-60"{% if option.folded %} data-choice-folded{% endif %}>
+  {% if widget.mark == "start" %}
+    <input type="{{ option.type }}" name="{{ option.name }}" value="{{ option.value|stringformat:'s' }}"{% include "daisyui/widgets/attrs.html" with widget=option %}>
+  {% endif %}
+  {% if option.icon and widget.mark != "start" %}
     <div class="grid size-9 shrink-0 place-items-center rounded-field bg-base-200 group-has-checked:bg-primary group-has-checked:text-primary-content">{{ option.icon }}</div>
   {% endif %}
   <div class="min-w-0 grow">
@@ -7,5 +10,10 @@
     <div class="font-semibold">{{ option.label }}</div>
     {% if option.description %}<div class="text-sm text-base-content/90 group-has-checked:text-base-content">{{ option.description }}</div>{% endif %}
   </div>
-  <input type="{{ option.type }}" name="{{ option.name }}" value="{{ option.value|stringformat:'s' }}"{% include "daisyui/widgets/attrs.html" with widget=option %}>
+  {% if option.icon and widget.mark == "start" %}
+    <div class="grid size-9 shrink-0 place-items-center rounded-field bg-base-200 group-has-checked:bg-primary group-has-checked:text-primary-content">{{ option.icon }}</div>
+  {% endif %}
+  {% if widget.mark != "start" %}
+    <input type="{{ option.type }}" name="{{ option.name }}" value="{{ option.value|stringformat:'s' }}"{% include "daisyui/widgets/attrs.html" with widget=option %}>
+  {% endif %}
 </label>

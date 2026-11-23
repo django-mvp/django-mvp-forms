@@ -29,13 +29,14 @@ name that is daisyUI's or one listed in `LAYOUT_UTILITIES`. Every utility the te
 tables write is listed there by name, so adding one is a reviewed change, and a class that is
 neither daisyUI's nor listed still fails.
 
-The chip and card widgets draw the choices not on show inside a native `details` element whose
-`summary` is the control. The browser provides the disclosure, its keyboard operation and its
-open state for assistive technology. One script, `mvp_forms/choice-fold.js`, is named in the
-media of those two widgets and nowhere else. It keeps a choice chosen inside a closed fold on
-show and keeps the count true. Without it every folded choice can still be reached by opening
-the fold, so a page that loads no script still answers and submits the form. The scale and the
-pills name no script.
+The chip and card widgets draw every choice in the same row or grid, mark the choices not on show
+`data-choice-folded`, and draw after them a native `button` that is hidden in the markup. One
+script, `mvp_forms/choice-fold.js`, is named in the media of those two widgets and nowhere else.
+On load it hides the marked choices that are not chosen and shows the button. A press shows
+the hidden choices in place, removes the button and moves the focus to the first choice shown. It
+also acts on choices that arrive later, from a formset row or htmx. Without it every choice is
+shown and the button stays hidden, so a page that loads no script still answers and submits the
+form. The scale and the pills name no script.
 
 ## Why
 
@@ -52,10 +53,12 @@ checked state needs a state utility. Listing each by name keeps the class test's
 class is written without review, and naming the state utilities beside the layout utilities
 changes that list and not the test's rule.
 
-A native `details` costs no script to open, close or announce, and the pack's promise is that
-its own templates need no script. A script that only moves a chosen choice and rewrites a count
-follows the widgets that already ship one, named in their media so that a project that uses none
-of them never loads it.
+The pack's promise is that its own templates need no script, and it holds because the choices
+stay in the markup and a page without the script shows all of them. A script that only hides and
+shows follows the widgets that already ship one, named in their media so that a project that uses
+none of them never loads it. A button in the same row as the choices reads as one more choice,
+where a disclosure drawn under them reads as a separate control and moves the choices a person
+has already found when it opens.
 
 ## Revisit if
 
