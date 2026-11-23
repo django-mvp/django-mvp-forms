@@ -1546,7 +1546,8 @@ class CardChoices(FoldedChoices):
         columns: The number of cards across on a wide screen: 1, 2 or 3. One
             card sits across on a narrow screen.
         mark: The side of the card the radio or checkbox mark is drawn on:
-            ``"end"``, after the text, or ``"start"``, before the icon.
+            ``"end"``, after the text, or ``"start"``, before the text,
+            with the icon moved after it.
 
     Attributes:
         edge_classes: The classes of a chosen card's edge and tint when the

@@ -301,6 +301,10 @@ class Reader:
             "h-11",
             "h-12",
             "has-focus-visible:outline",
+            # A disabled card is faded, and WCAG 1.4.3 sets no figure for a
+            # disabled control.
+            "has-disabled:cursor-not-allowed",
+            "has-disabled:opacity-60",
             "inline-flex",
             "inline-grid",
             "justify-between",

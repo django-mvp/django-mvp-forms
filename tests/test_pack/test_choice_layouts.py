@@ -462,14 +462,14 @@ class TestCardExtras:
         assert self.order_in(self.label_of(soup, "a")) == ["icon", "text", "mark"]
 
     @pytest.mark.parametrize("widget_class", CARDS)
-    def test_a_mark_at_the_start_is_drawn_before_the_icon_and_the_text(
+    def test_a_mark_at_the_start_is_drawn_before_the_text_and_the_icon_after_it(
         self, drawn, widget_class
     ):
         widget = widget_class(mark="start", icons={"a": mark_safe("<svg></svg>")})
 
         soup = drawn(widget, choices=self.CHOICES)
 
-        assert self.order_in(self.label_of(soup, "a")) == ["mark", "icon", "text"]
+        assert self.order_in(self.label_of(soup, "a")) == ["mark", "text", "icon"]
         assert self.order_in(self.label_of(soup, "b")) == ["mark", "text"]
 
     @pytest.mark.parametrize("columns", [1, 2, 3])

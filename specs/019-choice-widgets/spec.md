@@ -227,7 +227,8 @@ and then by keyboard alone, press the button of the chip and card fields, and su
 
 A developer draws a list of cards where the radio or checkbox is the first thing a person looks
 for, such as a list of plans or of permissions. They set one setting on the card widget, `mark`,
-to `"start"`, and each card draws its mark, then its icon, then its text. Without it the card
+to `"start"`, and each card draws its mark, then its text, then its icon: the mark and the icon
+change places. Without it the card
 draws its icon, its text, then its mark, as before.
 
 **Why this priority**: It is a placement of what story 1 draws. The cards work without it.
@@ -238,7 +239,7 @@ for one choice and none for another, and read the order of the parts of each car
 **Acceptance Scenarios**:
 
 1. **Given** a card widget with `mark="start"`, **When** its form is drawn, **Then** each card
-   holds its input first, then its icon where one is given, then its text.
+   holds its input first, then its text, then its icon where one is given.
 2. **Given** a card widget with `mark="end"`, or with no `mark`, **When** its form is drawn,
    **Then** each card holds its icon where one is given, then its text, then its input.
 3. **Given** a card widget given a `mark` other than `"start"` or `"end"`, **When** the widget is
@@ -329,7 +330,7 @@ for one choice and none for another, and read the order of the parts of each car
 - **FR-032**: A card widget MUST take the side of the card on which the radio or checkbox mark is
   drawn, `mark`, "end" or "start", with "end" when none is given. A value other than those two
   MUST raise an error naming `mark` when the widget is made. With "start" the card draws the
-  mark, the icon and then the text, in that order, and with "end" the icon, the text and then
+  mark, the text and then the icon, in that order, and with "end" the icon, the text and then
   the mark.
 
 #### The fold

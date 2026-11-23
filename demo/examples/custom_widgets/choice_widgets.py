@@ -207,7 +207,7 @@ class CardsForm(DemoForm):
 
 
 class CardMarkForm(DemoForm):
-    """Cards with the mark at the start: mark, icon, then text."""
+    """Cards with the mark at the start: mark, text, then icon."""
 
     plan = forms.ChoiceField(
         label="Plan",
@@ -220,7 +220,7 @@ class CardMarkForm(DemoForm):
             meta=PLAN_META,
         ),
         initial="standard",
-        help_text="The radio is drawn before the icon.",
+        help_text="The radio is drawn at the start and the icon at the end.",
     )
     extras = forms.MultipleChoiceField(
         label="Extras",
