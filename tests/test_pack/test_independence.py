@@ -144,6 +144,7 @@ LAYOUT_UTILITIES = {
     "h-auto",
     "inset-x-0",
     "items-center",
+    "justify-center",
     "items-end",
     "items-start",
     "max-h-full",

@@ -9,7 +9,6 @@ import sys
 import zoneinfo
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import patch
 from urllib.parse import urlencode
 
 import pytest
@@ -2912,7 +2911,6 @@ class TestFoldedChoicesContext:
 
         assert values_of(context["shown"]) == ["a", "b", "c"]
         assert context["folded"] == []
-        assert context["fold_open"] is False
 
     @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
     def test_the_choices_not_named_are_folded(self, widget_class):
@@ -2920,7 +2918,6 @@ class TestFoldedChoicesContext:
 
         assert values_of(context["shown"]) == ["b"]
         assert values_of(context["folded"]) == ["a", "c"]
-        assert context["fold_open"] is False
 
     @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
     def test_a_chosen_choice_is_always_on_show(self, widget_class):
@@ -2933,19 +2930,17 @@ class TestFoldedChoicesContext:
         assert values_of(context["folded"]) == ["b"]
 
     @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
-    def test_a_fold_holding_every_choice_with_none_chosen_is_open(self, widget_class):
+    def test_nothing_is_folded_when_no_choice_would_stay_on_show(self, widget_class):
         context = options_of(widget_class(show=[], choices=LETTERS))
 
-        assert context["shown"] == []
-        assert values_of(context["folded"]) == ["a", "b", "c"]
-        assert context["fold_open"] is True
+        assert values_of(context["shown"]) == ["a", "b", "c"]
+        assert context["folded"] == []
 
     @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
     def test_a_fold_that_would_hold_nothing_is_not_drawn(self, widget_class):
         context = options_of(widget_class(show={"a", "b", "c"}, choices=LETTERS))
 
         assert context["folded"] == []
-        assert context["fold_open"] is False
 
     @pytest.mark.parametrize("widget_class", FOLDING_WIDGETS)
     def test_a_value_the_field_does_not_offer_is_passed_over(self, widget_class):
@@ -2988,15 +2983,6 @@ class TestFoldedChoicesContext:
         context = options_of(widget)
 
         assert context["fold_label"] == "Others"
-        assert context["fold_custom"] is True
-
-    def test_the_package_words_for_the_fold_carry_the_count(self):
-        widget = ChipSelect(show={"a"}, choices=LETTERS)
-
-        context = options_of(widget)
-
-        assert str(context["fold_label"]) == context["fold_other"].replace("{n}", "2")
-        assert context["fold_custom"] is False
 
     def test_the_clearing_choice_carries_the_clearing_classes_after_the_layouts(self):
         class Clearing(ChipSelect):
@@ -3010,13 +2996,6 @@ class TestFoldedChoicesContext:
             ChipSelect.input_classes.split()
         )
         assert all("clear-me" not in o["attrs"]["class"] for o in context["options"])
-
-    def test_the_package_words_for_the_fold_have_a_form_for_one(self):
-        widget = ChipSelect(show={"a", "b"}, choices=LETTERS)
-
-        context = options_of(widget)
-
-        assert str(context["fold_label"]) == context["fold_one"].replace("{n}", "1")
 
     def test_setting_the_values_on_show_changes_one_forms_widget_alone(self):
         class LettersForm(forms.Form):
@@ -3078,19 +3057,6 @@ class TestFoldedChoicesContext:
         options = options_of(widget_class(choices=LETTERS))["options"]
 
         assert all("aria-label" not in option["attrs"] for option in options)
-
-    def test_the_fold_words_are_chosen_for_the_count_of_folded_choices(self):
-        widget = ChipSelectMultiple(show=[], choices=[(n, str(n)) for n in range(5)])
-        counts = []
-
-        def record(singular, plural, number):
-            counts.append(number)
-            return singular
-
-        with patch("mvp_forms.widgets.ngettext", record):
-            options_of(widget)
-
-        assert 5 in counts
 
     def test_the_set_given_is_not_changed_by_drawing(self):
         given = {"a"}

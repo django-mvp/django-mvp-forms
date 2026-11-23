@@ -56,9 +56,9 @@ drawn last, and a multiple field draws it as any other.
 ## Chips and a fold
 
 `ChipSelect` and `ChipSelectMultiple` suit long labels, which a chip shows in
-full. `show` names the values that stay on show. The rest sit in a fold that
-says how many choices it holds, and `fold_label` gives the fold your own words.
-A chosen choice is never folded.
+full. `show` names the values that stay on show. The rest are hidden behind a
+"More options" button after the chips, and `fold_label` gives the button your
+own words. A chosen choice is never folded.
 
 ```python
 interests = forms.MultipleChoiceField(
@@ -145,7 +145,7 @@ does. They take no variant.
 
 ## In a formset
 
-Each row of a formset has a fold of its own. Keep the empty form in a
+Each row of a formset has a button of its own. Keep the empty form in a
 `<template>` element and make a row from it, never by copying a row that is
 already on the page.
 

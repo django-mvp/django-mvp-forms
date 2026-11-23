@@ -1,4 +1,4 @@
-<label class="card card-border group cursor-pointer flex-row items-center gap-3 p-3 {{ widget.choice_class }} has-focus-visible:outline"{% if option.position is not None %} data-choice-index="{{ option.position }}"{% endif %}>
+<label class="card card-border group cursor-pointer flex-row items-center gap-3 p-3 {{ widget.choice_class }} has-focus-visible:outline"{% if option.folded %} data-choice-folded{% endif %}>
   {% if option.icon %}
     <div class="grid size-9 shrink-0 place-items-center rounded-field bg-base-200 group-has-checked:bg-primary group-has-checked:text-primary-content">{{ option.icon }}</div>
   {% endif %}

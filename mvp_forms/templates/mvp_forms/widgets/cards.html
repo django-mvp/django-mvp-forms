@@ -1,39 +1,18 @@
 <div{% if widget.attrs.id %} id="{{ widget.attrs.id }}"{% endif %} class="flex flex-col gap-2">
   {% if widget.columns == 3 %}
-    <div class="grid grid-cols-1 gap-2 sm:grid-cols-3" data-choice-shown>
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-3" data-choice-row>
   {% elif widget.columns == 1 %}
-    <div class="grid grid-cols-1 gap-2 sm:grid-cols-1" data-choice-shown>
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-1" data-choice-row>
   {% else %}
-    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2" data-choice-shown>
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2" data-choice-row>
   {% endif %}
-    {% for option in widget.shown %}
+    {% for option in widget.options %}
       {% include "mvp_forms/widgets/card_option.html" %}
     {% endfor %}
+    {% if widget.folded %}
+      <button type="button" hidden data-choice-more class="card card-dash cursor-pointer flex-row items-center justify-center gap-3 bg-base-100 border-base-300 p-3 font-semibold"><span aria-hidden="true">+</span> {{ widget.fold_label }}</button>
+    {% endif %}
   </div>
-  {% if widget.folded %}
-    <details class="group" data-choice-fold{% if widget.fold_open %} open{% endif %}>
-      <summary class="link inline-flex min-h-11 cursor-pointer items-center gap-2"{% if not widget.fold_custom %} data-choice-one="{{ widget.fold_one }}" data-choice-other="{{ widget.fold_other }}"{% endif %}>
-        <span class="inline-grid size-5 place-items-center rounded-full border border-current leading-none" aria-hidden="true"><span class="group-open:hidden">+</span><span class="hidden group-open:inline">&minus;</span></span>
-        {% if widget.fold_custom %}
-          <span>{{ widget.fold_label }}</span>
-          <span data-choice-count>{{ widget.fold_count }}</span>
-        {% else %}
-          <span data-choice-count>{{ widget.fold_label }}</span>
-        {% endif %}
-      </summary>
-      {% if widget.columns == 3 %}
-        <div class="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-3">
-      {% elif widget.columns == 1 %}
-        <div class="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-1">
-      {% else %}
-        <div class="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-2">
-      {% endif %}
-        {% for option in widget.folded %}
-          {% include "mvp_forms/widgets/card_option.html" %}
-        {% endfor %}
-      </div>
-    </details>
-  {% endif %}
   {% with option=widget.clearing %}
     {% if option %}
       {% include "mvp_forms/widgets/card_option.html" %}

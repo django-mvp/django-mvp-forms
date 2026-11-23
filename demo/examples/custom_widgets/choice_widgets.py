@@ -159,7 +159,7 @@ class ChipsForm(DemoForm):
         choices=INTERESTS,
         widget=ChipSelectMultiple(show=USUAL_INTERESTS, fold_label="Other hobbies"),
         required=False,
-        help_text="The fold's control says what it holds, in words you give.",
+        help_text="The button after the chips has the words you give.",
     )
 
 

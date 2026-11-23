@@ -1,6 +1,9 @@
-// Keeps a choice chosen inside a closed fold on show, and the count of the
-// choices still folded true. Without it the fold still opens and every choice
-// in it can be chosen and sent.
+// Folds the choices a chip or card widget marks behind its "More options"
+// button. On load the marked choices that are not chosen are hidden and the
+// button is shown. A click shows them in place, removes the button and moves
+// the focus to the first choice shown. Without the script every choice is on
+// show and the button stays hidden. Content added later, by a formset row or by
+// htmx, is folded as it arrives.
 (function () {
   "use strict";
 
@@ -8,50 +11,67 @@
   if (window.mvpFormsChoiceFold) return;
   window.mvpFormsChoiceFold = true;
 
-  const FOLD = "details[data-choice-fold]";
-  const OPTION = "[data-choice-index]";
+  const MORE = "button[data-choice-more]";
+  const FOLDED = "[data-choice-folded]";
 
-  function chosen(option) {
-    return option.matches(":checked") || option.querySelector("input:checked") !== null;
+  function inputOf(option) {
+    return option.matches("input") ? option : option.querySelector("input");
   }
 
-  // Put an option among the choices on show where the field's order puts it.
-  function place(shown, option) {
-    const index = Number(option.dataset.choiceIndex);
-    const later = Array.from(shown.children).find(function (each) {
-      return Number(each.dataset.choiceIndex) > index;
-    });
-    shown.insertBefore(option, later || null);
+  function setHidden(option, hidden) {
+    option.hidden = hidden;
+    option.style.display = hidden ? "none" : "";
   }
 
-  // The words for a count: the package's own, held in the summary, or the
-  // number alone after the developer's.
-  function words(summary, count) {
-    const own = count === 1 ? summary.dataset.choiceOne : summary.dataset.choiceOther;
-    return own ? own.replace("{n}", String(count)) : String(count);
-  }
-
-  // The toggle event does not bubble, so it is heard in the capture phase.
-  document.addEventListener(
-    "toggle",
-    function (event) {
-      const fold = event.target;
-      if (!(fold instanceof Element) || !fold.matches(FOLD) || fold.open) return;
-      const shown = fold.parentElement.querySelector(":scope > [data-choice-shown]");
-      if (!shown) return;
-      Array.from(fold.querySelectorAll(OPTION))
-        .filter(chosen)
-        .forEach(function (option) {
-          place(shown, option);
-        });
-      const left = fold.querySelectorAll(OPTION).length;
-      if (left === 0) {
-        fold.remove();
-        return;
+  // Hide the marked choices next to a button that are not chosen and show the
+  // button. A chosen choice is never folded. Running it again changes nothing.
+  function fold(button) {
+    const row = button.parentElement;
+    const folded = Array.from(row.querySelectorAll(":scope > " + FOLDED));
+    folded.forEach(function (option) {
+      if (inputOf(option).checked) {
+        option.removeAttribute("data-choice-folded");
+      } else {
+        setHidden(option, true);
       }
-      const count = fold.querySelector("[data-choice-count]");
-      if (count) count.textContent = words(fold.querySelector("summary"), left);
-    },
-    true
-  );
+    });
+    if (row.querySelector(":scope > " + FOLDED)) {
+      button.hidden = false;
+    } else {
+      button.remove();
+    }
+  }
+
+  function foldWithin(node) {
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    if (node.matches(MORE)) fold(node);
+    node.querySelectorAll(MORE).forEach(fold);
+  }
+
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest && event.target.closest(MORE);
+    if (!button) return;
+    const row = button.parentElement;
+    const shown = Array.from(row.querySelectorAll(":scope > " + FOLDED));
+    shown.forEach(function (option) {
+      setHidden(option, false);
+      option.removeAttribute("data-choice-folded");
+    });
+    button.remove();
+    if (shown.length) inputOf(shown[0]).focus();
+  });
+
+  new MutationObserver(function (records) {
+    records.forEach(function (record) {
+      record.addedNodes.forEach(foldWithin);
+    });
+  }).observe(document.documentElement, { childList: true, subtree: true });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      foldWithin(document.body);
+    });
+  } else {
+    foldWithin(document.body);
+  }
 })();

@@ -448,117 +448,111 @@ class TestCardExtras:
         grids = [
             tag
             for tag in soup.find_all(["div"])
-            if tag.has_attr("data-choice-shown") or tag.find_parent("details")
+            if any(c.startswith("sm:grid-cols-") for c in tag.get("class", []))
         ]
-        for grid in grids:
-            wide = {c for c in grid.get("class", []) if c.startswith("sm:grid-cols-")}
-            assert wide <= {f"sm:grid-cols-{columns}"}
-        assert any(f"sm:grid-cols-{columns}" in grid.get("class", []) for grid in grids)
+        assert len(grids) == 1
+        assert f"sm:grid-cols-{columns}" in grids[0]["class"]
 
     @pytest.mark.parametrize("widget_class", CARDS)
     def test_two_columns_are_drawn_when_none_is_given(self, drawn, widget_class):
         soup = drawn(widget_class())
 
-        assert "sm:grid-cols-2" in soup.find(attrs={"data-choice-shown": True})["class"]
+        assert "sm:grid-cols-2" in soup.find(attrs={"data-choice-row": True})["class"]
 
 
 class TestFold:
     LETTERS = [("a", "A"), ("b", "B"), ("c", "C"), ("d", "D")]
 
-    def fold_of(self, soup):
-        return soup.find("details", attrs={"data-choice-fold": True})
+    def row_of(self, soup):
+        return soup.find(attrs={"data-choice-row": True})
+
+    def folded_in(self, soup):
+        """The values of the inputs marked as folded, in the order drawn."""
+        return [
+            i["value"]
+            for i in soup.find_all("input")
+            if i.has_attr("data-choice-folded")
+            or i.find_parent("label", attrs={"data-choice-folded": True})
+        ]
 
     def values_in(self, tag):
         return [i["value"] for i in tag.find_all("input")]
 
+    def more_of(self, soup):
+        return soup.find("button", attrs={"data-choice-more": True})
+
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_choices_not_named_are_in_a_fold_in_the_fields_order(
+    def test_every_choice_is_in_one_row_in_the_fields_order_and_the_unnamed_are_marked(
         self, drawn, widget_class
     ):
         soup = drawn(widget_class(show={"a", "c"}), choices=self.LETTERS)
 
-        fold = self.fold_of(soup)
-        shown = soup.find(attrs={"data-choice-shown": True})
-
-        assert self.values_in(fold) == ["b", "d"]
-        assert self.values_in(shown) == ["a", "c"]
-        assert not fold.has_attr("open")
+        assert self.values_in(self.row_of(soup)) == ["a", "b", "c", "d"]
+        assert self.folded_in(soup) == ["b", "d"]
+        assert soup.find("details") is None
 
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_fold_is_a_disclosure_with_a_summary(self, drawn, widget_class):
-        soup = drawn(widget_class(show={"a"}), choices=self.LETTERS)
-
-        fold = self.fold_of(soup)
-
-        assert fold.find("summary") is not None
-
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_every_choice_is_one_input_whether_shown_or_folded(
+    def test_the_button_is_drawn_after_the_choices_in_the_row_and_is_hidden(
         self, drawn, widget_class
     ):
         soup = drawn(widget_class(show={"a"}), choices=self.LETTERS)
 
-        assert sorted(self.values_in(soup)) == ["a", "b", "c", "d"]
+        button = self.more_of(soup)
+
+        assert button["type"] == "button"
+        assert button.has_attr("hidden")
+        assert button.parent is self.row_of(soup)
+        assert button.find_previous("input")["value"] == "d"
 
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_each_choice_carries_its_place_in_the_fields_order(
+    def test_the_button_is_the_only_button_of_the_field(self, drawn, widget_class):
+        soup = drawn(widget_class(show={"a"}), choices=self.LETTERS)
+
+        assert len(soup.find_all("button")) == 1
+
+    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
+    def test_nothing_is_marked_and_no_button_is_drawn_when_every_choice_is_on_show(
         self, drawn, widget_class
     ):
-        soup = drawn(widget_class(show={"b", "d"}), choices=self.LETTERS)
-
-        places = {
-            i["value"]: (i.find_parent(attrs={"data-choice-index": True}) or i)[
-                "data-choice-index"
-            ]
-            for i in soup.find_all("input")
-        }
-
-        assert places == {"a": "0", "b": "1", "c": "2", "d": "3"}
-
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_no_fold_is_drawn_when_every_choice_is_on_show(self, drawn, widget_class):
         everything = drawn(widget_class(), choices=self.LETTERS)
         all_named = drawn(widget_class(show=set("abcd")), choices=self.LETTERS)
         unknown_only = drawn(
             widget_class(show={"zzz"}), choices=[("a", "A")], data="field=a"
         )
 
-        assert self.fold_of(everything) is None
-        assert self.fold_of(all_named) is None
-        assert self.fold_of(unknown_only) is None
+        for soup in (everything, all_named, unknown_only):
+            assert self.more_of(soup) is None
+            assert self.folded_in(soup) == []
 
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_a_fold_holding_every_choice_with_none_chosen_is_open(
+    def test_nothing_is_folded_when_no_choice_would_stay_on_show(
         self, drawn, widget_class
     ):
         soup = drawn(widget_class(show=set()), choices=self.LETTERS)
 
-        fold = self.fold_of(soup)
-
-        assert fold.has_attr("open")
-        assert self.values_in(fold) == ["a", "b", "c", "d"]
+        assert self.more_of(soup) is None
+        assert self.folded_in(soup) == []
 
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARD_SINGLES)
-    def test_a_chosen_choice_is_on_show_whether_or_not_it_was_named(
+    def test_a_chosen_choice_is_never_folded_whether_or_not_it_was_named(
         self, drawn, widget_class
     ):
         soup = drawn(widget_class(show={"a"}), choices=self.LETTERS, data="field=c")
 
-        assert self.values_in(self.fold_of(soup)) == ["b", "d"]
-        assert "c" in self.values_in(soup.find(attrs={"data-choice-shown": True}))
+        assert self.folded_in(soup) == ["b", "d"]
 
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARD_MULTIPLES)
-    def test_every_chosen_choice_of_a_multiple_widget_is_on_show(
+    def test_every_chosen_choice_of_a_multiple_widget_is_never_folded(
         self, drawn, widget_class
     ):
         soup = drawn(
             widget_class(show={"a"}), choices=self.LETTERS, data="field=b&field=d"
         )
 
-        assert self.values_in(self.fold_of(soup)) == ["c"]
+        assert self.folded_in(soup) == ["c"]
 
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_a_fold_whose_choices_are_all_chosen_is_not_drawn(
+    def test_no_button_is_drawn_when_every_folded_choice_is_chosen(
         self, drawn, widget_class
     ):
         soup = drawn(
@@ -567,19 +561,24 @@ class TestFold:
             data="field=b",
         )
 
-        assert self.fold_of(soup) is None
+        assert self.more_of(soup) is None
 
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_clearing_choice_is_never_in_the_fold(self, drawn, widget_class):
+    def test_the_clearing_choice_is_never_folded_and_stays_outside_the_row(
+        self, drawn, widget_class
+    ):
         choices = [*self.LETTERS, ("", "None")]
         if widget_class in CHIP_AND_CARD_MULTIPLES:
             choices = self.LETTERS
         soup = drawn(widget_class(show={"a"}), choices=choices, initial="a")
 
-        assert "" not in self.values_in(self.fold_of(soup))
+        assert "" not in self.folded_in(soup)
+        assert "" not in self.values_in(self.row_of(soup))
 
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_fold_holds_checked_state_for_bound_values(self, drawn, widget_class):
+    def test_the_folded_choices_hold_checked_state_for_bound_values(
+        self, drawn, widget_class
+    ):
         soup = drawn(widget_class(show={"a"}), choices=self.LETTERS, data="field=b")
 
         checked = [i["value"] for i in soup.find_all("input", checked=True)]
@@ -587,30 +586,12 @@ class TestFold:
         assert checked == ["b"]
 
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_fold_holds_checked_state_for_initial_values(self, drawn, widget_class):
-        initial = ["b"] if widget_class in CHIP_AND_CARD_MULTIPLES else "b"
-        soup = drawn(widget_class(show={"a"}), choices=self.LETTERS, initial=initial)
-
-        assert [i["value"] for i in soup.find_all("input", checked=True)] == ["b"]
-
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_package_words_carry_the_count_of_folded_choices(
-        self, drawn, widget_class
-    ):
-        soup = drawn(widget_class(show={"a"}), choices=self.LETTERS)
-
-        assert "3" in self.fold_of(soup).find("summary").get_text()
-
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_developers_words_are_drawn_with_the_count(self, drawn, widget_class):
+    def test_the_developers_words_are_drawn_in_the_button(self, drawn, widget_class):
         soup = drawn(
             widget_class(show={"a"}, fold_label="Others"), choices=self.LETTERS
         )
 
-        summary = self.fold_of(soup).find("summary")
-
-        assert "Others" in summary.get_text()
-        assert summary.find(attrs={"data-choice-count": True}).get_text() == "3"
+        assert "Others" in self.more_of(soup).get_text()
 
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
     def test_a_show_set_on_a_form_instance_affects_that_form_alone(self, widget_class):
@@ -629,9 +610,9 @@ class TestFold:
         plain = BeautifulSoup(str(LetterForm()["field"]), "html.parser")
         again = BeautifulSoup(str(LetterForm(show={"b", "c"})["field"]), "html.parser")
 
-        assert self.values_in(self.fold_of(narrowed)) == ["b", "c", "d"]
-        assert self.fold_of(plain) is None
-        assert self.values_in(self.fold_of(again)) == ["a", "d"]
+        assert self.folded_in(narrowed) == ["b", "c", "d"]
+        assert self.folded_in(plain) == []
+        assert self.folded_in(again) == ["a", "d"]
 
     @pytest.mark.django_db
     @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
@@ -652,10 +633,7 @@ class TestFold:
 
         soup = BeautifulSoup(str(GroupForm()["field"]), "html.parser")
 
-        assert self.values_in(self.fold_of(soup)) == [
-            str(groups[0].pk),
-            str(groups[2].pk),
-        ]
+        assert self.folded_in(soup) == [str(groups[0].pk), str(groups[2].pk)]
 
 
 SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
@@ -1071,77 +1049,6 @@ class TestPackMistakes:
 
         assert (error.kind, error.value, error.allowed) == ("drawing", drawing, ())
         assert error.target == name
-
-
-class TestFoldCount:
-    LETTERS = TestFold.LETTERS
-
-    def summary_of(self, soup):
-        return soup.find("details", attrs={"data-choice-fold": True}).find("summary")
-
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_count_is_always_its_own_element(self, drawn, widget_class):
-        soup = drawn(widget_class(show={"a"}), choices=self.LETTERS)
-        custom = drawn(
-            widget_class(show={"a"}, fold_label="Others"), choices=self.LETTERS
-        )
-
-        for each in (soup, custom):
-            assert (
-                len(self.summary_of(each).find_all(attrs={"data-choice-count": True}))
-                == 1
-            )
-
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_package_words_are_carried_with_a_placeholder_for_the_count(
-        self, drawn, widget_class
-    ):
-        summary = self.summary_of(drawn(widget_class(show={"a"}), choices=self.LETTERS))
-
-        assert "{n}" in summary["data-choice-one"]
-        assert "{n}" in summary["data-choice-other"]
-
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_package_words_are_drawn_with_the_count_without_the_script(
-        self, drawn, widget_class
-    ):
-        summary = self.summary_of(drawn(widget_class(show={"a"}), choices=self.LETTERS))
-        count = summary.find(attrs={"data-choice-count": True})
-
-        assert count.get_text() == summary["data-choice-other"].replace("{n}", "3")
-
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_form_for_one_is_drawn_for_a_single_folded_choice(
-        self, drawn, widget_class
-    ):
-        summary = self.summary_of(
-            drawn(widget_class(show={"a", "b", "c"}), choices=self.LETTERS)
-        )
-        count = summary.find(attrs={"data-choice-count": True})
-
-        assert count.get_text() == summary["data-choice-one"].replace("{n}", "1")
-
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARDS)
-    def test_the_developers_words_carry_no_words_for_the_script_to_rewrite(
-        self, drawn, widget_class
-    ):
-        summary = self.summary_of(
-            drawn(widget_class(show={"a"}, fold_label="Others"), choices=self.LETTERS)
-        )
-
-        assert not summary.has_attr("data-choice-one")
-        assert not summary.has_attr("data-choice-other")
-
-    @pytest.mark.parametrize("widget_class", CHIP_AND_CARD_SINGLES)
-    def test_the_clearing_choice_carries_no_place_in_the_order(
-        self, drawn, widget_class
-    ):
-        soup = drawn(widget_class(show={"a"}), choices=[*self.LETTERS, ("", "None")])
-
-        clearing = soup.find("input", value="")
-
-        assert clearing.find_parent(attrs={"data-choice-index": True}) is None
-        assert not clearing.has_attr("data-choice-index")
 
 
 class TestScript:

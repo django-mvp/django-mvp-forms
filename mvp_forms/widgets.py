@@ -22,8 +22,8 @@ from django.utils.functional import Promise
 from django.utils.html import strip_tags
 from django.utils.safestring import SafeData
 from django.utils.text import normalize_newlines
+from django.utils.translation import gettext, ngettext
 from django.utils.translation import gettext_lazy as _
-from django.utils.translation import ngettext
 
 
 class Check:
@@ -1439,18 +1439,18 @@ class ChoiceLayout:
 
 
 class FoldedChoices(ChoiceLayout):
-    """Chip and card widgets: some choices on show, the rest in a fold.
+    """Chip and card widgets: some choices on show, the rest behind a button.
 
     A choice is folded when ``show`` is set, its value is not in it and it is
     not chosen. The clearing choice of a single-choice widget is never folded.
-    A fold that holds every choice with none chosen is open, and a fold that
-    would hold none is not drawn. The context gains ``shown``, ``folded``,
-    ``fold_open``, ``fold_label``, the developer's words for the fold or the
-    package's own with the count, ``fold_count``, the number of folded choices,
-    and ``fold_custom``, true when the words are the developer's. The package's
-    own words are given as ``fold_one`` and ``fold_other``, each with ``{n}``
-    where the count goes, for the script to write again when the count changes.
-    The widget's media names the script that keeps a chosen choice on show.
+    When no choice would stay on show, none is folded. Every choice is drawn in
+    the one row or grid, a folded one marked ``data-choice-folded``, followed
+    by a hidden "More options" button. The script hides the marked choices and
+    shows the button, and the button shows them again in place. Without the
+    script every choice is on show and the button stays hidden. The context
+    gains ``shown``, ``folded`` and ``fold_label``, the developer's words for
+    the button or the package's own. Each option gains ``folded``. The widget's
+    media names the script.
 
     Args:
         attrs: HTML attributes for each input.
@@ -1460,8 +1460,8 @@ class FoldedChoices(ChoiceLayout):
             and a value the field does not offer is passed over. Set it on a
             form's own copy of the widget in its ``__init__`` to follow the
             person using the form.
-        fold_label: The words for the fold's control, shown with the count of
-            choices it holds. Empty for the package's own words.
+        fold_label: The words for the button that shows the folded choices.
+            Empty for the package's own words.
         **settings: Settings of the widget's own, passed on.
 
     Raises:
@@ -1509,16 +1509,13 @@ class FoldedChoices(ChoiceLayout):
                 and not option["selected"]
             )
             (folded if hidden else shown).append(option)
+        if not shown:
+            shown, folded = folded, []
+        for option in folded:
+            option["folded"] = True
         widget["shown"] = shown
         widget["folded"] = folded
-        widget["fold_open"] = bool(folded) and not shown
-        widget["fold_count"] = len(folded)
-        widget["fold_custom"] = bool(self.fold_label)
-        widget["fold_one"] = ngettext("{n} more", "{n} more", 1)
-        widget["fold_other"] = ngettext("{n} more", "{n} more", 2)
-        widget["fold_label"] = self.fold_label or ngettext(
-            "{n} more", "{n} more", len(folded)
-        ).replace("{n}", str(len(folded)))
+        widget["fold_label"] = self.fold_label or gettext("More options")
         return context
 
     def __deepcopy__(self, memo):
