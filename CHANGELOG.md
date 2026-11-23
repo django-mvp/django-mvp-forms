@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.11.0] - 2026-11-23
+
 ### Added
 
 - Seven widgets draw a choice field with large choices in place of a select or a column of radios: `ScaleSelect` (one row of segments, with optional words at its ends), `PillSelect` and `PillSelectMultiple` (rounded toggles), `ChipSelect` and `ChipSelectMultiple` (large toggles that show a long label in full) and `CardSelect` and `CardSelectMultiple` (cards with an optional icon, short line and description, one to three across). A chip or card widget can fold the choices you do not name in `show` behind a "More options" button drawn after the others as a chip or a card-shaped tile, and a chosen choice is never folded. A single choice is cleared by the field's own empty choice, drawn after the others. They take the form's and the field's size and colour, and the fields clean exactly as they do with a radio or checkbox group. The chip and card widgets name one script for the fold, and every choice stays reachable without it. The card widgets take `mark="start"` to draw the radio or checkbox at the start of the card, with the icon moved to the end. A Choice widgets page in the demo shows each of them.
