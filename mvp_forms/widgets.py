@@ -1529,9 +1529,9 @@ class CardChoices(FoldedChoices):
     """Card widgets: a description, an icon and a short line for each choice.
 
     Each option gains ``description``, ``icon`` and ``meta``, found by its value
-    read as text, and the context gains ``columns`` and ``mark``. A text that is not marked
-    safe is escaped when drawn. An icon is drawn as the markup given, so the
-    developer marks it safe.
+    read as text, and the context gains ``columns`` and ``mark``. A text that
+    is not marked safe is escaped when drawn. An icon is drawn as the markup
+    given, so the developer marks it safe.
 
     Args:
         attrs: HTML attributes for each input.
