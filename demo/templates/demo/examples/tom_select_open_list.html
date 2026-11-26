@@ -1,0 +1,28 @@
+{% extends "demo/examples/base.html" %}
+{% load crispy_forms_tags %}
+{% block example %}
+  <style>
+    /* The list is drawn where it is written: in the flow of the page, as wide as
+       the control, and scrolling in place. */
+    html:root #organisation-list .ts-dropdown {
+      position: static;
+      inset: auto;
+      width: auto;
+      margin: 0.5rem 0 0;
+    }
+  </style>
+  {% crispy form %}
+  <script>
+    // Tom Select sends this once it has started a control on a select. A control
+    // whose select names a container in data-open-list has its list moved there
+    // and kept open: close() is replaced by a function that does nothing.
+    document.addEventListener("mvp-forms:tomselect", function (event) {
+      var control = event.detail.tomselect;
+      var container = document.querySelector(control.input.dataset.openList || "");
+      if (!container) return;
+      container.appendChild(control.dropdown);
+      control.close = function () {};
+      control.open();
+    });
+  </script>
+{% endblock example %}

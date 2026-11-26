@@ -55,6 +55,38 @@ countries in the list and pick a few, then clear them with the button. A screen
 reader is told each chosen value by name. Backspace in an empty search box
 removes the value chosen last, as it does in any Tom Select control.
 
+## A list that stays open
+
+For a long list that people browse as much as they search, such as choosing an
+organisation, the options can sit under the search box and stay there. Picking
+one leaves the list where it is. This is Tom Select's own
+[remote data example](https://tom-select.js.org/examples/remote/), and the
+widget needs no option for it. It takes three steps on the page.
+
+1. Write a container where the list should appear, under the field.
+2. Name the container on the select with the attribute `data-open-list`, as the
+   example does through `attrs`. The attribute is the example's own. The widget
+   passes it through and reads nothing from it.
+3. Once a control has started, the select sends `mvp-forms:tomselect`, which
+   carries the Tom Select instance in `event.detail.tomselect`. Move the
+   instance's `dropdown` into the container, replace its `close()` with a
+   function that does nothing, and open it.
+
+A few lines of CSS take the list out of its floating position, so it is drawn in
+the flow of the page and scrolls in place.
+
+```{live-example} /examples/tom-select-open-list/
+:title: A list that stays open
+
+../../examples/custom_widgets/tom_select_open_list.py
+../../templates/demo/examples/tom_select_open_list.html
+```
+
+Tom Select's own version names a `dropdownParent` and a `no_close` plugin when
+it starts the control. The widget starts the control itself and passes it only
+`placeholder`, `maxItems` and the plugins it names, so those two are reached
+through the instance instead, which gives the same result.
+
 ## In a row of filters
 
 In a form that draws no labels, with `form_show_labels = False`, a select shows
