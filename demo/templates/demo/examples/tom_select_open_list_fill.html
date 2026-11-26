@@ -1,0 +1,8 @@
+{% extends "demo/examples/tom_select_open_list.html" %}
+{% load crispy_forms_tags %}
+{# The form sits in a container of a fixed height, and the list fills it. #}
+{% block frame %}
+  <div style="height: 22rem">
+    {% crispy form %}
+  </div>
+{% endblock frame %}

@@ -17,6 +17,37 @@
         0 1px color-mix(in oklab, var(--input-color) calc(var(--depth) * 10%), #0000) inset,
         0 -1px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset;
     }
+    /* The list has a height of its own, so it keeps its size when a search finds
+       nothing. --open-list-height sets it: any length, set by a class or a style on
+       the form or any element around the field, as the list is not inside the
+       select. */
+    html:root select[data-open-list] ~ .ts-dropdown {
+      height: var(--open-list-height, 14rem);
+    }
+    html:root select[data-open-list] ~ .ts-dropdown .ts-dropdown-content {
+      height: 100%;
+      max-height: none;
+    }
+    /* data-open-list="fill" takes the height there is instead: the form fills
+       its container, and the list fills what the other fields leave. The
+       container needs a height, from a class, a style or the page's layout.
+       --open-list-height is then the least the list is drawn at. */
+    html:root form:has(> .fieldset > select[data-open-list="fill"]) {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    html:root .fieldset:has(> select[data-open-list="fill"]) {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 0;
+      min-height: 0;
+    }
+    html:root select[data-open-list="fill"] ~ .ts-dropdown {
+      flex: 1 1 0;
+      height: auto;
+      min-height: var(--open-list-height, 8rem);
+    }
     /* A field in error frames its list in the error colour, as it frames its box. */
     html:root select[data-open-list].select-error ~ .ts-dropdown {
       --input-color: var(--color-error);
@@ -31,7 +62,9 @@
       color: inherit;
     }
   </style>
-  {% crispy form %}
+  {% block frame %}
+    {% crispy form %}
+  {% endblock frame %}
   <script>
     // Tom Select sends this once it has started a control on a select. The list
     // of a control whose select carries data-open-list is moved out of the

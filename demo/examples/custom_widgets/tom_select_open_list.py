@@ -32,7 +32,8 @@ class OrganisationForm(forms.Form):
             attrs={"data-open-list": True},
         ),
         help_text=(
-            "The list stays open under the box. Picking an option leaves it there."
+            "The list stays open under the box, at a height of its own. "
+            "Picking an option leaves it there."
         ),
     )
 
@@ -40,5 +41,21 @@ class OrganisationForm(forms.Form):
         """Add the helper and a submit button."""
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        self.helper.attrs = {"novalidate": True}
+        self.helper.attrs = {
+            "novalidate": True,
+            "style": "--open-list-height: 16rem",
+        }
         self.helper.add_input(Submit("submit", "Save"))
+
+
+class FillOrganisationForm(OrganisationForm):
+    """The same list, filling the container it sits in."""
+
+    organisation = forms.ChoiceField(
+        choices=ORGANISATIONS,
+        widget=TomSelect(
+            placeholder="Search organisations",
+            attrs={"data-open-list": "fill"},
+        ),
+        help_text="The list takes the height the container leaves it.",
+    )
