@@ -57,7 +57,10 @@ from demo.examples.custom_widgets.range_input import (
 )
 from demo.examples.custom_widgets.regex_mask import AccountForm
 from demo.examples.custom_widgets.tom_select import TopicsForm
-from demo.examples.custom_widgets.tom_select_open_list import OrganisationForm
+from demo.examples.custom_widgets.tom_select_open_list import (
+    FillOrganisationForm,
+    OrganisationForm,
+)
 from demo.examples.formsets.collapsible import (
     MEMBERS,
     MemberFormSet,
@@ -325,6 +328,13 @@ urlpatterns = [
         ExampleView.as_view(
             form_class=OrganisationForm,
             template_name="demo/examples/tom_select_open_list.html",
+        ),
+    ),
+    path(
+        "tom-select-open-list-fill/",
+        ExampleView.as_view(
+            form_class=FillOrganisationForm,
+            template_name="demo/examples/tom_select_open_list_fill.html",
         ),
     ),
     path(
