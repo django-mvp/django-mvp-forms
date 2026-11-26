@@ -57,6 +57,7 @@ from demo.examples.custom_widgets.range_input import (
 )
 from demo.examples.custom_widgets.regex_mask import AccountForm
 from demo.examples.custom_widgets.tom_select import TopicsForm
+from demo.examples.custom_widgets.tom_select_open_list import OrganisationForm
 from demo.examples.formsets.collapsible import (
     MEMBERS,
     MemberFormSet,
@@ -318,6 +319,13 @@ urlpatterns = [
     path(
         "tom-select/",
         ExampleView.as_view(form_class=TopicsForm, template_name=TOM_SELECT),
+    ),
+    path(
+        "tom-select-open-list/",
+        ExampleView.as_view(
+            form_class=OrganisationForm,
+            template_name="demo/examples/tom_select_open_list.html",
+        ),
     ),
     path(
         "tom-select-counted/",

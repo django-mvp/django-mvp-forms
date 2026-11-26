@@ -55,6 +55,42 @@ countries in the list and pick a few, then clear them with the button. A screen
 reader is told each chosen value by name. Backspace in an empty search box
 removes the value chosen last, as it does in any Tom Select control.
 
+## A list that stays open
+
+For a long list that people browse as much as they search, such as choosing an
+organisation, the options can sit under the search box and stay there. Picking
+one leaves the list where it is. This is Tom Select's own
+[remote data example](https://tom-select.js.org/examples/remote/), and the
+widget needs no option for it. It takes two things on the page.
+
+1. Mark the select with an attribute of your own, through `attrs`. The example
+   uses `data-open-list`. The widget passes it through and reads nothing from it.
+2. Listen for `mvp-forms:tomselect`, which the select sends once its control has
+   started, carrying the Tom Select instance in `event.detail.tomselect`. For a
+   marked select, move the instance's `dropdown` to sit directly after its
+   `wrapper`, and wrap its `close()` so the list is drawn again and shown each
+   time it would be hidden.
+
+A few lines of CSS take the list out of its floating position and draw it as an
+input is drawn: the input's border, corners and shadow, the error colour on a
+field in error, and no arrow on the box.
+
+```{live-example} /examples/tom-select-open-list/
+:title: A list that stays open
+
+../../examples/custom_widgets/tom_select_open_list.py
+../../templates/demo/examples/tom_select_open_list.html
+```
+
+Tom Select's own version names a `dropdownParent` and a `no_close` plugin when
+it starts the control. The widget starts the control itself and passes it only
+`placeholder`, `maxItems` and the plugins it names, so the same is reached
+through the instance. Wrap `close()` rather than replacing it with a function
+that does nothing: closing is also when Tom Select empties the search after a
+pick and lets go of the box's focus. Draw the list at first with
+`refreshOptions(false)` rather than `open()`, which moves focus into the box as
+the page loads.
+
 ## In a row of filters
 
 In a form that draws no labels, with `form_show_labels = False`, a select shows
