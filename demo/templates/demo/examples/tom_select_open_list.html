@@ -2,27 +2,58 @@
 {% load crispy_forms_tags %}
 {% block example %}
   <style>
-    /* The list is drawn where it is written: in the flow of the page, as wide as
-       the control, and scrolling in place. */
-    html:root #organisation-list .ts-dropdown {
+    /* The list is drawn in the flow of the page, directly under the box, as an
+       input is drawn: the input's border, corners and inset shadow, and no
+       shadow beneath it. */
+    html:root select[data-open-list] ~ .ts-dropdown {
+      --input-color: color-mix(in oklab, var(--color-base-content) 20%, #0000);
       position: static;
       inset: auto;
       width: auto;
       margin: 0.5rem 0 0;
+      border: var(--border) solid var(--input-color);
+      border-radius: var(--radius-field);
+      box-shadow:
+        0 1px color-mix(in oklab, var(--input-color) calc(var(--depth) * 10%), #0000) inset,
+        0 -1px oklch(100% 0 0 / calc(var(--depth) * 0.1)) inset;
+    }
+    /* A field in error frames its list in the error colour, as it frames its box. */
+    html:root select[data-open-list].select-error ~ .ts-dropdown {
+      --input-color: var(--color-error);
+    }
+    /* The list never opens or closes, so the box has no arrow. */
+    html:root select[data-open-list] + .ts-wrapper {
+      background-image: none;
+    }
+    /* An option is marked for the keyboard only while the box has focus. */
+    html:root select[data-open-list] + .ts-wrapper:not(.focus) ~ .ts-dropdown .active:not(.selected) {
+      background: transparent;
+      color: inherit;
     }
   </style>
   {% crispy form %}
   <script>
-    // Tom Select sends this once it has started a control on a select. A control
-    // whose select names a container in data-open-list has its list moved there
-    // and kept open: close() is replaced by a function that does nothing.
+    // Tom Select sends this once it has started a control on a select. The list
+    // of a control whose select carries data-open-list is moved out of the
+    // control to sit directly under it, and never hidden. close() still does
+    // what it does on any control, emptying the search once an option is
+    // picked or the box is left, and then the whole list is drawn again and
+    // shown. The list is first drawn without open(), which would move focus
+    // into the box as the page loads.
     document.addEventListener("mvp-forms:tomselect", function (event) {
       var control = event.detail.tomselect;
-      var container = document.querySelector(control.input.dataset.openList || "");
-      if (!container) return;
-      container.appendChild(control.dropdown);
-      control.close = function () {};
-      control.open();
+      if (!("openList" in control.input.dataset)) return;
+      var close = control.close.bind(control);
+      function show() {
+        control.refreshOptions(false);
+        control.dropdown.style.display = "block";
+      }
+      control.wrapper.after(control.dropdown);
+      control.close = function (setTextboxValue) {
+        close(setTextboxValue);
+        show();
+      };
+      show();
     });
   </script>
 {% endblock example %}

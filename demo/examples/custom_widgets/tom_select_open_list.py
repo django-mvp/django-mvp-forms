@@ -1,7 +1,7 @@
 """A Tom Select control whose list of options stays open under the search box."""
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Layout, Submit
+from crispy_forms.layout import Submit
 from django import forms
 
 from mvp_forms.widgets import TomSelect
@@ -29,7 +29,7 @@ class OrganisationForm(forms.Form):
         choices=ORGANISATIONS,
         widget=TomSelect(
             placeholder="Search organisations",
-            attrs={"data-open-list": "#organisation-list"},
+            attrs={"data-open-list": True},
         ),
         help_text="The list stays open under the box. Picking an option leaves it there.",
     )
@@ -39,8 +39,4 @@ class OrganisationForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.attrs = {"novalidate": True}
-        # The container the list is moved into, written under the field.
-        self.helper.layout = Layout(
-            "organisation", HTML('<div id="organisation-list" class="mb-4"></div>')
-        )
         self.helper.add_input(Submit("submit", "Save"))

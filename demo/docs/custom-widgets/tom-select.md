@@ -61,19 +61,19 @@ For a long list that people browse as much as they search, such as choosing an
 organisation, the options can sit under the search box and stay there. Picking
 one leaves the list where it is. This is Tom Select's own
 [remote data example](https://tom-select.js.org/examples/remote/), and the
-widget needs no option for it. It takes three steps on the page.
+widget needs no option for it. It takes two things on the page.
 
-1. Write a container where the list should appear, under the field.
-2. Name the container on the select with the attribute `data-open-list`, as the
-   example does through `attrs`. The attribute is the example's own. The widget
-   passes it through and reads nothing from it.
-3. Once a control has started, the select sends `mvp-forms:tomselect`, which
-   carries the Tom Select instance in `event.detail.tomselect`. Move the
-   instance's `dropdown` into the container, replace its `close()` with a
-   function that does nothing, and open it.
+1. Mark the select with an attribute of your own, through `attrs`. The example
+   uses `data-open-list`. The widget passes it through and reads nothing from it.
+2. Listen for `mvp-forms:tomselect`, which the select sends once its control has
+   started, carrying the Tom Select instance in `event.detail.tomselect`. For a
+   marked select, move the instance's `dropdown` to sit directly after its
+   `wrapper`, and wrap its `close()` so the list is drawn again and shown each
+   time it would be hidden.
 
-A few lines of CSS take the list out of its floating position, so it is drawn in
-the flow of the page and scrolls in place.
+A few lines of CSS take the list out of its floating position and draw it as an
+input is drawn: the input's border, corners and shadow, the error colour on a
+field in error, and no arrow on the box.
 
 ```{live-example} /examples/tom-select-open-list/
 :title: A list that stays open
@@ -84,8 +84,12 @@ the flow of the page and scrolls in place.
 
 Tom Select's own version names a `dropdownParent` and a `no_close` plugin when
 it starts the control. The widget starts the control itself and passes it only
-`placeholder`, `maxItems` and the plugins it names, so those two are reached
-through the instance instead, which gives the same result.
+`placeholder`, `maxItems` and the plugins it names, so the same is reached
+through the instance. Wrap `close()` rather than replacing it with a function
+that does nothing: closing is also when Tom Select empties the search after a
+pick and lets go of the box's focus. Draw the list at first with
+`refreshOptions(false)` rather than `open()`, which moves focus into the box as
+the page loads.
 
 ## In a row of filters
 
