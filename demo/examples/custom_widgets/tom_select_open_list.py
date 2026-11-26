@@ -31,7 +31,9 @@ class OrganisationForm(forms.Form):
             placeholder="Search organisations",
             attrs={"data-open-list": True},
         ),
-        help_text="The list stays open under the box. Picking an option leaves it there.",
+        help_text=(
+            "The list stays open under the box. Picking an option leaves it there."
+        ),
     )
 
     def __init__(self, *args, **kwargs):
