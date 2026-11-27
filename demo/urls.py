@@ -10,10 +10,16 @@ from demo.autocompletes import (
     RockAutocomplete,
 )
 from demo.mounted import docs
+from mvp_forms.countries import CountryAutocomplete as FlaggedCountryAutocomplete
 
 urlpatterns = [
     # The pages the documentation shows in a frame as live examples.
     path("examples/", include("demo.examples.urls")),
+    path(
+        "autocomplete/flagged-countries/",
+        FlaggedCountryAutocomplete.as_view(),
+        name="ac-flagged-countries",
+    ),
     path("autocomplete/countries/", CountryAutocomplete.as_view(), name="ac-countries"),
     path(
         "autocomplete/languages/", LanguageAutocomplete.as_view(), name="ac-languages"
