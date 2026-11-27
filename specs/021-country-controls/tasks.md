@@ -41,11 +41,14 @@ each from the template, escaping every value; one with no `render` is drawn as b
 - [ ] T002 [US1] `CountrySelect` and `CountrySelectMultiple`, the flag on each option
 
 **Files**: `tests/test_countries.py` (new), `mvp_forms/countries.py` (new),
-`tests/test_pack/test_independence.py`
+`tests/test_pack/test_independence.py`, `pyproject.toml`, `uv.lock`
 
 Plan, *Python*. `FlaggedOptions`, `FLAGGED`, the two widgets. `data-flag` on every option with a
 value and none on the empty choice. Settings and refusals inherited. The single widget starts
-empty on a field whose choices have a break (D6). The module imports with django-tomselect absent.
+empty on a field whose choices have a break (D6), and draws `required` on a required field. The
+module imports with django-tomselect absent. The independence test takes only django-countries and
+django-tomselect out of the forbidden set, for this one module. `pyproject.toml` gains the
+`countries` and `tomselect` extras (plan, *Python*).
 
 ### Group 2
 
@@ -71,7 +74,7 @@ Issue: #277. Delivers FR-009 to FR-014, FR-021 to FR-023 (the view's part); SC-0
 
 **Files**: `tests/test_countries.py`, `mvp_forms/countries.py`
 
-Plan, *Python*. Pages of 20, search by name and code ignoring case, django-countries' order,
+Plan, *Python*. `iterable = True` with its one-line reason. Pages of 20, search by name and code ignoring case, django-countries' order,
 results with `value`, `label`, `flag`. `country_config` carries the URL name, `value_field`,
 `label_field`, the minimum query length of 0 and the two templates as JSON strings; any
 `TomSelectConfig` setting passes. Both are absent without django-tomselect, and the widgets import.
@@ -83,7 +86,7 @@ results with `value`, `label`, `flag`. `country_config` carries the URL name, `v
 `demo/examples/urls.py`, `demo/urls.py`,
 `demo/docs/third-party-support/django-countries.md`, `README.md`, `CONTEXT.md`, `CHANGELOG.md`
 
-Article XII amended (FR-014) with the ADR. In Chrome, under django-tomselect 2026.6.2: the fetched
+Article XII amended (FR-014) with the ADR, and the footer's version and date. In Chrome, under django-tomselect 2026.6.2: the fetched
 control opens, searches, shows flag before name in options and chosen values with no page error,
 and posts the codes. Demo `FetchedCountriesForm` (its first two fields), the `ac-flagged-countries`
 route and the page section, as the prototype has them.
@@ -102,7 +105,9 @@ Plan, *Python*. `grouped_at_break` and `optgroups()` for both widgets. Countries
 group and ahead of the rest, the rest under one group headed by the break, no group without a break,
 each country once whatever `first_repeat` says, the settings route (`COUNTRIES_FIRST`,
 `COUNTRIES_FIRST_BREAK`), the stock select untouched. `CountryAutocomplete.countries` and the
-`optgroup` of results after the break.
+`optgroup` of results after the break. The settings-route tests clear django-countries' cache
+around each test. A field whose countries set `first_repeat` lists each country once, with a break
+and without one, and the view answers each country once.
 
 - [ ] T007 [US3] Countries first in the browser, the demo and the documentation
 

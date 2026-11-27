@@ -1,26 +1,38 @@
-"""django-countries' own fields, drawn by this package with nothing added."""
+"""django-countries' fields, as a stock select and as Tom Select controls with flags."""
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django import forms
 from django_countries.fields import CountryField
-from django_countries.widgets import CountrySelectWidget
 
-# django-countries places the flag by this argument. This one sits the flag
-# beside its select.
-FLAG_BESIDE = (
-    '<div class="flex items-center gap-2">{widget}'
-    '<img class="country-select-flag" id="{flag_id}" src="{country.flag}"></div>'
-)
+from mvp_forms.countries import CountrySelect, CountrySelectMultiple
 
 
 class AddressForm(forms.Form):
-    """One country, several countries, and one with its flag."""
+    """Countries that come with the form: one, one searched, several, counted."""
 
-    country = CountryField().formfield()
-    visited = CountryField(multiple=True).formfield(required=False)
-    born_in = CountryField().formfield(
-        widget=CountrySelectWidget(layout=FLAG_BESIDE), required=False
+    stock_country = CountryField().formfield(
+        label="CountryField, stock widget",
+        help_text="django-countries' form field with its own select, unchanged.",
+    )
+    country_select = CountryField().formfield(
+        label="CountryField with CountrySelect",
+        widget=CountrySelect(placeholder="Search for a country", clear_button=True),
+        help_text="One country. Type to search, and clear it with the button.",
+        required=False,
+    )
+    country_select_multiple = CountryField(multiple=True).formfield(
+        label="CountryField(multiple=True) with CountrySelectMultiple",
+        widget=CountrySelectMultiple(placeholder="Add a country", remove_button=True),
+        help_text="Several countries, with remove_button=True.",
+        required=False,
+    )
+    country_select_counted = CountryField(multiple=True).formfield(
+        label="CountryField(multiple=True) with CountrySelectMultiple, counted",
+        widget=CountrySelectMultiple(counted=True),
+        help_text="Several countries, with counted=True: a count in place of the "
+        "countries, and a tick on each one chosen.",
+        required=False,
     )
 
     def __init__(self, *args, **kwargs):

@@ -21,6 +21,8 @@ from tests.forms import (
     ChoiceFoldLineFormSet,
     ChoiceLongLabelForm,
     ChoiceWidgetsForm,
+    CountriesPageForm,
+    CountriesPageLineFormSet,
     ImagePageForm,
     MaskedDialogForm,
     MaskedLineFormSet,
@@ -298,6 +300,24 @@ class TemplatedPage(TemplateView):
         )
 
 
+class CountriesPage(TemplateView):
+    """A page of country controls, holding the values its query string names."""
+
+    template_name = "tests/countries_page.html"
+
+    def get_context_data(self, **kwargs):
+        """Draw the form, each value of the query string a list for a multiple one."""
+        initial = {
+            name: values if name != "country" else values[0]
+            for name, values in self.request.GET.lists()
+        }
+        return super().get_context_data(
+            form=CountriesPageForm(initial=initial),
+            line=CountriesPageLineFormSet().empty_form,
+            **kwargs,
+        )
+
+
 class UnlabelledPage(TemplateView):
     """A page of Tom Select controls drawn by the pack with the labels off."""
 
@@ -394,6 +414,7 @@ urlpatterns = [
         name="choices-page-copies",
     ),
     path("templated-page/", TemplatedPage.as_view(), name="templated-page"),
+    path("countries-page/", CountriesPage.as_view(), name="countries-page"),
     path(
         "choices-page/without-tom-select/",
         ChoicesPage.as_view(script_only=True),

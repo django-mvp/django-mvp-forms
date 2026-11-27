@@ -76,3 +76,154 @@ class TestAStatedTemplate:
         templated_page.locator(CONTROL.format("templated")).click()
 
         assert page_errors == []
+
+
+@pytest.fixture
+def countries_page(page, page_errors, live_server):
+    """Open a page of country controls, holding the values the query names."""
+
+    def open_page(**initial):
+        query = "&".join(f"{key}={value}" for key, value in initial.items())
+        page.goto(f"{live_server.url}{reverse('countries-page')}?{query}")
+        page.wait_for_load_state("load")
+        return page
+
+    return open_page
+
+
+def search(page, name, text):
+    """Open the control of a field and type part of a country's name."""
+    page.locator(CONTROL.format(name)).click()
+    page.locator(f"#id_{name}-ts-control").fill(text)
+
+
+def row_order(option):
+    """Return the tags of the flag image and the name in an option, in order."""
+    return option.evaluate(
+        "(option) => [...option.querySelectorAll('img, span span')]"
+        ".map((node) => node.tagName)"
+    )
+
+
+class TestSearchingCountries:
+    def test_typing_part_of_a_name_narrows_the_list_to_the_matches(
+        self, countries_page
+    ):
+        page = countries_page()
+
+        search(page, "country", "zeal")
+
+        options = page.locator("#id_country-ts-dropdown .option")
+        expect(options).to_have_count(1)
+        expect(options).to_have_text("New Zealand")
+
+    def test_each_option_shows_the_flag_of_its_country_ahead_of_its_name(
+        self, countries_page
+    ):
+        page = countries_page()
+        search(page, "country", "zeal")
+
+        option = page.locator('#id_country-ts-dropdown .option[data-value="NZ"]')
+
+        assert row_order(option) == ["IMG", "SPAN"]
+        expect(option.locator("img")).to_have_attribute("src", "/static/flags/nz.gif")
+
+    def test_the_country_chosen_is_shown_with_its_flag_ahead_of_its_name(
+        self, countries_page
+    ):
+        page = countries_page()
+        search(page, "country", "zeal")
+        page.locator('#id_country-ts-dropdown .option[data-value="NZ"]').click()
+
+        item = page.locator("#id_country + .ts-wrapper .item")
+
+        assert row_order(item) == ["IMG", "SPAN"]
+        expect(item).to_have_text("New Zealand")
+        assert page.evaluate("document.getElementById('id_country').value") == "NZ"
+
+    def test_the_control_of_a_single_field_with_no_value_holds_no_country(
+        self, countries_page
+    ):
+        page = countries_page()
+
+        held = page.evaluate("document.getElementById('id_country').tomselect.items")
+
+        assert held == []
+
+    def test_a_value_already_chosen_is_held_with_its_flag(self, countries_page):
+        page = countries_page(country="DE")
+
+        item = page.locator("#id_country + .ts-wrapper .item")
+
+        expect(item.locator("img")).to_have_attribute("src", "/static/flags/de.gif")
+        expect(item).to_have_text("Germany")
+
+
+class TestSeveralCountries:
+    def test_each_country_chosen_has_its_flag_and_a_button_to_remove_it(
+        self, countries_page
+    ):
+        page = countries_page()
+        for text, code in (("zeal", "NZ"), ("germ", "DE")):
+            search(page, "countries", text)
+            page.locator(
+                f'#id_countries-ts-dropdown .option[data-value="{code}"]'
+            ).click()
+
+        items = page.locator("#id_countries + .ts-wrapper .item")
+
+        expect(items).to_have_count(2)
+        expect(items.locator("img")).to_have_count(2)
+        expect(items.locator(".remove")).to_have_count(2)
+        assert page.evaluate(
+            "[...document.getElementById('id_countries').selectedOptions]"
+            ".map((option) => option.value)"
+        ) == ["NZ", "DE"]
+
+    def test_a_counted_control_shows_the_flag_in_each_option_of_its_list(
+        self, countries_page
+    ):
+        page = countries_page()
+        page.locator(CONTROL.format("counted")).click()
+
+        options = page.locator('#id_counted-ts-dropdown .option[data-value="NZ"]')
+
+        expect(options.locator("img")).to_have_attribute(
+            "src", "/static/flags/nz.gif"
+        )
+
+    def test_a_counted_control_ticks_each_country_chosen(self, countries_page):
+        page = countries_page(counted="NZ")
+        page.locator(CONTROL.format("counted")).click()
+
+        ticked = page.locator('#id_counted-ts-dropdown .option[data-value="NZ"]')
+
+        expect(ticked.locator("input[type=checkbox]")).to_be_checked()
+
+
+class TestASelectAddedLater:
+    def test_a_row_added_to_the_page_starts_its_control_with_flags(
+        self, countries_page
+    ):
+        page = countries_page()
+        page.evaluate(
+            """() => {
+              const markup = document.getElementById("line").innerHTML;
+              document.getElementById("page").insertAdjacentHTML(
+                "beforeend", markup.replaceAll("__prefix__", "1"));
+            }"""
+        )
+
+        page.locator(CONTROL.format("form-1-country")).click()
+
+        option = page.locator('#id_form-1-country-ts-dropdown .option[data-value="NZ"]')
+        expect(option.locator("img")).to_have_attribute("src", "/static/flags/nz.gif")
+
+
+class TestThePageRaisesNoError:
+    def test_opening_every_control_raises_no_error(self, countries_page, page_errors):
+        page = countries_page()
+        for name in ("country", "countries", "counted"):
+            page.locator(CONTROL.format(name)).click()
+
+        assert page_errors == []

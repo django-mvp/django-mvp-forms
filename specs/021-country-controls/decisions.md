@@ -128,3 +128,29 @@ measured on them, and the side-by-side check covers the three example screens.
 the country controls depends on it.
 
 **Self-resolved.** **ADR:** none.
+
+## D11. Design review of the plan
+
+**Chosen:** the plan takes each finding of the design review that adds no work beyond a stated
+requirement, and records the two readings below for the maintainer.
+
+- **deptry and the extras.** Article VII requires deptry to pass, and it reports a module that
+  imports a package declared only in the development group. The package gains the extras
+  `countries` and `tomselect`, as it has `timezone`. Nothing becomes a required dependency.
+- **The canary.** The obvious upstream fix of the quoting defect would quote the template a second
+  time, which a workaround that already quotes would show as quote marks in every option. The spec's
+  edge case asks for a control that keeps working when the defect is fixed. Reading chosen: a
+  canary test fails on the first django-tomselect release that quotes the template, and the
+  workaround goes in the pull request that moves to that release. A project that moves to that
+  release before the package's next release sees the quote marks until then. Fully tolerating both
+  behaviours would need the workaround to read django-tomselect's version, a mechanism the spec does
+  not ask for.
+- **The amendment's own pull request.** The constitution asks that an amendment be made in its own
+  pull request. FR-014 puts it in this one, on the maintainer's approved specification. The
+  amendment goes in with its ADR and a new footer (version 2.5.0). The pull request says so.
+- **A flag the `Countries` object overrides.** The autocomplete reads each flag through the
+  `Countries` it answers from. A widget sees only the choices its field gives it, so it draws
+  django-countries' own address for each country, which honours `COUNTRIES_FLAG_URL`. A per-country
+  flag address set on a `Countries` subclass shows in the fetched control and not in the widgets.
+
+**Self-resolved.** **ADR:** none.

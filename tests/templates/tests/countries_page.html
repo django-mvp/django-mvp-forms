@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Country controls</title>
+  </head>
+  <body>
+    <form id="page" method="post" action="">
+      {{ form.as_div }}
+      <button type="submit">Send</button>
+    </form>
+    <template id="line">{{ line.as_div }}</template>
+    {{ form.media }}
+  </body>
+</html>

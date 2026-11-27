@@ -28,6 +28,7 @@ from django_tomselect.forms import (
 )
 from quantityfield.fields import QuantityFormField
 
+from mvp_forms.countries import CountrySelect, CountrySelectMultiple
 from mvp_forms.fields import PartialDateField
 from mvp_forms.layout import Join
 from mvp_forms.widgets import (
@@ -1212,11 +1213,33 @@ class CountriesForm(forms.Form):
     flagged = CountryField().formfield(
         widget=CountrySelectWidget(), help_text="One country, with its flag"
     )
+    searched = CountryField().formfield(
+        widget=CountrySelect(), help_text="One country, searched"
+    )
+    searched_many = CountryField(multiple=True).formfield(
+        widget=CountrySelectMultiple(), help_text="Some countries, searched"
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+
+
+class CountriesPageForm(forms.Form):
+    country = CountryField().formfield(
+        widget=CountrySelect(placeholder="Pick one", clear_button=True),
+        required=False,
+    )
+    countries = CountryField(multiple=True).formfield(
+        widget=CountrySelectMultiple(remove_button=True), required=False
+    )
+    counted = CountryField(multiple=True).formfield(
+        widget=CountrySelectMultiple(counted=True), required=False
+    )
+
+
+CountriesPageLineFormSet = formset_factory(CountriesPageForm, extra=1)
 
 
 class QuantityForm(forms.Form):
