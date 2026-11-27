@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A Tom Select list opened inside a sheet's body now spans the body, with its options flush with its edges and padded as the sheet's menu rows are, so it lines up with the other rows. A project no longer has to override the theme for its sheet.
+
 ## [v0.11.1] - 2026-11-26
 
 ## [v0.11.0] - 2026-11-23

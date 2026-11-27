@@ -639,3 +639,25 @@ html:root [id$="_sr_status"].visually-hidden {
 .overflow-x-auto:has(.ts-wrapper.dropdown-active) {
   overflow: visible;
 }
+
+/* In a sheet's body the list is laid out as the sheet's other rows are: it
+   spans the body, its options are flush with its edges, and they are padded as
+   a menu row is. */
+
+html:root .ts-dropdown:is([data-mvp-sheet-body] *) {
+  --option-px: 4;
+}
+
+html:root .ts-dropdown:is([data-mvp-sheet-body] *) .ts-dropdown-content {
+  padding: 0;
+}
+
+html:root .ts-dropdown:is([data-mvp-sheet-body] *) .option,
+html:root .ts-dropdown:is([data-mvp-sheet-body] *) .create,
+html:root .ts-dropdown:is([data-mvp-sheet-body] *) .no-results,
+html:root .ts-dropdown:is([data-mvp-sheet-body] *) .not-loading,
+html:root .ts-dropdown:is([data-mvp-sheet-body] *) .no-more-results,
+html:root .ts-dropdown:is([data-mvp-sheet-body] *) .loading-more-results,
+html:root .ts-dropdown:is([data-mvp-sheet-body] *) .optgroup-header {
+  border-radius: 0;
+}
