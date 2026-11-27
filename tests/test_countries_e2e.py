@@ -397,8 +397,11 @@ class TestCountriesFirst:
         assert above_the_heading
 
     def test_the_page_raises_no_error(self, first_page, page_errors):
+        dropdown = first_page.locator("#id_country_select_first-ts-dropdown")
         first_page.locator(CONTROL.format("country_select_first")).click()
+        expect(dropdown).to_be_visible()
         first_page.keyboard.press("Escape")
+        expect(dropdown).to_be_hidden()
         first_page.locator(CONTROL.format("country_select_multiple_first")).click()
 
         assert page_errors == []
