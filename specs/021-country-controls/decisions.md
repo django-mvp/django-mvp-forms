@@ -154,3 +154,12 @@ requirement, and records the two readings below for the maintainer.
   flag address set on a `Countries` subclass shows in the fetched control and not in the widgets.
 
 **Self-resolved.** **ADR:** none.
+
+## D12. The three stories are built directly
+
+**Chosen:** the stories are built in this worktree by the one session that planned them, with no
+subagent dispatched. The three stories share one module, one script and one demo page, so each
+build leans on the one before. Each task still goes test first, each story ends on a green run of
+every check, and the review that follows is a separate session.
+
+**Self-resolved.** **ADR:** none.
