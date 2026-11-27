@@ -1,5 +1,7 @@
 """The suite's urlconf: the demo project's routes plus any test-only route."""
 
+import json
+
 from django.contrib.auth.models import Group
 from django.http import HttpResponse, JsonResponse
 from django.urls import path
@@ -9,6 +11,7 @@ from django.views.generic import TemplateView
 from django_tomselect.autocompletes import AutocompleteModelView
 
 from demo.urls import urlpatterns as demo_urlpatterns
+from mvp_forms.widgets import TomSelect
 from tests.forms import (
     CharactersLeftDialogForm,
     CharactersLeftLineForm,
@@ -280,6 +283,21 @@ class ChoicesPage(TemplateView):
         return JsonResponse({name: request.POST.getlist(name) for name in request.POST})
 
 
+class TemplatedPage(TemplateView):
+    """A page whose select states an option template and an item template."""
+
+    template_name = "tests/templated_page.html"
+
+    def get_context_data(self, **kwargs):
+        """Write the settings the select holds, and the script's media."""
+        template = '<p><img src="${data.flag}"><i>${data.text}</i></p>'
+        return super().get_context_data(
+            templated=json.dumps({"render": {"option": template, "item": template}}),
+            media=TomSelect().media,
+            **kwargs,
+        )
+
+
 class UnlabelledPage(TemplateView):
     """A page of Tom Select controls drawn by the pack with the labels off."""
 
@@ -375,6 +393,7 @@ urlpatterns = [
         ChoicesPage.as_view(copies=3),
         name="choices-page-copies",
     ),
+    path("templated-page/", TemplatedPage.as_view(), name="templated-page"),
     path(
         "choices-page/without-tom-select/",
         ChoicesPage.as_view(script_only=True),
