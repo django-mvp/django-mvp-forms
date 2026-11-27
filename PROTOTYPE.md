@@ -29,6 +29,7 @@ Branch `prototype-countries`. A reference for the rebuild, never merged.
    `mvp_forms/countries.py`.
 
 Feature 1 depends on the shared piece below. Feature 2 depends on nothing new.
+Feature 3 extends both, so it comes after them.
 
 ## The shared pieces
 
@@ -53,7 +54,8 @@ control plus the flag row above.
 | Screen | Address | Widths |
 |---|---|---|
 | Stock select, searched single, multiple with remove buttons, counted multiple | `/examples/countries/` | 390, 1280 |
-| Fetched single and multiple | `/examples/countries/fetched/` | 390, 1280 |
+| Countries first: stock select, searched single, multiple | `/examples/countries/first/` | 390, 1280 |
+| Fetched single, multiple, and single with countries first | `/examples/countries/fetched/` | 390, 1280 |
 | Docs page | `/third-party-support/django-countries/` | 1280 |
 
 ## What it replaces
@@ -94,8 +96,7 @@ control plus the flag row above.
   rebuild decides whether to keep that or wait for a fixed release.
 - No tests, no changelog, no README template list entry.
 - The flag image has an empty `alt`, since the country's name is beside it.
-- django-countries' list is used as it is: no `countries_first`, no
-  translations checked.
+- Translated country names are not checked.
 
 ## Sam's decisions
 
