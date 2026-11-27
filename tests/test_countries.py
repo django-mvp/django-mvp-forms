@@ -89,6 +89,40 @@ class TestCountrySelect:
         assert CountrySelectMultiple().media._css == TomSelectMultiple().media._css
 
 
+class TestTheEmptyChoice:
+    def test_a_single_control_starts_on_an_empty_option_when_the_field_has_none(self):
+        field = CountryField(default="NZ").formfield()
+
+        select = draw(CountrySelect(), field=field)
+
+        assert field.choices[0][0] != ""
+        assert options_of(select)[0] == ""
+        assert options_of(select).count("") == 1
+        assert [o["value"] for o in select.find_all("option", selected=True)] == [""]
+
+    def test_a_blank_choice_the_field_gives_is_not_drawn_twice(self):
+        field = CountryField(blank=True).formfield()
+
+        select = draw(CountrySelect(), field=field)
+
+        assert options_of(select).count("") == 1
+
+    def test_a_multiple_control_is_given_no_empty_option(self):
+        select = draw(CountrySelectMultiple())
+
+        assert "" not in options_of(select)
+
+    def test_a_required_field_is_drawn_required(self):
+        class Form(forms.Form):
+            country = CountryField(default="NZ").formfield(widget=CountrySelect())
+
+        select = BeautifulSoup(str(Form()["country"]), "html.parser").select_one(
+            "select"
+        )
+
+        assert select.has_attr("required")
+
+
 class TestTheSettingsAreTomSelects:
     def test_each_setting_reaches_the_control(self):
         select = draw(

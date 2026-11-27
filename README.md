@@ -45,7 +45,7 @@ When two reasonable designs conflict, stock daisyUI markup wins over custom styl
 pip install django-mvp-forms
 ```
 
-The `timezone` extra adds [django-timezone-field](https://github.com/django-mvp/django-mvp-forms#django-timezone-field) at the release the package is tested against: `pip install "django-mvp-forms[timezone]"`.
+The `timezone` extra adds [django-timezone-field](https://github.com/django-mvp/django-mvp-forms#django-timezone-field) at the release the package is tested against: `pip install "django-mvp-forms[timezone]"`. The `countries` extra adds django-countries, which `mvp_forms.countries` imports, and the `tomselect` extra adds django-tomselect, which the country autocomplete in the same module needs: `pip install "django-mvp-forms[countries,tomselect]"`.
 
 Then add it to `INSTALLED_APPS` alongside crispy-forms:
 
@@ -1792,7 +1792,7 @@ Every option of the field is written into the page each time the form is drawn. 
 
 ### django-countries
 
-The pack draws the form fields of [django-countries](https://github.com/SmileyChris/django-countries) as daisyUI selects. It covers the field a `CountryField` gives a form, the field a `CountryField(multiple=True)` gives one, and either drawn by django-countries' flag widget, `CountrySelectWidget`. django-countries is not a dependency of the package and no module of the package imports it, so a project without it is drawn as before.
+The pack draws the form fields of [django-countries](https://github.com/SmileyChris/django-countries) as daisyUI selects. It covers the field a `CountryField` gives a form, the field a `CountryField(multiple=True)` gives one, and either drawn by django-countries' flag widget, `CountrySelectWidget`. django-countries is not a dependency of the package, and a project without it is drawn as before. Only `mvp_forms.countries` imports it, and a project imports that module only when it wants the country controls below.
 
 `{{ form|crispy }}` and `{% crispy form %}` need nothing from you for these fields. They write daisyUI's `select` class on the `<select>` with `w-full`, the size, the colour and the variant stated for the form or for the field, and `select-error` in place of the colour on a field in error, exactly as for a stock select. A disabled field carries the `disabled` attribute, the label is tied to the select, and the form cleans to django-countries' two-letter codes as it does under any other pack.
 
@@ -1812,29 +1812,34 @@ A model form gets the first two for a model's `CountryField` with no code at all
 
 #### The flag widget
 
-`CountrySelectWidget` writes a flag image after its select and changes the image when the country changes. The pack draws the select as a daisyUI select, like any other, and leaves the flag where django-countries puts it. django-countries places the two with the widget's `layout` argument, and its own layout puts the flag after the select with nothing around them. A field's frame is one column, so the flag then sits on a line of its own under a full-width select.
+`CountrySelectWidget` writes a flag image after its select and changes the image when the country changes. The pack draws the select as a daisyUI select, like any other, and leaves the flag where django-countries puts it. To show the flag inside each option instead, use the country controls below.
 
-To sit the flag beside the select, centred against it, pass a layout that holds the two in a row:
+- The flag images are django-countries' own static files. List `django_countries` in `INSTALLED_APPS` so that Django's static files finder serves them.
+- The image of `CountrySelectWidget` changes through an `onchange` handler that django-countries writes on the select. Under a Content Security Policy that forbids inline event handlers the select still works and the flag stays as the page drew it. The handler is django-countries' own, and a policy that forbids it is yours to open, as it is for [the pack's two handlers](https://github.com/django-mvp/django-mvp-forms#layout-objects).
+
+#### Country controls with a flag in each option
+
+`CountrySelect` and `CountrySelectMultiple` from `mvp_forms.countries` are the pack's [Tom Select widgets](https://github.com/django-mvp/django-mvp-forms#tom-select-widgets) for a country field. A person searches the countries by typing, and each country is shown with its flag before its name, in the list and in each chosen value. Every country is written into the page with the form, so the control makes no request.
 
 ```python
 from django import forms
 from django_countries.fields import CountryField
-from django_countries.widgets import CountrySelectWidget
 
-FLAG_BESIDE = (
-    '<div class="flex items-center gap-2">{widget}'
-    '<img class="country-select-flag" id="{flag_id}" src="{country.flag}"></div>'
-)
+from mvp_forms.countries import CountrySelect, CountrySelectMultiple
 
 
 class AddressForm(forms.Form):
-    residence = CountryField().formfield(widget=CountrySelectWidget(layout=FLAG_BESIDE))
+    country = CountryField().formfield(
+        widget=CountrySelect(placeholder="Search for a country", clear_button=True)
+    )
+    visited = CountryField(multiple=True).formfield(
+        widget=CountrySelectMultiple(remove_button=True), required=False
+    )
 ```
 
-The select takes the width the flag leaves. The image keeps the class and the `id` django-countries gives it, which its handler finds the image by, and leaves out the inline margin of django-countries' own layout. The three utilities are Tailwind's and the string is in your code, so a Tailwind build of your own finds them there. daisyUI's CDN install with Tailwind's browser build needs nothing.
+`CountrySelect` takes every setting `TomSelect` takes and `CountrySelectMultiple` every setting `TomSelectMultiple` takes: `placeholder`, `clear_button`, `remove_button`, `max_items` and a counted control, with the same checks and the same errors. The form cleans to django-countries' codes as it does with its own widget, and the control is drawn with the classes and attributes of any Tom Select select.
 
-- The flag images are django-countries' own static files. List `django_countries` in `INSTALLED_APPS` so that Django's static files finder serves them.
-- The image changes through an `onchange` handler that django-countries writes on the select. Under a Content Security Policy that forbids inline event handlers the select still works and the flag stays as the page drew it. The handler is django-countries' own, and a policy that forbids it is yours to open, as it is for [the pack's two handlers](https://github.com/django-mvp/django-mvp-forms#layout-objects).
+A single control whose field holds no value starts holding no country. The widget draws an empty option first when the field has none, so the control never starts on the first country in the list. The widgets need django-countries and nothing else beyond what the pack's Tom Select widgets need, and the flag is the image django-countries serves for each country, so list `django_countries` in `INSTALLED_APPS`. The flag row uses Tailwind utilities written in the module, which your Tailwind build finds when it scans the installed package, as the installation section asks.
 
 #### What is not covered
 

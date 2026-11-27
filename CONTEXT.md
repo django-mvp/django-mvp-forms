@@ -45,6 +45,12 @@ second. A supported package is never a required dependency. An extra may name th
 release the pack is tested against, as `timezone` does for django-timezone-field.
 _Avoid_: integration, add-on.
 
+**Country widget**:
+`CountrySelect` or `CountrySelectMultiple`, the pack's Tom Select widgets for a
+django-countries field. Each option and each chosen value shows the country's flag
+before its name. Their module is the one that imports django-countries.
+_Avoid_: flag select, country picker.
+
 **Tagging**:
 A multiple django-tomselect control that offers to add what was typed, each value
 shown as a tag with a remove button. The pack draws it. Saving a new value is the

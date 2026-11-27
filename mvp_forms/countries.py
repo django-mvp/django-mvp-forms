@@ -15,6 +15,10 @@ the country's name. Nothing here needs a stylesheet.
 This is the one module of the package that imports django-countries.
 """
 
+import copy
+
+from django import forms
+from django.db.models.fields import BLANK_CHOICE_DASH
 from django_countries.fields import Country
 
 from mvp_forms.widgets import TomSelect, TomSelectMultiple
@@ -31,7 +35,31 @@ FLAGGED = (
 
 
 class FlaggedOptions:
-    """Write each country's flag on its option, and draw options with it."""
+    """Write each country's flag on its option, and draw options with it.
+
+    A single control starts holding no country. Tom Select offers no option of
+    empty value, so one is drawn first when the field's choices have none, and
+    the browser has nothing to start on but that.
+    """
+
+    def optgroups(self, name, value, attrs=None):
+        """Return the option groups, with an empty option first in a single one."""
+        choices = list(self.choices)
+        if not self.allow_multiple_selected and not any(
+            not code and not isinstance(label, (list, tuple)) for code, label in choices
+        ):
+            choices = [*BLANK_CHOICE_DASH, *choices]
+        drawn = copy.copy(self)
+        drawn.choices = choices
+        return super(FlaggedOptions, drawn).optgroups(name, value, attrs)
+
+    def use_required_attribute(self, initial):
+        """Draw a required field required, whatever its first choice is.
+
+        The empty option drawn first is not one of the field's choices, so
+        Django's own answer, which reads the first choice, would drop it.
+        """
+        return forms.Widget.use_required_attribute(self, initial)
 
     def create_option(self, name, value, label, selected, index, **kwargs):
         """Add the flag of the option's country in ``data-flag``."""
