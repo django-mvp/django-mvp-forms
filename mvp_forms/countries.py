@@ -16,9 +16,11 @@ This is the one module of the package that imports django-countries.
 """
 
 import copy
+import json
 
 from django import forms
 from django.db.models.fields import BLANK_CHOICE_DASH
+from django_countries import countries
 from django_countries.fields import Country
 
 from mvp_forms.widgets import TomSelect, TomSelectMultiple
@@ -92,3 +94,60 @@ class CountrySelect(FlaggedOptions, TomSelect):
 
 class CountrySelectMultiple(FlaggedOptions, TomSelectMultiple):
     """A searchable control for several countries, each option with its flag."""
+
+
+try:
+    from django_tomselect.app_settings import TomSelectConfig
+    from django_tomselect.autocompletes import AutocompleteIterablesView
+except ImportError:  # django-tomselect is optional.
+    pass
+else:
+
+    class CountryAutocomplete(AutocompleteIterablesView):
+        """Every country django-countries lists, with its code and its flag.
+
+        Each result holds ``value``, the country's code, ``label``, its name,
+        and ``flag``, the address of its flag image. A search matches the name
+        or the code. ``countries`` is the list to answer from, django-countries'
+        own by default.
+        """
+
+        # The parent answers nothing while ``iterable`` is None. The list is
+        # read in ``get_iterable``, so any value that is not None will do.
+        iterable = ()
+        page_size = 20
+        countries = countries
+
+        def get_iterable(self):
+            """Return every country as a result."""
+            return [
+                {
+                    "value": code,
+                    "label": name,
+                    "flag": Country(code=code, custom_countries=self.countries).flag,
+                }
+                for code, name in self.countries
+                if code
+            ]
+
+    def country_config(url, **kwargs):
+        """Configure a django-tomselect field to fetch countries from ``url``.
+
+        Args:
+            url: The name of the URL that serves ``CountryAutocomplete``.
+            **kwargs: Any other setting of ``TomSelectConfig``.
+
+        Returns:
+            The configuration, drawing each option and each chosen value with
+            its flag.
+        """
+        kwargs.setdefault("minimum_query_length", 0)
+        # django-tomselect writes these into its script as they are given. Its
+        # own "render" setting reaches the script unquoted in 2026.6.2, which
+        # stops the control, so the templates are given already quoted.
+        attrs = kwargs.pop("attrs", {})
+        attrs["data_template_option"] = json.dumps(FLAGGED % "label")
+        attrs["data_template_item"] = json.dumps(FLAGGED % "label")
+        return TomSelectConfig(
+            url=url, value_field="value", label_field="label", attrs=attrs, **kwargs
+        )

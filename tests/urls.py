@@ -11,6 +11,7 @@ from django.views.generic import TemplateView
 from django_tomselect.autocompletes import AutocompleteModelView
 
 from demo.urls import urlpatterns as demo_urlpatterns
+from mvp_forms.countries import CountryAutocomplete
 from mvp_forms.widgets import TomSelect
 from tests.forms import (
     CharactersLeftDialogForm,
@@ -351,6 +352,11 @@ class BoostedPage(TemplateView):
 # suite's own routes come first.
 urlpatterns = [
     path("autocomplete/groups/", GroupAutocomplete.as_view(), name="ac-groups"),
+    path(
+        "autocomplete/countries/",
+        CountryAutocomplete.as_view(),
+        name="ac-countries",
+    ),
     path("masked/", MaskedPage.as_view(), name="masked"),
     path("characters-left/", CharactersLeftPage.as_view(), name="characters-left"),
     path(

@@ -701,6 +701,9 @@ countries = [
 timezone = [
     { name = "django-timezone-field" },
 ]
+tomselect = [
+    { name = "django-tomselect" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -722,8 +725,9 @@ requires-dist = [
     { name = "django-countries", marker = "extra == 'countries'", specifier = ">=9.1.0" },
     { name = "django-crispy-forms", specifier = ">=2.7" },
     { name = "django-timezone-field", marker = "extra == 'timezone'", specifier = ">=7.2" },
+    { name = "django-tomselect", marker = "extra == 'tomselect'", specifier = ">=2026.6.2" },
 ]
-provides-extras = ["timezone", "countries"]
+provides-extras = ["timezone", "countries", "tomselect"]
 
 [package.metadata.requires-dev]
 dev = [

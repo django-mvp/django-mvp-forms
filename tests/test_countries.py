@@ -2,16 +2,27 @@
 
 import importlib
 import json
+import re
 import sys
 
 import pytest
 from bs4 import BeautifulSoup
 from django import forms
+from django.test import RequestFactory
+from django_countries import Countries, countries
 from django_countries.fields import Country, CountryField
+from django_tomselect.app_settings import TomSelectConfig
+from django_tomselect.forms import TomSelectChoiceField
 
 import mvp_forms
 from mvp_forms import countries as countries_module
-from mvp_forms.countries import CountrySelect, CountrySelectMultiple
+from mvp_forms.countries import (
+    FLAGGED,
+    CountryAutocomplete,
+    CountrySelect,
+    CountrySelectMultiple,
+    country_config,
+)
 from mvp_forms.widgets import TomSelect, TomSelectMultiple
 
 WIDGETS = [CountrySelect, CountrySelectMultiple]
@@ -221,3 +232,107 @@ class TestWithoutDjangoTomselect:
         assert hasattr(module, "CountrySelect")
         assert not hasattr(module, "CountryAutocomplete")
         assert not hasattr(module, "country_config")
+
+
+def ask(view=CountryAutocomplete, **query):
+    """Return the JSON the autocomplete view answers to a request."""
+    request = RequestFactory().get("/countries/", query)
+    response = view.as_view()(request)
+    assert response.status_code == 200
+    return json.loads(response.content)
+
+
+class TestCountryAutocomplete:
+    def test_it_answers_a_page_of_twenty_and_says_more_follow(self):
+        answer = ask()
+
+        assert len(answer["results"]) == 20
+        assert answer["has_more"] is True
+        assert answer["page"] == 1
+
+    def test_a_later_page_continues_where_the_page_before_stopped(self):
+        every = []
+        for page in range(1, 20):
+            answer = ask(p=page)
+            every.extend(result["value"] for result in answer["results"])
+            if not answer["has_more"]:
+                break
+
+        assert every == [code for code, _name in countries]
+
+    def test_each_result_holds_the_code_the_name_and_the_address_of_the_flag(self):
+        answer = ask(q="zealand")
+
+        assert answer["results"] == [
+            {
+                "value": "NZ",
+                "label": "New Zealand",
+                "flag": Country(code="NZ").flag,
+            }
+        ]
+
+    @pytest.mark.parametrize("text", ["zeal", "ZEAL", "nz", "Nz"])
+    def test_a_search_matches_the_name_or_the_code_whatever_the_case(self, text):
+        values = [result["value"] for result in ask(q=text)["results"]]
+
+        assert "NZ" in values
+
+    def test_a_search_matching_nothing_answers_no_result(self):
+        answer = ask(q="qqqq")
+
+        assert answer["results"] == []
+        assert answer["has_more"] is False
+
+    def test_the_results_keep_the_order_of_django_countries(self):
+        values = [result["value"] for result in ask()["results"]]
+
+        assert values == [code for code, _name in list(countries)[:20]]
+
+    def test_the_flag_follows_the_countries_it_answers_from(self):
+        class Custom(Countries):
+            override = {"NZ": {"name": "New Zealand", "flag_url": "custom/{code}.png"}}
+
+        class Answering(CountryAutocomplete):
+            countries = Custom()
+
+        results = ask(Answering, q="zealand")["results"]
+
+        assert results[0]["flag"] == Country(code="NZ", custom_countries=Custom()).flag
+        assert results[0]["flag"].endswith("custom/nz.png")
+
+
+class TestCountryConfig:
+    def test_it_is_a_django_tomselect_configuration_for_the_url(self):
+        config = country_config("ac-countries")
+
+        assert isinstance(config, TomSelectConfig)
+        assert config.url == "ac-countries"
+        assert config.value_field == "value"
+        assert config.label_field == "label"
+
+    def test_a_search_starts_with_no_typing_unless_the_project_says_otherwise(self):
+        assert country_config("ac").minimum_query_length == 0
+        assert country_config("ac", minimum_query_length=2).minimum_query_length == 2
+
+    def test_any_setting_of_the_configuration_passes_through(self):
+        config = country_config("ac", placeholder="Pick one", max_items=4)
+
+        assert config.placeholder == "Pick one"
+        assert config.max_items == 4
+
+    def test_the_templates_are_given_as_quoted_strings_and_attrs_are_kept(self):
+        config = country_config("ac", attrs={"class": "mine"})
+
+        assert config.attrs["class"] == "mine"
+        assert json.loads(config.attrs["data_template_option"]) == FLAGGED % "label"
+        assert json.loads(config.attrs["data_template_item"]) == FLAGGED % "label"
+
+    def test_the_templates_reach_the_script_as_django_tomselect_writes_it(self):
+        """A canary: the day django-tomselect quotes a template itself, this fails."""
+        field = TomSelectChoiceField(config=country_config("ac-countries"))
+        script = str(field.widget.render("country", None))
+
+        templates = re.findall(r"var template = (.*);", script)
+
+        assert templates
+        assert all(template == json.dumps(FLAGGED % "label") for template in templates)
