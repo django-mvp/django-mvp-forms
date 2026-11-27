@@ -9,6 +9,7 @@ from demo.autocompletes import (
     LanguageAutocomplete,
     RockAutocomplete,
 )
+from demo.examples.third_party.countries import GermanSpeakingFirst
 from demo.mounted import docs
 from mvp_forms.countries import CountryAutocomplete as FlaggedCountryAutocomplete
 
@@ -19,6 +20,11 @@ urlpatterns = [
         "autocomplete/flagged-countries/",
         FlaggedCountryAutocomplete.as_view(),
         name="ac-flagged-countries",
+    ),
+    path(
+        "autocomplete/flagged-countries-first/",
+        FlaggedCountryAutocomplete.as_view(countries=GermanSpeakingFirst()),
+        name="ac-flagged-countries-first",
     ),
     path("autocomplete/countries/", CountryAutocomplete.as_view(), name="ac-countries"),
     path(

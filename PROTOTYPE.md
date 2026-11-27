@@ -19,6 +19,15 @@ Branch `prototype-countries`. A reference for the rebuild, never merged.
    Screen: `/examples/countries/fetched/`. Code: `mvp_forms/countries.py`
    (`CountryAutocomplete`, `country_config`).
 
+3. **Some countries first, grouped.** A developer configures django-countries'
+   `first` and `first_break` (a `Countries` subclass on the field, or the
+   settings), and the country widgets list those countries at the top and the
+   rest under a heading of the break's text. `CountryAutocomplete` takes a
+   `countries` to answer from and gives the rest an `optgroup` of the break's
+   text. Screens: `/examples/countries/first/` and the third field of
+   `/examples/countries/fetched/`. Code: `grouped_at_break` in
+   `mvp_forms/countries.py`.
+
 Feature 1 depends on the shared piece below. Feature 2 depends on nothing new.
 
 ## The shared pieces
@@ -71,6 +80,13 @@ control plus the flag row above.
 
 ## Faked or skipped
 
+- A Tom Select control holds one option for each value, so `first_repeat` is
+  dropped in the country widgets: a country first is not listed again below.
+- django-countries' own stock select, with `first_break` on a field that
+  starts empty, shows the break's text as the chosen value, because the blank
+  choice and the break both have the empty value. The country widgets don't,
+  since the break becomes a heading.
+
 - **django-tomselect 2026.6.2 writes its `render` templates into the page
   script unquoted**, which stops the control with a syntax error.
   `country_config` gives the templates as `data_template_option` and
@@ -89,3 +105,6 @@ control plus the flag row above.
 - 2026-11-27: The flag stays before the name. Each demo field is labelled with
   what it uses, not a made-up form's wording. Use django-mvp-sphinx's own docs
   styling, upgraded, with no demo overrides.
+- 2026-11-27: Offer django-countries' "countries first" as the grouping, with
+  demos. No continent or region grouping: django-countries has no such data
+  and no other source is added.

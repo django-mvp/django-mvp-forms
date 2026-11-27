@@ -13,6 +13,7 @@ The flag is the image django-countries serves, drawn at its own size beside
 the country's name. Nothing here needs a stylesheet.
 """
 
+import copy
 import json
 
 from django_countries import countries
@@ -31,8 +32,37 @@ FLAGGED = (
 )
 
 
+def grouped_at_break(choices):
+    """Return country choices with the countries after the break in a group.
+
+    django-countries lists the countries its ``first`` option names ahead of
+    the rest, and when ``first_break`` is set writes that text between them as
+    a choice with no value. The countries first stay outside every group, at
+    the top, and the rest go under a heading of the break's text. A Tom Select
+    control holds one option for each value, so a country ``first_repeat``
+    lists again among the rest is left out there. Choices with no break come
+    back as they are.
+    """
+    choices = list(choices)
+    for index, (value, label) in enumerate(choices):
+        if index and not value and any(code for code, _name in choices[:index]):
+            first = {code for code, _name in choices[:index]}
+            rest = [choice for choice in choices[index + 1 :] if choice[0] not in first]
+            return [*choices[:index], (str(label), rest)]
+    return choices
+
+
 class FlaggedOptions:
-    """Write each country's flag on its option, and draw options with it."""
+    """Write each country's flag on its option, and draw options with it.
+
+    Countries after django-countries' ``first_break`` are grouped under it.
+    """
+
+    def optgroups(self, name, value, attrs=None):
+        """Return the option groups, the countries after the break in one."""
+        grouped = copy.copy(self)
+        grouped.choices = grouped_at_break(self.choices)
+        return super(FlaggedOptions, grouped).optgroups(name, value, attrs)
 
     def create_option(self, name, value, label, selected, index, **kwargs):
         """Add the flag of the option's country in ``data-flag``."""
@@ -69,18 +99,36 @@ else:
 
         Each result holds ``value``, the country's code, ``label``, its name,
         and ``flag``, the address of its flag image. A search matches the name
-        or the code.
+        or the code. ``countries`` is the list to answer from, django-countries'
+        own by default: give it a ``Countries`` subclass to put some countries
+        first. The countries after its ``first_break`` carry the break's text in
+        ``optgroup``, so they are listed under that heading.
         """
 
         iterable = True
         page_size = 20
+        countries = countries
 
         def get_iterable(self):
             """Return every country as a result."""
-            return [
-                {"value": code, "label": name, "flag": Country(code=code).flag}
-                for code, name in countries
-            ]
+            results = []
+            for entry in grouped_at_break(self.countries):
+                code, name = entry
+                if isinstance(name, list):
+                    results.extend(
+                        {
+                            "value": c,
+                            "label": n,
+                            "flag": Country(code=c).flag,
+                            "optgroup": code,
+                        }
+                        for c, n in name
+                    )
+                elif code:
+                    results.append(
+                        {"value": code, "label": name, "flag": Country(code=code).flag}
+                    )
+            return results
 
     def country_config(url, **kwargs):
         """Configure a django-tomselect field to fetch countries from ``url``.
