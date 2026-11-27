@@ -1,4 +1,4 @@
-"""The demo project's user, which stores each person's preferences as django-mvp asks."""
+"""The demo project's user, which keeps each person's preferences for django-mvp."""
 
 from django.contrib.auth.models import AbstractUser
 from mvp.models import PreferencesMixin
