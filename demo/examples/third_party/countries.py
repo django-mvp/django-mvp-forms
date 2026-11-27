@@ -17,22 +17,27 @@ from mvp_forms.countries import (
 class AddressForm(forms.Form):
     """Countries that come with the form: one, one searched, several, counted."""
 
-    country = CountryField().formfield(
-        help_text="django-countries' own field, a stock select.",
+    stock_country = CountryField().formfield(
+        label="CountryField, stock widget",
+        help_text="django-countries' form field with its own select, unchanged.",
     )
-    born_in = CountryField().formfield(
+    country_select = CountryField().formfield(
+        label="CountryField with CountrySelect",
         widget=CountrySelect(placeholder="Search for a country", clear_button=True),
-        help_text="Type to search. Each country shows its flag.",
+        help_text="One country. Type to search, and clear it with the button.",
         required=False,
     )
-    visited = CountryField(multiple=True).formfield(
+    country_select_multiple = CountryField(multiple=True).formfield(
+        label="CountryField(multiple=True) with CountrySelectMultiple",
         widget=CountrySelectMultiple(placeholder="Add a country", remove_button=True),
-        help_text="Several countries, each with a remove button.",
+        help_text="Several countries, with remove_button=True.",
         required=False,
     )
-    lived_in = CountryField(multiple=True).formfield(
+    country_select_counted = CountryField(multiple=True).formfield(
+        label="CountryField(multiple=True) with CountrySelectMultiple, counted",
         widget=CountrySelectMultiple(counted=True),
-        help_text="Several countries, counted, with a tick on each one chosen.",
+        help_text="Several countries, with counted=True: a count in place of the "
+        "countries, and a tick on each one chosen.",
         required=False,
     )
 
@@ -47,21 +52,24 @@ class AddressForm(forms.Form):
 class FetchedCountriesForm(forms.Form):
     """Countries fetched as a person types, for one value and for several."""
 
-    born_in = TomSelectChoiceField(
+    autocomplete_country = TomSelectChoiceField(
+        label="TomSelectChoiceField with country_config",
         config=country_config(
             "ac-flagged-countries",
             placeholder="Search for a country",
             plugin_clear_button=PluginClearButton(),
         ),
-        help_text="Fetched as you type. The page holds none of the list.",
+        help_text="One country, fetched from CountryAutocomplete as you type. "
+        "The page holds none of the list.",
     )
-    visited = TomSelectMultipleChoiceField(
+    autocomplete_countries = TomSelectMultipleChoiceField(
+        label="TomSelectMultipleChoiceField with country_config",
         config=country_config(
             "ac-flagged-countries",
             placeholder="Add a country",
             plugin_remove_button=PluginRemoveButton(),
         ),
-        help_text="Several countries, fetched as you type.",
+        help_text="Several countries, fetched from CountryAutocomplete as you type.",
         required=False,
     )
 

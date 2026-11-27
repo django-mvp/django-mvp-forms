@@ -57,6 +57,18 @@ control plus the flag row above.
 - The tests in `tests/test_pack/test_countries.py` and `CountriesForm` in
   `tests/forms.py` still describe the old demo and are not updated here.
 
+## The demo project
+
+- django-mvp-sphinx is upgraded from 0.6.1 to 0.11.1, which styles the docs
+  pages with sphinx-daisyui. `demo/docs/conf.py` names the `daisyui` theme.
+  The demo had no styles of its own for the docs pages to remove.
+- The upgrade brings django-mvp 0.40, which needs `object_preferences`, its
+  `PreferencesMiddleware` and a user model with `PreferencesMixin`. The demo
+  gets `demo.User` and its first migration, so an existing `demo.sqlite3` has to
+  be recreated. The sidebar renderer is django-mvp-sphinx's.
+- Every field of the country demos is labelled with the field and widget it
+  uses, and its help text names the settings it shows.
+
 ## Faked or skipped
 
 - **django-tomselect 2026.6.2 writes its `render` templates into the page
@@ -74,3 +86,6 @@ control plus the flag row above.
 - 2026-11-27: Tom Select versions, one with the options in the page and one
   fetched through a django-tomselect view. Flags inside the options, never
   beside the select. Work within the existing widgets and add no stylesheet.
+- 2026-11-27: The flag stays before the name. Each demo field is labelled with
+  what it uses, not a made-up form's wording. Use django-mvp-sphinx's own docs
+  styling, upgraded, with no demo overrides.
