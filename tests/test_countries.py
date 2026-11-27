@@ -100,8 +100,11 @@ class TestCountrySelect:
         assert chosen == ["DE", "NZ"]
 
     def test_the_media_is_the_tom_select_media(self):
-        assert CountrySelect().media._js == TomSelect().media._js
-        assert CountrySelectMultiple().media._css == TomSelectMultiple().media._css
+        assert CountrySelect().media.render_js() == TomSelect().media.render_js()
+        assert (
+            CountrySelectMultiple().media.render_css()
+            == TomSelectMultiple().media.render_css()
+        )
 
 
 class TestTheEmptyChoice:
