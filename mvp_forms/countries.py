@@ -36,17 +36,49 @@ FLAGGED = (
 )
 
 
+def grouped_at_break(choices):
+    """Return country choices with the countries after the break in one group.
+
+    django-countries lists the countries its ``first`` option names ahead of
+    the rest, and when ``first_break`` is set writes that text between them as
+    a choice with no value. The countries first stay outside every group, at
+    the top, and the rest go under a heading of the break's text. A Tom Select
+    control holds one option for each value, so a country listed again, as
+    ``first_repeat`` does, is kept only where it first comes. Choices with no
+    break come back as they are, apart from that.
+
+    Args:
+        choices: The ``(code, name)`` choices of a country field.
+
+    Returns:
+        The choices, with those after the break in one ``(heading, choices)``
+        group.
+    """
+    listed = []
+    seen = set()
+    for code, name in choices:
+        if code and code in seen:
+            continue
+        seen.add(code)
+        listed.append((code, name))
+    for index, (code, name) in enumerate(listed):
+        if index and not code and any(earlier for earlier, _name in listed[:index]):
+            return [*listed[:index], (str(name), listed[index + 1 :])]
+    return listed
+
+
 class FlaggedOptions:
     """Write each country's flag on its option, and draw options with it.
 
-    A single control starts holding no country. Tom Select offers no option of
-    empty value, so one is drawn first when the field's choices have none, and
-    the browser has nothing to start on but that.
+    The countries after django-countries' ``first_break`` are grouped under
+    it. A single control starts holding no country. Tom Select offers no
+    option of empty value, so one is drawn first when the field's choices have
+    none outside a group, and the browser has nothing to start on but that.
     """
 
     def optgroups(self, name, value, attrs=None):
-        """Return the option groups, with an empty option first in a single one."""
-        choices = list(self.choices)
+        """Return the option groups, the countries after the break in one."""
+        choices = grouped_at_break(self.choices)
         if not self.allow_multiple_selected and not any(
             not code and not isinstance(label, (list, tuple)) for code, label in choices
         ):
@@ -109,7 +141,9 @@ else:
         Each result holds ``value``, the country's code, ``label``, its name,
         and ``flag``, the address of its flag image. A search matches the name
         or the code. ``countries`` is the list to answer from, django-countries'
-        own by default.
+        own by default: give it a ``Countries`` subclass to put some countries
+        first. The countries after its ``first_break`` carry the break's text in
+        ``optgroup``, so they are listed under that heading.
         """
 
         # The parent answers nothing while ``iterable`` is None. The list is
@@ -119,16 +153,34 @@ else:
         countries = countries
 
         def get_iterable(self):
-            """Return every country as a result."""
-            return [
-                {
-                    "value": code,
-                    "label": name,
-                    "flag": Country(code=code, custom_countries=self.countries).flag,
-                }
-                for code, name in self.countries
-                if code
-            ]
+            """Return every country as a result, those after the break grouped."""
+            results = []
+            for code, name in grouped_at_break(self.countries):
+                if isinstance(name, list):
+                    results.extend(self.result(c, n, group=code) for c, n in name)
+                elif code:
+                    results.append(self.result(code, name))
+            return results
+
+        def result(self, code, name, group=None):
+            """Return one country as a result, in the group when it has one.
+
+            Args:
+                code: The country's code.
+                name: The country's name.
+                group: The heading of the group the country is listed under.
+
+            Returns:
+                The result as django-tomselect sends it.
+            """
+            result = {
+                "value": code,
+                "label": name,
+                "flag": Country(code=code, custom_countries=self.countries).flag,
+            }
+            if group:
+                result["optgroup"] = group
+            return result
 
     def country_config(url, **kwargs):
         """Configure a django-tomselect field to fetch countries from ``url``.

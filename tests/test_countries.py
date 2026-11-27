@@ -8,7 +8,7 @@ import sys
 import pytest
 from bs4 import BeautifulSoup
 from django import forms
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 from django_countries import Countries, countries
 from django_countries.fields import Country, CountryField
 from django_tomselect.app_settings import TomSelectConfig
@@ -22,6 +22,7 @@ from mvp_forms.countries import (
     CountrySelect,
     CountrySelectMultiple,
     country_config,
+    grouped_at_break,
 )
 from mvp_forms.widgets import TomSelect, TomSelectMultiple
 
@@ -336,3 +337,214 @@ class TestCountryConfig:
 
         assert templates
         assert all(template == json.dumps(FLAGGED % "label") for template in templates)
+
+
+class GermanSpeakingFirst(Countries):
+    first = ["DE", "AT", "CH"]
+    first_break = "Other"
+
+
+class FirstWithoutBreak(Countries):
+    first = ["DE", "AT"]
+
+
+class FirstRepeated(Countries):
+    first = ["DE", "AT"]
+    first_repeat = True
+
+
+class FirstRepeatedWithBreak(Countries):
+    first = ["DE", "AT"]
+    first_break = "Other"
+    first_repeat = True
+
+
+@pytest.fixture
+def fresh_countries():
+    """Clear django-countries' cache of its list before and after a test."""
+    countries.__dict__.pop("countries", None)
+    yield
+    countries.__dict__.pop("countries", None)
+
+
+def field_of(countries_class, widget):
+    """Return the form field a CountryField of the countries gives the widget."""
+    multiple = widget.allow_multiple_selected
+    return CountryField(countries=countries_class, multiple=multiple).formfield()
+
+
+def top_level(select):
+    """Return the values of the options outside every group, in order."""
+    return [child["value"] for child in select.find_all("option", recursive=False)]
+
+
+def groups_of(select):
+    """Return each option group of the select as its heading and its values."""
+    return [
+        (group["label"], [option["value"] for option in group.find_all("option")])
+        for group in select.find_all("optgroup")
+    ]
+
+
+class TestCountriesFirstInTheWidgets:
+    def test_the_countries_first_are_listed_ahead_of_all_the_others_outside_a_group(
+        self,
+    ):
+        select = draw(
+            CountrySelect(), field=field_of(GermanSpeakingFirst, CountrySelect)
+        )
+
+        assert top_level(select) == ["", "DE", "AT", "CH"]
+
+    def test_every_other_country_is_in_one_group_headed_by_the_break(self):
+        select = draw(
+            CountrySelect(), field=field_of(GermanSpeakingFirst, CountrySelect)
+        )
+
+        [(heading, values)] = groups_of(select)
+
+        assert heading == "Other"
+        assert len(values) == 246
+        assert "DE" not in values
+        assert "NZ" in values
+
+    def test_the_break_is_never_a_value_a_person_can_choose(self):
+        select = draw(
+            CountrySelect(), field=field_of(GermanSpeakingFirst, CountrySelect)
+        )
+
+        assert options_of(select).count("") == 1
+        assert not any(option.text == "Other" for option in select.find_all("option"))
+
+    def test_a_multiple_control_has_no_empty_option_and_the_same_groups(self):
+        widget = CountrySelectMultiple
+        select = draw(widget(), field=field_of(GermanSpeakingFirst, widget))
+
+        assert top_level(select) == ["DE", "AT", "CH"]
+        assert [heading for heading, _values in groups_of(select)] == ["Other"]
+
+    def test_without_a_break_the_countries_first_sit_at_the_top_in_no_group(self):
+        select = draw(CountrySelect(), field=field_of(FirstWithoutBreak, CountrySelect))
+
+        assert top_level(select)[:3] == ["", "DE", "AT"]
+        assert groups_of(select) == []
+        assert options_of(select).count("DE") == 1
+
+    @pytest.mark.parametrize("countries_class", [FirstRepeated, FirstRepeatedWithBreak])
+    @pytest.mark.parametrize("widget", WIDGETS)
+    def test_each_country_is_listed_once_whatever_first_repeat_says(
+        self, countries_class, widget
+    ):
+        select = draw(widget(), field=field_of(countries_class, widget))
+
+        values = [value for value in options_of(select) if value]
+
+        assert len(values) == len(set(values)) == 249
+
+    def test_a_value_chosen_among_the_countries_first_is_shown_chosen(self):
+        select = draw(
+            CountrySelect(), "AT", field=field_of(GermanSpeakingFirst, CountrySelect)
+        )
+
+        assert [o["value"] for o in select.find_all("option", selected=True)] == ["AT"]
+
+    def test_the_stock_select_is_drawn_as_it_was(self):
+        field = field_of(GermanSpeakingFirst, forms.Select)
+        field.widget.choices = field.choices
+
+        select = BeautifulSoup(
+            field.widget.render("country", None), "html.parser"
+        ).select_one("select")
+
+        assert select.find("option", value="").text == "Other"
+        assert select.find("optgroup") is None
+
+    @pytest.mark.usefixtures("fresh_countries")
+    @override_settings(COUNTRIES_FIRST=["NZ", "AU"], COUNTRIES_FIRST_BREAK="Rest")
+    def test_django_countries_settings_take_effect_with_no_setting_of_the_packages(
+        self,
+    ):
+        select = draw(CountrySelect(), field=CountryField().formfield())
+
+        assert top_level(select) == ["", "NZ", "AU"]
+        assert [heading for heading, _values in groups_of(select)] == ["Rest"]
+
+
+class TestGroupedAtBreak:
+    def test_choices_with_no_break_come_back_as_they_are(self):
+        choices = [("DE", "Germany"), ("AT", "Austria")]
+
+        assert grouped_at_break(choices) == choices
+
+    def test_a_leading_empty_choice_is_not_a_break(self):
+        choices = [("", "---"), ("DE", "Germany")]
+
+        assert grouped_at_break(choices) == choices
+
+    def test_a_country_listed_twice_is_kept_where_it_first_comes(self):
+        choices = [("DE", "Germany"), ("AT", "Austria"), ("DE", "Germany")]
+
+        assert grouped_at_break(choices) == choices[:2]
+
+
+class TestCountriesFirstInTheView:
+    def test_the_countries_first_come_first_with_no_group(self):
+        class Answering(CountryAutocomplete):
+            countries = GermanSpeakingFirst()
+
+        results = ask(Answering)["results"]
+
+        assert [result["value"] for result in results[:3]] == ["DE", "AT", "CH"]
+        assert not any("optgroup" in result for result in results[:3])
+
+    def test_every_other_result_names_the_break_as_its_group(self):
+        class Answering(CountryAutocomplete):
+            countries = GermanSpeakingFirst()
+
+        results = ask(Answering, q="zealand")["results"]
+
+        assert [result["optgroup"] for result in results] == ["Other"]
+
+    def test_a_search_lists_the_matches_among_the_countries_first_above_the_rest(self):
+        class Answering(CountryAutocomplete):
+            countries = GermanSpeakingFirst()
+
+        results = ask(Answering, q="a")["results"]
+        groups = [result.get("optgroup") for result in results]
+
+        assert groups.index("Other") > groups.index(None)
+        assert groups == sorted(groups, key=lambda group: group is not None)
+
+    def test_the_break_is_not_a_result(self):
+        class Answering(CountryAutocomplete):
+            countries = GermanSpeakingFirst()
+
+        results = ask(Answering, q="other")["results"]
+
+        assert all(result["value"] for result in results)
+
+    @pytest.mark.parametrize("countries_class", [FirstRepeated, FirstRepeatedWithBreak])
+    def test_each_country_is_answered_once_whatever_first_repeat_says(
+        self, countries_class
+    ):
+        class Answering(CountryAutocomplete):
+            countries = countries_class()
+
+        values = []
+        for page in range(1, 20):
+            answer = ask(Answering, p=page)
+            values.extend(result["value"] for result in answer["results"])
+            if not answer["has_more"]:
+                break
+
+        assert len(values) == len(set(values)) == 249
+
+    @pytest.mark.usefixtures("fresh_countries")
+    @override_settings(COUNTRIES_FIRST=["NZ"], COUNTRIES_FIRST_BREAK="Rest")
+    def test_django_countries_settings_take_effect_with_no_setting_of_the_packages(
+        self,
+    ):
+        results = ask()["results"]
+
+        assert results[0]["value"] == "NZ"
+        assert results[1]["optgroup"] == "Rest"
