@@ -99,8 +99,8 @@ class TestPages:
 
     @pytest.mark.parametrize("page", PAGES, ids=str)
     def test_the_sidebar_links_each(self, rendered, page) -> None:
-        _, overview = rendered[Path("index.md")]
-        sidebar = overview.find("nav", attrs={"aria-label": "MVP Forms"})
+        _, soup = rendered[page]
+        sidebar = soup.find("nav", attrs={"aria-label": "MVP Forms"})
 
         assert sidebar.find("a", href=address_of(page))
 
