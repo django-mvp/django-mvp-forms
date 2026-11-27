@@ -45,7 +45,7 @@ function is the model, with tests behind it. The setting stays internal to the c
 - `CountrySelect(FlaggedOptions, TomSelect)` and `CountrySelectMultiple(FlaggedOptions,
   TomSelectMultiple)`: nothing else, so every setting and error is inherited (FR-002).
 - Where `django_tomselect` imports: `CountryAutocomplete(AutocompleteIterablesView)` with
-  `countries = django_countries.countries`, `page_size = 20`, `iterable = True` (the parent's
+  `countries = django_countries.countries`, `page_size = 20`, `iterable = ()` (the parent's
   `get()` answers nothing while it is `None`, and a line says so), `get_iterable()` answering from
   `grouped_at_break(self.countries)`, each result `value`, `label`, `flag`, and `optgroup` for those
   after the break. Each flag is `Country(code=..., custom_countries=self.countries).flag`, so a

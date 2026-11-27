@@ -70,7 +70,7 @@ out of the package, which belong to django-mvp. An autocomplete view for a suppo
 the data source of a widget, not a page. Leaving the article as it is would make the agreed
 feature unconstitutional.
 
-**Self-resolved, and the item most worth his veto.** **ADR:** yes, with the amendment.
+**Self-resolved, and the item most worth his veto.** **ADR:** yes, with the amendment (0073).
 
 ## D6. A single control with no value starts empty
 

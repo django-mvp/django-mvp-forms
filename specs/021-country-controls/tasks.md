@@ -74,7 +74,7 @@ Issue: #277. Delivers FR-009 to FR-014, FR-021 to FR-023 (the view's part); SC-0
 
 **Files**: `tests/test_countries.py`, `mvp_forms/countries.py`
 
-Plan, *Python*. `iterable = True` with its one-line reason. Pages of 20, search by name and code ignoring case, django-countries' order,
+Plan, *Python*. `iterable = ()` with its one-line reason. Pages of 20, search by name and code ignoring case, django-countries' order,
 results with `value`, `label`, `flag`. `country_config` carries the URL name, `value_field`,
 `label_field`, the minimum query length of 0 and the two templates as JSON strings; any
 `TomSelectConfig` setting passes. Both are absent without django-tomselect, and the widgets import.
