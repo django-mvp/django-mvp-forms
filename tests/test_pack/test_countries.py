@@ -6,11 +6,17 @@ from mvp_forms.choices import FormChoices, Modifiers
 from tests.forms import CountriesForm
 
 SOURCES = ["{{ form|crispy }}", "{% crispy form %}"]
-FIELDS = ["country", "countries", "flagged"]
+FIELDS = ["country", "countries", "flagged", "searched", "searched_many"]
 SIZES = Modifiers.names("size", "select")
 COLOURS = Modifiers.names("color", "select")
 VARIANTS = Modifiers.names("variant", "select")
-POSTED = {"country": "DE", "countries": ["DE", "FR"], "flagged": "NZ"}
+POSTED = {
+    "country": "DE",
+    "countries": ["DE", "FR"],
+    "flagged": "NZ",
+    "searched": "AT",
+    "searched_many": ["AT", "CH"],
+}
 
 
 def stated(**statement):
@@ -84,13 +90,14 @@ class TestTheSelect:
         form = CountriesForm()
         form.fields["countries"].disabled = True
         form.fields["flagged"].disabled = True
+        form.fields["searched_many"].disabled = True
 
         soup = draw(source, form=form)
 
         disabled = [
             name for name in FIELDS if soup.find(id=f"id_{name}").has_attr("disabled")
         ]
-        assert disabled == ["countries", "flagged"]
+        assert disabled == ["countries", "flagged", "searched_many"]
 
     def test_each_label_is_tied_to_its_select(self, draw, source):
         soup = draw(source, form=CountriesForm())
@@ -134,6 +141,8 @@ class TestTheSelect:
             "country": {"DE"},
             "countries": {"DE", "FR"},
             "flagged": {"NZ"},
+            "searched": {"AT"},
+            "searched_many": {"AT", "CH"},
         }
         assert form.is_valid()
         assert form.cleaned_data == POSTED

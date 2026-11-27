@@ -1,0 +1,21 @@
+{% load static %}<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Selects with a template</title>
+  </head>
+  <body>
+    <form id="page" method="post" action="">
+      <select id="id_templated" name="templated" data-tom-select="{{ templated }}">
+        <option value=""></option>
+        <option value="a" data-flag="/static/flags/a.gif">Apple</option>
+        <option value="b" data-flag="/static/flags/b.gif">&lt;b&gt;Bold&lt;/b&gt; &amp; "quoted"</option>
+        <option value="c">No flag</option>
+      </select>
+      <select id="id_plain" name="plain" data-tom-select="{}">
+        <option value="a" data-flag="/static/flags/a.gif">Apple</option>
+      </select>
+    </form>
+    {{ media }}
+  </body>
+</html>

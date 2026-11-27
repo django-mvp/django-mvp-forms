@@ -36,6 +36,12 @@ classifiers = [
 # The release of django-timezone-field that TimeZoneSelect is tested against.
 # No module here imports it: the widget draws the choices of its form field.
 timezone = ["django-timezone-field>=7.2"]
+# The release of django-countries that mvp_forms.countries is tested against. That
+# module imports it, and no other module of the package does.
+countries = ["django-countries>=9.1.0"]
+# The release of django-tomselect that mvp_forms.countries answers autocomplete
+# requests for. That module imports it when it is installed.
+tomselect = ["django-tomselect>=2026.6.2"]
 
 [project.urls]
 Homepage = "https://github.com/django-mvp/django-mvp-forms"
@@ -182,4 +188,5 @@ non-mirror-paths = [
   "tests/test_image_input_e2e.py",
   "tests/test_characters_left_e2e.py",
   "tests/test_choice_fold_e2e.py",
+  "tests/test_countries_e2e.py",
 ]

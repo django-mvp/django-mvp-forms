@@ -105,7 +105,11 @@ from demo.examples.special_fields.checkbox_toggle_switch import NotificationsFor
 from demo.examples.special_fields.inline_choices import SurveyForm
 from demo.examples.special_fields.rating_and_range import ReviewForm
 from demo.examples.standard_fields import StandardFieldsForm
-from demo.examples.third_party.countries import AddressForm
+from demo.examples.third_party.countries import (
+    AddressForm,
+    CountriesFirstForm,
+    FetchedCountriesForm,
+)
 from demo.examples.third_party.pint import (
     SENT,
     DisabledForm,
@@ -378,6 +382,13 @@ urlpatterns = [
         ExampleView.as_view(form_class=ResearchForm, template_name=DJANGO_TOMSELECT),
     ),
     path("countries/", ExampleView.as_view(form_class=AddressForm)),
+    path("countries/first/", ExampleView.as_view(form_class=CountriesFirstForm)),
+    path(
+        "countries/fetched/",
+        ExampleView.as_view(
+            form_class=FetchedCountriesForm, template_name=DJANGO_TOMSELECT
+        ),
+    ),
     path("pint/", ExampleView.as_view(form_class=QuantitiesForm, sent_data=SENT)),
     path("pint-sizes/", ExampleView.as_view(form_class=SizedForm)),
     path("pint-disabled/", ExampleView.as_view(form_class=DisabledForm)),

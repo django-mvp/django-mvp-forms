@@ -100,6 +100,8 @@ FORBIDDEN_MODULES = {
     "django_countries",
 }
 FORBIDDEN_LIBRARIES = {"cotton", "mvp"}
+# The one module that draws a supported package's fields and views may import it.
+SUPPORTED_PACKAGE_MODULES = {"countries.py": {"django_countries", "django_tomselect"}}
 
 DEVELOPER_CLASS = "wide"
 LABEL_CLASS = "supplied-by-label-class"
@@ -1241,7 +1243,8 @@ class TestDistributedFiles:
         "path", sorted(PACKAGE.rglob("*.py")), ids=lambda path: path.name
     )
     def test_no_module_imports_django_mvp_or_cotton(self, path):
-        assert not imported_modules(path) & FORBIDDEN_MODULES
+        allowed = SUPPORTED_PACKAGE_MODULES.get(str(path.relative_to(PACKAGE)), set())
+        assert not imported_modules(path) & (FORBIDDEN_MODULES - allowed)
 
     def test_the_package_static_directory_holds_its_own_files_and_tom_select(self):
         files = sorted(

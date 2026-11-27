@@ -166,8 +166,9 @@ widgets. Class names inside the rendered markup are not part of it.
 ### Article XII — Scope
 
 This package draws forms and supplies what goes in them: the template pack,
-its layout objects, form fields and widgets. It ships no models, no views, no
-URLs and no migrations.
+its layout objects, form fields and widgets. It ships no models, no URLs and
+no migrations, and no views except an autocomplete view that answers a widget
+of a supported package, which the host project routes itself.
 
 Form views, inline formset handling and form page templates are django-mvp's.
 A change that needs one of them belongs there, however small.
@@ -245,4 +246,4 @@ Read at planning and at review; applies to every change.
 
 ---
 
-**Version**: 2.4.1 | **Ratified**: 2026-10-03 | **Last Amended**: 2026-11-11
+**Version**: 2.5.0 | **Ratified**: 2026-10-03 | **Last Amended**: 2026-11-27

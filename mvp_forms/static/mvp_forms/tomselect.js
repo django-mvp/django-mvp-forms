@@ -19,10 +19,22 @@
   const EVENT = "mvp-forms:tomselect";
   // The only settings read from the attribute. Everything else is reached
   // through the control itself.
-  const SETTINGS = ["placeholder", "maxItems", "plugins"];
+  const SETTINGS = ["placeholder", "maxItems", "plugins", "lockOptgroupOrder"];
   // The words a counted control shows, which the stylesheet reads from the box
   // that holds the chosen values.
   const WORDS = ["noneText", "countText"];
+
+  // A template for an option or a chosen value, as the widget wrote it. Each
+  // ${data.name} is replaced by that value of the option, escaped, which is
+  // how django-tomselect reads its own templates.
+  function template(text) {
+    return function (data, escape) {
+      return text.replace(/\$\{data\.(\w+)\}/g, function (match, name) {
+        const value = data[name];
+        return value === undefined || value === null ? "" : escape(String(value));
+      });
+    };
+  }
 
   function settings(select) {
     const written = JSON.parse(select.dataset.tomSelect);
@@ -30,6 +42,12 @@
     SETTINGS.forEach(function (name) {
       if (name in written) given[name] = written[name];
     });
+    if (written.render) {
+      given.render = {};
+      ["option", "item"].forEach(function (name) {
+        if (written.render[name]) given.render[name] = template(written.render[name]);
+      });
+    }
     return given;
   }
 
