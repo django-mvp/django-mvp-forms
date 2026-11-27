@@ -188,9 +188,7 @@ class TestSeveralCountries:
 
         options = page.locator('#id_counted-ts-dropdown .option[data-value="NZ"]')
 
-        expect(options.locator("img")).to_have_attribute(
-            "src", "/static/flags/nz.gif"
-        )
+        expect(options.locator("img")).to_have_attribute("src", "/static/flags/nz.gif")
 
     def test_a_counted_control_ticks_each_country_chosen(self, countries_page):
         page = countries_page(counted="NZ")

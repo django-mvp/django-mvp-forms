@@ -58,12 +58,22 @@ class FlaggedOptions:
 
         The empty option drawn first is not one of the field's choices, so
         Django's own answer, which reads the first choice, would drop it.
+
+        Args:
+            initial: The field's initial value, which Django passes on.
+
+        Returns:
+            Whether the select carries the ``required`` attribute.
         """
         return forms.Widget.use_required_attribute(self, initial)
 
-    def create_option(self, name, value, label, selected, index, **kwargs):
+    def create_option(
+        self, name, value, label, selected, index, subindex=None, attrs=None
+    ):
         """Add the flag of the option's country in ``data-flag``."""
-        option = super().create_option(name, value, label, selected, index, **kwargs)
+        option = super().create_option(
+            name, value, label, selected, index, subindex, attrs
+        )
         code = "" if value is None else str(value)
         if code:
             option["attrs"]["data-flag"] = Country(code=code).flag

@@ -45,7 +45,7 @@ When two reasonable designs conflict, stock daisyUI markup wins over custom styl
 pip install django-mvp-forms
 ```
 
-The `timezone` extra adds [django-timezone-field](https://github.com/django-mvp/django-mvp-forms#django-timezone-field) at the release the package is tested against: `pip install "django-mvp-forms[timezone]"`. The `countries` extra adds django-countries, which `mvp_forms.countries` imports, and the `tomselect` extra adds django-tomselect, which the country autocomplete in the same module needs: `pip install "django-mvp-forms[countries,tomselect]"`.
+The `timezone` extra adds [django-timezone-field](https://github.com/django-mvp/django-mvp-forms#django-timezone-field) at the release the package is tested against: `pip install "django-mvp-forms[timezone]"`. The `countries` extra adds django-countries, which `mvp_forms.countries` imports, at the release the package is tested against: `pip install "django-mvp-forms[countries]"`.
 
 Then add it to `INSTALLED_APPS` alongside crispy-forms:
 
@@ -1838,6 +1838,8 @@ class AddressForm(forms.Form):
 ```
 
 `CountrySelect` takes every setting `TomSelect` takes and `CountrySelectMultiple` every setting `TomSelectMultiple` takes: `placeholder`, `clear_button`, `remove_button`, `max_items` and a counted control, with the same checks and the same errors. The form cleans to django-countries' codes as it does with its own widget, and the control is drawn with the classes and attributes of any Tom Select select.
+
+Both are the pack's Tom Select widgets with the mixin `FlaggedOptions`, which writes each country's flag on its option, states the option and item templates and draws the empty option. List it before a Tom Select widget of your own to give that widget the same flags.
 
 A single control whose field holds no value starts holding no country. The widget draws an empty option first when the field has none, so the control never starts on the first country in the list. The widgets need django-countries and nothing else beyond what the pack's Tom Select widgets need, and the flag is the image django-countries serves for each country, so list `django_countries` in `INSTALLED_APPS`. The flag row uses Tailwind utilities written in the module, which your Tailwind build finds when it scans the installed package, as the installation section asks.
 

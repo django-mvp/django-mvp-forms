@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `CountrySelect` and `CountrySelectMultiple` in `mvp_forms.countries`: Tom Select widgets for a django-countries field. A person searches the countries by typing, and each country is shown with its flag before its name, in the list and in each chosen value. They take every setting of `TomSelect` and `TomSelectMultiple`, and a single control whose field holds no value starts holding no country. The `countries` and `tomselect` extras install django-countries and django-tomselect at the releases the package is tested against.
+- `CountrySelect` and `CountrySelectMultiple` in `mvp_forms.countries`: Tom Select widgets for a django-countries field. A person searches the countries by typing, and each country is shown with its flag before its name, in the list and in each chosen value. They take every setting of `TomSelect` and `TomSelectMultiple`, and a single control whose field holds no value starts holding no country. The `countries` extra installs django-countries at the release the package is tested against.
 - A Tom Select select can state a template for its options and its chosen values in `data-tom-select`. The script fills each `${data.name}` with that value of the option, escaped. A select that states none is drawn as before.
 
 ### Changed

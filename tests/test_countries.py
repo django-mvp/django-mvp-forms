@@ -1,7 +1,7 @@
-"""The country widgets, the autocomplete view and the configuration of mvp_forms.countries."""
+"""The country widgets, the autocomplete view and the configuration of the module."""
 
+import importlib
 import json
-import subprocess
 import sys
 
 import pytest
@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 from django import forms
 from django_countries.fields import Country, CountryField
 
+import mvp_forms
+from mvp_forms import countries as countries_module
 from mvp_forms.countries import CountrySelect, CountrySelectMultiple
 from mvp_forms.widgets import TomSelect, TomSelectMultiple
 
@@ -205,22 +207,17 @@ class TestTheFieldItDraws:
 
 
 class TestWithoutDjangoTomselect:
-    def test_the_widgets_import_and_the_view_and_configuration_are_absent(self):
-        code = (
-            "import sys; sys.modules['django_tomselect'] = None;"
-            "from django.conf import settings;"
-            "settings.configure(INSTALLED_APPS=['django_countries']);"
-            "import django; django.setup();"
-            "import mvp_forms.countries as c;"
-            "print(hasattr(c, 'CountrySelect'), hasattr(c, 'CountryAutocomplete'),"
-            " hasattr(c, 'country_config'))"
-        )
+    def test_the_widgets_import_and_the_view_and_configuration_are_absent(
+        self, monkeypatch
+    ):
+        monkeypatch.setattr(mvp_forms, "countries", countries_module)
+        monkeypatch.delitem(sys.modules, "mvp_forms.countries")
+        monkeypatch.setitem(sys.modules, "django_tomselect", None)
+        monkeypatch.setitem(sys.modules, "django_tomselect.app_settings", None)
+        monkeypatch.setitem(sys.modules, "django_tomselect.autocompletes", None)
 
-        result = subprocess.run(
-            [sys.executable, "-c", code],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        module = importlib.import_module("mvp_forms.countries")
 
-        assert result.stdout.split() == ["True", "False", "False"], result.stderr
+        assert hasattr(module, "CountrySelect")
+        assert not hasattr(module, "CountryAutocomplete")
+        assert not hasattr(module, "country_config")
