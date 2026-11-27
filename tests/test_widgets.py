@@ -2184,13 +2184,14 @@ class TestTimeZoneSelect:
         assert not form.is_valid()
 
     def test_it_draws_without_django_timezone_field_installed(self):
-        # A fresh interpreter in which django-timezone-field cannot be imported,
-        # as in a project that has not installed it.
+        # A fresh interpreter in which django-timezone-field cannot be imported
+        # once the project has started, as in a project that has not installed
+        # it. The demo's own shell, django-mvp, needs it while it starts.
         script = (
             "import sys, zoneinfo\n"
-            "sys.modules['timezone_field'] = None\n"
             "import django\n"
             "django.setup()\n"
+            "sys.modules['timezone_field'] = None\n"
             "from django import forms\n"
             "from mvp_forms.widgets import TimeZoneSelect\n"
             "names = sorted(zoneinfo.available_timezones())\n"

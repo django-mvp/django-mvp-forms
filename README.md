@@ -2992,6 +2992,11 @@ uv run python manage.py build_docs
 uv run python manage.py runserver
 ```
 
+The demo has its own user model, `demo.User`, which stores each person's
+preferences as django-mvp 0.40 requires. A `demo.sqlite3` made before that change
+cannot be migrated to it, so delete the file and run the commands above again to
+create it afresh.
+
 The sidebar follows the package:
 
 - **Crispy forms**: every field Django ships on one plain form, the fields the pack
