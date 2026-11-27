@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "easy_icons",
     "crispy_forms",
     "flex_menu",
+    # Stores each person's preferences. django-mvp requires it.
+    "object_preferences",
     "django_cotton",
     # A supported third-party package, for the pages that show its widgets. The
     # package itself never depends on it.
@@ -66,6 +68,8 @@ MIDDLEWARE = [
     "django.contrib.sites.middleware.CurrentSiteMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Applies each person's timezone and language.
+    "mvp.middleware.PreferencesMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # Hands the request to django-tomselect's widgets, which read it to find
@@ -98,6 +102,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "demo.wsgi.application"
 
+# django-mvp stores each person's preferences on the user model.
+AUTH_USER_MODEL = "demo.User"
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -124,7 +131,8 @@ CRISPY_TEMPLATE_PACK = "daisyui"
 # the dock shown below the sidebar breakpoint.
 FLEX_MENUS = {
     "renderers": {
-        "sidebar": "mvp.renderers.SidebarRenderer",
+        # Draws the documentation's contents in the sidebar as well as the menus.
+        "sidebar": "mvp_sphinx.renderers.SidebarRenderer",
         "dock": "mvp.renderers.MobileFooterNavRenderer",
     },
     "log_url_failures": DEBUG,
