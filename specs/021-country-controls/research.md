@@ -4,6 +4,44 @@ Written at specification time with the assumptions the specification makes about
 already exists. The full investigation, and the planning notes answered by name, are added when
 the feature is planned.
 
+## Packages brought up to date
+
+`forge own-deps` on 2026-11-27 lists `django-mvp` 0.34.2 → 0.40.0, `daisy-cotton` 0.2.0 → 0.3.0
+(through django-mvp) and `django-mvp-sphinx` 0.6.1 → 0.11.1, all dev-group packages of the demo.
+django-mvp 0.40 requires `object_preferences`, `PreferencesMiddleware` and a user model with
+`PreferencesMixin` in the demo, and that work, with the sphinx upgrade, is the open resolve run on
+the tracker ([#274](https://github.com/django-mvp/django-mvp-forms/issues/274)), which edits
+`demo/settings.py`, `demo/migrations/`, `pyproject.toml` and `uv.lock`. The three upgrades are one
+chain and ride in that pull request. This branch makes no change to them and picks them up when it
+brings itself up to date with `main`.
+
+## Planning notes, answered
+
+- **Option and item templates for the pack's Tom Select widgets**: adopted, internal to the country
+  widgets. Nothing in the spec asks for a public `TomSelect` setting, and one would be a surface
+  to support and document for no requester.
+- **The flag row `FLAGGED`**: adopted as the prototype has it, in `mvp_forms/countries.py`, the
+  one string serving the widgets and the fetched control.
+- **The quoting defect**: the latest django-tomselect is 2026.6.2, so the workaround is kept, with
+  a comment naming the version (D8), and a browser test covers both the current release and a
+  release that quotes the template itself.
+- **Design rules**: adopted without change.
+- **The look is ported**: the plan names the six files and the story that lands each.
+- **What it replaces**: `CountriesForm` keeps its stock fields and gains the widgets; the stock
+  select's tests stay.
+- **The empty choice and Article XII**: D6 and D5.
+
+## What already exists
+
+- Option groups for a Tom Select: `TimeZoneSelect.optgroups()` in `mvp_forms/widgets.py` (this
+  repo). `FlaggedOptions.optgroups()` takes the same route.
+- Search and paging of an iterable autocomplete: `AutocompleteIterablesView` (installed package).
+- The flag address: `django_countries.fields.Country.flag` (installed package).
+- Escaping an option's values: Tom Select's `escape` argument to a render function (the browser
+  library the pack ships). Only the `${data.name}` filling is new code, the syntax django-tomselect
+  already uses.
+- Everything else of the widgets' settings: `TomSelect` and `TomSelectMultiple` (this repo).
+
 ## Assumptions checked
 
 Each was run or read on the default branch at `f7b5060`, or in the installed release, on
