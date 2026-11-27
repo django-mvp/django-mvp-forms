@@ -325,3 +325,134 @@ class TestFetchedCountries:
         ).click()
 
         assert page_errors == []
+
+
+@pytest.fixture
+def first_page(page, page_errors, live_server):
+    """Open the demo page whose country controls list three countries first."""
+    page.route("https://cdn.jsdelivr.net/**", lambda route: route.abort())
+    page.goto(f"{live_server.url}/examples/countries/first/")
+    page.wait_for_load_state("load")
+    return page
+
+
+def values_listed(page, name):
+    """Return the values of the options a control lists, in order."""
+    return page.locator(f"#id_{name}-ts-dropdown .option").evaluate_all(
+        "(options) => options.map((option) => option.dataset.value)"
+    )
+
+
+class TestCountriesFirst:
+    def test_a_single_control_starts_holding_no_country(self, first_page):
+        held = first_page.evaluate(
+            "document.getElementById('id_country_select_first').tomselect.items"
+        )
+
+        assert held == []
+
+    def test_the_countries_first_are_listed_above_the_heading_and_the_rest(
+        self, first_page
+    ):
+        first_page.locator(CONTROL.format("country_select_first")).click()
+
+        assert values_listed(first_page, "country_select_first")[:3] == [
+            "DE",
+            "AT",
+            "CH",
+        ]
+        heading = first_page.locator(
+            "#id_country_select_first-ts-dropdown .optgroup-header"
+        )
+        expect(heading).to_have_text("Other")
+
+    def test_the_break_is_a_heading_and_never_an_option_to_choose(self, first_page):
+        first_page.locator(CONTROL.format("country_select_first")).click()
+
+        options = first_page.locator("#id_country_select_first-ts-dropdown .option")
+
+        expect(options.filter(has_text="Other")).to_have_count(0)
+
+    def test_a_search_lists_the_matches_among_the_countries_first_above_the_rest(
+        self, first_page
+    ):
+        search(first_page, "country_select_first", "ma")
+        dropdown = "#id_country_select_first-ts-dropdown"
+        expect(
+            first_page.locator(f'{dropdown} .option[data-value="AT"]')
+        ).to_have_count(0)
+
+        above_the_heading = first_page.evaluate(
+            """(dropdown) => {
+              const heading = document.querySelector(dropdown + " .optgroup-header");
+              const german = document.querySelector(
+                dropdown + ' .option[data-value="DE"]');
+              return Boolean(
+                german.compareDocumentPosition(heading)
+                & Node.DOCUMENT_POSITION_FOLLOWING);
+            }""",
+            dropdown,
+        )
+
+        assert above_the_heading
+
+    def test_the_page_raises_no_error(self, first_page, page_errors):
+        first_page.locator(CONTROL.format("country_select_first")).click()
+        first_page.keyboard.press("Escape")
+        first_page.locator(CONTROL.format("country_select_multiple_first")).click()
+
+        assert page_errors == []
+
+
+class TestFetchedCountriesFirst:
+    def test_the_countries_first_come_first_and_the_rest_under_the_heading(
+        self, fetched_page
+    ):
+        fetched_page.locator(CONTROL.format("autocomplete_country_first")).click()
+        dropdown = "#id_autocomplete_country_first-ts-dropdown"
+
+        expect(fetched_page.locator(f"{dropdown} .option").first).to_be_visible()
+
+        assert values_listed(fetched_page, "autocomplete_country_first")[:3] == [
+            "DE",
+            "AT",
+            "CH",
+        ]
+        expect(fetched_page.locator(f"{dropdown} .optgroup-header")).to_have_text(
+            "Other"
+        )
+
+    def test_a_search_lists_the_matches_among_the_countries_first_above_the_rest(
+        self, fetched_page
+    ):
+        search(fetched_page, "autocomplete_country_first", "ma")
+        dropdown = "#id_autocomplete_country_first-ts-dropdown"
+        expect(
+            fetched_page.locator(f'{dropdown} .option[data-value="DE"]')
+        ).to_be_visible()
+
+        above_the_heading = fetched_page.evaluate(
+            """(dropdown) => {
+              const heading = document.querySelector(dropdown + " .optgroup-header");
+              const german = document.querySelector(
+                dropdown + ' .option[data-value="DE"]');
+              return Boolean(
+                german.compareDocumentPosition(heading)
+                & Node.DOCUMENT_POSITION_FOLLOWING);
+            }""",
+            dropdown,
+        )
+
+        assert above_the_heading
+
+    def test_a_country_chosen_posts_its_code(self, fetched_page):
+        search(fetched_page, "autocomplete_country_first", "aus")
+        fetched_page.locator(
+            '#id_autocomplete_country_first-ts-dropdown .option[data-value="AT"]'
+        ).click()
+
+        value = fetched_page.evaluate(
+            "document.getElementById('id_autocomplete_country_first').value"
+        )
+
+        assert value == "AT"

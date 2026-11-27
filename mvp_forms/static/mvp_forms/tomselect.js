@@ -19,7 +19,7 @@
   const EVENT = "mvp-forms:tomselect";
   // The only settings read from the attribute. Everything else is reached
   // through the control itself.
-  const SETTINGS = ["placeholder", "maxItems", "plugins"];
+  const SETTINGS = ["placeholder", "maxItems", "plugins", "lockOptgroupOrder"];
   // The words a counted control shows, which the stylesheet reads from the box
   // that holds the chosen values.
   const WORDS = ["noneText", "countText"];

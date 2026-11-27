@@ -57,6 +57,12 @@ code, its name and the address of its flag, and `country_config`, which configur
 django-tomselect field to fetch from it. The host project routes the view.
 _Avoid_: country picker, country API.
 
+**Countries first**:
+The countries django-countries lists ahead of the rest, through `first` and
+`first_break`. The widgets and the autocomplete keep them at the top and put the rest
+under a heading of the break's text.
+_Avoid_: priority countries, pinned countries.
+
 **Tagging**:
 A multiple django-tomselect control that offers to add what was typed, each value
 shown as a tag with a remove button. The pack draws it. Saving a new value is the

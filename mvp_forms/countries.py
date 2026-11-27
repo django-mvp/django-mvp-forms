@@ -114,8 +114,14 @@ class FlaggedOptions:
         return option
 
     def control_settings(self):
-        """Draw each option and each chosen value with its flag."""
+        """Draw each option and each chosen value with its flag.
+
+        The groups stay in the order they were written, so a search lists the
+        matches among the countries first above the heading and not by how well
+        each group matched.
+        """
         settings = super().control_settings()
+        settings["lockOptgroupOrder"] = True
         settings["render"] = {"option": FLAGGED % "text", "item": FLAGGED % "text"}
         return settings
 

@@ -82,6 +82,7 @@ class TestCountrySelect:
         render = json.loads(select["data-tom-select"])["render"]
 
         assert set(render) == {"option", "item"}
+        assert json.loads(select["data-tom-select"])["lockOptgroupOrder"] is True
         for template in render.values():
             assert "${data.flag}" in template
             assert "${data.text}" in template

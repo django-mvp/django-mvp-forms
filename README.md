@@ -1872,6 +1872,32 @@ class AddressForm(forms.Form):
 
 `country_config(url, **kwargs)` takes the name of the URL and any other setting of django-tomselect's `TomSelectConfig`. It sets `value_field` and `label_field` for the view's results and a minimum query length of 0, so the list opens before anything is typed. The page holds none of the list. `CountryAutocomplete` and `country_config` exist only where django-tomselect is installed, and the widgets above import without it.
 
+#### Countries first
+
+django-countries can list some countries ahead of the rest, through `first` and `first_break` on a `Countries` subclass given to the field, or through its `COUNTRIES_FIRST` and `COUNTRIES_FIRST_BREAK` settings for every field. The country widgets and `CountryAutocomplete` take that with no setting of their own.
+
+```python
+from django_countries import Countries
+from django_countries.fields import CountryField
+
+from mvp_forms.countries import CountrySelect
+
+
+class GermanSpeakingFirst(Countries):
+    first = ["DE", "AT", "CH"]
+    first_break = "Other"
+
+
+class AddressForm(forms.Form):
+    country = CountryField(countries=GermanSpeakingFirst).formfield(
+        widget=CountrySelect(), required=False
+    )
+```
+
+The widgets keep the countries first at the top, outside any group, and write every other country in one group headed by the break's text. The break is never a value a person can choose, and a single control starts holding no country. Without `first_break` the countries first sit at the top and no group is written. Each country is listed once, so `first_repeat` has no effect on the country controls: a country the field lists again is kept where it first comes. `grouped_at_break(choices)` does the regrouping and is public for a widget of your own that lists countries.
+
+`CountryAutocomplete` answers from django-countries' own list. Give `as_view()` a `countries` to answer from another, as in `CountryAutocomplete.as_view(countries=GermanSpeakingFirst())`. The countries first come first in its results, and every other result carries the break's text in `optgroup`, so the fetched control lists them under that heading. A search lists the matches among the countries first above the heading. The stock select of a django-countries field is drawn as it is today, the break as an option of empty value.
+
 #### What is not covered
 
 - django-countries' own behaviour: its settings, its translations, the countries it lists and what a `CountryField` stores. The pack draws the field and changes none of it.
