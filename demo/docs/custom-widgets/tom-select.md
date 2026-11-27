@@ -73,13 +73,36 @@ widget needs no option for it. It takes two things on the page.
 
 A few lines of CSS take the list out of its floating position and draw it as an
 input is drawn: the input's border, corners and shadow, the error colour on a
-field in error, and no arrow on the box.
+field in error, and no arrow on the box. The same CSS gives the list a height of
+its own, so it keeps its size when a search finds nothing.
+
+### The height of the list
+
+Set `--open-list-height` to any length, such as `16rem` or `320px`. Set it with
+a class or a `style` on the form or on any element around the field, not on the
+select, since the list sits beside the select and not inside it. Without it the
+list is `14rem` high.
+
+For a list that takes the room there is, mark the select `data-open-list="fill"`
+and give the element around the form a height, from a class, a style or the
+page's layout. The form fills that element and the list fills what the other
+fields leave, never less than `--open-list-height`, which then defaults to
+`8rem`.
 
 ```{live-example} /examples/tom-select-open-list/
 :title: A list that stays open
 
 ../../examples/custom_widgets/tom_select_open_list.py
 ../../templates/demo/examples/tom_select_open_list.html
+```
+
+The same list in a container of a fixed height, filling it:
+
+```{live-example} /examples/tom-select-open-list-fill/
+:title: A list that fills its container
+
+../../examples/custom_widgets/tom_select_open_list.py
+../../templates/demo/examples/tom_select_open_list_fill.html
 ```
 
 Tom Select's own version names a `dropdownParent` and a `no_close` plugin when
