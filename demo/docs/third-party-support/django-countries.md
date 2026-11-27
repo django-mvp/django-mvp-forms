@@ -36,7 +36,7 @@ from django_countries import Countries
 
 class GermanSpeakingFirst(Countries):
     first = ["DE", "AT", "CH"]
-    first_break = "All countries"
+    first_break = "Other"
 ```
 
 ```{live-example} /examples/countries/first/

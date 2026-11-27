@@ -54,7 +54,7 @@ class GermanSpeakingFirst(Countries):
     """django-countries' list with three countries first, then a heading."""
 
     first = ["DE", "AT", "CH"]
-    first_break = "All countries"
+    first_break = "Other"
 
 
 class CountriesFirstForm(forms.Form):

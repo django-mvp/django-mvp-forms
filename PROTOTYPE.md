@@ -105,6 +105,8 @@ control plus the flag row above.
 - 2026-11-27: The flag stays before the name. Each demo field is labelled with
   what it uses, not a made-up form's wording. Use django-mvp-sphinx's own docs
   styling, upgraded, with no demo overrides.
+- 2026-11-27: The break reads "Other". The stock select stays as django-countries
+  draws it. No heading above the countries first.
 - 2026-11-27: Offer django-countries' "countries first" as the grouping, with
   demos. No continent or region grouping: django-countries has no such data
   and no other source is added.
