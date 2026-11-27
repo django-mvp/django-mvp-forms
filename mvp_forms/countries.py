@@ -164,7 +164,7 @@ else:
             for code, name in grouped_at_break(self.countries):
                 if isinstance(name, list):
                     results.extend(self.result(c, n, group=code) for c, n in name)
-                elif code:
+                else:
                     results.append(self.result(code, name))
             return results
 
