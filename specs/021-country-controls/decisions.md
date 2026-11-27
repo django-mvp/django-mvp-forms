@@ -18,7 +18,9 @@ and the option template, and the third extends the first two. A developer sets o
 the three on its own, so each is a story. Every setting of the widgets, the empty choice, htmx and
 formsets are scenarios under the first story, not stories of their own.
 
-**Self-resolved.** **ADR:** none.
+**Self-resolved.**
+
+**ADR:** none — local to this feature, nothing downstream inherits it.
 
 ## D2. No story for the person filling in the form
 
@@ -29,7 +31,9 @@ outcomes under each developer story.
 from it is what the pack's controls already offer. What is new is a widget a developer names, and
 the flag it draws. A story of the person's own would repeat the developer stories' scenarios.
 
-**Self-resolved.** **ADR:** none.
+**Self-resolved.**
+
+**ADR:** none — local to this feature, nothing downstream inherits it.
 
 ## D3. The stock select and django-countries' flag widget are untouched
 
@@ -41,7 +45,9 @@ it there is replaced by the country widgets. The pack still draws `CountrySelect
 the demo field is the prototype's decision. Dropping the pack's drawing of a widget a host project
 may use would break that project for no gain, so only the demo and the recipe go.
 
-**Self-resolved.** **ADR:** none.
+**Self-resolved.**
+
+**ADR:** none — local to this feature, nothing downstream inherits it.
 
 ## D4. The country widgets live in a module of their own
 
@@ -54,7 +60,9 @@ it is drawn as before. A module the host project imports only when it wants the 
 keeps that promise. django-tomselect is optional too, so a project with django-countries alone
 must still have the widgets.
 
-**Self-resolved.** **ADR:** none. The module's name is the plan's call.
+**Self-resolved.**
+
+**ADR:** none — the module's name is a local choice nothing else inherits.
 
 ## D5. The autocomplete view needs Article XII amended
 
@@ -70,7 +78,9 @@ out of the package, which belong to django-mvp. An autocomplete view for a suppo
 the data source of a widget, not a page. Leaving the article as it is would make the agreed
 feature unconstitutional.
 
-**Self-resolved, and the item most worth his veto.** **ADR:** yes, with the amendment (0073).
+**Self-resolved, and the item most worth his veto.**
+
+**ADR:** docs/adr/0073-an-autocomplete-view-for-a-supported-package.md
 
 ## D6. A single control with no value starts empty
 
@@ -83,7 +93,9 @@ which leaves the select with no option of empty value, so the browser selects th
 and the control starts holding it. A person who never touched the field would then submit
 Germany. The stock select starts on the empty choice, and the control must do the same.
 
-**Self-resolved.** **ADR:** none.
+**Self-resolved.**
+
+**ADR:** none — local to this feature, nothing downstream inherits it.
 
 ## D7. `first_repeat` has no effect on the country controls
 
@@ -93,7 +105,9 @@ Germany. The stock select starts on the empty choice, and the control must do th
 (prototype, "Faked or skipped"). The documentation says so, so a developer who sets it knows why
 it does nothing.
 
-**Self-resolved.** **ADR:** none.
+**Self-resolved.**
+
+**ADR:** none — local to this feature, nothing downstream inherits it.
 
 ## D8. The django-tomselect quoting defect is worked round, not waited on
 
@@ -105,7 +119,9 @@ that value into the page script unquoted, which is a syntax error (checked, `res
 the latest release on 2026-11-27, so no fixed release exists to use. The workaround must keep
 working if a later release quotes the template itself, which the build checks.
 
-**Self-resolved.** **ADR:** none.
+**Self-resolved.**
+
+**ADR:** none — local to this feature, nothing downstream inherits it.
 
 ## D9. The demo's labels name the field and the widget
 
@@ -115,7 +131,9 @@ and its help text names the settings it shows.
 **Why:** the maintainer's decision of 2026-11-27. The demo exists to show a developer what each
 widget does, not to imitate a form.
 
-**Self-resolved.** **ADR:** none.
+**Self-resolved.**
+
+**ADR:** none — local to this feature, nothing downstream inherits it.
 
 ## D10. The demo project's other changes are not this feature
 
@@ -127,7 +145,9 @@ measured on them, and the side-by-side check covers the three example screens.
 **Why:** the prototype needed the upgrade to show its docs page in the new theme, but nothing in
 the country controls depends on it.
 
-**Self-resolved.** **ADR:** none.
+**Self-resolved.**
+
+**ADR:** none — local to this feature, nothing downstream inherits it.
 
 ## D11. Design review of the plan
 
@@ -153,7 +173,9 @@ requirement, and records the two readings below for the maintainer.
   django-countries' own address for each country, which honours `COUNTRIES_FLAG_URL`. A per-country
   flag address set on a `Countries` subclass shows in the fetched control and not in the widgets.
 
-**Self-resolved.** **ADR:** none.
+**Self-resolved.**
+
+**ADR:** none — local to this feature, nothing downstream inherits it.
 
 ## D12. The three stories are built directly
 
@@ -162,4 +184,6 @@ subagent dispatched. The three stories share one module, one script and one demo
 build leans on the one before. Each task still goes test first, each story ends on a green run of
 every check, and the review that follows is a separate session.
 
-**Self-resolved.** **ADR:** none.
+**Self-resolved.**
+
+**ADR:** none — local to this feature, nothing downstream inherits it.
