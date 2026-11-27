@@ -45,6 +45,7 @@ class TestAStatedTemplate:
         self, templated_page
     ):
         templated_page.locator(CONTROL.format("templated")).click()
+        expect(templated_page.locator(OPTION)).to_have_count(3)
 
         flags = templated_page.locator(f"{OPTION} img").evaluate_all(
             "(images) => images.map((image) => image.getAttribute('src'))"
@@ -338,6 +339,7 @@ def first_page(page, page_errors, live_server):
 
 def values_listed(page, name):
     """Return the values of the options a control lists, in order."""
+    expect(page.locator(f"#id_{name}-ts-dropdown .option").first).to_be_visible()
     return page.locator(f"#id_{name}-ts-dropdown .option").evaluate_all(
         "(options) => options.map((option) => option.dataset.value)"
     )
@@ -381,6 +383,10 @@ class TestCountriesFirst:
         expect(
             first_page.locator(f'{dropdown} .option[data-value="AT"]')
         ).to_have_count(0)
+        expect(first_page.locator(f"{dropdown} .optgroup-header")).to_be_visible()
+        expect(
+            first_page.locator(f'{dropdown} .option[data-value="DE"]')
+        ).to_be_visible()
 
         above_the_heading = first_page.evaluate(
             """(dropdown) => {
