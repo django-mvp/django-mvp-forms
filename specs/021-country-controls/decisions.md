@@ -187,3 +187,19 @@ every check, and the review that follows is a separate session.
 **Self-resolved.**
 
 **ADR:** none — local to this feature, nothing downstream inherits it.
+
+## D13. Two tests that existed before this feature are changed
+
+**Chosen:** the tests of the pack's draw of a django-countries field gain the two new widgets'
+fields, and the rule that no module imports django-countries is relaxed for the one module that
+is meant to.
+
+**Why:** `tests/test_pack/test_countries.py` now draws, posts, disables and cleans two more
+fields, and asserts everything it asserted before. Nothing was removed or loosened. The
+independence test forbade every module of the package from importing django-countries, and
+FR-008 makes `mvp_forms/countries.py` the one module that does, so the rule now allows that file
+alone, for django-countries and django-tomselect, and still forbids both everywhere else.
+
+**Self-resolved.**
+
+**ADR:** none — a test follows a requirement of this feature and nothing downstream inherits it.
