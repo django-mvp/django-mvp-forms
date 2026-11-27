@@ -203,9 +203,12 @@ else:
         # django-tomselect writes these into its script as they are given. Its
         # own "render" setting reaches the script unquoted in 2026.6.2, which
         # stops the control, so the templates are given already quoted.
-        attrs = kwargs.pop("attrs", {})
-        attrs["data_template_option"] = json.dumps(FLAGGED % "label")
-        attrs["data_template_item"] = json.dumps(FLAGGED % "label")
+        template = json.dumps(FLAGGED % "label")
+        attrs = {
+            **kwargs.pop("attrs", {}),
+            "data_template_option": template,
+            "data_template_item": template,
+        }
         return TomSelectConfig(
             url=url, value_field="value", label_field="label", attrs=attrs, **kwargs
         )

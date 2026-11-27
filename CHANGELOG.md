@@ -26,7 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `CountrySelect` and `CountrySelectMultiple` in `mvp_forms.countries`: Tom Select widgets for a django-countries field. A person searches the countries by typing, and each country is shown with its flag before its name, in the list and in each chosen value. They take every setting of `TomSelect` and `TomSelectMultiple`, and a single control whose field holds no value starts holding no country. The `countries` extra installs django-countries at the release the package is tested against.
 - A Tom Select select can state a template for its options and its chosen values in `data-tom-select`. The script fills each `${data.name}` with that value of the option, escaped. A select that states none is drawn as before.
-
 - `CountryAutocomplete` and `country_config` in `mvp_forms.countries`, where django-tomselect is installed: a django-tomselect view that answers with every country, its code, its name and the address of its flag, and a configuration that draws each fetched option and chosen value with its flag. You route the view yourself. The `tomselect` extra adds django-tomselect at the release it is tested against.
 - The country widgets and `CountryAutocomplete` list the countries django-countries names first (`first`, `first_break`, `COUNTRIES_FIRST` and `COUNTRIES_FIRST_BREAK`) ahead of the rest. The rest sit in one group headed by the break's text, and a country is listed once whatever `first_repeat` says. `grouped_at_break` does the regrouping.
 

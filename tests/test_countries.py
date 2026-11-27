@@ -12,7 +12,7 @@ from django.test import RequestFactory, override_settings
 from django_countries import Countries, countries
 from django_countries.fields import Country, CountryField
 from django_tomselect.app_settings import TomSelectConfig
-from django_tomselect.forms import TomSelectChoiceField
+from django_tomselect.forms import TomSelectChoiceField, TomSelectMultipleChoiceField
 
 import mvp_forms
 from mvp_forms import countries as countries_module
@@ -216,7 +216,7 @@ class TestTheFieldItDraws:
 
         form = Form({"country": "XX"})
 
-        assert form.errors["country"][0].startswith("Select a valid choice")
+        assert form.has_error("country", "invalid_choice")
 
 
 class TestWithoutDjangoTomselect:
@@ -328,6 +328,26 @@ class TestCountryConfig:
         assert config.attrs["class"] == "mine"
         assert json.loads(config.attrs["data_template_option"]) == FLAGGED % "label"
         assert json.loads(config.attrs["data_template_item"]) == FLAGGED % "label"
+
+    def test_the_dictionary_of_attrs_a_project_passes_is_left_as_it_was(self):
+        attrs = {"class": "mine"}
+
+        country_config("ac", attrs=attrs)
+
+        assert attrs == {"class": "mine"}
+
+    def test_a_form_with_the_fields_it_configures_cleans_to_the_codes(self):
+        class Form(forms.Form):
+            one = TomSelectChoiceField(config=country_config("ac-flagged-countries"))
+            several = TomSelectMultipleChoiceField(
+                config=country_config("ac-flagged-countries")
+            )
+
+        form = Form({"one": "NZ", "several": ["NZ", "DE"]})
+
+        assert form.is_valid()
+        assert form.cleaned_data["one"] == "NZ"
+        assert form.cleaned_data["several"] == ["NZ", "DE"]
 
     def test_the_templates_reach_the_script_as_django_tomselect_writes_it(self):
         """A canary: the day django-tomselect quotes a template itself, this fails."""

@@ -1859,6 +1859,7 @@ urlpatterns = [
 
 ```python
 # forms.py
+from django import forms
 from django_tomselect.forms import TomSelectChoiceField
 
 from mvp_forms.countries import country_config
@@ -1877,6 +1878,7 @@ class AddressForm(forms.Form):
 django-countries can list some countries ahead of the rest, through `first` and `first_break` on a `Countries` subclass given to the field, or through its `COUNTRIES_FIRST` and `COUNTRIES_FIRST_BREAK` settings for every field. The country widgets and `CountryAutocomplete` take that with no setting of their own.
 
 ```python
+from django import forms
 from django_countries import Countries
 from django_countries.fields import CountryField
 

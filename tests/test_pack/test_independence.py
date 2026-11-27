@@ -1243,7 +1243,7 @@ class TestDistributedFiles:
         "path", sorted(PACKAGE.rglob("*.py")), ids=lambda path: path.name
     )
     def test_no_module_imports_django_mvp_or_cotton(self, path):
-        allowed = SUPPORTED_PACKAGE_MODULES.get(path.name, set())
+        allowed = SUPPORTED_PACKAGE_MODULES.get(str(path.relative_to(PACKAGE)), set())
         assert not imported_modules(path) & (FORBIDDEN_MODULES - allowed)
 
     def test_the_package_static_directory_holds_its_own_files_and_tom_select(self):
