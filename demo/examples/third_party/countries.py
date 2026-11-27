@@ -4,8 +4,10 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django import forms
 from django_countries.fields import CountryField
+from django_tomselect.app_settings import PluginClearButton, PluginRemoveButton
+from django_tomselect.forms import TomSelectChoiceField, TomSelectMultipleChoiceField
 
-from mvp_forms.countries import CountrySelect, CountrySelectMultiple
+from mvp_forms.countries import CountrySelect, CountrySelectMultiple, country_config
 
 
 class AddressForm(forms.Form):
@@ -40,4 +42,37 @@ class AddressForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.attrs = {"novalidate": True}
+        self.helper.add_input(Submit("submit", "Save"))
+
+
+class FetchedCountriesForm(forms.Form):
+    """Countries fetched as a person types, for one value and for several."""
+
+    autocomplete_country = TomSelectChoiceField(
+        label="TomSelectChoiceField with country_config",
+        config=country_config(
+            "ac-flagged-countries",
+            placeholder="Search for a country",
+            plugin_clear_button=PluginClearButton(),
+        ),
+        help_text="One country, fetched from CountryAutocomplete as you type. "
+        "The page holds none of the list.",
+    )
+    autocomplete_countries = TomSelectMultipleChoiceField(
+        label="TomSelectMultipleChoiceField with country_config",
+        config=country_config(
+            "ac-flagged-countries",
+            placeholder="Add a country",
+            plugin_remove_button=PluginRemoveButton(),
+        ),
+        help_text="Several countries, fetched from CountryAutocomplete as you type.",
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Add the helper and a submit button."""
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.attrs = {"novalidate": True}
+        self.helper.include_media = False
         self.helper.add_input(Submit("submit", "Save"))

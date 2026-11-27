@@ -45,7 +45,7 @@ When two reasonable designs conflict, stock daisyUI markup wins over custom styl
 pip install django-mvp-forms
 ```
 
-The `timezone` extra adds [django-timezone-field](https://github.com/django-mvp/django-mvp-forms#django-timezone-field) at the release the package is tested against: `pip install "django-mvp-forms[timezone]"`. The `countries` extra adds django-countries, which `mvp_forms.countries` imports, at the release the package is tested against: `pip install "django-mvp-forms[countries]"`.
+The `timezone` extra adds [django-timezone-field](https://github.com/django-mvp/django-mvp-forms#django-timezone-field) at the release the package is tested against: `pip install "django-mvp-forms[timezone]"`. The `countries` extra adds django-countries, which `mvp_forms.countries` imports, at the release the package is tested against: `pip install "django-mvp-forms[countries]"`. The `tomselect` extra adds django-tomselect, which `mvp_forms.countries` imports for its autocomplete view: `pip install "django-mvp-forms[tomselect]"`.
 
 Then add it to `INSTALLED_APPS` alongside crispy-forms:
 
@@ -1842,6 +1842,35 @@ class AddressForm(forms.Form):
 Both are the pack's Tom Select widgets with the mixin `FlaggedOptions`, which writes each country's flag on its option, states the option and item templates and draws the empty option. List it before a Tom Select widget of your own to give that widget the same flags.
 
 A single control whose field holds no value starts holding no country. The widget draws an empty option first when the field has none, so the control never starts on the first country in the list. The widgets need django-countries and nothing else beyond what the pack's Tom Select widgets need, and the flag is the image django-countries serves for each country, so list `django_countries` in `INSTALLED_APPS`. The flag row uses Tailwind utilities written in the module, which your Tailwind build finds when it scans the installed package, as the installation section asks.
+
+#### Countries fetched as you type
+
+Where [django-tomselect](https://github.com/django-mvp/django-mvp-forms#django-tomselect) is installed, `mvp_forms.countries` also has `CountryAutocomplete`, a django-tomselect view that answers with every country django-countries lists, each result holding `value`, the country's code, `label`, its name, and `flag`, the address of its flag image. A search matches the name or the code, whatever the case, and results come in pages of 20 in django-countries' order. The package ships no URL, so you route the view yourself, and `country_config` configures a django-tomselect field to fetch from it with the same flag in every option.
+
+```python
+# urls.py
+from django.urls import path
+from mvp_forms.countries import CountryAutocomplete
+
+urlpatterns = [
+    path("countries/", CountryAutocomplete.as_view(), name="countries"),
+]
+```
+
+```python
+# forms.py
+from django_tomselect.forms import TomSelectChoiceField
+
+from mvp_forms.countries import country_config
+
+
+class AddressForm(forms.Form):
+    country = TomSelectChoiceField(
+        config=country_config("countries", placeholder="Search for a country")
+    )
+```
+
+`country_config(url, **kwargs)` takes the name of the URL and any other setting of django-tomselect's `TomSelectConfig`. It sets `value_field` and `label_field` for the view's results and a minimum query length of 0, so the list opens before anything is typed. The page holds none of the list. `CountryAutocomplete` and `country_config` exist only where django-tomselect is installed, and the widgets above import without it.
 
 #### What is not covered
 

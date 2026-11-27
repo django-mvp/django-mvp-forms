@@ -1,10 +1,24 @@
 """The country controls, run in Chrome against pages of the test project."""
 
+from pathlib import Path
+
+import django_tomselect
 import pytest
 from django.urls import reverse
 from playwright.sync_api import expect
 
+from tests.urls import DJANGO_TOMSELECT_URL, TOM_SELECT_URL
+
 pytestmark = pytest.mark.e2e
+
+TOM_SELECT = Path(__file__).parent / "data" / "tom-select-2.5.2.complete.min.js"
+DJANGO_TOMSELECT = (
+    Path(django_tomselect.__file__).parent
+    / "static"
+    / "django_tomselect"
+    / "js"
+    / "django-tomselect.min.js"
+)
 
 OPTION = "#id_templated-ts-dropdown .option"
 CONTROL = "#id_{} + .ts-wrapper .ts-control"
@@ -100,7 +114,7 @@ def search(page, name, text):
 def row_order(option):
     """Return the tags of the flag image and the name in an option, in order."""
     return option.evaluate(
-        "(option) => [...option.querySelectorAll('img, span span')]"
+        "(option) => [...option.querySelectorAll('.flex > *')]"
         ".map((node) => node.tagName)"
     )
 
@@ -223,5 +237,91 @@ class TestThePageRaisesNoError:
         page = countries_page()
         for name in ("country", "countries", "counted"):
             page.locator(CONTROL.format(name)).click()
+
+        assert page_errors == []
+
+
+@pytest.fixture
+def fetched_page(page, page_errors, live_server):
+    """Open the demo page whose country controls fetch from the view."""
+    # The demo's stylesheet builder comes from a CDN, which the run has no use for.
+    page.route("https://cdn.jsdelivr.net/**", lambda route: route.abort())
+    page.route(
+        TOM_SELECT_URL,
+        lambda route: route.fulfill(
+            body=TOM_SELECT.read_bytes(), content_type="text/javascript"
+        ),
+    )
+    page.route(
+        f"**{DJANGO_TOMSELECT_URL}",
+        lambda route: route.fulfill(
+            path=DJANGO_TOMSELECT, content_type="text/javascript"
+        ),
+    )
+    page.goto(f"{live_server.url}/examples/countries/fetched/")
+    page.wait_for_load_state("load")
+    return page
+
+
+class TestFetchedCountries:
+    def test_opening_the_control_lists_countries_with_no_typing(self, fetched_page):
+        fetched_page.locator(CONTROL.format("autocomplete_country")).click()
+
+        options = fetched_page.locator("#id_autocomplete_country-ts-dropdown .option")
+
+        expect(options.first).to_be_visible()
+        assert options.count() > 1
+
+    def test_a_search_lists_the_countries_matching_the_name(self, fetched_page):
+        search(fetched_page, "autocomplete_country", "zeal")
+
+        option = fetched_page.locator(
+            '#id_autocomplete_country-ts-dropdown .option[data-value="NZ"]'
+        )
+
+        expect(option).to_be_visible()
+        assert row_order(option) == ["IMG", "SPAN"]
+        expect(option.locator("img")).to_have_attribute("src", "/static/flags/nz.gif")
+
+    def test_the_country_chosen_is_held_with_its_flag_and_posts_its_code(
+        self, fetched_page
+    ):
+        search(fetched_page, "autocomplete_country", "zeal")
+        fetched_page.locator(
+            '#id_autocomplete_country-ts-dropdown .option[data-value="NZ"]'
+        ).click()
+
+        item = fetched_page.locator("#id_autocomplete_country + .ts-wrapper .item")
+
+        assert row_order(item) == ["IMG", "SPAN"]
+        expect(item).to_have_text("New Zealand")
+        assert (
+            fetched_page.evaluate(
+                "document.getElementById('id_autocomplete_country').value"
+            )
+            == "NZ"
+        )
+
+    def test_several_countries_are_chosen_with_a_remove_button_each(self, fetched_page):
+        for text, code in (("zeal", "NZ"), ("germ", "DE")):
+            search(fetched_page, "autocomplete_countries", text)
+            fetched_page.locator(
+                f'#id_autocomplete_countries-ts-dropdown .option[data-value="{code}"]'
+            ).click()
+
+        items = fetched_page.locator("#id_autocomplete_countries + .ts-wrapper .item")
+
+        expect(items).to_have_count(2)
+        expect(items.locator(".remove")).to_have_count(2)
+        assert fetched_page.evaluate(
+            "[...document.getElementById('id_autocomplete_countries').selectedOptions]"
+            ".map((option) => option.value)"
+        ) == ["NZ", "DE"]
+
+    def test_the_page_raises_no_error(self, fetched_page, page_errors):
+        search(fetched_page, "autocomplete_country", "zeal")
+        fetched_page.locator(
+            '#id_autocomplete_country-ts-dropdown .option[data-value="NZ"]'
+        ).click()
 
         assert page_errors == []

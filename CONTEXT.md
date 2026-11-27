@@ -51,6 +51,12 @@ django-countries field. Each option and each chosen value shows the country's fl
 before its name. Their module is the one that imports django-countries.
 _Avoid_: flag select, country picker.
 
+**Country autocomplete**:
+`CountryAutocomplete`, a django-tomselect view that answers with every country, its
+code, its name and the address of its flag, and `country_config`, which configures a
+django-tomselect field to fetch from it. The host project routes the view.
+_Avoid_: country picker, country API.
+
 **Tagging**:
 A multiple django-tomselect control that offers to add what was typed, each value
 shown as a tag with a remove button. The pack draws it. Saving a new value is the

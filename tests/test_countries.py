@@ -329,7 +329,7 @@ class TestCountryConfig:
 
     def test_the_templates_reach_the_script_as_django_tomselect_writes_it(self):
         """A canary: the day django-tomselect quotes a template itself, this fails."""
-        field = TomSelectChoiceField(config=country_config("ac-countries"))
+        field = TomSelectChoiceField(config=country_config("ac-flagged-countries"))
         script = str(field.widget.render("country", None))
 
         templates = re.findall(r"var template = (.*);", script)
