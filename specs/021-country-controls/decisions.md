@@ -177,12 +177,11 @@ requirement, and records the two readings below for the maintainer.
 
 **ADR:** none — local to this feature, nothing downstream inherits it.
 
-## D12. The three stories are built directly
+## D12. The three stories are built one after another
 
-**Chosen:** the stories are built in this worktree by the one session that planned them, with no
-subagent dispatched. The three stories share one module, one script and one demo page, so each
-build leans on the one before. Each task still goes test first, each story ends on a green run of
-every check, and the review that follows is a separate session.
+**Chosen:** the three stories share one module, one script and one demo page, so they are built
+one after another, each test first. Each story ends on a green run of every check before the
+next begins, since each build leans on the one before.
 
 **Self-resolved.**
 
